@@ -1,0 +1,366 @@
+import { AiProviderService } from '@/lib/services/ai-provider.service'
+import type { AiProvider } from '@/lib/db/schema'
+
+export interface AIOptions {
+  maxTokens?: number
+  temperature?: number
+  model?: string
+  systemPrompt?: string
+}
+
+export interface AIResponse {
+  text: string
+  provider: string
+  model: string
+  usage?: {
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
+  }
+}
+
+export interface AIProvider {
+  name: string
+  complete(prompt: string, options?: AIOptions): Promise<AIResponse>
+  isAvailable(): Promise<boolean>
+}
+
+export interface CompanyResearchResult {
+  summary: string
+  industry?: string
+  employeeCount?: string
+  revenue?: string
+  keyPeople?: Array<{
+    name: string
+    title: string
+  }>
+  recentNews?: string[]
+  competitors?: string[]
+  rawData?: Record<string, unknown>
+}
+
+// Kontext für Logging
+export interface AIRequestContext {
+  tenantId: string
+  userId?: string | null
+  feature?: string
+  entityType?: string
+  entityId?: string
+}
+
+// Factory-Funktion: Erstellt AIProvider aus DB-Konfiguration
+function createProviderFromConfig(config: AiProvider): AIProvider {
+  switch (config.providerType) {
+    case 'ollama': {
+      const { OllamaProvider } = require('./ollama.provider')
+      const provider = new OllamaProvider({
+        baseUrl: config.baseUrl || undefined,
+        model: config.model,
+      })
+      return provider
+    }
+    case 'openrouter': {
+      const { OpenRouterProvider } = require('./openrouter.provider')
+      return new OpenRouterProvider({
+        apiKey: config.apiKey || undefined,
+        model: config.model,
+        baseUrl: config.baseUrl || undefined,
+      })
+    }
+    case 'gemini': {
+      const { GeminiProvider } = require('./gemini.provider')
+      return new GeminiProvider({
+        apiKey: config.apiKey || undefined,
+        model: config.model,
+      })
+    }
+    case 'openai': {
+      const { OpenAIProvider } = require('./openai.provider')
+      return new OpenAIProvider({
+        apiKey: config.apiKey || undefined,
+        model: config.model,
+      })
+    }
+    default:
+      throw new Error(`Unknown provider type: ${config.providerType}`)
+  }
+}
+
+class AIServiceClass {
+  // Fallback: statische Provider (für Abwärtskompatibilität)
+  private staticProviders: AIProvider[] = []
+
+  registerProvider(provider: AIProvider): void {
+    this.staticProviders.push(provider)
+  }
+
+  /**
+   * Tenant-aware completion mit DB-basierten Providern und Logging
+   */
+  async completeWithContext(
+    prompt: string,
+    context: AIRequestContext,
+    options?: AIOptions
+  ): Promise<AIResponse> {
+    const startTime = Date.now()
+
+    // Provider aus DB laden
+    const dbProviders = await AiProviderService.getActiveProviders(context.tenantId)
+
+    if (dbProviders.length === 0) {
+      // Fallback auf statische Provider
+      return this.complete(prompt, options)
+    }
+
+    let lastError: Error | null = null
+
+    for (const config of dbProviders) {
+      try {
+        const provider = createProviderFromConfig(config)
+
+        if (!(await provider.isAvailable())) {
+          continue
+        }
+
+        // Provider-spezifische Optionen überschreiben
+        const mergedOptions: AIOptions = {
+          maxTokens: options?.maxTokens || config.maxTokens || 1000,
+          temperature: options?.temperature ?? parseFloat(config.temperature || '0.7'),
+          model: options?.model || config.model,
+          systemPrompt: options?.systemPrompt,
+        }
+
+        const response = await provider.complete(prompt, mergedOptions)
+        const durationMs = Date.now() - startTime
+
+        // Erfolg loggen
+        await AiProviderService.createLog({
+          tenantId: context.tenantId,
+          providerId: config.id,
+          userId: context.userId || null,
+          providerType: config.providerType,
+          model: response.model,
+          prompt,
+          response: response.text,
+          status: 'success',
+          promptTokens: response.usage?.promptTokens || null,
+          completionTokens: response.usage?.completionTokens || null,
+          totalTokens: response.usage?.totalTokens || null,
+          durationMs,
+          feature: context.feature || null,
+          entityType: context.entityType || null,
+          entityId: context.entityId || null,
+        }).catch((err) => {
+          // Logging-Fehler sollen nicht den Hauptprozess blockieren
+          console.error('Failed to log AI request:', err)
+        })
+
+        return response
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+        console.error(`Provider ${config.name} (${config.providerType}) failed:`, error)
+
+        // Fehler loggen
+        await AiProviderService.createLog({
+          tenantId: context.tenantId,
+          providerId: config.id,
+          userId: context.userId || null,
+          providerType: config.providerType,
+          model: config.model,
+          prompt,
+          status: 'error',
+          errorMessage: lastError.message,
+          durationMs: Date.now() - startTime,
+          feature: context.feature || null,
+          entityType: context.entityType || null,
+          entityId: context.entityId || null,
+        }).catch((err) => {
+          console.error('Failed to log AI error:', err)
+        })
+
+        continue
+      }
+    }
+
+    throw lastError || new Error('No AI provider available')
+  }
+
+  /**
+   * Legacy: Statische Provider (ohne DB, ohne Logging)
+   */
+  async complete(prompt: string, options?: AIOptions): Promise<AIResponse> {
+    for (const provider of this.staticProviders) {
+      try {
+        if (await provider.isAvailable()) {
+          return await provider.complete(prompt, options)
+        }
+      } catch (error) {
+        console.error(`Provider ${provider.name} failed:`, error)
+        continue
+      }
+    }
+
+    throw new Error('No AI provider available')
+  }
+
+  async research(companyName: string, context?: AIRequestContext): Promise<CompanyResearchResult> {
+    const prompt = `Research the company "${companyName}" and provide a structured summary including:
+    - Brief company description
+    - Industry/sector
+    - Approximate employee count
+    - Estimated revenue (if available)
+    - Key executives or decision makers
+    - Recent news or developments
+    - Main competitors
+
+    Format the response as JSON with the following structure:
+    {
+      "summary": "Brief description",
+      "industry": "Industry name",
+      "employeeCount": "Approximate count",
+      "revenue": "Estimated revenue",
+      "keyPeople": [{"name": "Name", "title": "Title"}],
+      "recentNews": ["News item 1", "News item 2"],
+      "competitors": ["Competitor 1", "Competitor 2"]
+    }`
+
+    const response = context
+      ? await this.completeWithContext(prompt, { ...context, feature: 'research' }, {
+          maxTokens: 1000,
+          temperature: 0.3,
+        })
+      : await this.complete(prompt, {
+          maxTokens: 1000,
+          temperature: 0.3,
+        })
+
+    try {
+      const jsonMatch = response.text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]) as CompanyResearchResult
+      }
+    } catch {
+      // If JSON parsing fails, return the raw text as summary
+    }
+
+    return {
+      summary: response.text,
+      rawData: { response: response.text },
+    }
+  }
+
+  async summarize(text: string, maxLength = 200, context?: AIRequestContext): Promise<string> {
+    const prompt = `Summarize the following text in ${maxLength} words or less. Be concise and capture the key points:\n\n${text}`
+
+    const response = context
+      ? await this.completeWithContext(prompt, { ...context, feature: 'summarize' }, {
+          maxTokens: maxLength * 2,
+          temperature: 0.3,
+        })
+      : await this.complete(prompt, {
+          maxTokens: maxLength * 2,
+          temperature: 0.3,
+        })
+
+    return response.text
+  }
+
+  async extractEntities(text: string, context?: AIRequestContext): Promise<{
+    companies: string[]
+    people: string[]
+    emails: string[]
+    phones: string[]
+  }> {
+    const prompt = `Extract the following entities from the text below and return as JSON:
+    - Companies mentioned
+    - People names
+    - Email addresses
+    - Phone numbers
+
+    Text: ${text}
+
+    Return JSON format:
+    {
+      "companies": [],
+      "people": [],
+      "emails": [],
+      "phones": []
+    }`
+
+    const response = context
+      ? await this.completeWithContext(prompt, { ...context, feature: 'extract_entities' }, {
+          maxTokens: 500,
+          temperature: 0.1,
+        })
+      : await this.complete(prompt, {
+          maxTokens: 500,
+          temperature: 0.1,
+        })
+
+    try {
+      const jsonMatch = response.text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0])
+      }
+    } catch {
+      // Parsing failed
+    }
+
+    return {
+      companies: [],
+      people: [],
+      emails: [],
+      phones: [],
+    }
+  }
+
+  async getAvailableProviders(): Promise<string[]> {
+    const available: string[] = []
+    for (const provider of this.staticProviders) {
+      if (await provider.isAvailable()) {
+        available.push(provider.name)
+      }
+    }
+    return available
+  }
+
+  /**
+   * Tenant-aware: Prüft welche DB-Provider verfügbar sind
+   */
+  async getAvailableProvidersForTenant(tenantId: string): Promise<Array<{
+    id: string
+    name: string
+    providerType: string
+    model: string
+    available: boolean
+  }>> {
+    const dbProviders = await AiProviderService.getActiveProviders(tenantId)
+    const result = []
+
+    for (const config of dbProviders) {
+      try {
+        const provider = createProviderFromConfig(config)
+        const available = await provider.isAvailable()
+        result.push({
+          id: config.id,
+          name: config.name,
+          providerType: config.providerType,
+          model: config.model,
+          available,
+        })
+      } catch {
+        result.push({
+          id: config.id,
+          name: config.name,
+          providerType: config.providerType,
+          model: config.model,
+          available: false,
+        })
+      }
+    }
+
+    return result
+  }
+}
+
+export const AIService = new AIServiceClass()

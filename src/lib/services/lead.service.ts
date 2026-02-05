@@ -1,0 +1,326 @@
+import { db } from '@/lib/db'
+import { leads, companies, persons, users } from '@/lib/db/schema'
+import { eq, and, ilike, count, desc, or, getTableColumns, inArray } from 'drizzle-orm'
+import type { Lead, NewLead } from '@/lib/db/schema'
+import type { PaginatedResult } from '@/lib/utils/api-response'
+
+// Type for lead with related data
+export interface LeadWithRelations extends Lead {
+  company: { id: string; name: string } | null
+  person: { id: string; firstName: string; lastName: string; email: string | null } | null
+  assignedToUser: { id: string; firstName: string | null; lastName: string | null; email: string } | null
+}
+
+export interface LeadFilters {
+  status?: string | string[]
+  source?: string
+  assignedTo?: string
+  search?: string
+  page?: number
+  limit?: number
+}
+
+export interface CreateLeadInput {
+  companyId?: string | null
+  personId?: string | null
+  title?: string
+  source: string
+  sourceDetail?: string
+  status?: string
+  score?: number
+  assignedTo?: string | null
+  tags?: string[]
+  notes?: string
+  rawData?: Record<string, unknown>
+}
+
+export type UpdateLeadInput = Partial<CreateLeadInput> & {
+  aiResearchStatus?: string
+  aiResearchResult?: Record<string, unknown>
+}
+
+// Helper to convert empty strings to null
+function emptyToNull<T>(value: T): T | null {
+  if (value === '' || value === undefined) return null
+  return value
+}
+
+export const LeadService = {
+  async create(
+    tenantId: string,
+    data: CreateLeadInput
+  ): Promise<Lead> {
+    const [lead] = await db
+      .insert(leads)
+      .values({
+        tenantId,
+        companyId: emptyToNull(data.companyId),
+        personId: emptyToNull(data.personId),
+        title: emptyToNull(data.title),
+        source: data.source,
+        sourceDetail: emptyToNull(data.sourceDetail),
+        status: data.status || 'new',
+        score: data.score || 0,
+        assignedTo: emptyToNull(data.assignedTo),
+        tags: data.tags || [],
+        notes: emptyToNull(data.notes),
+        rawData: data.rawData || {},
+      })
+      .returning()
+
+    return lead
+  },
+
+  async getById(tenantId: string, leadId: string): Promise<LeadWithRelations | null> {
+    const rows = await db
+      .select({
+        ...getTableColumns(leads),
+        company: {
+          id: companies.id,
+          name: companies.name,
+        },
+        person: {
+          id: persons.id,
+          firstName: persons.firstName,
+          lastName: persons.lastName,
+          email: persons.email,
+        },
+        assignedToUser: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+        },
+      })
+      .from(leads)
+      .leftJoin(companies, eq(leads.companyId, companies.id))
+      .leftJoin(persons, eq(leads.personId, persons.id))
+      .leftJoin(users, eq(leads.assignedTo, users.id))
+      .where(and(eq(leads.tenantId, tenantId), eq(leads.id, leadId)))
+      .limit(1)
+
+    if (rows.length === 0) return null
+
+    const row = rows[0]
+    return {
+      ...row,
+      company: row.company?.id ? row.company : null,
+      person: row.person?.id ? row.person : null,
+      assignedToUser: row.assignedToUser?.id ? row.assignedToUser : null,
+    }
+  },
+
+  async update(
+    tenantId: string,
+    leadId: string,
+    data: UpdateLeadInput
+  ): Promise<Lead | null> {
+    // Build update object with proper null handling
+    const updateData: Partial<NewLead> = {
+      updatedAt: new Date(),
+    }
+
+    // Only include fields that are explicitly provided
+    if ('companyId' in data) {
+      updateData.companyId = emptyToNull(data.companyId)
+    }
+    if ('personId' in data) {
+      updateData.personId = emptyToNull(data.personId)
+    }
+    if ('source' in data && data.source) {
+      updateData.source = data.source
+    }
+    if ('sourceDetail' in data) {
+      updateData.sourceDetail = emptyToNull(data.sourceDetail)
+    }
+    if ('status' in data && data.status) {
+      updateData.status = data.status
+    }
+    if ('score' in data) {
+      updateData.score = data.score ?? 0
+    }
+    if ('assignedTo' in data) {
+      updateData.assignedTo = emptyToNull(data.assignedTo)
+    }
+    if ('rawData' in data) {
+      updateData.rawData = data.rawData ?? {}
+    }
+    if ('aiResearchStatus' in data) {
+      updateData.aiResearchStatus = data.aiResearchStatus
+    }
+    if ('aiResearchResult' in data) {
+      updateData.aiResearchResult = data.aiResearchResult
+    }
+
+    const [lead] = await db
+      .update(leads)
+      .set(updateData)
+      .where(and(eq(leads.tenantId, tenantId), eq(leads.id, leadId)))
+      .returning()
+
+    return lead ?? null
+  },
+
+  async delete(tenantId: string, leadId: string): Promise<boolean> {
+    const result = await db
+      .delete(leads)
+      .where(and(eq(leads.tenantId, tenantId), eq(leads.id, leadId)))
+      .returning({ id: leads.id })
+
+    return result.length > 0
+  },
+
+  async list(
+    tenantId: string,
+    filters: LeadFilters = {}
+  ): Promise<PaginatedResult<LeadWithRelations>> {
+    const { status, source, assignedTo, search, page = 1, limit = 20 } = filters
+    const offset = (page - 1) * limit
+
+    const conditions = [eq(leads.tenantId, tenantId)]
+
+    if (status) {
+      if (Array.isArray(status)) {
+        conditions.push(inArray(leads.status, status))
+      } else {
+        conditions.push(eq(leads.status, status))
+      }
+    }
+
+    if (source) {
+      conditions.push(eq(leads.source, source))
+    }
+
+    if (assignedTo) {
+      conditions.push(eq(leads.assignedTo, assignedTo))
+    }
+
+    if (search) {
+      conditions.push(
+        or(
+          ilike(companies.name, `%${search}%`),
+          ilike(persons.firstName, `%${search}%`),
+          ilike(persons.lastName, `%${search}%`),
+          ilike(leads.sourceDetail, `%${search}%`)
+        )!
+      )
+    }
+
+    const whereClause = and(...conditions)
+
+    const [rows, [{ count: total }]] = await Promise.all([
+      db
+        .select({
+          ...getTableColumns(leads),
+          company: {
+            id: companies.id,
+            name: companies.name,
+          },
+          person: {
+            id: persons.id,
+            firstName: persons.firstName,
+            lastName: persons.lastName,
+            email: persons.email,
+          },
+          assignedToUser: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          },
+        })
+        .from(leads)
+        .leftJoin(companies, eq(leads.companyId, companies.id))
+        .leftJoin(persons, eq(leads.personId, persons.id))
+        .leftJoin(users, eq(leads.assignedTo, users.id))
+        .where(whereClause)
+        .orderBy(desc(leads.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db.select({ count: count() }).from(leads).where(and(eq(leads.tenantId, tenantId), status ? (Array.isArray(status) ? inArray(leads.status, status) : eq(leads.status, status)) : undefined)),
+    ])
+
+    // Transform rows to handle null relations
+    const items: LeadWithRelations[] = rows.map((row) => ({
+      ...row,
+      company: row.company?.id ? row.company : null,
+      person: row.person?.id ? row.person : null,
+      assignedToUser: row.assignedToUser?.id ? row.assignedToUser : null,
+    }))
+
+    return {
+      items,
+      meta: {
+        page,
+        limit,
+        total: Number(total),
+        totalPages: Math.ceil(Number(total) / limit),
+      },
+    }
+  },
+
+  async updateStatus(
+    tenantId: string,
+    leadId: string,
+    status: string,
+    oldStatus?: string
+  ): Promise<Lead | null> {
+    const lead = await this.update(tenantId, leadId, { status })
+    if (lead) {
+      // Webhook-Trigger asynchron feuern (blockiert nicht)
+      import('@/lib/services/webhook.service').then(({ WebhookService }) => {
+        WebhookService.fire(tenantId, 'lead.status_changed', {
+          leadId,
+          oldStatus: oldStatus || 'unknown',
+          newStatus: status,
+        }).catch(() => {})
+
+        if (status === 'won') {
+          WebhookService.fire(tenantId, 'lead.won', { leadId }).catch(() => {})
+        }
+        if (status === 'lost') {
+          WebhookService.fire(tenantId, 'lead.lost', { leadId }).catch(() => {})
+        }
+      }).catch(() => {})
+    }
+    return lead
+  },
+
+  async assignTo(
+    tenantId: string,
+    leadId: string,
+    userId: string | null
+  ): Promise<Lead | null> {
+    return this.update(tenantId, leadId, { assignedTo: userId })
+  },
+
+  async getStatusCounts(
+    tenantId: string
+  ): Promise<{ status: string; count: number }[]> {
+    const result = await db
+      .select({
+        status: leads.status,
+        count: count(),
+      })
+      .from(leads)
+      .where(eq(leads.tenantId, tenantId))
+      .groupBy(leads.status)
+
+    return result.map((r) => ({
+      status: r.status || 'unknown',
+      count: Number(r.count),
+    }))
+  },
+
+  async updateAIResearch(
+    tenantId: string,
+    leadId: string,
+    status: string,
+    result?: Record<string, unknown>
+  ): Promise<Lead | null> {
+    return this.update(tenantId, leadId, {
+      aiResearchStatus: status,
+      aiResearchResult: result,
+    })
+  },
+}

@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # Next.js Application
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+      target: development
+    container_name: xkmu-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD:-xkmu_dev_password}@postgres:5432/xkmu_business_os
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_in_production_min_32_chars}
+      # AI Provider Keys werden jetzt ueber die Datenbank verwaltet (Einstellungen > KI-Anbieter)
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - xkmu-network
+
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: xkmu-postgres
+    environment:
+      POSTGRES_USER: xkmu
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-xkmu_dev_password}
+      POSTGRES_DB: xkmu_business_os
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xkmu -d xkmu_business_os"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - xkmu-network
+
+  # ============================================
+  # Ollama (Local AI)
+  # ============================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: xkmu-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - xkmu-network
+    # GPU support (uncomment if NVIDIA GPU available)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # ============================================
+  # Redis (Session Cache)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: xkmu-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - xkmu-network
+
+networks:
+  xkmu-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  ollama_data:
+  redis_data:
