@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# xKMU Business OS
 
-## Getting Started
+Multi-tenant Business Management Platform for SMEs (Small and Medium Enterprises).
 
-First, run the development server:
+## Features
+
+- **CRM Module**: Companies, Persons, Leads management
+- **AI Lab**: Idea processing with AI-powered analysis
+- **AI Integration**: Gemini, OpenAI (Ollama for local dev)
+- **Activity Timeline**: Track all interactions and outreach
+- **Webhook Support**: API-first automation
+- **Multi-Tenant**: Secure tenant isolation
+
+## Tech Stack
+
+- **Framework**: Next.js 15+ (App Router)
+- **Language**: TypeScript
+- **Database**: PostgreSQL with Drizzle ORM
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Auth**: JWT-based sessions
+
+## Deployment Options
+
+### Option 1: Vercel (Recommended)
+
+1. **Fork/Clone** this repository
+2. **Import to Vercel**: [vercel.com/new](https://vercel.com/new)
+3. **Add Database**:
+   - Go to Storage > Create Database > Postgres
+   - Or use [Neon](https://neon.tech) / [Supabase](https://supabase.com)
+4. **Configure Environment Variables**:
+   ```
+   DATABASE_URL=your-postgresql-url
+   JWT_SECRET=your-secret-min-32-chars
+   GOOGLE_AI_API_KEY=your-gemini-api-key  (optional)
+   ```
+5. **Run Database Migration** (see below)
+6. **Deploy**
+
+### Option 2: Docker (Self-Hosted)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone repository
+git clone https://github.com/tsc-cybersecurity/xkmu-business-os.git
+cd xkmu-business-os
+
+# Copy environment file
+cp .env.example .env
+# Edit .env with your values
+
+# Start with Docker Compose
+docker-compose up -d
+
+# Run migrations
+docker exec xkmu-app npm run db:push
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+After deployment, run the database migration:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# For Vercel/Cloud deployment (run locally with cloud DB URL)
+DATABASE_URL="your-cloud-db-url" npm run db:push
 
-## Learn More
+# For Docker
+docker exec xkmu-app npm run db:push
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Seed Initial Data
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Create initial admin user and tenant
+curl -X POST https://your-app.vercel.app/api/v1/ai-prompt-templates/seed
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment Variables
 
-## Deploy on Vercel
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `JWT_SECRET` | Yes | Secret for JWT tokens (min 32 chars) |
+| `GOOGLE_AI_API_KEY` | Recommended | Gemini API key |
+| `OPENAI_API_KEY` | Optional | OpenAI API key |
+| `OLLAMA_BASE_URL` | Optional | Local Ollama URL (not for Vercel) |
+| `SMTP_*` | Optional | Email configuration |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See `.env.example` for full list.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run linter
+npm run lint
+
+# Database commands
+npm run db:generate  # Generate migrations
+npm run db:push      # Push schema to database
+npm run db:studio    # Open Drizzle Studio
+```
+
+## API Documentation
+
+All API endpoints are available under `/api/v1/`:
+
+- `POST /api/v1/auth/login` - Login
+- `GET /api/v1/companies` - List companies
+- `POST /api/v1/leads` - Create lead
+- `POST /api/v1/ideas/[id]/convert` - Convert idea to lead
+- `POST /api/v1/ai/completion` - AI completion
+
+API authentication via:
+- Session cookie (`xkmu_session`)
+- API key header (`X-Api-Key`)
+
+## License
+
+Private - All rights reserved

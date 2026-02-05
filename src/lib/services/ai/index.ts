@@ -5,9 +5,22 @@ import { OllamaProvider } from './ollama.provider'
 
 // Register static fallback providers (für Legacy-Kompatibilität)
 // Diese werden nur verwendet, wenn keine DB-Provider konfiguriert sind
-AIService.registerProvider(new OllamaProvider())
+//
+// Priority order for Vercel/Cloud deployment:
+// 1. Gemini (Google AI) - cost-effective, recommended
+// 2. OpenAI - reliable fallback
+// 3. Ollama - only available in local/self-hosted environments
+//
+// Ollama wird nur registriert wenn OLLAMA_BASE_URL gesetzt ist
+// (für lokale Entwicklung oder selbst-gehostete Umgebungen)
+
 AIService.registerProvider(new GeminiProvider())
 AIService.registerProvider(new OpenAIProvider())
+
+// Ollama nur registrieren wenn explizit konfiguriert (nicht verfügbar auf Vercel)
+if (process.env.OLLAMA_BASE_URL) {
+  AIService.registerProvider(new OllamaProvider())
+}
 
 export { AIService }
 export type { AIOptions, AIResponse, AIProvider, AIRequestContext } from './ai.service'
