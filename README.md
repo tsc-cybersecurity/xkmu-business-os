@@ -37,7 +37,31 @@ Multi-tenant Business Management Platform for SMEs (Small and Medium Enterprises
 5. **Run Database Migration** (see below)
 6. **Deploy**
 
-### Option 2: Docker (Self-Hosted)
+### Option 2: Coolify (Self-Hosted, Recommended)
+
+[Coolify](https://coolify.io) is an open-source, self-hostable Heroku/Vercel alternative.
+
+1. **In Coolify Dashboard**:
+   - Create new Project → Add Resource → Docker Compose
+   - Git Repository: `https://github.com/tsc-cybersecurity/xkmu-business-os`
+   - Docker Compose File: `docker-compose.coolify.yml`
+
+2. **Set Environment Variables** in Coolify UI:
+   ```
+   DB_PASSWORD=your-strong-database-password
+   JWT_SECRET=your-secret-min-32-chars
+   GOOGLE_AI_API_KEY=your-gemini-api-key  (optional)
+   ```
+
+3. **Deploy** - Coolify handles SSL, domains, and container management
+
+4. **Run Database Migration** (after first deploy):
+   ```bash
+   # Via Coolify terminal or SSH
+   docker exec xkmu-app npm run db:push
+   ```
+
+### Option 3: Docker (Manual)
 
 ```bash
 # Clone repository
@@ -49,7 +73,7 @@ cp .env.example .env
 # Edit .env with your values
 
 # Start with Docker Compose
-docker-compose up -d
+docker-compose -f docker-compose.prod.yml up -d
 
 # Run migrations
 docker exec xkmu-app npm run db:push

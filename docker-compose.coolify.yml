@@ -1,0 +1,115 @@
+# ============================================
+# xKMU Business OS - Coolify Deployment
+# ============================================
+# This file is optimized for Coolify deployment.
+#
+# In Coolify:
+# 1. Create new project > Docker Compose
+# 2. Point to this repository
+# 3. Set docker-compose file: docker-compose.coolify.yml
+# 4. Configure environment variables in Coolify UI
+# 5. Deploy!
+#
+# Required Environment Variables (set in Coolify):
+# - DB_PASSWORD: Strong database password
+# - JWT_SECRET: Min 32 character secret for auth
+#
+# Optional Environment Variables:
+# - GOOGLE_AI_API_KEY: For Gemini AI
+# - OPENAI_API_KEY: For OpenAI
+# - SMTP_* variables for email
+# ============================================
+
+services:
+  # ============================================
+  # Next.js Application
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: docker/app/Dockerfile
+      target: production
+    container_name: xkmu-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - COOLIFY=true
+      - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD}@postgres:5432/xkmu_business_os
+      - JWT_SECRET=${JWT_SECRET}
+      # AI Providers (optional - configure in app settings or here)
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Ollama (optional - only if you want local AI)
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
+      # Redis for session caching
+      - REDIS_URL=redis://redis:6379
+      # Email (optional)
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - SMTP_FROM=${SMTP_FROM:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - xkmu-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/v1/auth/me"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================
+  # PostgreSQL Database
+  # ============================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: xkmu-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: xkmu
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: xkmu_business_os
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xkmu -d xkmu_business_os"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - xkmu-network
+
+  # ============================================
+  # Redis (Session Cache)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: xkmu-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - xkmu-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  xkmu-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
