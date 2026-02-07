@@ -289,7 +289,12 @@ export const webhookEventSchema = z.enum([
 
 export const createWebhookSchema = z.object({
   name: z.string().min(1, 'Name ist erforderlich').max(100),
-  url: z.string().url('Ungültige URL').max(500),
+  url: z.string().max(500).transform(v => {
+    if (v && !v.startsWith('http://') && !v.startsWith('https://')) {
+      return `https://${v}`
+    }
+    return v
+  }).pipe(z.string().url('Ungültige URL')),
   events: z.array(webhookEventSchema).min(1, 'Mindestens ein Event erforderlich'),
   secret: z.string().max(255).optional().or(z.literal('')).transform(v => v || undefined),
   isActive: z.boolean().default(true),
