@@ -1,49 +1,33 @@
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,
-  apiUnauthorized,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
-import { getSession } from '@/lib/auth/session'
-import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { withPermission } from '@/lib/auth/require-permission'
 
 type Params = Promise<{ id: string }>
-
-async function getAuthContext(request: NextRequest) {
-  const session = await getSession()
-  if (session) {
-    return { tenantId: session.user.tenantId, userId: session.user.id, role: session.user.role }
-  }
-  const apiKey = getApiKeyFromRequest(request)
-  if (apiKey) {
-    const payload = await validateApiKey(apiKey)
-    if (payload) return { tenantId: payload.tenantId, userId: null, role: 'admin' }
-  }
-  return null
-}
 
 // GET /api/v1/ai-prompt-templates/[id]
 export async function GET(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) return apiUnauthorized()
+  return withPermission(request, 'ai_prompts', 'read', async (auth) => {
+    const { id } = await params
 
-  const { id } = await params
-
-  try {
-    const template = await AiPromptTemplateService.getById(auth.tenantId, id)
-    if (!template) {
-      return apiNotFound('Prompt-Vorlage nicht gefunden')
+    try {
+      const template = await AiPromptTemplateService.getById(auth.tenantId, id)
+      if (!template) {
+        return apiNotFound('Prompt-Vorlage nicht gefunden')
+      }
+      return apiSuccess(template)
+    } catch (error) {
+      console.error('Failed to get AI prompt template:', error)
+      return apiError('INTERNAL_ERROR', 'Fehler beim Laden der KI-Prompt-Vorlage', 500)
     }
-    return apiSuccess(template)
-  } catch (error) {
-    console.error('Failed to get AI prompt template:', error)
-    return apiError('INTERNAL_ERROR', 'Fehler beim Laden der KI-Prompt-Vorlage', 500)
-  }
+  })
 }
 
 // PUT /api/v1/ai-prompt-templates/[id]
@@ -51,36 +35,31 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) return apiUnauthorized()
+  return withPermission(request, 'ai_prompts', 'update', async (auth) => {
+    const { id } = await params
 
-  if (auth.role !== 'owner' && auth.role !== 'admin') {
-    return apiError('FORBIDDEN', 'Keine Berechtigung', 403)
-  }
+    try {
+      const body = await request.json()
 
-  const { id } = await params
+      const template = await AiPromptTemplateService.update(auth.tenantId, id, {
+        name: body.name,
+        description: body.description,
+        systemPrompt: body.systemPrompt,
+        userPrompt: body.userPrompt,
+        outputFormat: body.outputFormat,
+        isActive: body.isActive,
+      })
 
-  try {
-    const body = await request.json()
+      if (!template) {
+        return apiNotFound('Prompt-Vorlage nicht gefunden')
+      }
 
-    const template = await AiPromptTemplateService.update(auth.tenantId, id, {
-      name: body.name,
-      description: body.description,
-      systemPrompt: body.systemPrompt,
-      userPrompt: body.userPrompt,
-      outputFormat: body.outputFormat,
-      isActive: body.isActive,
-    })
-
-    if (!template) {
-      return apiNotFound('Prompt-Vorlage nicht gefunden')
+      return apiSuccess(template)
+    } catch (error) {
+      console.error('Failed to update AI prompt template:', error)
+      return apiError('INTERNAL_ERROR', 'Fehler beim Aktualisieren der KI-Prompt-Vorlage', 500)
     }
-
-    return apiSuccess(template)
-  } catch (error) {
-    console.error('Failed to update AI prompt template:', error)
-    return apiError('INTERNAL_ERROR', 'Fehler beim Aktualisieren der KI-Prompt-Vorlage', 500)
-  }
+  })
 }
 
 // PATCH /api/v1/ai-prompt-templates/[id] - Auf Standard zurücksetzen
@@ -88,25 +67,20 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) return apiUnauthorized()
+  return withPermission(request, 'ai_prompts', 'update', async (auth) => {
+    const { id } = await params
 
-  if (auth.role !== 'owner' && auth.role !== 'admin') {
-    return apiError('FORBIDDEN', 'Keine Berechtigung', 403)
-  }
-
-  const { id } = await params
-
-  try {
-    const template = await AiPromptTemplateService.resetToDefault(auth.tenantId, id)
-    if (!template) {
-      return apiError('RESET_FAILED', 'Vorlage konnte nicht zurückgesetzt werden. Kein Standard vorhanden.', 400)
+    try {
+      const template = await AiPromptTemplateService.resetToDefault(auth.tenantId, id)
+      if (!template) {
+        return apiError('RESET_FAILED', 'Vorlage konnte nicht zurückgesetzt werden. Kein Standard vorhanden.', 400)
+      }
+      return apiSuccess(template)
+    } catch (error) {
+      console.error('Failed to reset AI prompt template:', error)
+      return apiError('INTERNAL_ERROR', 'Fehler beim Zurücksetzen der KI-Prompt-Vorlage', 500)
     }
-    return apiSuccess(template)
-  } catch (error) {
-    console.error('Failed to reset AI prompt template:', error)
-    return apiError('INTERNAL_ERROR', 'Fehler beim Zurücksetzen der KI-Prompt-Vorlage', 500)
-  }
+  })
 }
 
 // DELETE /api/v1/ai-prompt-templates/[id]
@@ -114,23 +88,18 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) return apiUnauthorized()
+  return withPermission(request, 'ai_prompts', 'delete', async (auth) => {
+    const { id } = await params
 
-  if (auth.role !== 'owner' && auth.role !== 'admin') {
-    return apiError('FORBIDDEN', 'Keine Berechtigung', 403)
-  }
-
-  const { id } = await params
-
-  try {
-    const deleted = await AiPromptTemplateService.delete(auth.tenantId, id)
-    if (!deleted) {
-      return apiError('DELETE_FAILED', 'Vorlage konnte nicht gelöscht werden. Standard-Vorlagen können nicht gelöscht werden.', 400)
+    try {
+      const deleted = await AiPromptTemplateService.delete(auth.tenantId, id)
+      if (!deleted) {
+        return apiError('DELETE_FAILED', 'Vorlage konnte nicht gelöscht werden. Standard-Vorlagen können nicht gelöscht werden.', 400)
+      }
+      return apiSuccess({ deleted: true })
+    } catch (error) {
+      console.error('Failed to delete AI prompt template:', error)
+      return apiError('INTERNAL_ERROR', 'Fehler beim Löschen der KI-Prompt-Vorlage', 500)
     }
-    return apiSuccess({ deleted: true })
-  } catch (error) {
-    console.error('Failed to delete AI prompt template:', error)
-    return apiError('INTERNAL_ERROR', 'Fehler beim Löschen der KI-Prompt-Vorlage', 500)
-  }
+  })
 }

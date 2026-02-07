@@ -8,6 +8,7 @@ export interface SessionUser {
   firstName: string | null
   lastName: string | null
   role: UserRole
+  roleId: string | null
 }
 
 export interface Session {

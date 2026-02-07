@@ -54,6 +54,52 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 })
 
+export const registerSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  firstName: z.string().min(1, 'Vorname ist erforderlich').max(100),
+  lastName: z.string().min(1, 'Nachname ist erforderlich').max(100),
+  companyName: z.string().min(1, 'Firmenname ist erforderlich').max(255),
+})
+
+// ============================================
+// Role Schemas
+// ============================================
+export const createRoleSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'Name ist erforderlich')
+    .max(50)
+    .regex(/^[a-z0-9_]+$/, 'Nur Kleinbuchstaben, Zahlen und Unterstriche'),
+  displayName: z.string().min(1, 'Anzeigename ist erforderlich').max(100),
+  description: z.string().max(500).optional().or(z.literal('')),
+  permissions: z.array(
+    z.object({
+      module: z.string(),
+      canCreate: z.boolean(),
+      canRead: z.boolean(),
+      canUpdate: z.boolean(),
+      canDelete: z.boolean(),
+    })
+  ),
+})
+
+export const updateRoleSchema = z.object({
+  displayName: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional().or(z.literal('')),
+  permissions: z
+    .array(
+      z.object({
+        module: z.string(),
+        canCreate: z.boolean(),
+        canRead: z.boolean(),
+        canUpdate: z.boolean(),
+        canDelete: z.boolean(),
+      })
+    )
+    .optional(),
+})
+
 // ============================================
 // Company Schemas
 // ============================================

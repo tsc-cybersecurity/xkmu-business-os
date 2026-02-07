@@ -59,6 +59,7 @@ const navigation = [
       { name: 'KI-Logging', href: '/settings/ai-logs' },
       { name: 'Webhooks', href: '/settings/webhooks' },
       { name: 'Benutzer', href: '/settings/users' },
+      { name: 'Rollen', href: '/settings/roles' },
       { name: 'API-Schlüssel', href: '/settings/api-keys' },
       { name: 'Organisation', href: '/settings/tenant' },
     ],

@@ -32,6 +32,7 @@ export const tenants = pgTable('tenants', {
 
 export const tenantsRelations = relations(tenants, ({ many }) => ({
   users: many(users),
+  roles: many(roles),
   companies: many(companies),
   persons: many(persons),
   leads: many(leads),
@@ -47,6 +48,55 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
 }))
 
 // ============================================
+// Roles (Rollen pro Tenant)
+// ============================================
+export const roles = pgTable('roles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 50 }).notNull(),
+  displayName: varchar('display_name', { length: 100 }).notNull(),
+  description: text('description'),
+  isSystem: boolean('is_system').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_roles_tenant_id').on(table.tenantId),
+  index('idx_roles_tenant_name').on(table.tenantId, table.name),
+])
+
+export const rolesRelations = relations(roles, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [roles.tenantId],
+    references: [tenants.id],
+  }),
+  permissions: many(rolePermissions),
+  users: many(users),
+}))
+
+// ============================================
+// Role Permissions (Berechtigungen pro Rolle)
+// ============================================
+export const rolePermissions = pgTable('role_permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  roleId: uuid('role_id').notNull().references(() => roles.id, { onDelete: 'cascade' }),
+  module: varchar('module', { length: 50 }).notNull(),
+  canCreate: boolean('can_create').default(false),
+  canRead: boolean('can_read').default(false),
+  canUpdate: boolean('can_update').default(false),
+  canDelete: boolean('can_delete').default(false),
+}, (table) => [
+  index('idx_role_permissions_role_id').on(table.roleId),
+  index('idx_role_permissions_module').on(table.roleId, table.module),
+])
+
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, {
+    fields: [rolePermissions.roleId],
+    references: [roles.id],
+  }),
+}))
+
+// ============================================
 // Users
 // ============================================
 export const users = pgTable('users', {
@@ -57,6 +107,7 @@ export const users = pgTable('users', {
   firstName: varchar('first_name', { length: 100 }),
   lastName: varchar('last_name', { length: 100 }),
   role: varchar('role', { length: 50 }).default('member'),
+  roleId: uuid('role_id').references(() => roles.id, { onDelete: 'set null' }),
   status: varchar('status', { length: 20 }).default('active'),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -71,6 +122,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   tenant: one(tenants, {
     fields: [users.tenantId],
     references: [tenants.id],
+  }),
+  userRole: one(roles, {
+    fields: [users.roleId],
+    references: [roles.id],
   }),
   createdCompanies: many(companies),
   createdPersons: many(persons),
@@ -662,3 +717,9 @@ export type NewActivity = typeof activities.$inferInsert
 
 export type Webhook = typeof webhooks.$inferSelect
 export type NewWebhook = typeof webhooks.$inferInsert
+
+export type Role = typeof roles.$inferSelect
+export type NewRole = typeof roles.$inferInsert
+
+export type RolePermission = typeof rolePermissions.$inferSelect
+export type NewRolePermission = typeof rolePermissions.$inferInsert

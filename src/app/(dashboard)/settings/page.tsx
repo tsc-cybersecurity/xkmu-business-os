@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSession } from '@/lib/auth/session'
-import { Users, Key, Building, Bot, FileText, Sparkles, Webhook } from 'lucide-react'
+import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function SettingsPage() {
@@ -26,6 +26,20 @@ export default async function SettingsPage() {
                 <CardTitle className="mt-4">Benutzerverwaltung</CardTitle>
                 <CardDescription>
                   Benutzer hinzufugen, bearbeiten und Rollen zuweisen
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
+
+        {isAdmin && (
+          <Link href="/settings/roles">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <Shield className="h-8 w-8 text-muted-foreground" />
+                <CardTitle className="mt-4">Rollenverwaltung</CardTitle>
+                <CardDescription>
+                  Rollen und Berechtigungen verwalten
                 </CardDescription>
               </CardHeader>
             </Card>

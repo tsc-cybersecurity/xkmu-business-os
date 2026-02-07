@@ -20,6 +20,7 @@ export interface CreateUserInput {
   firstName?: string
   lastName?: string
   role?: string
+  roleId?: string
 }
 
 export interface UpdateUserInput {
@@ -45,6 +46,7 @@ export const UserService = {
         firstName: data.firstName,
         lastName: data.lastName,
         role: data.role || 'member',
+        roleId: data.roleId,
       })
       .returning()
 
@@ -85,6 +87,7 @@ export const UserService = {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role as SessionUser['role'],
+      roleId: user.roleId ?? null,
     }
 
     return { success: true, user: sessionUser }
@@ -194,6 +197,7 @@ export const UserService = {
           firstName: users.firstName,
           lastName: users.lastName,
           role: users.role,
+          roleId: users.roleId,
           status: users.status,
           lastLoginAt: users.lastLoginAt,
           createdAt: users.createdAt,

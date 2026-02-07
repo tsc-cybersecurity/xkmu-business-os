@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,
-  apiUnauthorized,
-  apiForbidden,
   apiNotFound,
 } from '@/lib/utils/api-response'
 import { ApiKeyService } from '@/lib/services/api-key.service'
-import { getSession } from '@/lib/auth/session'
+import { withPermission } from '@/lib/auth/require-permission'
 
 type Params = Promise<{ id: string }>
 
@@ -14,22 +12,14 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const session = await getSession()
-  if (!session) {
-    return apiUnauthorized()
-  }
+  return withPermission(request, 'api_keys', 'delete', async (auth) => {
+    const { id } = await params
+    const deleted = await ApiKeyService.delete(auth.tenantId, id)
 
-  // Only admin and owner can delete API keys
-  if (!['owner', 'admin'].includes(session.user.role)) {
-    return apiForbidden('Insufficient permissions')
-  }
+    if (!deleted) {
+      return apiNotFound('API key not found')
+    }
 
-  const { id } = await params
-  const deleted = await ApiKeyService.delete(session.user.tenantId, id)
-
-  if (!deleted) {
-    return apiNotFound('API key not found')
-  }
-
-  return apiSuccess({ message: 'API key deleted successfully' })
+    return apiSuccess({ message: 'API key deleted successfully' })
+  })
 }
