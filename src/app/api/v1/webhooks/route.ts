@@ -26,8 +26,10 @@ export async function POST(request: NextRequest) {
   return withPermission(request, 'webhooks', 'create', async (auth) => {
     try {
       const body = await request.json()
+      console.log('Webhook create body:', JSON.stringify(body))
       const validation = validateAndParse(createWebhookSchema, body)
       if (!validation.success) {
+        console.error('Webhook validation errors:', JSON.stringify(validation.errors))
         return apiValidationError(formatZodErrors(validation.errors))
       }
 

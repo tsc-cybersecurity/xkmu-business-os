@@ -291,7 +291,7 @@ export const createWebhookSchema = z.object({
   name: z.string().min(1, 'Name ist erforderlich').max(100),
   url: z.string().url('Ungültige URL').max(500),
   events: z.array(webhookEventSchema).min(1, 'Mindestens ein Event erforderlich'),
-  secret: z.string().max(255).optional().or(z.literal('')),
+  secret: z.string().max(255).optional().or(z.literal('')).transform(v => v || undefined),
   isActive: z.boolean().default(true),
 })
 
