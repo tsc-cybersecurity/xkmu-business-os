@@ -221,6 +221,16 @@ export const UserService = {
     }
   },
 
+  async findByEmail(email: string): Promise<User | null> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1)
+
+    return user ?? null
+  },
+
   async emailExists(
     tenantId: string,
     email: string,

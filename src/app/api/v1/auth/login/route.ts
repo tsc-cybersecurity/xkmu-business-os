@@ -2,15 +2,11 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiValidationError } from '@/lib/utils/api-response'
 import { loginSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { UserService } from '@/lib/services/user.service'
-import { TenantService } from '@/lib/services/tenant.service'
 import { createSession } from '@/lib/auth/session'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-
-    // Get tenant from header or default
-    const tenantSlug = request.headers.get('x-tenant') || 'default'
 
     // Validate input
     const validation = validateAndParse(loginSchema, body)
@@ -20,14 +16,14 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validation.data
 
-    // Get tenant
-    const tenant = await TenantService.getBySlug(tenantSlug)
-    if (!tenant) {
-      return apiError('TENANT_NOT_FOUND', 'Tenant not found', 404)
+    // Find user by email across all tenants
+    const user = await UserService.findByEmail(email)
+    if (!user) {
+      return apiError('INVALID_CREDENTIALS', 'Invalid credentials', 401)
     }
 
-    // Authenticate user
-    const result = await UserService.authenticate(tenant.id, email, password)
+    // Authenticate with the user's tenant
+    const result = await UserService.authenticate(user.tenantId, email, password)
 
     if (!result.success || !result.user) {
       return apiError('INVALID_CREDENTIALS', result.error || 'Invalid credentials', 401)
