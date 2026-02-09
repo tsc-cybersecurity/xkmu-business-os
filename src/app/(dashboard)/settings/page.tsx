@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSession } from '@/lib/auth/session'
-import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database } from 'lucide-react'
+import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Book } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function SettingsPage() {
@@ -143,6 +143,18 @@ export default async function SettingsPage() {
             </Card>
           </Link>
         )}
+
+        <Link href="/settings/api-docs">
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+            <CardHeader>
+              <Book className="h-8 w-8 text-muted-foreground" />
+              <CardTitle className="mt-4">API-Dokumentation</CardTitle>
+              <CardDescription>
+                Vollständige REST API-Referenz mit curl-Beispielen
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
       </div>
 
       <Card>
