@@ -50,11 +50,9 @@ export async function GET() {
     for (const table of tables) {
       try {
         // Daten für diesen Tenant abrufen
-        const result = await db.execute(
+        const rows = await db.execute<Record<string, unknown>>(
           sql.raw(`SELECT * FROM ${table} WHERE tenant_id = '${tenantId}'`)
         )
-
-        const rows = result.rows as Record<string, unknown>[]
 
         if (rows.length > 0) {
           sqlDump += `-- Tabelle: ${table}\n`
@@ -104,11 +102,9 @@ export async function GET() {
         // Falls Tabelle keine tenant_id Spalte hat (z.B. tenants selbst), speziell behandeln
         if (table === 'tenants') {
           try {
-            const result = await db.execute(
+            const rows = await db.execute<Record<string, unknown>>(
               sql.raw(`SELECT * FROM ${table} WHERE id = '${tenantId}'`)
             )
-
-            const rows = result.rows as Record<string, unknown>[]
 
             if (rows.length > 0) {
               sqlDump += `-- Tabelle: ${table}\n`
