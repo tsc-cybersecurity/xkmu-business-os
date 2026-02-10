@@ -37,7 +37,7 @@ export function Header({ user }: HeaderProps) {
 
   const handleLogout = async () => {
     await fetch('/api/v1/auth/logout', { method: 'POST' })
-    router.push('/login')
+    router.push('/')
     router.refresh()
   }
 
@@ -67,11 +67,11 @@ export function Header({ user }: HeaderProps) {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => router.push('/settings')}>
+          <DropdownMenuItem onClick={() => router.push('/intern/settings')}>
             <Settings className="mr-2 h-4 w-4" />
             Einstellungen
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push('/settings/profile')}>
+          <DropdownMenuItem onClick={() => router.push('/intern/settings/profile')}>
             <User className="mr-2 h-4 w-4" />
             Profil
           </DropdownMenuItem>

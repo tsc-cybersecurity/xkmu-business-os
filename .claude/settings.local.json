@@ -37,7 +37,16 @@
       "Bash(git config:*)",
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: xKMU Business OS\n\n- Multi-tenant CRM with Next.js 15, PostgreSQL, Drizzle ORM\n- Modules: Companies, Persons, Leads, Ideas \\(AI Lab\\), Products\n- AI Integration: Gemini/OpenAI/Ollama for lead research, outreach\n- Features: Webhooks, Activity Timeline, Document Analysis\n- Docker Compose setup for development\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git commit:*)",
+      "Bash(gh release create:*)",
+      "Bash(git tag -a v0.1.0 -m \"$\\(cat <<''EOF''\nv0.1.0 - Initial Release\n\nFirst public release of xKMU Business OS.\n\nFeatures:\n- CRM Module \\(Companies, Persons, Leads\\)\n- AI Lab with idea processing\n- AI Integration \\(Gemini, OpenAI, Ollama\\)\n- Activity Timeline\n- Webhook Support\n- Multi-Tenant architecture\n- Email Integration\n\nDeployment: Vercel, Coolify, Docker\nEOF\n\\)\")",
+      "Bash(winget install:*)",
+      "Bash(choco install:*)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh:*)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" --version)"
     ]
   }
 }

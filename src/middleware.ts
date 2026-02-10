@@ -4,8 +4,8 @@ import { jwtVerify } from 'jose'
 
 const PUBLIC_PATHS = [
   '/',
-  '/login',
-  '/register',
+  '/intern/login',
+  '/intern/register',
   '/api/v1/auth/login',
   '/api/v1/auth/register',
 ]
@@ -59,7 +59,7 @@ export async function middleware(request: NextRequest) {
   if (!sessionToken) {
     // Redirect to login for page requests
     if (!pathname.startsWith('/api/')) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      return NextResponse.redirect(new URL('/intern/login', request.url))
     }
     // Return 401 for API requests
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -71,7 +71,7 @@ export async function middleware(request: NextRequest) {
     // Clear invalid session
     const response = pathname.startsWith('/api/')
       ? NextResponse.json({ error: 'Session expired' }, { status: 401 })
-      : NextResponse.redirect(new URL('/login', request.url))
+      : NextResponse.redirect(new URL('/intern/login', request.url))
 
     response.cookies.delete('xkmu_session')
     return response
