@@ -6,8 +6,8 @@ export function LandingHero() {
   return (
     <section className="container mx-auto px-4 pt-20 pb-16 md:pt-32 md:pb-24">
       <div className="flex flex-col items-center text-center space-y-8">
-        <div className="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm bg-muted/50">
-          <Building2 className="h-4 w-4" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 dark:border-blue-800 px-4 py-2 text-sm bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+          <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <span>Professionelles Business Operating System</span>
         </div>
 

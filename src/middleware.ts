@@ -4,6 +4,11 @@ import { jwtVerify } from 'jose'
 
 const PUBLIC_PATHS = [
   '/',
+  '/api-docs',
+  '/impressum',
+  '/agb',
+  '/datenschutz',
+  '/kontakt',
   '/intern/login',
   '/intern/register',
   '/api/v1/auth/login',
