@@ -139,7 +139,7 @@ export default function RolesPage() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Can module="roles" action="update">
-                          <Link href={`/settings/roles/${role.id}`}>
+                          <Link href={`/intern/settings/roles/${role.id}`}>
                             <Button variant="ghost" size="icon">
                               <Pencil className="h-4 w-4" />
                             </Button>

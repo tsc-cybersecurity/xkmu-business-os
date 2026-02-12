@@ -715,7 +715,7 @@ export default function CompanyDetailPage() {
 
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/contacts/companies/${companyId}/edit`}>
+            <Link href={`/intern/contacts/companies/${companyId}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
               Bearbeiten
             </Link>
@@ -957,7 +957,7 @@ export default function CompanyDetailPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <Link href={`/contacts/persons/new?companyId=${companyId}`}>
+                    <Link href={`/intern/contacts/persons/new?companyId=${companyId}`}>
                       <UserPlus className="mr-2 h-4 w-4" />
                       Neue Person erstellen
                     </Link>
@@ -989,7 +989,7 @@ export default function CompanyDetailPage() {
                       <TableRow key={person.id}>
                         <TableCell>
                           <Link
-                            href={`/contacts/persons/${person.id}`}
+                            href={`/intern/contacts/persons/${person.id}`}
                             className="font-medium hover:underline"
                           >
                             {person.firstName} {person.lastName}

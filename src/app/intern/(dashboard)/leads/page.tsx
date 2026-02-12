@@ -213,7 +213,7 @@ export default function LeadsPage() {
                   <TableRow key={lead.id}>
                     <TableCell>
                       <Link
-                        href={`/leads/${lead.id}`}
+                        href={`/intern/leads/${lead.id}`}
                         className="font-medium hover:underline"
                       >
                         {lead.title ||

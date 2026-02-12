@@ -138,7 +138,7 @@ export default function CompaniesPage() {
                   <TableRow key={company.id}>
                     <TableCell>
                       <Link
-                        href={`/contacts/companies/${company.id}`}
+                        href={`/intern/contacts/companies/${company.id}`}
                         className="font-medium hover:underline"
                       >
                         {company.name}

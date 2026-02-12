@@ -898,7 +898,7 @@ export default function LeadDetailPage() {
                 </Select>
               ) : lead.company ? (
                 <Link
-                  href={`/contacts/companies/${lead.company.id}`}
+                  href={`/intern/contacts/companies/${lead.company.id}`}
                   className="text-primary hover:underline font-medium"
                 >
                   {lead.company.name}
@@ -954,7 +954,7 @@ export default function LeadDetailPage() {
               ) : lead.person ? (
                 <div>
                   <Link
-                    href={`/contacts/persons/${lead.person.id}`}
+                    href={`/intern/contacts/persons/${lead.person.id}`}
                     className="text-primary hover:underline font-medium"
                   >
                     {lead.person.firstName} {lead.person.lastName}

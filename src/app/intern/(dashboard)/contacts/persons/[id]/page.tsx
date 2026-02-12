@@ -197,7 +197,7 @@ export default function PersonDetailPage() {
 
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/contacts/persons/${personId}/edit`}>
+            <Link href={`/intern/contacts/persons/${personId}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
               Bearbeiten
             </Link>
@@ -317,7 +317,7 @@ export default function PersonDetailPage() {
                     <dd>
                       {company ? (
                         <Link
-                          href={`/contacts/companies/${company.id}`}
+                          href={`/intern/contacts/companies/${company.id}`}
                           className="hover:underline"
                         >
                           {company.name}

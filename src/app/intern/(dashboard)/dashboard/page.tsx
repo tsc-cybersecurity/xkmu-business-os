@@ -281,7 +281,7 @@ export default function DashboardPage() {
                     <TableRow key={company.id}>
                       <TableCell>
                         <Link
-                          href={`/contacts/companies/${company.id}`}
+                          href={`/intern/contacts/companies/${company.id}`}
                           className="font-medium hover:underline"
                         >
                           {company.name}
@@ -341,7 +341,7 @@ export default function DashboardPage() {
                     <TableRow key={person.id}>
                       <TableCell>
                         <Link
-                          href={`/contacts/persons/${person.id}`}
+                          href={`/intern/contacts/persons/${person.id}`}
                           className="font-medium hover:underline"
                         >
                           {person.firstName} {person.lastName}

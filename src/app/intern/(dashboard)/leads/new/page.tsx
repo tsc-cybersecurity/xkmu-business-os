@@ -153,7 +153,7 @@ export default function NewLeadPage() {
 
       if (response.ok) {
         toast.success('Lead erfolgreich erstellt')
-        router.push(`/leads/${data.data.id}`)
+        router.push(`/intern/leads/${data.data.id}`)
       } else {
         throw new Error(data.error?.message || 'Fehler beim Erstellen')
       }

@@ -171,7 +171,7 @@ export function CompanyForm({ company, mode }: CompanyFormProps) {
           : 'Firma erfolgreich aktualisiert'
       )
 
-      router.push(`/contacts/companies/${result.data.id}`)
+      router.push(`/intern/contacts/companies/${result.data.id}`)
       router.refresh()
     } catch (error) {
       toast.error(

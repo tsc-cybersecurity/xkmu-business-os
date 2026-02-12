@@ -187,7 +187,7 @@ export function PersonForm({ person, mode }: PersonFormProps) {
           : 'Person erfolgreich aktualisiert'
       )
 
-      router.push(`/contacts/persons/${result.data.id}`)
+      router.push(`/intern/contacts/persons/${result.data.id}`)
       router.refresh()
     } catch (error) {
       toast.error(

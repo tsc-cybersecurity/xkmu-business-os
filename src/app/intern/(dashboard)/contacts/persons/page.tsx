@@ -129,7 +129,7 @@ export default function PersonsPage() {
                   <TableRow key={person.id}>
                     <TableCell>
                       <Link
-                        href={`/contacts/persons/${person.id}`}
+                        href={`/intern/contacts/persons/${person.id}`}
                         className="font-medium hover:underline"
                       >
                         {person.firstName} {person.lastName}
@@ -138,7 +138,7 @@ export default function PersonsPage() {
                     <TableCell>
                       {person.company ? (
                         <Link
-                          href={`/contacts/companies/${person.company.id}`}
+                          href={`/intern/contacts/companies/${person.company.id}`}
                           className="text-primary hover:underline"
                         >
                           {person.company.name}

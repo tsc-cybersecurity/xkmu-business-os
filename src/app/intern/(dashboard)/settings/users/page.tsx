@@ -221,7 +221,7 @@ export default function UsersPage() {
                   <TableRow key={user.id}>
                     <TableCell>
                       <Link
-                        href={`/settings/users/${user.id}`}
+                        href={`/intern/settings/users/${user.id}`}
                         className="font-medium hover:underline"
                       >
                         {user.firstName || user.lastName

@@ -168,7 +168,7 @@ export default function IdeasPage() {
                       <CardHeader className="pb-2">
                         <div className="flex items-start justify-between gap-2">
                           <Link
-                            href={`/ideas/${idea.id}`}
+                            href={`/intern/ideas/${idea.id}`}
                             className="flex-1 text-sm font-medium hover:underline line-clamp-2"
                           >
                             {(idea.structuredContent as Record<string, unknown>)?.summary as string ||

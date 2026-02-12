@@ -232,7 +232,7 @@ export default function IdeaDetailPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Firma:</span>
                     <Link
-                      href={`/contacts/companies/${convertedTo.companyId}`}
+                      href={`/intern/contacts/companies/${convertedTo.companyId}`}
                       className="text-sm font-medium hover:underline"
                     >
                       {convertedTo.companyName}
@@ -243,7 +243,7 @@ export default function IdeaDetailPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">Lead:</span>
                     <Link
-                      href={`/leads/${convertedTo.leadId}`}
+                      href={`/intern/leads/${convertedTo.leadId}`}
                       className="text-sm font-medium hover:underline"
                     >
                       Lead ansehen
@@ -331,7 +331,7 @@ export default function IdeaDetailPage() {
               )}
               {convertResult.leadId && (
                 <p className="text-sm">
-                  <Link href={`/leads/${convertResult.leadId}`} className="text-primary hover:underline">
+                  <Link href={`/intern/leads/${convertResult.leadId}`} className="text-primary hover:underline">
                     Zum neuen Lead
                   </Link>
                 </p>
