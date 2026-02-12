@@ -18,8 +18,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, X, User, LogOut, Type } from 'lucide-react'
-import { useFontSwitcher, type FontId } from './font-provider'
+import { Menu, X, User, LogOut, Type, Palette, RectangleHorizontal } from 'lucide-react'
+import { useDesign, type FontId, type AccentId, type RadiusId } from './design-provider'
 /* eslint-disable @next/next/no-img-element */
 
 interface SessionUser {
@@ -52,7 +52,11 @@ function getUserDisplayName(user: SessionUser) {
 export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [user, setUser] = useState<SessionUser | null>(null)
-  const { font, setFont, fontOptions } = useFontSwitcher()
+  const {
+    font, setFont, fontOptions,
+    accent, setAccent, accentOptions,
+    radius, setRadius, radiusOptions,
+  } = useDesign()
   const router = useRouter()
 
   useEffect(() => {
@@ -88,7 +92,7 @@ export function LandingNavbar() {
             <Link
               key={item.name}
               href={item.href}
-              className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] dark:hover:text-[var(--brand-400)] transition-colors"
             >
               {item.name}
             </Link>
@@ -132,6 +136,40 @@ export function LandingNavbar() {
                     </DropdownMenuRadioGroup>
                   </DropdownMenuSubContent>
                 </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Palette className="size-4" />
+                    Akzentfarbe
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup value={accent} onValueChange={(v) => setAccent(v as AccentId)}>
+                      {accentOptions.map((opt) => (
+                        <DropdownMenuRadioItem key={opt.id} value={opt.id} className="gap-2">
+                          <span
+                            className="inline-block size-3 rounded-full shrink-0"
+                            style={{ background: opt.color }}
+                          />
+                          {opt.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <RectangleHorizontal className="size-4" />
+                    Ecken-Radius
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup value={radius} onValueChange={(v) => setRadius(v as RadiusId)}>
+                      {radiusOptions.map((opt) => (
+                        <DropdownMenuRadioItem key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="size-4" />
@@ -141,7 +179,7 @@ export function LandingNavbar() {
             </DropdownMenu>
           ) : (
             <Link href="/kontakt">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6">
+              <Button className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white px-6">
                 Kontakt
               </Button>
             </Link>
@@ -166,7 +204,7 @@ export function LandingNavbar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 py-2 border-b border-gray-100 dark:border-slate-800"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] py-2 border-b border-gray-100 dark:border-slate-800"
                 onClick={() => setMobileOpen(false)}
               >
                 {item.name}
@@ -183,12 +221,13 @@ export function LandingNavbar() {
                 </div>
                 <Link
                   href="/intern/settings"
-                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 py-2 border-b border-gray-100 dark:border-slate-800 flex items-center gap-2"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] py-2 border-b border-gray-100 dark:border-slate-800 flex items-center gap-2"
                   onClick={() => setMobileOpen(false)}
                 >
                   <User className="size-4" />
                   Profil
                 </Link>
+                {/* Font */}
                 <div className="py-2 border-b border-gray-100 dark:border-slate-800">
                   <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
                     <Type className="size-3" />
@@ -201,8 +240,52 @@ export function LandingNavbar() {
                         onClick={() => setFont(opt.id)}
                         className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
                           font === opt.id
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:border-blue-400'
+                            ? 'bg-[var(--brand-600)] text-white border-[var(--brand-600)]'
+                            : 'bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:border-[var(--brand-400)]'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Accent */}
+                <div className="py-2 border-b border-gray-100 dark:border-slate-800">
+                  <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                    <Palette className="size-3" />
+                    Akzentfarbe
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {accentOptions.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setAccent(opt.id)}
+                        className={`size-8 rounded-full border-2 transition-all ${
+                          accent === opt.id
+                            ? 'border-gray-900 dark:border-white scale-110'
+                            : 'border-transparent hover:scale-105'
+                        }`}
+                        style={{ background: opt.color }}
+                        title={opt.label}
+                      />
+                    ))}
+                  </div>
+                </div>
+                {/* Radius */}
+                <div className="py-2 border-b border-gray-100 dark:border-slate-800">
+                  <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                    <RectangleHorizontal className="size-3" />
+                    Ecken-Radius
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {radiusOptions.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setRadius(opt.id)}
+                        className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                          radius === opt.id
+                            ? 'bg-[var(--brand-600)] text-white border-[var(--brand-600)]'
+                            : 'bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:border-[var(--brand-400)]'
                         }`}
                       >
                         {opt.label}
@@ -223,7 +306,7 @@ export function LandingNavbar() {
               </>
             ) : (
               <Link href="/kontakt" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2">
+                <Button className="w-full bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white mt-2">
                   Kontakt
                 </Button>
               </Link>

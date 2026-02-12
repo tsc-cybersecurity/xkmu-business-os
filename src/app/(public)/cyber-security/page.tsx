@@ -4,8 +4,8 @@ export default function CyberSecurityPage() {
   return (
     <div className="container mx-auto px-4 py-16 max-w-3xl text-center">
       <div className="flex justify-center mb-6">
-        <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-6">
-          <Shield className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+        <div className="rounded-full bg-[var(--brand-100)] dark:bg-[var(--brand-900)]/30 p-6">
+          <Shield className="h-12 w-12 text-[var(--brand-600)] dark:text-[var(--brand-400)]" />
         </div>
       </div>
       <h1 className="text-4xl font-bold mb-4">Cyber Security</h1>

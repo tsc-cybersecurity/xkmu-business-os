@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Ubuntu, Ubuntu_Mono, Geist, Inter, Roboto, Montserrat } from "next/font/google";
 import "./globals.css";
-import { FontProvider } from "./_components/font-provider";
+import { DesignProvider } from "./_components/design-provider";
 
 const ubuntu = Ubuntu({
   weight: ["300", "400", "500", "700"],
@@ -51,7 +51,7 @@ export default function RootLayout({
       <body
         className={`${ubuntu.variable} ${ubuntuMono.variable} ${geist.variable} ${inter.variable} ${roboto.variable} ${montserrat.variable} antialiased`}
       >
-        <FontProvider>{children}</FontProvider>
+        <DesignProvider>{children}</DesignProvider>
       </body>
     </html>
   );

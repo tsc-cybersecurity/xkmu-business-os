@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button'
 export function LandingCTA() {
   return (
     <section className="container mx-auto px-4 py-16 md:py-24">
-      <div className="rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 p-8 md:p-12 text-white">
+      <div className="rounded-2xl bg-gradient-to-br from-[var(--brand-gradient-from)] to-[var(--brand-gradient-to)] p-8 md:p-12 text-white">
         <div className="max-w-3xl mx-auto text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">
             Bereit durchzustarten?
           </h2>
-          <p className="text-lg text-blue-100">
+          <p className="text-lg text-[var(--brand-100)]">
             Starten Sie jetzt kostenlos und erleben Sie, wie XKMU Business OS
             Ihre Geschäftsprozesse vereinfacht und automatisiert.
           </p>
@@ -35,23 +35,23 @@ export function LandingCTA() {
 
           <div className="grid md:grid-cols-3 gap-6 pt-12 border-t border-white/20">
             <div className="flex flex-col items-center gap-2">
-              <Shield className="h-8 w-8 text-blue-100" />
+              <Shield className="h-8 w-8 text-[var(--brand-100)]" />
               <div className="font-semibold">Sicher & DSGVO-konform</div>
-              <div className="text-sm text-blue-100">
+              <div className="text-sm text-[var(--brand-100)]">
                 Ihre Daten bleiben geschützt
               </div>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <Zap className="h-8 w-8 text-blue-100" />
+              <Zap className="h-8 w-8 text-[var(--brand-100)]" />
               <div className="font-semibold">Sofort einsatzbereit</div>
-              <div className="text-sm text-blue-100">
+              <div className="text-sm text-[var(--brand-100)]">
                 In Minuten startklar
               </div>
             </div>
             <div className="flex flex-col items-center gap-2">
-              <Globe className="h-8 w-8 text-blue-100" />
+              <Globe className="h-8 w-8 text-[var(--brand-100)]" />
               <div className="font-semibold">Open Source</div>
-              <div className="text-sm text-blue-100">
+              <div className="text-sm text-[var(--brand-100)]">
                 Volle Transparenz & Kontrolle
               </div>
             </div>

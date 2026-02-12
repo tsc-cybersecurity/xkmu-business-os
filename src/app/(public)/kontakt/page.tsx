@@ -119,8 +119,8 @@ export default function KontaktPage() {
     <div className="container mx-auto px-4 py-12 max-w-2xl">
       <div className="text-center mb-10">
         <div className="flex justify-center mb-4">
-          <div className="rounded-full bg-blue-100 dark:bg-blue-900/30 p-4">
-            <Mail className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <div className="rounded-full bg-[var(--brand-100)] dark:bg-[var(--brand-900)]/30 p-4">
+            <Mail className="h-8 w-8 text-[var(--brand-600)] dark:text-[var(--brand-400)]" />
           </div>
         </div>
         <h1 className="text-4xl font-bold mb-3">Kontakt</h1>
@@ -219,7 +219,7 @@ export default function KontaktPage() {
                 onClick={() => toggleInterest(tag)}
                 className={`rounded-full px-3 py-1.5 text-sm border transition-colors ${
                   formData.interests.includes(tag)
-                    ? 'bg-blue-600 text-white border-blue-600'
+                    ? 'bg-[var(--brand-600)] text-white border-[var(--brand-600)]'
                     : 'bg-background hover:bg-muted border-input'
                 }`}
               >
@@ -261,7 +261,7 @@ export default function KontaktPage() {
             />
             <span className="text-sm text-muted-foreground">
               Ich habe die{' '}
-              <Link href="/datenschutz" className="text-blue-600 hover:underline" target="_blank">
+              <Link href="/datenschutz" className="text-[var(--brand-600)] hover:underline" target="_blank">
                 Datenschutzbestimmungen
               </Link>{' '}
               gelesen und stimme der Verarbeitung meiner Daten zu. *

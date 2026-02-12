@@ -18,14 +18,14 @@ export function LandingHero() {
       {/* Content */}
       <div className="container mx-auto px-4 relative z-10">
         <div className="flex flex-col items-center text-center space-y-8 py-20 md:py-24">
-        <div className="inline-flex items-center gap-2 rounded-full border border-blue-300/30 px-4 py-2 text-sm bg-white/10 backdrop-blur-md text-white">
-          <Building2 className="h-4 w-4 text-blue-300" />
+        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-400)]/30 px-4 py-2 text-sm bg-white/10 backdrop-blur-md text-white">
+          <Building2 className="h-4 w-4 text-[var(--brand-400)]" />
           <span>Professionelles Business Operating System</span>
         </div>
 
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-4xl text-white drop-shadow-lg">
           Ihr Unternehmen.{' '}
-          <span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-[var(--brand-400)] to-[var(--brand-gradient-to)] bg-clip-text text-transparent">
             Eine Plattform.
           </span>
         </h1>
