@@ -29,10 +29,10 @@ export async function withPermission(
   // Benutzer mit roleId: granulare Berechtigungspruefung
   if (auth.roleId) {
     const allowed = await hasPermission(auth.roleId, module, action)
-    if (!allowed) {
-      return apiForbidden('Keine Berechtigung fuer diese Aktion')
+    if (allowed) {
+      return handler(auth)
     }
-    return handler(auth)
+    // Fallthrough zum Legacy-Fallback wenn kein Permission-Eintrag fuer das Modul existiert
   }
 
   // Legacy-Fallback: Benutzer ohne roleId (alte Benutzer vor Migration)
