@@ -9,7 +9,7 @@ import { useState } from 'react'
 export function ApiDocsContent() {
   return (
     <Tabs defaultValue="auth" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
         <TabsTrigger value="auth">Auth</TabsTrigger>
         <TabsTrigger value="companies">Firmen</TabsTrigger>
         <TabsTrigger value="persons">Personen</TabsTrigger>
@@ -17,6 +17,7 @@ export function ApiDocsContent() {
         <TabsTrigger value="products">Produkte</TabsTrigger>
         <TabsTrigger value="ai">KI</TabsTrigger>
         <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+        <TabsTrigger value="backup">Backup</TabsTrigger>
         <TabsTrigger value="admin">Admin</TabsTrigger>
       </TabsList>
 
@@ -684,6 +685,69 @@ export function ApiDocsContent() {
                 message: 'Webhook gelöscht',
               }}
             />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Backup */}
+      <TabsContent value="backup" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Datenbank-Backup</CardTitle>
+            <CardDescription>SQL-Export und -Import für Datensicherung und Wiederherstellung</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/export/database"
+              description="Kompletten SQL-Dump aller Tenant-Daten herunterladen. Erfordert Admin-Rolle oder API-Key mit read-Berechtigung."
+              responseExample="-- SQL Export für Tenant: uuid\n-- Erstellt am: 2026-02-12T10:00:00Z\nINSERT INTO companies (...) VALUES (...);\n..."
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/import/database"
+              description="SQL-Datei importieren. Erfordert Admin-Rolle oder API-Key mit write-Berechtigung. Unterstützt zwei Modi: 'merge' (Standard, ON CONFLICT DO NOTHING) und 'replace' (bestehende Daten löschen)."
+              requestBody={{
+                file: '(SQL-Datei als multipart/form-data)',
+                mode: 'merge | replace',
+              }}
+              responseExample={{
+                success: true,
+                message: 'Import erfolgreich abgeschlossen',
+                stats: {
+                  totalStatements: 150,
+                  totalInserted: 148,
+                  tablesAffected: 12,
+                  perTable: {
+                    companies: 25,
+                    persons: 50,
+                    leads: 30,
+                  },
+                  errors: ['persons: duplicate key...'],
+                },
+              }}
+            />
+
+            <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+              <h4 className="text-sm font-semibold">Hinweise zum Backup-Workflow</h4>
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p><strong>Export via API-Key (curl):</strong></p>
+                <pre className="text-xs bg-black text-green-400 p-3 rounded overflow-x-auto font-mono">
+{`curl -X GET "https://your-domain.com/api/v1/export/database" \\
+  -H "x-api-key: xkmu_your_key" \\
+  -o backup.sql`}
+                </pre>
+                <p className="mt-3"><strong>Import via API-Key (curl):</strong></p>
+                <pre className="text-xs bg-black text-green-400 p-3 rounded overflow-x-auto font-mono">
+{`curl -X POST "https://your-domain.com/api/v1/import/database" \\
+  -H "x-api-key: xkmu_your_key" \\
+  -F "file=@backup.sql" \\
+  -F "mode=merge"`}
+                </pre>
+                <p className="mt-3"><strong>Tabellen:</strong> tenants, roles, role_permissions, users, api_keys, companies, persons, leads, product_categories, products, ai_providers, ai_logs, ai_prompt_templates, ideas, activities, webhooks, audit_log, documents, document_items</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>

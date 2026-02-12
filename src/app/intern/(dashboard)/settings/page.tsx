@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSession } from '@/lib/auth/session'
-import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Book } from 'lucide-react'
+import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Upload, Book } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function SettingsPage() {
@@ -138,6 +138,20 @@ export default async function SettingsPage() {
                 <CardTitle className="mt-4">Datenbank-Export</CardTitle>
                 <CardDescription>
                   Kompletten SQL-Export der Datenbank herunterladen
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
+
+        {isAdmin && (
+          <Link href="/intern/settings/import">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <Upload className="h-8 w-8 text-muted-foreground" />
+                <CardTitle className="mt-4">Datenbank-Import</CardTitle>
+                <CardDescription>
+                  SQL-Datei importieren und Daten wiederherstellen
                 </CardDescription>
               </CardHeader>
             </Card>

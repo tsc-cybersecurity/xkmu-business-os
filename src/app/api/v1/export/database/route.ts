@@ -1,25 +1,43 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
+import { validateApiKey, getApiKeyFromRequest, hasPermission } from '@/lib/auth/api-key'
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  try {
-    const session = await getSession()
-
-    if (!session) {
-      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
-    }
-
-    // Nur Admins dürfen exportieren
+async function getAuthContext(request: NextRequest) {
+  const session = await getSession()
+  if (session) {
     const isAdmin = session.user.role === 'owner' || session.user.role === 'admin'
-    if (!isAdmin) {
+    if (!isAdmin) return { error: 'forbidden' as const }
+    return { tenantId: session.user.tenantId }
+  }
+
+  const apiKey = getApiKeyFromRequest(request)
+  if (apiKey) {
+    const payload = await validateApiKey(apiKey)
+    if (payload) {
+      if (!hasPermission(payload, 'read')) return { error: 'forbidden' as const }
+      return { tenantId: payload.tenantId }
+    }
+  }
+
+  return { error: 'unauthorized' as const }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const auth = await getAuthContext(request)
+
+    if ('error' in auth) {
+      if (auth.error === 'unauthorized') {
+        return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
+      }
       return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
     }
 
-    const tenantId = session.user.tenantId
+    const tenantId = auth.tenantId
 
     // Liste aller Tabellen des Schemas
     const tables = [
@@ -40,6 +58,8 @@ export async function GET() {
       'activities',
       'webhooks',
       'audit_log',
+      'documents',
+      'document_items',
     ]
 
     let sqlDump = `-- SQL Export für Tenant: ${tenantId}\n`
