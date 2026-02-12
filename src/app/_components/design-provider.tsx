@@ -13,7 +13,7 @@ export const fontOptions = [
   { id: 'inter', label: 'Inter', variable: 'var(--font-inter)' },
   { id: 'roboto', label: 'Roboto', variable: 'var(--font-roboto)' },
   { id: 'montserrat', label: 'Montserrat', variable: 'var(--font-montserrat)' },
-  { id: 'times', label: 'Times New Roman', variable: 'var(--font-times)' },
+  { id: 'times', label: 'Times New Roman', variable: '"Times New Roman", Times, serif' },
 ] as const
 
 export type FontId = (typeof fontOptions)[number]['id']
@@ -21,7 +21,7 @@ export type FontId = (typeof fontOptions)[number]['id']
 function applyFont(fontId: FontId) {
   const option = fontOptions.find((f) => f.id === fontId)
   if (option) {
-    document.body.style.setProperty('--font-sans', option.variable)
+    document.body.style.setProperty('--active-font', option.variable)
   }
 }
 
