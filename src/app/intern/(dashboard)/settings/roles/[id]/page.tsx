@@ -72,15 +72,22 @@ export default function RoleEditPage({ params }: { params: Promise<{ id: string 
         // Berechtigungen aus API-Daten setzen
         const permMap: Record<string, Record<string, boolean>> = {}
         for (const mod of MODULES) {
-          permMap[mod] = { create: false, read: false, update: false, delete: false }
+          // Owner-Rolle hat immer vollen Zugriff
+          if (role.name === 'owner') {
+            permMap[mod] = { create: true, read: true, update: true, delete: true }
+          } else {
+            permMap[mod] = { create: false, read: false, update: false, delete: false }
+          }
         }
-        for (const p of role.permissions) {
-          if (permMap[p.module]) {
-            permMap[p.module] = {
-              create: p.canCreate,
-              read: p.canRead,
-              update: p.canUpdate,
-              delete: p.canDelete,
+        if (role.name !== 'owner') {
+          for (const p of role.permissions) {
+            if (permMap[p.module]) {
+              permMap[p.module] = {
+                create: p.canCreate,
+                read: p.canRead,
+                update: p.canUpdate,
+                delete: p.canDelete,
+              }
             }
           }
         }

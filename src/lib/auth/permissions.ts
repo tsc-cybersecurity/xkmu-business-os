@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { rolePermissions } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import type { Module, Action } from '@/lib/types/permissions'
+import { MODULES, type Module, type Action } from '@/lib/types/permissions'
 
 export async function getPermissionsForRole(
   roleId: string
@@ -11,7 +11,13 @@ export async function getPermissionsForRole(
     .from(rolePermissions)
     .where(eq(rolePermissions.roleId, roleId))
 
+  // Alle Module initialisieren (damit neue Module nicht fehlen)
   const map: Record<string, Record<string, boolean>> = {}
+  for (const mod of MODULES) {
+    map[mod] = { create: false, read: false, update: false, delete: false }
+  }
+
+  // DB-Werte ueberschreiben
   for (const p of perms) {
     map[p.module] = {
       create: p.canCreate ?? false,

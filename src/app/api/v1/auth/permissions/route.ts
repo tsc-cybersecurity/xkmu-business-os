@@ -1,7 +1,7 @@
 import { apiSuccess, apiUnauthorized, apiError } from '@/lib/utils/api-response'
 import { getSession } from '@/lib/auth/session'
 import { getPermissionsForRole } from '@/lib/auth/permissions'
-import { DEFAULT_ROLE_PERMISSIONS } from '@/lib/types/permissions'
+import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '@/lib/types/permissions'
 
 export async function GET() {
   try {
@@ -11,6 +11,15 @@ export async function GET() {
     }
 
     const { roleId, role } = session.user
+
+    // Owner und Admin bekommen immer vollen Zugriff (unabhaengig von DB-Zustand)
+    if (role === 'owner' || role === 'admin') {
+      const permissions: Record<string, Record<string, boolean>> = {}
+      for (const mod of MODULES) {
+        permissions[mod] = { create: true, read: true, update: true, delete: true }
+      }
+      return apiSuccess({ permissions })
+    }
 
     // Benutzer mit roleId: Berechtigungen aus DB laden
     if (roleId) {

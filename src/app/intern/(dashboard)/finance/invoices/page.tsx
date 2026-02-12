@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Plus, Search, FileText } from 'lucide-react'
 import { DocumentStatusBadge, invoiceStatuses } from '../_components/status-badge'
+import { Can } from '@/hooks/use-permissions'
 
 interface DocumentListItem {
   id: string
@@ -92,12 +93,14 @@ export default function InvoicesPage() {
           <h1 className="text-3xl font-bold">Rechnungen</h1>
           <p className="text-muted-foreground">Verwalten Sie Ihre Rechnungen</p>
         </div>
-        <Button asChild>
-          <Link href="/intern/finance/invoices/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Neue Rechnung
-          </Link>
-        </Button>
+        <Can module="documents" action="create">
+          <Button asChild>
+            <Link href="/intern/finance/invoices/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Neue Rechnung
+            </Link>
+          </Button>
+        </Can>
       </div>
 
       <Card>
@@ -137,12 +140,14 @@ export default function InvoicesPage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 Erstellen Sie Ihre erste Rechnung, um loszulegen.
               </p>
-              <Button asChild className="mt-4">
-                <Link href="/intern/finance/invoices/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Erste Rechnung erstellen
-                </Link>
-              </Button>
+              <Can module="documents" action="create">
+                <Button asChild className="mt-4">
+                  <Link href="/intern/finance/invoices/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Erste Rechnung erstellen
+                  </Link>
+                </Button>
+              </Can>
             </div>
           ) : (
             <>

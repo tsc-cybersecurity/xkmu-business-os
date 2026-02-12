@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { Plus, Search, FileText } from 'lucide-react'
 import { DocumentStatusBadge, offerStatuses } from '../_components/status-badge'
+import { Can } from '@/hooks/use-permissions'
 
 interface DocumentListItem {
   id: string
@@ -92,12 +93,14 @@ export default function OffersPage() {
           <h1 className="text-3xl font-bold">Angebote</h1>
           <p className="text-muted-foreground">Verwalten Sie Ihre Angebote</p>
         </div>
-        <Button asChild>
-          <Link href="/intern/finance/offers/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Neues Angebot
-          </Link>
-        </Button>
+        <Can module="documents" action="create">
+          <Button asChild>
+            <Link href="/intern/finance/offers/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Neues Angebot
+            </Link>
+          </Button>
+        </Can>
       </div>
 
       <Card>
@@ -137,12 +140,14 @@ export default function OffersPage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 Erstellen Sie Ihr erstes Angebot, um loszulegen.
               </p>
-              <Button asChild className="mt-4">
-                <Link href="/intern/finance/offers/new">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Erstes Angebot erstellen
-                </Link>
-              </Button>
+              <Can module="documents" action="create">
+                <Button asChild className="mt-4">
+                  <Link href="/intern/finance/offers/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Erstes Angebot erstellen
+                  </Link>
+                </Button>
+              </Can>
             </div>
           ) : (
             <>

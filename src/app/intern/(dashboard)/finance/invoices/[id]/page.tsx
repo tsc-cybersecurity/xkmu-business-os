@@ -19,6 +19,7 @@ import {
   XCircle,
   Clock,
 } from 'lucide-react'
+import { Can } from '@/hooks/use-permissions'
 
 interface DocumentItem {
   id: string
@@ -217,60 +218,66 @@ export default function InvoiceDetailPage() {
         <div className="flex gap-2">
           {status === 'draft' && (
             <>
-              <Button variant="outline" onClick={() => setEditing(true)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Bearbeiten
-              </Button>
-              <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Löschen
-              </Button>
+              <Can module="documents" action="update">
+                <Button variant="outline" onClick={() => setEditing(true)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Bearbeiten
+                </Button>
+              </Can>
+              <Can module="documents" action="delete">
+                <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Löschen
+                </Button>
+              </Can>
             </>
           )}
         </div>
       </div>
 
       {/* Status Actions */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-2">
-            {status === 'draft' && (
-              <Button onClick={() => handleStatusChange('sent')} disabled={statusLoading}>
-                <Send className="mr-2 h-4 w-4" />
-                Als versendet markieren
-              </Button>
-            )}
-            {status === 'sent' && (
-              <>
-                <Button onClick={() => handleStatusChange('paid')} disabled={statusLoading} className="bg-green-600 hover:bg-green-700">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Als bezahlt markieren
+      <Can module="documents" action="update">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex gap-2">
+              {status === 'draft' && (
+                <Button onClick={() => handleStatusChange('sent')} disabled={statusLoading}>
+                  <Send className="mr-2 h-4 w-4" />
+                  Als versendet markieren
                 </Button>
-                <Button variant="outline" onClick={() => handleStatusChange('overdue')} disabled={statusLoading}>
-                  <Clock className="mr-2 h-4 w-4" />
-                  Als überfällig markieren
-                </Button>
-                <Button variant="outline" onClick={() => handleStatusChange('cancelled')} disabled={statusLoading}>
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Stornieren
-                </Button>
-              </>
-            )}
-            {status === 'overdue' && (
-              <>
-                <Button onClick={() => handleStatusChange('paid')} disabled={statusLoading} className="bg-green-600 hover:bg-green-700">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Als bezahlt markieren
-                </Button>
-                <Button variant="outline" onClick={() => handleStatusChange('cancelled')} disabled={statusLoading}>
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Stornieren
-                </Button>
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              )}
+              {status === 'sent' && (
+                <>
+                  <Button onClick={() => handleStatusChange('paid')} disabled={statusLoading} className="bg-green-600 hover:bg-green-700">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Als bezahlt markieren
+                  </Button>
+                  <Button variant="outline" onClick={() => handleStatusChange('overdue')} disabled={statusLoading}>
+                    <Clock className="mr-2 h-4 w-4" />
+                    Als überfällig markieren
+                  </Button>
+                  <Button variant="outline" onClick={() => handleStatusChange('cancelled')} disabled={statusLoading}>
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Stornieren
+                  </Button>
+                </>
+              )}
+              {status === 'overdue' && (
+                <>
+                  <Button onClick={() => handleStatusChange('paid')} disabled={statusLoading} className="bg-green-600 hover:bg-green-700">
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Als bezahlt markieren
+                  </Button>
+                  <Button variant="outline" onClick={() => handleStatusChange('cancelled')} disabled={statusLoading}>
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Stornieren
+                  </Button>
+                </>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </Can>
 
       {/* Details */}
       <div className="grid gap-6 md:grid-cols-2">

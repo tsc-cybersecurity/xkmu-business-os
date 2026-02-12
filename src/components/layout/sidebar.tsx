@@ -16,8 +16,24 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
+import { usePermissions } from '@/hooks/use-permissions'
+import type { Module } from '@/lib/types/permissions'
 
-const navigation = [
+interface NavChild {
+  name: string
+  href: string
+  requiredModule?: Module
+}
+
+interface NavItem {
+  name: string
+  href?: string
+  icon: typeof LayoutDashboard
+  requiredModule?: Module
+  children?: NavChild[]
+}
+
+const navigation: NavItem[] = [
   {
     name: 'Dashboard',
     href: '/intern/dashboard',
@@ -27,50 +43,52 @@ const navigation = [
     name: 'Kontakte',
     icon: Building2,
     children: [
-      { name: 'Firmen', href: '/intern/contacts/companies' },
-      { name: 'Personen', href: '/intern/contacts/persons' },
+      { name: 'Firmen', href: '/intern/contacts/companies', requiredModule: 'companies' },
+      { name: 'Personen', href: '/intern/contacts/persons', requiredModule: 'persons' },
     ],
   },
   {
     name: 'Katalog',
     icon: Package,
     children: [
-      { name: 'Produkte', href: '/intern/catalog/products' },
-      { name: 'Dienstleistungen', href: '/intern/catalog/services' },
-      { name: 'Kategorien', href: '/intern/catalog/categories' },
+      { name: 'Produkte', href: '/intern/catalog/products', requiredModule: 'products' },
+      { name: 'Dienstleistungen', href: '/intern/catalog/services', requiredModule: 'products' },
+      { name: 'Kategorien', href: '/intern/catalog/categories', requiredModule: 'product_categories' },
     ],
   },
   {
     name: 'Finanzen',
     icon: FileText,
     children: [
-      { name: 'Rechnungen', href: '/intern/finance/invoices' },
-      { name: 'Angebote', href: '/intern/finance/offers' },
+      { name: 'Rechnungen', href: '/intern/finance/invoices', requiredModule: 'documents' },
+      { name: 'Angebote', href: '/intern/finance/offers', requiredModule: 'documents' },
     ],
   },
   {
     name: 'Leads',
     href: '/intern/leads',
     icon: TrendingUp,
+    requiredModule: 'leads',
   },
   {
     name: 'Ideen',
     href: '/intern/ideas',
     icon: Lightbulb,
+    requiredModule: 'ideas',
   },
   {
     name: 'Einstellungen',
     icon: Settings,
     children: [
-      { name: 'Übersicht', href: '/intern/settings' },
-      { name: 'KI-Anbieter', href: '/intern/settings/ai-providers' },
-      { name: 'KI-Prompts', href: '/intern/settings/ai-prompts' },
-      { name: 'KI-Logging', href: '/intern/settings/ai-logs' },
-      { name: 'Webhooks', href: '/intern/settings/webhooks' },
-      { name: 'Benutzer', href: '/intern/settings/users' },
-      { name: 'Rollen', href: '/intern/settings/roles' },
-      { name: 'API-Schlüssel', href: '/intern/settings/api-keys' },
-      { name: 'Organisation', href: '/intern/settings/tenant' },
+      { name: 'Übersicht', href: '/intern/settings', requiredModule: 'settings' },
+      { name: 'KI-Anbieter', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
+      { name: 'KI-Prompts', href: '/intern/settings/ai-prompts', requiredModule: 'ai_prompts' },
+      { name: 'KI-Logging', href: '/intern/settings/ai-logs', requiredModule: 'ai_logs' },
+      { name: 'Webhooks', href: '/intern/settings/webhooks', requiredModule: 'webhooks' },
+      { name: 'Benutzer', href: '/intern/settings/users', requiredModule: 'users' },
+      { name: 'Rollen', href: '/intern/settings/roles', requiredModule: 'roles' },
+      { name: 'API-Schlüssel', href: '/intern/settings/api-keys', requiredModule: 'api_keys' },
+      { name: 'Organisation', href: '/intern/settings/tenant', requiredModule: 'settings' },
     ],
   },
 ]
@@ -79,6 +97,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const [expandedItems, setExpandedItems] = useState<string[]>(['Kontakte'])
+  const { hasPermission, loading: permissionsLoading } = usePermissions()
 
   const toggleExpanded = (name: string) => {
     setExpandedItems((prev) =>
@@ -86,6 +105,18 @@ export function Sidebar() {
         ? prev.filter((item) => item !== name)
         : [...prev, name]
     )
+  }
+
+  // Berechtigungscheck: Mindestens Lesen fuer das Modul
+  const canAccessModule = (mod?: Module): boolean => {
+    if (!mod) return true
+    if (permissionsLoading) return true // Waehrend Laden alles anzeigen
+    return hasPermission(mod, 'read')
+  }
+
+  // Kinder nach Berechtigung filtern
+  const filterChildren = (children: NavChild[]): NavChild[] => {
+    return children.filter((child) => canAccessModule(child.requiredModule))
   }
 
   return (
@@ -115,9 +146,15 @@ export function Sidebar() {
 
       <nav className="flex-1 space-y-1 p-2">
         {navigation.map((item) => {
+          // Top-Level mit requiredModule pruefen
+          if (item.href && !canAccessModule(item.requiredModule)) return null
+
           if (item.children) {
+            const visibleChildren = filterChildren(item.children)
+            if (visibleChildren.length === 0) return null
+
             const isExpanded = expandedItems.includes(item.name)
-            const isActive = item.children.some((child) =>
+            const isActive = visibleChildren.some((child) =>
               child.href.length <= 10
                 ? pathname === child.href
                 : pathname.startsWith(child.href)
@@ -149,7 +186,7 @@ export function Sidebar() {
                 </button>
                 {!collapsed && isExpanded && (
                   <div className="ml-7 mt-1 space-y-1">
-                    {item.children.map((child) => {
+                    {visibleChildren.map((child) => {
                       // Exact match for short paths like /settings, startsWith for longer paths
                       const isChildActive = child.href.length <= 10
                         ? pathname === child.href
@@ -180,7 +217,7 @@ export function Sidebar() {
           return (
             <Link
               key={item.name}
-              href={item.href}
+              href={item.href!}
               className={cn(
                 'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                 isActive
