@@ -17,6 +17,7 @@ const PUBLIC_PATHS = [
   '/intern/register',
   '/api/v1/auth/login',
   '/api/v1/auth/register',
+  '/api/v1/contact',
 ]
 
 const API_KEY_PATHS = [

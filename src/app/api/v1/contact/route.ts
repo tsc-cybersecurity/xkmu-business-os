@@ -2,14 +2,23 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiValidationError, apiError } from '@/lib/utils/api-response'
 import { contactFormSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
-
-const DEFAULT_TENANT_ID = process.env.DEFAULT_TENANT_ID
+import { db } from '@/lib/db'
+import { tenants } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 export async function POST(request: NextRequest) {
   try {
-    if (!DEFAULT_TENANT_ID) {
-      return apiError('CONFIGURATION_ERROR', 'Server-Konfiguration fehlt', 500)
+    const [tenant] = await db
+      .select({ id: tenants.id })
+      .from(tenants)
+      .where(eq(tenants.status, 'active'))
+      .limit(1)
+
+    if (!tenant) {
+      return apiError('CONFIGURATION_ERROR', 'Kein aktiver Mandant gefunden', 500)
     }
+
+    const tenantId = tenant.id
 
     const body = await request.json()
     const validation = validateAndParse(contactFormSchema, body)
@@ -20,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     const { firstName, lastName, company, phone, email, interests, message } = validation.data
 
-    const lead = await LeadService.create(DEFAULT_TENANT_ID, {
+    const lead = await LeadService.create(tenantId, {
       source: 'website',
       sourceDetail: 'Kontaktformular',
       title: `${firstName} ${lastName} - ${company || 'Privat'}`,
