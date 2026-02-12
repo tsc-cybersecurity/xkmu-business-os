@@ -13,6 +13,7 @@ export const fontOptions = [
   { id: 'inter', label: 'Inter', variable: 'var(--font-inter)' },
   { id: 'roboto', label: 'Roboto', variable: 'var(--font-roboto)' },
   { id: 'montserrat', label: 'Montserrat', variable: 'var(--font-montserrat)' },
+  { id: 'times', label: 'Times New Roman', variable: 'var(--font-times)' },
 ] as const
 
 export type FontId = (typeof fontOptions)[number]['id']
