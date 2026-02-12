@@ -210,7 +210,7 @@ export function DocumentForm({ mode, documentType, document, onSaved, onCancel }
       if (onSaved) {
         onSaved()
       } else {
-        router.push(`${basePath}/${result.data.id}`)
+        router.push(basePath)
         router.refresh()
       }
     } catch (error) {
