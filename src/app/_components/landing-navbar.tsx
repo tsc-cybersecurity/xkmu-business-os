@@ -1,10 +1,33 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Menu, X } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Menu, X, User, LogOut, Type } from 'lucide-react'
+import { useFontSwitcher, type FontId } from './font-provider'
 /* eslint-disable @next/next/no-img-element */
+
+interface SessionUser {
+  id: string
+  email: string
+  firstName: string | null
+  lastName: string | null
+}
 
 const navItems = [
   { name: 'Cyber Security', href: '/cyber-security' },
@@ -13,8 +36,39 @@ const navItems = [
   { name: 'IT-News', href: '/it-news' },
 ]
 
+function getUserInitials(user: SessionUser) {
+  const first = user.firstName?.[0] ?? ''
+  const last = user.lastName?.[0] ?? ''
+  return (first + last).toUpperCase() || user.email[0].toUpperCase()
+}
+
+function getUserDisplayName(user: SessionUser) {
+  if (user.firstName || user.lastName) {
+    return [user.firstName, user.lastName].filter(Boolean).join(' ')
+  }
+  return user.email
+}
+
 export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [user, setUser] = useState<SessionUser | null>(null)
+  const { font, setFont, fontOptions } = useFontSwitcher()
+  const router = useRouter()
+
+  useEffect(() => {
+    fetch('/api/v1/auth/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.data?.user) setUser(data.data.user)
+      })
+      .catch(() => {})
+  }, [])
+
+  const handleLogout = async () => {
+    await fetch('/api/v1/auth/logout', { method: 'POST' })
+    setUser(null)
+    router.push('/')
+  }
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-[100px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 shadow-sm">
@@ -39,11 +93,59 @@ export function LandingNavbar() {
               {item.name}
             </Link>
           ))}
-          <Link href="/kontakt">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6">
-              Kontakt
-            </Button>
-          </Link>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="outline-none">
+                  <Avatar className="cursor-pointer">
+                    <AvatarFallback>{getUserInitials(user)}</AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="font-medium">{getUserDisplayName(user)}</div>
+                  {(user.firstName || user.lastName) && (
+                    <div className="text-xs text-muted-foreground font-normal">{user.email}</div>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/intern/settings">
+                    <User className="size-4" />
+                    Profil
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Type className="size-4" />
+                    Schriftart
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuRadioGroup value={font} onValueChange={(v) => setFont(v as FontId)}>
+                      {fontOptions.map((opt) => (
+                        <DropdownMenuRadioItem key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="size-4" />
+                  Abmelden
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/kontakt">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6">
+                Kontakt
+              </Button>
+            </Link>
+          )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -70,11 +172,62 @@ export function LandingNavbar() {
                 {item.name}
               </Link>
             ))}
-            <Link href="/kontakt" onClick={() => setMobileOpen(false)}>
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2">
-                Kontakt
-              </Button>
-            </Link>
+
+            {user ? (
+              <>
+                <div className="py-2 border-b border-gray-100 dark:border-slate-800">
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {getUserDisplayName(user)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">{user.email}</div>
+                </div>
+                <Link
+                  href="/intern/settings"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 py-2 border-b border-gray-100 dark:border-slate-800 flex items-center gap-2"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <User className="size-4" />
+                  Profil
+                </Link>
+                <div className="py-2 border-b border-gray-100 dark:border-slate-800">
+                  <div className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                    <Type className="size-3" />
+                    Schriftart
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {fontOptions.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setFont(opt.id)}
+                        className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
+                          font === opt.id
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white dark:bg-slate-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:border-blue-400'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false)
+                    handleLogout()
+                  }}
+                  className="text-sm font-medium text-red-600 hover:text-red-700 py-2 flex items-center gap-2 mt-1"
+                >
+                  <LogOut className="size-4" />
+                  Abmelden
+                </button>
+              </>
+            ) : (
+              <Link href="/kontakt" onClick={() => setMobileOpen(false)}>
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white mt-2">
+                  Kontakt
+                </Button>
+              </Link>
+            )}
           </nav>
         </div>
       )}
