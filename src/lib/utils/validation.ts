@@ -303,6 +303,56 @@ export const createWebhookSchema = z.object({
 export const updateWebhookSchema = createWebhookSchema.partial()
 
 // ============================================
+// Document Schemas (Rechnungen & Angebote)
+// ============================================
+export const documentTypeSchema = z.enum(['invoice', 'offer'])
+export const invoiceStatusSchema = z.enum(['draft', 'sent', 'paid', 'overdue', 'cancelled'])
+export const offerStatusSchema = z.enum(['draft', 'sent', 'accepted', 'rejected', 'expired'])
+export const discountTypeSchema = z.enum(['percent', 'fixed'])
+
+export const createDocumentSchema = z.object({
+  type: documentTypeSchema,
+  number: z.string().max(50).optional().or(z.literal('')),
+  companyId: uuidSchema.nullable().optional(),
+  contactPersonId: uuidSchema.nullable().optional(),
+  issueDate: z.string().optional(),
+  dueDate: z.string().optional().or(z.literal('')),
+  validUntil: z.string().optional().or(z.literal('')),
+  notes: z.string().optional().or(z.literal('')),
+  paymentTerms: z.string().max(255).optional().or(z.literal('')),
+  discount: z.number().min(0).nullable().optional(),
+  discountType: discountTypeSchema.nullable().optional(),
+  // Customer address snapshot (auto-filled from company, but can be overridden)
+  customerName: z.string().max(255).optional().or(z.literal('')),
+  customerStreet: z.string().max(255).optional().or(z.literal('')),
+  customerHouseNumber: z.string().max(20).optional().or(z.literal('')),
+  customerPostalCode: z.string().max(20).optional().or(z.literal('')),
+  customerCity: z.string().max(100).optional().or(z.literal('')),
+  customerCountry: z.string().max(2).optional().or(z.literal('')),
+  customerVatId: z.string().max(50).optional().or(z.literal('')),
+})
+
+export const updateDocumentSchema = createDocumentSchema.partial()
+
+export const createDocumentItemSchema = z.object({
+  productId: uuidSchema.nullable().optional(),
+  name: z.string().min(1, 'Name ist erforderlich').max(255),
+  description: z.string().optional().or(z.literal('')),
+  quantity: z.number().min(0).default(1),
+  unit: z.string().max(30).default('Stück'),
+  unitPrice: z.number().min(0).default(0),
+  vatRate: z.number().min(0).max(100).default(19),
+  discount: z.number().min(0).nullable().optional(),
+  discountType: discountTypeSchema.nullable().optional(),
+})
+
+export const updateDocumentItemSchema = createDocumentItemSchema.partial()
+
+export const updateDocumentStatusSchema = z.object({
+  status: z.string().min(1),
+})
+
+// ============================================
 // Helper Functions
 // ============================================
 export function validateAndParse<T>(

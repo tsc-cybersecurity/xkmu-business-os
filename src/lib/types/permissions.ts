@@ -17,6 +17,7 @@ export const MODULES = [
   'ai_logs',
   'api_keys',
   'roles',
+  'documents',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -51,6 +52,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   ai_logs: 'KI-Logs',
   api_keys: 'API-Schluessel',
   roles: 'Rollen',
+  documents: 'Dokumente',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {

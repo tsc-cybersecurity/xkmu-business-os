@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Building2,
   Package,
+  FileText,
   TrendingUp,
   Lightbulb,
   Settings,
@@ -37,6 +38,14 @@ const navigation = [
       { name: 'Produkte', href: '/intern/catalog/products' },
       { name: 'Dienstleistungen', href: '/intern/catalog/services' },
       { name: 'Kategorien', href: '/intern/catalog/categories' },
+    ],
+  },
+  {
+    name: 'Finanzen',
+    icon: FileText,
+    children: [
+      { name: 'Rechnungen', href: '/intern/finance/invoices' },
+      { name: 'Angebote', href: '/intern/finance/offers' },
     ],
   },
   {

@@ -45,6 +45,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   ideas: many(ideas),
   activities: many(activities),
   webhooks: many(webhooks),
+  documents: many(documents),
+  documentItems: many(documentItems),
 }))
 
 // ============================================
@@ -671,6 +673,118 @@ export const auditLogRelations = relations(auditLog, ({ one }) => ({
 }))
 
 // ============================================
+// Documents (Rechnungen & Angebote)
+// ============================================
+export const documents = pgTable('documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 20 }).notNull(), // 'invoice' | 'offer'
+  number: varchar('number', { length: 50 }).notNull(),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+  contactPersonId: uuid('contact_person_id').references(() => persons.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 30 }).default('draft'),
+  // Dates
+  issueDate: timestamp('issue_date', { withTimezone: true }),
+  dueDate: timestamp('due_date', { withTimezone: true }),
+  validUntil: timestamp('valid_until', { withTimezone: true }),
+  // Totals
+  subtotal: decimal('subtotal', { precision: 15, scale: 2 }).default('0'),
+  taxTotal: decimal('tax_total', { precision: 15, scale: 2 }).default('0'),
+  total: decimal('total', { precision: 15, scale: 2 }).default('0'),
+  discount: decimal('discount', { precision: 15, scale: 2 }),
+  discountType: varchar('discount_type', { length: 10 }), // 'percent' | 'fixed'
+  // Content
+  notes: text('notes'),
+  paymentTerms: varchar('payment_terms', { length: 255 }),
+  // Customer Address Snapshot
+  customerName: varchar('customer_name', { length: 255 }),
+  customerStreet: varchar('customer_street', { length: 255 }),
+  customerHouseNumber: varchar('customer_house_number', { length: 20 }),
+  customerPostalCode: varchar('customer_postal_code', { length: 20 }),
+  customerCity: varchar('customer_city', { length: 100 }),
+  customerCountry: varchar('customer_country', { length: 2 }),
+  customerVatId: varchar('customer_vat_id', { length: 50 }),
+  // Self-reference for offer → invoice conversion
+  convertedFromId: uuid('converted_from_id'),
+  // Metadata
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_documents_tenant_type').on(table.tenantId, table.type),
+  index('idx_documents_tenant_status').on(table.tenantId, table.status),
+  index('idx_documents_tenant_company').on(table.tenantId, table.companyId),
+  index('idx_documents_tenant_number').on(table.tenantId, table.number),
+  index('idx_documents_tenant_issue_date').on(table.tenantId, table.issueDate),
+])
+
+export const documentsRelations = relations(documents, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [documents.tenantId],
+    references: [tenants.id],
+  }),
+  company: one(companies, {
+    fields: [documents.companyId],
+    references: [companies.id],
+  }),
+  contactPerson: one(persons, {
+    fields: [documents.contactPersonId],
+    references: [persons.id],
+  }),
+  createdByUser: one(users, {
+    fields: [documents.createdBy],
+    references: [users.id],
+  }),
+  convertedFrom: one(documents, {
+    fields: [documents.convertedFromId],
+    references: [documents.id],
+    relationName: 'documentConversion',
+  }),
+  items: many(documentItems),
+}))
+
+// ============================================
+// Document Items (Positionen)
+// ============================================
+export const documentItems = pgTable('document_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  documentId: uuid('document_id').notNull().references(() => documents.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  position: integer('position').default(0),
+  productId: uuid('product_id').references(() => products.id, { onDelete: 'set null' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  quantity: decimal('quantity', { precision: 10, scale: 3 }).default('1'),
+  unit: varchar('unit', { length: 30 }).default('Stück'),
+  unitPrice: decimal('unit_price', { precision: 15, scale: 2 }).default('0'),
+  vatRate: decimal('vat_rate', { precision: 5, scale: 2 }).default('19.00'),
+  discount: decimal('discount', { precision: 15, scale: 2 }),
+  discountType: varchar('discount_type', { length: 10 }), // 'percent' | 'fixed'
+  lineTotal: decimal('line_total', { precision: 15, scale: 2 }).default('0'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_document_items_document').on(table.documentId),
+  index('idx_document_items_tenant_document').on(table.tenantId, table.documentId),
+  index('idx_document_items_product').on(table.productId),
+])
+
+export const documentItemsRelations = relations(documentItems, ({ one }) => ({
+  document: one(documents, {
+    fields: [documentItems.documentId],
+    references: [documents.id],
+  }),
+  tenant: one(tenants, {
+    fields: [documentItems.tenantId],
+    references: [tenants.id],
+  }),
+  product: one(products, {
+    fields: [documentItems.productId],
+    references: [products.id],
+  }),
+}))
+
+// ============================================
 // Type Exports
 // ============================================
 export type Tenant = typeof tenants.$inferSelect
@@ -723,3 +837,9 @@ export type NewRole = typeof roles.$inferInsert
 
 export type RolePermission = typeof rolePermissions.$inferSelect
 export type NewRolePermission = typeof rolePermissions.$inferInsert
+
+export type Document = typeof documents.$inferSelect
+export type NewDocument = typeof documents.$inferInsert
+
+export type DocumentItem = typeof documentItems.$inferSelect
+export type NewDocumentItem = typeof documentItems.$inferInsert

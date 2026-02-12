@@ -1,0 +1,62 @@
+import { NextRequest } from 'next/server'
+import {
+  apiSuccess,
+  apiValidationError,
+  apiError,
+} from '@/lib/utils/api-response'
+import {
+  createDocumentSchema,
+  validateAndParse,
+  formatZodErrors,
+} from '@/lib/utils/validation'
+import { DocumentService } from '@/lib/services/document.service'
+import { withPermission } from '@/lib/auth/require-permission'
+
+// GET /api/v1/documents - List documents with filters
+export async function GET(request: NextRequest) {
+  return withPermission(request, 'documents', 'read', async (auth) => {
+    try {
+      const searchParams = request.nextUrl.searchParams
+      const filters = {
+        type: searchParams.get('type') || undefined,
+        status: searchParams.get('status') || undefined,
+        companyId: searchParams.get('companyId') || undefined,
+        dateFrom: searchParams.get('dateFrom') || undefined,
+        dateTo: searchParams.get('dateTo') || undefined,
+        search: searchParams.get('search') || undefined,
+        page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined,
+        limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+      }
+
+      const result = await DocumentService.list(auth.tenantId, filters)
+      return apiSuccess(result.items, result.meta)
+    } catch (error) {
+      console.error('Failed to list documents:', error)
+      return apiError('INTERNAL_ERROR', 'Fehler beim Laden der Dokumente', 500)
+    }
+  })
+}
+
+// POST /api/v1/documents - Create document
+export async function POST(request: NextRequest) {
+  return withPermission(request, 'documents', 'create', async (auth) => {
+    try {
+      const body = await request.json()
+      const validation = validateAndParse(createDocumentSchema, body)
+
+      if (!validation.success) {
+        return apiValidationError(formatZodErrors(validation.errors))
+      }
+
+      const document = await DocumentService.create(
+        auth.tenantId,
+        validation.data,
+        auth.userId || undefined
+      )
+      return apiSuccess(document, undefined, 201)
+    } catch (error) {
+      console.error('Failed to create document:', error)
+      return apiError('INTERNAL_ERROR', 'Fehler beim Erstellen des Dokuments', 500)
+    }
+  })
+}
