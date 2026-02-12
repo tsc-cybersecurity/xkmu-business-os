@@ -295,6 +295,12 @@ export const leads = pgTable('leads', {
   aiResearchResult: jsonb('ai_research_result'),
   // Assignment
   assignedTo: uuid('assigned_to').references(() => users.id),
+  // Contact Info (from website form)
+  contactFirstName: varchar('contact_first_name', { length: 100 }),
+  contactLastName: varchar('contact_last_name', { length: 100 }),
+  contactCompany: varchar('contact_company', { length: 255 }),
+  contactPhone: varchar('contact_phone', { length: 50 }),
+  contactEmail: varchar('contact_email', { length: 255 }),
   // Metadata
   tags: text('tags').array().default([]),
   notes: text('notes'),

@@ -23,6 +23,7 @@ import {
   Building2,
   User,
   Mail,
+  Phone,
   Trash2,
   Brain,
   TrendingUp,
@@ -57,6 +58,11 @@ interface Lead {
   company: { id: string; name: string } | null
   person: { id: string; firstName: string; lastName: string; email: string | null } | null
   assignedToUser: { id: string; firstName: string | null; lastName: string | null; email: string } | null
+  contactFirstName: string | null
+  contactLastName: string | null
+  contactCompany: string | null
+  contactPhone: string | null
+  contactEmail: string | null
 }
 
 interface UserData {
@@ -106,6 +112,7 @@ const sourceLabels: Record<string, string> = {
   import: 'Import',
   manual: 'Manuell',
   idea: 'Idee',
+  website: 'Website',
 }
 
 const aiStatusLabels: Record<string, string> = {
@@ -973,6 +980,48 @@ export default function LeadDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Contact Info (from website form) */}
+          {(lead.contactFirstName || lead.contactLastName || lead.contactEmail) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCircle className="h-5 w-5" />
+                  Kontaktdaten
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {(lead.contactFirstName || lead.contactLastName) && (
+                  <div>
+                    <span className="text-muted-foreground">Name: </span>
+                    <span>{lead.contactFirstName} {lead.contactLastName}</span>
+                  </div>
+                )}
+                {lead.contactCompany && (
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{lead.contactCompany}</span>
+                  </div>
+                )}
+                {lead.contactEmail && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                    <a href={`mailto:${lead.contactEmail}`} className="text-blue-600 hover:underline">
+                      {lead.contactEmail}
+                    </a>
+                  </div>
+                )}
+                {lead.contactPhone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                    <a href={`tel:${lead.contactPhone}`} className="hover:underline">
+                      {lead.contactPhone}
+                    </a>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Meta Info */}
           <Card>

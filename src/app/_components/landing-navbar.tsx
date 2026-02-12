@@ -7,10 +7,10 @@ import { Menu, X } from 'lucide-react'
 /* eslint-disable @next/next/no-img-element */
 
 const navItems = [
-  { name: 'Cyber Security', href: '#cyber-security' },
-  { name: 'KI & Automation', href: '#ki-automation' },
-  { name: 'IT Consulting', href: '#it-consulting' },
-  { name: 'IT-News', href: '#it-news' },
+  { name: 'Cyber Security', href: '/cyber-security' },
+  { name: 'KI & Automation', href: '/ki-automation' },
+  { name: 'IT Consulting', href: '/it-consulting' },
+  { name: 'IT-News', href: '/it-news' },
 ]
 
 export function LandingNavbar() {

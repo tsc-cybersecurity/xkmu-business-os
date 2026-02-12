@@ -32,6 +32,11 @@ export interface CreateLeadInput {
   tags?: string[]
   notes?: string
   rawData?: Record<string, unknown>
+  contactFirstName?: string
+  contactLastName?: string
+  contactCompany?: string
+  contactPhone?: string
+  contactEmail?: string
 }
 
 export type UpdateLeadInput = Partial<CreateLeadInput> & {
@@ -65,6 +70,11 @@ export const LeadService = {
         tags: data.tags || [],
         notes: emptyToNull(data.notes),
         rawData: data.rawData || {},
+        contactFirstName: emptyToNull(data.contactFirstName),
+        contactLastName: emptyToNull(data.contactLastName),
+        contactCompany: emptyToNull(data.contactCompany),
+        contactPhone: emptyToNull(data.contactPhone),
+        contactEmail: emptyToNull(data.contactEmail),
       })
       .returning()
 

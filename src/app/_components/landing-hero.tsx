@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 
 export function LandingHero() {
   return (
-    <section className="relative min-h-[66vh] flex items-center pt-[100px]">
+    <section className="relative min-h-[66vh] flex items-center">
       {/* Background Image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"

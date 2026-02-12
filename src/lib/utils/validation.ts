@@ -178,7 +178,7 @@ export const leadStatusSchema = z.enum([
   'lost',
 ])
 
-export const leadSourceSchema = z.enum(['api', 'form', 'import', 'manual', 'idea'])
+export const leadSourceSchema = z.enum(['api', 'form', 'import', 'manual', 'idea', 'website'])
 
 export const createLeadSchema = z.object({
   companyId: uuidSchema.nullable().optional(),
@@ -195,6 +195,20 @@ export const createLeadSchema = z.object({
 })
 
 export const updateLeadSchema = createLeadSchema.partial()
+
+// ============================================
+// Contact Form Schema (Public Website)
+// ============================================
+export const contactFormSchema = z.object({
+  firstName: z.string().min(1, 'Vorname ist erforderlich'),
+  lastName: z.string().min(1, 'Nachname ist erforderlich'),
+  company: z.string().optional().or(z.literal('')),
+  phone: z.string().optional().or(z.literal('')),
+  email: z.string().email('Gültige E-Mail-Adresse erforderlich'),
+  interests: z.array(z.string()).min(1, 'Bitte wählen Sie mindestens ein Interesse'),
+  message: z.string().min(1, 'Nachricht ist erforderlich'),
+  privacyAccepted: z.literal(true, 'Datenschutzbestimmungen müssen akzeptiert werden'),
+})
 
 // ============================================
 // Product Category Schemas

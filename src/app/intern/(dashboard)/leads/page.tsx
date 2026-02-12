@@ -35,6 +35,10 @@ interface Lead {
   company: { id: string; name: string } | null
   person: { id: string; firstName: string; lastName: string; email: string | null } | null
   assignedToUser: { id: string; firstName: string | null; lastName: string | null; email: string } | null
+  contactFirstName: string | null
+  contactLastName: string | null
+  contactCompany: string | null
+  contactEmail: string | null
 }
 
 const statusLabels: Record<string, string> = {
@@ -65,6 +69,7 @@ const sourceLabels: Record<string, string> = {
   import: 'Import',
   manual: 'Manuell',
   idea: 'Idee',
+  website: 'Website',
 }
 
 const aiStatusLabels: Record<string, string> = {
@@ -220,13 +225,19 @@ export default function LeadsPage() {
                           lead.company?.name ||
                           (lead.person
                             ? `${lead.person.firstName} ${lead.person.lastName}`.trim()
-                            : lead.sourceDetail || 'Unbekannt')}
+                            : (lead.contactFirstName || lead.contactLastName)
+                              ? `${lead.contactFirstName || ''} ${lead.contactLastName || ''}`.trim()
+                              : lead.sourceDetail || 'Unbekannt')}
                       </Link>
-                      {(lead.company || lead.person) && lead.title && (
-                        <p className="text-sm text-muted-foreground">
-                          {lead.company?.name || `${lead.person?.firstName || ''} ${lead.person?.lastName || ''}`.trim()}
-                        </p>
-                      )}
+                      {(() => {
+                        const subtitle = lead.company?.name
+                          || (lead.person ? `${lead.person.firstName || ''} ${lead.person.lastName || ''}`.trim() : null)
+                          || lead.contactCompany
+                          || lead.contactEmail
+                        return subtitle && lead.title ? (
+                          <p className="text-sm text-muted-foreground">{subtitle}</p>
+                        ) : null
+                      })()}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
