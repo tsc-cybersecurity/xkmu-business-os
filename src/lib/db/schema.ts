@@ -47,6 +47,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   webhooks: many(webhooks),
   documents: many(documents),
   documentItems: many(documentItems),
+  dinAuditSessions: many(dinAuditSessions),
+  dinAnswers: many(dinAnswers),
 }))
 
 // ============================================
@@ -791,6 +793,117 @@ export const documentItemsRelations = relations(documentItems, ({ one }) => ({
 }))
 
 // ============================================
+// DIN SPEC 27076 - Requirements (statisch, per Seed)
+// ============================================
+export const dinRequirements = pgTable('din_requirements', {
+  id: integer('id').primaryKey(),
+  number: varchar('number', { length: 10 }).notNull(),
+  groupNumber: varchar('group_number', { length: 10 }),
+  componentNumber: integer('component_number'),
+  type: varchar('type', { length: 10 }).notNull(), // 'top' | 'regular'
+  topicArea: integer('topic_area').notNull(), // 1-6
+  officialAnforderungText: text('official_anforderung_text').notNull(),
+  questionText: text('question_text').notNull(),
+  recommendationText: text('recommendation_text'),
+  isStatusQuestion: boolean('is_status_question').default(false),
+  dependsOn: integer('depends_on'),
+  points: integer('points'),
+})
+
+export const dinRequirementsRelations = relations(dinRequirements, ({ many }) => ({
+  answers: many(dinAnswers),
+}))
+
+// ============================================
+// DIN SPEC 27076 - Audit Sessions
+// ============================================
+export const dinAuditSessions = pgTable('din_audit_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  clientCompanyId: uuid('client_company_id').references(() => companies.id, { onDelete: 'set null' }),
+  consultantId: uuid('consultant_id').references(() => users.id, { onDelete: 'set null' }),
+  reviewerId: uuid('reviewer_id').references(() => users.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 20 }).default('draft'), // draft | in_progress | completed | approved
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_din_audit_sessions_tenant').on(table.tenantId),
+  index('idx_din_audit_sessions_status').on(table.tenantId, table.status),
+  index('idx_din_audit_sessions_client').on(table.tenantId, table.clientCompanyId),
+])
+
+export const dinAuditSessionsRelations = relations(dinAuditSessions, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [dinAuditSessions.tenantId],
+    references: [tenants.id],
+  }),
+  clientCompany: one(companies, {
+    fields: [dinAuditSessions.clientCompanyId],
+    references: [companies.id],
+  }),
+  consultant: one(users, {
+    fields: [dinAuditSessions.consultantId],
+    references: [users.id],
+    relationName: 'consultantSessions',
+  }),
+  reviewer: one(users, {
+    fields: [dinAuditSessions.reviewerId],
+    references: [users.id],
+    relationName: 'reviewerSessions',
+  }),
+  answers: many(dinAnswers),
+}))
+
+// ============================================
+// DIN SPEC 27076 - Answers
+// ============================================
+export const dinAnswers = pgTable('din_answers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  sessionId: uuid('session_id').notNull().references(() => dinAuditSessions.id, { onDelete: 'cascade' }),
+  requirementId: integer('requirement_id').notNull().references(() => dinRequirements.id),
+  status: varchar('status', { length: 20 }).notNull(), // fulfilled | not_fulfilled | irrelevant
+  justification: text('justification'),
+  answeredAt: timestamp('answered_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_din_answers_session').on(table.sessionId),
+  index('idx_din_answers_tenant_session').on(table.tenantId, table.sessionId),
+])
+
+export const dinAnswersRelations = relations(dinAnswers, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [dinAnswers.tenantId],
+    references: [tenants.id],
+  }),
+  session: one(dinAuditSessions, {
+    fields: [dinAnswers.sessionId],
+    references: [dinAuditSessions.id],
+  }),
+  requirement: one(dinRequirements, {
+    fields: [dinAnswers.requirementId],
+    references: [dinRequirements.id],
+  }),
+}))
+
+// ============================================
+// DIN SPEC 27076 - Grants (Foerdermittel, statisch per Seed)
+// ============================================
+export const dinGrants = pgTable('din_grants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  provider: varchar('provider', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  purpose: text('purpose'),
+  url: varchar('url', { length: 500 }),
+  region: varchar('region', { length: 100 }).notNull(),
+  minEmployees: integer('min_employees'),
+  maxEmployees: integer('max_employees'),
+}, (table) => [
+  index('idx_din_grants_region').on(table.region),
+])
+
+// ============================================
 // Type Exports
 // ============================================
 export type Tenant = typeof tenants.$inferSelect
@@ -849,3 +962,15 @@ export type NewDocument = typeof documents.$inferInsert
 
 export type DocumentItem = typeof documentItems.$inferSelect
 export type NewDocumentItem = typeof documentItems.$inferInsert
+
+export type DinRequirement = typeof dinRequirements.$inferSelect
+export type NewDinRequirement = typeof dinRequirements.$inferInsert
+
+export type DinAuditSession = typeof dinAuditSessions.$inferSelect
+export type NewDinAuditSession = typeof dinAuditSessions.$inferInsert
+
+export type DinAnswer = typeof dinAnswers.$inferSelect
+export type NewDinAnswer = typeof dinAnswers.$inferInsert
+
+export type DinGrant = typeof dinGrants.$inferSelect
+export type NewDinGrant = typeof dinGrants.$inferInsert

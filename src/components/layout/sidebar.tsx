@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Lightbulb,
   Settings,
+  ShieldCheck,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
@@ -75,6 +76,14 @@ const navigation: NavItem[] = [
     href: '/intern/ideas',
     icon: Lightbulb,
     requiredModule: 'ideas',
+  },
+  {
+    name: 'DIN SPEC 27076',
+    icon: ShieldCheck,
+    children: [
+      { name: 'Audits', href: '/intern/din-audit', requiredModule: 'din_audits' },
+      { name: 'Foerdermittel', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
+    ],
   },
   {
     name: 'Einstellungen',

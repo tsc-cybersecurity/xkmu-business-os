@@ -18,6 +18,8 @@ export const MODULES = [
   'api_keys',
   'roles',
   'documents',
+  'din_audits',
+  'din_grants',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -53,6 +55,8 @@ export const MODULE_LABELS: Record<Module, string> = {
   api_keys: 'API-Schluessel',
   roles: 'Rollen',
   documents: 'Dokumente',
+  din_audits: 'DIN-Audits',
+  din_grants: 'Foerdermittel',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {
@@ -111,6 +115,16 @@ function buildViewerAccess(): Record<Module, Record<Action, boolean>> {
   ) as Record<Module, Record<Action, boolean>>
 }
 
+function buildAuditorAccess(): Record<Module, Record<Action, boolean>> {
+  return Object.fromEntries(
+    MODULES.map((m) => {
+      if (m === 'din_audits' || m === 'din_grants') return [m, { ...allTrue }]
+      if (m === 'companies' || m === 'persons') return [m, { ...readOnly }]
+      return [m, { ...allFalse }]
+    })
+  ) as Record<Module, Record<Action, boolean>>
+}
+
 export const DEFAULT_ROLE_PERMISSIONS: Record<
   string,
   { displayName: string; description: string; permissions: Record<Module, Record<Action, boolean>> }
@@ -134,5 +148,10 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<
     displayName: 'Betrachter',
     description: 'Nur-Lese-Zugriff',
     permissions: buildViewerAccess(),
+  },
+  auditor: {
+    displayName: 'IT-Auditor A',
+    description: 'DIN SPEC 27076 Audits durchfuehren und Foerdermittel verwalten',
+    permissions: buildAuditorAccess(),
   },
 }
