@@ -18,7 +18,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, X, User, LogOut, Type, Palette, RectangleHorizontal } from 'lucide-react'
+import { Menu, X, User, LogOut, Type, Palette, RectangleHorizontal, LayoutDashboard } from 'lucide-react'
 import { useDesign, type FontId, type AccentId, type RadiusId } from './design-provider'
 /* eslint-disable @next/next/no-img-element */
 
@@ -115,6 +115,12 @@ export function LandingNavbar() {
                   )}
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/intern/dashboard">
+                    <LayoutDashboard className="size-4" />
+                    BusinessOS Dashboard
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/intern/settings">
                     <User className="size-4" />
@@ -219,6 +225,14 @@ export function LandingNavbar() {
                   </div>
                   <div className="text-xs text-muted-foreground">{user.email}</div>
                 </div>
+                <Link
+                  href="/intern/dashboard"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] py-2 border-b border-gray-100 dark:border-slate-800 flex items-center gap-2"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <LayoutDashboard className="size-4" />
+                  BusinessOS Dashboard
+                </Link>
                 <Link
                   href="/intern/settings"
                   className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] py-2 border-b border-gray-100 dark:border-slate-800 flex items-center gap-2"
