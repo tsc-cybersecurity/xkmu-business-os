@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { LogOut, User, Settings } from 'lucide-react'
+import { LogOut, User, Settings, Globe } from 'lucide-react'
 
 interface HeaderProps {
   user?: {
@@ -66,6 +66,11 @@ export function Header({ user }: HeaderProps) {
               )}
             </div>
           </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => router.push('/')}>
+            <Globe className="mr-2 h-4 w-4" />
+            Webseite
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => router.push('/intern/settings')}>
             <Settings className="mr-2 h-4 w-4" />

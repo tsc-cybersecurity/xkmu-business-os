@@ -45,6 +45,16 @@ async function verifySession(token: string): Promise<boolean> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Redirect /catalog/* to /intern/catalog/*
+  if (pathname.startsWith('/catalog/') || pathname === '/catalog') {
+    return NextResponse.redirect(new URL(`/intern${pathname}`, request.url))
+  }
+
+  // Redirect /intern to /intern/dashboard
+  if (pathname === '/intern' || pathname === '/intern/') {
+    return NextResponse.redirect(new URL('/intern/dashboard', request.url))
+  }
+
   // Allow public paths (login, register, etc.)
   const isPublicPath = PUBLIC_PATHS.some(path =>
     pathname === path || pathname.startsWith(path + '/')

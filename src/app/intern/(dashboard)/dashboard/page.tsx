@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Building2, Users, TrendingUp, Activity, Target } from 'lucide-react'
+import { Building2, Users, TrendingUp, Activity, Target, Globe } from 'lucide-react'
 
 interface DashboardData {
   stats: {
@@ -121,11 +121,20 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Willkommen bei xKMU Business OS
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Willkommen bei xKMU Business OS
+          </p>
+        </div>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <Globe className="h-4 w-4" />
+          Zur Webseite
+        </Link>
       </div>
 
       {/* Stats Cards */}
