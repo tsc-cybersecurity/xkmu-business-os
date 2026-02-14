@@ -833,7 +833,8 @@ export default function LeadDetailPage() {
           <ActivityTimeline
             leadId={leadId}
             companyId={lead.company?.id}
-            showOutreachButton={lead.aiResearchStatus === 'completed'}
+            showOutreachButton={true}
+            outreachEnabled={lead.aiResearchStatus === 'completed'}
           />
 
           {/* Raw Data */}

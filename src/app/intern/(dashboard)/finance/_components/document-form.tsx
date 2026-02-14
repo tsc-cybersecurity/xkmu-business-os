@@ -14,7 +14,8 @@ import {
 } from '@/components/ui/select'
 import { FormField } from '@/components/shared'
 import { toast } from 'sonner'
-import { Loader2, Save } from 'lucide-react'
+import { Loader2, Save, Plus } from 'lucide-react'
+import { QuickCreateCompanyDialog, QuickCreatePersonDialog } from '@/components/shared'
 
 interface Company {
   id: string
@@ -90,6 +91,8 @@ export function DocumentForm({ mode, documentType, document, onSaved, onCancel }
     }
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [showCreateCompany, setShowCreateCompany] = useState(false)
+  const [showCreatePerson, setShowCreatePerson] = useState(false)
 
   const entityLabel = documentType === 'invoice' ? 'Rechnung' : 'Angebot'
   const basePath = documentType === 'invoice' ? '/intern/finance/invoices' : '/intern/finance/offers'
@@ -296,6 +299,16 @@ export function DocumentForm({ mode, documentType, document, onSaved, onCancel }
                   <SelectValue placeholder="Firma wählen" />
                 </SelectTrigger>
                 <SelectContent>
+                  <div className="p-1">
+                    <button
+                      type="button"
+                      className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-primary hover:bg-accent cursor-pointer"
+                      onMouseDown={(e) => { e.preventDefault(); setShowCreateCompany(true) }}
+                    >
+                      <Plus className="h-4 w-4" />
+                      Neue Firma anlegen
+                    </button>
+                  </div>
                   <SelectItem value="none">Keine Firma</SelectItem>
                   {companies.map((company) => (
                     <SelectItem key={company.id} value={company.id}>
@@ -316,6 +329,18 @@ export function DocumentForm({ mode, documentType, document, onSaved, onCancel }
                   <SelectValue placeholder="Ansprechpartner wählen" />
                 </SelectTrigger>
                 <SelectContent>
+                  {formData.companyId && (
+                    <div className="p-1">
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-primary hover:bg-accent cursor-pointer"
+                        onMouseDown={(e) => { e.preventDefault(); setShowCreatePerson(true) }}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Neue Person anlegen
+                      </button>
+                    </div>
+                  )}
                   <SelectItem value="none">Kein Ansprechpartner</SelectItem>
                   {persons.map((person) => (
                     <SelectItem key={person.id} value={person.id}>
@@ -409,6 +434,23 @@ export function DocumentForm({ mode, documentType, document, onSaved, onCancel }
           {mode === 'create' ? 'Erstellen' : 'Speichern'}
         </Button>
       </div>
+      <QuickCreateCompanyDialog
+        open={showCreateCompany}
+        onOpenChange={setShowCreateCompany}
+        onCreated={(company) => {
+          fetchCompanies()
+          handleCompanyChange(company.id)
+        }}
+      />
+      <QuickCreatePersonDialog
+        open={showCreatePerson}
+        onOpenChange={setShowCreatePerson}
+        preselectedCompanyId={formData.companyId}
+        onCreated={(person) => {
+          if (formData.companyId) fetchPersons(formData.companyId)
+          updateField('contactPersonId', person.id)
+        }}
+      />
     </form>
   )
 }

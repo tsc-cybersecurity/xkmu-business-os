@@ -1,11 +1,21 @@
 import { db } from '@/lib/db'
 import { dinGrants } from '@/lib/db/schema'
 import { eq, and, gte, lte, asc, or } from 'drizzle-orm'
-import type { DinGrant } from '@/lib/db/schema'
+import type { DinGrant, NewDinGrant } from '@/lib/db/schema'
 
 export interface GrantFilters {
   region?: string
   employeeCount?: number
+}
+
+export interface GrantInput {
+  name: string
+  provider: string
+  purpose?: string | null
+  url?: string | null
+  region: string
+  minEmployees?: number | null
+  maxEmployees?: number | null
 }
 
 export const DinGrantService = {
@@ -63,5 +73,47 @@ export const DinGrantService = {
       .groupBy(dinGrants.region)
       .orderBy(asc(dinGrants.region))
     return results.map((r) => r.region)
+  },
+
+  async create(data: GrantInput): Promise<DinGrant> {
+    const [grant] = await db
+      .insert(dinGrants)
+      .values({
+        name: data.name,
+        provider: data.provider,
+        purpose: data.purpose || null,
+        url: data.url || null,
+        region: data.region,
+        minEmployees: data.minEmployees ?? null,
+        maxEmployees: data.maxEmployees ?? null,
+      })
+      .returning()
+    return grant
+  },
+
+  async update(id: string, data: Partial<GrantInput>): Promise<DinGrant | null> {
+    const updateData: Record<string, unknown> = {}
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.provider !== undefined) updateData.provider = data.provider
+    if (data.purpose !== undefined) updateData.purpose = data.purpose || null
+    if (data.url !== undefined) updateData.url = data.url || null
+    if (data.region !== undefined) updateData.region = data.region
+    if (data.minEmployees !== undefined) updateData.minEmployees = data.minEmployees ?? null
+    if (data.maxEmployees !== undefined) updateData.maxEmployees = data.maxEmployees ?? null
+
+    const [grant] = await db
+      .update(dinGrants)
+      .set(updateData)
+      .where(eq(dinGrants.id, id))
+      .returning()
+    return grant ?? null
+  },
+
+  async delete(id: string): Promise<boolean> {
+    const result = await db
+      .delete(dinGrants)
+      .where(eq(dinGrants.id, id))
+      .returning({ id: dinGrants.id })
+    return result.length > 0
   },
 }

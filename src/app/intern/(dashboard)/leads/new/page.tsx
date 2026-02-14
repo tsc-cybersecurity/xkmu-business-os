@@ -16,7 +16,8 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { ArrowLeft, Save, Search } from 'lucide-react'
+import { ArrowLeft, Save, Search, Plus } from 'lucide-react'
+import { QuickCreateCompanyDialog, QuickCreatePersonDialog } from '@/components/shared'
 
 interface Company {
   id: string
@@ -46,6 +47,8 @@ export default function NewLeadPage() {
   const [users, setUsers] = useState<User[]>([])
   const [companySearch, setCompanySearch] = useState('')
   const [personSearch, setPersonSearch] = useState('')
+  const [showCreateCompany, setShowCreateCompany] = useState(false)
+  const [showCreatePerson, setShowCreatePerson] = useState(false)
 
   const [formData, setFormData] = useState({
     companyId: searchParams.get('companyId') || '',
@@ -310,6 +313,16 @@ export default function NewLeadPage() {
                         />
                       </div>
                     </div>
+                    <div className="p-1">
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-primary hover:bg-accent cursor-pointer"
+                        onMouseDown={(e) => { e.preventDefault(); setShowCreateCompany(true) }}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Neue Firma anlegen
+                      </button>
+                    </div>
                     <SelectItem value="none">Keine Firma</SelectItem>
                     {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
@@ -342,6 +355,16 @@ export default function NewLeadPage() {
                           className="pl-8"
                         />
                       </div>
+                    </div>
+                    <div className="p-1">
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-primary hover:bg-accent cursor-pointer"
+                        onMouseDown={(e) => { e.preventDefault(); setShowCreatePerson(true) }}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Neue Person anlegen
+                      </button>
                     </div>
                     <SelectItem value="none">Keine Person</SelectItem>
                     {persons.map((person) => (
@@ -380,6 +403,25 @@ export default function NewLeadPage() {
           </Button>
         </div>
       </form>
+
+      <QuickCreateCompanyDialog
+        open={showCreateCompany}
+        onOpenChange={setShowCreateCompany}
+        onCreated={(company) => {
+          setCompanies((prev) => [company, ...prev])
+          setFormData((prev) => ({ ...prev, companyId: company.id }))
+        }}
+      />
+      <QuickCreatePersonDialog
+        open={showCreatePerson}
+        onOpenChange={setShowCreatePerson}
+        companies={companies}
+        preselectedCompanyId={formData.companyId}
+        onCreated={(person) => {
+          setPersons((prev) => [person, ...prev])
+          setFormData((prev) => ({ ...prev, personId: person.id }))
+        }}
+      />
     </div>
   )
 }

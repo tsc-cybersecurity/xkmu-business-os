@@ -20,6 +20,7 @@ export const MODULES = [
   'documents',
   'din_audits',
   'din_grants',
+  'basisabsicherung',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -57,6 +58,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   documents: 'Dokumente',
   din_audits: 'DIN-Audits',
   din_grants: 'Foerdermittel',
+  basisabsicherung: 'Basisabsicherung',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {

@@ -92,7 +92,13 @@ KERNREGELN:
 3. Antworte immer auf Deutsch
 4. Bewerte konservativ – wenige Daten = niedriger Score (max 40-50)
 5. Empfohlene Aktionen sollen helfen, fehlende Informationen zu beschaffen
-6. Halluziniere NICHT – es ist besser "Nicht ermittelbar" zu schreiben als falsche Informationen zu liefern`,
+6. Halluziniere NICHT – es ist besser "Nicht ermittelbar" zu schreiben als falsche Informationen zu liefern
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codeblöcke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
     userPrompt: `Analysiere die folgenden Lead-Informationen:
 
 {{#if companyName}}- Firmenname: {{companyName}}{{/if}}
@@ -165,7 +171,13 @@ KERNREGELN:
 3. Antworte immer auf Deutsch
 4. Extrahiere alle Adressen/Standorte die tatsächlich in den Daten gefunden werden
 5. Das Firmenprofil (companyProfile) soll NUR verifizierte Informationen enthalten
-6. Adressen MÜSSEN die einzelnen Felder (street, houseNumber, postalCode, city, country) enthalten`,
+6. Adressen MÜSSEN die einzelnen Felder (street, houseNumber, postalCode, city, country) enthalten
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codeblöcke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
     userPrompt: `Analysiere die bereitgestellten Informationen über das folgende Unternehmen:
 
 - Name: {{name}}
@@ -244,7 +256,13 @@ KERNREGELN:
 2. Erfinde KEINE Informationen – bei Unsicherheit schreibe "Nicht ermittelbar"
 3. Antworte immer auf Deutsch
 4. Erfinde KEINE Karrieregeschichte, Ausbildung, Sprachen oder Social-Media-Profile!
-5. Verwende leere Arrays [] oder "Nicht ermittelbar" statt erfundener Daten`,
+5. Verwende leere Arrays [] oder "Nicht ermittelbar" statt erfundener Daten
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codeblöcke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
     userPrompt: `Analysiere die bereitgestellten Informationen über die folgende Person:
 
 - Name: {{firstName}} {{lastName}}
@@ -292,7 +310,12 @@ KERNREGELN:
 1. Bewerte NUR basierend auf den bereitgestellten Daten
 2. Wenige Daten = niedriger Score
 3. Antworte auf Deutsch
-4. Antworte NUR mit dem JSON-Format`,
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codeblöcke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
     userPrompt: `Bewerte den folgenden Lead:
 
 {{#if companyName}}- Firma: {{companyName}}{{/if}}
@@ -311,7 +334,12 @@ KERNREGELN:
 1. Erstelle eine prägnante Zusammenfassung (2-3 Sätze)
 2. Generiere 3-5 relevante deutsche Tags
 3. Tags sollen kurz und aussagekräftig sein (1-2 Wörter)
-4. Antworte NUR mit dem JSON-Format`,
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codeblöcke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
     userPrompt: `Analysiere die folgende Idee/Notiz:
 
 {{rawContent}}
@@ -332,7 +360,13 @@ KERNREGELN:
 4. Klarer Call-to-Action (z.B. Terminvorschlag)
 5. Deutsch, Sie-Form
 6. Kein aggressiver Vertriebston
-7. Antworte NUR mit dem JSON-Format`,
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codeblöcke, KEIN \`\`\`json
+- KEINE Erklärungen oder Kommentare
+- Beginne deine Antwort direkt mit { und ende mit }`,
     userPrompt: `Erstelle eine Erstkontakt-E-Mail für den folgenden Lead:
 
 {{#if companyName}}- Firma: {{companyName}}{{/if}}
@@ -342,7 +376,7 @@ KERNREGELN:
 {{#if researchSummary}}- Research: {{researchSummary}}{{/if}}
 
 Die E-Mail soll die Stärken des Unternehmens würdigen und einen natürlichen Gesprächseinstieg bieten.`,
-    outputFormat: `Antworte NUR mit diesem JSON-Format:
+    outputFormat: `Antworte NUR mit dem folgenden JSON-Objekt (KEIN Markdown, KEIN \`\`\`json, KEINE Erklärungen):
 {
   "subject": "<E-Mail Betreff>",
   "body": "<E-Mail Text mit Absätzen>",
@@ -359,7 +393,12 @@ KERNREGELN:
 2. Erfinde KEINE Kennzahlen – schreibe "Nicht ermittelbar" wenn nicht vorhanden
 3. Gib Beträge in Euro an (sofern im Dokument erkennbar)
 4. Antworte auf Deutsch
-5. Antworte NUR mit dem JSON-Format`,
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codeblöcke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
     userPrompt: `Analysiere das folgende Dokument der Firma "{{companyName}}":
 
 === DOKUMENTINHALT ===

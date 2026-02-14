@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
-import { dinAuditSessions, dinAnswers, companies, users } from '@/lib/db/schema'
-import { eq, and, count, desc } from 'drizzle-orm'
+import { dinAuditSessions, dinAnswers, dinRequirements, companies, users } from '@/lib/db/schema'
+import { eq, and, count, desc, sql } from 'drizzle-orm'
 import type { DinAuditSession, DinAnswer, NewDinAuditSession } from '@/lib/db/schema'
 
 export interface DinAuditFilters {
@@ -111,8 +111,46 @@ export const DinAuditService = {
       db.select({ total: count() }).from(dinAuditSessions).where(whereClause!),
     ])
 
+    // Get answer counts per session
+    const sessionIds = items.map((i) => i.id)
+    let answerStats: Array<{ sessionId: string; answered: number; fulfilled: number; notFulfilled: number; irrelevant: number }> = []
+
+    if (sessionIds.length > 0) {
+      answerStats = await db
+        .select({
+          sessionId: dinAnswers.sessionId,
+          answered: count(dinAnswers.id),
+          fulfilled: sql<number>`count(*) filter (where ${dinAnswers.status} = 'fulfilled')`,
+          notFulfilled: sql<number>`count(*) filter (where ${dinAnswers.status} = 'not_fulfilled')`,
+          irrelevant: sql<number>`count(*) filter (where ${dinAnswers.status} = 'irrelevant')`,
+        })
+        .from(dinAnswers)
+        .where(sql`${dinAnswers.sessionId} IN (${sql.join(sessionIds.map(id => sql`${id}`), sql`, `)})`)
+        .groupBy(dinAnswers.sessionId)
+    }
+
+    // Get total requirements count (excluding status questions)
+    const [{ totalReqs }] = await db
+      .select({ totalReqs: count() })
+      .from(dinRequirements)
+      .where(sql`${dinRequirements.componentNumber} != 0`)
+
+    const statsMap = new Map(answerStats.map((s) => [s.sessionId, s]))
+
+    const enrichedItems = items.map((item) => {
+      const stats = statsMap.get(item.id)
+      return {
+        ...item,
+        answeredCount: stats ? Number(stats.answered) : 0,
+        fulfilledCount: stats ? Number(stats.fulfilled) : 0,
+        notFulfilledCount: stats ? Number(stats.notFulfilled) : 0,
+        irrelevantCount: stats ? Number(stats.irrelevant) : 0,
+        totalRequirements: Number(totalReqs),
+      }
+    })
+
     return {
-      items,
+      items: enrichedItems,
       meta: {
         page,
         limit,

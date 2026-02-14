@@ -11,7 +11,7 @@ import {
   TrendingUp,
   Lightbulb,
   Settings,
-  ShieldCheck,
+  Shield,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { Module } from '@/lib/types/permissions'
+import packageJson from '../../../package.json'
 
 interface NavChild {
   name: string
@@ -78,11 +79,12 @@ const navigation: NavItem[] = [
     requiredModule: 'ideas',
   },
   {
-    name: 'DIN SPEC 27076',
-    icon: ShieldCheck,
+    name: 'Cybersecurity',
+    icon: Shield,
     children: [
-      { name: 'Audits', href: '/intern/din-audit', requiredModule: 'din_audits' },
+      { name: 'DIN SPEC Audits', href: '/intern/din-audit', requiredModule: 'din_audits' },
       { name: 'Foerdermittel', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
+      { name: 'Basisabsicherung', href: '/intern/cybersecurity/basisabsicherung', requiredModule: 'basisabsicherung' },
     ],
   },
   {
@@ -240,6 +242,14 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      <div className="border-t px-4 py-3">
+        {!collapsed ? (
+          <span className="text-xs text-muted-foreground">v{packageJson.version}</span>
+        ) : (
+          <span className="text-xs text-muted-foreground text-center block">{packageJson.version.split('.')[2]}</span>
+        )}
+      </div>
     </aside>
   )
 }

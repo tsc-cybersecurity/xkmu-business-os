@@ -1,7 +1,19 @@
 import { NextRequest } from 'next/server'
-import { apiSuccess } from '@/lib/utils/api-response'
+import { apiSuccess, apiValidationError, apiServerError } from '@/lib/utils/api-response'
 import { DinGrantService } from '@/lib/services/din-grant.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { z } from 'zod'
+import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
+
+const createGrantSchema = z.object({
+  name: z.string().min(1, 'Name ist erforderlich'),
+  provider: z.string().min(1, 'Anbieter ist erforderlich'),
+  purpose: z.string().optional().nullable(),
+  url: z.string().url('Ungueltige URL').optional().nullable().or(z.literal('')),
+  region: z.string().min(1, 'Region ist erforderlich'),
+  minEmployees: z.number().int().min(0).optional().nullable(),
+  maxEmployees: z.number().int().min(0).optional().nullable(),
+})
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'din_grants', 'read', async () => {
@@ -15,5 +27,26 @@ export async function GET(request: NextRequest) {
     const regions = await DinGrantService.getRegions()
 
     return apiSuccess({ grants, regions })
+  })
+}
+
+export async function POST(request: NextRequest) {
+  return withPermission(request, 'din_grants', 'create', async () => {
+    try {
+      const body = await request.json()
+      const validation = validateAndParse(createGrantSchema, body)
+      if (!validation.success) {
+        return apiValidationError(formatZodErrors(validation.errors))
+      }
+
+      const grant = await DinGrantService.create({
+        ...validation.data,
+        url: validation.data.url || null,
+      })
+      return apiSuccess(grant, undefined, 201)
+    } catch (error) {
+      console.error('Error creating grant:', error)
+      return apiServerError()
+    }
   })
 }

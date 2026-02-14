@@ -78,16 +78,41 @@ export const OutreachService = {
       systemPrompt: template.systemPrompt,
     })
 
-    // 6. JSON parsen
+    // 6. JSON parsen (robust: Markdown-Codeblöcke und Textfragmente entfernen)
     try {
-      const jsonMatch = response.text.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0])
-        return {
-          subject: parsed.subject || parsed.betreff || 'Geschäftliche Anfrage',
-          body: parsed.body || parsed.text || parsed.inhalt || response.text,
-          tone: parsed.tone || parsed.tonalitaet || 'professionell',
-        }
+      let content = response.text.trim()
+
+      // Markdown-Codeblöcke entfernen (```json...``` oder ```...```)
+      const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (codeBlockMatch) {
+        content = codeBlockMatch[1].trim()
+      }
+
+      // Alles vor dem ersten { entfernen (z.B. "Betreff: Kontaktaufnahme\n{...")
+      const firstBrace = content.indexOf('{')
+      if (firstBrace > 0) {
+        content = content.slice(firstBrace)
+      }
+
+      // Alles nach dem letzten } entfernen
+      const lastBrace = content.lastIndexOf('}')
+      if (lastBrace > 0) {
+        content = content.slice(0, lastBrace + 1)
+      }
+
+      const parsed = JSON.parse(content)
+
+      const subject = parsed.subject || parsed.betreff || 'Geschäftliche Anfrage'
+      const body = parsed.body || parsed.text || parsed.inhalt || response.text
+      const tone = parsed.tone || parsed.tonalitaet || 'professionell'
+
+      // Validierung: Prüfe, dass subject/body keine JSON-Fragmente enthalten
+      const isJsonFragment = (s: string) => s.trim().startsWith('{') || s.trim().startsWith('[')
+
+      return {
+        subject: isJsonFragment(subject) ? `Kontaktaufnahme${companyName ? ` – ${companyName}` : ''}` : subject,
+        body: isJsonFragment(body) ? response.text : body,
+        tone,
       }
     } catch {
       // Falls kein JSON, nutze den gesamten Text als Body

@@ -64,6 +64,7 @@ interface ActivityTimelineProps {
   companyId?: string
   personId?: string
   showOutreachButton?: boolean
+  outreachEnabled?: boolean
   recipientEmail?: string
   recipientName?: string
 }
@@ -81,6 +82,7 @@ export function ActivityTimeline({
   companyId,
   personId,
   showOutreachButton = false,
+  outreachEnabled = true,
   recipientEmail,
   recipientName,
 }: ActivityTimelineProps) {
@@ -358,7 +360,8 @@ export function ActivityTimeline({
                 variant="outline"
                 size="sm"
                 onClick={handleGenerateOutreach}
-                disabled={generatingOutreach}
+                disabled={!outreachEnabled || generatingOutreach}
+                title={!outreachEnabled ? 'Bitte zuerst KI-Recherche durchführen' : undefined}
               >
                 {generatingOutreach ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

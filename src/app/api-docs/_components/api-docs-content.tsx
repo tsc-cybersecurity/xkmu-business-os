@@ -9,12 +9,15 @@ import { useState } from 'react'
 export function ApiDocsContent() {
   return (
     <Tabs defaultValue="auth" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-11">
         <TabsTrigger value="auth">Auth</TabsTrigger>
         <TabsTrigger value="companies">Firmen</TabsTrigger>
         <TabsTrigger value="persons">Personen</TabsTrigger>
         <TabsTrigger value="leads">Leads</TabsTrigger>
+        <TabsTrigger value="documents">Dokumente</TabsTrigger>
+        <TabsTrigger value="activities">Aktivitaeten</TabsTrigger>
         <TabsTrigger value="products">Produkte</TabsTrigger>
+        <TabsTrigger value="din-audit">DIN Audit</TabsTrigger>
         <TabsTrigger value="ai">KI</TabsTrigger>
         <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
         <TabsTrigger value="admin">Admin</TabsTrigger>
@@ -186,16 +189,16 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/companies/:id"
-              description="Firma löschen"
+              description="Firma loeschen"
               responseExample={{
-                message: 'Firma gelöscht',
+                message: 'Firma geloescht',
               }}
             />
 
             <EndpointDoc
               method="POST"
               path="/api/v1/companies/:id/research"
-              description="KI-Recherche für Firma durchführen"
+              description="KI-Recherche fuer Firma durchfuehren"
               responseExample={{
                 message: 'Recherche gestartet',
               }}
@@ -211,7 +214,7 @@ export function ApiDocsContent() {
                     id: 'uuid',
                     firstName: 'Max',
                     lastName: 'Mustermann',
-                    jobTitle: 'Geschäftsführer',
+                    jobTitle: 'Geschaeftsfuehrer',
                     email: 'max@musterfirma.de',
                   },
                 ],
@@ -260,7 +263,7 @@ export function ApiDocsContent() {
                 email: 'max@example.com',
                 phone: '+49 30 12345678',
                 mobile: '+49 170 1234567',
-                jobTitle: 'Geschäftsführer',
+                jobTitle: 'Geschaeftsfuehrer',
                 department: 'Management',
               }}
               responseExample={{
@@ -299,16 +302,16 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/persons/:id"
-              description="Person löschen"
+              description="Person loeschen"
               responseExample={{
-                message: 'Person gelöscht',
+                message: 'Person geloescht',
               }}
             />
 
             <EndpointDoc
               method="POST"
               path="/api/v1/persons/:id/research"
-              description="KI-Recherche für Person durchführen"
+              description="KI-Recherche fuer Person durchfuehren"
               responseExample={{
                 message: 'Recherche gestartet',
               }}
@@ -393,16 +396,16 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/leads/:id"
-              description="Lead löschen"
+              description="Lead loeschen"
               responseExample={{
-                message: 'Lead gelöscht',
+                message: 'Lead geloescht',
               }}
             />
 
             <EndpointDoc
               method="POST"
               path="/api/v1/leads/:id/research"
-              description="KI-Recherche für Lead durchführen"
+              description="KI-Recherche fuer Lead durchfuehren"
               responseExample={{
                 message: 'Recherche gestartet',
               }}
@@ -412,12 +415,254 @@ export function ApiDocsContent() {
               method="POST"
               path="/api/v1/leads/:id/outreach"
               description="Automatische Kontaktaufnahme via KI"
+              responseExample={{
+                subject: 'Betreff der E-Mail',
+                body: 'Generierter E-Mail-Text...',
+                tone: 'professionell',
+              }}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Documents */}
+      <TabsContent value="documents" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Dokumente</CardTitle>
+            <CardDescription>Rechnungen, Angebote und Dokumentenpositionen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/documents"
+              description="Alle Dokumente abrufen"
+              queryParams={['page=1', 'limit=20', 'type=invoice', 'status=draft']}
+              responseExample={{
+                data: [
+                  {
+                    id: 'uuid',
+                    type: 'invoice',
+                    number: 'RE-2026-0001',
+                    status: 'draft',
+                    totalNet: '1500.00',
+                    totalGross: '1785.00',
+                    customerName: 'Musterfirma GmbH',
+                  },
+                ],
+                pagination: { page: 1, limit: 20, total: 10 },
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/documents"
+              description="Neues Dokument erstellen (Rechnung oder Angebot)"
               requestBody={{
-                channel: 'email',
-                message: 'Benutzerdefinierte Nachricht',
+                type: 'invoice',
+                number: 'RE-2026-0002',
+                companyId: 'uuid',
+                contactPersonId: 'uuid',
+                issueDate: '2026-01-15',
+                dueDate: '2026-02-14',
+                paymentTerms: 'Zahlbar innerhalb von 30 Tagen',
+                customerName: 'Musterfirma GmbH',
+                customerStreet: 'Hauptstr.',
+                customerHouseNumber: '1',
+                customerPostalCode: '10115',
+                customerCity: 'Berlin',
+                customerCountry: 'DE',
               }}
               responseExample={{
-                message: 'Outreach gesendet',
+                id: 'uuid',
+                type: 'invoice',
+                number: 'RE-2026-0002',
+                status: 'draft',
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/documents/:id"
+              description="Einzelnes Dokument mit Positionen abrufen"
+              responseExample={{
+                id: 'uuid',
+                type: 'invoice',
+                number: 'RE-2026-0001',
+                status: 'draft',
+                items: [
+                  { id: 'uuid', description: 'Beratung', quantity: '10', unitPrice: '150.00', totalNet: '1500.00' },
+                ],
+              }}
+            />
+
+            <EndpointDoc
+              method="PUT"
+              path="/api/v1/documents/:id"
+              description="Dokument aktualisieren"
+              requestBody={{
+                notes: 'Aktualisierte Notiz',
+                dueDate: '2026-03-01',
+              }}
+              responseExample={{
+                id: 'uuid',
+                notes: 'Aktualisierte Notiz',
+              }}
+            />
+
+            <EndpointDoc
+              method="DELETE"
+              path="/api/v1/documents/:id"
+              description="Dokument loeschen"
+              responseExample={{
+                message: 'Dokument geloescht',
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/documents/next-number"
+              description="Naechste Dokumentnummer generieren"
+              queryParams={['type=invoice']}
+              responseExample={{
+                number: 'RE-2026-0003',
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/documents/:id/items"
+              description="Position zu Dokument hinzufuegen"
+              requestBody={{
+                productId: 'uuid',
+                description: 'IT-Beratung',
+                quantity: '10',
+                unitPrice: '150.00',
+                vatRate: '19.00',
+              }}
+              responseExample={{
+                id: 'uuid',
+                description: 'IT-Beratung',
+                totalNet: '1500.00',
+              }}
+            />
+
+            <EndpointDoc
+              method="PUT"
+              path="/api/v1/documents/:id/items/:itemId"
+              description="Dokumentposition aktualisieren"
+              requestBody={{
+                quantity: '20',
+              }}
+              responseExample={{
+                id: 'uuid',
+                quantity: '20',
+                totalNet: '3000.00',
+              }}
+            />
+
+            <EndpointDoc
+              method="DELETE"
+              path="/api/v1/documents/:id/items/:itemId"
+              description="Dokumentposition loeschen"
+              responseExample={{
+                message: 'Position geloescht',
+              }}
+            />
+
+            <EndpointDoc
+              method="PUT"
+              path="/api/v1/documents/:id/status"
+              description="Dokumentstatus aendern"
+              requestBody={{
+                status: 'sent',
+              }}
+              responseExample={{
+                id: 'uuid',
+                status: 'sent',
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/documents/:id/convert"
+              description="Angebot in Rechnung umwandeln"
+              responseExample={{
+                id: 'new-uuid',
+                type: 'invoice',
+                number: 'RE-2026-0003',
+                status: 'draft',
+              }}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Activities */}
+      <TabsContent value="activities" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Aktivitaeten</CardTitle>
+            <CardDescription>Notizen, E-Mails, Anrufe und Termine</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/activities"
+              description="Aktivitaeten abrufen"
+              queryParams={['leadId=uuid', 'companyId=uuid', 'personId=uuid', 'type=note']}
+              responseExample={{
+                data: [
+                  {
+                    id: 'uuid',
+                    type: 'note',
+                    subject: 'Telefonat',
+                    content: 'Kunde ist interessiert an...',
+                    createdAt: '2026-01-15T10:30:00Z',
+                    user: { id: 'uuid', firstName: 'Max', lastName: 'Mustermann' },
+                  },
+                ],
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/activities"
+              description="Neue Aktivitaet erstellen"
+              requestBody={{
+                leadId: 'uuid',
+                companyId: 'uuid',
+                type: 'note',
+                subject: 'Erstgespraech',
+                content: 'Kunde zeigt Interesse an IT-Sicherheit',
+              }}
+              responseExample={{
+                id: 'uuid',
+                type: 'note',
+                subject: 'Erstgespraech',
+              }}
+            />
+
+            <EndpointDoc
+              method="PUT"
+              path="/api/v1/activities/:id"
+              description="Aktivitaet aktualisieren"
+              requestBody={{
+                subject: 'Aktualisierter Betreff',
+                content: 'Aktualisierter Inhalt',
+              }}
+              responseExample={{
+                id: 'uuid',
+                subject: 'Aktualisierter Betreff',
+              }}
+            />
+
+            <EndpointDoc
+              method="DELETE"
+              path="/api/v1/activities/:id"
+              description="Aktivitaet loeschen"
+              responseExample={{
+                message: 'Aktivitaet geloescht',
               }}
             />
           </CardContent>
@@ -463,7 +708,7 @@ export function ApiDocsContent() {
                 categoryId: 'uuid',
                 priceNet: '149.99',
                 vatRate: '19.00',
-                unit: 'Stück',
+                unit: 'Stueck',
                 status: 'active',
               }}
               responseExample={{
@@ -507,12 +752,166 @@ export function ApiDocsContent() {
         </Card>
       </TabsContent>
 
+      {/* DIN SPEC 27076 */}
+      <TabsContent value="din-audit" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>DIN SPEC 27076</CardTitle>
+            <CardDescription>IT-Sicherheitsaudits und Foerdermittel</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/din/audits"
+              description="Alle DIN-Audits abrufen"
+              queryParams={['page=1', 'limit=20', 'status=in_progress']}
+              responseExample={{
+                data: [
+                  {
+                    id: 'uuid',
+                    companyName: 'Musterfirma GmbH',
+                    status: 'in_progress',
+                    totalScore: 42,
+                    maxScore: 100,
+                    createdAt: '2026-01-15T10:00:00Z',
+                  },
+                ],
+                pagination: { page: 1, limit: 20, total: 5 },
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/din/audits"
+              description="Neues DIN-Audit erstellen"
+              requestBody={{
+                companyId: 'uuid',
+                companyName: 'Musterfirma GmbH',
+                auditorName: 'Max Mustermann',
+              }}
+              responseExample={{
+                id: 'uuid',
+                companyName: 'Musterfirma GmbH',
+                status: 'draft',
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/din/audits/:id"
+              description="Einzelnes DIN-Audit abrufen"
+              responseExample={{
+                id: 'uuid',
+                companyName: 'Musterfirma GmbH',
+                status: 'in_progress',
+                answers: [],
+              }}
+            />
+
+            <EndpointDoc
+              method="PUT"
+              path="/api/v1/din/audits/:id"
+              description="DIN-Audit aktualisieren"
+              requestBody={{
+                status: 'completed',
+              }}
+              responseExample={{
+                id: 'uuid',
+                status: 'completed',
+              }}
+            />
+
+            <EndpointDoc
+              method="DELETE"
+              path="/api/v1/din/audits/:id"
+              description="DIN-Audit loeschen"
+              responseExample={{
+                message: 'Audit geloescht',
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/din/audits/:id/answers"
+              description="Antworten fuer ein Audit speichern"
+              requestBody={{
+                answers: [
+                  { requirementId: 'uuid', value: 2, comment: 'Teilweise umgesetzt' },
+                ],
+              }}
+              responseExample={{
+                message: 'Antworten gespeichert',
+                totalScore: 42,
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/din/audits/:id/answers"
+              description="Antworten eines Audits abrufen"
+              responseExample={{
+                data: [
+                  { requirementId: 'uuid', value: 2, comment: 'Teilweise umgesetzt' },
+                ],
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/din/audits/:id/scoring"
+              description="Scoring/Ergebnis eines Audits abrufen"
+              responseExample={{
+                totalScore: 42,
+                maxScore: 100,
+                percentage: 42,
+                categoryScores: [
+                  { category: 'Organisation & Sensibilisierung', score: 8, maxScore: 20 },
+                ],
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/din/requirements"
+              description="Alle DIN-Anforderungen (Fragenkatalog) abrufen"
+              responseExample={{
+                data: [
+                  {
+                    id: 'uuid',
+                    category: 'Organisation & Sensibilisierung',
+                    question: 'Gibt es einen IT-Sicherheitsbeauftragten?',
+                    maxPoints: 4,
+                  },
+                ],
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/din/grants"
+              description="Verfuegbare Foerdermittel abrufen"
+              responseExample={{
+                data: [
+                  {
+                    id: 'uuid',
+                    name: 'go-digital',
+                    description: 'Foerderprogramm des BMWi',
+                    maxAmount: 16500,
+                    region: 'bundesweit',
+                  },
+                ],
+              }}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
       {/* AI */}
       <TabsContent value="ai" className="space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>KI-Funktionen</CardTitle>
-            <CardDescription>AI Provider, Prompts und Logs</CardDescription>
+            <CardDescription>AI Provider, Prompt-Templates und Logs</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <EndpointDoc
@@ -555,9 +954,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="POST"
               path="/api/v1/ai/completion"
-              description="Text-Vervollständigung via KI"
+              description="Text-Vervollstaendigung via KI"
               requestBody={{
-                prompt: 'Schreibe einen Text über...',
+                prompt: 'Schreibe einen Text ueber...',
                 systemPrompt: 'Du bist ein hilfreicher Assistent',
               }}
               responseExample={{
@@ -613,8 +1012,74 @@ export function ApiDocsContent() {
                     name: 'Lead-Recherche',
                     systemPrompt: 'Du bist...',
                     userPrompt: 'Recherchiere...',
+                    isActive: true,
+                    isDefault: true,
                   },
                 ],
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/ai-prompt-templates"
+              description="Neues Prompt-Template erstellen"
+              requestBody={{
+                slug: 'custom_template',
+                name: 'Benutzerdefiniertes Template',
+                description: 'Beschreibung',
+                systemPrompt: 'Du bist ein Experte fuer...',
+                userPrompt: 'Analysiere {{input}}',
+                outputFormat: 'Antworte mit JSON...',
+              }}
+              responseExample={{
+                id: 'uuid',
+                slug: 'custom_template',
+                name: 'Benutzerdefiniertes Template',
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/ai-prompt-templates/:id"
+              description="Einzelnes Prompt-Template abrufen"
+              responseExample={{
+                id: 'uuid',
+                slug: 'lead_research',
+                name: 'Lead-Recherche',
+                systemPrompt: 'Du bist...',
+                userPrompt: 'Recherchiere...',
+                outputFormat: 'Antworte NUR mit JSON...',
+              }}
+            />
+
+            <EndpointDoc
+              method="PUT"
+              path="/api/v1/ai-prompt-templates/:id"
+              description="Prompt-Template aktualisieren"
+              requestBody={{
+                systemPrompt: 'Aktualisierter System-Prompt...',
+              }}
+              responseExample={{
+                id: 'uuid',
+                systemPrompt: 'Aktualisierter System-Prompt...',
+              }}
+            />
+
+            <EndpointDoc
+              method="DELETE"
+              path="/api/v1/ai-prompt-templates/:id"
+              description="Prompt-Template loeschen (nur benutzerdefinierte)"
+              responseExample={{
+                message: 'Template geloescht',
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/ai-prompt-templates/seed"
+              description="Standard-Templates initialisieren"
+              responseExample={{
+                message: 'Standard-Templates erstellt',
               }}
             />
           </CardContent>
@@ -626,7 +1091,7 @@ export function ApiDocsContent() {
         <Card>
           <CardHeader>
             <CardTitle>Webhooks</CardTitle>
-            <CardDescription>HTTP-Callbacks für Automatisierungen</CardDescription>
+            <CardDescription>HTTP-Callbacks fuer Automatisierungen</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <EndpointDoc
@@ -679,9 +1144,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/webhooks/:id"
-              description="Webhook löschen"
+              description="Webhook loeschen"
               responseExample={{
-                message: 'Webhook gelöscht',
+                message: 'Webhook geloescht',
               }}
             />
           </CardContent>
@@ -693,7 +1158,7 @@ export function ApiDocsContent() {
         <Card>
           <CardHeader>
             <CardTitle>Administration</CardTitle>
-            <CardDescription>Benutzer, Rollen, API-Keys und Tenant-Verwaltung</CardDescription>
+            <CardDescription>Benutzer, Rollen, API-Keys, Tenant und Export/Import</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <EndpointDoc
@@ -777,7 +1242,7 @@ export function ApiDocsContent() {
               responseExample={{
                 id: 'uuid',
                 name: 'Mein API Key',
-                key: 'xk_live_...', // Nur einmalig sichtbar!
+                key: 'xk_live_...',
               }}
             />
 
@@ -820,6 +1285,34 @@ export function ApiDocsContent() {
                   totalCompanies: 85,
                   totalPersons: 200,
                 },
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/export/database"
+              description="Kompletten Datenbank-Export herunterladen (JSON)"
+              responseExample={{
+                companies: ['...'],
+                persons: ['...'],
+                leads: ['...'],
+                documents: ['...'],
+                exportedAt: '2026-01-15T10:00:00Z',
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/import/database"
+              description="Datenbank-Import durchfuehren (JSON)"
+              requestBody={{
+                companies: ['...'],
+                persons: ['...'],
+                leads: ['...'],
+              }}
+              responseExample={{
+                message: 'Import erfolgreich',
+                imported: { companies: 10, persons: 25, leads: 15 },
               }}
             />
           </CardContent>
