@@ -3,6 +3,7 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
+  "ignoreCommand": "if git log -1 --format='%an' | grep -q 'github-actions\\[bot\\]'; then exit 0; else exit 1; fi",
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30
