@@ -29,6 +29,19 @@ interface Product {
   tags: string[]
   notes: string | null
   category: { id: string; name: string } | null
+  isPublic: boolean
+  isHighlight: boolean
+  shortDescription: string | null
+  slug: string | null
+  seoTitle: string | null
+  seoDescription: string | null
+  images: unknown
+  weight: string | null
+  dimensions: unknown
+  manufacturer: string | null
+  ean: string | null
+  minOrderQuantity: number
+  deliveryTime: string | null
   createdAt: string
   updatedAt: string
 }
@@ -132,6 +145,8 @@ export default function ProductDetailPage() {
 
   // Edit mode - show the form
   if (editing) {
+    const dims = product.dimensions as { length?: number; width?: number; height?: number; unit?: string } | null
+    const imgs = (product.images || []) as Array<{ url: string; alt: string; sortOrder: number }>
     const formData = {
       id: product.id,
       type: product.type,
@@ -145,6 +160,22 @@ export default function ProductDetailPage() {
       status: product.status || 'active',
       tags: product.tags || [],
       notes: product.notes || '',
+      isPublic: product.isPublic ?? false,
+      isHighlight: product.isHighlight ?? false,
+      shortDescription: product.shortDescription || '',
+      slug: product.slug || '',
+      seoTitle: product.seoTitle || '',
+      seoDescription: product.seoDescription || '',
+      images: imgs,
+      weight: product.weight || '',
+      dimensionLength: dims?.length?.toString() || '',
+      dimensionWidth: dims?.width?.toString() || '',
+      dimensionHeight: dims?.height?.toString() || '',
+      dimensionUnit: dims?.unit || 'cm',
+      manufacturer: product.manufacturer || '',
+      ean: product.ean || '',
+      minOrderQuantity: (product.minOrderQuantity ?? 1).toString(),
+      deliveryTime: product.deliveryTime || '',
     }
 
     return (

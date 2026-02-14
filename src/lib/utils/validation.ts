@@ -228,6 +228,19 @@ export const updateProductCategorySchema = createProductCategorySchema.partial()
 export const productTypeSchema = z.enum(['product', 'service'])
 export const productStatusSchema = z.enum(['active', 'inactive', 'draft'])
 
+const productImageSchema = z.object({
+  url: z.string().max(500),
+  alt: z.string().max(255).optional().or(z.literal('')),
+  sortOrder: z.number().int().min(0).optional(),
+})
+
+const productDimensionsSchema = z.object({
+  length: z.number().min(0).optional(),
+  width: z.number().min(0).optional(),
+  height: z.number().min(0).optional(),
+  unit: z.enum(['cm', 'mm', 'm']).default('cm'),
+})
+
 export const createProductSchema = z.object({
   type: productTypeSchema,
   name: z.string().min(1).max(255),
@@ -241,6 +254,22 @@ export const createProductSchema = z.object({
   tags: z.array(z.string()).default([]),
   notes: z.string().optional().or(z.literal('')),
   customFields: z.record(z.string(), z.unknown()).default({}),
+  // Web & SEO
+  isPublic: z.boolean().default(false),
+  isHighlight: z.boolean().default(false),
+  shortDescription: z.string().optional().or(z.literal('')),
+  slug: z.string().max(255).optional().or(z.literal('')),
+  seoTitle: z.string().max(70).optional().or(z.literal('')),
+  seoDescription: z.string().max(160).optional().or(z.literal('')),
+  // Media
+  images: z.array(productImageSchema).default([]),
+  // Logistics
+  weight: z.number().min(0).nullable().optional(),
+  dimensions: productDimensionsSchema.nullable().optional(),
+  manufacturer: z.string().max(255).optional().or(z.literal('')),
+  ean: z.string().max(13).optional().or(z.literal('')),
+  minOrderQuantity: z.number().int().min(1).default(1),
+  deliveryTime: z.string().max(100).optional().or(z.literal('')),
 })
 
 export const updateProductSchema = createProductSchema.partial()

@@ -1028,6 +1028,7 @@ export default function CompanyDetailPage() {
             entityType="company"
             entityId={companyId}
             entityLabel={company.name}
+            companyData={company}
             onResearchComplete={() => {
               // Reload company data after research (CRM fields may have been updated)
               fetchCompany()

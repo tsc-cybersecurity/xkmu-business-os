@@ -3,6 +3,7 @@ import { apiSuccess, apiValidationError, apiServerError } from '@/lib/utils/api-
 import { generateBlogPostSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { BlogAIService } from '@/lib/services/ai/blog-ai.service'
 import { BlogPostService } from '@/lib/services/blog-post.service'
+import { UnsplashService } from '@/lib/services/unsplash.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
 export async function POST(request: NextRequest) {
@@ -22,12 +23,30 @@ export async function POST(request: NextRequest) {
         feature: 'blog_generate',
       })
 
+      // Fetch featured image from Unsplash using AI-generated search keywords
+      let featuredImage = generated.featuredImage || ''
+      let featuredImageAlt = generated.featuredImageAlt || ''
+
+      if (generated.featuredImage) {
+        try {
+          const photo = await UnsplashService.searchPhoto(generated.featuredImage)
+          if (photo) {
+            featuredImage = photo.url
+            featuredImageAlt = generated.featuredImageAlt || photo.alt
+          }
+        } catch (error) {
+          console.warn('Failed to fetch Unsplash image:', error)
+        }
+      }
+
       // Save as draft
       const post = await BlogPostService.create(auth.tenantId, {
         title: generated.title,
         slug: generated.slug,
         excerpt: generated.excerpt,
         content: generated.content,
+        featuredImage,
+        featuredImageAlt,
         seoTitle: generated.seoTitle,
         seoDescription: generated.seoDescription,
         seoKeywords: generated.seoKeywords,

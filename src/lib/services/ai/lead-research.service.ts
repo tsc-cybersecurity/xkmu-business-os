@@ -517,16 +517,70 @@ export const LeadResearchService = {
     return { ...result, researchedAt: new Date().toISOString() }
   },
 
-  async researchCompany(input: CompanyResearchInput, context?: AIRequestContext): Promise<CompanyResearchResult> {
+  async researchCompany(input: CompanyResearchInput, context?: AIRequestContext): Promise<{
+    research: CompanyResearchResult
+    scrapedPages: Array<{ url: string; title: string; content: string; scrapedAt: string }>
+  }> {
+    // Step 0: Load Firecrawl API key from DB if tenant context is available
+    let firecrawlApiKey: string | undefined
+    if (context?.tenantId) {
+      try {
+        const { db } = await import('@/lib/db')
+        const { aiProviders } = await import('@/lib/db/schema')
+        const { eq, and } = await import('drizzle-orm')
+
+        const [provider] = await db
+          .select({ apiKey: aiProviders.apiKey })
+          .from(aiProviders)
+          .where(
+            and(
+              eq(aiProviders.tenantId, context.tenantId),
+              eq(aiProviders.providerType, 'firecrawl'),
+              eq(aiProviders.isActive, true)
+            )
+          )
+          .limit(1)
+
+        if (provider?.apiKey) {
+          firecrawlApiKey = provider.apiKey
+          console.log('[Company Research] Firecrawl API key loaded from DB')
+        }
+      } catch (err) {
+        console.warn('[Company Research] Could not load Firecrawl API key:', err)
+      }
+    }
+
     // Step 1: Scrape website if URL available and no website content provided yet
     let enrichedInput = { ...input }
+    const scrapedPages: Array<{ url: string; title: string; content: string; scrapedAt: string }> = []
     if (input.website && !input.websiteContent) {
       console.log(`[Company Research] Scraping website: ${input.website}`)
       try {
-        const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(input.website)
+        const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(input.website, firecrawlApiKey)
         if (scrapeResult.success && scrapeResult.combinedText) {
           enrichedInput.websiteContent = scrapeResult.combinedText
           console.log(`[Company Research] Website scraped successfully (${scrapeResult.combinedText.length} chars)`)
+
+          // Collect scraped pages for persistence
+          const now = new Date().toISOString()
+          if (scrapeResult.mainPage?.success) {
+            scrapedPages.push({
+              url: scrapeResult.mainPage.url,
+              title: scrapeResult.mainPage.title,
+              content: scrapeResult.mainPage.text.substring(0, 5000),
+              scrapedAt: now,
+            })
+          }
+          for (const sub of scrapeResult.subPages || []) {
+            if (sub.success) {
+              scrapedPages.push({
+                url: sub.url,
+                title: sub.title,
+                content: sub.text.substring(0, 5000),
+                scrapedAt: now,
+              })
+            }
+          }
         }
       } catch (scrapeError) {
         console.error('[Company Research] Website scraping failed:', scrapeError)
@@ -604,7 +658,10 @@ export const LeadResearchService = {
       }
     }
 
-    return { ...result, researchedAt: new Date().toISOString() }
+    return {
+      research: { ...result, researchedAt: new Date().toISOString() },
+      scrapedPages,
+    }
   },
 
   async researchPerson(input: PersonResearchInput, context?: AIRequestContext): Promise<PersonResearchResult> {

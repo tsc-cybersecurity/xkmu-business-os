@@ -54,6 +54,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   cmsBlockTemplates: many(cmsBlockTemplates),
   blogPosts: many(blogPosts),
   mediaUploads: many(mediaUploads),
+  companyResearches: many(companyResearches),
 }))
 
 // ============================================
@@ -222,6 +223,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   persons: many(persons),
   leads: many(leads),
   activities: many(activities),
+  companyResearches: many(companyResearches),
 }))
 
 // ============================================
@@ -396,6 +398,22 @@ export const products = pgTable('products', {
   // Status & Classification
   status: varchar('status', { length: 20 }).default('active'),
   tags: text('tags').array().default([]),
+  // Web & SEO
+  isPublic: boolean('is_public').default(false),
+  isHighlight: boolean('is_highlight').default(false),
+  shortDescription: text('short_description'),
+  slug: varchar('slug', { length: 255 }),
+  seoTitle: varchar('seo_title', { length: 70 }),
+  seoDescription: varchar('seo_description', { length: 160 }),
+  // Media
+  images: jsonb('images').default([]),
+  // Logistics (physical products)
+  weight: decimal('weight', { precision: 10, scale: 3 }),
+  dimensions: jsonb('dimensions'),
+  manufacturer: varchar('manufacturer', { length: 255 }),
+  ean: varchar('ean', { length: 13 }),
+  minOrderQuantity: integer('min_order_quantity').default(1),
+  deliveryTime: varchar('delivery_time', { length: 100 }),
   // Metadata
   notes: text('notes'),
   customFields: jsonb('custom_fields').default({}),
@@ -409,6 +427,9 @@ export const products = pgTable('products', {
   index('idx_products_category_id').on(table.tenantId, table.categoryId),
   index('idx_products_sku').on(table.tenantId, table.sku),
   index('idx_products_name').on(table.tenantId, table.name),
+  index('idx_products_slug').on(table.tenantId, table.slug),
+  index('idx_products_is_public').on(table.tenantId, table.isPublic),
+  index('idx_products_ean').on(table.tenantId, table.ean),
 ])
 
 export const productsRelations = relations(products, ({ one }) => ({
@@ -1068,6 +1089,36 @@ export const mediaUploadsRelations = relations(mediaUploads, ({ one }) => ({
 }))
 
 // ============================================
+// Company Researches (Persistente KI-Recherche-Ergebnisse)
+// ============================================
+export const companyResearches = pgTable('company_researches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  status: varchar('status', { length: 20 }).notNull().default('completed'), // completed | applied | rejected
+  researchData: jsonb('research_data'), // Full CompanyResearchResult + proposedProfileText
+  scrapedPages: jsonb('scraped_pages'), // Array [{url, title, content, scrapedAt}]
+  proposedChanges: jsonb('proposed_changes'), // Proposed CRM field updates
+  appliedAt: timestamp('applied_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_company_researches_tenant').on(table.tenantId),
+  index('idx_company_researches_tenant_company').on(table.tenantId, table.companyId),
+  index('idx_company_researches_tenant_status').on(table.tenantId, table.status),
+])
+
+export const companyResearchesRelations = relations(companyResearches, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [companyResearches.tenantId],
+    references: [tenants.id],
+  }),
+  company: one(companies, {
+    fields: [companyResearches.companyId],
+    references: [companies.id],
+  }),
+}))
+
+// ============================================
 // Type Exports
 // ============================================
 export type Tenant = typeof tenants.$inferSelect
@@ -1153,3 +1204,6 @@ export type NewBlogPost = typeof blogPosts.$inferInsert
 
 export type MediaUpload = typeof mediaUploads.$inferSelect
 export type NewMediaUpload = typeof mediaUploads.$inferInsert
+
+export type CompanyResearch = typeof companyResearches.$inferSelect
+export type NewCompanyResearch = typeof companyResearches.$inferInsert

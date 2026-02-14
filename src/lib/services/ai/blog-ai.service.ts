@@ -9,6 +9,8 @@ export interface GeneratedPost {
   seoDescription: string
   seoKeywords: string
   tags: string[]
+  featuredImage: string
+  featuredImageAlt: string
 }
 
 export interface GeneratePostOptions {
@@ -61,7 +63,9 @@ Antworte NUR als JSON:
   "seoTitle": "SEO-Titel (max 60 Zeichen)",
   "seoDescription": "Meta-Description (max 155 Zeichen)",
   "seoKeywords": "keyword1, keyword2, keyword3",
-  "tags": ["tag1", "tag2", "tag3"]
+  "tags": ["tag1", "tag2", "tag3"],
+  "featuredImage": "2-4 englische Keywords fuer Unsplash-Bildsuche, z.B. 'technology server network'",
+  "featuredImageAlt": "Beschreibender Alt-Text fuer das Bild auf Deutsch"
 }`
 
     const response = await AIService.completeWithContext(prompt, context, {

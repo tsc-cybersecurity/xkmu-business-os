@@ -14,11 +14,18 @@ import {
 } from '@/components/ui/select'
 import { FormField } from '@/components/shared'
 import { toast } from 'sonner'
-import { Loader2, Save, X } from 'lucide-react'
+import { Loader2, Plus, Save, Trash2, X } from 'lucide-react'
+import { Label } from '@/components/ui/label'
 
 interface Category {
   id: string
   name: string
+}
+
+interface ProductImage {
+  url: string
+  alt: string
+  sortOrder: number
 }
 
 interface ProductFormData {
@@ -33,6 +40,25 @@ interface ProductFormData {
   status: string
   tags: string[]
   notes: string
+  // Web & SEO
+  isPublic: boolean
+  isHighlight: boolean
+  shortDescription: string
+  slug: string
+  seoTitle: string
+  seoDescription: string
+  // Media
+  images: ProductImage[]
+  // Logistics
+  weight: string
+  dimensionLength: string
+  dimensionWidth: string
+  dimensionHeight: string
+  dimensionUnit: string
+  manufacturer: string
+  ean: string
+  minOrderQuantity: string
+  deliveryTime: string
 }
 
 const statusOptions = [
@@ -84,6 +110,22 @@ export function ProductForm({ product, mode, productType, onSaved, onCancel }: P
       status: 'active',
       tags: [],
       notes: '',
+      isPublic: false,
+      isHighlight: false,
+      shortDescription: '',
+      slug: '',
+      seoTitle: '',
+      seoDescription: '',
+      images: [],
+      weight: '',
+      dimensionLength: '',
+      dimensionWidth: '',
+      dimensionHeight: '',
+      dimensionUnit: 'cm',
+      manufacturer: '',
+      ean: '',
+      minOrderQuantity: '1',
+      deliveryTime: '',
     }
   )
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -107,11 +149,25 @@ export function ProductForm({ product, mode, productType, onSaved, onCancel }: P
     }
   }
 
-  const updateField = (field: keyof ProductFormData, value: string | string[]) => {
+  const updateField = (field: keyof ProductFormData, value: string | string[] | boolean | ProductImage[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }))
     }
+  }
+
+  const addImage = () => {
+    updateField('images', [...formData.images, { url: '', alt: '', sortOrder: formData.images.length }])
+  }
+
+  const removeImage = (index: number) => {
+    updateField('images', formData.images.filter((_, i) => i !== index))
+  }
+
+  const updateImage = (index: number, field: keyof ProductImage, value: string) => {
+    const updated = [...formData.images]
+    updated[index] = { ...updated[index], [field]: value }
+    updateField('images', updated)
   }
 
   const validateForm = (): boolean => {
@@ -140,12 +196,40 @@ export function ProductForm({ product, mode, productType, onSaved, onCancel }: P
     setLoading(true)
 
     try {
+      const hasDimensions = formData.dimensionLength || formData.dimensionWidth || formData.dimensionHeight
       const payload = {
-        ...formData,
         type: productType,
+        name: formData.name,
+        description: formData.description,
+        sku: formData.sku,
         categoryId: formData.categoryId || null,
         priceNet: formData.priceNet ? parseFloat(formData.priceNet) : null,
         vatRate: parseFloat(formData.vatRate),
+        unit: formData.unit,
+        status: formData.status,
+        tags: formData.tags,
+        notes: formData.notes,
+        // Web & SEO
+        isPublic: formData.isPublic,
+        isHighlight: formData.isHighlight,
+        shortDescription: formData.shortDescription,
+        slug: formData.slug,
+        seoTitle: formData.seoTitle,
+        seoDescription: formData.seoDescription,
+        // Media
+        images: formData.images.filter(img => img.url),
+        // Logistics
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+        dimensions: hasDimensions ? {
+          length: formData.dimensionLength ? parseFloat(formData.dimensionLength) : undefined,
+          width: formData.dimensionWidth ? parseFloat(formData.dimensionWidth) : undefined,
+          height: formData.dimensionHeight ? parseFloat(formData.dimensionHeight) : undefined,
+          unit: formData.dimensionUnit,
+        } : null,
+        manufacturer: formData.manufacturer,
+        ean: formData.ean,
+        minOrderQuantity: formData.minOrderQuantity ? parseInt(formData.minOrderQuantity) : 1,
+        deliveryTime: formData.deliveryTime,
       }
 
       const url =
@@ -361,6 +445,240 @@ export function ProductForm({ product, mode, productType, onSaved, onCancel }: P
           )}
         </CardContent>
       </Card>
+
+      {/* Webseite & SEO */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Webseite & SEO</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isPublic"
+                checked={formData.isPublic}
+                onChange={(e) => updateField('isPublic', e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="isPublic">Öffentlich sichtbar</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isHighlight"
+                checked={formData.isHighlight}
+                onChange={(e) => updateField('isHighlight', e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <Label htmlFor="isHighlight">Hervorgehoben</Label>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField label="URL-Slug" htmlFor="slug">
+              <Input
+                id="slug"
+                value={formData.slug}
+                onChange={(e) => updateField('slug', e.target.value)}
+                placeholder="wird-automatisch-generiert"
+              />
+            </FormField>
+
+            <FormField label="Kurzteaser" htmlFor="shortDescription">
+              <Input
+                id="shortDescription"
+                value={formData.shortDescription}
+                onChange={(e) => updateField('shortDescription', e.target.value)}
+                placeholder="Kurze Beschreibung für Listings"
+              />
+            </FormField>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <FormField label="SEO-Titel (max. 70 Zeichen)" htmlFor="seoTitle">
+              <Input
+                id="seoTitle"
+                value={formData.seoTitle}
+                onChange={(e) => updateField('seoTitle', e.target.value)}
+                maxLength={70}
+                placeholder="SEO-optimierter Titel"
+              />
+              <span className="text-xs text-muted-foreground">{formData.seoTitle.length}/70</span>
+            </FormField>
+
+            <FormField label="Meta-Description (max. 160 Zeichen)" htmlFor="seoDescription">
+              <Input
+                id="seoDescription"
+                value={formData.seoDescription}
+                onChange={(e) => updateField('seoDescription', e.target.value)}
+                maxLength={160}
+                placeholder="Meta-Description für Suchmaschinen"
+              />
+              <span className="text-xs text-muted-foreground">{formData.seoDescription.length}/160</span>
+            </FormField>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bilder */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Bilder</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addImage}>
+              <Plus className="mr-2 h-4 w-4" />
+              Bild hinzufügen
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {formData.images.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Noch keine Bilder hinzugefügt
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {formData.images.map((img, index) => (
+                <div key={index} className="flex gap-3 items-start">
+                  <div className="flex-1 grid gap-2 md:grid-cols-2">
+                    <Input
+                      value={img.url}
+                      onChange={(e) => updateImage(index, 'url', e.target.value)}
+                      placeholder="Bild-URL"
+                    />
+                    <Input
+                      value={img.alt}
+                      onChange={(e) => updateImage(index, 'alt', e.target.value)}
+                      placeholder="Alt-Text"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeImage(index)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Logistik (nur bei type='product') */}
+      {!isService && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Logistik</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <FormField label="Gewicht (kg)" htmlFor="weight">
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  value={formData.weight}
+                  onChange={(e) => updateField('weight', e.target.value)}
+                  placeholder="0.000"
+                />
+              </FormField>
+
+              <FormField label="Hersteller" htmlFor="manufacturer">
+                <Input
+                  id="manufacturer"
+                  value={formData.manufacturer}
+                  onChange={(e) => updateField('manufacturer', e.target.value)}
+                  placeholder="Herstellername"
+                />
+              </FormField>
+
+              <FormField label="EAN / Barcode" htmlFor="ean">
+                <Input
+                  id="ean"
+                  value={formData.ean}
+                  onChange={(e) => updateField('ean', e.target.value)}
+                  maxLength={13}
+                  placeholder="4000000000000"
+                />
+              </FormField>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-4">
+              <FormField label="Länge" htmlFor="dimensionLength">
+                <Input
+                  id="dimensionLength"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={formData.dimensionLength}
+                  onChange={(e) => updateField('dimensionLength', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Breite" htmlFor="dimensionWidth">
+                <Input
+                  id="dimensionWidth"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={formData.dimensionWidth}
+                  onChange={(e) => updateField('dimensionWidth', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Höhe" htmlFor="dimensionHeight">
+                <Input
+                  id="dimensionHeight"
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  value={formData.dimensionHeight}
+                  onChange={(e) => updateField('dimensionHeight', e.target.value)}
+                />
+              </FormField>
+              <FormField label="Einheit" htmlFor="dimensionUnit">
+                <Select
+                  value={formData.dimensionUnit}
+                  onValueChange={(v) => updateField('dimensionUnit', v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cm">cm</SelectItem>
+                    <SelectItem value="mm">mm</SelectItem>
+                    <SelectItem value="m">m</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormField>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField label="Mindestbestellmenge" htmlFor="minOrderQuantity">
+                <Input
+                  id="minOrderQuantity"
+                  type="number"
+                  min="1"
+                  value={formData.minOrderQuantity}
+                  onChange={(e) => updateField('minOrderQuantity', e.target.value)}
+                />
+              </FormField>
+
+              <FormField label="Lieferzeit" htmlFor="deliveryTime">
+                <Input
+                  id="deliveryTime"
+                  value={formData.deliveryTime}
+                  onChange={(e) => updateField('deliveryTime', e.target.value)}
+                  placeholder="z.B. 2-3 Werktage"
+                />
+              </FormField>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Tags & Notizen */}
       <Card>

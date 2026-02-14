@@ -4,13 +4,28 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Brain, CheckCircle2, Loader2, MapPin, Sparkles } from 'lucide-react'
+import { Brain, CheckCircle2, Loader2, MapPin, Sparkles, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface CompanyData {
+  street?: string | null
+  houseNumber?: string | null
+  postalCode?: string | null
+  city?: string | null
+  country?: string | null
+  phone?: string | null
+  email?: string | null
+  website?: string | null
+  industry?: string | null
+  employeeCount?: number | null
+  notes?: string | null
+}
 
 interface AIResearchCardProps {
   entityType: 'company' | 'person'
   entityId: string
   entityLabel: string
+  companyData?: CompanyData
   onResearchComplete?: (result: Record<string, unknown>) => void
 }
 
@@ -22,7 +37,9 @@ interface GlobalResearchEntry {
   result: Record<string, unknown> | null
   updatedFields: string[]
   profileWritten: boolean
-  promise: Promise<void> | null // The active fetch promise
+  researchId: string | null
+  proposedChanges: Record<string, unknown> | null
+  promise: Promise<void> | null
 }
 
 const globalResearchStore = new Map<string, GlobalResearchEntry>()
@@ -82,8 +99,10 @@ const crmFieldLabels: Record<string, string> = {
   country: 'Land',
   phone: 'Telefon',
   email: 'E-Mail',
+  website: 'Website',
   industry: 'Branche',
   employeeCount: 'Mitarbeiter',
+  notes: 'Notizen/Firmenprofil',
 }
 
 function renderValue(value: unknown): string | null {
@@ -258,12 +277,145 @@ function ResearchResultDisplay({ data }: { data: Record<string, unknown> }) {
 }
 
 // ============================================
+// Proposed Changes Panel
+// ============================================
+function ProposedChangesPanel({
+  proposedChanges,
+  companyData,
+  researchId,
+  entityId,
+  onApply,
+  onReject,
+}: {
+  proposedChanges: Record<string, unknown>
+  companyData?: CompanyData
+  researchId: string
+  entityId: string
+  onApply: () => void
+  onReject: () => void
+}) {
+  const [applying, setApplying] = useState(false)
+  const [rejecting, setRejecting] = useState(false)
+
+  const handleApply = async () => {
+    setApplying(true)
+    try {
+      const response = await fetch(
+        `/api/v1/companies/${entityId}/research/${researchId}/apply`,
+        { method: 'POST' }
+      )
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast.success('Recherche-Ergebnisse erfolgreich übernommen')
+        onApply()
+      } else {
+        toast.error(data.error?.message || 'Übernahme fehlgeschlagen')
+      }
+    } catch {
+      toast.error('Fehler bei der Übernahme')
+    } finally {
+      setApplying(false)
+    }
+  }
+
+  const handleReject = async () => {
+    setRejecting(true)
+    try {
+      const response = await fetch(
+        `/api/v1/companies/${entityId}/research/${researchId}/reject`,
+        { method: 'POST' }
+      )
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        toast.success('Recherche-Ergebnisse verworfen')
+        onReject()
+      } else {
+        toast.error(data.error?.message || 'Verwerfen fehlgeschlagen')
+      }
+    } catch {
+      toast.error('Fehler beim Verwerfen')
+    } finally {
+      setRejecting(false)
+    }
+  }
+
+  const changedFields = Object.entries(proposedChanges).filter(
+    ([, value]) => value !== null && value !== undefined && value !== ''
+  )
+
+  if (changedFields.length === 0) return null
+
+  return (
+    <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg">
+      <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-3">
+        Vorgeschlagene Änderungen
+      </h4>
+      <div className="space-y-2 mb-4">
+        {changedFields.map(([field, newValue]) => {
+          const oldValue = companyData
+            ? (companyData as Record<string, unknown>)[field]
+            : undefined
+          const displayOld = oldValue ? String(oldValue) : '(leer)'
+          const displayNew = field === 'notes'
+            ? '(Firmenprofil wird aktualisiert)'
+            : String(newValue)
+
+          return (
+            <div key={field} className="grid grid-cols-3 gap-2 text-sm">
+              <span className="font-medium text-amber-900 dark:text-amber-100">
+                {crmFieldLabels[field] || field}
+              </span>
+              <span className="text-muted-foreground truncate" title={displayOld}>
+                {displayOld}
+              </span>
+              <span className="text-amber-800 dark:text-amber-200 truncate" title={displayNew}>
+                → {displayNew}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          onClick={handleApply}
+          disabled={applying || rejecting}
+        >
+          {applying ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+          )}
+          Übernehmen
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleReject}
+          disabled={applying || rejecting}
+        >
+          {rejecting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <XCircle className="mr-2 h-4 w-4" />
+          )}
+          Verwerfen
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ============================================
 // Main component
 // ============================================
 export function AIResearchCard({
   entityType,
   entityId,
   entityLabel,
+  companyData,
   onResearchComplete,
 }: AIResearchCardProps) {
   const stateKey = `${entityType}-${entityId}`
@@ -274,6 +426,9 @@ export function AIResearchCard({
   const [result, setResult] = useState<Record<string, unknown> | null>(globalEntry?.result ?? null)
   const [updatedFields, setUpdatedFields] = useState<string[]>(globalEntry?.updatedFields ?? [])
   const [profileWritten, setProfileWritten] = useState(globalEntry?.profileWritten ?? false)
+  const [researchId, setResearchId] = useState<string | null>(globalEntry?.researchId ?? null)
+  const [proposedChanges, setProposedChanges] = useState<Record<string, unknown> | null>(globalEntry?.proposedChanges ?? null)
+  const [applied, setApplied] = useState(false)
   const [loadingExisting, setLoadingExisting] = useState(!globalEntry?.result && !globalEntry?.researching)
 
   const mountedRef = useRef(true)
@@ -288,7 +443,6 @@ export function AIResearchCard({
     const entry = globalResearchStore.get(stateKey)
 
     if (entry?.researching && entry.promise) {
-      // Research is running (started before this mount) → attach to the promise
       setResearching(true)
       setLoadingExisting(false)
       entry.promise.then(() => {
@@ -298,19 +452,21 @@ export function AIResearchCard({
           setResult(updated.result)
           setUpdatedFields(updated.updatedFields)
           setProfileWritten(updated.profileWritten)
+          setResearchId(updated.researchId)
+          setProposedChanges(updated.proposedChanges)
           setResearching(false)
           onResearchComplete?.(updated.result)
         }
       })
     } else if (entry?.result) {
-      // We already have results from global state → show them
       setResult(entry.result)
       setUpdatedFields(entry.updatedFields)
       setProfileWritten(entry.profileWritten)
+      setResearchId(entry.researchId)
+      setProposedChanges(entry.proposedChanges)
       setResearching(false)
       setLoadingExisting(false)
     } else {
-      // No global state → load from server
       loadExistingResearch()
     }
 
@@ -330,12 +486,13 @@ export function AIResearchCard({
       if (response.ok && data.success && data.data.hasResearch && data.data.research) {
         const researchData = data.data.research as Record<string, unknown>
         setResult(researchData)
-        // Persist in global store
         globalResearchStore.set(stateKey, {
           researching: false,
           result: researchData,
           updatedFields: [],
           profileWritten: false,
+          researchId: null,
+          proposedChanges: null,
           promise: null,
         })
       }
@@ -353,8 +510,10 @@ export function AIResearchCard({
     setUpdatedFields([])
     setProfileWritten(false)
     setResult(null)
+    setResearchId(null)
+    setProposedChanges(null)
+    setApplied(false)
 
-    // Create the research promise
     const researchPromise = (async () => {
       try {
         const response = await fetch(apiPath, { method: 'POST' })
@@ -363,29 +522,27 @@ export function AIResearchCard({
         if (response.ok && data.success) {
           const researchData = data.data.research as Record<string, unknown>
           const newUpdatedFields = (data.data.updatedFields as string[] | undefined) || []
-          const newProfileWritten = !!data.data.profileWritten
+          const newResearchId = data.data.researchId as string | null
+          const newProposedChanges = (data.data.proposedChanges as Record<string, unknown> | undefined) || null
 
-          // ALWAYS update global store (even if component is unmounted)
           globalResearchStore.set(stateKey, {
             researching: false,
             result: researchData,
             updatedFields: newUpdatedFields,
-            profileWritten: newProfileWritten,
+            profileWritten: false,
+            researchId: newResearchId,
+            proposedChanges: newProposedChanges,
             promise: null,
           })
 
-          // Update UI only if still mounted
           if (mountedRef.current) {
             setResult(researchData)
             setUpdatedFields(newUpdatedFields)
-            setProfileWritten(newProfileWritten)
+            setResearchId(newResearchId)
+            setProposedChanges(newProposedChanges)
             setResearching(false)
 
-            const fieldCount = newUpdatedFields.length
-            const msg = entityType === 'company' && fieldCount > 0
-              ? `KI-Recherche abgeschlossen – ${fieldCount} Felder im CRM aktualisiert`
-              : 'KI-Recherche erfolgreich abgeschlossen'
-            toast.success(msg)
+            toast.success('KI-Recherche abgeschlossen – bitte prüfen Sie die vorgeschlagenen Änderungen')
             onResearchComplete?.(researchData)
           }
         } else {
@@ -395,6 +552,8 @@ export function AIResearchCard({
             result: null,
             updatedFields: [],
             profileWritten: false,
+            researchId: null,
+            proposedChanges: null,
             promise: null,
           })
           if (mountedRef.current) {
@@ -408,6 +567,8 @@ export function AIResearchCard({
           result: globalResearchStore.get(stateKey)?.result ?? null,
           updatedFields: [],
           profileWritten: false,
+          researchId: null,
+          proposedChanges: null,
           promise: null,
         })
         if (mountedRef.current) {
@@ -417,14 +578,43 @@ export function AIResearchCard({
       }
     })()
 
-    // Store the promise in global state so remounted components can attach to it
     globalResearchStore.set(stateKey, {
       researching: true,
       result: null,
       updatedFields: [],
       profileWritten: false,
+      researchId: null,
+      proposedChanges: null,
       promise: researchPromise,
     })
+  }
+
+  const handleApply = () => {
+    setApplied(true)
+    setProposedChanges(null)
+    setProfileWritten(true)
+    // Update global store
+    const entry = globalResearchStore.get(stateKey)
+    if (entry) {
+      globalResearchStore.set(stateKey, {
+        ...entry,
+        proposedChanges: null,
+        profileWritten: true,
+      })
+    }
+    onResearchComplete?.(result || {})
+  }
+
+  const handleReject = () => {
+    setProposedChanges(null)
+    // Update global store
+    const entry = globalResearchStore.get(stateKey)
+    if (entry) {
+      globalResearchStore.set(stateKey, {
+        ...entry,
+        proposedChanges: null,
+      })
+    }
   }
 
   return (
@@ -483,8 +673,20 @@ export function AIResearchCard({
           </div>
         ) : null}
 
-        {/* CRM Update Info Banner */}
-        {(updatedFields.length > 0 || profileWritten) ? (
+        {/* Proposed Changes Panel (two-step flow) */}
+        {!researching && proposedChanges && researchId && entityType === 'company' ? (
+          <ProposedChangesPanel
+            proposedChanges={proposedChanges}
+            companyData={companyData}
+            researchId={researchId}
+            entityId={entityId}
+            onApply={handleApply}
+            onReject={handleReject}
+          />
+        ) : null}
+
+        {/* CRM Update Info Banner (shown after apply) */}
+        {applied || profileWritten ? (
           <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
             <div className="flex items-start gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
@@ -497,11 +699,9 @@ export function AIResearchCard({
                     Aktualisierte Felder: {updatedFields.map(f => crmFieldLabels[f] || f).join(', ')}
                   </p>
                 ) : null}
-                {profileWritten ? (
-                  <p className="text-green-700 dark:text-green-300 mt-1">
-                    Firmenprofil wurde in das Notizfeld geschrieben.
-                  </p>
-                ) : null}
+                <p className="text-green-700 dark:text-green-300 mt-1">
+                  Firmenprofil wurde in das Notizfeld geschrieben.
+                </p>
               </div>
             </div>
           </div>

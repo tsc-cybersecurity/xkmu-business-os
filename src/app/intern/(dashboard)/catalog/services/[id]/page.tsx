@@ -29,6 +29,13 @@ interface Service {
   tags: string[]
   notes: string | null
   category: { id: string; name: string } | null
+  isPublic: boolean
+  isHighlight: boolean
+  shortDescription: string | null
+  slug: string | null
+  seoTitle: string | null
+  seoDescription: string | null
+  images: unknown
   createdAt: string
   updatedAt: string
 }
@@ -132,6 +139,7 @@ export default function ServiceDetailPage() {
 
   // Edit mode - show the form
   if (editing) {
+    const imgs = (service.images || []) as Array<{ url: string; alt: string; sortOrder: number }>
     const formData = {
       id: service.id,
       type: service.type,
@@ -145,6 +153,22 @@ export default function ServiceDetailPage() {
       status: service.status || 'active',
       tags: service.tags || [],
       notes: service.notes || '',
+      isPublic: service.isPublic ?? false,
+      isHighlight: service.isHighlight ?? false,
+      shortDescription: service.shortDescription || '',
+      slug: service.slug || '',
+      seoTitle: service.seoTitle || '',
+      seoDescription: service.seoDescription || '',
+      images: imgs,
+      weight: '',
+      dimensionLength: '',
+      dimensionWidth: '',
+      dimensionHeight: '',
+      dimensionUnit: 'cm',
+      manufacturer: '',
+      ean: '',
+      minOrderQuantity: '1',
+      deliveryTime: '',
     }
 
     return (

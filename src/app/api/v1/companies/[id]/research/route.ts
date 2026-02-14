@@ -9,6 +9,7 @@ import {
   apiError,
 } from '@/lib/utils/api-response'
 import { CompanyService } from '@/lib/services/company.service'
+import { CompanyResearchService } from '@/lib/services/company-research.service'
 import { LeadResearchService } from '@/lib/services/ai'
 import type { CompanyResearchResult, CompanyAddress } from '@/lib/services/ai'
 import { getSession } from '@/lib/auth/session'
@@ -62,7 +63,6 @@ function buildCompanyProfileText(
     lines.push('')
   }
 
-  // Addresses
   if (research.addresses && research.addresses.length > 0) {
     lines.push('--- STANDORTE ---')
     research.addresses.forEach((addr: CompanyAddress, i: number) => {
@@ -78,7 +78,6 @@ function buildCompanyProfileText(
     lines.push('')
   }
 
-  // Key data
   const keyData: [string, string][] = []
   if (research.industry && research.industry !== 'Nicht ermittelbar') keyData.push(['Branche', research.industry])
   if (research.employeeCount && research.employeeCount !== 'Nicht ermittelbar') keyData.push(['Mitarbeiter', research.employeeCount])
@@ -92,39 +91,24 @@ function buildCompanyProfileText(
     lines.push('')
   }
 
-  // Products & Services
-  if (research.products?.length > 0) {
-    lines.push(`Produkte: ${research.products.join(', ')}`)
-  }
-  if (research.services?.length > 0) {
-    lines.push(`Dienstleistungen: ${research.services.join(', ')}`)
-  }
-  if (research.products?.length > 0 || research.services?.length > 0) {
-    lines.push('')
-  }
+  if (research.products?.length > 0) lines.push(`Produkte: ${research.products.join(', ')}`)
+  if (research.services?.length > 0) lines.push(`Dienstleistungen: ${research.services.join(', ')}`)
+  if (research.products?.length > 0 || research.services?.length > 0) lines.push('')
 
-  // Strengths & USPs
   if (research.strengths?.length > 0) {
     lines.push('--- STÄRKEN/USP ---')
     research.strengths.forEach(s => lines.push(`• ${s}`))
     lines.push('')
   }
 
-  // Competitors
   if (research.competitors?.length > 0) {
     lines.push(`Wettbewerber: ${research.competitors.join(', ')}`)
     lines.push('')
   }
 
-  // Technologies
-  if (research.technologies?.length > 0) {
-    lines.push(`Technologien: ${research.technologies.join(', ')}`)
-  }
-  if (research.certifications?.length > 0) {
-    lines.push(`Zertifizierungen: ${research.certifications.join(', ')}`)
-  }
+  if (research.technologies?.length > 0) lines.push(`Technologien: ${research.technologies.join(', ')}`)
+  if (research.certifications?.length > 0) lines.push(`Zertifizierungen: ${research.certifications.join(', ')}`)
 
-  // Financials
   const fin = research.financials
   if (fin) {
     const finParts: string[] = []
@@ -138,7 +122,6 @@ function buildCompanyProfileText(
     }
   }
 
-  // Social Media
   const sm = research.socialMedia
   if (sm) {
     const smParts: string[] = []
@@ -178,7 +161,6 @@ function extractCrmUpdateData(
 ): Record<string, unknown> {
   const updates: Record<string, unknown> = {}
 
-  // Fill primary address from first address in research (if company has no address)
   if (!existingCompany.street && research.addresses?.length > 0) {
     const primaryAddr = research.addresses[0]
     if (primaryAddr.street) updates.street = primaryAddr.street
@@ -188,40 +170,33 @@ function extractCrmUpdateData(
     if (primaryAddr.country) updates.country = primaryAddr.country
   }
 
-  // Fill phone from first address if missing
   if (!existingCompany.phone) {
     const phoneAddr = research.addresses?.find(a => a.phone)
     if (phoneAddr?.phone) updates.phone = phoneAddr.phone
   }
 
-  // Fill email from first address if missing
   if (!existingCompany.email) {
     const emailAddr = research.addresses?.find(a => a.email)
     if (emailAddr?.email) updates.email = emailAddr.email
   }
 
-  // Fill website if missing
   if (!existingCompany.website && research.website && research.website !== 'Nicht ermittelbar') {
     updates.website = research.website
   }
 
-  // Fill industry if missing
   if (!existingCompany.industry && research.industry && research.industry !== 'Nicht ermittelbar') {
     updates.industry = research.industry
   }
 
-  // Fill employee count if missing
   if (!existingCompany.employeeCount && research.employeeCount && research.employeeCount !== 'Nicht ermittelbar') {
     const match = research.employeeCount.match(/\d+/)
-    if (match) {
-      updates.employeeCount = parseInt(match[0])
-    }
+    if (match) updates.employeeCount = parseInt(match[0])
   }
 
   return updates
 }
 
-// POST /api/v1/companies/[id]/research - Start AI research for a company (with website scraping)
+// POST /api/v1/companies/[id]/research - Start AI research, save to DB, return proposed changes (NO auto-apply)
 export async function POST(
   request: NextRequest,
   { params }: { params: Params }
@@ -242,7 +217,7 @@ export async function POST(
     console.log(`[Company Research] Starting research for: ${company.name}`)
 
     // Run AI research (includes automatic website scraping if URL available)
-    const researchResult = await LeadResearchService.researchCompany({
+    const { research: researchResult, scrapedPages } = await LeadResearchService.researchCompany({
       name: company.name,
       legalForm: company.legalForm || undefined,
       industry: company.industry || undefined,
@@ -263,7 +238,24 @@ export async function POST(
     // Extract CRM-relevant updates (only fill missing fields)
     const crmUpdates = extractCrmUpdateData(company, researchResult)
 
-    // Store additional addresses in customFields
+    // Build proposed changes (including notes override)
+    const proposedChanges = {
+      ...crmUpdates,
+      notes: companyProfileText,
+    }
+
+    // Save research result to DB (but do NOT apply to company yet)
+    const savedResearch = await CompanyResearchService.create(auth.tenantId, id, {
+      companyId: id,
+      researchData: {
+        ...researchResult,
+        proposedProfileText: companyProfileText,
+      },
+      scrapedPages,
+      proposedChanges,
+    })
+
+    // Still store aiResearch in customFields for backward-compat display
     const existingCustomFields = (company.customFields || {}) as Record<string, unknown>
     const updatedCustomFields = {
       ...existingCustomFields,
@@ -286,26 +278,15 @@ export async function POST(
       },
     }
 
-    // Apply updates to company record
-    const updatePayload = {
-      ...crmUpdates,
-      notes: companyProfileText,
+    await CompanyService.update(auth.tenantId, id, {
       customFields: updatedCustomFields,
-    }
-
-    console.log(`[Company Research] Updating company record with:`, Object.keys(updatePayload))
-
-    const updatedCompany = await CompanyService.update(
-      auth.tenantId,
-      id,
-      updatePayload
-    )
+    })
 
     return apiSuccess({
-      company: updatedCompany,
+      researchId: savedResearch.id,
       research: researchResult,
+      proposedChanges,
       updatedFields: Object.keys(crmUpdates),
-      profileWritten: true,
     })
   } catch (error) {
     console.error('Company research error:', error)
@@ -318,7 +299,7 @@ export async function POST(
   }
 }
 
-// GET /api/v1/companies/[id]/research - Get last research data from customFields
+// GET /api/v1/companies/[id]/research - Get all past researches for this company
 export async function GET(
   request: NextRequest,
   { params }: { params: Params }
@@ -335,12 +316,16 @@ export async function GET(
     return apiNotFound('Company not found')
   }
 
+  const researches = await CompanyResearchService.listByCompany(auth.tenantId, id)
+
+  // Backward compat: also include customFields research data
   const customFields = (company.customFields || {}) as Record<string, unknown>
   const aiResearch = customFields.aiResearch as Record<string, unknown> | undefined
 
   return apiSuccess({
     company,
-    hasResearch: !!aiResearch,
+    researches,
+    hasResearch: researches.length > 0 || !!aiResearch,
     research: aiResearch || null,
   })
 }
