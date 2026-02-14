@@ -527,7 +527,6 @@ export function AIResearchCard({
   // Crawl state
   const [crawling, setCrawling] = useState(globalCrawlEntry?.crawling ?? false)
   const [crawls, setCrawls] = useState<CrawlRecord[]>([])
-  const [loadingCrawls, setLoadingCrawls] = useState(false)
 
   const mountedRef = useRef(true)
 
@@ -625,7 +624,6 @@ export function AIResearchCard({
   }, [apiPath, stateKey])
 
   const loadExistingCrawls = useCallback(async () => {
-    setLoadingCrawls(true)
     try {
       const response = await fetch(crawlApiPath, { method: 'GET' })
       const data = await response.json()
@@ -637,10 +635,6 @@ export function AIResearchCard({
       }
     } catch (error) {
       console.error('Failed to load existing crawls:', error)
-    } finally {
-      if (mountedRef.current) {
-        setLoadingCrawls(false)
-      }
     }
   }, [crawlApiPath])
 
@@ -811,157 +805,197 @@ export function AIResearchCard({
   }
 
   const hasWebsite = !!(companyWebsite || companyData?.website)
+  const hasCrawlData = crawls.length > 0
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5" />
-          KI-Recherche
-        </CardTitle>
-        <CardDescription>
-          {entityType === 'company'
-            ? `Automatische Informationsrecherche und CRM-Update für ${entityLabel}`
-            : `Automatische Analyse und Informationsrecherche für ${entityLabel}`
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {/* Action buttons */}
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleStartResearch}
-            disabled={researching || crawling}
-          >
-            {researching ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                KI analysiert...
-              </>
-            ) : (
-              <>
-                <Brain className="mr-2 h-4 w-4" />
-                {result ? 'Erneut recherchieren' : 'KI-Recherche'}
-              </>
-            )}
-          </Button>
+    <div className="space-y-6">
+      {/* ============================================ */}
+      {/* Card 1: Website Crawl (Firecrawl) */}
+      {/* ============================================ */}
+      {entityType === 'company' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Website Crawl
+            </CardTitle>
+            <CardDescription>
+              Vollständiger Website-Crawl via Firecrawl – erfasst alle Unterseiten als Markdown.
+              {hasCrawlData ? ' Die KI-Recherche nutzt diese Daten automatisch als Kontext.' : ''}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {/* Crawl button + status */}
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleStartCrawl}
+                disabled={crawling || researching || !hasWebsite}
+                title={!hasWebsite ? 'Keine Website hinterlegt' : undefined}
+              >
+                {crawling ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Website wird gecrawlt...
+                  </>
+                ) : (
+                  <>
+                    <Globe className="mr-2 h-4 w-4" />
+                    {hasCrawlData ? 'Erneut crawlen' : 'Website crawlen'}
+                  </>
+                )}
+              </Button>
 
-          {entityType === 'company' ? (
+              <Badge variant={crawling ? 'secondary' : hasCrawlData ? 'default' : 'outline'}>
+                {crawling ? 'Crawl läuft' : hasCrawlData ? `${crawls[0].pageCount || 0} Seiten erfasst` : 'Nicht gecrawlt'}
+              </Badge>
+
+              {!hasWebsite ? (
+                <span className="text-xs text-muted-foreground">Keine Website hinterlegt</span>
+              ) : null}
+            </div>
+
+            {/* Crawl progress */}
+            {crawling ? (
+              <div className="p-4 border border-dashed rounded-lg text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  Die Website wird vollständig gecrawlt (max. 20 Seiten). Dies kann bis zu 2 Minuten dauern...
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sie können frei navigieren – der Crawl läuft im Hintergrund weiter.
+                </p>
+              </div>
+            ) : null}
+
+            {/* Crawl results */}
+            {!crawling && hasCrawlData ? (
+              <CrawlResultsDisplay crawls={crawls} />
+            ) : !crawling && hasWebsite ? (
+              <p className="text-muted-foreground text-sm">
+                Klicken Sie auf &quot;Website crawlen&quot;, um die gesamte Website zu erfassen. Die Ergebnisse werden gespeichert und stehen der KI-Recherche als Kontext zur Verfügung.
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {/* ============================================ */}
+      {/* Card 2: KI-Recherche */}
+      {/* ============================================ */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="h-5 w-5" />
+            KI-Recherche
+          </CardTitle>
+          <CardDescription>
+            {entityType === 'company'
+              ? `KI-gestützte Analyse und CRM-Datenvorschläge für ${entityLabel}`
+              : `Automatische Analyse und Informationsrecherche für ${entityLabel}`
+            }
+            {entityType === 'company' && hasCrawlData
+              ? ' – nutzt automatisch die gecrawlten Website-Daten.'
+              : ''
+            }
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Research button + status */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
             <Button
               variant="outline"
               size="sm"
-              onClick={handleStartCrawl}
-              disabled={crawling || researching || !hasWebsite}
-              title={!hasWebsite ? 'Keine Website hinterlegt' : undefined}
+              onClick={handleStartResearch}
+              disabled={researching || crawling}
             >
-              {crawling ? (
+              {researching ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Website wird gecrawlt...
+                  KI analysiert...
                 </>
               ) : (
                 <>
-                  <Globe className="mr-2 h-4 w-4" />
-                  Website crawlen
+                  <Brain className="mr-2 h-4 w-4" />
+                  {result ? 'Erneut recherchieren' : 'KI-Recherche starten'}
                 </>
               )}
             </Button>
+
+            <Badge variant={researching ? 'secondary' : result ? 'default' : 'outline'}>
+              {researching ? 'Recherche läuft' : result ? 'Abgeschlossen' : 'Ausstehend'}
+            </Badge>
+          </div>
+
+          {/* Research progress */}
+          {researching ? (
+            <div className="mb-4 p-4 border border-dashed rounded-lg text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                {entityType === 'company'
+                  ? 'Die KI analysiert die verfügbaren Daten. Dies kann bis zu 2 Minuten dauern...'
+                  : 'Informationen werden recherchiert. Dies kann bis zu 2 Minuten dauern...'
+                }
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Sie können frei navigieren – die Recherche läuft im Hintergrund weiter.
+              </p>
+            </div>
           ) : null}
 
-          <Badge variant={researching || crawling ? 'secondary' : result ? 'default' : 'outline'}>
-            {researching ? 'KI-Recherche läuft' : crawling ? 'Crawl läuft' : result ? 'Abgeschlossen' : 'Ausstehend'}
-          </Badge>
-        </div>
+          {/* Proposed Changes Panel (two-step flow) */}
+          {!researching && proposedChanges && researchId && entityType === 'company' ? (
+            <ProposedChangesPanel
+              proposedChanges={proposedChanges}
+              companyData={companyData}
+              researchId={researchId}
+              entityId={entityId}
+              onApply={handleApply}
+              onReject={handleReject}
+            />
+          ) : null}
 
-        {/* Crawl progress */}
-        {crawling ? (
-          <div className="mb-4 p-4 border border-dashed rounded-lg text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              Die Website wird vollständig gecrawlt (max. 20 Seiten). Dies kann bis zu 2 Minuten dauern...
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Sie können frei navigieren – der Crawl läuft im Hintergrund weiter.
-            </p>
-          </div>
-        ) : null}
-
-        {/* Research progress */}
-        {researching ? (
-          <div className="mb-4 p-4 border border-dashed rounded-lg text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">
-              {entityType === 'company'
-                ? 'Die KI analysiert die verfügbaren Daten. Dies kann bis zu 2 Minuten dauern...'
-                : 'Informationen werden recherchiert. Dies kann bis zu 2 Minuten dauern...'
-              }
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Sie können frei navigieren – die Recherche läuft im Hintergrund weiter.
-            </p>
-          </div>
-        ) : null}
-
-        {/* Proposed Changes Panel (two-step flow) */}
-        {!researching && proposedChanges && researchId && entityType === 'company' ? (
-          <ProposedChangesPanel
-            proposedChanges={proposedChanges}
-            companyData={companyData}
-            researchId={researchId}
-            entityId={entityId}
-            onApply={handleApply}
-            onReject={handleReject}
-          />
-        ) : null}
-
-        {/* CRM Update Info Banner (shown after apply) */}
-        {applied || profileWritten ? (
-          <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-            <div className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-green-800 dark:text-green-200">
-                  CRM-Datensatz aktualisiert
-                </p>
-                {updatedFields.length > 0 ? (
-                  <p className="text-green-700 dark:text-green-300 mt-1">
-                    Aktualisierte Felder: {updatedFields.map(f => crmFieldLabels[f] || f).join(', ')}
+          {/* CRM Update Info Banner (shown after apply) */}
+          {applied || profileWritten ? (
+            <div className="mb-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-green-800 dark:text-green-200">
+                    CRM-Datensatz aktualisiert
                   </p>
-                ) : null}
-                <p className="text-green-700 dark:text-green-300 mt-1">
-                  Firmenprofil wurde in das Notizfeld geschrieben.
-                </p>
+                  {updatedFields.length > 0 ? (
+                    <p className="text-green-700 dark:text-green-300 mt-1">
+                      Aktualisierte Felder: {updatedFields.map(f => crmFieldLabels[f] || f).join(', ')}
+                    </p>
+                  ) : null}
+                  <p className="text-green-700 dark:text-green-300 mt-1">
+                    Firmenprofil wurde in das Notizfeld geschrieben.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {/* Crawl results */}
-        {!crawling && crawls.length > 0 ? (
-          <div className="mb-4">
-            <CrawlResultsDisplay crawls={crawls} />
-          </div>
-        ) : null}
-
-        {/* Content area */}
-        {loadingExisting && !researching ? (
-          <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Lade vorhandene Recherche-Ergebnisse...
-          </div>
-        ) : result && !researching ? (
-          <ResearchResultDisplay data={result} />
-        ) : !researching && !crawling ? (
-          <p className="text-muted-foreground text-sm">
-            {entityType === 'company'
-              ? 'Nutzen Sie "Website crawlen" um die Website zu erfassen, und "KI-Recherche" um automatisch Firmendaten zu analysieren und vorzuschlagen.'
-              : `Klicken Sie auf "KI-Recherche", um automatisch Informationen über ${entityLabel} zu sammeln.`
-            }
-          </p>
-        ) : null}
-      </CardContent>
-    </Card>
+          {/* Content area */}
+          {loadingExisting && !researching ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Lade vorhandene Recherche-Ergebnisse...
+            </div>
+          ) : result && !researching ? (
+            <ResearchResultDisplay data={result} />
+          ) : !researching ? (
+            <p className="text-muted-foreground text-sm">
+              {entityType === 'company'
+                ? 'Klicken Sie auf "KI-Recherche starten", um automatisch Firmendaten zu analysieren und CRM-Felder vorzuschlagen.'
+                : `Klicken Sie auf "KI-Recherche starten", um automatisch Informationen über ${entityLabel} zu sammeln.`
+              }
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
   )
 }
