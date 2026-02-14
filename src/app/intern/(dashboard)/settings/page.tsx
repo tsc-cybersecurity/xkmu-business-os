@@ -79,9 +79,9 @@ export default async function SettingsPage() {
             <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardHeader>
                 <Bot className="h-8 w-8 text-muted-foreground" />
-                <CardTitle className="mt-4">KI-Anbieter</CardTitle>
+                <CardTitle className="mt-4">Integrations</CardTitle>
                 <CardDescription>
-                  KI-Provider und API-Schlüssel verwalten
+                  KI-Provider, Firecrawl und API-Schlüssel verwalten
                 </CardDescription>
               </CardHeader>
             </Card>

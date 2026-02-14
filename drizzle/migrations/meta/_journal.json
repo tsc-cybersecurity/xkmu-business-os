@@ -36,6 +36,13 @@
       "when": 1770927458385,
       "tag": "0004_ambiguous_hedge_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771076190096,
+      "tag": "0005_normal_whistler",
+      "breakpoints": true
     }
   ]
 }

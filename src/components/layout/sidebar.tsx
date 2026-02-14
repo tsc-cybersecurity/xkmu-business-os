@@ -12,6 +12,7 @@ import {
   Lightbulb,
   Settings,
   Shield,
+  Globe,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
@@ -79,6 +80,14 @@ const navigation: NavItem[] = [
     requiredModule: 'ideas',
   },
   {
+    name: 'Website',
+    icon: Globe,
+    children: [
+      { name: 'CMS Seiten', href: '/intern/cms', requiredModule: 'cms' },
+      { name: 'Blog', href: '/intern/blog', requiredModule: 'blog' },
+    ],
+  },
+  {
     name: 'Cybersecurity',
     icon: Shield,
     children: [
@@ -92,7 +101,7 @@ const navigation: NavItem[] = [
     icon: Settings,
     children: [
       { name: 'Übersicht', href: '/intern/settings', requiredModule: 'settings' },
-      { name: 'KI-Anbieter', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
+      { name: 'Integrations', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
       { name: 'KI-Prompts', href: '/intern/settings/ai-prompts', requiredModule: 'ai_prompts' },
       { name: 'KI-Logging', href: '/intern/settings/ai-logs', requiredModule: 'ai_logs' },
       { name: 'Webhooks', href: '/intern/settings/webhooks', requiredModule: 'webhooks' },

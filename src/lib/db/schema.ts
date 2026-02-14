@@ -49,6 +49,11 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   documentItems: many(documentItems),
   dinAuditSessions: many(dinAuditSessions),
   dinAnswers: many(dinAnswers),
+  cmsPages: many(cmsPages),
+  cmsBlocks: many(cmsBlocks),
+  cmsBlockTemplates: many(cmsBlockTemplates),
+  blogPosts: many(blogPosts),
+  mediaUploads: many(mediaUploads),
 }))
 
 // ============================================
@@ -422,7 +427,7 @@ export const productsRelations = relations(products, ({ one }) => ({
 }))
 
 // ============================================
-// AI Providers (KI-Anbieter Konfiguration)
+// AI Providers (Integrations Konfiguration)
 // ============================================
 export const aiProviders = pgTable('ai_providers', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -904,6 +909,165 @@ export const dinGrants = pgTable('din_grants', {
 ])
 
 // ============================================
+// CMS Pages (Editierbare Seiten)
+// ============================================
+export const cmsPages = pgTable('cms_pages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  slug: varchar('slug', { length: 255 }).notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  seoTitle: varchar('seo_title', { length: 70 }),
+  seoDescription: varchar('seo_description', { length: 160 }),
+  seoKeywords: varchar('seo_keywords', { length: 255 }),
+  ogImage: varchar('og_image', { length: 500 }),
+  status: varchar('status', { length: 20 }).default('draft'),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cms_pages_tenant_slug').on(table.tenantId, table.slug),
+  index('idx_cms_pages_tenant_status').on(table.tenantId, table.status),
+])
+
+export const cmsPagesRelations = relations(cmsPages, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [cmsPages.tenantId],
+    references: [tenants.id],
+  }),
+  createdByUser: one(users, {
+    fields: [cmsPages.createdBy],
+    references: [users.id],
+  }),
+  blocks: many(cmsBlocks),
+}))
+
+// ============================================
+// CMS Blocks (Inhaltsblöcke pro Seite)
+// ============================================
+export const cmsBlocks = pgTable('cms_blocks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  pageId: uuid('page_id').notNull().references(() => cmsPages.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  blockType: varchar('block_type', { length: 50 }).notNull(),
+  sortOrder: integer('sort_order').default(0),
+  content: jsonb('content').default({}),
+  settings: jsonb('settings').default({}),
+  isVisible: boolean('is_visible').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cms_blocks_page_sort').on(table.pageId, table.sortOrder),
+  index('idx_cms_blocks_tenant').on(table.tenantId),
+])
+
+export const cmsBlocksRelations = relations(cmsBlocks, ({ one }) => ({
+  page: one(cmsPages, {
+    fields: [cmsBlocks.pageId],
+    references: [cmsPages.id],
+  }),
+  tenant: one(tenants, {
+    fields: [cmsBlocks.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+// ============================================
+// CMS Block Templates (Wiederverwendbare Blockvorlagen)
+// ============================================
+export const cmsBlockTemplates = pgTable('cms_block_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  blockType: varchar('block_type', { length: 50 }).notNull(),
+  content: jsonb('content').default({}),
+  settings: jsonb('settings').default({}),
+  isSystem: boolean('is_system').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cms_block_templates_tenant').on(table.tenantId),
+  index('idx_cms_block_templates_tenant_type').on(table.tenantId, table.blockType),
+])
+
+export const cmsBlockTemplatesRelations = relations(cmsBlockTemplates, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [cmsBlockTemplates.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+// ============================================
+// Blog Posts (Blog-Beiträge)
+// ============================================
+export const blogPosts = pgTable('blog_posts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 255 }).notNull(),
+  excerpt: text('excerpt'),
+  content: text('content'),
+  featuredImage: varchar('featured_image', { length: 500 }),
+  featuredImageAlt: varchar('featured_image_alt', { length: 255 }),
+  seoTitle: varchar('seo_title', { length: 70 }),
+  seoDescription: varchar('seo_description', { length: 160 }),
+  seoKeywords: varchar('seo_keywords', { length: 255 }),
+  tags: text('tags').array().default([]),
+  category: varchar('category', { length: 100 }),
+  status: varchar('status', { length: 20 }).default('draft'),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+  source: varchar('source', { length: 20 }).default('manual'),
+  aiMetadata: jsonb('ai_metadata'),
+  authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_blog_posts_tenant_slug').on(table.tenantId, table.slug),
+  index('idx_blog_posts_tenant_status').on(table.tenantId, table.status),
+  index('idx_blog_posts_tenant_published').on(table.tenantId, table.publishedAt),
+  index('idx_blog_posts_tenant_category').on(table.tenantId, table.category),
+])
+
+export const blogPostsRelations = relations(blogPosts, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [blogPosts.tenantId],
+    references: [tenants.id],
+  }),
+  author: one(users, {
+    fields: [blogPosts.authorId],
+    references: [users.id],
+  }),
+}))
+
+// ============================================
+// Media Uploads (Hochgeladene Dateien)
+// ============================================
+export const mediaUploads = pgTable('media_uploads', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  filename: varchar('filename', { length: 255 }).notNull(),
+  originalName: varchar('original_name', { length: 255 }).notNull(),
+  mimeType: varchar('mime_type', { length: 100 }).notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+  path: varchar('path', { length: 500 }).notNull(),
+  alt: varchar('alt', { length: 255 }),
+  uploadedBy: uuid('uploaded_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_media_uploads_tenant').on(table.tenantId),
+])
+
+export const mediaUploadsRelations = relations(mediaUploads, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [mediaUploads.tenantId],
+    references: [tenants.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [mediaUploads.uploadedBy],
+    references: [users.id],
+  }),
+}))
+
+// ============================================
 // Type Exports
 // ============================================
 export type Tenant = typeof tenants.$inferSelect
@@ -974,3 +1138,18 @@ export type NewDinAnswer = typeof dinAnswers.$inferInsert
 
 export type DinGrant = typeof dinGrants.$inferSelect
 export type NewDinGrant = typeof dinGrants.$inferInsert
+
+export type CmsPage = typeof cmsPages.$inferSelect
+export type NewCmsPage = typeof cmsPages.$inferInsert
+
+export type CmsBlock = typeof cmsBlocks.$inferSelect
+export type NewCmsBlock = typeof cmsBlocks.$inferInsert
+
+export type CmsBlockTemplate = typeof cmsBlockTemplates.$inferSelect
+export type NewCmsBlockTemplate = typeof cmsBlockTemplates.$inferInsert
+
+export type BlogPost = typeof blogPosts.$inferSelect
+export type NewBlogPost = typeof blogPosts.$inferInsert
+
+export type MediaUpload = typeof mediaUploads.$inferSelect
+export type NewMediaUpload = typeof mediaUploads.$inferInsert

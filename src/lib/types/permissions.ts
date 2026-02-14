@@ -21,6 +21,8 @@ export const MODULES = [
   'din_audits',
   'din_grants',
   'basisabsicherung',
+  'cms',
+  'blog',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -50,7 +52,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   webhooks: 'Webhooks',
   users: 'Benutzer',
   settings: 'Einstellungen',
-  ai_providers: 'KI-Anbieter',
+  ai_providers: 'Integrations',
   ai_prompts: 'KI-Prompts',
   ai_logs: 'KI-Logs',
   api_keys: 'API-Schluessel',
@@ -59,6 +61,8 @@ export const MODULE_LABELS: Record<Module, string> = {
   din_audits: 'DIN-Audits',
   din_grants: 'Foerdermittel',
   basisabsicherung: 'Basisabsicherung',
+  cms: 'CMS / Seiteneditor',
+  blog: 'Blog / IT-News',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {
@@ -98,10 +102,12 @@ function buildMemberAccess(): Record<Module, Record<Action, boolean>> {
     'api_keys',
     'webhooks',
     'roles',
+    'cms',
   ]
   return Object.fromEntries(
     MODULES.map((m) => {
       if (restrictedModules.includes(m)) return [m, { ...readOnly }]
+      if (m === 'blog') return [m, { ...readCreateUpdate }]
       return [m, { ...readCreateUpdate }]
     })
   ) as Record<Module, Record<Action, boolean>>
@@ -123,6 +129,15 @@ function buildAuditorAccess(): Record<Module, Record<Action, boolean>> {
       if (m === 'din_audits' || m === 'din_grants') return [m, { ...allTrue }]
       if (m === 'companies' || m === 'persons') return [m, { ...readOnly }]
       return [m, { ...allFalse }]
+    })
+  ) as Record<Module, Record<Action, boolean>>
+}
+
+function buildDesignerAccess(): Record<Module, Record<Action, boolean>> {
+  return Object.fromEntries(
+    MODULES.map((m) => {
+      if (m === 'cms' || m === 'blog') return [m, { ...allTrue }]
+      return [m, { ...readOnly }]
     })
   ) as Record<Module, Record<Action, boolean>>
 }
@@ -155,5 +170,10 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<
     displayName: 'IT-Auditor A',
     description: 'DIN SPEC 27076 Audits durchfuehren und Foerdermittel verwalten',
     permissions: buildAuditorAccess(),
+  },
+  designer: {
+    displayName: 'Designer',
+    description: 'CMS-Seiten und Blog-Beitraege verwalten',
+    permissions: buildDesignerAccess(),
   },
 }

@@ -367,6 +367,79 @@ export const updateDocumentStatusSchema = z.object({
 })
 
 // ============================================
+// CMS Page Schemas
+// ============================================
+export const cmsPageStatusSchema = z.enum(['draft', 'published'])
+
+export const createCmsPageSchema = z.object({
+  slug: z.string().min(1, 'Slug ist erforderlich').max(255).regex(/^\/[a-z0-9\-\/]*$/, 'Slug muss mit / beginnen und darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten'),
+  title: z.string().min(1, 'Titel ist erforderlich').max(255),
+  seoTitle: z.string().max(70).optional().or(z.literal('')),
+  seoDescription: z.string().max(160).optional().or(z.literal('')),
+  seoKeywords: z.string().max(255).optional().or(z.literal('')),
+  ogImage: z.string().max(500).optional().or(z.literal('')),
+  status: cmsPageStatusSchema.default('draft'),
+})
+
+export const updateCmsPageSchema = createCmsPageSchema.partial()
+
+// ============================================
+// CMS Block Schemas
+// ============================================
+export const cmsBlockTypeSchema = z.enum(['hero', 'features', 'cta', 'text', 'heading', 'image', 'cards', 'placeholder'])
+
+export const createCmsBlockSchema = z.object({
+  blockType: cmsBlockTypeSchema,
+  sortOrder: z.number().int().min(0).default(0),
+  content: z.record(z.string(), z.unknown()).default({}),
+  settings: z.record(z.string(), z.unknown()).default({}),
+  isVisible: z.boolean().default(true),
+})
+
+export const updateCmsBlockSchema = z.object({
+  blockType: cmsBlockTypeSchema.optional(),
+  sortOrder: z.number().int().min(0).optional(),
+  content: z.record(z.string(), z.unknown()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
+  isVisible: z.boolean().optional(),
+})
+
+export const reorderCmsBlocksSchema = z.object({
+  blockIds: z.array(z.string().uuid()).min(1, 'Mindestens ein Block erforderlich'),
+})
+
+// ============================================
+// Blog Post Schemas
+// ============================================
+export const blogPostStatusSchema = z.enum(['draft', 'published', 'archived'])
+export const blogPostSourceSchema = z.enum(['manual', 'ai', 'api'])
+
+export const createBlogPostSchema = z.object({
+  title: z.string().min(1, 'Titel ist erforderlich').max(255),
+  slug: z.string().max(255).optional().or(z.literal('')),
+  excerpt: z.string().optional().or(z.literal('')),
+  content: z.string().optional().or(z.literal('')),
+  featuredImage: z.string().max(500).optional().or(z.literal('')),
+  featuredImageAlt: z.string().max(255).optional().or(z.literal('')),
+  seoTitle: z.string().max(70).optional().or(z.literal('')),
+  seoDescription: z.string().max(160).optional().or(z.literal('')),
+  seoKeywords: z.string().max(255).optional().or(z.literal('')),
+  tags: z.array(z.string()).default([]),
+  category: z.string().max(100).optional().or(z.literal('')),
+  status: blogPostStatusSchema.default('draft'),
+  source: blogPostSourceSchema.default('manual'),
+})
+
+export const updateBlogPostSchema = createBlogPostSchema.partial()
+
+export const generateBlogPostSchema = z.object({
+  topic: z.string().min(1, 'Thema ist erforderlich').max(500),
+  language: z.enum(['de', 'en']).default('de'),
+  tone: z.enum(['professional', 'casual', 'technical']).default('professional'),
+  length: z.enum(['short', 'medium', 'long']).default('medium'),
+})
+
+// ============================================
 // Helper Functions
 // ============================================
 export function validateAndParse<T>(

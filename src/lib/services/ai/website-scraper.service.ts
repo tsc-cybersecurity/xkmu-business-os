@@ -198,16 +198,52 @@ async function scrapeSubpages(baseUrl: string): Promise<ScrapedWebsite[]> {
 // ============================================
 export const WebsiteScraperService = {
   /**
-   * Scrape a website: main page + important subpages
-   * Returns combined text content for AI analysis
+   * Scrape a website using Firecrawl API if available, otherwise fallback to HTML scraper.
+   * Returns combined text content for AI analysis.
    */
-  async scrapeCompanyWebsite(url: string): Promise<{
+  async scrapeCompanyWebsite(url: string, firecrawlApiKey?: string): Promise<{
     mainPage: ScrapedWebsite
     subPages: ScrapedWebsite[]
     combinedText: string
     success: boolean
   }> {
-    console.log(`[WebsiteScraper] Starting scrape of: ${url}`)
+    // Try Firecrawl first if API key is provided
+    if (firecrawlApiKey) {
+      try {
+        const { FirecrawlService } = await import('@/lib/services/firecrawl.service')
+        console.log(`[WebsiteScraper] Using Firecrawl for: ${url}`)
+        const result = await FirecrawlService.scrape(url, firecrawlApiKey)
+
+        if (result.success && result.markdown) {
+          let combinedText = `=== HAUPTSEITE: ${result.url} ===\n`
+          if (result.title) combinedText += `Titel: ${result.title}\n`
+          combinedText += result.markdown
+
+          if (combinedText.length > 30000) {
+            combinedText = combinedText.substring(0, 30000) + '\n\n[... Text gekürzt ...]'
+          }
+
+          return {
+            mainPage: {
+              url: result.url,
+              title: result.title,
+              text: result.markdown,
+              metaDescription: null,
+              success: true,
+            },
+            subPages: [],
+            combinedText,
+            success: true,
+          }
+        }
+
+        console.warn(`[WebsiteScraper] Firecrawl failed, falling back to HTML scraper: ${result.error}`)
+      } catch (error) {
+        console.warn('[WebsiteScraper] Firecrawl import/call failed, falling back to HTML scraper:', error)
+      }
+    }
+
+    console.log(`[WebsiteScraper] Starting HTML scrape of: ${url}`)
 
     // 1. Scrape main page
     const mainPage = await scrapePage(url)

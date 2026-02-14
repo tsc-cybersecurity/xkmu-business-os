@@ -1,23 +1,23 @@
-import { Monitor } from 'lucide-react'
+import { CmsPageContent } from '../../_components/cms-page-content'
+import { CmsPageService } from '@/lib/services/cms-page.service'
+import type { Metadata } from 'next'
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const page = await CmsPageService.getBySlugPublic('/it-consulting')
+    if (page) {
+      return {
+        title: page.seoTitle || page.title || 'IT Consulting',
+        description: page.seoDescription || undefined,
+        keywords: page.seoKeywords || undefined,
+      }
+    }
+  } catch {
+    // DB not available
+  }
+  return { title: 'IT Consulting' }
+}
 
 export default function ITConsultingPage() {
-  return (
-    <div className="container mx-auto px-4 py-16 max-w-3xl text-center">
-      <div className="flex justify-center mb-6">
-        <div className="rounded-full bg-emerald-100 dark:bg-emerald-900/30 p-6">
-          <Monitor className="h-12 w-12 text-emerald-600 dark:text-emerald-400" />
-        </div>
-      </div>
-      <h1 className="text-4xl font-bold mb-4">IT Consulting</h1>
-      <p className="text-xl text-muted-foreground mb-8">
-        Strategische IT-Beratung für die digitale Transformation Ihres Unternehmens.
-      </p>
-      <div className="rounded-lg border bg-card p-8">
-        <p className="text-muted-foreground">
-          Inhalt folgt in Kürze. Wir arbeiten an einer detaillierten Übersicht unserer
-          IT-Beratungsleistungen, einschließlich Digitalisierung, Cloud Migration und IT-Strategie.
-        </p>
-      </div>
-    </div>
-  )
+  return <CmsPageContent slug="/it-consulting" />
 }

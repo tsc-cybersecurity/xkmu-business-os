@@ -89,6 +89,23 @@ function createProviderFromConfig(config: AiProvider): AIProvider {
         model: config.model,
       })
     }
+    case 'deepseek': {
+      const { DeepseekProvider } = require('./deepseek.provider')
+      return new DeepseekProvider({
+        apiKey: config.apiKey || undefined,
+        model: config.model,
+      })
+    }
+    case 'kimi': {
+      const { KimiProvider } = require('./kimi.provider')
+      return new KimiProvider({
+        apiKey: config.apiKey || undefined,
+        model: config.model,
+      })
+    }
+    case 'firecrawl':
+      // Firecrawl is not an AI provider, skip
+      throw new Error('Firecrawl is not an AI provider')
     default:
       throw new Error(`Unknown provider type: ${config.providerType}`)
   }

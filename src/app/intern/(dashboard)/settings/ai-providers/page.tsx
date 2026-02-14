@@ -68,6 +68,9 @@ const providerTypes = [
   { value: 'openrouter', label: 'OpenRouter', needsKey: true },
   { value: 'gemini', label: 'Google Gemini', needsKey: true },
   { value: 'openai', label: 'OpenAI', needsKey: true },
+  { value: 'deepseek', label: 'Deepseek', needsKey: true },
+  { value: 'kimi', label: 'Kimi (Moonshot)', needsKey: true },
+  { value: 'firecrawl', label: 'Firecrawl (Web-Scraping)', needsKey: true },
 ]
 
 const providerColors: Record<string, string> = {
@@ -75,6 +78,9 @@ const providerColors: Record<string, string> = {
   openrouter: 'bg-purple-500',
   gemini: 'bg-blue-500',
   openai: 'bg-gray-700',
+  deepseek: 'bg-teal-500',
+  kimi: 'bg-orange-500',
+  firecrawl: 'bg-amber-500',
 }
 
 // Bekannte Modelle pro Provider-Typ
@@ -100,6 +106,16 @@ const providerModels: Record<string, Array<{ id: string; name: string; descripti
     { id: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4', description: 'Anthropic, ausgewogen' },
     { id: 'meta-llama/llama-3.3-70b-instruct', name: 'Llama 3.3 70B', description: 'Meta, Open Source' },
     { id: 'mistralai/mistral-large', name: 'Mistral Large', description: 'Mistral AI' },
+    { id: 'deepseek/deepseek-chat-v3', name: 'Deepseek V3', description: 'Deepseek, günstig & leistungsstark' },
+  ],
+  deepseek: [
+    { id: 'deepseek-chat', name: 'Deepseek V3', description: 'Schnell & günstig (Empfohlen)' },
+    { id: 'deepseek-reasoner', name: 'Deepseek R1', description: 'Reasoning-Modell' },
+  ],
+  kimi: [
+    { id: 'moonshot-v1-8k', name: 'Moonshot v1 8K', description: '8K Kontext (Empfohlen)' },
+    { id: 'moonshot-v1-32k', name: 'Moonshot v1 32K', description: '32K Kontext' },
+    { id: 'moonshot-v1-128k', name: 'Moonshot v1 128K', description: '128K Kontext' },
   ],
   ollama: [
     { id: 'gemma3', name: 'Gemma 3', description: 'Google, leicht & schnell (Empfohlen)' },
@@ -116,6 +132,8 @@ const defaultModels: Record<string, string> = {
   openrouter: 'openai/gpt-4o-mini',
   gemini: 'gemini-2.5-flash',
   openai: 'gpt-4o-mini',
+  deepseek: 'deepseek-chat',
+  kimi: 'moonshot-v1-8k',
 }
 
 const defaultBaseUrls: Record<string, string> = {
@@ -123,6 +141,9 @@ const defaultBaseUrls: Record<string, string> = {
   openrouter: '',
   gemini: '',
   openai: '',
+  deepseek: '',
+  kimi: '',
+  firecrawl: '',
 }
 
 const emptyForm: ProviderFormData = {
@@ -164,7 +185,7 @@ export default function AiProvidersPage() {
       }
     } catch (error) {
       console.error('Failed to fetch providers:', error)
-      toast.error('Fehler beim Laden der KI-Anbieter')
+      toast.error('Fehler beim Laden der Integrations')
     } finally {
       setLoading(false)
     }
@@ -216,15 +237,21 @@ export default function AiProvidersPage() {
     setFormData((prev) => ({
       ...prev,
       providerType: type,
-      model: prev.model || defaultModels[type] || '',
+      model: type === 'firecrawl' ? 'firecrawl' : (prev.model || defaultModels[type] || ''),
       baseUrl: prev.baseUrl || defaultBaseUrls[type] || '',
       name: prev.name || providerTypes.find((t) => t.value === type)?.label || '',
     }))
   }
 
+  const isFirecrawl = formData.providerType === 'firecrawl'
+
   const handleSave = async () => {
-    if (!formData.name.trim() || !formData.model.trim()) {
-      toast.error('Name und Modell sind erforderlich')
+    if (!formData.name.trim()) {
+      toast.error('Name ist erforderlich')
+      return
+    }
+    if (!isFirecrawl && !formData.model.trim()) {
+      toast.error('Modell ist erforderlich')
       return
     }
 
@@ -301,9 +328,9 @@ export default function AiProvidersPage() {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">KI-Anbieter</h1>
+            <h1 className="text-3xl font-bold">Integrations</h1>
             <p className="text-muted-foreground">
-              Verwalten Sie Ihre KI-Provider und API-Schlüssel
+              Verwalten Sie Ihre KI-Provider, Firecrawl und API-Schlüssel
             </p>
           </div>
         </div>
@@ -328,9 +355,9 @@ export default function AiProvidersPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Bot className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-1">Keine KI-Anbieter konfiguriert</h3>
+            <h3 className="text-lg font-semibold mb-1">Keine Integrations konfiguriert</h3>
             <p className="text-muted-foreground text-sm mb-4">
-              Fügen Sie einen KI-Anbieter hinzu, um die KI-Funktionen zu nutzen.
+              Fügen Sie einen KI-Provider oder eine Integration hinzu.
             </p>
             <Button onClick={openCreate}>
               <Plus className="mr-2 h-4 w-4" />
@@ -374,9 +401,16 @@ export default function AiProvidersPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>Modell: <code className="bg-muted px-1 rounded">{provider.model}</code></span>
-                      <span>Priorität: {provider.priority}</span>
-                      <span>Max Tokens: {provider.maxTokens}</span>
+                      {provider.providerType !== 'firecrawl' && (
+                        <>
+                          <span>Modell: <code className="bg-muted px-1 rounded">{provider.model}</code></span>
+                          <span>Priorität: {provider.priority}</span>
+                          <span>Max Tokens: {provider.maxTokens}</span>
+                        </>
+                      )}
+                      {provider.providerType === 'firecrawl' && (
+                        <span>Web-Scraping Integration</span>
+                      )}
                       {provider.apiKey && (
                         <span>API-Key: <code className="bg-muted px-1 rounded">{provider.apiKey}</code></span>
                       )}
@@ -472,52 +506,60 @@ export default function AiProvidersPage() {
               </FormField>
             )}
 
-            <FormField label="Modell" htmlFor="model" required>
-              {providerModels[formData.providerType] ? (
-                <div className="space-y-2">
-                  <Select
-                    value={providerModels[formData.providerType]?.some(m => m.id === formData.model) ? formData.model : '_custom'}
-                    onValueChange={(v) => {
-                      if (v !== '_custom') {
-                        setFormData((p) => ({ ...p, model: v }))
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Modell auswählen..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {providerModels[formData.providerType]?.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          <div className="flex flex-col">
-                            <span>{m.name}</span>
-                            <span className="text-xs text-muted-foreground">{m.description}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="_custom">Benutzerdefiniert...</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {(!providerModels[formData.providerType]?.some(m => m.id === formData.model)) && (
-                    <Input
-                      id="model"
-                      value={formData.model}
-                      onChange={(e) => setFormData((p) => ({ ...p, model: e.target.value }))}
-                      placeholder={defaultModels[formData.providerType] || 'Modellname eingeben'}
-                    />
-                  )}
-                </div>
-              ) : (
-                <Input
-                  id="model"
-                  value={formData.model}
-                  onChange={(e) => setFormData((p) => ({ ...p, model: e.target.value }))}
-                  placeholder="Modellname eingeben"
-                />
-              )}
-            </FormField>
+            {!isFirecrawl && (
+              <FormField label="Modell" htmlFor="model" required>
+                {providerModels[formData.providerType] ? (
+                  <div className="space-y-2">
+                    <Select
+                      value={providerModels[formData.providerType]?.some(m => m.id === formData.model) ? formData.model : '_custom'}
+                      onValueChange={(v) => {
+                        if (v !== '_custom') {
+                          setFormData((p) => ({ ...p, model: v }))
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Modell auswählen..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {providerModels[formData.providerType]?.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            <div className="flex flex-col">
+                              <span>{m.name}</span>
+                              <span className="text-xs text-muted-foreground">{m.description}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="_custom">Benutzerdefiniert...</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {(!providerModels[formData.providerType]?.some(m => m.id === formData.model)) && (
+                      <Input
+                        id="model"
+                        value={formData.model}
+                        onChange={(e) => setFormData((p) => ({ ...p, model: e.target.value }))}
+                        placeholder={defaultModels[formData.providerType] || 'Modellname eingeben'}
+                      />
+                    )}
+                  </div>
+                ) : (
+                  <Input
+                    id="model"
+                    value={formData.model}
+                    onChange={(e) => setFormData((p) => ({ ...p, model: e.target.value }))}
+                    placeholder="Modellname eingeben"
+                  />
+                )}
+              </FormField>
+            )}
 
-            <div className="grid grid-cols-3 gap-4">
+            {isFirecrawl && (
+              <p className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3">
+                Firecrawl wird als Web-Scraping-Integration verwendet. Wenn ein API-Key konfiguriert ist, wird Firecrawl automatisch für die Firmenrecherche genutzt.
+              </p>
+            )}
+
+            {!isFirecrawl && <div className="grid grid-cols-3 gap-4">
               <FormField label="Max Tokens" htmlFor="maxTokens">
                 <Input
                   id="maxTokens"
@@ -553,7 +595,7 @@ export default function AiProvidersPage() {
                   Niedrig = höhere Priorität
                 </p>
               </FormField>
-            </div>
+            </div>}
 
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -594,7 +636,7 @@ export default function AiProvidersPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         title="Anbieter löschen"
-        description="Möchten Sie diesen KI-Anbieter wirklich löschen? Dies kann nicht rückgängig gemacht werden."
+        description="Möchten Sie diese Integration wirklich löschen? Dies kann nicht rückgängig gemacht werden."
         confirmLabel="Löschen"
         variant="destructive"
         onConfirm={handleDelete}

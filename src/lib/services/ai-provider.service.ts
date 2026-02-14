@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { aiProviders, aiLogs } from '@/lib/db/schema'
-import { eq, and, desc, asc, sql, count, like, or } from 'drizzle-orm'
+import { eq, and, desc, asc, sql, count, like, or, ne } from 'drizzle-orm'
 
 // ============================================
 // AI Provider Service - DB-basierte Verwaltung
@@ -78,7 +78,8 @@ export const AiProviderService = {
       .where(
         and(
           eq(aiProviders.tenantId, tenantId),
-          eq(aiProviders.isActive, true)
+          eq(aiProviders.isActive, true),
+          ne(aiProviders.providerType, 'firecrawl')
         )
       )
       .orderBy(asc(aiProviders.priority))

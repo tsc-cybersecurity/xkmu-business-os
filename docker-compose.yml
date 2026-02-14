@@ -16,7 +16,7 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD:-xkmu_dev_password}@postgres:5432/xkmu_business_os
       - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_in_production_min_32_chars}
-      # AI Provider Keys werden jetzt ueber die Datenbank verwaltet (Einstellungen > KI-Anbieter)
+      # AI Provider Keys werden jetzt ueber die Datenbank verwaltet (Einstellungen > Integrations)
       - OLLAMA_BASE_URL=http://ollama:11434
       - REDIS_URL=redis://redis:6379
     volumes:
