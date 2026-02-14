@@ -314,22 +314,31 @@ function CrawlResultsDisplay({ crawls }: { crawls: CrawlRecord[] }) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h4 className="text-sm font-medium flex items-center gap-2">
-          <Globe className="h-4 w-4" />
-          Website-Crawl ({latest.pageCount || pages.length} Seiten)
-        </h4>
-        <span className="text-xs text-muted-foreground">
-          {new Date(latest.createdAt).toLocaleDateString('de-DE', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </span>
+      {/* Success banner */}
+      <div className="p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <span className="text-sm font-medium text-green-800 dark:text-green-200">
+              {latest.pageCount || pages.length} Seiten erfolgreich gecrawlt
+            </span>
+          </div>
+          <span className="text-xs text-green-700 dark:text-green-300">
+            {latest.createdAt ? new Date(latest.createdAt).toLocaleDateString('de-DE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            }) : ''}
+          </span>
+        </div>
+        <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+          Die KI-Recherche nutzt automatisch diese Daten als Kontext.
+        </p>
       </div>
 
+      {/* Page list */}
       {latest.status === 'completed' && pages.length > 0 ? (
         <div className="border rounded-lg divide-y max-h-[300px] overflow-y-auto">
           {pages.map((page, i) => (
@@ -358,11 +367,11 @@ function CrawlResultsDisplay({ crawls }: { crawls: CrawlRecord[] }) {
         <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
           Crawl fehlgeschlagen: {latest.error || 'Unbekannter Fehler'}
         </div>
-      ) : null}
-
-      <p className="text-xs text-muted-foreground">
-        Die KI-Recherche nutzt automatisch diese Daten als Kontext.
-      </p>
+      ) : (
+        <div className="p-3 bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-700 dark:text-amber-300">
+          Crawl abgeschlossen, aber keine Seiten-Daten vorhanden (Status: {latest.status}, Pages: {pages.length})
+        </div>
+      )}
     </div>
   )
 }
@@ -723,12 +732,15 @@ export function AIResearchCard({
   }
 
   const handleStartCrawl = async () => {
+    console.log('[Crawl UI] Starting crawl...', { crawlApiPath, hasWebsite })
     setCrawling(true)
 
     const crawlPromise = (async () => {
       try {
         const response = await fetch(crawlApiPath, { method: 'POST' })
+        console.log('[Crawl UI] Response status:', response.status)
         const data = await response.json()
+        console.log('[Crawl UI] Response data:', JSON.stringify(data).substring(0, 500))
 
         if (response.ok && data.success) {
           const crawlResult = data.data.crawl as CrawlRecord
@@ -746,6 +758,7 @@ export function AIResearchCard({
           }
         } else {
           const errorMsg = data.error?.message || 'Website-Crawl fehlgeschlagen'
+          console.error('[Crawl UI] API error:', errorMsg)
           globalCrawlStore.set(stateKey, {
             crawling: false,
             crawlResult: null,
@@ -757,6 +770,7 @@ export function AIResearchCard({
           }
         }
       } catch (error) {
+        console.error('[Crawl UI] Fetch error:', error)
         globalCrawlStore.set(stateKey, {
           crawling: false,
           crawlResult: null,
