@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache'
 import { CmsPageContent } from '../_components/cms-page-content'
 import { LandingHero } from '../_components/landing-hero'
 import { LandingFeatures } from '../_components/landing-features'
@@ -5,7 +6,10 @@ import { LandingCTA } from '../_components/landing-cta'
 import { CmsPageService } from '@/lib/services/cms-page.service'
 import type { Metadata } from 'next'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata(): Promise<Metadata> {
+  noStore()
   try {
     const page = await CmsPageService.getBySlugPublic('/')
     if (page) {

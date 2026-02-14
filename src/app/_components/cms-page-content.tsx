@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from 'next/cache'
 import { CmsPageService } from '@/lib/services/cms-page.service'
 import { CmsBlockRenderer } from './cms-block-renderer'
 
@@ -7,6 +8,7 @@ interface CmsPageContentProps {
 }
 
 export async function CmsPageContent({ slug, fallback }: CmsPageContentProps) {
+  noStore()
   const page = await CmsPageService.getBySlugPublic(slug)
 
   if (!page || page.blocks.length === 0) {
