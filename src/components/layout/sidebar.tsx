@@ -139,7 +139,10 @@ export function Sidebar() {
     >
       <div className="flex h-14 items-center justify-between border-b px-4">
         {!collapsed && (
-          <span className="font-semibold text-lg">xKMU OS</span>
+          <span className="font-semibold text-lg">
+            xKMU OS
+            <sup className="ml-1 text-[10px] font-normal text-muted-foreground">v{packageJson.version}</sup>
+          </span>
         )}
         <Button
           variant="ghost"
@@ -243,13 +246,6 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t px-4 py-3">
-        {!collapsed ? (
-          <span className="text-xs text-muted-foreground">v{packageJson.version}</span>
-        ) : (
-          <span className="text-xs text-muted-foreground text-center block">{packageJson.version.split('.')[2]}</span>
-        )}
-      </div>
     </aside>
   )
 }
