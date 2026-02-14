@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Brain, CheckCircle2, Loader2, MapPin, Sparkles, XCircle } from 'lucide-react'
+import { Brain, CheckCircle2, ExternalLink, Globe, Loader2, MapPin, Sparkles, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface CompanyData {
@@ -21,11 +21,29 @@ interface CompanyData {
   notes?: string | null
 }
 
+interface CrawlPage {
+  url: string
+  title: string
+  markdown: string
+  scrapedAt: string
+}
+
+interface CrawlRecord {
+  id: string
+  url: string
+  status: string
+  pageCount: number | null
+  pages: CrawlPage[] | null
+  error: string | null
+  createdAt: string
+}
+
 interface AIResearchCardProps {
   entityType: 'company' | 'person'
   entityId: string
   entityLabel: string
   companyData?: CompanyData
+  companyWebsite?: string
   onResearchComplete?: (result: Record<string, unknown>) => void
 }
 
@@ -43,6 +61,15 @@ interface GlobalResearchEntry {
 }
 
 const globalResearchStore = new Map<string, GlobalResearchEntry>()
+
+// Global crawl tracker
+interface GlobalCrawlEntry {
+  crawling: boolean
+  crawlResult: CrawlRecord | null
+  promise: Promise<void> | null
+}
+
+const globalCrawlStore = new Map<string, GlobalCrawlEntry>()
 
 // ============================================
 // Field labels & display helpers
@@ -277,6 +304,70 @@ function ResearchResultDisplay({ data }: { data: Record<string, unknown> }) {
 }
 
 // ============================================
+// Crawl Results Display
+// ============================================
+function CrawlResultsDisplay({ crawls }: { crawls: CrawlRecord[] }) {
+  if (crawls.length === 0) return null
+
+  const latest = crawls[0]
+  const pages = latest.pages || []
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-medium flex items-center gap-2">
+          <Globe className="h-4 w-4" />
+          Website-Crawl ({latest.pageCount || pages.length} Seiten)
+        </h4>
+        <span className="text-xs text-muted-foreground">
+          {new Date(latest.createdAt).toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </span>
+      </div>
+
+      {latest.status === 'completed' && pages.length > 0 ? (
+        <div className="border rounded-lg divide-y max-h-[300px] overflow-y-auto">
+          {pages.map((page, i) => (
+            <div key={i} className="p-3 flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium truncate">{page.title || page.url}</p>
+                <p className="text-xs text-muted-foreground truncate">{page.url}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge variant="outline" className="text-xs">
+                  {(page.markdown?.length || 0).toLocaleString('de-DE')} Zeichen
+                </Badge>
+                <a
+                  href={page.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : latest.status === 'failed' ? (
+        <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+          Crawl fehlgeschlagen: {latest.error || 'Unbekannter Fehler'}
+        </div>
+      ) : null}
+
+      <p className="text-xs text-muted-foreground">
+        Die KI-Recherche nutzt automatisch diese Daten als Kontext.
+      </p>
+    </div>
+  )
+}
+
+// ============================================
 // Proposed Changes Panel
 // ============================================
 function ProposedChangesPanel({
@@ -371,7 +462,7 @@ function ProposedChangesPanel({
                 {displayOld}
               </span>
               <span className="text-amber-800 dark:text-amber-200 truncate" title={displayNew}>
-                → {displayNew}
+                &rarr; {displayNew}
               </span>
             </div>
           )
@@ -416,10 +507,12 @@ export function AIResearchCard({
   entityId,
   entityLabel,
   companyData,
+  companyWebsite,
   onResearchComplete,
 }: AIResearchCardProps) {
   const stateKey = `${entityType}-${entityId}`
   const globalEntry = globalResearchStore.get(stateKey)
+  const globalCrawlEntry = globalCrawlStore.get(stateKey)
 
   // Initialize from global state (survives tab switch & route change)
   const [researching, setResearching] = useState(globalEntry?.researching ?? false)
@@ -431,13 +524,20 @@ export function AIResearchCard({
   const [applied, setApplied] = useState(false)
   const [loadingExisting, setLoadingExisting] = useState(!globalEntry?.result && !globalEntry?.researching)
 
+  // Crawl state
+  const [crawling, setCrawling] = useState(globalCrawlEntry?.crawling ?? false)
+  const [crawls, setCrawls] = useState<CrawlRecord[]>([])
+  const [loadingCrawls, setLoadingCrawls] = useState(false)
+
   const mountedRef = useRef(true)
 
   const apiPath = entityType === 'company'
     ? `/api/v1/companies/${entityId}/research`
     : `/api/v1/persons/${entityId}/research`
 
-  // On mount: load existing research from server OR attach to running research
+  const crawlApiPath = `/api/v1/companies/${entityId}/crawl`
+
+  // On mount: load existing research and crawls
   useEffect(() => {
     mountedRef.current = true
     const entry = globalResearchStore.get(stateKey)
@@ -468,6 +568,25 @@ export function AIResearchCard({
       setLoadingExisting(false)
     } else {
       loadExistingResearch()
+    }
+
+    // Attach to running crawl if any
+    const crawlEntry = globalCrawlStore.get(stateKey)
+    if (crawlEntry?.crawling && crawlEntry.promise) {
+      setCrawling(true)
+      crawlEntry.promise.then(() => {
+        if (!mountedRef.current) return
+        const updatedCrawl = globalCrawlStore.get(stateKey)
+        if (updatedCrawl?.crawlResult) {
+          setCrawls(prev => [updatedCrawl.crawlResult!, ...prev])
+          setCrawling(false)
+        }
+      })
+    }
+
+    // Load existing crawls for companies
+    if (entityType === 'company') {
+      loadExistingCrawls()
     }
 
     return () => {
@@ -504,6 +623,26 @@ export function AIResearchCard({
       }
     }
   }, [apiPath, stateKey])
+
+  const loadExistingCrawls = useCallback(async () => {
+    setLoadingCrawls(true)
+    try {
+      const response = await fetch(crawlApiPath, { method: 'GET' })
+      const data = await response.json()
+
+      if (!mountedRef.current) return
+
+      if (response.ok && data.success && data.data.crawls) {
+        setCrawls(data.data.crawls as CrawlRecord[])
+      }
+    } catch (error) {
+      console.error('Failed to load existing crawls:', error)
+    } finally {
+      if (mountedRef.current) {
+        setLoadingCrawls(false)
+      }
+    }
+  }, [crawlApiPath])
 
   const handleStartResearch = async () => {
     setResearching(true)
@@ -589,6 +728,60 @@ export function AIResearchCard({
     })
   }
 
+  const handleStartCrawl = async () => {
+    setCrawling(true)
+
+    const crawlPromise = (async () => {
+      try {
+        const response = await fetch(crawlApiPath, { method: 'POST' })
+        const data = await response.json()
+
+        if (response.ok && data.success) {
+          const crawlResult = data.data.crawl as CrawlRecord
+
+          globalCrawlStore.set(stateKey, {
+            crawling: false,
+            crawlResult,
+            promise: null,
+          })
+
+          if (mountedRef.current) {
+            setCrawls(prev => [crawlResult, ...prev])
+            setCrawling(false)
+            toast.success(`Website-Crawl abgeschlossen: ${data.data.pageCount} Seiten gescraped`)
+          }
+        } else {
+          const errorMsg = data.error?.message || 'Website-Crawl fehlgeschlagen'
+          globalCrawlStore.set(stateKey, {
+            crawling: false,
+            crawlResult: null,
+            promise: null,
+          })
+          if (mountedRef.current) {
+            setCrawling(false)
+            toast.error(errorMsg)
+          }
+        }
+      } catch (error) {
+        globalCrawlStore.set(stateKey, {
+          crawling: false,
+          crawlResult: null,
+          promise: null,
+        })
+        if (mountedRef.current) {
+          setCrawling(false)
+          toast.error(error instanceof Error ? error.message : 'Fehler beim Website-Crawl')
+        }
+      }
+    })()
+
+    globalCrawlStore.set(stateKey, {
+      crawling: true,
+      crawlResult: null,
+      promise: crawlPromise,
+    })
+  }
+
   const handleApply = () => {
     setApplied(true)
     setProposedChanges(null)
@@ -617,6 +810,8 @@ export function AIResearchCard({
     }
   }
 
+  const hasWebsite = !!(companyWebsite || companyData?.website)
+
   return (
     <Card>
       <CardHeader>
@@ -626,44 +821,80 @@ export function AIResearchCard({
         </CardTitle>
         <CardDescription>
           {entityType === 'company'
-            ? `Automatische Website-Analyse, Informationsrecherche und CRM-Update für ${entityLabel}`
+            ? `Automatische Informationsrecherche und CRM-Update für ${entityLabel}`
             : `Automatische Analyse und Informationsrecherche für ${entityLabel}`
           }
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {/* Status bar */}
-        <div className="flex items-center gap-4 mb-4">
-          <Badge variant={researching ? 'secondary' : result ? 'default' : 'outline'}>
-            {researching ? 'In Bearbeitung' : result ? 'Abgeschlossen' : 'Ausstehend'}
-          </Badge>
+        {/* Action buttons */}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
           <Button
             variant="outline"
             size="sm"
             onClick={handleStartResearch}
-            disabled={researching}
+            disabled={researching || crawling}
           >
             {researching ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {entityType === 'company' ? 'Website wird analysiert...' : 'Recherche läuft...'}
+                KI analysiert...
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                {result ? 'Erneut recherchieren' : 'Recherche starten'}
+                <Brain className="mr-2 h-4 w-4" />
+                {result ? 'Erneut recherchieren' : 'KI-Recherche'}
               </>
             )}
           </Button>
+
+          {entityType === 'company' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleStartCrawl}
+              disabled={crawling || researching || !hasWebsite}
+              title={!hasWebsite ? 'Keine Website hinterlegt' : undefined}
+            >
+              {crawling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Website wird gecrawlt...
+                </>
+              ) : (
+                <>
+                  <Globe className="mr-2 h-4 w-4" />
+                  Website crawlen
+                </>
+              )}
+            </Button>
+          ) : null}
+
+          <Badge variant={researching || crawling ? 'secondary' : result ? 'default' : 'outline'}>
+            {researching ? 'KI-Recherche läuft' : crawling ? 'Crawl läuft' : result ? 'Abgeschlossen' : 'Ausstehend'}
+          </Badge>
         </div>
 
-        {/* Progress indicator */}
+        {/* Crawl progress */}
+        {crawling ? (
+          <div className="mb-4 p-4 border border-dashed rounded-lg text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Die Website wird vollständig gecrawlt (max. 20 Seiten). Dies kann bis zu 2 Minuten dauern...
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Sie können frei navigieren – der Crawl läuft im Hintergrund weiter.
+            </p>
+          </div>
+        ) : null}
+
+        {/* Research progress */}
         {researching ? (
           <div className="mb-4 p-4 border border-dashed rounded-lg text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
               {entityType === 'company'
-                ? 'Die Website wird gescraped und analysiert. Dies kann bis zu 2 Minuten dauern...'
+                ? 'Die KI analysiert die verfügbaren Daten. Dies kann bis zu 2 Minuten dauern...'
                 : 'Informationen werden recherchiert. Dies kann bis zu 2 Minuten dauern...'
               }
             </p>
@@ -707,6 +938,13 @@ export function AIResearchCard({
           </div>
         ) : null}
 
+        {/* Crawl results */}
+        {!crawling && crawls.length > 0 ? (
+          <div className="mb-4">
+            <CrawlResultsDisplay crawls={crawls} />
+          </div>
+        ) : null}
+
         {/* Content area */}
         {loadingExisting && !researching ? (
           <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
@@ -715,11 +953,11 @@ export function AIResearchCard({
           </div>
         ) : result && !researching ? (
           <ResearchResultDisplay data={result} />
-        ) : !researching ? (
+        ) : !researching && !crawling ? (
           <p className="text-muted-foreground text-sm">
             {entityType === 'company'
-              ? 'Klicken Sie auf "Recherche starten", um die Website zu analysieren und automatisch Firmendaten zu ergänzen.'
-              : `Klicken Sie auf "Recherche starten", um automatisch Informationen über ${entityLabel} zu sammeln.`
+              ? 'Nutzen Sie "Website crawlen" um die Website zu erfassen, und "KI-Recherche" um automatisch Firmendaten zu analysieren und vorzuschlagen.'
+              : `Klicken Sie auf "KI-Recherche", um automatisch Informationen über ${entityLabel} zu sammeln.`
             }
           </p>
         ) : null}

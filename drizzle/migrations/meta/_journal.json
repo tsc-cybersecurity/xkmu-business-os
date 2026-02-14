@@ -50,6 +50,13 @@
       "when": 1771080822538,
       "tag": "0006_next_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771082731071,
+      "tag": "0007_sturdy_fat_cobra",
+      "breakpoints": true
     }
   ]
 }

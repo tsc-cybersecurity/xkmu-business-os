@@ -10,6 +10,7 @@ import {
 } from '@/lib/utils/api-response'
 import { CompanyService } from '@/lib/services/company.service'
 import { CompanyResearchService } from '@/lib/services/company-research.service'
+import { FirecrawlResearchService } from '@/lib/services/firecrawl-research.service'
 import { LeadResearchService } from '@/lib/services/ai'
 import type { CompanyResearchResult, CompanyAddress } from '@/lib/services/ai'
 import { getSession } from '@/lib/auth/session'
@@ -216,7 +217,28 @@ export async function POST(
 
     console.log(`[Company Research] Starting research for: ${company.name}`)
 
-    // Run AI research (includes automatic website scraping if URL available)
+    // Check if there's a recent firecrawl crawl to use as context
+    let firecrawlContent: string | undefined
+    if (company.website) {
+      try {
+        const latestCrawl = await FirecrawlResearchService.getLatest(auth.tenantId, id)
+        if (latestCrawl?.pages && Array.isArray(latestCrawl.pages)) {
+          const pages = latestCrawl.pages as Array<{ url: string; title: string; markdown: string }>
+          const parts = pages.map((page, i) => {
+            let text = `=== SEITE ${i + 1}: ${page.url} ===\n`
+            if (page.title) text += `Titel: ${page.title}\n`
+            text += page.markdown
+            return text
+          })
+          firecrawlContent = parts.join('\n\n')
+          console.log(`[Company Research] Using firecrawl data as context (${firecrawlContent.length} chars, ${pages.length} pages)`)
+        }
+      } catch (err) {
+        console.warn('[Company Research] Could not load firecrawl data:', err)
+      }
+    }
+
+    // Run AI research (uses firecrawl data if available, otherwise scrapes automatically)
     const { research: researchResult, scrapedPages } = await LeadResearchService.researchCompany({
       name: company.name,
       legalForm: company.legalForm || undefined,
@@ -225,6 +247,7 @@ export async function POST(
       city: company.city || undefined,
       email: company.email || undefined,
       notes: company.notes || undefined,
+      websiteContent: firecrawlContent,
     }, {
       tenantId: auth.tenantId,
       userId: auth.userId,

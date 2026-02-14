@@ -1,0 +1,92 @@
+import { db } from '@/lib/db'
+import { firecrawlResearches } from '@/lib/db/schema'
+import { eq, and, desc } from 'drizzle-orm'
+import type { FirecrawlResearch } from '@/lib/db/schema'
+
+export const FirecrawlResearchService = {
+  async create(
+    tenantId: string,
+    companyId: string,
+    data: {
+      url: string
+      status?: string
+      pageCount?: number
+      pages?: unknown
+      error?: string
+    }
+  ): Promise<FirecrawlResearch> {
+    const [research] = await db
+      .insert(firecrawlResearches)
+      .values({
+        tenantId,
+        companyId,
+        url: data.url,
+        status: data.status || 'crawling',
+        pageCount: data.pageCount,
+        pages: data.pages,
+        error: data.error,
+      })
+      .returning()
+
+    return research
+  },
+
+  async getById(tenantId: string, id: string): Promise<FirecrawlResearch | null> {
+    const [research] = await db
+      .select()
+      .from(firecrawlResearches)
+      .where(and(eq(firecrawlResearches.tenantId, tenantId), eq(firecrawlResearches.id, id)))
+      .limit(1)
+
+    return research ?? null
+  },
+
+  async listByCompany(tenantId: string, companyId: string): Promise<FirecrawlResearch[]> {
+    return db
+      .select()
+      .from(firecrawlResearches)
+      .where(
+        and(
+          eq(firecrawlResearches.tenantId, tenantId),
+          eq(firecrawlResearches.companyId, companyId)
+        )
+      )
+      .orderBy(desc(firecrawlResearches.createdAt))
+  },
+
+  async getLatest(tenantId: string, companyId: string): Promise<FirecrawlResearch | null> {
+    const [research] = await db
+      .select()
+      .from(firecrawlResearches)
+      .where(
+        and(
+          eq(firecrawlResearches.tenantId, tenantId),
+          eq(firecrawlResearches.companyId, companyId),
+          eq(firecrawlResearches.status, 'completed')
+        )
+      )
+      .orderBy(desc(firecrawlResearches.createdAt))
+      .limit(1)
+
+    return research ?? null
+  },
+
+  async update(
+    tenantId: string,
+    id: string,
+    data: {
+      status?: string
+      pageCount?: number
+      pages?: unknown
+      error?: string
+    }
+  ): Promise<FirecrawlResearch | null> {
+    const [updated] = await db
+      .update(firecrawlResearches)
+      .set(data)
+      .where(and(eq(firecrawlResearches.tenantId, tenantId), eq(firecrawlResearches.id, id)))
+      .returning()
+
+    return updated ?? null
+  },
+}

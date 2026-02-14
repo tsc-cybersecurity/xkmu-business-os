@@ -55,6 +55,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   blogPosts: many(blogPosts),
   mediaUploads: many(mediaUploads),
   companyResearches: many(companyResearches),
+  firecrawlResearches: many(firecrawlResearches),
 }))
 
 // ============================================
@@ -224,6 +225,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
   leads: many(leads),
   activities: many(activities),
   companyResearches: many(companyResearches),
+  firecrawlResearches: many(firecrawlResearches),
 }))
 
 // ============================================
@@ -1119,6 +1121,35 @@ export const companyResearchesRelations = relations(companyResearches, ({ one })
 }))
 
 // ============================================
+// Firecrawl Researches (Website-Crawl-Ergebnisse)
+// ============================================
+export const firecrawlResearches = pgTable('firecrawl_researches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  url: varchar('url', { length: 500 }).notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('completed'), // crawling | completed | failed
+  pageCount: integer('page_count'),
+  pages: jsonb('pages'), // Array [{url, title, markdown, scrapedAt}]
+  error: text('error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_firecrawl_researches_tenant').on(table.tenantId),
+  index('idx_firecrawl_researches_tenant_company').on(table.tenantId, table.companyId),
+])
+
+export const firecrawlResearchesRelations = relations(firecrawlResearches, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [firecrawlResearches.tenantId],
+    references: [tenants.id],
+  }),
+  company: one(companies, {
+    fields: [firecrawlResearches.companyId],
+    references: [companies.id],
+  }),
+}))
+
+// ============================================
 // Type Exports
 // ============================================
 export type Tenant = typeof tenants.$inferSelect
@@ -1207,3 +1238,6 @@ export type NewMediaUpload = typeof mediaUploads.$inferInsert
 
 export type CompanyResearch = typeof companyResearches.$inferSelect
 export type NewCompanyResearch = typeof companyResearches.$inferInsert
+
+export type FirecrawlResearch = typeof firecrawlResearches.$inferSelect
+export type NewFirecrawlResearch = typeof firecrawlResearches.$inferInsert
