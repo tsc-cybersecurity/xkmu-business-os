@@ -831,7 +831,7 @@ export function AIResearchCard({
                 variant="outline"
                 size="sm"
                 onClick={handleStartCrawl}
-                disabled={crawling || researching || !hasWebsite}
+                disabled={crawling || !hasWebsite}
                 title={!hasWebsite ? 'Keine Website hinterlegt' : undefined}
               >
                 {crawling ? (
@@ -908,7 +908,7 @@ export function AIResearchCard({
               variant="outline"
               size="sm"
               onClick={handleStartResearch}
-              disabled={researching || crawling}
+              disabled={researching}
             >
               {researching ? (
                 <>
