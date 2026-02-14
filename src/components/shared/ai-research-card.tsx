@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Brain, CheckCircle2, ExternalLink, Globe, Loader2, MapPin, Sparkles, XCircle } from 'lucide-react'
+import { Brain, CheckCircle2, ChevronDown, ChevronRight, ExternalLink, Globe, Loader2, MapPin, Sparkles, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface CompanyData {
@@ -306,6 +306,55 @@ function ResearchResultDisplay({ data }: { data: Record<string, unknown> }) {
 // ============================================
 // Crawl Results Display
 // ============================================
+function CrawlPageItem({ page, index }: { page: CrawlPage; index: number }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className="border-b last:border-b-0">
+      <button
+        type="button"
+        className="w-full p-3 flex items-center justify-between gap-3 hover:bg-muted/50 transition-colors text-left"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {expanded ? (
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium truncate">{page.title || page.url}</p>
+            <p className="text-xs text-muted-foreground truncate">{page.url}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant="outline" className="text-xs">
+            {(page.markdown?.length || 0).toLocaleString('de-DE')} Zeichen
+          </Badge>
+          <a
+            href={page.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      </button>
+      {expanded && page.markdown ? (
+        <div className="px-3 pb-3 pl-9">
+          <div className="bg-muted/50 rounded-lg p-4 max-h-[400px] overflow-y-auto">
+            <pre className="text-xs whitespace-pre-wrap break-words font-sans leading-relaxed">
+              {page.markdown}
+            </pre>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function CrawlResultsDisplay({ crawls }: { crawls: CrawlRecord[] }) {
   if (crawls.length === 0) return null
 
@@ -334,33 +383,15 @@ function CrawlResultsDisplay({ crawls }: { crawls: CrawlRecord[] }) {
           </span>
         </div>
         <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-          Die KI-Recherche nutzt automatisch diese Daten als Kontext.
+          Die KI-Recherche nutzt automatisch diese Daten als Kontext. Klicken Sie auf eine Seite, um den Inhalt anzuzeigen.
         </p>
       </div>
 
-      {/* Page list */}
+      {/* Page list with expandable content */}
       {latest.status === 'completed' && pages.length > 0 ? (
-        <div className="border rounded-lg divide-y max-h-[300px] overflow-y-auto">
+        <div className="border rounded-lg max-h-[600px] overflow-y-auto">
           {pages.map((page, i) => (
-            <div key={i} className="p-3 flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{page.title || page.url}</p>
-                <p className="text-xs text-muted-foreground truncate">{page.url}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge variant="outline" className="text-xs">
-                  {(page.markdown?.length || 0).toLocaleString('de-DE')} Zeichen
-                </Badge>
-                <a
-                  href={page.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-            </div>
+            <CrawlPageItem key={i} page={page} index={i} />
           ))}
         </div>
       ) : latest.status === 'failed' ? (
