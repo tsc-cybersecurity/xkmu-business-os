@@ -14,9 +14,9 @@ import {
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Checkbox } from '@/components/ui/checkbox'
-import { FormField } from '@/components/shared'
+import { FormField, QuickCreateCompanyDialog } from '@/components/shared'
 import { toast } from 'sonner'
-import { Loader2, Save, X } from 'lucide-react'
+import { Loader2, Save, X, Plus } from 'lucide-react'
 
 interface PersonFormData {
   salutation: string
@@ -102,6 +102,7 @@ export function PersonForm({ person, mode }: PersonFormProps) {
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [tagInput, setTagInput] = useState('')
+  const [showCreateCompany, setShowCreateCompany] = useState(false)
 
   useEffect(() => {
     fetchCompanies()
@@ -310,6 +311,16 @@ export function PersonForm({ person, mode }: PersonFormProps) {
                     <SelectValue placeholder="Firma wählen (optional)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <div className="p-1">
+                      <button
+                        type="button"
+                        className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-primary hover:bg-accent cursor-pointer"
+                        onMouseDown={(e) => { e.preventDefault(); setShowCreateCompany(true) }}
+                      >
+                        <Plus className="h-4 w-4" />
+                        Neue Firma anlegen
+                      </button>
+                    </div>
                     <SelectItem value="none">Keine Firma</SelectItem>
                     {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
@@ -545,6 +556,15 @@ export function PersonForm({ person, mode }: PersonFormProps) {
           {mode === 'create' ? 'Erstellen' : 'Speichern'}
         </Button>
       </div>
+
+      <QuickCreateCompanyDialog
+        open={showCreateCompany}
+        onOpenChange={setShowCreateCompany}
+        onCreated={(company) => {
+          setCompanies((prev) => [company, ...prev])
+          updateField('companyId', company.id)
+        }}
+      />
     </form>
   )
 }
