@@ -71,11 +71,21 @@ export default function CmsNavigationPage() {
   const [formPageId, setFormPageId] = useState('')
   const [formOpenInNewTab, setFormOpenInNewTab] = useState(false)
 
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (trySeed = false) => {
     try {
       const response = await fetch('/api/v1/cms/navigation')
       const data = await response.json()
-      if (data.success) setItems(data.data)
+      if (data.success) {
+        if (data.data.length === 0 && trySeed) {
+          // No items exist yet - seed defaults
+          await fetch('/api/v1/cms/navigation/seed', { method: 'POST' })
+          const retry = await fetch('/api/v1/cms/navigation')
+          const retryData = await retry.json()
+          if (retryData.success) setItems(retryData.data)
+        } else {
+          setItems(data.data)
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch navigation items:', error)
     } finally {
@@ -94,7 +104,7 @@ export default function CmsNavigationPage() {
   }, [])
 
   useEffect(() => {
-    fetchItems()
+    fetchItems(true)
     fetchPages()
   }, [fetchItems, fetchPages])
 
