@@ -61,31 +61,9 @@ export const UnsplashService = {
   },
 
   async searchWithSource(query: string): Promise<UnsplashPhoto | null> {
-    try {
-      // Use source.unsplash.com which redirects to a matching photo
-      const encodedQuery = encodeURIComponent(query)
-      const sourceUrl = `https://source.unsplash.com/1200x630/?${encodedQuery}`
-
-      // Follow the redirect to get the actual image URL
-      const response = await fetch(sourceUrl, { method: 'HEAD', redirect: 'follow' })
-      const finalUrl = response.url
-
-      if (finalUrl && !finalUrl.includes('source.unsplash.com')) {
-        return {
-          url: finalUrl,
-          alt: query,
-          credit: 'Unsplash',
-        }
-      }
-
-      return {
-        url: sourceUrl,
-        alt: query,
-        credit: 'Unsplash',
-      }
-    } catch (error) {
-      console.warn('[Unsplash Source] Error:', error)
-      return null
-    }
+    // source.unsplash.com was deprecated in 2023 and is unreliable
+    // Without an API key, we cannot fetch Unsplash images
+    console.warn('[Unsplash] No UNSPLASH_ACCESS_KEY configured, skipping image fetch')
+    return null
   },
 }
