@@ -6,6 +6,8 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { UnsplashService } from '@/lib/services/unsplash.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
+export const maxDuration = 120
+
 export async function POST(request: NextRequest) {
   return withPermission(request, 'blog', 'create', async (auth) => {
     try {
@@ -23,13 +25,16 @@ export async function POST(request: NextRequest) {
         feature: 'blog_generate',
       })
 
-      // Fetch featured image from Unsplash using AI-generated search keywords
-      let featuredImage = generated.featuredImage || ''
+      // Fetch featured image from Unsplash (non-blocking, with timeout)
+      let featuredImage = ''
       let featuredImageAlt = generated.featuredImageAlt || ''
 
       if (generated.featuredImage) {
         try {
-          const photo = await UnsplashService.searchPhoto(generated.featuredImage)
+          const photo = await Promise.race([
+            UnsplashService.searchPhoto(generated.featuredImage),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+          ])
           if (photo) {
             featuredImage = photo.url
             featuredImageAlt = generated.featuredImageAlt || photo.alt

@@ -4,6 +4,8 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { BlogAIService } from '@/lib/services/ai/blog-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
+export const maxDuration = 120
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -4,6 +4,8 @@ import { CmsPageService } from '@/lib/services/cms-page.service'
 import { CmsAIService } from '@/lib/services/ai/cms-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
+export const maxDuration = 120
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
