@@ -6,7 +6,19 @@
   "ignoreCommand": "if git log -1 --format='%an' | grep -q 'github-actions\\[bot\\]'; then exit 0; else exit 1; fi",
   "functions": {
     "src/app/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 60
+    },
+    "src/app/api/v1/blog/posts/generate/*.ts": {
+      "maxDuration": 120
+    },
+    "src/app/api/v1/blog/posts/*/seo/generate/*.ts": {
+      "maxDuration": 120
+    },
+    "src/app/api/v1/cms/pages/*/seo/generate/*.ts": {
+      "maxDuration": 120
+    },
+    "src/app/api/v1/companies/*/research/*.ts": {
+      "maxDuration": 120
     }
   },
   "crons": [],
