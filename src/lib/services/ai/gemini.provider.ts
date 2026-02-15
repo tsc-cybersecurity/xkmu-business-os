@@ -61,7 +61,22 @@ export class GeminiProvider implements AIProvider {
 
     const data = await response.json()
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    // Gemini 2.5+ models have built-in "thinking" — the response contains
+    // multiple parts: thinking parts (with thought:true) and the actual response.
+    // We need the actual response text, not the thinking output.
+    const parts = data.candidates?.[0]?.content?.parts || []
+    let text = ''
+    for (const part of parts) {
+      // Skip thinking parts, take the actual response
+      if (part.thought) continue
+      if (part.text) {
+        text = part.text
+      }
+    }
+    // Fallback: if no non-thinking part found, use the last part
+    if (!text && parts.length > 0) {
+      text = parts[parts.length - 1]?.text || ''
+    }
     const usage = data.usageMetadata
 
     return {
