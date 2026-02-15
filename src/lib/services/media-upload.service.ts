@@ -2,14 +2,76 @@ import { db } from '@/lib/db'
 import { mediaUploads } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import type { MediaUpload } from '@/lib/db/schema'
-import { writeFile, mkdir, unlink } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
 import { randomUUID } from 'crypto'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
 
+function useVercelBlob(): boolean {
+  return !!process.env.BLOB_READ_WRITE_TOKEN
+}
+
+// ============================================
+// Vercel Blob Storage
+// ============================================
+async function uploadToBlob(file: File, filename: string, tenantId: string): Promise<string> {
+  const { put } = await import('@vercel/blob')
+  const blob = await put(`uploads/${tenantId}/${filename}`, file, {
+    access: 'public',
+    addRandomSuffix: false,
+  })
+  return blob.url
+}
+
+async function deleteFromBlob(url: string): Promise<void> {
+  try {
+    const { del } = await import('@vercel/blob')
+    await del(url)
+  } catch (error) {
+    console.error('Failed to delete blob:', error)
+  }
+}
+
+// ============================================
+// Lokales Dateisystem
+// ============================================
+async function uploadToLocal(file: File, filename: string, tenantId: string): Promise<string> {
+  const { writeFile, mkdir } = await import('fs/promises')
+  const { existsSync } = await import('fs')
+  const path = await import('path')
+
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads', tenantId)
+  const filePath = path.join(uploadDir, filename)
+  const publicPath = `/uploads/${tenantId}/${filename}`
+
+  if (!existsSync(uploadDir)) {
+    await mkdir(uploadDir, { recursive: true })
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer())
+  await writeFile(filePath, buffer)
+
+  return publicPath
+}
+
+async function deleteFromLocal(filePath: string): Promise<void> {
+  try {
+    const { unlink } = await import('fs/promises')
+    const { existsSync } = await import('fs')
+    const path = await import('path')
+
+    const fullPath = path.join(process.cwd(), 'public', filePath)
+    if (existsSync(fullPath)) {
+      await unlink(fullPath)
+    }
+  } catch (error) {
+    console.error('Failed to delete local file:', error)
+  }
+}
+
+// ============================================
+// Service
+// ============================================
 export const MediaUploadService = {
   async upload(
     tenantId: string,
@@ -26,18 +88,11 @@ export const MediaUploadService = {
 
     const ext = file.name.split('.').pop() || 'jpg'
     const filename = `${randomUUID()}.${ext}`
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', tenantId)
-    const filePath = path.join(uploadDir, filename)
-    const publicPath = `/uploads/${tenantId}/${filename}`
 
-    // Ensure directory exists
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true })
-    }
-
-    // Write file
-    const buffer = Buffer.from(await file.arrayBuffer())
-    await writeFile(filePath, buffer)
+    // Upload je nach Umgebung
+    const publicPath = useVercelBlob()
+      ? await uploadToBlob(file, filename, tenantId)
+      : await uploadToLocal(file, filename, tenantId)
 
     // Save to DB
     const [upload] = await db
@@ -73,14 +128,11 @@ export const MediaUploadService = {
 
     if (!upload) return false
 
-    // Delete file from disk
-    try {
-      const filePath = path.join(process.cwd(), 'public', upload.path)
-      if (existsSync(filePath)) {
-        await unlink(filePath)
-      }
-    } catch (error) {
-      console.error('Failed to delete file from disk:', error)
+    // Delete file
+    if (useVercelBlob() && upload.path.startsWith('http')) {
+      await deleteFromBlob(upload.path)
+    } else {
+      await deleteFromLocal(upload.path)
     }
 
     // Delete from DB

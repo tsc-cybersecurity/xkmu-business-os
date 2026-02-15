@@ -157,9 +157,13 @@ export default function BlogPostEditorPage() {
       const data = await response.json()
       if (data.success) {
         setFeaturedImage(data.data.path)
+        toast.success('Bild erfolgreich hochgeladen')
+      } else {
+        toast.error(data.error?.message || 'Upload fehlgeschlagen')
       }
     } catch (error) {
       console.error('Failed to upload image:', error)
+      toast.error('Bild-Upload fehlgeschlagen')
     }
   }
 
