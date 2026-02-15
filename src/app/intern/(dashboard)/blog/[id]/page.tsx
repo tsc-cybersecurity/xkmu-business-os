@@ -84,26 +84,33 @@ export default function BlogPostEditorPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await fetch(`/api/v1/blog/posts/${postId}`, {
+      const response = await fetch(`/api/v1/blog/posts/${postId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
           slug,
-          excerpt: excerpt || undefined,
-          content: content || undefined,
-          featuredImage: featuredImage || undefined,
-          featuredImageAlt: featuredImageAlt || undefined,
-          seoTitle: seoTitle || undefined,
-          seoDescription: seoDescription || undefined,
-          seoKeywords: seoKeywords || undefined,
+          excerpt: excerpt || '',
+          content: content || '',
+          featuredImage: featuredImage || '',
+          featuredImageAlt: featuredImageAlt || '',
+          seoTitle: seoTitle || '',
+          seoDescription: seoDescription || '',
+          seoKeywords: seoKeywords || '',
           tags: tagsStr ? tagsStr.split(',').map((t) => t.trim()).filter(Boolean) : [],
-          category: category || undefined,
+          category: category || '',
         }),
       })
-      fetchPost()
+      const data = await response.json()
+      if (data.success) {
+        toast.success('Beitrag gespeichert')
+        fetchPost()
+      } else {
+        toast.error(data.error?.message || 'Speichern fehlgeschlagen')
+      }
     } catch (error) {
       console.error('Failed to save post:', error)
+      toast.error('Speichern fehlgeschlagen')
     } finally {
       setSaving(false)
     }

@@ -22,6 +22,7 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs'
 import { ArrowLeft, Loader2, PenLine, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function NewBlogPostPage() {
   const router = useRouter()
@@ -33,12 +34,37 @@ export default function NewBlogPostPage() {
   const [excerpt, setExcerpt] = useState('')
   const [category, setCategory] = useState('')
   const [tagsStr, setTagsStr] = useState('')
+  const [featuredImage, setFeaturedImage] = useState('')
+  const [featuredImageAlt, setFeaturedImageAlt] = useState('')
 
   // AI form
   const [aiTopic, setAiTopic] = useState('')
   const [aiLanguage, setAiLanguage] = useState('de')
   const [aiTone, setAiTone] = useState('professional')
   const [aiLength, setAiLength] = useState('medium')
+
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const formData = new FormData()
+    formData.append('file', file)
+    try {
+      const response = await fetch('/api/v1/media/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await response.json()
+      if (data.success) {
+        setFeaturedImage(data.data.path)
+        toast.success('Bild erfolgreich hochgeladen')
+      } else {
+        toast.error(data.error?.message || 'Upload fehlgeschlagen')
+      }
+    } catch (error) {
+      console.error('Failed to upload image:', error)
+      toast.error('Bild-Upload fehlgeschlagen')
+    }
+  }
 
   const handleCreateManual = async () => {
     if (!title.trim()) return
@@ -51,6 +77,8 @@ export default function NewBlogPostPage() {
           title,
           content: content || undefined,
           excerpt: excerpt || undefined,
+          featuredImage: featuredImage || undefined,
+          featuredImageAlt: featuredImageAlt || undefined,
           category: category || undefined,
           tags: tagsStr ? tagsStr.split(',').map((t) => t.trim()).filter(Boolean) : [],
           source: 'manual',
@@ -59,9 +87,12 @@ export default function NewBlogPostPage() {
       const data = await response.json()
       if (data.success) {
         router.push(`/intern/blog/${data.data.id}`)
+      } else {
+        toast.error(data.error?.message || 'Erstellen fehlgeschlagen')
       }
     } catch (error) {
       console.error('Failed to create post:', error)
+      toast.error('Beitrag konnte nicht erstellt werden')
     } finally {
       setCreating(false)
     }
@@ -84,9 +115,12 @@ export default function NewBlogPostPage() {
       const data = await response.json()
       if (data.success) {
         router.push(`/intern/blog/${data.data.id}`)
+      } else {
+        toast.error(data.error?.message || 'Generierung fehlgeschlagen')
       }
     } catch (error) {
       console.error('Failed to generate post:', error)
+      toast.error('Beitrag konnte nicht generiert werden')
     } finally {
       setCreating(false)
     }
@@ -132,6 +166,19 @@ export default function NewBlogPostPage() {
                 <Label>Inhalt (Markdown)</Label>
                 <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={15} className="font-mono text-sm" placeholder="# Ueberschrift\n\nIhr Text hier..." />
               </div>
+              <div className="space-y-2">
+                <Label>Beitragsbild</Label>
+                <Input type="file" accept="image/*" onChange={handleUploadImage} />
+                {featuredImage && (
+                  <p className="text-xs text-muted-foreground truncate">{featuredImage}</p>
+                )}
+              </div>
+              {featuredImage && (
+                <div className="space-y-2">
+                  <Label>Alt-Text</Label>
+                  <Input value={featuredImageAlt} onChange={(e) => setFeaturedImageAlt(e.target.value)} placeholder="Bildbeschreibung" />
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Kategorie</Label>
