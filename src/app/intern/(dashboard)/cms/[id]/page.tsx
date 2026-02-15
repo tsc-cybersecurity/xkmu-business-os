@@ -53,6 +53,7 @@ import {
   Table2,
 } from 'lucide-react'
 import { CmsBlockRenderer } from '@/app/_components/cms-block-renderer'
+import { toast } from 'sonner'
 
 interface CmsBlock {
   id: string
@@ -125,6 +126,7 @@ export default function CmsPageEditorPage() {
   const [showAddBlock, setShowAddBlock] = useState(false)
   const [newBlockType, setNewBlockType] = useState('text')
   const [blockTypes, setBlockTypes] = useState<BlockTypeDefinition[]>([])
+  const [generatingSeo, setGeneratingSeo] = useState(false)
 
   // SEO form state
   const [title, setTitle] = useState('')
@@ -288,6 +290,7 @@ export default function CmsPageEditorPage() {
   }
 
   const handleGenerateSeo = async () => {
+    setGeneratingSeo(true)
     try {
       const response = await fetch(`/api/v1/cms/pages/${pageId}/seo/generate`, {
         method: 'POST',
@@ -297,9 +300,15 @@ export default function CmsPageEditorPage() {
         if (data.data.seoTitle) setSeoTitle(data.data.seoTitle)
         if (data.data.seoDescription) setSeoDescription(data.data.seoDescription)
         if (data.data.seoKeywords) setSeoKeywords(data.data.seoKeywords)
+        toast.success('SEO-Daten erfolgreich generiert')
+      } else {
+        toast.error(data.error?.message || 'SEO-Generierung fehlgeschlagen')
       }
     } catch (error) {
       console.error('Failed to generate SEO:', error)
+      toast.error('SEO-Generierung fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
+    } finally {
+      setGeneratingSeo(false)
     }
   }
 
@@ -404,9 +413,9 @@ export default function CmsPageEditorPage() {
               <Label>OG Image URL</Label>
               <Input value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="https://..." />
             </div>
-            <Button variant="outline" className="w-full" onClick={handleGenerateSeo}>
-              <Sparkles className="h-4 w-4 mr-2" />
-              SEO per KI generieren
+            <Button variant="outline" className="w-full" onClick={handleGenerateSeo} disabled={generatingSeo}>
+              {generatingSeo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+              {generatingSeo ? 'Generiere...' : 'SEO per KI generieren'}
             </Button>
           </CardContent>
         </Card>

@@ -73,6 +73,10 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'pageSlug', label: 'Seiten-URL', description: 'Slug/Pfad der Seite' },
     { key: 'pageContent', label: 'Seiteninhalt', description: 'Extrahierter Text aus den Bloecken' },
   ],
+  blog_seo_generation: [
+    { key: 'title', label: 'Beitragstitel', description: 'Titel des Blogbeitrags' },
+    { key: 'content', label: 'Beitragsinhalt', description: 'Inhalt des Blogbeitrags (Auszug)' },
+  ],
 }
 
 // ============================================
@@ -409,6 +413,37 @@ Seiten-URL: {{pageSlug}}
 
 Seiteninhalt:
 {{pageContent}}
+
+Erstelle SEO-Titel, Meta-Description und Keywords im vorgegebenen JSON-Format.`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "seoTitle": "<max 60 Zeichen, praegnant mit Hauptkeyword>",
+  "seoDescription": "<max 155 Zeichen, mit Call-to-Action>",
+  "seoKeywords": "<keyword1, keyword2, keyword3, ... (5-8 Keywords)>"
+}`,
+  },
+  blog_seo_generation: {
+    name: 'Blog SEO-Generierung',
+    description: 'Generiert optimierte SEO-Metadaten (Titel, Beschreibung, Keywords) fuer Blogbeitraege.',
+    systemPrompt: `Du bist ein SEO-Spezialist fuer deutschsprachige Blogs und Online-Magazine. Deine Aufgabe ist es, optimierte SEO-Metadaten fuer Blogbeitraege zu generieren.
+
+KERNREGELN:
+1. SEO-Titel: max 60 Zeichen, praegnant, mit Hauptkeyword
+2. Meta-Description: max 155 Zeichen, mit Call-to-Action
+3. Keywords: 5-8 relevante Keywords, kommagetrennt
+4. Antworte immer auf Deutsch
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codebloecke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Generiere optimierte SEO-Metadaten fuer den folgenden Blogbeitrag.
+
+Titel: {{title}}
+
+Inhalt (Auszug):
+{{content}}
 
 Erstelle SEO-Titel, Meta-Description und Keywords im vorgegebenen JSON-Format.`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft, Loader2, Save, Globe, EyeOff, Sparkles } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface BlogPost {
   id: string
@@ -48,6 +49,7 @@ export default function BlogPostEditorPage() {
   const [seoKeywords, setSeoKeywords] = useState('')
   const [tagsStr, setTagsStr] = useState('')
   const [category, setCategory] = useState('')
+  const [generatingSeo, setGeneratingSeo] = useState(false)
 
   const fetchPost = useCallback(async () => {
     try {
@@ -120,6 +122,7 @@ export default function BlogPostEditorPage() {
   }
 
   const handleGenerateSeo = async () => {
+    setGeneratingSeo(true)
     try {
       const response = await fetch(`/api/v1/blog/posts/${postId}/seo/generate`, {
         method: 'POST',
@@ -129,9 +132,15 @@ export default function BlogPostEditorPage() {
         if (data.data.seoTitle) setSeoTitle(data.data.seoTitle)
         if (data.data.seoDescription) setSeoDescription(data.data.seoDescription)
         if (data.data.seoKeywords) setSeoKeywords(data.data.seoKeywords)
+        toast.success('SEO-Daten erfolgreich generiert')
+      } else {
+        toast.error(data.error?.message || 'SEO-Generierung fehlgeschlagen')
       }
     } catch (error) {
       console.error('Failed to generate SEO:', error)
+      toast.error('SEO-Generierung fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
+    } finally {
+      setGeneratingSeo(false)
     }
   }
 
@@ -275,9 +284,9 @@ export default function BlogPostEditorPage() {
                 <Label>SEO Keywords</Label>
                 <Input value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} />
               </div>
-              <Button variant="outline" className="w-full" onClick={handleGenerateSeo}>
-                <Sparkles className="h-4 w-4 mr-2" />
-                SEO per KI generieren
+              <Button variant="outline" className="w-full" onClick={handleGenerateSeo} disabled={generatingSeo}>
+                {generatingSeo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                {generatingSeo ? 'Generiere...' : 'SEO per KI generieren'}
               </Button>
             </CardContent>
           </Card>
