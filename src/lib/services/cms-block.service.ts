@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { cmsBlocks } from '@/lib/db/schema'
+import { cmsBlocks, cmsPages } from '@/lib/db/schema'
 import { eq, and, asc } from 'drizzle-orm'
 import type { CmsBlock, NewCmsBlock } from '@/lib/db/schema'
 
@@ -17,6 +17,19 @@ export interface UpdateCmsBlockInput {
   content?: Record<string, unknown>
   settings?: Record<string, unknown>
   isVisible?: boolean
+}
+
+async function markPageDraftChanges(tenantId: string, pageId: string) {
+  await db
+    .update(cmsPages)
+    .set({ hasDraftChanges: true, updatedAt: new Date() })
+    .where(
+      and(
+        eq(cmsPages.tenantId, tenantId),
+        eq(cmsPages.id, pageId),
+        eq(cmsPages.status, 'published')
+      )
+    )
 }
 
 export const CmsBlockService = {
@@ -41,6 +54,8 @@ export const CmsBlockService = {
         isVisible: data.isVisible ?? true,
       })
       .returning()
+
+    await markPageDraftChanges(tenantId, pageId)
     return block
   },
 
@@ -57,14 +72,31 @@ export const CmsBlockService = {
       .set(updateData)
       .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.id, blockId)))
       .returning()
+
+    if (block) {
+      await markPageDraftChanges(tenantId, block.pageId)
+    }
+
     return block ?? null
   },
 
   async delete(tenantId: string, blockId: string): Promise<boolean> {
+    // Get block first to know the page
+    const [existing] = await db
+      .select({ pageId: cmsBlocks.pageId })
+      .from(cmsBlocks)
+      .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.id, blockId)))
+      .limit(1)
+
     const result = await db
       .delete(cmsBlocks)
       .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.id, blockId)))
       .returning({ id: cmsBlocks.id })
+
+    if (result.length > 0 && existing) {
+      await markPageDraftChanges(tenantId, existing.pageId)
+    }
+
     return result.length > 0
   },
 
@@ -81,6 +113,8 @@ export const CmsBlockService = {
           )
         )
     }
+
+    await markPageDraftChanges(tenantId, pageId)
     return true
   },
 
@@ -104,6 +138,8 @@ export const CmsBlockService = {
         isVisible: original.isVisible,
       })
       .returning()
+
+    await markPageDraftChanges(tenantId, original.pageId)
     return block
   },
 }

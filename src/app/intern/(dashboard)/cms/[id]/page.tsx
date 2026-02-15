@@ -17,13 +17,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   ArrowLeft,
   ArrowUp,
   ArrowDown,
@@ -79,158 +72,46 @@ interface CmsPage {
   seoKeywords: string | null
   ogImage: string | null
   status: string | null
+  hasDraftChanges: boolean | null
   blocks: CmsBlock[]
 }
 
-const blockTypeLabels: Record<string, string> = {
-  hero: 'Hero',
-  features: 'Features',
-  cta: 'Call-to-Action',
-  text: 'Text',
-  heading: 'Ueberschrift',
-  image: 'Bild',
-  cards: 'Karten',
-  testimonials: 'Referenzen',
-  pricing: 'Preistabelle',
-  faq: 'FAQ',
-  stats: 'Kennzahlen',
-  team: 'Team',
-  timeline: 'Zeitleiste',
-  logocloud: 'Logo-Cloud',
-  video: 'Video',
-  gallery: 'Galerie',
-  banner: 'Banner',
-  divider: 'Trenner',
-  comparison: 'Vergleich',
-  placeholder: 'Platzhalter',
-}
-
-const blockTypeInfo: Record<string, {
-  icon: typeof LayoutTemplate
-  description: string
+interface BlockTypeDefinition {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  icon: string | null
+  category: string | null
   fields: string[]
   defaultContent: Record<string, unknown>
-}> = {
-  hero: {
-    icon: LayoutTemplate,
-    description: 'Grosser Einleitungsbereich mit Bild, Headline und CTA-Buttons',
-    fields: ['headline', 'headlineHighlight', 'subheadline', 'buttons', 'stats'],
-    defaultContent: { headline: 'Willkommen', headlineHighlight: 'auf unserer Seite', subheadline: 'Beschreibungstext hier...', buttons: [{ label: 'Mehr erfahren', href: '#', variant: 'default' }] },
-  },
-  features: {
-    icon: Star,
-    description: 'Feature-Grid mit Icons, Titeln und Beschreibungen',
-    fields: ['sectionTitle', 'sectionSubtitle', 'columns', 'items'],
-    defaultContent: { sectionTitle: 'Unsere Features', sectionSubtitle: 'Was wir bieten', columns: 3, items: [{ icon: 'Star', title: 'Feature 1', description: 'Beschreibung' }] },
-  },
-  cta: {
-    icon: MousePointerClick,
-    description: 'Call-to-Action Bereich mit Headline, Beschreibung und Buttons',
-    fields: ['headline', 'description', 'buttons', 'highlights'],
-    defaultContent: { headline: 'Bereit loszulegen?', description: 'Kontaktieren Sie uns noch heute.', buttons: [{ label: 'Kontakt', href: '#', variant: 'default' }] },
-  },
-  text: {
-    icon: Type,
-    description: 'Freitext-Block mit Markdown-Unterstuetzung',
-    fields: ['content', 'alignment'],
-    defaultContent: { content: 'Hier steht Ihr **Text** mit _Markdown_-Formatierung.', alignment: 'left' },
-  },
-  heading: {
-    icon: Heading,
-    description: 'Ueberschrift mit optionalem Untertitel',
-    fields: ['text', 'level', 'subtitle'],
-    defaultContent: { text: 'Ueberschrift', level: 2, subtitle: 'Optionaler Untertitel' },
-  },
-  image: {
-    icon: ImageIcon,
-    description: 'Einzelbild mit Alt-Text und optionaler Bildunterschrift',
-    fields: ['src', 'alt', 'caption', 'width'],
-    defaultContent: { src: '', alt: 'Beispielbild', caption: 'Bildunterschrift', width: 'container' },
-  },
-  cards: {
-    icon: SquareStack,
-    description: 'Karten-Grid mit Icons, Titeln und Beschreibungen',
-    fields: ['columns', 'items'],
-    defaultContent: { columns: 3, items: [{ icon: 'Box', title: 'Karte 1', description: 'Beschreibung', link: '' }] },
-  },
-  testimonials: {
-    icon: MessageSquareQuote,
-    description: 'Kundenstimmen und Referenzen mit Bewertungen',
-    fields: ['sectionTitle', 'columns', 'items'],
-    defaultContent: { sectionTitle: 'Was unsere Kunden sagen', columns: 2, items: [{ name: 'Max Mustermann', role: 'CEO', company: 'Beispiel GmbH', quote: 'Hervorragende Zusammenarbeit und erstklassige Ergebnisse.', rating: 5 }] },
-  },
-  pricing: {
-    icon: CreditCard,
-    description: 'Preistabelle mit Paketen, Features und CTA-Buttons',
-    fields: ['sectionTitle', 'plans'],
-    defaultContent: { sectionTitle: 'Unsere Pakete', plans: [{ name: 'Starter', price: '29€', period: 'Monat', description: 'Fuer Einsteiger', features: ['Feature 1', 'Feature 2'], buttonLabel: 'Waehlen', buttonHref: '#' }, { name: 'Professional', price: '79€', period: 'Monat', description: 'Fuer Profis', features: ['Alles aus Starter', 'Feature 3', 'Feature 4'], buttonLabel: 'Waehlen', buttonHref: '#', highlighted: true }] },
-  },
-  faq: {
-    icon: HelpCircle,
-    description: 'Haeufige Fragen als aufklappbares Akkordeon',
-    fields: ['sectionTitle', 'items'],
-    defaultContent: { sectionTitle: 'Haeufige Fragen', items: [{ question: 'Wie kann ich starten?', answer: 'Registrieren Sie sich einfach und legen Sie los.' }, { question: 'Gibt es eine Testphase?', answer: 'Ja, Sie koennen unseren Service 14 Tage kostenlos testen.' }] },
-  },
-  stats: {
-    icon: BarChart3,
-    description: 'Kennzahlen und Statistiken als grosse Zahlenwerte',
-    fields: ['sectionTitle', 'columns', 'variant', 'items'],
-    defaultContent: { sectionTitle: 'In Zahlen', columns: 4, variant: 'cards', items: [{ value: '500+', label: 'Kunden' }, { value: '99.9%', label: 'Uptime' }, { value: '24/7', label: 'Support' }, { value: '50+', label: 'Integrationen' }] },
-  },
-  team: {
-    icon: Users,
-    description: 'Teammitglieder mit Foto, Rolle und Bio',
-    fields: ['sectionTitle', 'columns', 'items'],
-    defaultContent: { sectionTitle: 'Unser Team', columns: 3, items: [{ name: 'Anna Schmidt', role: 'Geschaeftsfuehrung', bio: 'Ueber 15 Jahre Erfahrung.' }, { name: 'Tom Mueller', role: 'Technik', bio: 'Full-Stack Entwickler.' }] },
-  },
-  timeline: {
-    icon: GitBranch,
-    description: 'Vertikale Zeitleiste fuer Prozesse oder Geschichte',
-    fields: ['sectionTitle', 'items'],
-    defaultContent: { sectionTitle: 'So funktioniert es', items: [{ icon: 'Search', title: 'Schritt 1: Analyse', description: 'Wir analysieren Ihre Anforderungen.' }, { icon: 'Settings', title: 'Schritt 2: Umsetzung', description: 'Wir setzen die Loesung um.' }, { icon: 'CheckCircle', title: 'Schritt 3: Launch', description: 'Wir gehen gemeinsam live.' }] },
-  },
-  logocloud: {
-    icon: Building2,
-    description: 'Logo-Leiste fuer Partner, Kunden oder Technologien',
-    fields: ['sectionTitle', 'items'],
-    defaultContent: { sectionTitle: 'Unsere Partner', items: [{ name: 'Partner 1' }, { name: 'Partner 2' }, { name: 'Partner 3' }, { name: 'Partner 4' }] },
-  },
-  video: {
-    icon: Play,
-    description: 'Video-Einbettung (YouTube, Vimeo oder direkt)',
-    fields: ['src', 'title', 'caption', 'width', 'aspectRatio'],
-    defaultContent: { src: '', title: 'Video', caption: '', width: 'container', aspectRatio: '16:9' },
-  },
-  gallery: {
-    icon: GalleryHorizontalEnd,
-    description: 'Bildergalerie mit Lightbox und optionalen Bildunterschriften',
-    fields: ['sectionTitle', 'columns', 'items'],
-    defaultContent: { sectionTitle: 'Galerie', columns: 3, items: [] },
-  },
-  banner: {
-    icon: Megaphone,
-    description: 'Ankuendigungs-Banner mit Icon, Text und optionalem Button',
-    fields: ['text', 'variant', 'icon', 'buttonLabel', 'buttonHref'],
-    defaultContent: { text: 'Wichtige Ankuendigung: Neues Update verfuegbar!', variant: 'brand', icon: 'Megaphone', buttonLabel: 'Mehr erfahren', buttonHref: '#' },
-  },
-  divider: {
-    icon: Minus,
-    description: 'Visueller Trenner zwischen Sektionen',
-    fields: ['style', 'label'],
-    defaultContent: { style: 'gradient', label: '' },
-  },
-  comparison: {
-    icon: Table2,
-    description: 'Vergleichstabelle fuer Features oder Pakete',
-    fields: ['sectionTitle', 'columns', 'rows'],
-    defaultContent: { sectionTitle: 'Funktionsvergleich', columns: [{ name: 'Starter', highlighted: false }, { name: 'Professional', highlighted: true }], rows: [{ feature: 'Benutzer', values: ['1', 'Unbegrenzt'] }, { feature: 'Support', values: ['E-Mail', 'Prioritaet'] }, { feature: 'API-Zugang', values: ['nein', 'ja'] }] },
-  },
-  placeholder: {
-    icon: Box,
-    description: 'Platzhalter-Block fuer zukuenftige Inhalte',
-    fields: ['icon', 'title', 'description'],
-    defaultContent: { icon: 'Box', title: 'Platzhalter', description: 'Dieser Bereich wird bald gefuellt.' },
-  },
+  defaultSettings: Record<string, unknown>
+  isActive: boolean | null
+  sortOrder: number | null
+}
+
+import type { LucideIcon } from 'lucide-react'
+const iconMap: Record<string, LucideIcon> = {
+  LayoutTemplate,
+  Type,
+  Heading,
+  ImageIcon,
+  SquareStack,
+  MousePointerClick,
+  Star,
+  Box,
+  MessageSquareQuote,
+  CreditCard,
+  HelpCircle,
+  BarChart3,
+  Users,
+  GitBranch,
+  Building2,
+  Play,
+  GalleryHorizontalEnd,
+  Megaphone,
+  Minus,
+  Table2,
 }
 
 export default function CmsPageEditorPage() {
@@ -243,6 +124,7 @@ export default function CmsPageEditorPage() {
   const [saving, setSaving] = useState(false)
   const [showAddBlock, setShowAddBlock] = useState(false)
   const [newBlockType, setNewBlockType] = useState('text')
+  const [blockTypes, setBlockTypes] = useState<BlockTypeDefinition[]>([])
 
   // SEO form state
   const [title, setTitle] = useState('')
@@ -272,9 +154,22 @@ export default function CmsPageEditorPage() {
     }
   }, [pageId])
 
+  const fetchBlockTypes = useCallback(async () => {
+    try {
+      const response = await fetch('/api/v1/cms/block-types')
+      const data = await response.json()
+      if (data.success) {
+        setBlockTypes(data.data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch block types:', error)
+    }
+  }, [])
+
   useEffect(() => {
     fetchPage()
-  }, [fetchPage])
+    fetchBlockTypes()
+  }, [fetchPage, fetchBlockTypes])
 
   const handleSave = async () => {
     setSaving(true)
@@ -299,11 +194,16 @@ export default function CmsPageEditorPage() {
     }
   }
 
+  // Helper: get block type info from DB-loaded data
+  const getBlockTypeDef = useCallback((slug: string) => blockTypes.find((bt) => bt.slug === slug), [blockTypes])
+  const getBlockTypeLabel = useCallback((slug: string) => getBlockTypeDef(slug)?.name || slug, [getBlockTypeDef])
+
   const handleAddBlock = async (typeOverride?: string) => {
     const blockType = typeOverride || newBlockType
     try {
       const sortOrder = page?.blocks.length || 0
-      const defaultContent = blockTypeInfo[blockType]?.defaultContent || {}
+      const def = getBlockTypeDef(blockType)
+      const defaultContent = (def?.defaultContent as Record<string, unknown>) || {}
       await fetch(`/api/v1/cms/pages/${pageId}/blocks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -435,13 +335,23 @@ export default function CmsPageEditorPage() {
           <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
             {page.status === 'published' ? 'Veroeffentlicht' : 'Entwurf'}
           </Badge>
+          {page.hasDraftChanges && (
+            <Badge variant="outline" className="border-orange-400 text-orange-600">
+              Unveroeffentlichte Aenderungen
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={handlePublish}>
-            {page.status === 'published' ? (
+            {page.status === 'published' && !page.hasDraftChanges ? (
               <>
                 <EyeOff className="h-4 w-4 mr-2" />
                 Zurueckziehen
+              </>
+            ) : page.hasDraftChanges ? (
+              <>
+                <Globe className="h-4 w-4 mr-2" />
+                Aenderungen veroeffentlichen
               </>
             ) : (
               <>
@@ -544,7 +454,7 @@ export default function CmsPageEditorPage() {
                     </div>
 
                     <Badge variant="outline" className="shrink-0">
-                      {blockTypeLabels[block.blockType] || block.blockType}
+                      {getBlockTypeLabel(block.blockType)}
                     </Badge>
 
                     <div className="flex-1 min-w-0">
@@ -643,13 +553,14 @@ export default function CmsPageEditorPage() {
             <DialogTitle>Block hinzufuegen</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-4">
-            {Object.entries(blockTypeInfo).map(([type, info]) => {
-              const Icon = info.icon
-              const isSelected = newBlockType === type
+            {blockTypes.map((bt) => {
+              const Icon = (bt.icon ? iconMap[bt.icon] : null) || Box
+              const isSelected = newBlockType === bt.slug
+              const fields = (bt.fields as string[]) || []
               return (
                 <button
-                  key={type}
-                  onClick={() => setNewBlockType(type)}
+                  key={bt.slug}
+                  onClick={() => setNewBlockType(bt.slug)}
                   className={`text-left rounded-lg border-2 p-4 transition-all hover:border-blue-400 hover:shadow-sm ${
                     isSelected ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30' : 'border-muted'
                   }`}
@@ -660,12 +571,12 @@ export default function CmsPageEditorPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{blockTypeLabels[type]}</span>
+                        <span className="font-medium text-sm">{bt.name}</span>
                         {isSelected && <Check className="h-4 w-4 text-blue-500" />}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{info.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{bt.description}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {info.fields.map((field) => (
+                        {fields.map((field) => (
                           <Badge key={field} variant="secondary" className="text-[10px] px-1.5 py-0">
                             {field}
                           </Badge>
@@ -680,12 +591,12 @@ export default function CmsPageEditorPage() {
           {/* Mini preview of selected block type */}
           <div className="rounded-lg border overflow-hidden bg-white dark:bg-background">
             <div className="text-xs text-muted-foreground px-3 py-1.5 bg-muted/50 border-b">
-              Vorschau: {blockTypeLabels[newBlockType]}
+              Vorschau: {getBlockTypeLabel(newBlockType)}
             </div>
             <div className="pointer-events-none max-h-64 overflow-hidden relative">
               <CmsBlockRenderer
                 blockType={newBlockType}
-                content={blockTypeInfo[newBlockType]?.defaultContent || {}}
+                content={(getBlockTypeDef(newBlockType)?.defaultContent as Record<string, unknown>) || {}}
                 settings={{}}
               />
               <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-background to-transparent" />
@@ -697,7 +608,7 @@ export default function CmsPageEditorPage() {
             </Button>
             <Button onClick={() => handleAddBlock()}>
               <Plus className="h-4 w-4 mr-2" />
-              {blockTypeLabels[newBlockType]} hinzufuegen
+              {getBlockTypeLabel(newBlockType)} hinzufuegen
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -750,6 +661,6 @@ function getBlockPreview(block: CmsBlock): string {
     case 'placeholder':
       return (content.title as string) || 'Platzhalter'
     default:
-      return blockTypeLabels[block.blockType] || block.blockType
+      return block.blockType
   }
 }

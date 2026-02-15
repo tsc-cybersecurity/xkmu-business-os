@@ -69,6 +69,10 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'companyName', label: 'Firmenname', description: 'Name der Firma' },
     { key: 'documentText', label: 'Dokumenttext', description: 'Extrahierter Text aus dem PDF' },
   ],
+  cms_seo_generation: [
+    { key: 'pageSlug', label: 'Seiten-URL', description: 'Slug/Pfad der Seite' },
+    { key: 'pageContent', label: 'Seiteninhalt', description: 'Extrahierter Text aus den Bloecken' },
+  ],
 }
 
 // ============================================
@@ -381,6 +385,37 @@ Die E-Mail soll die Stärken des Unternehmens würdigen und einen natürlichen G
   "subject": "<E-Mail Betreff>",
   "body": "<E-Mail Text mit Absätzen>",
   "tone": "<professionell|freundlich|direkt>"
+}`,
+  },
+  cms_seo_generation: {
+    name: 'CMS SEO-Generierung',
+    description: 'Generiert optimierte SEO-Metadaten (Titel, Beschreibung, Keywords) fuer CMS-Seiten.',
+    systemPrompt: `Du bist ein SEO-Spezialist fuer deutschsprachige Webseiten. Deine Aufgabe ist es, optimierte SEO-Metadaten zu generieren.
+
+KERNREGELN:
+1. SEO-Titel: max 60 Zeichen, praegnant, mit Hauptkeyword
+2. Meta-Description: max 155 Zeichen, mit Call-to-Action
+3. Keywords: 5-8 relevante Keywords, kommagetrennt
+4. Antworte immer auf Deutsch
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codebloecke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Generiere optimierte SEO-Metadaten fuer die folgende Webseite.
+
+Seiten-URL: {{pageSlug}}
+
+Seiteninhalt:
+{{pageContent}}
+
+Erstelle SEO-Titel, Meta-Description und Keywords im vorgegebenen JSON-Format.`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "seoTitle": "<max 60 Zeichen, praegnant mit Hauptkeyword>",
+  "seoDescription": "<max 155 Zeichen, mit Call-to-Action>",
+  "seoKeywords": "<keyword1, keyword2, keyword3, ... (5-8 Keywords)>"
 }`,
   },
   document_analysis: {

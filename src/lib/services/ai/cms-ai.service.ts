@@ -1,4 +1,5 @@
 import { AIService, type AIRequestContext } from './ai.service'
+import { AiPromptTemplateService } from '../ai-prompt-template.service'
 
 export interface SEOResult {
   seoTitle: string
@@ -12,28 +13,21 @@ export const CmsAIService = {
     pageSlug: string,
     context: AIRequestContext
   ): Promise<SEOResult> {
-    const prompt = `Du bist ein SEO-Experte. Generiere optimierte SEO-Metadaten fuer eine Webseite.
+    const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'cms_seo_generation')
 
-Seiten-URL: ${pageSlug}
-Seiteninhalt:
-${pageContent.substring(0, 2000)}
+    const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
+      pageSlug,
+      pageContent: pageContent.substring(0, 2000),
+    })
 
-Generiere:
-1. SEO-Titel (max 60 Zeichen, praegnant, mit Hauptkeyword)
-2. Meta-Description (max 155 Zeichen, mit Call-to-Action)
-3. Keywords (5-8 relevante Keywords, kommagetrennt)
+    const fullPrompt = template.outputFormat
+      ? `${userPrompt}\n\n${template.outputFormat}`
+      : userPrompt
 
-Antworte NUR als JSON:
-{
-  "seoTitle": "...",
-  "seoDescription": "...",
-  "seoKeywords": "keyword1, keyword2, ..."
-}`
-
-    const response = await AIService.completeWithContext(prompt, context, {
+    const response = await AIService.completeWithContext(fullPrompt, context, {
       maxTokens: 500,
       temperature: 0.3,
-      systemPrompt: 'Du bist ein SEO-Spezialist fuer deutschsprachige Webseiten. Antworte immer auf Deutsch und nur als valides JSON.',
+      systemPrompt: template.systemPrompt,
     })
 
     try {

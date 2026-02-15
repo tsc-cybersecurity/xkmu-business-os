@@ -945,6 +945,12 @@ export const cmsPages = pgTable('cms_pages', {
   ogImage: varchar('og_image', { length: 500 }),
   status: varchar('status', { length: 20 }).default('draft'),
   publishedAt: timestamp('published_at', { withTimezone: true }),
+  publishedBlocks: jsonb('published_blocks'),
+  publishedTitle: varchar('published_title', { length: 255 }),
+  publishedSeoTitle: varchar('published_seo_title', { length: 70 }),
+  publishedSeoDescription: varchar('published_seo_description', { length: 160 }),
+  publishedSeoKeywords: varchar('published_seo_keywords', { length: 255 }),
+  hasDraftChanges: boolean('has_draft_changes').default(false),
   createdBy: uuid('created_by').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -1051,6 +1057,30 @@ export const cmsNavigationItemsRelations = relations(cmsNavigationItems, ({ one 
 
 export type CmsNavigationItem = typeof cmsNavigationItems.$inferSelect
 export type NewCmsNavigationItem = typeof cmsNavigationItems.$inferInsert
+
+// ============================================
+// CMS Block Type Definitions (Globale Block-Typ-Konfiguration)
+// ============================================
+export const cmsBlockTypeDefinitions = pgTable('cms_block_type_definitions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: varchar('slug', { length: 50 }).unique().notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  icon: varchar('icon', { length: 50 }),
+  category: varchar('category', { length: 50 }),
+  fields: jsonb('fields').default([]),
+  defaultContent: jsonb('default_content').default({}),
+  defaultSettings: jsonb('default_settings').default({}),
+  isActive: boolean('is_active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cms_block_type_defs_slug').on(table.slug),
+  index('idx_cms_block_type_defs_active').on(table.isActive),
+])
+
+export type CmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferSelect
+export type NewCmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferInsert
 
 // ============================================
 // Blog Posts (Blog-Beiträge)

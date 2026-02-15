@@ -415,7 +415,7 @@ export const updateCmsPageSchema = createCmsPageSchema.partial()
 // ============================================
 // CMS Block Schemas
 // ============================================
-export const cmsBlockTypeSchema = z.enum(['hero', 'features', 'cta', 'text', 'heading', 'image', 'cards', 'placeholder'])
+export const cmsBlockTypeSchema = z.string().min(1).max(50)
 
 export const createCmsBlockSchema = z.object({
   blockType: cmsBlockTypeSchema,

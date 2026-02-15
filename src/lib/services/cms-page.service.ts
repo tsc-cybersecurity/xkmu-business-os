@@ -86,6 +86,42 @@ export const CmsPageService = {
       .limit(1)
     if (!page) return null
 
+    // Use published snapshot if available
+    if (page.publishedBlocks) {
+      const snapshotBlocks = page.publishedBlocks as Array<{
+        id: string
+        blockType: string
+        sortOrder: number
+        content: Record<string, unknown>
+        settings: Record<string, unknown>
+        isVisible: boolean
+      }>
+      // Build CmsBlock-like objects from snapshot
+      const blocks = snapshotBlocks.map((b) => ({
+        id: b.id,
+        pageId: page.id,
+        tenantId: page.tenantId,
+        blockType: b.blockType,
+        sortOrder: b.sortOrder,
+        content: b.content,
+        settings: b.settings,
+        isVisible: b.isVisible,
+        createdAt: page.createdAt,
+        updatedAt: page.updatedAt,
+      })) as CmsBlock[]
+      // Override title/SEO with published versions
+      const publicPage = {
+        ...page,
+        title: page.publishedTitle || page.title,
+        seoTitle: page.publishedSeoTitle ?? page.seoTitle,
+        seoDescription: page.publishedSeoDescription ?? page.seoDescription,
+        seoKeywords: page.publishedSeoKeywords ?? page.seoKeywords,
+        blocks,
+      }
+      return publicPage
+    }
+
+    // Fallback: load live blocks (for pages published before versioning)
     const blocks = await db
       .select()
       .from(cmsBlocks)
@@ -96,6 +132,13 @@ export const CmsPageService = {
   },
 
   async update(tenantId: string, pageId: string, data: UpdateCmsPageInput): Promise<CmsPage | null> {
+    // Check if page is published – if so, mark draft changes
+    const [existing] = await db
+      .select({ status: cmsPages.status })
+      .from(cmsPages)
+      .where(and(eq(cmsPages.tenantId, tenantId), eq(cmsPages.id, pageId)))
+      .limit(1)
+
     const updateData: Partial<NewCmsPage> = { updatedAt: new Date() }
     if (data.slug !== undefined) updateData.slug = data.slug
     if (data.title !== undefined) updateData.title = data.title
@@ -104,6 +147,11 @@ export const CmsPageService = {
     if (data.seoKeywords !== undefined) updateData.seoKeywords = data.seoKeywords || null
     if (data.ogImage !== undefined) updateData.ogImage = data.ogImage || null
     if (data.status !== undefined) updateData.status = data.status
+
+    // Mark draft changes if page is currently published
+    if (existing?.status === 'published' && data.status === undefined) {
+      updateData.hasDraftChanges = true
+    }
 
     const [page] = await db
       .update(cmsPages)
@@ -122,9 +170,43 @@ export const CmsPageService = {
   },
 
   async publish(tenantId: string, pageId: string): Promise<CmsPage | null> {
+    // Load all current blocks for snapshot
+    const blocks = await db
+      .select()
+      .from(cmsBlocks)
+      .where(and(eq(cmsBlocks.pageId, pageId), eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.isVisible, true)))
+      .orderBy(asc(cmsBlocks.sortOrder))
+
+    // Load current page data for SEO snapshot
+    const [currentPage] = await db
+      .select()
+      .from(cmsPages)
+      .where(and(eq(cmsPages.tenantId, tenantId), eq(cmsPages.id, pageId)))
+      .limit(1)
+    if (!currentPage) return null
+
+    const blockSnapshot = blocks.map((b) => ({
+      id: b.id,
+      blockType: b.blockType,
+      sortOrder: b.sortOrder,
+      content: b.content,
+      settings: b.settings,
+      isVisible: b.isVisible,
+    }))
+
     const [page] = await db
       .update(cmsPages)
-      .set({ status: 'published', publishedAt: new Date(), updatedAt: new Date() })
+      .set({
+        status: 'published',
+        publishedAt: new Date(),
+        publishedBlocks: blockSnapshot,
+        publishedTitle: currentPage.title,
+        publishedSeoTitle: currentPage.seoTitle,
+        publishedSeoDescription: currentPage.seoDescription,
+        publishedSeoKeywords: currentPage.seoKeywords,
+        hasDraftChanges: false,
+        updatedAt: new Date(),
+      })
       .where(and(eq(cmsPages.tenantId, tenantId), eq(cmsPages.id, pageId)))
       .returning()
     return page ?? null
@@ -133,10 +215,33 @@ export const CmsPageService = {
   async unpublish(tenantId: string, pageId: string): Promise<CmsPage | null> {
     const [page] = await db
       .update(cmsPages)
-      .set({ status: 'draft', publishedAt: null, updatedAt: new Date() })
+      .set({
+        status: 'draft',
+        publishedAt: null,
+        publishedBlocks: null,
+        publishedTitle: null,
+        publishedSeoTitle: null,
+        publishedSeoDescription: null,
+        publishedSeoKeywords: null,
+        hasDraftChanges: false,
+        updatedAt: new Date(),
+      })
       .where(and(eq(cmsPages.tenantId, tenantId), eq(cmsPages.id, pageId)))
       .returning()
     return page ?? null
+  },
+
+  async markDraftChanges(tenantId: string, pageId: string): Promise<void> {
+    await db
+      .update(cmsPages)
+      .set({ hasDraftChanges: true, updatedAt: new Date() })
+      .where(
+        and(
+          eq(cmsPages.tenantId, tenantId),
+          eq(cmsPages.id, pageId),
+          eq(cmsPages.status, 'published')
+        )
+      )
   },
 
   async list(tenantId: string, filters: CmsPageFilters = {}) {
