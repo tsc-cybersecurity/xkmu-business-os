@@ -1,0 +1,49 @@
+import { NextRequest } from 'next/server'
+import {
+  apiSuccess,
+  apiNotFound,
+  apiValidationError,
+  apiServerError,
+} from '@/lib/utils/api-response'
+import {
+  updateCmsNavigationItemSchema,
+  validateAndParse,
+  formatZodErrors,
+} from '@/lib/utils/validation'
+import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
+import { withPermission } from '@/lib/auth/require-permission'
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return withPermission(request, 'cms', 'update', async (auth) => {
+    try {
+      const { id } = await params
+      const body = await request.json()
+      const validation = validateAndParse(updateCmsNavigationItemSchema, body)
+      if (!validation.success) {
+        return apiValidationError(formatZodErrors(validation.errors))
+      }
+
+      const item = await CmsNavigationService.update(auth.tenantId, id, validation.data)
+      if (!item) return apiNotFound('Navigations-Item nicht gefunden')
+      return apiSuccess(item)
+    } catch (error) {
+      console.error('Error updating navigation item:', error)
+      return apiServerError()
+    }
+  })
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return withPermission(request, 'cms', 'delete', async (auth) => {
+    const { id } = await params
+    const deleted = await CmsNavigationService.delete(auth.tenantId, id)
+    if (!deleted) return apiNotFound('Navigations-Item nicht gefunden')
+    return apiSuccess({ deleted: true })
+  })
+}

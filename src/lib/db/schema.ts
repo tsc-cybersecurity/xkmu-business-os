@@ -1020,6 +1020,39 @@ export const cmsBlockTemplatesRelations = relations(cmsBlockTemplates, ({ one })
 }))
 
 // ============================================
+// CMS Navigation Items (Navigations-Einträge)
+// ============================================
+export const cmsNavigationItems = pgTable('cms_navigation_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  location: varchar('location', { length: 20 }).notNull(), // 'header' | 'footer'
+  label: varchar('label', { length: 100 }).notNull(),
+  href: varchar('href', { length: 500 }).notNull(),
+  pageId: uuid('page_id').references(() => cmsPages.id, { onDelete: 'set null' }),
+  sortOrder: integer('sort_order').notNull().default(0),
+  openInNewTab: boolean('open_in_new_tab').default(false),
+  isVisible: boolean('is_visible').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cms_nav_items_tenant_location_sort').on(table.tenantId, table.location, table.sortOrder),
+])
+
+export const cmsNavigationItemsRelations = relations(cmsNavigationItems, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [cmsNavigationItems.tenantId],
+    references: [tenants.id],
+  }),
+  page: one(cmsPages, {
+    fields: [cmsNavigationItems.pageId],
+    references: [cmsPages.id],
+  }),
+}))
+
+export type CmsNavigationItem = typeof cmsNavigationItems.$inferSelect
+export type NewCmsNavigationItem = typeof cmsNavigationItems.$inferInsert
+
+// ============================================
 // Blog Posts (Blog-Beiträge)
 // ============================================
 export const blogPosts = pgTable('blog_posts', {

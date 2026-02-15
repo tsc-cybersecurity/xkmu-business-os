@@ -438,6 +438,27 @@ export const reorderCmsBlocksSchema = z.object({
 })
 
 // ============================================
+// CMS Navigation Schemas
+// ============================================
+export const cmsNavigationLocationSchema = z.enum(['header', 'footer'])
+
+export const createCmsNavigationItemSchema = z.object({
+  location: cmsNavigationLocationSchema,
+  label: z.string().min(1, 'Label ist erforderlich').max(100),
+  href: z.string().min(1, 'Link ist erforderlich').max(500),
+  pageId: z.string().uuid().nullable().optional(),
+  sortOrder: z.number().int().min(0).default(0),
+  openInNewTab: z.boolean().default(false),
+  isVisible: z.boolean().default(true),
+})
+
+export const updateCmsNavigationItemSchema = createCmsNavigationItemSchema.partial()
+
+export const reorderCmsNavigationItemsSchema = z.object({
+  itemIds: z.array(z.string().uuid()).min(1, 'Mindestens ein Item erforderlich'),
+})
+
+// ============================================
 // Blog Post Schemas
 // ============================================
 export const blogPostStatusSchema = z.enum(['draft', 'published', 'archived'])

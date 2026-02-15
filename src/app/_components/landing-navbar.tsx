@@ -29,7 +29,13 @@ interface SessionUser {
   lastName: string | null
 }
 
-const navItems = [
+interface NavItemData {
+  name: string
+  href: string
+  openInNewTab?: boolean
+}
+
+const defaultNavItems: NavItemData[] = [
   { name: 'Cyber Security', href: '/cyber-security' },
   { name: 'KI & Automation', href: '/ki-automation' },
   { name: 'IT Consulting', href: '/it-consulting' },
@@ -52,6 +58,7 @@ function getUserDisplayName(user: SessionUser) {
 export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [user, setUser] = useState<SessionUser | null>(null)
+  const [navItems, setNavItems] = useState<NavItemData[]>(defaultNavItems)
   const {
     font, setFont, fontOptions,
     accent, setAccent, accentOptions,
@@ -64,6 +71,19 @@ export function LandingNavbar() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.data?.user) setUser(data.data.user)
+      })
+      .catch(() => {})
+
+    fetch('/api/v1/public/navigation?location=header')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && data.data?.length > 0) {
+          setNavItems(data.data.map((item: { label: string; href: string; openInNewTab: boolean }) => ({
+            name: item.label,
+            href: item.href,
+            openInNewTab: item.openInNewTab,
+          })))
+        }
       })
       .catch(() => {})
   }, [])
@@ -92,6 +112,7 @@ export function LandingNavbar() {
             <Link
               key={item.name}
               href={item.href}
+              {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] dark:hover:text-[var(--brand-400)] transition-colors"
             >
               {item.name}
@@ -210,6 +231,7 @@ export function LandingNavbar() {
               <Link
                 key={item.name}
                 href={item.href}
+                {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] py-2 border-b border-gray-100 dark:border-slate-800"
                 onClick={() => setMobileOpen(false)}
               >

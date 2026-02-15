@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { ChevronRight, Home } from 'lucide-react'
 
-const pathLabels: Record<string, string> = {
+const defaultPathLabels: Record<string, string> = {
   'agb': 'AGB',
   'impressum': 'Impressum',
   'datenschutz': 'Datenschutz',
@@ -17,10 +18,32 @@ const pathLabels: Record<string, string> = {
 
 export function Breadcrumb() {
   const pathname = usePathname()
+  const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/v1/public/navigation?location=header').then((r) => r.ok ? r.json() : null),
+      fetch('/api/v1/public/navigation?location=footer').then((r) => r.ok ? r.json() : null),
+    ])
+      .then(([headerData, footerData]) => {
+        const labels: Record<string, string> = {}
+        const allItems = [
+          ...(headerData?.data || []),
+          ...(footerData?.data || []),
+        ]
+        for (const item of allItems) {
+          const slug = item.href.replace(/^\//, '').split('/')[0]
+          if (slug) labels[slug] = item.label
+        }
+        setDynamicLabels(labels)
+      })
+      .catch(() => {})
+  }, [])
 
   if (pathname === '/') return null
 
   const segments = pathname.split('/').filter(Boolean)
+  const pathLabels = { ...defaultPathLabels, ...dynamicLabels }
 
   return (
     <nav aria-label="Breadcrumb" className="container mx-auto px-4 py-4">

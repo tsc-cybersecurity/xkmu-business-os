@@ -1,0 +1,41 @@
+import { NextRequest } from 'next/server'
+import {
+  apiSuccess,
+  apiValidationError,
+  apiServerError,
+} from '@/lib/utils/api-response'
+import {
+  createCmsNavigationItemSchema,
+  validateAndParse,
+  formatZodErrors,
+} from '@/lib/utils/validation'
+import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
+import { withPermission } from '@/lib/auth/require-permission'
+
+export async function GET(request: NextRequest) {
+  return withPermission(request, 'cms', 'read', async (auth) => {
+    const { searchParams } = new URL(request.url)
+    const location = searchParams.get('location') || undefined
+
+    const items = await CmsNavigationService.list(auth.tenantId, location)
+    return apiSuccess(items)
+  })
+}
+
+export async function POST(request: NextRequest) {
+  return withPermission(request, 'cms', 'create', async (auth) => {
+    try {
+      const body = await request.json()
+      const validation = validateAndParse(createCmsNavigationItemSchema, body)
+      if (!validation.success) {
+        return apiValidationError(formatZodErrors(validation.errors))
+      }
+
+      const item = await CmsNavigationService.create(auth.tenantId, validation.data)
+      return apiSuccess(item, undefined, 201)
+    } catch (error) {
+      console.error('Error creating navigation item:', error)
+      return apiServerError()
+    }
+  })
+}
