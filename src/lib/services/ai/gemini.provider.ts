@@ -39,6 +39,7 @@ export class GeminiProvider implements AIProvider {
       headers: {
         'Content-Type': 'application/json',
       },
+      signal: AbortSignal.timeout(90000),
       body: JSON.stringify({
         ...(options?.systemPrompt ? { systemInstruction: { parts: [{ text: options.systemPrompt }] } } : {}),
         contents: [

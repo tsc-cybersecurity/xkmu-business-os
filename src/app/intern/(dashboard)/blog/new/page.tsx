@@ -112,15 +112,30 @@ export default function NewBlogPostPage() {
           length: aiLength,
         }),
       })
+      if (!response.ok) {
+        // Handle non-JSON errors (e.g. Vercel 504 timeout returns HTML)
+        try {
+          const data = await response.json()
+          toast.error(data.error?.message || `Server-Fehler (${response.status})`)
+        } catch {
+          toast.error(
+            response.status === 504
+              ? 'Zeitüberschreitung – die KI hat zu lange gebraucht. Bitte erneut versuchen.'
+              : `Server-Fehler (${response.status}). Bitte erneut versuchen.`
+          )
+        }
+        return
+      }
       const data = await response.json()
       if (data.success) {
+        toast.success('Beitrag erfolgreich generiert')
         router.push(`/intern/blog/${data.data.id}`)
       } else {
         toast.error(data.error?.message || 'Generierung fehlgeschlagen')
       }
     } catch (error) {
       console.error('Failed to generate post:', error)
-      toast.error('Beitrag konnte nicht generiert werden')
+      toast.error('Netzwerkfehler – Beitrag konnte nicht generiert werden')
     } finally {
       setCreating(false)
     }

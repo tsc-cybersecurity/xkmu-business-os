@@ -30,6 +30,7 @@ export class DeepseekProvider implements AIProvider {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.apiKey}`,
       },
+      signal: AbortSignal.timeout(90000),
       body: JSON.stringify({
         model,
         messages: [

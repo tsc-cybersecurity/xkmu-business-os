@@ -32,7 +32,64 @@ const toneGuide: Record<string, string> = {
   technical: 'technisch detailliert und praezise',
 }
 
+function extractJson(text: string): string | null {
+  // 1. Try to extract from ```json code blocks
+  const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
+  if (codeBlockMatch) {
+    return codeBlockMatch[1].trim()
+  }
+
+  // 2. Try to find raw JSON object
+  const jsonMatch = text.match(/\{[\s\S]*\}/)
+  if (jsonMatch) {
+    return jsonMatch[0]
+  }
+
+  return null
+}
+
 export const BlogAIService = {
+  /**
+   * Parse AI response text into a GeneratedPost, with robust error handling
+   */
+  parseGeneratedPost(text: string): GeneratedPost {
+    const jsonStr = extractJson(text)
+    if (!jsonStr) {
+      console.error('[BlogAI] No JSON found in response. First 500 chars:', text.substring(0, 500))
+      throw new Error('KI-Antwort enthielt kein JSON. Bitte erneut versuchen.')
+    }
+
+    try {
+      const parsed = JSON.parse(jsonStr)
+
+      // Validate required fields
+      if (!parsed.title || !parsed.content) {
+        console.error('[BlogAI] Parsed JSON missing required fields:', Object.keys(parsed))
+        throw new Error('KI-Antwort unvollstaendig (Titel oder Inhalt fehlt). Bitte erneut versuchen.')
+      }
+
+      return {
+        title: String(parsed.title || ''),
+        slug: String(parsed.slug || ''),
+        content: String(parsed.content || ''),
+        excerpt: String(parsed.excerpt || ''),
+        seoTitle: String(parsed.seoTitle || ''),
+        seoDescription: String(parsed.seoDescription || ''),
+        seoKeywords: String(parsed.seoKeywords || ''),
+        tags: Array.isArray(parsed.tags) ? parsed.tags.map(String) : [],
+        featuredImage: String(parsed.featuredImage || ''),
+        featuredImageAlt: String(parsed.featuredImageAlt || ''),
+      }
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        console.error('[BlogAI] JSON parse error:', error.message)
+        console.error('[BlogAI] Attempted to parse:', jsonStr.substring(0, 300))
+        throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
+      }
+      throw error
+    }
+  },
+
   async generatePost(
     topic: string,
     options: GeneratePostOptions,
@@ -72,29 +129,20 @@ Antworte NUR als JSON:
     const response = await AIService.completeWithContext(prompt, context, {
       maxTokens: 4000,
       temperature: 0.7,
-      systemPrompt: `Du bist ein professioneller IT-Fachautor. Schreibe ${tone} auf ${lang}. Antworte nur als valides JSON.`,
+      systemPrompt: `Du bist ein professioneller IT-Fachautor. Schreibe ${tone} auf ${lang}. Antworte NUR als valides JSON ohne Markdown-Code-Bloecke.`,
     })
 
-    try {
-      const match = response.text.match(/\{[\s\S]*\}/)
-      if (match) {
-        const parsed = JSON.parse(match[0]) as GeneratedPost
-        // Ensure slug is URL-safe
-        parsed.slug = parsed.slug
-          .toLowerCase()
-          .replace(/[äÄ]/g, 'ae')
-          .replace(/[öÖ]/g, 'oe')
-          .replace(/[üÜ]/g, 'ue')
-          .replace(/ß/g, 'ss')
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-|-$/g, '')
-        return parsed
-      }
-    } catch {
-      // Parsing failed
-    }
-
-    throw new Error('KI-Antwort konnte nicht verarbeitet werden')
+    const parsed = this.parseGeneratedPost(response.text)
+    // Ensure slug is URL-safe
+    parsed.slug = parsed.slug
+      .toLowerCase()
+      .replace(/[äÄ]/g, 'ae')
+      .replace(/[öÖ]/g, 'oe')
+      .replace(/[üÜ]/g, 'ue')
+      .replace(/ß/g, 'ss')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+    return parsed
   },
 
   async generateSEO(

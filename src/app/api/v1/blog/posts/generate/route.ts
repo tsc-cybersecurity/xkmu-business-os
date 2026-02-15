@@ -62,8 +62,9 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(post, undefined, 201)
     } catch (error) {
-      console.error('Error generating blog post:', error)
-      return apiServerError('KI-Generierung fehlgeschlagen')
+      const message = error instanceof Error ? error.message : 'KI-Generierung fehlgeschlagen'
+      console.error('Error generating blog post:', message, error)
+      return apiServerError(message)
     }
   })
 }

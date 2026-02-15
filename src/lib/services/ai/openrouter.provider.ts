@@ -34,6 +34,7 @@ export class OpenRouterProvider implements AIProvider {
         'HTTP-Referer': 'https://xkmu-business-os.local',
         'X-Title': 'xKMU Business OS',
       },
+      signal: AbortSignal.timeout(90000),
       body: JSON.stringify({
         model,
         messages: [
