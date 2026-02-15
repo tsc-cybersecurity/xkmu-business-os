@@ -158,8 +158,8 @@ class AIServiceClass {
         const response = await provider.complete(prompt, mergedOptions)
         const durationMs = Date.now() - startTime
 
-        // Erfolg loggen
-        await AiProviderService.createLog({
+        // Erfolg loggen (fire-and-forget, blockiert nicht den Response)
+        AiProviderService.createLog({
           tenantId: context.tenantId,
           providerId: config.id,
           userId: context.userId || null,
@@ -176,7 +176,6 @@ class AIServiceClass {
           entityType: context.entityType || null,
           entityId: context.entityId || null,
         }).catch((err) => {
-          // Logging-Fehler sollen nicht den Hauptprozess blockieren
           console.error('Failed to log AI request:', err)
         })
 
@@ -185,8 +184,8 @@ class AIServiceClass {
         lastError = error instanceof Error ? error : new Error(String(error))
         console.error(`Provider ${config.name} (${config.providerType}) failed:`, error)
 
-        // Fehler loggen
-        await AiProviderService.createLog({
+        // Fehler loggen (fire-and-forget)
+        AiProviderService.createLog({
           tenantId: context.tenantId,
           providerId: config.id,
           userId: context.userId || null,
