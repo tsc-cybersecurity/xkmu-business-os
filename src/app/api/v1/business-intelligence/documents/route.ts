@@ -1,4 +1,6 @@
 import { NextRequest } from 'next/server'
+import { writeFile, mkdir } from 'fs/promises'
+import path from 'path'
 import {
   apiSuccess,
   apiError,
@@ -7,6 +9,8 @@ import {
 } from '@/lib/utils/api-response'
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'bi')
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'business_intelligence', 'read', async (auth) => {
@@ -49,6 +53,11 @@ export async function POST(request: NextRequest) {
       }
 
       const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`
+
+      // Save file to disk
+      await mkdir(UPLOAD_DIR, { recursive: true })
+      const buffer = Buffer.from(await file.arrayBuffer())
+      await writeFile(path.join(UPLOAD_DIR, filename), buffer)
 
       const doc = await BusinessDocumentService.create(
         auth.tenantId,

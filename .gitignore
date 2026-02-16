@@ -36,6 +36,9 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
+# uploads (user-generated content)
+/public/uploads/
+
 # vercel
 .vercel
 

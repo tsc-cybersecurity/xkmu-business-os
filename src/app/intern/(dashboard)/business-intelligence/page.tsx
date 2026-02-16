@@ -128,37 +128,19 @@ export default function BusinessIntelligencePage() {
   const handleExtract = async (doc: BusinessDocument) => {
     setExtracting(doc.id);
     try {
-      // We need to re-upload the file for extraction
-      // First fetch the original file content by asking user to re-select
-      // For simplicity, we use a file input approach
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.pdf,.docx,.xlsx,.xls,.txt';
-      input.onchange = async (e) => {
-        const file = (e.target as HTMLInputElement).files?.[0];
-        if (!file) {
-          setExtracting(null);
-          return;
-        }
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await fetch(`/api/v1/business-intelligence/documents/${doc.id}/extract`, {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await response.json();
-        if (data.success) {
-          toast.success('Text erfolgreich extrahiert');
-          fetchData();
-        } else {
-          toast.error(data.error?.message || 'Extraktion fehlgeschlagen');
-        }
-        setExtracting(null);
-      };
-      input.click();
+      const response = await fetch(`/api/v1/business-intelligence/documents/${doc.id}/extract`, {
+        method: 'POST',
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success('Text erfolgreich extrahiert');
+        fetchData();
+      } else {
+        toast.error(data.error?.message || 'Extraktion fehlgeschlagen');
+      }
     } catch {
       toast.error('Extraktion fehlgeschlagen');
+    } finally {
       setExtracting(null);
     }
   };

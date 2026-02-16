@@ -68,7 +68,7 @@ export const BusinessDocumentService = {
     return result.length > 0
   },
 
-  async updateExtraction(tenantId: string, id: string, extractedText: string | null, status: 'completed' | 'failed'): Promise<BusinessDocument | null> {
+  async updateExtraction(tenantId: string, id: string, extractedText: string | null, status: 'processing' | 'completed' | 'failed'): Promise<BusinessDocument | null> {
     const [doc] = await db
       .update(businessDocuments)
       .set({

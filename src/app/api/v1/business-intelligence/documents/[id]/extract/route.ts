@@ -1,4 +1,6 @@
 import { NextRequest } from 'next/server'
+import { readFile } from 'fs/promises'
+import path from 'path'
 import {
   apiSuccess,
   apiNotFound,
@@ -9,6 +11,8 @@ import { BusinessDocumentService } from '@/lib/services/business-document.servic
 import { withPermission } from '@/lib/auth/require-permission'
 
 export const maxDuration = 120
+
+const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'bi')
 
 export async function POST(
   request: NextRequest,
@@ -21,19 +25,14 @@ export async function POST(
       if (!doc) return apiNotFound('Dokument nicht gefunden')
 
       // Mark as processing
-      await BusinessDocumentService.updateExtraction(auth.tenantId, id, null, 'completed')
+      await BusinessDocumentService.updateExtraction(auth.tenantId, id, null, 'processing')
 
       let extractedText = ''
 
       try {
-        const formData = await request.formData()
-        const file = formData.get('file') as File | null
-
-        if (!file) {
-          return apiError('VALIDATION_ERROR', 'Datei fuer Extraktion erforderlich', 400)
-        }
-
-        const buffer = Buffer.from(await file.arrayBuffer())
+        // Read file from disk
+        const filePath = path.join(UPLOAD_DIR, doc.filename)
+        const buffer = await readFile(filePath)
 
         if (doc.mimeType === 'application/pdf') {
           const { PDFParse } = await import('pdf-parse')
