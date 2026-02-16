@@ -20,17 +20,32 @@ function getConnectionString(): string {
   return connectionString
 }
 
+function getSslConfig(): 'require' | false {
+  const sslEnv = process.env.DATABASE_SSL
+
+  // Explicit override via DATABASE_SSL
+  if (sslEnv === 'false' || sslEnv === '0') return false
+  if (sslEnv === 'require') return 'require'
+
+  // Docker/Coolify: default no SSL (local PostgreSQL)
+  if (process.env.DOCKER === 'true' || process.env.COOLIFY === 'true') return false
+
+  // Production (Vercel, Neon, etc.): default SSL required
+  if (process.env.NODE_ENV === 'production') return 'require'
+
+  // Development: no SSL
+  return false
+}
+
 function createClient() {
   if (!_client) {
     const connectionString = getConnectionString()
 
-    // Vercel/Serverless optimized settings
     _client = postgres(connectionString, {
-      max: 5, // Reduced for serverless (connection pooling)
+      max: 5,
       idle_timeout: 20,
       connect_timeout: 10,
-      // SSL required for most cloud providers (Vercel Postgres, Neon, Supabase)
-      ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
+      ssl: getSslConfig(),
     })
   }
   return _client

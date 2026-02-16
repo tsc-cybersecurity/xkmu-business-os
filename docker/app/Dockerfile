@@ -43,14 +43,28 @@ FROM base AS production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN apk add --no-cache netcat-openbsd
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Standalone Next.js output
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Full node_modules for drizzle-kit push + tsx (schema migration & seeding at startup)
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Drizzle config + schema for migrations
+COPY --from=builder --chown=nextjs:nodejs /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/db ./src/lib/db
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
+# Production entrypoint (DB wait, migration, seeding, then server)
+COPY --chown=nextjs:nodejs docker/app/entrypoint.prod.sh /entrypoint.prod.sh
+RUN chmod +x /entrypoint.prod.sh
+
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000
-CMD ["node", "server.js"]
+CMD ["/entrypoint.prod.sh"]

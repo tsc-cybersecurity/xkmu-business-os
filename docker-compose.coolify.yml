@@ -13,6 +13,7 @@
 # Required Environment Variables (set in Coolify):
 # - DB_PASSWORD: Strong database password
 # - JWT_SECRET: Min 32 character secret for auth
+# - NEXT_PUBLIC_APP_URL: Public URL (e.g. https://app.example.com)
 #
 # Optional Environment Variables:
 # - GOOGLE_AI_API_KEY: For Gemini AI
@@ -37,7 +38,9 @@ services:
       - NODE_ENV=production
       - COOLIFY=true
       - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD}@postgres:5432/xkmu_business_os
+      - DATABASE_SSL=false
       - JWT_SECRET=${JWT_SECRET}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       # AI Providers (optional - configure in app settings or here)
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -52,6 +55,8 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
+    volumes:
+      - uploads_data:/app/public/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,11 +65,11 @@ services:
     networks:
       - xkmu-network
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/v1/auth/me"]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 40s
+      retries: 5
+      start_period: 60s
 
   # ============================================
   # PostgreSQL Database
@@ -79,7 +84,6 @@ services:
       POSTGRES_DB: xkmu_business_os
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U xkmu -d xkmu_business_os"]
       interval: 10s
@@ -113,3 +117,4 @@ networks:
 volumes:
   postgres_data:
   redis_data:
+  uploads_data:
