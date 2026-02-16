@@ -20,7 +20,7 @@ echo "Schema sync complete!"
 
 # Run seed if needed (checks if default tenant exists)
 echo "Checking if seed is needed..."
-node seed-check.js
+npx tsx src/lib/db/seed-check.ts
 
 # Start the application
 echo "Starting Next.js production server..."
