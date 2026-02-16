@@ -7,8 +7,9 @@
 # 1. Create new project > Docker Compose
 # 2. Point to this repository
 # 3. Set docker-compose file: docker-compose.coolify.yml
-# 4. Configure environment variables in Coolify UI
-# 5. Deploy!
+# 4. Set FQDN on app service to https://your-domain.com
+# 5. Configure environment variables in Coolify UI
+# 6. Deploy!
 #
 # Required Environment Variables (set in Coolify):
 # - DB_PASSWORD: Strong database password
@@ -30,10 +31,9 @@ services:
       context: .
       dockerfile: docker/app/Dockerfile
       target: production
-    container_name: xkmu-app
     restart: always
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       - NODE_ENV=production
       - COOLIFY=true
@@ -62,8 +62,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    networks:
-      - xkmu-network
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
@@ -76,7 +74,6 @@ services:
   # ============================================
   postgres:
     image: postgres:16-alpine
-    container_name: xkmu-postgres
     restart: always
     environment:
       POSTGRES_USER: xkmu
@@ -89,30 +86,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - xkmu-network
 
   # ============================================
   # Redis (Session Cache)
   # ============================================
   redis:
     image: redis:7-alpine
-    container_name: xkmu-redis
     restart: always
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
-    networks:
-      - xkmu-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
-
-networks:
-  xkmu-network:
-    driver: bridge
 
 volumes:
   postgres_data:
