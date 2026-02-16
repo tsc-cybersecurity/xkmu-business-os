@@ -23,6 +23,9 @@ export const MODULES = [
   'basisabsicherung',
   'cms',
   'blog',
+  'business_intelligence',
+  'marketing',
+  'social_media',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -63,6 +66,9 @@ export const MODULE_LABELS: Record<Module, string> = {
   basisabsicherung: 'Basisabsicherung',
   cms: 'CMS / Seiteneditor',
   blog: 'Blog / IT-News',
+  business_intelligence: 'Business Intelligence',
+  marketing: 'Marketing',
+  social_media: 'Social Media',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {

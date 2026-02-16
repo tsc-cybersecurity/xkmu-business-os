@@ -490,6 +490,121 @@ export const generateBlogPostSchema = z.object({
 })
 
 // ============================================
+// Business Intelligence Schemas
+// ============================================
+export const businessDocumentUploadSchema = z.object({
+  filename: z.string().min(1).max(255),
+  originalName: z.string().min(1).max(255),
+  mimeType: z.string().min(1).max(100),
+  sizeBytes: z.number().int().min(1),
+})
+
+// ============================================
+// Marketing Campaign Schemas
+// ============================================
+export const campaignTypeSchema = z.enum(['email', 'call', 'sms', 'multi'])
+export const campaignStatusSchema = z.enum(['draft', 'active', 'paused', 'completed', 'archived'])
+
+export const createMarketingCampaignSchema = z.object({
+  name: z.string().min(1, 'Name ist erforderlich').max(255),
+  description: z.string().optional().or(z.literal('')),
+  type: campaignTypeSchema,
+  status: campaignStatusSchema.default('draft'),
+  targetAudience: z.string().optional().or(z.literal('')),
+  startDate: z.string().optional().or(z.literal('')),
+  endDate: z.string().optional().or(z.literal('')),
+  settings: z.record(z.string(), z.unknown()).default({}),
+})
+
+export const updateMarketingCampaignSchema = createMarketingCampaignSchema.partial()
+
+export const marketingTaskTypeSchema = z.enum(['email', 'call', 'sms'])
+export const marketingTaskStatusSchema = z.enum(['draft', 'scheduled', 'sent', 'failed'])
+
+export const createMarketingTaskSchema = z.object({
+  type: marketingTaskTypeSchema,
+  recipientEmail: z.string().email().optional().or(z.literal('')),
+  recipientName: z.string().max(255).optional().or(z.literal('')),
+  recipientCompany: z.string().max(255).optional().or(z.literal('')),
+  personId: uuidSchema.nullable().optional(),
+  companyId: uuidSchema.nullable().optional(),
+  subject: z.string().max(255).optional().or(z.literal('')),
+  content: z.string().optional().or(z.literal('')),
+  scheduledAt: z.string().optional().or(z.literal('')),
+  status: marketingTaskStatusSchema.default('draft'),
+})
+
+export const updateMarketingTaskSchema = createMarketingTaskSchema.partial()
+
+export const createMarketingTemplateSchema = z.object({
+  name: z.string().min(1, 'Name ist erforderlich').max(255),
+  type: marketingTaskTypeSchema,
+  subject: z.string().max(255).optional().or(z.literal('')),
+  content: z.string().min(1, 'Inhalt ist erforderlich'),
+  isDefault: z.boolean().default(false),
+})
+
+export const updateMarketingTemplateSchema = createMarketingTemplateSchema.partial()
+
+export const generateMarketingContentSchema = z.object({
+  type: marketingTaskTypeSchema,
+  recipientIds: z.array(uuidSchema).optional(),
+  tone: z.enum(['professional', 'casual', 'persuasive']).default('professional'),
+  language: z.enum(['de', 'en']).default('de'),
+  context: z.string().optional().or(z.literal('')),
+})
+
+// ============================================
+// Social Media Schemas
+// ============================================
+export const socialPlatformSchema = z.enum(['linkedin', 'twitter', 'instagram', 'facebook', 'xing'])
+export const socialPostStatusSchema = z.enum(['draft', 'scheduled', 'posted', 'failed'])
+
+export const createSocialMediaTopicSchema = z.object({
+  name: z.string().min(1, 'Name ist erforderlich').max(100),
+  description: z.string().optional().or(z.literal('')),
+  color: z.string().max(7).default('#3b82f6'),
+})
+
+export const updateSocialMediaTopicSchema = createSocialMediaTopicSchema.partial()
+
+export const createSocialMediaPostSchema = z.object({
+  topicId: uuidSchema.nullable().optional(),
+  platform: socialPlatformSchema,
+  title: z.string().max(255).optional().or(z.literal('')),
+  content: z.string().min(1, 'Inhalt ist erforderlich'),
+  hashtags: z.array(z.string()).default([]),
+  imageUrl: z.string().max(500).optional().or(z.literal('')),
+  scheduledAt: z.string().optional().or(z.literal('')),
+  status: socialPostStatusSchema.default('draft'),
+})
+
+export const updateSocialMediaPostSchema = createSocialMediaPostSchema.partial()
+
+export const generateSocialPostSchema = z.object({
+  platform: socialPlatformSchema,
+  topicId: uuidSchema.nullable().optional(),
+  topic: z.string().min(1, 'Thema ist erforderlich').max(500),
+  tone: z.enum(['professional', 'casual', 'humorous', 'inspirational']).default('professional'),
+  language: z.enum(['de', 'en']).default('de'),
+  includeHashtags: z.boolean().default(true),
+  includeEmoji: z.boolean().default(true),
+})
+
+export const generateContentPlanSchema = z.object({
+  platforms: z.array(socialPlatformSchema).min(1, 'Mindestens eine Plattform'),
+  topicIds: z.array(uuidSchema).optional(),
+  topics: z.array(z.string()).optional(),
+  count: z.number().int().min(1).max(30).default(7),
+  tone: z.enum(['professional', 'casual', 'humorous', 'inspirational']).default('professional'),
+  language: z.enum(['de', 'en']).default('de'),
+})
+
+export const improveSocialPostSchema = z.object({
+  instructions: z.string().min(1, 'Anweisungen erforderlich').max(500),
+})
+
+// ============================================
 // Helper Functions
 // ============================================
 export function validateAndParse<T>(

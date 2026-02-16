@@ -56,6 +56,13 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   mediaUploads: many(mediaUploads),
   companyResearches: many(companyResearches),
   firecrawlResearches: many(firecrawlResearches),
+  businessDocuments: many(businessDocuments),
+  businessProfiles: many(businessProfiles),
+  marketingCampaigns: many(marketingCampaigns),
+  marketingTasks: many(marketingTasks),
+  marketingTemplates: many(marketingTemplates),
+  socialMediaTopics: many(socialMediaTopics),
+  socialMediaPosts: many(socialMediaPosts),
 }))
 
 // ============================================
@@ -1213,6 +1220,238 @@ export const firecrawlResearchesRelations = relations(firecrawlResearches, ({ on
 }))
 
 // ============================================
+// Business Documents (BI - Hochgeladene Geschaeftsdokumente)
+// ============================================
+export const businessDocuments = pgTable('business_documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  filename: varchar('filename', { length: 255 }).notNull(),
+  originalName: varchar('original_name', { length: 255 }).notNull(),
+  mimeType: varchar('mime_type', { length: 100 }).notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+  extractedText: text('extracted_text'),
+  extractionStatus: varchar('extraction_status', { length: 20 }).default('pending'), // pending | processing | completed | failed
+  uploadedBy: uuid('uploaded_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_business_documents_tenant').on(table.tenantId),
+  index('idx_business_documents_status').on(table.tenantId, table.extractionStatus),
+])
+
+export const businessDocumentsRelations = relations(businessDocuments, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [businessDocuments.tenantId],
+    references: [tenants.id],
+  }),
+  uploadedByUser: one(users, {
+    fields: [businessDocuments.uploadedBy],
+    references: [users.id],
+  }),
+}))
+
+// ============================================
+// Business Profiles (BI - KI-generiertes Geschaeftsprofil)
+// ============================================
+export const businessProfiles = pgTable('business_profiles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  companyName: varchar('company_name', { length: 255 }),
+  industry: varchar('industry', { length: 100 }),
+  businessModel: text('business_model'),
+  swotAnalysis: jsonb('swot_analysis'), // {strengths, weaknesses, opportunities, threats}
+  marketAnalysis: text('market_analysis'),
+  financialSummary: text('financial_summary'),
+  keyMetrics: jsonb('key_metrics'),
+  recommendations: text('recommendations'),
+  rawAnalysis: text('raw_analysis'),
+  analyzedDocumentIds: text('analyzed_document_ids').array().default([]),
+  lastAnalyzedAt: timestamp('last_analyzed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_business_profiles_tenant').on(table.tenantId),
+])
+
+export const businessProfilesRelations = relations(businessProfiles, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [businessProfiles.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+// ============================================
+// Marketing Campaigns (Kampagnen)
+// ============================================
+export const marketingCampaigns = pgTable('marketing_campaigns', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  type: varchar('type', { length: 30 }).notNull(), // email | call | sms | multi
+  status: varchar('status', { length: 20 }).default('draft'), // draft | active | paused | completed | archived
+  targetAudience: text('target_audience'),
+  startDate: timestamp('start_date', { withTimezone: true }),
+  endDate: timestamp('end_date', { withTimezone: true }),
+  settings: jsonb('settings').default({}),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_marketing_campaigns_tenant').on(table.tenantId),
+  index('idx_marketing_campaigns_status').on(table.tenantId, table.status),
+  index('idx_marketing_campaigns_type').on(table.tenantId, table.type),
+])
+
+export const marketingCampaignsRelations = relations(marketingCampaigns, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [marketingCampaigns.tenantId],
+    references: [tenants.id],
+  }),
+  createdByUser: one(users, {
+    fields: [marketingCampaigns.createdBy],
+    references: [users.id],
+  }),
+  tasks: many(marketingTasks),
+}))
+
+// ============================================
+// Marketing Tasks (Einzelaufgaben einer Kampagne)
+// ============================================
+export const marketingTasks = pgTable('marketing_tasks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  campaignId: uuid('campaign_id').notNull().references(() => marketingCampaigns.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 20 }).notNull(), // email | call | sms
+  recipientEmail: varchar('recipient_email', { length: 255 }),
+  recipientName: varchar('recipient_name', { length: 255 }),
+  recipientCompany: varchar('recipient_company', { length: 255 }),
+  personId: uuid('person_id').references(() => persons.id, { onDelete: 'set null' }),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+  subject: varchar('subject', { length: 255 }),
+  content: text('content'),
+  scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+  status: varchar('status', { length: 20 }).default('draft'), // draft | scheduled | sent | failed
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_marketing_tasks_tenant').on(table.tenantId),
+  index('idx_marketing_tasks_campaign').on(table.campaignId),
+  index('idx_marketing_tasks_status').on(table.tenantId, table.status),
+  index('idx_marketing_tasks_scheduled').on(table.tenantId, table.scheduledAt),
+])
+
+export const marketingTasksRelations = relations(marketingTasks, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [marketingTasks.tenantId],
+    references: [tenants.id],
+  }),
+  campaign: one(marketingCampaigns, {
+    fields: [marketingTasks.campaignId],
+    references: [marketingCampaigns.id],
+  }),
+  person: one(persons, {
+    fields: [marketingTasks.personId],
+    references: [persons.id],
+  }),
+  company: one(companies, {
+    fields: [marketingTasks.companyId],
+    references: [companies.id],
+  }),
+}))
+
+// ============================================
+// Marketing Templates (Wiederverwendbare Vorlagen)
+// ============================================
+export const marketingTemplates = pgTable('marketing_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  type: varchar('type', { length: 20 }).notNull(), // email | call | sms
+  subject: varchar('subject', { length: 255 }),
+  content: text('content').notNull(),
+  isDefault: boolean('is_default').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_marketing_templates_tenant').on(table.tenantId),
+  index('idx_marketing_templates_type').on(table.tenantId, table.type),
+])
+
+export const marketingTemplatesRelations = relations(marketingTemplates, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [marketingTemplates.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+// ============================================
+// Social Media Topics (Themen-Kategorien)
+// ============================================
+export const socialMediaTopics = pgTable('social_media_topics', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  color: varchar('color', { length: 7 }).default('#3b82f6'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_social_media_topics_tenant').on(table.tenantId),
+])
+
+export const socialMediaTopicsRelations = relations(socialMediaTopics, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [socialMediaTopics.tenantId],
+    references: [tenants.id],
+  }),
+  posts: many(socialMediaPosts),
+}))
+
+// ============================================
+// Social Media Posts (Beitraege)
+// ============================================
+export const socialMediaPosts = pgTable('social_media_posts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  topicId: uuid('topic_id').references(() => socialMediaTopics.id, { onDelete: 'set null' }),
+  platform: varchar('platform', { length: 30 }).notNull(), // linkedin | twitter | instagram | facebook | xing
+  title: varchar('title', { length: 255 }),
+  content: text('content').notNull(),
+  hashtags: text('hashtags').array().default([]),
+  imageUrl: varchar('image_url', { length: 500 }),
+  scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
+  postedAt: timestamp('posted_at', { withTimezone: true }),
+  status: varchar('status', { length: 20 }).default('draft'), // draft | scheduled | posted | failed
+  aiGenerated: boolean('ai_generated').default(false),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_social_media_posts_tenant').on(table.tenantId),
+  index('idx_social_media_posts_platform').on(table.tenantId, table.platform),
+  index('idx_social_media_posts_status').on(table.tenantId, table.status),
+  index('idx_social_media_posts_scheduled').on(table.tenantId, table.scheduledAt),
+  index('idx_social_media_posts_topic').on(table.tenantId, table.topicId),
+])
+
+export const socialMediaPostsRelations = relations(socialMediaPosts, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [socialMediaPosts.tenantId],
+    references: [tenants.id],
+  }),
+  topic: one(socialMediaTopics, {
+    fields: [socialMediaPosts.topicId],
+    references: [socialMediaTopics.id],
+  }),
+  createdByUser: one(users, {
+    fields: [socialMediaPosts.createdBy],
+    references: [users.id],
+  }),
+}))
+
+// ============================================
 // Type Exports
 // ============================================
 export type Tenant = typeof tenants.$inferSelect
@@ -1304,3 +1543,24 @@ export type NewCompanyResearch = typeof companyResearches.$inferInsert
 
 export type FirecrawlResearch = typeof firecrawlResearches.$inferSelect
 export type NewFirecrawlResearch = typeof firecrawlResearches.$inferInsert
+
+export type BusinessDocument = typeof businessDocuments.$inferSelect
+export type NewBusinessDocument = typeof businessDocuments.$inferInsert
+
+export type BusinessProfile = typeof businessProfiles.$inferSelect
+export type NewBusinessProfile = typeof businessProfiles.$inferInsert
+
+export type MarketingCampaign = typeof marketingCampaigns.$inferSelect
+export type NewMarketingCampaign = typeof marketingCampaigns.$inferInsert
+
+export type MarketingTask = typeof marketingTasks.$inferSelect
+export type NewMarketingTask = typeof marketingTasks.$inferInsert
+
+export type MarketingTemplate = typeof marketingTemplates.$inferSelect
+export type NewMarketingTemplate = typeof marketingTemplates.$inferInsert
+
+export type SocialMediaTopic = typeof socialMediaTopics.$inferSelect
+export type NewSocialMediaTopic = typeof socialMediaTopics.$inferInsert
+
+export type SocialMediaPost = typeof socialMediaPosts.$inferSelect
+export type NewSocialMediaPost = typeof socialMediaPosts.$inferInsert

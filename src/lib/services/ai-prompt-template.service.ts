@@ -77,6 +77,44 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'title', label: 'Beitragstitel', description: 'Titel des Blogbeitrags' },
     { key: 'content', label: 'Beitragsinhalt', description: 'Inhalt des Blogbeitrags (Auszug)' },
   ],
+  business_profile_analysis: [
+    { key: 'documentTexts', label: 'Dokumentinhalte', description: 'Extrahierte Texte aus den hochgeladenen Dokumenten' },
+  ],
+  marketing_email: [
+    { key: 'recipientName', label: 'Empfaengername', description: 'Name des Empfaengers' },
+    { key: 'recipientCompany', label: 'Empfaengerfirma', description: 'Firma des Empfaengers' },
+    { key: 'context', label: 'Kontext', description: 'Zusaetzlicher Kontext fuer die Generierung' },
+    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+  ],
+  marketing_call_script: [
+    { key: 'recipientName', label: 'Empfaengername', description: 'Name des Gespraechspartners' },
+    { key: 'recipientCompany', label: 'Empfaengerfirma', description: 'Firma des Gespraechspartners' },
+    { key: 'context', label: 'Kontext', description: 'Zusaetzlicher Kontext fuer das Gespraech' },
+    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+  ],
+  marketing_sms: [
+    { key: 'recipientName', label: 'Empfaengername', description: 'Name des Empfaengers' },
+    { key: 'context', label: 'Kontext', description: 'Zusaetzlicher Kontext' },
+    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+  ],
+  social_media_post: [
+    { key: 'platform', label: 'Plattform', description: 'Social-Media-Plattform' },
+    { key: 'topic', label: 'Thema', description: 'Thema des Beitrags' },
+    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+    { key: 'includeHashtags', label: 'Hashtags', description: 'Ob Hashtags enthalten sein sollen' },
+    { key: 'includeEmoji', label: 'Emojis', description: 'Ob Emojis enthalten sein sollen' },
+  ],
+  social_media_content_plan: [
+    { key: 'platforms', label: 'Plattformen', description: 'Ziel-Plattformen' },
+    { key: 'topics', label: 'Themen', description: 'Themen fuer den Contentplan' },
+    { key: 'count', label: 'Anzahl', description: 'Anzahl der zu erstellenden Beitraege' },
+    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+  ],
+  social_media_improve: [
+    { key: 'currentContent', label: 'Aktueller Inhalt', description: 'Der bestehende Beitrag' },
+    { key: 'platform', label: 'Plattform', description: 'Social-Media-Plattform' },
+    { key: 'instructions', label: 'Anweisungen', description: 'Verbesserungsanweisungen' },
+  ],
 }
 
 // ============================================
@@ -451,6 +489,231 @@ Erstelle SEO-Titel, Meta-Description und Keywords im vorgegebenen JSON-Format.`,
   "seoTitle": "<max 60 Zeichen, praegnant mit Hauptkeyword>",
   "seoDescription": "<max 155 Zeichen, mit Call-to-Action>",
   "seoKeywords": "<keyword1, keyword2, keyword3, ... (5-8 Keywords)>"
+}`,
+  },
+  marketing_email: {
+    name: 'Marketing E-Mail',
+    description: 'Generiert professionelle Marketing-E-Mails fuer Kampagnen.',
+    systemPrompt: `Du bist ein erfahrener Marketing-Spezialist fuer den deutschsprachigen Markt. Erstelle professionelle Marketing-E-Mails.
+
+KERNREGELN:
+1. Professioneller, aber einladender Ton
+2. Klare Struktur mit Betreff und Inhalt
+3. Call-to-Action am Ende
+4. Deutsch, Sie-Form
+5. Max. 200 Woerter Inhalt
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codebloecke
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Erstelle eine Marketing-E-Mail mit folgenden Parametern:
+
+{{#if recipientName}}- Empfaenger: {{recipientName}}{{/if}}
+{{#if recipientCompany}}- Firma: {{recipientCompany}}{{/if}}
+- Tonalitaet: {{tone}}
+
+{{#if context}}Kontext/Ziel:
+{{context}}{{/if}}`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "subject": "<E-Mail Betreff>",
+  "content": "<E-Mail Inhalt mit Absaetzen>",
+  "tone": "<verwendete Tonalitaet>"
+}`,
+  },
+  marketing_call_script: {
+    name: 'Marketing Anruf-Skript',
+    description: 'Generiert Gespraechsleitfaeden fuer telefonische Marketing-Kampagnen.',
+    systemPrompt: `Du bist ein erfahrener Vertriebscoach. Erstelle strukturierte Gespraechsleitfaeden fuer telefonische Kontaktaufnahmen.
+
+KERNREGELN:
+1. Natuerlicher Gespraechsfluss
+2. Klare Struktur: Begruessung, Anlass, Nutzen, Abschluss
+3. Einwandbehandlung einbauen
+4. Deutsch, Sie-Form
+5. Praxisnah und authentisch
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Erstelle einen Gespraechsleitfaden mit folgenden Parametern:
+
+{{#if recipientName}}- Gespraechspartner: {{recipientName}}{{/if}}
+{{#if recipientCompany}}- Firma: {{recipientCompany}}{{/if}}
+- Tonalitaet: {{tone}}
+
+{{#if context}}Kontext/Ziel:
+{{context}}{{/if}}`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "subject": "<Thema des Gespraechs>",
+  "content": "<Strukturierter Gespraechsleitfaden>",
+  "tone": "<verwendete Tonalitaet>"
+}`,
+  },
+  marketing_sms: {
+    name: 'Marketing SMS',
+    description: 'Generiert kurze, praegnante SMS-Texte fuer Marketing-Kampagnen.',
+    systemPrompt: `Du bist ein Marketing-Spezialist fuer SMS-Kommunikation. Erstelle kurze, wirkungsvolle SMS-Texte.
+
+KERNREGELN:
+1. Maximal 160 Zeichen fuer den Content
+2. Klare Botschaft
+3. Call-to-Action
+4. Deutsch
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Erstelle eine Marketing-SMS mit folgenden Parametern:
+
+{{#if recipientName}}- Empfaenger: {{recipientName}}{{/if}}
+- Tonalitaet: {{tone}}
+
+{{#if context}}Kontext/Ziel:
+{{context}}{{/if}}`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "subject": "<Kurzes Thema>",
+  "content": "<SMS-Text, max 160 Zeichen>",
+  "tone": "<verwendete Tonalitaet>"
+}`,
+  },
+  social_media_post: {
+    name: 'Social Media Beitrag',
+    description: 'Generiert plattformspezifische Social-Media-Beitraege.',
+    systemPrompt: `Du bist ein Social-Media-Experte fuer den deutschsprachigen Markt. Erstelle ansprechende, plattformspezifische Beitraege.
+
+KERNREGELN:
+1. Beachte die Zeichenlimits der Plattform (Twitter: 280 Zeichen, LinkedIn: laenger erlaubt)
+2. Plattformspezifischer Stil und Tonalitaet
+3. Relevante Hashtags (3-8 Stueck)
+4. Deutsch als Standardsprache
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Erstelle einen Social-Media-Beitrag mit folgenden Parametern:
+
+- Plattform: {{platform}}
+- Thema: {{topic}}
+- Tonalitaet: {{tone}}
+- Hashtags einbeziehen: {{includeHashtags}}
+- Emojis einbeziehen: {{includeEmoji}}`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "title": "<Kurzer Titel/Hook>",
+  "content": "<Beitragstext>",
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"]
+}`,
+  },
+  social_media_content_plan: {
+    name: 'Social Media Contentplan',
+    description: 'Generiert einen mehrtaegigen Contentplan mit mehreren Beitraegen.',
+    systemPrompt: `Du bist ein Social-Media-Stratege. Erstelle strukturierte Contentplaene mit abwechslungsreichen Beitraegen.
+
+KERNREGELN:
+1. Abwechslungsreiche Inhalte ueber die Tage verteilt
+2. Plattformspezifische Optimierung
+3. Konsistente Markensprache
+4. Strategische Hashtag-Nutzung
+5. Deutsch als Standardsprache
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Array
+- Beginne deine Antwort direkt mit [ und ende mit ]`,
+    userPrompt: `Erstelle einen Contentplan mit folgenden Parametern:
+
+- Plattformen: {{platforms}}
+- Themen: {{topics}}
+- Anzahl Beitraege: {{count}}
+- Tonalitaet: {{tone}}`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format (Array):
+[
+  {
+    "platform": "<Plattform>",
+    "title": "<Titel/Hook>",
+    "content": "<Beitragstext>",
+    "hashtags": ["#hashtag1", "#hashtag2"],
+    "scheduledDay": 1
+  }
+]`,
+  },
+  social_media_improve: {
+    name: 'Social Media Verbesserung',
+    description: 'Verbessert bestehende Social-Media-Beitraege basierend auf Anweisungen.',
+    systemPrompt: `Du bist ein Social-Media-Experte. Verbessere bestehende Beitraege basierend auf den Anweisungen des Nutzers.
+
+KERNREGELN:
+1. Behalte die Kernaussage bei
+2. Verbessere Engagement und Reichweite
+3. Optimiere fuer die Zielplattform
+4. Deutsch als Standardsprache
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Verbessere den folgenden Social-Media-Beitrag:
+
+Plattform: {{platform}}
+
+Aktueller Beitrag:
+{{currentContent}}
+
+Verbesserungsanweisungen:
+{{instructions}}`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "content": "<Verbesserter Beitragstext>",
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"]
+}`,
+  },
+  business_profile_analysis: {
+    name: 'Business-Profil-Analyse',
+    description: 'Analysiert hochgeladene Geschaeftsdokumente und erstellt ein umfassendes Unternehmensprofil mit SWOT-Analyse.',
+    systemPrompt: `Du bist ein erfahrener Business-Analyst und Unternehmensberater. Deine Aufgabe ist es, Geschaeftsdokumente zu analysieren und ein strukturiertes Unternehmensprofil zu erstellen.
+
+KERNREGELN:
+1. Verwende AUSSCHLIESSLICH die bereitgestellten Dokumentinhalte
+2. Erfinde KEINE Informationen – bei Unsicherheit schreibe "Nicht ermittelbar"
+3. Antworte immer auf Deutsch
+4. Erstelle eine fundierte SWOT-Analyse basierend auf den Dokumenten
+5. Leite Empfehlungen aus den tatsaechlichen Daten ab
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codebloecke, KEIN \`\`\`json
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Analysiere die folgenden Geschaeftsdokumente und erstelle ein umfassendes Unternehmensprofil:
+
+=== DOKUMENTINHALTE ===
+{{documentTexts}}
+=== ENDE DER DOKUMENTE ===
+
+Erstelle basierend auf diesen Dokumenten ein strukturiertes Unternehmensprofil im vorgegebenen JSON-Format.`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "companyName": "Firmenname (aus den Dokumenten)",
+  "industry": "Branche",
+  "businessModel": "Beschreibung des Geschaeftsmodells (3-5 Saetze)",
+  "swotAnalysis": {
+    "strengths": ["Staerke 1", "Staerke 2", "Staerke 3"],
+    "weaknesses": ["Schwaeche 1", "Schwaeche 2"],
+    "opportunities": ["Chance 1", "Chance 2", "Chance 3"],
+    "threats": ["Risiko 1", "Risiko 2"]
+  },
+  "marketAnalysis": "Marktanalyse basierend auf den Dokumenten (3-5 Saetze)",
+  "financialSummary": "Finanzuebersicht mit konkreten Zahlen aus den Dokumenten",
+  "keyMetrics": {
+    "revenue": "Umsatz oder 'Nicht ermittelbar'",
+    "employees": "Mitarbeiterzahl oder 'Nicht ermittelbar'",
+    "growth": "Wachstum oder 'Nicht ermittelbar'"
+  },
+  "recommendations": "3-5 konkrete Handlungsempfehlungen basierend auf der Analyse"
 }`,
   },
   document_analysis: {

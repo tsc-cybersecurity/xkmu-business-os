@@ -1,0 +1,61 @@
+import { NextRequest } from 'next/server'
+import {
+  apiSuccess,
+  apiNotFound,
+  apiValidationError,
+  apiServerError,
+} from '@/lib/utils/api-response'
+import {
+  updateMarketingTemplateSchema,
+  validateAndParse,
+  formatZodErrors,
+} from '@/lib/utils/validation'
+import { MarketingTemplateService } from '@/lib/services/marketing-template.service'
+import { withPermission } from '@/lib/auth/require-permission'
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return withPermission(request, 'marketing', 'read', async (auth) => {
+    const { id } = await params
+    const template = await MarketingTemplateService.getById(auth.tenantId, id)
+    if (!template) return apiNotFound('Vorlage nicht gefunden')
+    return apiSuccess(template)
+  })
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return withPermission(request, 'marketing', 'update', async (auth) => {
+    try {
+      const { id } = await params
+      const body = await request.json()
+      const validation = validateAndParse(updateMarketingTemplateSchema, body)
+      if (!validation.success) {
+        return apiValidationError(formatZodErrors(validation.errors))
+      }
+
+      const template = await MarketingTemplateService.update(auth.tenantId, id, validation.data)
+      if (!template) return apiNotFound('Vorlage nicht gefunden')
+      return apiSuccess(template)
+    } catch (error) {
+      console.error('Error updating marketing template:', error)
+      return apiServerError()
+    }
+  })
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  return withPermission(request, 'marketing', 'delete', async (auth) => {
+    const { id } = await params
+    const deleted = await MarketingTemplateService.delete(auth.tenantId, id)
+    if (!deleted) return apiNotFound('Vorlage nicht gefunden')
+    return apiSuccess({ deleted: true })
+  })
+}

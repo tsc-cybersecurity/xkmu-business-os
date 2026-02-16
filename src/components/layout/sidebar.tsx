@@ -15,6 +15,7 @@ import {
   Globe,
   ChevronLeft,
   ChevronRight,
+  Brain,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
@@ -86,6 +87,15 @@ const navigation: NavItem[] = [
       { name: 'CMS Seiten', href: '/intern/cms', requiredModule: 'cms' },
       { name: 'Navigation', href: '/intern/cms/navigation', requiredModule: 'cms' },
       { name: 'Blog', href: '/intern/blog', requiredModule: 'blog' },
+    ],
+  },
+  {
+    name: 'Marketing & KI',
+    icon: Brain,
+    children: [
+      { name: 'Business Intelligence', href: '/intern/business-intelligence', requiredModule: 'business_intelligence' },
+      { name: 'Marketing', href: '/intern/marketing', requiredModule: 'marketing' },
+      { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
     ],
   },
   {
