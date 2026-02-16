@@ -1,41 +1,35 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
-import { ArrowLeft, Loader2, Brain, Save, CalendarDays } from 'lucide-react'
-import { toast } from 'sonner'
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ArrowLeft, Loader2, Brain, Save, CalendarDays } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Topic {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface ContentPlanItem {
-  platform: string
-  title: string
-  content: string
-  hashtags: string[]
-  scheduledDay?: number
+  platform: string;
+  title: string;
+  content: string;
+  hashtags: string[];
+  scheduledDay?: number;
 }
 
 const platformLabels: Record<string, string> = {
@@ -44,81 +38,86 @@ const platformLabels: Record<string, string> = {
   instagram: 'Instagram',
   facebook: 'Facebook',
   xing: 'XING',
-}
+};
 
 export default function ContentPlanPage() {
-  const router = useRouter()
-  const [topics, setTopics] = useState<Topic[]>([])
-  const [generating, setGenerating] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [plan, setPlan] = useState<ContentPlanItem[]>([])
+  const router = useRouter();
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [plan, setPlan] = useState<ContentPlanItem[]>([]);
 
   const [form, setForm] = useState({
     platforms: ['linkedin'] as string[],
     topics: '',
     count: 7,
     tone: 'professional',
-  })
+  });
 
   const fetchTopics = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/social-media/topics')
-      const data = await response.json()
-      if (data.success) setTopics(data.data)
+      const response = await fetch('/api/v1/social-media/topics');
+      const data = await response.json();
+      if (data.success) setTopics(data.data);
     } catch (error) {
-      console.error('Failed to fetch topics:', error)
+      console.error('Failed to fetch topics:', error);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchTopics()
-  }, [fetchTopics])
+    fetchTopics();
+  }, [fetchTopics]);
 
   const togglePlatform = (platform: string) => {
-    setForm(f => ({
+    setForm((f) => ({
       ...f,
       platforms: f.platforms.includes(platform)
-        ? f.platforms.filter(p => p !== platform)
+        ? f.platforms.filter((p) => p !== platform)
         : [...f.platforms, platform],
-    }))
-  }
+    }));
+  };
 
   const handleGenerate = async () => {
     if (form.platforms.length === 0) {
-      toast.error('Mindestens eine Plattform auswaehlen')
-      return
+      toast.error('Mindestens eine Plattform auswaehlen');
+      return;
     }
-    setGenerating(true)
+    setGenerating(true);
     try {
       const response = await fetch('/api/v1/social-media/posts/generate-plan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           platforms: form.platforms,
-          topics: form.topics ? form.topics.split(',').map(t => t.trim()).filter(Boolean) : undefined,
+          topics: form.topics
+            ? form.topics
+                .split(',')
+                .map((t) => t.trim())
+                .filter(Boolean)
+            : undefined,
           count: form.count,
           tone: form.tone,
         }),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (data.success) {
-        setPlan(data.data)
-        toast.success(`${data.data.length} Beitraege generiert`)
+        setPlan(data.data);
+        toast.success(`${data.data.length} Beitraege generiert`);
       } else {
-        toast.error(data.error?.message || 'Generierung fehlgeschlagen')
+        toast.error(data.error?.message || 'Generierung fehlgeschlagen');
       }
     } catch {
-      toast.error('Generierung fehlgeschlagen')
+      toast.error('Generierung fehlgeschlagen');
     } finally {
-      setGenerating(false)
+      setGenerating(false);
     }
-  }
+  };
 
   const handleSaveAll = async () => {
-    if (plan.length === 0) return
-    setSaving(true)
+    if (plan.length === 0) return;
+    setSaving(true);
     try {
-      let savedCount = 0
+      let savedCount = 0;
       for (const item of plan) {
         const response = await fetch('/api/v1/social-media/posts', {
           method: 'POST',
@@ -131,20 +130,20 @@ export default function ContentPlanPage() {
             aiGenerated: true,
             status: 'draft',
           }),
-        })
-        const data = await response.json()
-        if (data.success) savedCount++
+        });
+        const data = await response.json();
+        if (data.success) savedCount++;
       }
-      toast.success(`${savedCount} Beitraege gespeichert`)
-      router.push('/intern/social-media')
+      toast.success(`${savedCount} Beitraege gespeichert`);
+      router.push('/intern/social-media');
     } catch {
-      toast.error('Fehler beim Speichern')
+      toast.error('Fehler beim Speichern');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
-  const allPlatforms = ['linkedin', 'twitter', 'instagram', 'facebook', 'xing']
+  const allPlatforms = ['linkedin', 'twitter', 'instagram', 'facebook', 'xing'];
 
   return (
     <div className="space-y-6">
@@ -173,7 +172,7 @@ export default function ContentPlanPage() {
           <div className="space-y-2">
             <Label>Plattformen *</Label>
             <div className="flex flex-wrap gap-2">
-              {allPlatforms.map(platform => (
+              {allPlatforms.map((platform) => (
                 <Button
                   key={platform}
                   type="button"
@@ -191,7 +190,7 @@ export default function ContentPlanPage() {
               <Label>Themen (kommagetrennt)</Label>
               <Textarea
                 value={form.topics}
-                onChange={(e) => setForm(f => ({ ...f, topics: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, topics: e.target.value }))}
                 placeholder="z.B. Digitalisierung, KI, IT-Sicherheit"
                 rows={2}
               />
@@ -204,12 +203,15 @@ export default function ContentPlanPage() {
                   min={1}
                   max={30}
                   value={form.count}
-                  onChange={(e) => setForm(f => ({ ...f, count: parseInt(e.target.value) || 7 }))}
+                  onChange={(e) => setForm((f) => ({ ...f, count: parseInt(e.target.value) || 7 }))}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Tonalitaet</Label>
-                <Select value={form.tone} onValueChange={(v) => setForm(f => ({ ...f, tone: v }))}>
+                <Select
+                  value={form.tone}
+                  onValueChange={(v) => setForm((f) => ({ ...f, tone: v }))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -224,7 +226,11 @@ export default function ContentPlanPage() {
             </div>
           </div>
           <Button onClick={handleGenerate} disabled={generating}>
-            {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Brain className="h-4 w-4 mr-2" />}
+            {generating ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Brain className="h-4 w-4 mr-2" />
+            )}
             {generating ? 'Generiere Contentplan...' : 'Contentplan generieren'}
           </Button>
         </CardContent>
@@ -235,7 +241,11 @@ export default function ContentPlanPage() {
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold">Vorschau ({plan.length} Beitraege)</h2>
             <Button onClick={handleSaveAll} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              {saving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
               Alle als Entwuerfe speichern
             </Button>
           </div>
@@ -244,12 +254,14 @@ export default function ContentPlanPage() {
               <Card key={index}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{item.title || `Beitrag ${index + 1}`}</CardTitle>
-                    <Badge variant="outline">{platformLabels[item.platform] || item.platform}</Badge>
+                    <CardTitle className="text-base">
+                      {item.title || `Beitrag ${index + 1}`}
+                    </CardTitle>
+                    <Badge variant="outline">
+                      {platformLabels[item.platform] || item.platform}
+                    </Badge>
                   </div>
-                  {item.scheduledDay && (
-                    <CardDescription>Tag {item.scheduledDay}</CardDescription>
-                  )}
+                  {item.scheduledDay && <CardDescription>Tag {item.scheduledDay}</CardDescription>}
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm whitespace-pre-line">{item.content}</p>
@@ -263,5 +275,5 @@ export default function ContentPlanPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -74,7 +74,14 @@
       "WebFetch(domain:docs.firecrawl.dev)",
       "WebFetch(domain:github.com)",
       "Bash(npx tsx:*)",
-      "Bash(export:*)"
+      "Bash(export:*)",
+      "Bash(psql:*)",
+      "Bash(echo:*)",
+      "Bash(head:*)",
+      "Bash(npm run db:migrate:*)",
+      "Bash(npx prettier:*)",
+      "Bash(cat:*)",
+      "Bash(awk:*)"
     ]
   }
 }

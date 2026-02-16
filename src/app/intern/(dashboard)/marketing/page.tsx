@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -11,26 +11,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Megaphone, Plus, Loader2, Pencil, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
+} from '@/components/ui/select';
+import { Megaphone, Plus, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Campaign {
-  id: string
-  name: string
-  type: string
-  status: string | null
-  targetAudience: string | null
-  startDate: string | null
-  endDate: string | null
-  createdAt: string | null
+  id: string;
+  name: string;
+  type: string;
+  status: string | null;
+  targetAudience: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string | null;
 }
 
 const typeLabels: Record<string, string> = {
@@ -38,7 +38,7 @@ const typeLabels: Record<string, string> = {
   call: 'Anruf',
   sms: 'SMS',
   multi: 'Multi-Kanal',
-}
+};
 
 const statusLabels: Record<string, string> = {
   draft: 'Entwurf',
@@ -46,7 +46,7 @@ const statusLabels: Record<string, string> = {
   paused: 'Pausiert',
   completed: 'Abgeschlossen',
   archived: 'Archiviert',
-}
+};
 
 const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'secondary',
@@ -54,51 +54,51 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
   paused: 'outline',
   completed: 'default',
   archived: 'outline',
-}
+};
 
 export default function MarketingPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([])
-  const [loading, setLoading] = useState(true)
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const fetchCampaigns = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ limit: '50' })
-      if (statusFilter !== 'all') params.set('status', statusFilter)
-      if (typeFilter !== 'all') params.set('type', typeFilter)
+      const params = new URLSearchParams({ limit: '50' });
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (typeFilter !== 'all') params.set('type', typeFilter);
 
-      const response = await fetch(`/api/v1/marketing/campaigns?${params}`)
-      const data = await response.json()
-      if (data.success) setCampaigns(data.data)
+      const response = await fetch(`/api/v1/marketing/campaigns?${params}`);
+      const data = await response.json();
+      if (data.success) setCampaigns(data.data);
     } catch (error) {
-      console.error('Failed to fetch campaigns:', error)
+      console.error('Failed to fetch campaigns:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [statusFilter, typeFilter])
+  }, [statusFilter, typeFilter]);
 
   useEffect(() => {
-    fetchCampaigns()
-  }, [fetchCampaigns])
+    fetchCampaigns();
+  }, [fetchCampaigns]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Kampagne wirklich loeschen?')) return
+    if (!confirm('Kampagne wirklich loeschen?')) return;
     try {
-      await fetch(`/api/v1/marketing/campaigns/${id}`, { method: 'DELETE' })
-      toast.success('Kampagne geloescht')
-      fetchCampaigns()
+      await fetch(`/api/v1/marketing/campaigns/${id}`, { method: 'DELETE' });
+      toast.success('Kampagne geloescht');
+      fetchCampaigns();
     } catch {
-      toast.error('Loeschen fehlgeschlagen')
+      toast.error('Loeschen fehlgeschlagen');
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -191,12 +191,15 @@ export default function MarketingPage() {
                     {campaign.startDate
                       ? new Date(campaign.startDate).toLocaleDateString('de-DE')
                       : '-'}
-                    {campaign.endDate && ` - ${new Date(campaign.endDate).toLocaleDateString('de-DE')}`}
+                    {campaign.endDate &&
+                      ` - ${new Date(campaign.endDate).toLocaleDateString('de-DE')}`}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {campaign.createdAt
                       ? new Date(campaign.createdAt).toLocaleDateString('de-DE', {
-                          day: '2-digit', month: '2-digit', year: 'numeric',
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
                         })
                       : '-'}
                   </TableCell>
@@ -207,7 +210,12 @@ export default function MarketingPage() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button variant="ghost" size="icon" title="Loeschen" onClick={() => handleDelete(campaign.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Loeschen"
+                        onClick={() => handleDelete(campaign.id)}
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -219,5 +227,5 @@ export default function MarketingPage() {
         </Table>
       </div>
     </div>
-  )
+  );
 }

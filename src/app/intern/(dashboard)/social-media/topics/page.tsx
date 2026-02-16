@@ -1,132 +1,127 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { ArrowLeft, Loader2, Plus, Trash2, Pencil, Tags } from 'lucide-react'
-import { toast } from 'sonner'
+} from '@/components/ui/dialog';
+import { ArrowLeft, Loader2, Plus, Trash2, Pencil, Tags } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Topic {
-  id: string
-  name: string
-  description: string | null
-  color: string | null
-  createdAt: string | null
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  createdAt: string | null;
 }
 
 export default function SocialMediaTopicsPage() {
-  const [topics, setTopics] = useState<Topic[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showDialog, setShowDialog] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     description: '',
     color: '#3b82f6',
-  })
+  });
 
   const fetchTopics = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/social-media/topics')
-      const data = await response.json()
-      if (data.success) setTopics(data.data)
+      const response = await fetch('/api/v1/social-media/topics');
+      const data = await response.json();
+      if (data.success) setTopics(data.data);
     } catch (error) {
-      console.error('Failed to fetch topics:', error)
+      console.error('Failed to fetch topics:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchTopics()
-  }, [fetchTopics])
+    fetchTopics();
+  }, [fetchTopics]);
 
   const handleSave = async () => {
     if (!form.name.trim()) {
-      toast.error('Name ist erforderlich')
-      return
+      toast.error('Name ist erforderlich');
+      return;
     }
-    setSaving(true)
+    setSaving(true);
     try {
       const url = editingId
         ? `/api/v1/social-media/topics/${editingId}`
-        : '/api/v1/social-media/topics'
-      const method = editingId ? 'PUT' : 'POST'
+        : '/api/v1/social-media/topics';
+      const method = editingId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (data.success) {
-        toast.success(editingId ? 'Thema aktualisiert' : 'Thema erstellt')
-        setShowDialog(false)
-        setEditingId(null)
-        setForm({ name: '', description: '', color: '#3b82f6' })
-        fetchTopics()
+        toast.success(editingId ? 'Thema aktualisiert' : 'Thema erstellt');
+        setShowDialog(false);
+        setEditingId(null);
+        setForm({ name: '', description: '', color: '#3b82f6' });
+        fetchTopics();
       } else {
-        toast.error(data.error?.message || 'Fehler beim Speichern')
+        toast.error(data.error?.message || 'Fehler beim Speichern');
       }
     } catch {
-      toast.error('Fehler beim Speichern')
+      toast.error('Fehler beim Speichern');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleEdit = (topic: Topic) => {
-    setEditingId(topic.id)
+    setEditingId(topic.id);
     setForm({
       name: topic.name,
       description: topic.description || '',
       color: topic.color || '#3b82f6',
-    })
-    setShowDialog(true)
-  }
+    });
+    setShowDialog(true);
+  };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Thema wirklich loeschen?')) return
+    if (!confirm('Thema wirklich loeschen?')) return;
     try {
-      await fetch(`/api/v1/social-media/topics/${id}`, { method: 'DELETE' })
-      toast.success('Thema geloescht')
-      fetchTopics()
+      await fetch(`/api/v1/social-media/topics/${id}`, { method: 'DELETE' });
+      toast.success('Thema geloescht');
+      fetchTopics();
     } catch {
-      toast.error('Loeschen fehlgeschlagen')
+      toast.error('Loeschen fehlgeschlagen');
     }
-  }
+  };
 
   const handleDialogClose = (open: boolean) => {
-    setShowDialog(open)
+    setShowDialog(open);
     if (!open) {
-      setEditingId(null)
-      setForm({ name: '', description: '', color: '#3b82f6' })
+      setEditingId(null);
+      setForm({ name: '', description: '', color: '#3b82f6' });
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -162,7 +157,7 @@ export default function SocialMediaTopicsPage() {
                 <Label>Name *</Label>
                 <Input
                   value={form.name}
-                  onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="Themenname"
                 />
               </div>
@@ -170,7 +165,7 @@ export default function SocialMediaTopicsPage() {
                 <Label>Beschreibung</Label>
                 <Textarea
                   value={form.description}
-                  onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   placeholder="Optionale Beschreibung"
                   rows={3}
                 />
@@ -181,12 +176,12 @@ export default function SocialMediaTopicsPage() {
                   <input
                     type="color"
                     value={form.color}
-                    onChange={(e) => setForm(f => ({ ...f, color: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
                     className="h-10 w-10 rounded border cursor-pointer"
                   />
                   <Input
                     value={form.color}
-                    onChange={(e) => setForm(f => ({ ...f, color: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
                     placeholder="#3b82f6"
                     className="w-32"
                   />
@@ -240,5 +235,5 @@ export default function SocialMediaTopicsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

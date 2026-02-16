@@ -1,27 +1,21 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useCallback } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+} from '@/components/ui/select';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -29,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -37,31 +31,31 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { ArrowLeft, Loader2, Trash2, Plus, Brain, Save } from 'lucide-react'
-import { toast } from 'sonner'
+} from '@/components/ui/dialog';
+import { ArrowLeft, Loader2, Trash2, Plus, Brain, Save } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Campaign {
-  id: string
-  name: string
-  description: string | null
-  type: string
-  status: string | null
-  targetAudience: string | null
-  startDate: string | null
-  endDate: string | null
+  id: string;
+  name: string;
+  description: string | null;
+  type: string;
+  status: string | null;
+  targetAudience: string | null;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 interface Task {
-  id: string
-  type: string
-  recipientName: string | null
-  recipientEmail: string | null
-  recipientCompany: string | null
-  subject: string | null
-  content: string | null
-  status: string | null
-  createdAt: string | null
+  id: string;
+  type: string;
+  recipientName: string | null;
+  recipientEmail: string | null;
+  recipientCompany: string | null;
+  subject: string | null;
+  content: string | null;
+  status: string | null;
+  createdAt: string | null;
 }
 
 const statusLabels: Record<string, string> = {
@@ -70,62 +64,62 @@ const statusLabels: Record<string, string> = {
   paused: 'Pausiert',
   completed: 'Abgeschlossen',
   archived: 'Archiviert',
-}
+};
 
 const taskStatusLabels: Record<string, string> = {
   draft: 'Entwurf',
   scheduled: 'Geplant',
   sent: 'Gesendet',
   failed: 'Fehlgeschlagen',
-}
+};
 
 const typeLabels: Record<string, string> = {
   email: 'E-Mail',
   call: 'Anruf',
   sms: 'SMS',
-}
+};
 
 export default function CampaignDetailPage() {
-  const { id } = useParams<{ id: string }>()
-  const router = useRouter()
-  const [campaign, setCampaign] = useState<Campaign | null>(null)
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [generating, setGenerating] = useState(false)
-  const [showGenDialog, setShowGenDialog] = useState(false)
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [showGenDialog, setShowGenDialog] = useState(false);
   const [genForm, setGenForm] = useState({
     type: 'email' as string,
     recipientName: '',
     recipientCompany: '',
     tone: 'professional',
     context: '',
-  })
+  });
 
   const fetchData = useCallback(async () => {
     try {
       const [campaignRes, tasksRes] = await Promise.all([
         fetch(`/api/v1/marketing/campaigns/${id}`),
         fetch(`/api/v1/marketing/campaigns/${id}/tasks`),
-      ])
-      const campaignData = await campaignRes.json()
-      const tasksData = await tasksRes.json()
-      if (campaignData.success) setCampaign(campaignData.data)
-      if (tasksData.success) setTasks(tasksData.data)
+      ]);
+      const campaignData = await campaignRes.json();
+      const tasksData = await tasksRes.json();
+      if (campaignData.success) setCampaign(campaignData.data);
+      if (tasksData.success) setTasks(tasksData.data);
     } catch (error) {
-      console.error('Failed to fetch campaign:', error)
+      console.error('Failed to fetch campaign:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [id])
+  }, [id]);
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    fetchData();
+  }, [fetchData]);
 
   const handleSave = async () => {
-    if (!campaign) return
-    setSaving(true)
+    if (!campaign) return;
+    setSaving(true);
     try {
       const response = await fetch(`/api/v1/marketing/campaigns/${id}`, {
         method: 'PUT',
@@ -136,30 +130,30 @@ export default function CampaignDetailPage() {
           status: campaign.status,
           targetAudience: campaign.targetAudience,
         }),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (data.success) {
-        toast.success('Kampagne gespeichert')
+        toast.success('Kampagne gespeichert');
       } else {
-        toast.error(data.error?.message || 'Fehler beim Speichern')
+        toast.error(data.error?.message || 'Fehler beim Speichern');
       }
     } catch {
-      toast.error('Fehler beim Speichern')
+      toast.error('Fehler beim Speichern');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleGenerate = async () => {
-    if (!campaign) return
-    setGenerating(true)
+    if (!campaign) return;
+    setGenerating(true);
     try {
       const response = await fetch('/api/v1/marketing/tasks/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(genForm),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (data.success) {
         // Create a task with the generated content
         const taskRes = await fetch('/api/v1/marketing/tasks', {
@@ -174,40 +168,40 @@ export default function CampaignDetailPage() {
             content: data.data.content,
             status: 'draft',
           }),
-        })
-        const taskData = await taskRes.json()
+        });
+        const taskData = await taskRes.json();
         if (taskData.success) {
-          toast.success('KI-Inhalt generiert und Task erstellt')
-          setShowGenDialog(false)
-          fetchData()
+          toast.success('KI-Inhalt generiert und Task erstellt');
+          setShowGenDialog(false);
+          fetchData();
         }
       } else {
-        toast.error(data.error?.message || 'Generierung fehlgeschlagen')
+        toast.error(data.error?.message || 'Generierung fehlgeschlagen');
       }
     } catch {
-      toast.error('Generierung fehlgeschlagen')
+      toast.error('Generierung fehlgeschlagen');
     } finally {
-      setGenerating(false)
+      setGenerating(false);
     }
-  }
+  };
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!confirm('Task wirklich loeschen?')) return
+    if (!confirm('Task wirklich loeschen?')) return;
     try {
-      await fetch(`/api/v1/marketing/tasks/${taskId}`, { method: 'DELETE' })
-      toast.success('Task geloescht')
-      fetchData()
+      await fetch(`/api/v1/marketing/tasks/${taskId}`, { method: 'DELETE' });
+      toast.success('Task geloescht');
+      fetchData();
     } catch {
-      toast.error('Loeschen fehlgeschlagen')
+      toast.error('Loeschen fehlgeschlagen');
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   if (!campaign) {
@@ -218,7 +212,7 @@ export default function CampaignDetailPage() {
           <Button variant="link">Zurueck zur Uebersicht</Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -238,7 +232,11 @@ export default function CampaignDetailPage() {
           </div>
         </div>
         <Button onClick={handleSave} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          {saving ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
           Speichern
         </Button>
       </div>
@@ -254,21 +252,23 @@ export default function CampaignDetailPage() {
               <Label>Name</Label>
               <Input
                 value={campaign.name}
-                onChange={(e) => setCampaign(c => c ? { ...c, name: e.target.value } : c)}
+                onChange={(e) => setCampaign((c) => (c ? { ...c, name: e.target.value } : c))}
               />
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
               <Select
                 value={campaign.status || 'draft'}
-                onValueChange={(v) => setCampaign(c => c ? { ...c, status: v } : c)}
+                onValueChange={(v) => setCampaign((c) => (c ? { ...c, status: v } : c))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(statusLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -278,7 +278,7 @@ export default function CampaignDetailPage() {
             <Label>Beschreibung</Label>
             <Textarea
               value={campaign.description || ''}
-              onChange={(e) => setCampaign(c => c ? { ...c, description: e.target.value } : c)}
+              onChange={(e) => setCampaign((c) => (c ? { ...c, description: e.target.value } : c))}
               rows={3}
             />
           </div>
@@ -286,7 +286,9 @@ export default function CampaignDetailPage() {
             <Label>Zielgruppe</Label>
             <Textarea
               value={campaign.targetAudience || ''}
-              onChange={(e) => setCampaign(c => c ? { ...c, targetAudience: e.target.value } : c)}
+              onChange={(e) =>
+                setCampaign((c) => (c ? { ...c, targetAudience: e.target.value } : c))
+              }
               rows={2}
             />
           </div>
@@ -311,12 +313,17 @@ export default function CampaignDetailPage() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>KI-Inhalt generieren</DialogTitle>
-                  <DialogDescription>Lassen Sie die KI Marketing-Inhalte erstellen</DialogDescription>
+                  <DialogDescription>
+                    Lassen Sie die KI Marketing-Inhalte erstellen
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Typ</Label>
-                    <Select value={genForm.type} onValueChange={(v) => setGenForm(f => ({ ...f, type: v }))}>
+                    <Select
+                      value={genForm.type}
+                      onValueChange={(v) => setGenForm((f) => ({ ...f, type: v }))}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -331,7 +338,7 @@ export default function CampaignDetailPage() {
                     <Label>Empfaenger-Name</Label>
                     <Input
                       value={genForm.recipientName}
-                      onChange={(e) => setGenForm(f => ({ ...f, recipientName: e.target.value }))}
+                      onChange={(e) => setGenForm((f) => ({ ...f, recipientName: e.target.value }))}
                       placeholder="Max Mustermann"
                     />
                   </div>
@@ -339,13 +346,18 @@ export default function CampaignDetailPage() {
                     <Label>Firma</Label>
                     <Input
                       value={genForm.recipientCompany}
-                      onChange={(e) => setGenForm(f => ({ ...f, recipientCompany: e.target.value }))}
+                      onChange={(e) =>
+                        setGenForm((f) => ({ ...f, recipientCompany: e.target.value }))
+                      }
                       placeholder="Musterfirma GmbH"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Tonalitaet</Label>
-                    <Select value={genForm.tone} onValueChange={(v) => setGenForm(f => ({ ...f, tone: v }))}>
+                    <Select
+                      value={genForm.tone}
+                      onValueChange={(v) => setGenForm((f) => ({ ...f, tone: v }))}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -360,13 +372,17 @@ export default function CampaignDetailPage() {
                     <Label>Kontext / Ziel</Label>
                     <Textarea
                       value={genForm.context}
-                      onChange={(e) => setGenForm(f => ({ ...f, context: e.target.value }))}
+                      onChange={(e) => setGenForm((f) => ({ ...f, context: e.target.value }))}
                       placeholder="Was soll mit dem Inhalt erreicht werden?"
                       rows={3}
                     />
                   </div>
                   <Button onClick={handleGenerate} disabled={generating} className="w-full">
-                    {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Brain className="h-4 w-4 mr-2" />}
+                    {generating ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Brain className="h-4 w-4 mr-2" />
+                    )}
                     {generating ? 'Generiere...' : 'Generieren'}
                   </Button>
                 </div>
@@ -404,14 +420,21 @@ export default function CampaignDetailPage() {
                         <span className="text-muted-foreground"> ({task.recipientCompany})</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm max-w-[300px] truncate">{task.subject || '-'}</TableCell>
+                    <TableCell className="text-sm max-w-[300px] truncate">
+                      {task.subject || '-'}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={task.status === 'sent' ? 'default' : 'secondary'}>
                         {taskStatusLabels[task.status || 'draft']}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" title="Loeschen" onClick={() => handleDeleteTask(task.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Loeschen"
+                        onClick={() => handleDeleteTask(task.id)}
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </TableCell>
@@ -423,5 +446,5 @@ export default function CampaignDetailPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

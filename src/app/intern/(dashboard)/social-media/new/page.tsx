@@ -1,44 +1,34 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
-import { ArrowLeft, Loader2, Brain } from 'lucide-react'
-import { toast } from 'sonner'
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Loader2, Brain } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Topic {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export default function NewSocialMediaPostPage() {
-  const router = useRouter()
-  const [topics, setTopics] = useState<Topic[]>([])
-  const [saving, setSaving] = useState(false)
-  const [generating, setGenerating] = useState(false)
+  const router = useRouter();
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   // Manual form
   const [form, setForm] = useState({
@@ -47,7 +37,7 @@ export default function NewSocialMediaPostPage() {
     title: '',
     content: '',
     hashtags: '',
-  })
+  });
 
   // AI generation form
   const [aiForm, setAiForm] = useState({
@@ -56,34 +46,34 @@ export default function NewSocialMediaPostPage() {
     tone: 'professional',
     includeHashtags: true,
     includeEmoji: true,
-  })
+  });
   const [generatedContent, setGeneratedContent] = useState<{
-    title: string
-    content: string
-    hashtags: string[]
-  } | null>(null)
+    title: string;
+    content: string;
+    hashtags: string[];
+  } | null>(null);
 
   const fetchTopics = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/social-media/topics')
-      const data = await response.json()
-      if (data.success) setTopics(data.data)
+      const response = await fetch('/api/v1/social-media/topics');
+      const data = await response.json();
+      if (data.success) setTopics(data.data);
     } catch (error) {
-      console.error('Failed to fetch topics:', error)
+      console.error('Failed to fetch topics:', error);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchTopics()
-  }, [fetchTopics])
+    fetchTopics();
+  }, [fetchTopics]);
 
   const handleManualSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!form.content.trim()) {
-      toast.error('Inhalt ist erforderlich')
-      return
+      toast.error('Inhalt ist erforderlich');
+      return;
     }
-    setSaving(true)
+    setSaving(true);
     try {
       const response = await fetch('/api/v1/social-media/posts', {
         method: 'POST',
@@ -91,52 +81,57 @@ export default function NewSocialMediaPostPage() {
         body: JSON.stringify({
           ...form,
           topicId: form.topicId || undefined,
-          hashtags: form.hashtags ? form.hashtags.split(',').map(h => h.trim()).filter(Boolean) : [],
+          hashtags: form.hashtags
+            ? form.hashtags
+                .split(',')
+                .map((h) => h.trim())
+                .filter(Boolean)
+            : [],
         }),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (data.success) {
-        toast.success('Beitrag erstellt')
-        router.push('/intern/social-media')
+        toast.success('Beitrag erstellt');
+        router.push('/intern/social-media');
       } else {
-        toast.error(data.error?.message || 'Fehler beim Erstellen')
+        toast.error(data.error?.message || 'Fehler beim Erstellen');
       }
     } catch {
-      toast.error('Fehler beim Erstellen')
+      toast.error('Fehler beim Erstellen');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleGenerate = async () => {
     if (!aiForm.topic.trim()) {
-      toast.error('Thema ist erforderlich')
-      return
+      toast.error('Thema ist erforderlich');
+      return;
     }
-    setGenerating(true)
+    setGenerating(true);
     try {
       const response = await fetch('/api/v1/social-media/posts/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(aiForm),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (data.success) {
-        setGeneratedContent(data.data)
-        toast.success('Beitrag generiert')
+        setGeneratedContent(data.data);
+        toast.success('Beitrag generiert');
       } else {
-        toast.error(data.error?.message || 'Generierung fehlgeschlagen')
+        toast.error(data.error?.message || 'Generierung fehlgeschlagen');
       }
     } catch {
-      toast.error('Generierung fehlgeschlagen')
+      toast.error('Generierung fehlgeschlagen');
     } finally {
-      setGenerating(false)
+      setGenerating(false);
     }
-  }
+  };
 
   const handleSaveGenerated = async () => {
-    if (!generatedContent) return
-    setSaving(true)
+    if (!generatedContent) return;
+    setSaving(true);
     try {
       const response = await fetch('/api/v1/social-media/posts', {
         method: 'POST',
@@ -148,20 +143,20 @@ export default function NewSocialMediaPostPage() {
           hashtags: generatedContent.hashtags,
           aiGenerated: true,
         }),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (data.success) {
-        toast.success('Beitrag gespeichert')
-        router.push('/intern/social-media')
+        toast.success('Beitrag gespeichert');
+        router.push('/intern/social-media');
       } else {
-        toast.error(data.error?.message || 'Fehler beim Speichern')
+        toast.error(data.error?.message || 'Fehler beim Speichern');
       }
     } catch {
-      toast.error('Fehler beim Speichern')
+      toast.error('Fehler beim Speichern');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -173,7 +168,9 @@ export default function NewSocialMediaPostPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold">Neuer Beitrag</h1>
-          <p className="text-muted-foreground mt-1">Erstellen Sie einen neuen Social-Media-Beitrag</p>
+          <p className="text-muted-foreground mt-1">
+            Erstellen Sie einen neuen Social-Media-Beitrag
+          </p>
         </div>
       </div>
 
@@ -193,7 +190,10 @@ export default function NewSocialMediaPostPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Plattform *</Label>
-                    <Select value={form.platform} onValueChange={(v) => setForm(f => ({ ...f, platform: v }))}>
+                    <Select
+                      value={form.platform}
+                      onValueChange={(v) => setForm((f) => ({ ...f, platform: v }))}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -208,14 +208,21 @@ export default function NewSocialMediaPostPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Thema</Label>
-                    <Select value={form.topicId || 'none'} onValueChange={(v) => setForm(f => ({ ...f, topicId: v === 'none' ? '' : v }))}>
+                    <Select
+                      value={form.topicId || 'none'}
+                      onValueChange={(v) =>
+                        setForm((f) => ({ ...f, topicId: v === 'none' ? '' : v }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Kein Thema" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Kein Thema</SelectItem>
-                        {topics.map(topic => (
-                          <SelectItem key={topic.id} value={topic.id}>{topic.name}</SelectItem>
+                        {topics.map((topic) => (
+                          <SelectItem key={topic.id} value={topic.id}>
+                            {topic.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -225,7 +232,7 @@ export default function NewSocialMediaPostPage() {
                   <Label>Titel</Label>
                   <Input
                     value={form.title}
-                    onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                     placeholder="Optionaler Titel"
                   />
                 </div>
@@ -233,7 +240,7 @@ export default function NewSocialMediaPostPage() {
                   <Label>Inhalt *</Label>
                   <Textarea
                     value={form.content}
-                    onChange={(e) => setForm(f => ({ ...f, content: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
                     placeholder="Beitragstext"
                     rows={6}
                   />
@@ -242,13 +249,15 @@ export default function NewSocialMediaPostPage() {
                   <Label>Hashtags (kommagetrennt)</Label>
                   <Input
                     value={form.hashtags}
-                    onChange={(e) => setForm(f => ({ ...f, hashtags: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, hashtags: e.target.value }))}
                     placeholder="#hashtag1, #hashtag2"
                   />
                 </div>
                 <div className="flex justify-end gap-2">
                   <Link href="/intern/social-media">
-                    <Button variant="outline" type="button">Abbrechen</Button>
+                    <Button variant="outline" type="button">
+                      Abbrechen
+                    </Button>
                   </Link>
                   <Button type="submit" disabled={saving}>
                     {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -272,7 +281,10 @@ export default function NewSocialMediaPostPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Plattform *</Label>
-                  <Select value={aiForm.platform} onValueChange={(v) => setAiForm(f => ({ ...f, platform: v }))}>
+                  <Select
+                    value={aiForm.platform}
+                    onValueChange={(v) => setAiForm((f) => ({ ...f, platform: v }))}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -287,7 +299,10 @@ export default function NewSocialMediaPostPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Tonalitaet</Label>
-                  <Select value={aiForm.tone} onValueChange={(v) => setAiForm(f => ({ ...f, tone: v }))}>
+                  <Select
+                    value={aiForm.tone}
+                    onValueChange={(v) => setAiForm((f) => ({ ...f, tone: v }))}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -304,13 +319,17 @@ export default function NewSocialMediaPostPage() {
                 <Label>Thema *</Label>
                 <Textarea
                   value={aiForm.topic}
-                  onChange={(e) => setAiForm(f => ({ ...f, topic: e.target.value }))}
+                  onChange={(e) => setAiForm((f) => ({ ...f, topic: e.target.value }))}
                   placeholder="Worüber soll der Beitrag handeln?"
                   rows={3}
                 />
               </div>
               <Button onClick={handleGenerate} disabled={generating}>
-                {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Brain className="h-4 w-4 mr-2" />}
+                {generating ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Brain className="h-4 w-4 mr-2" />
+                )}
                 {generating ? 'Generiere...' : 'Beitrag generieren'}
               </Button>
 
@@ -335,5 +354,5 @@ export default function NewSocialMediaPostPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

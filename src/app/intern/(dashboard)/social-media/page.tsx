@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -11,33 +11,33 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Share2, Plus, Loader2, Pencil, Trash2, CalendarDays, Tags } from 'lucide-react'
-import { toast } from 'sonner'
+} from '@/components/ui/select';
+import { Share2, Plus, Loader2, Pencil, Trash2, CalendarDays, Tags } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Post {
-  id: string
-  platform: string
-  title: string | null
-  content: string
-  status: string | null
-  hashtags: string[] | null
-  aiGenerated: boolean | null
-  scheduledAt: string | null
-  createdAt: string | null
+  id: string;
+  platform: string;
+  title: string | null;
+  content: string;
+  status: string | null;
+  hashtags: string[] | null;
+  aiGenerated: boolean | null;
+  scheduledAt: string | null;
+  createdAt: string | null;
 }
 
 interface Topic {
-  id: string
-  name: string
-  color: string | null
+  id: string;
+  name: string;
+  color: string | null;
 }
 
 const platformLabels: Record<string, string> = {
@@ -46,71 +46,71 @@ const platformLabels: Record<string, string> = {
   instagram: 'Instagram',
   facebook: 'Facebook',
   xing: 'XING',
-}
+};
 
 const statusLabels: Record<string, string> = {
   draft: 'Entwurf',
   scheduled: 'Geplant',
   posted: 'Gepostet',
   failed: 'Fehlgeschlagen',
-}
+};
 
 const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
   draft: 'secondary',
   scheduled: 'outline',
   posted: 'default',
   failed: 'destructive',
-}
+};
 
 export default function SocialMediaPage() {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [topics, setTopics] = useState<Topic[]>([])
-  const [loading, setLoading] = useState(true)
-  const [platformFilter, setPlatformFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [platformFilter, setPlatformFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const fetchData = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ limit: '50' })
-      if (platformFilter !== 'all') params.set('platform', platformFilter)
-      if (statusFilter !== 'all') params.set('status', statusFilter)
+      const params = new URLSearchParams({ limit: '50' });
+      if (platformFilter !== 'all') params.set('platform', platformFilter);
+      if (statusFilter !== 'all') params.set('status', statusFilter);
 
       const [postsRes, topicsRes] = await Promise.all([
         fetch(`/api/v1/social-media/posts?${params}`),
         fetch('/api/v1/social-media/topics'),
-      ])
-      const postsData = await postsRes.json()
-      const topicsData = await topicsRes.json()
-      if (postsData.success) setPosts(postsData.data)
-      if (topicsData.success) setTopics(topicsData.data)
+      ]);
+      const postsData = await postsRes.json();
+      const topicsData = await topicsRes.json();
+      if (postsData.success) setPosts(postsData.data);
+      if (topicsData.success) setTopics(topicsData.data);
     } catch (error) {
-      console.error('Failed to fetch social media data:', error)
+      console.error('Failed to fetch social media data:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [platformFilter, statusFilter])
+  }, [platformFilter, statusFilter]);
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    fetchData();
+  }, [fetchData]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Beitrag wirklich loeschen?')) return
+    if (!confirm('Beitrag wirklich loeschen?')) return;
     try {
-      await fetch(`/api/v1/social-media/posts/${id}`, { method: 'DELETE' })
-      toast.success('Beitrag geloescht')
-      fetchData()
+      await fetch(`/api/v1/social-media/posts/${id}`, { method: 'DELETE' });
+      toast.success('Beitrag geloescht');
+      fetchData();
     } catch {
-      toast.error('Loeschen fehlgeschlagen')
+      toast.error('Loeschen fehlgeschlagen');
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -196,12 +196,16 @@ export default function SocialMediaPage() {
                 <TableRow key={post.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{platformLabels[post.platform] || post.platform}</Badge>
+                      <Badge variant="outline">
+                        {platformLabels[post.platform] || post.platform}
+                      </Badge>
                       {post.aiGenerated && <Badge variant="secondary">KI</Badge>}
                     </div>
                   </TableCell>
                   <TableCell className="max-w-[400px]">
-                    <p className="text-sm font-medium truncate">{post.title || post.content.substring(0, 80)}</p>
+                    <p className="text-sm font-medium truncate">
+                      {post.title || post.content.substring(0, 80)}
+                    </p>
                     {post.hashtags && post.hashtags.length > 0 && (
                       <p className="text-xs text-muted-foreground mt-1 truncate">
                         {post.hashtags.join(' ')}
@@ -216,7 +220,9 @@ export default function SocialMediaPage() {
                   <TableCell className="text-sm text-muted-foreground">
                     {post.createdAt
                       ? new Date(post.createdAt).toLocaleDateString('de-DE', {
-                          day: '2-digit', month: '2-digit', year: 'numeric',
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
                         })
                       : '-'}
                   </TableCell>
@@ -227,7 +233,12 @@ export default function SocialMediaPage() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <Button variant="ghost" size="icon" title="Loeschen" onClick={() => handleDelete(post.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Loeschen"
+                        onClick={() => handleDelete(post.id)}
+                      >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -239,5 +250,5 @@ export default function SocialMediaPage() {
         </Table>
       </div>
     </div>
-  )
+  );
 }

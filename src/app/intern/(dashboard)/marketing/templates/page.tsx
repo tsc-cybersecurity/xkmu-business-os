@@ -1,124 +1,119 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+import { useEffect, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { ArrowLeft, Loader2, Plus, Trash2, FileText } from 'lucide-react'
-import { toast } from 'sonner'
+} from '@/components/ui/dialog';
+import { ArrowLeft, Loader2, Plus, Trash2, FileText } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Template {
-  id: string
-  name: string
-  type: string
-  subject: string | null
-  content: string
-  isDefault: boolean | null
-  createdAt: string | null
+  id: string;
+  name: string;
+  type: string;
+  subject: string | null;
+  content: string;
+  isDefault: boolean | null;
+  createdAt: string | null;
 }
 
 const typeLabels: Record<string, string> = {
   email: 'E-Mail',
   call: 'Anruf',
   sms: 'SMS',
-}
+};
 
 export default function MarketingTemplatesPage() {
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showDialog, setShowDialog] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     name: '',
     type: 'email',
     subject: '',
     content: '',
-  })
+  });
 
   const fetchTemplates = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/marketing/templates?limit=50')
-      const data = await response.json()
-      if (data.success) setTemplates(data.data)
+      const response = await fetch('/api/v1/marketing/templates?limit=50');
+      const data = await response.json();
+      if (data.success) setTemplates(data.data);
     } catch (error) {
-      console.error('Failed to fetch templates:', error)
+      console.error('Failed to fetch templates:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    fetchTemplates()
-  }, [fetchTemplates])
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   const handleCreate = async () => {
     if (!form.name.trim() || !form.content.trim()) {
-      toast.error('Name und Inhalt sind erforderlich')
-      return
+      toast.error('Name und Inhalt sind erforderlich');
+      return;
     }
-    setSaving(true)
+    setSaving(true);
     try {
       const response = await fetch('/api/v1/marketing/templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
-      })
-      const data = await response.json()
+      });
+      const data = await response.json();
       if (data.success) {
-        toast.success('Vorlage erstellt')
-        setShowDialog(false)
-        setForm({ name: '', type: 'email', subject: '', content: '' })
-        fetchTemplates()
+        toast.success('Vorlage erstellt');
+        setShowDialog(false);
+        setForm({ name: '', type: 'email', subject: '', content: '' });
+        fetchTemplates();
       } else {
-        toast.error(data.error?.message || 'Fehler beim Erstellen')
+        toast.error(data.error?.message || 'Fehler beim Erstellen');
       }
     } catch {
-      toast.error('Fehler beim Erstellen')
+      toast.error('Fehler beim Erstellen');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Vorlage wirklich loeschen?')) return
+    if (!confirm('Vorlage wirklich loeschen?')) return;
     try {
-      await fetch(`/api/v1/marketing/templates/${id}`, { method: 'DELETE' })
-      toast.success('Vorlage geloescht')
-      fetchTemplates()
+      await fetch(`/api/v1/marketing/templates/${id}`, { method: 'DELETE' });
+      toast.success('Vorlage geloescht');
+      fetchTemplates();
     } catch {
-      toast.error('Loeschen fehlgeschlagen')
+      toast.error('Loeschen fehlgeschlagen');
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
-    )
+    );
   }
 
   return (
@@ -154,13 +149,16 @@ export default function MarketingTemplatesPage() {
                 <Label>Name *</Label>
                 <Input
                   value={form.name}
-                  onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   placeholder="Vorlagenname"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Typ *</Label>
-                <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v }))}>
+                <Select
+                  value={form.type}
+                  onValueChange={(v) => setForm((f) => ({ ...f, type: v }))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -175,7 +173,7 @@ export default function MarketingTemplatesPage() {
                 <Label>Betreff</Label>
                 <Input
                   value={form.subject}
-                  onChange={(e) => setForm(f => ({ ...f, subject: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
                   placeholder="Betreffzeile"
                 />
               </div>
@@ -183,7 +181,7 @@ export default function MarketingTemplatesPage() {
                 <Label>Inhalt *</Label>
                 <Textarea
                   value={form.content}
-                  onChange={(e) => setForm(f => ({ ...f, content: e.target.value }))}
+                  onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
                   placeholder="Vorlagen-Inhalt"
                   rows={6}
                 />
@@ -231,5 +229,5 @@ export default function MarketingTemplatesPage() {
         )}
       </div>
     </div>
-  )
+  );
 }
