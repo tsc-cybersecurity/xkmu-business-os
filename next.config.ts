@@ -9,9 +9,7 @@ const nextConfig: NextConfig = {
   ...(isDocker && { output: 'standalone' }),
 
   // Optimize external packages for serverless/Docker
-  experimental: {
-    serverComponentsExternalPackages: ['postgres', 'pdf-parse'],
-  },
+  serverExternalPackages: ['postgres', 'pdf-parse'],
 
   // Environment variables that should be available at build time
   env: {
