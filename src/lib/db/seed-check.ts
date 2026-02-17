@@ -19,13 +19,22 @@ const SEED_DATA = {
   },
 }
 
+function getSslConfig(): 'require' | false {
+  const sslEnv = process.env.DATABASE_SSL
+  if (sslEnv === 'false' || sslEnv === '0') return false
+  if (sslEnv === 'require') return 'require'
+  if (process.env.DOCKER === 'true' || process.env.COOLIFY === 'true') return false
+  if (process.env.NODE_ENV === 'production') return 'require'
+  return false
+}
+
 async function seedCheck() {
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set')
   }
 
-  const client = postgres(connectionString)
+  const client = postgres(connectionString, { ssl: getSslConfig() })
   const db = drizzle(client)
 
   // Check if default tenant already exists

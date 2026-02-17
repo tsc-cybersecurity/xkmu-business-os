@@ -4,13 +4,22 @@ import { tenants, roles, rolePermissions } from '../schema'
 import { eq, and } from 'drizzle-orm'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../../types/permissions'
 
+function getSslConfig(): 'require' | false {
+  const sslEnv = process.env.DATABASE_SSL
+  if (sslEnv === 'false' || sslEnv === '0') return false
+  if (sslEnv === 'require') return 'require'
+  if (process.env.DOCKER === 'true' || process.env.COOLIFY === 'true') return false
+  if (process.env.NODE_ENV === 'production') return 'require'
+  return false
+}
+
 async function seedAuditorRole() {
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
     throw new Error('DATABASE_URL environment variable is not set')
   }
 
-  const client = postgres(connectionString)
+  const client = postgres(connectionString, { ssl: getSslConfig() })
   const db = drizzle(client)
 
   console.log('Creating IT-Auditor A role...')

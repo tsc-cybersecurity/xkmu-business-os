@@ -19,7 +19,14 @@ async function seed() {
     process.exit(1)
   }
 
-  const client = postgres(connectionString)
+  const sslEnv = process.env.DATABASE_SSL
+  let ssl: 'require' | false = false
+  if (sslEnv === 'require') ssl = 'require'
+  else if (sslEnv === 'false' || sslEnv === '0') ssl = false
+  else if (process.env.DOCKER === 'true' || process.env.COOLIFY === 'true') ssl = false
+  else if (process.env.NODE_ENV === 'production') ssl = 'require'
+
+  const client = postgres(connectionString, { ssl })
   const db = drizzle(client)
 
   // Get first tenant (system tenant)
