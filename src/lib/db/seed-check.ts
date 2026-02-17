@@ -1,8 +1,11 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
-import { tenants, users, cmsPages, cmsBlocks } from './schema'
-import { eq } from 'drizzle-orm'
+import { tenants, users, cmsPages, cmsBlocks, dinRequirements, dinGrants, roles, rolePermissions } from './schema'
+import { eq, and, count } from 'drizzle-orm'
+import { requirementsSeedData } from './seeds/din-requirements.seed'
+import { grantsSeedData } from './seeds/din-grants.seed'
+import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
 
 const SEED_DATA = {
   tenant: {
@@ -182,6 +185,70 @@ async function seedCmsPages(db: ReturnType<typeof drizzle>, tenantId: string) {
   return created
 }
 
+async function seedDinData(db: ReturnType<typeof drizzle>) {
+  let seeded = false
+
+  // Seed Requirements
+  const [{ total: reqCount }] = await db.select({ total: count() }).from(dinRequirements)
+  if (Number(reqCount) === 0) {
+    await db.insert(dinRequirements).values(requirementsSeedData)
+    console.log(`Created ${requirementsSeedData.length} DIN SPEC 27076 requirements`)
+    seeded = true
+  }
+
+  // Seed Grants
+  const [{ total: grantCount }] = await db.select({ total: count() }).from(dinGrants)
+  if (Number(grantCount) === 0) {
+    await db.insert(dinGrants).values(grantsSeedData)
+    console.log(`Created ${grantsSeedData.length} Foerderprogramme`)
+    seeded = true
+  }
+
+  if (!seeded) {
+    console.log('DIN SPEC data already exists, skipping...')
+  }
+}
+
+async function seedAuditorRole(db: ReturnType<typeof drizzle>, tenantId: string) {
+  const auditorConfig = DEFAULT_ROLE_PERMISSIONS['auditor']
+  if (!auditorConfig) return
+
+  // Check if role already exists for this tenant
+  const [existing] = await db
+    .select()
+    .from(roles)
+    .where(and(eq(roles.tenantId, tenantId), eq(roles.name, 'auditor')))
+    .limit(1)
+
+  if (existing) {
+    console.log('Auditor role already exists, skipping...')
+    return
+  }
+
+  const [role] = await db
+    .insert(roles)
+    .values({
+      tenantId,
+      name: 'auditor',
+      displayName: auditorConfig.displayName,
+      description: auditorConfig.description,
+      isSystem: true,
+    })
+    .returning()
+
+  const permissionRows = MODULES.map((module) => ({
+    roleId: role.id,
+    module,
+    canCreate: auditorConfig.permissions[module]?.create ?? false,
+    canRead: auditorConfig.permissions[module]?.read ?? false,
+    canUpdate: auditorConfig.permissions[module]?.update ?? false,
+    canDelete: auditorConfig.permissions[module]?.delete ?? false,
+  }))
+
+  await db.insert(rolePermissions).values(permissionRows)
+  console.log(`Created auditor role with ${permissionRows.length} permissions`)
+}
+
 async function seedCheck() {
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
@@ -239,6 +306,12 @@ async function seedCheck() {
   } else {
     console.log('CMS pages already exist, skipping...')
   }
+
+  // 4. Seed DIN SPEC 27076 data (requirements + grants)
+  await seedDinData(db)
+
+  // 5. Seed auditor role
+  await seedAuditorRole(db, tenantId)
 
   console.log('')
   console.log('='.repeat(50))

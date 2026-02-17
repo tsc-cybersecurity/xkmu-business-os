@@ -55,9 +55,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Full node_modules for drizzle-kit push + tsx (schema migration & seeding at startup)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Drizzle config + schema for migrations
+# Drizzle config + schema for migrations and seeding
 COPY --from=builder --chown=nextjs:nodejs /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/db ./src/lib/db
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/types ./src/lib/types
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 # Production entrypoint (DB wait, migration, seeding, then server)
