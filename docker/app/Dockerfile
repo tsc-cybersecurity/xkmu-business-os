@@ -20,7 +20,7 @@ RUN apk add --no-cache netcat-openbsd
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 COPY docker/app/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 ENV NODE_ENV=development
 EXPOSE 3000
 CMD ["/entrypoint.sh"]
@@ -62,7 +62,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 # Production entrypoint (DB wait, migration, seeding, then server)
 COPY --chown=nextjs:nodejs docker/app/entrypoint.prod.sh /entrypoint.prod.sh
-RUN chmod +x /entrypoint.prod.sh
+RUN sed -i 's/\r$//' /entrypoint.prod.sh && chmod +x /entrypoint.prod.sh
 
 USER nextjs
 EXPOSE 3000
