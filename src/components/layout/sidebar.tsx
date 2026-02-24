@@ -120,6 +120,7 @@ const navigation: NavItem[] = [
       { name: 'Rollen', href: '/intern/settings/roles', requiredModule: 'roles' },
       { name: 'API-Schlüssel', href: '/intern/settings/api-keys', requiredModule: 'api_keys' },
       { name: 'Organisation', href: '/intern/settings/tenant', requiredModule: 'settings' },
+      { name: 'App-Dokumentation', href: '/intern/settings/app-docs', requiredModule: 'settings' },
     ],
   },
 ]
