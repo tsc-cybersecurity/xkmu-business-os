@@ -938,9 +938,9 @@ export const AiPromptTemplateService = {
     userPrompt: string
     outputFormat: string
   }> {
-    // Versuche aus DB zu laden
+    // Versuche aus DB zu laden (nur wenn systemPrompt befüllt ist)
     const template = await this.getBySlug(tenantId, slug)
-    if (template) {
+    if (template && template.systemPrompt) {
       return {
         systemPrompt: template.systemPrompt,
         userPrompt: template.userPrompt,

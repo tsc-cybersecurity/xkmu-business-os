@@ -6,6 +6,7 @@ import { eq, and, count } from 'drizzle-orm'
 import { requirementsSeedData } from './seeds/din-requirements.seed'
 import { grantsSeedData } from './seeds/din-grants.seed'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
+import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.service'
 
 const SEED_DATA = {
   tenant: {
@@ -443,24 +444,9 @@ async function seedBlogPosts(db: ReturnType<typeof drizzle>, tenantId: string, a
 }
 
 // ============================================
-// AI Prompt Templates Seed Data
+// AI Prompt Templates Seed Data (Slugs aus DEFAULT_TEMPLATES)
 // ============================================
-const AI_PROMPT_TEMPLATES = [
-  { slug: 'lead_research', name: 'Lead-Recherche', description: 'Analysiert Lead-Informationen und erstellt einen strukturierten Bericht.' },
-  { slug: 'company_research', name: 'Firmen-Recherche', description: 'Recherchiert Informationen zu einer Firma aus dem Web.' },
-  { slug: 'person_research', name: 'Personen-Recherche', description: 'Recherchiert Informationen zu einer Kontaktperson.' },
-  { slug: 'outreach_email', name: 'Outreach E-Mail', description: 'Generiert personalisierte Kontaktaufnahme-E-Mails.' },
-  { slug: 'outreach_linkedin', name: 'Outreach LinkedIn', description: 'Generiert LinkedIn-Nachrichten fuer die Kontaktaufnahme.' },
-  { slug: 'blog_generate', name: 'Blog-Beitrag generieren', description: 'Erstellt komplette Blog-Beitraege aus Thema und Keywords.' },
-  { slug: 'blog_seo', name: 'Blog SEO', description: 'Generiert SEO-Metadaten fuer Blog-Beitraege.' },
-  { slug: 'cms_seo', name: 'CMS SEO', description: 'Generiert SEO-Metadaten fuer CMS-Seiten.' },
-  { slug: 'social_media_generate', name: 'Social Media Post', description: 'Generiert Social-Media-Posts fuer verschiedene Plattformen.' },
-  { slug: 'social_media_improve', name: 'Social Media verbessern', description: 'Verbessert bestehende Social-Media-Posts.' },
-  { slug: 'social_media_plan', name: 'Content-Plan', description: 'Erstellt einen Redaktionsplan fuer Social Media.' },
-  { slug: 'marketing_tasks', name: 'Marketing-Aufgaben', description: 'Generiert Aufgabenlisten fuer Marketing-Kampagnen.' },
-  { slug: 'document_analysis', name: 'Dokumentenanalyse', description: 'Analysiert PDF-Dokumente und extrahiert Geschaeftsdaten.' },
-  { slug: 'idea_evaluation', name: 'Ideen-Bewertung', description: 'Bewertet Geschaeftsideen und gibt Empfehlungen.' },
-]
+const AI_PROMPT_TEMPLATE_SLUGS = Object.keys(DEFAULT_TEMPLATES)
 
 async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>, tenantId: string) {
   const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates).where(eq(aiPromptTemplates.tenantId, tenantId))
@@ -470,15 +456,16 @@ async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>, tenantId: s
   }
 
   let created = 0
-  for (const tmpl of AI_PROMPT_TEMPLATES) {
+  for (const slug of AI_PROMPT_TEMPLATE_SLUGS) {
+    const defaults = DEFAULT_TEMPLATES[slug]
     await db.insert(aiPromptTemplates).values({
       tenantId,
-      slug: tmpl.slug,
-      name: tmpl.name,
-      description: tmpl.description,
-      systemPrompt: '',
-      userPrompt: '',
-      outputFormat: '',
+      slug,
+      name: defaults.name,
+      description: defaults.description,
+      systemPrompt: defaults.systemPrompt,
+      userPrompt: defaults.userPrompt,
+      outputFormat: defaults.outputFormat,
       isActive: true,
     })
     created++
