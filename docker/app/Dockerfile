@@ -61,6 +61,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/src/lib/db ./src/lib/db
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/types ./src/lib/types
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
+# Writable upload directory for BI documents
+RUN mkdir -p /app/data/uploads/bi && chown -R nextjs:nodejs /app/data
+ENV BI_UPLOAD_DIR=/app/data/uploads/bi
+
 # Production entrypoint (DB wait, migration, seeding, then server)
 COPY --chown=nextjs:nodejs docker/app/entrypoint.prod.sh /entrypoint.prod.sh
 RUN sed -i 's/\r$//' /entrypoint.prod.sh && chmod +x /entrypoint.prod.sh

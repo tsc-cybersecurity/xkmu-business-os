@@ -10,7 +10,7 @@ import {
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'bi')
+const UPLOAD_DIR = process.env.BI_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads', 'bi')
 
 export async function POST(
   request: NextRequest,

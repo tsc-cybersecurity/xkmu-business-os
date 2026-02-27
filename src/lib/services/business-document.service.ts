@@ -5,7 +5,7 @@ import { unlink } from 'fs/promises'
 import path from 'path'
 import type { BusinessDocument } from '@/lib/db/schema'
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'bi')
+const UPLOAD_DIR = process.env.BI_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads', 'bi')
 
 export interface BusinessDocumentFilters {
   status?: string
