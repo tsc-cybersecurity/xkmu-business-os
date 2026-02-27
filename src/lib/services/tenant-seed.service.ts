@@ -417,6 +417,9 @@ export class TenantSeedService {
     products: number
     activities: number
   }> {
+    // Strukturelle Daten (Rollen, AI Prompts, Kategorien etc.) sicherstellen
+    await this.seedStructuralData(tenantId)
+
     const cmsCount = await this.seedCmsPages(tenantId)
     const navCount = await this.seedNavigation(tenantId)
     const blogCount = await this.seedBlogPosts(tenantId, userId)
