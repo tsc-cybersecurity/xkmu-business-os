@@ -7,31 +7,6 @@ import { randomUUID } from 'crypto'
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
 
-function useVercelBlob(): boolean {
-  return !!process.env.BLOB_READ_WRITE_TOKEN
-}
-
-// ============================================
-// Vercel Blob Storage
-// ============================================
-async function uploadToBlob(file: File, filename: string, tenantId: string): Promise<string> {
-  const { put } = await import('@vercel/blob')
-  const blob = await put(`uploads/${tenantId}/${filename}`, file, {
-    access: 'public',
-    addRandomSuffix: false,
-  })
-  return blob.url
-}
-
-async function deleteFromBlob(url: string): Promise<void> {
-  try {
-    const { del } = await import('@vercel/blob')
-    await del(url)
-  } catch (error) {
-    console.error('Failed to delete blob:', error)
-  }
-}
-
 // ============================================
 // Lokales Dateisystem
 // ============================================
@@ -89,10 +64,7 @@ export const MediaUploadService = {
     const ext = file.name.split('.').pop() || 'jpg'
     const filename = `${randomUUID()}.${ext}`
 
-    // Upload je nach Umgebung
-    const publicPath = useVercelBlob()
-      ? await uploadToBlob(file, filename, tenantId)
-      : await uploadToLocal(file, filename, tenantId)
+    const publicPath = await uploadToLocal(file, filename, tenantId)
 
     // Save to DB
     const [upload] = await db
@@ -128,12 +100,7 @@ export const MediaUploadService = {
 
     if (!upload) return false
 
-    // Delete file
-    if (useVercelBlob() && upload.path.startsWith('http')) {
-      await deleteFromBlob(upload.path)
-    } else {
-      await deleteFromLocal(upload.path)
-    }
+    await deleteFromLocal(upload.path)
 
     // Delete from DB
     const result = await db

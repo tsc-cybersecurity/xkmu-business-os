@@ -13,8 +13,6 @@ import {
 import { MarketingAIService } from '@/lib/services/ai/marketing-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
-export const maxDuration = 120
-
 export async function POST(request: NextRequest) {
   return withPermission(request, 'marketing', 'create', async (auth) => {
     try {

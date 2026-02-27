@@ -60,8 +60,8 @@ export function AppDocsContent() {
               <InfoTable rows={[
                 ['Framework', 'Next.js 16 (App Router)'],
                 ['Frontend', 'React 19, Tailwind CSS, shadcn/ui'],
-                ['Datenbank', 'PostgreSQL (Neon) mit Drizzle ORM'],
-                ['Deployment', 'Vercel (mit maxDuration fuer KI-Routen)'],
+                ['Datenbank', 'PostgreSQL mit Drizzle ORM'],
+                ['Deployment', 'Docker (Self-Hosted)'],
                 ['Authentifizierung', 'Session-basiert mit httpOnly Cookies'],
                 ['Sprache', 'Deutsch (UI), Englisch (API/Code)'],
               ]} />

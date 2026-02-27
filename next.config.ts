@@ -1,22 +1,12 @@
 import type { NextConfig } from "next";
 
-// Detect if running in Docker/Coolify (standalone mode needed)
-const isDocker = process.env.DOCKER === 'true' || process.env.COOLIFY === 'true';
-
 const nextConfig: NextConfig = {
-  // Standalone output for Docker/Coolify deployments
-  // Vercel handles this automatically, so only enable for self-hosted
-  ...(isDocker && { output: 'standalone' }),
+  // Standalone output for Docker deployments
+  output: 'standalone',
 
-  // Optimize external packages for serverless/Docker
   serverExternalPackages: ['postgres', 'pdf-parse'],
 
-  // Environment variables that should be available at build time
-  env: {
-    // Add any build-time env vars here if needed
-  },
-
-  // CORS headers for API routes (works on all platforms, not just Vercel)
+  // CORS headers for API routes
   async headers() {
     return [
       {

@@ -113,7 +113,7 @@ export default function NewBlogPostPage() {
         }),
       })
       if (!response.ok) {
-        // Handle non-JSON errors (e.g. Vercel 504 timeout returns HTML)
+        // Handle non-JSON errors (e.g. 504 timeout returns HTML)
         try {
           const data = await response.json()
           toast.error(data.error?.message || `Server-Fehler (${response.status})`)

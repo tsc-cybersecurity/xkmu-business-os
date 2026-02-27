@@ -52,12 +52,11 @@ export interface AIRequestContext {
 function createProviderFromConfig(config: AiProvider): AIProvider {
   switch (config.providerType) {
     case 'ollama': {
-      // Ollama nur verfügbar wenn OLLAMA_BASE_URL gesetzt oder baseUrl in config
-      // Auf Vercel/Serverless nicht verfügbar ohne externe Ollama-Instanz
+      // Ollama benoetigt OLLAMA_BASE_URL oder baseUrl in config
       if (!config.baseUrl && !process.env.OLLAMA_BASE_URL) {
         throw new Error(
-          'Ollama is not available in serverless environments. ' +
-          'Please configure a cloud-based AI provider (Gemini, OpenAI) or provide an external Ollama URL.'
+          'Ollama ist nicht konfiguriert. ' +
+          'Bitte OLLAMA_BASE_URL setzen oder einen anderen KI-Provider (Gemini, OpenAI) verwenden.'
         )
       }
       const { OllamaProvider } = require('./ollama.provider')

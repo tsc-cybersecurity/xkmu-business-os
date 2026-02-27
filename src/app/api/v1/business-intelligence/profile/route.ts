@@ -9,8 +9,6 @@ import { BusinessDocumentService } from '@/lib/services/business-document.servic
 import { BusinessIntelligenceAIService } from '@/lib/services/ai/business-intelligence-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
-export const maxDuration = 120
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'business_intelligence', 'read', async (auth) => {
     const profile = await BusinessProfileService.getByTenant(auth.tenantId)

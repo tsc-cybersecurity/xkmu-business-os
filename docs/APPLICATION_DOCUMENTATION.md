@@ -2,7 +2,7 @@
 
 > **Version:** 1.1.56
 > **Stand:** 2026-02-24
-> **Stack:** Next.js 16 App Router, React 19, Drizzle ORM, PostgreSQL (Neon)
+> **Stack:** Next.js 16 App Router, React 19, Drizzle ORM, PostgreSQL
 > **Sprache:** Deutsch (UI), Englisch (API/Code)
 
 ---

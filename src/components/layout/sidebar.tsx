@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Brain,
+  Database,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
@@ -121,6 +122,7 @@ const navigation: NavItem[] = [
       { name: 'API-Schlüssel', href: '/intern/settings/api-keys', requiredModule: 'api_keys' },
       { name: 'Organisation', href: '/intern/settings/tenant', requiredModule: 'settings' },
       { name: 'App-Dokumentation', href: '/intern/settings/app-docs', requiredModule: 'settings' },
+      { name: 'Datenbank', href: '/intern/settings/database', requiredModule: 'database' },
     ],
   },
 ]

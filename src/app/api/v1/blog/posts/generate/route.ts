@@ -6,8 +6,6 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { UnsplashService } from '@/lib/services/unsplash.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
-export const maxDuration = 120
-
 export async function POST(request: NextRequest) {
   return withPermission(request, 'blog', 'create', async (auth) => {
     const startTime = Date.now()

@@ -26,6 +26,7 @@ export const MODULES = [
   'business_intelligence',
   'marketing',
   'social_media',
+  'database',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -69,6 +70,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   business_intelligence: 'Business Intelligence',
   marketing: 'Marketing',
   social_media: 'Social Media',
+  database: 'Datenbank-Admin',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {
@@ -110,8 +112,10 @@ function buildMemberAccess(): Record<Module, Record<Action, boolean>> {
     'roles',
     'cms',
   ]
+  const hiddenModules: Module[] = ['database']
   return Object.fromEntries(
     MODULES.map((m) => {
+      if (hiddenModules.includes(m)) return [m, { ...allFalse }]
       if (restrictedModules.includes(m)) return [m, { ...readOnly }]
       if (m === 'blog') return [m, { ...readCreateUpdate }]
       return [m, { ...readCreateUpdate }]
@@ -120,7 +124,7 @@ function buildMemberAccess(): Record<Module, Record<Action, boolean>> {
 }
 
 function buildViewerAccess(): Record<Module, Record<Action, boolean>> {
-  const hiddenModules: Module[] = ['roles', 'api_keys']
+  const hiddenModules: Module[] = ['roles', 'api_keys', 'database']
   return Object.fromEntries(
     MODULES.map((m) => {
       if (hiddenModules.includes(m)) return [m, { ...allFalse }]

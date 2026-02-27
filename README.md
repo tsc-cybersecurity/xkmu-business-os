@@ -6,43 +6,41 @@ Multi-tenant Business Management Platform for SMEs (Small and Medium Enterprises
 
 - **CRM Module**: Companies, Persons, Leads management
 - **AI Lab**: Idea processing with AI-powered analysis
-- **AI Integration**: Gemini, OpenAI (Ollama for local dev)
+- **AI Integration**: Gemini, OpenAI, OpenRouter, Deepseek, Kimi, Ollama
 - **Activity Timeline**: Track all interactions and outreach
 - **Webhook Support**: API-first automation
 - **Multi-Tenant**: Secure tenant isolation
 
 ## Tech Stack
 
-- **Framework**: Next.js 15+ (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Database**: PostgreSQL with Drizzle ORM
 - **Styling**: Tailwind CSS + shadcn/ui
 - **Auth**: JWT-based sessions
+- **Deployment**: Docker
 
-## Deployment Options
+## Deployment
 
-### Option 1: Vercel (Recommended)
+### Option 1: Docker Local
 
-1. **Fork/Clone** this repository
-2. **Import to Vercel**: [vercel.com/new](https://vercel.com/new)
-3. **Add Database**:
-   - Go to Storage > Create Database > Postgres
-   - Or use [Neon](https://neon.tech) / [Supabase](https://supabase.com)
-4. **Configure Environment Variables**:
-   ```
-   DATABASE_URL=your-postgresql-url
-   JWT_SECRET=your-secret-min-32-chars
-   GOOGLE_AI_API_KEY=your-gemini-api-key  (optional)
-   ```
-5. **Run Database Migration** (see below)
-6. **Deploy**
+```bash
+# Clone repository
+git clone https://github.com/tsc-cybersecurity/xkmu-business-os.git
+cd xkmu-business-os
 
-### Option 2: Coolify (Self-Hosted, Recommended)
+# Start with Docker Compose (includes PostgreSQL + Redis)
+docker compose -f docker-compose.local.yml up -d --build
 
-[Coolify](https://coolify.io) is an open-source, self-hostable Heroku/Vercel alternative.
+# Default Login: admin@example.com / admin123
+```
+
+### Option 2: Coolify (Self-Hosted)
+
+[Coolify](https://coolify.io) is an open-source, self-hostable platform.
 
 1. **In Coolify Dashboard**:
-   - Create new Project → Add Resource → Docker Compose
+   - Create new Project > Add Resource > Docker Compose
    - Git Repository: `https://github.com/tsc-cybersecurity/xkmu-business-os`
    - Docker Compose File: `docker-compose.coolify.yml`
 
@@ -55,13 +53,7 @@ Multi-tenant Business Management Platform for SMEs (Small and Medium Enterprises
 
 3. **Deploy** - Coolify handles SSL, domains, and container management
 
-4. **Run Database Migration** (after first deploy):
-   ```bash
-   # Via Coolify terminal or SSH
-   docker exec xkmu-app npm run db:push
-   ```
-
-### Option 3: Docker (Manual)
+### Option 3: Docker (Manual Production)
 
 ```bash
 # Clone repository
@@ -73,29 +65,10 @@ cp .env.example .env
 # Edit .env with your values
 
 # Start with Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
 # Run migrations
 docker exec xkmu-app npm run db:push
-```
-
-## Database Setup
-
-After deployment, run the database migration:
-
-```bash
-# For Vercel/Cloud deployment (run locally with cloud DB URL)
-DATABASE_URL="your-cloud-db-url" npm run db:push
-
-# For Docker
-docker exec xkmu-app npm run db:push
-```
-
-### Seed Initial Data
-
-```bash
-# Create initial admin user and tenant
-curl -X POST https://your-app.vercel.app/api/v1/ai-prompt-templates/seed
 ```
 
 ## Environment Variables
@@ -106,7 +79,7 @@ curl -X POST https://your-app.vercel.app/api/v1/ai-prompt-templates/seed
 | `JWT_SECRET` | Yes | Secret for JWT tokens (min 32 chars) |
 | `GOOGLE_AI_API_KEY` | Recommended | Gemini API key |
 | `OPENAI_API_KEY` | Optional | OpenAI API key |
-| `OLLAMA_BASE_URL` | Optional | Local Ollama URL (not for Vercel) |
+| `OLLAMA_BASE_URL` | Optional | Ollama URL |
 | `SMTP_*` | Optional | Email configuration |
 
 See `.env.example` for full list.

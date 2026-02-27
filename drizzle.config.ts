@@ -7,8 +7,6 @@ export default defineConfig({
   out: './drizzle/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    // DATABASE_URL is required only when running drizzle-kit commands
-    // Not needed during Vercel build (migrations should be run separately)
     url: process.env.DATABASE_URL || 'postgresql://placeholder:placeholder@localhost:5432/placeholder',
   },
   verbose: true,

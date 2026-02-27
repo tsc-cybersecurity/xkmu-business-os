@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
-import { tenants, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions } from './schema'
+import { tenants, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities } from './schema'
 import { eq, and, count } from 'drizzle-orm'
 import { requirementsSeedData } from './seeds/din-requirements.seed'
 import { grantsSeedData } from './seeds/din-grants.seed'
@@ -519,6 +519,106 @@ async function seedProductCategories(db: ReturnType<typeof drizzle>, tenantId: s
   return created
 }
 
+// ============================================
+// Example Business Data
+// ============================================
+async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId: string, adminUserId: string) {
+  // Check if companies already exist for this tenant
+  const [{ total }] = await db.select({ total: count() }).from(companies).where(eq(companies.tenantId, tenantId))
+  if (Number(total) > 0) {
+    console.log('Business data already exists, skipping...')
+    return
+  }
+
+  // --- 1. Companies ---
+  const companyData = [
+    { name: 'TechVision GmbH', legalForm: 'GmbH', status: 'customer', industry: 'IT-Dienstleistungen', city: 'Muenchen', postalCode: '80331', street: 'Maximilianstrasse', houseNumber: '12', phone: '+49 89 12345678', email: 'info@techvision.de', website: 'https://techvision.de', employeeCount: 45 },
+    { name: 'CloudFirst AG', legalForm: 'AG', status: 'prospect', industry: 'Cloud-Services', city: 'Berlin', postalCode: '10115', street: 'Friedrichstrasse', houseNumber: '88', phone: '+49 30 98765432', email: 'kontakt@cloudfirst.de', website: 'https://cloudfirst.de', employeeCount: 120 },
+    { name: 'SecureNet Solutions GmbH', legalForm: 'GmbH', status: 'partner', industry: 'IT-Sicherheit', city: 'Hamburg', postalCode: '20095', street: 'Moenckebergstrasse', houseNumber: '5', phone: '+49 40 55566677', email: 'info@securenet.de', website: 'https://securenet.de', employeeCount: 30 },
+    { name: 'Digital Manufaktur OHG', legalForm: 'OHG', status: 'customer', industry: 'Software-Entwicklung', city: 'Frankfurt', postalCode: '60311', street: 'Zeil', houseNumber: '42', phone: '+49 69 44455566', email: 'hello@digitalmanufaktur.de', website: 'https://digitalmanufaktur.de', employeeCount: 18 },
+    { name: 'GreenEnergy Systems KG', legalForm: 'KG', status: 'prospect', industry: 'Erneuerbare Energien', city: 'Stuttgart', postalCode: '70173', street: 'Koenigstrasse', houseNumber: '28', phone: '+49 711 33344455', email: 'kontakt@greenenergy-systems.de', website: 'https://greenenergy-systems.de', employeeCount: 65 },
+  ]
+
+  const createdCompanies = []
+  for (const c of companyData) {
+    const [company] = await db.insert(companies).values({ tenantId, ...c, country: 'DE', createdBy: adminUserId }).returning()
+    createdCompanies.push(company)
+  }
+  console.log(`Created ${createdCompanies.length} example companies`)
+
+  const [techVision, cloudFirst, secureNet, digitalManufaktur, greenEnergy] = createdCompanies
+
+  // --- 2. Persons ---
+  const personData = [
+    { companyId: techVision.id, salutation: 'Herr', firstName: 'Thomas', lastName: 'Mueller', jobTitle: 'Geschaeftsfuehrer', email: 'mueller@techvision.de', phone: '+49 89 12345601', isPrimaryContact: true },
+    { companyId: techVision.id, salutation: 'Frau', firstName: 'Sandra', lastName: 'Klein', jobTitle: 'IT-Leiterin', department: 'IT', email: 'klein@techvision.de', phone: '+49 89 12345602' },
+    { companyId: cloudFirst.id, salutation: 'Herr', firstName: 'Andreas', lastName: 'Berger', jobTitle: 'CTO', department: 'Technik', email: 'berger@cloudfirst.de', phone: '+49 30 98765401', isPrimaryContact: true },
+    { companyId: cloudFirst.id, salutation: 'Frau', firstName: 'Lisa', lastName: 'Hoffmann', jobTitle: 'Einkaufsleiterin', department: 'Einkauf', email: 'hoffmann@cloudfirst.de', phone: '+49 30 98765402' },
+    { companyId: secureNet.id, salutation: 'Herr', firstName: 'Michael', lastName: 'Wagner', jobTitle: 'CISO', department: 'Security', email: 'wagner@securenet.de', phone: '+49 40 55566601', isPrimaryContact: true },
+    { companyId: digitalManufaktur.id, salutation: 'Frau', firstName: 'Julia', lastName: 'Schneider', jobTitle: 'Geschaeftsfuehrerin', email: 'schneider@digitalmanufaktur.de', phone: '+49 69 44455501', isPrimaryContact: true },
+    { companyId: digitalManufaktur.id, salutation: 'Herr', firstName: 'Markus', lastName: 'Weber', jobTitle: 'Projektleiter', department: 'Entwicklung', email: 'weber@digitalmanufaktur.de', phone: '+49 69 44455502' },
+    { companyId: greenEnergy.id, salutation: 'Frau', firstName: 'Petra', lastName: 'Fischer', jobTitle: 'Geschaeftsentwicklung', department: 'Business Development', email: 'fischer@greenenergy-systems.de', phone: '+49 711 33344401', isPrimaryContact: true },
+  ]
+
+  const createdPersons = []
+  for (const p of personData) {
+    const [person] = await db.insert(persons).values({ tenantId, ...p, status: 'active', createdBy: adminUserId }).returning()
+    createdPersons.push(person)
+  }
+  console.log(`Created ${createdPersons.length} example persons`)
+
+  const [, , berger, , wagner, schneider, , fischer] = createdPersons
+
+  // --- 3. Leads ---
+  const leadData = [
+    { title: 'Website-Relaunch', source: 'website', status: 'new', score: 45, companyId: cloudFirst.id, personId: berger.id, contactFirstName: 'Andreas', contactLastName: 'Berger', contactCompany: 'CloudFirst AG', contactEmail: 'berger@cloudfirst.de' },
+    { title: 'Security-Audit DIN SPEC', source: 'referral', status: 'contacted', score: 70, companyId: secureNet.id, personId: wagner.id, contactFirstName: 'Michael', contactLastName: 'Wagner', contactCompany: 'SecureNet Solutions GmbH', contactEmail: 'wagner@securenet.de' },
+    { title: 'ERP-Integration', source: 'direct', status: 'qualified', score: 85, companyId: techVision.id, personId: createdPersons[0].id, contactFirstName: 'Thomas', contactLastName: 'Mueller', contactCompany: 'TechVision GmbH', contactEmail: 'mueller@techvision.de' },
+    { title: 'Cloud-Migration', source: 'website', status: 'proposal', score: 60, companyId: digitalManufaktur.id, personId: schneider.id, contactFirstName: 'Julia', contactLastName: 'Schneider', contactCompany: 'Digital Manufaktur OHG', contactEmail: 'schneider@digitalmanufaktur.de' },
+    { title: 'IoT-Dashboard', source: 'event', status: 'new', score: 30, companyId: greenEnergy.id, personId: fischer.id, contactFirstName: 'Petra', contactLastName: 'Fischer', contactCompany: 'GreenEnergy Systems KG', contactEmail: 'fischer@greenenergy-systems.de' },
+  ]
+
+  const createdLeads = []
+  for (const l of leadData) {
+    const [lead] = await db.insert(leads).values({ tenantId, ...l, assignedTo: adminUserId }).returning()
+    createdLeads.push(lead)
+  }
+  console.log(`Created ${createdLeads.length} example leads`)
+
+  // --- 4. Products ---
+  // Look up existing categories
+  const existingCategories = await db.select().from(productCategories).where(eq(productCategories.tenantId, tenantId))
+  const catMap = Object.fromEntries(existingCategories.map(c => [c.slug, c.id]))
+
+  const productData = [
+    { type: 'service', name: 'IT-Beratung Stunde', description: 'Individuelle IT-Beratung durch erfahrene Consultants. Analyse, Konzeption und Strategieentwicklung.', priceNet: '150.00', unit: 'Stunde', categoryId: catMap['it-dienstleistungen'] || null, sku: 'SRV-001' },
+    { type: 'service', name: 'Security-Audit Paket', description: 'Umfassendes IT-Sicherheitsaudit nach DIN SPEC 27076 inkl. Bericht und Handlungsempfehlungen.', priceNet: '2500.00', unit: 'Paket', categoryId: catMap['security'] || null, sku: 'SRV-002' },
+    { type: 'service', name: 'Cloud-Migration Paket', description: 'Komplettpaket fuer die Migration Ihrer IT-Infrastruktur in die Cloud. Planung, Durchfuehrung und Nachbetreuung.', priceNet: '5000.00', unit: 'Paket', categoryId: catMap['cloud-services'] || null, sku: 'SRV-003' },
+    { type: 'product', name: 'Managed Firewall', description: 'Vollstaendig verwaltete Firewall-Loesung inkl. Monitoring, Updates und 24/7-Support.', priceNet: '89.00', unit: 'Monat', categoryId: catMap['security'] || null, sku: 'PRD-001' },
+    { type: 'product', name: 'SSL-Zertifikat Enterprise', description: 'Extended Validation SSL-Zertifikat fuer maximale Vertrauenswuerdigkeit und Sicherheit.', priceNet: '299.00', unit: 'Jahr', categoryId: catMap['security'] || null, sku: 'PRD-002' },
+    { type: 'product', name: 'Backup-Loesung Pro', description: 'Automatische Cloud-Backup-Loesung mit Versionierung, Verschluesselung und schneller Wiederherstellung.', priceNet: '49.00', unit: 'Monat', categoryId: catMap['cloud-services'] || null, sku: 'PRD-003' },
+  ]
+
+  for (const p of productData) {
+    await db.insert(products).values({ tenantId, ...p, status: 'active', vatRate: '19.00', createdBy: adminUserId })
+  }
+  console.log(`Created ${productData.length} example products`)
+
+  // --- 5. Activities ---
+  const activityData = [
+    { type: 'email', subject: 'Erstkontakt: Website-Relaunch', content: 'Erste E-Mail an CloudFirst AG bezueglich Website-Relaunch gesendet. Interesse an modernem Design und CMS-Integration.', leadId: createdLeads[0].id, companyId: cloudFirst.id, personId: berger.id },
+    { type: 'call', subject: 'Telefonat: Security-Audit Anforderungen', content: 'Ausfuehrliches Telefonat mit Michael Wagner (SecureNet) ueber die Anforderungen fuer den Security-Audit nach DIN SPEC 27076. Termin fuer Vor-Ort-Begehung vereinbart.', leadId: createdLeads[1].id, companyId: secureNet.id, personId: wagner.id },
+    { type: 'meeting', subject: 'Meeting: ERP-Integration Anforderungsanalyse', content: 'Vor-Ort-Meeting bei TechVision GmbH. Bestehende Systeme dokumentiert, Schnittstellen identifiziert. Naechster Schritt: Technisches Konzept erstellen.', leadId: createdLeads[2].id, companyId: techVision.id, personId: createdPersons[0].id },
+    { type: 'email', subject: 'Angebot: Cloud-Migration', content: 'Detailliertes Angebot fuer die Cloud-Migration an Digital Manufaktur OHG gesendet. Umfang: 3 Server, 2 Datenbanken, 5 Anwendungen.', leadId: createdLeads[3].id, companyId: digitalManufaktur.id, personId: schneider.id },
+    { type: 'note', subject: 'Notiz: IoT-Dashboard Potenzial', content: 'GreenEnergy Systems hat grosses Interesse an einem IoT-Dashboard fuer die Ueberwachung ihrer Solaranlagen. Potenzialwert mittel-hoch, aber Entscheidungsprozess dauert voraussichtlich 3-6 Monate.', leadId: createdLeads[4].id, companyId: greenEnergy.id, personId: fischer.id },
+  ]
+
+  for (const a of activityData) {
+    await db.insert(activities).values({ tenantId, ...a, userId: adminUserId })
+  }
+  console.log(`Created ${activityData.length} example activities`)
+}
+
 async function seedCheck() {
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
@@ -606,6 +706,11 @@ async function seedCheck() {
 
   // 9. Seed auditor role
   await seedAuditorRole(db, tenantId)
+
+  // 10. Seed example business data (companies, persons, leads, products, activities)
+  if (adminUserId) {
+    await seedExampleBusinessData(db, tenantId, adminUserId)
+  }
 
   console.log('')
   console.log('='.repeat(50))

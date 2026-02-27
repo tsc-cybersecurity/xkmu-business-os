@@ -10,8 +10,6 @@ import {
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
-export const maxDuration = 120
-
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'bi')
 
 export async function POST(

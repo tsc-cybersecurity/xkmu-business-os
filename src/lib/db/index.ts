@@ -2,9 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
 
-// Lazy initialization for Vercel compatibility
-// Database connection is only established when actually needed (runtime)
-// This prevents build-time errors when DATABASE_URL is not available
+// Lazy initialization - connection is only established when actually needed (runtime)
 
 let _db: ReturnType<typeof drizzle<typeof schema>> | null = null
 let _client: ReturnType<typeof postgres> | null = null
@@ -14,7 +12,7 @@ function getConnectionString(): string {
   if (!connectionString) {
     throw new Error(
       'DATABASE_URL environment variable is not set. ' +
-      'Please configure it in your Vercel project settings or .env file.'
+      'Please configure it in your .env file.'
     )
   }
   return connectionString
@@ -30,10 +28,7 @@ function getSslConfig(): 'require' | false {
   // Docker/Coolify: default no SSL (local PostgreSQL)
   if (process.env.DOCKER === 'true' || process.env.COOLIFY === 'true') return false
 
-  // Production (Vercel, Neon, etc.): default SSL required
-  if (process.env.NODE_ENV === 'production') return 'require'
-
-  // Development: no SSL
+  // Default: no SSL for local PostgreSQL
   return false
 }
 

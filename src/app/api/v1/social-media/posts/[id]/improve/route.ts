@@ -15,8 +15,6 @@ import { SocialMediaPostService } from '@/lib/services/social-media-post.service
 import { SocialMediaAIService } from '@/lib/services/ai/social-media-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
-export const maxDuration = 120
-
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

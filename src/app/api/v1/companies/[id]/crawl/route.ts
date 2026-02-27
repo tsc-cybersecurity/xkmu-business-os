@@ -1,6 +1,3 @@
-// Allow longer execution time for website crawling
-export const maxDuration = 120
-
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,

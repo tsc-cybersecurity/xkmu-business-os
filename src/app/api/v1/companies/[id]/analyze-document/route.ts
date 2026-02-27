@@ -1,6 +1,3 @@
-// Allow longer execution time for PDF + AI
-export const maxDuration = 120
-
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,
