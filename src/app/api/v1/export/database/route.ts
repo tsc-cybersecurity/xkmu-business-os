@@ -6,6 +6,91 @@ import { sql } from 'drizzle-orm'
 
 export const dynamic = 'force-dynamic'
 
+// Tabellen mit tenant_id Spalte (gefiltert nach Tenant)
+const TENANT_TABLES = [
+  'roles',
+  'users',
+  'api_keys',
+  'companies',
+  'persons',
+  'leads',
+  'product_categories',
+  'products',
+  'ai_providers',
+  'ai_logs',
+  'ai_prompt_templates',
+  'ideas',
+  'activities',
+  'webhooks',
+  'audit_log',
+  'documents',
+  'document_items',
+  'din_audit_sessions',
+  'din_answers',
+  'cms_pages',
+  'cms_blocks',
+  'cms_block_templates',
+  'cms_navigation_items',
+  'blog_posts',
+  'media_uploads',
+  'company_researches',
+  'firecrawl_researches',
+  'business_documents',
+  'business_profiles',
+  'marketing_campaigns',
+  'marketing_tasks',
+  'marketing_templates',
+  'social_media_topics',
+  'social_media_posts',
+]
+
+// Globale Tabellen (ohne tenant_id, komplett exportiert)
+const GLOBAL_TABLES = [
+  'din_requirements',
+  'din_grants',
+  'cms_block_type_definitions',
+]
+
+// role_permissions hat kein tenant_id, aber roleId -> export ueber JOIN
+const ROLE_PERMISSIONS_TABLE = 'role_permissions'
+
+function formatSqlValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return 'NULL'
+  }
+  if (typeof value === 'string') {
+    return `'${value.replace(/'/g, "''")}'`
+  }
+  if (typeof value === 'boolean') {
+    return value ? 'TRUE' : 'FALSE'
+  }
+  if (value instanceof Date) {
+    return `'${value.toISOString()}'`
+  }
+  if (typeof value === 'object') {
+    return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`
+  }
+  return String(value)
+}
+
+function exportRows(rows: Record<string, unknown>[], table: string): string {
+  if (rows.length === 0) return ''
+
+  let dump = `-- Tabelle: ${table}\n`
+  dump += `-- Anzahl Datensaetze: ${rows.length}\n`
+  dump += `-- =============================================\n\n`
+
+  const columns = Object.keys(rows[0])
+
+  for (const row of rows) {
+    const values = columns.map((col) => formatSqlValue(row[col]))
+    dump += `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${values.join(', ')});\n`
+  }
+
+  dump += '\n\n'
+  return dump
+}
+
 async function getAuthContext(request: NextRequest) {
   const session = await getSession()
   if (session) {
@@ -39,141 +124,56 @@ export async function GET(request: NextRequest) {
 
     const tenantId = auth.tenantId
 
-    // Liste aller Tabellen des Schemas
-    const tables = [
-      'tenants',
-      'roles',
-      'role_permissions',
-      'users',
-      'api_keys',
-      'companies',
-      'persons',
-      'leads',
-      'product_categories',
-      'products',
-      'ai_providers',
-      'ai_logs',
-      'ai_prompt_templates',
-      'ideas',
-      'activities',
-      'webhooks',
-      'audit_log',
-      'documents',
-      'document_items',
-    ]
-
-    let sqlDump = `-- SQL Export für Tenant: ${tenantId}\n`
+    let sqlDump = `-- SQL Export fuer Tenant: ${tenantId}\n`
     sqlDump += `-- Erstellt am: ${new Date().toISOString()}\n`
     sqlDump += `-- =============================================\n\n`
 
-    // Für jede Tabelle Daten exportieren
-    for (const table of tables) {
+    // 1. Tenant selbst (WHERE id = ...)
+    try {
+      const rows = await db.execute<Record<string, unknown>>(
+        sql.raw(`SELECT * FROM tenants WHERE id = '${tenantId}'`)
+      )
+      sqlDump += exportRows(rows as unknown as Record<string, unknown>[], 'tenants')
+    } catch (error) {
+      console.error('Fehler beim Export der Tabelle tenants:', error)
+    }
+
+    // 2. Tenant-spezifische Tabellen (WHERE tenant_id = ...)
+    for (const table of TENANT_TABLES) {
       try {
-        // Daten für diesen Tenant abrufen
         const rows = await db.execute<Record<string, unknown>>(
           sql.raw(`SELECT * FROM ${table} WHERE tenant_id = '${tenantId}'`)
         )
-
-        if (rows.length > 0) {
-          sqlDump += `-- Tabelle: ${table}\n`
-          sqlDump += `-- Anzahl Datensätze: ${rows.length}\n`
-          sqlDump += `-- =============================================\n\n`
-
-          // Spalten ermitteln
-          const columns = Object.keys(rows[0])
-
-          // INSERT Statements generieren
-          for (const row of rows) {
-            const values = columns.map((col) => {
-              const value = row[col]
-
-              if (value === null || value === undefined) {
-                return 'NULL'
-              }
-
-              if (typeof value === 'string') {
-                // String escapen für SQL
-                return `'${value.replace(/'/g, "''")}'`
-              }
-
-              if (typeof value === 'boolean') {
-                return value ? 'TRUE' : 'FALSE'
-              }
-
-              if (typeof value === 'object') {
-                // JSON Objekte/Arrays
-                return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`
-              }
-
-              if (value instanceof Date) {
-                return `'${value.toISOString()}'`
-              }
-
-              // Zahlen und andere Werte
-              return String(value)
-            })
-
-            sqlDump += `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${values.join(', ')});\n`
-          }
-
-          sqlDump += '\n\n'
-        }
+        sqlDump += exportRows(rows as unknown as Record<string, unknown>[], table)
       } catch (error) {
-        // Falls Tabelle keine tenant_id Spalte hat (z.B. tenants selbst), speziell behandeln
-        if (table === 'tenants') {
-          try {
-            const rows = await db.execute<Record<string, unknown>>(
-              sql.raw(`SELECT * FROM ${table} WHERE id = '${tenantId}'`)
-            )
+        console.error(`Fehler beim Export der Tabelle ${table}:`, error)
+      }
+    }
 
-            if (rows.length > 0) {
-              sqlDump += `-- Tabelle: ${table}\n`
-              sqlDump += `-- =============================================\n\n`
+    // 3. role_permissions (ueber roles.tenant_id verknuepft)
+    try {
+      const rows = await db.execute<Record<string, unknown>>(
+        sql.raw(`SELECT rp.* FROM ${ROLE_PERMISSIONS_TABLE} rp INNER JOIN roles r ON rp.role_id = r.id WHERE r.tenant_id = '${tenantId}'`)
+      )
+      sqlDump += exportRows(rows as unknown as Record<string, unknown>[], ROLE_PERMISSIONS_TABLE)
+    } catch (error) {
+      console.error('Fehler beim Export der Tabelle role_permissions:', error)
+    }
 
-              const columns = Object.keys(rows[0])
-
-              for (const row of rows) {
-                const values = columns.map((col) => {
-                  const value = row[col]
-
-                  if (value === null || value === undefined) {
-                    return 'NULL'
-                  }
-
-                  if (typeof value === 'string') {
-                    return `'${value.replace(/'/g, "''")}'`
-                  }
-
-                  if (typeof value === 'boolean') {
-                    return value ? 'TRUE' : 'FALSE'
-                  }
-
-                  if (typeof value === 'object') {
-                    return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`
-                  }
-
-                  if (value instanceof Date) {
-                    return `'${value.toISOString()}'`
-                  }
-
-                  return String(value)
-                })
-
-                sqlDump += `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${values.join(', ')});\n`
-              }
-
-              sqlDump += '\n\n'
-            }
-          } catch (innerError) {
-            console.error(`Fehler beim Export der Tabelle ${table}:`, innerError)
-          }
-        }
+    // 4. Globale Tabellen (komplett, ohne Filter)
+    for (const table of GLOBAL_TABLES) {
+      try {
+        const rows = await db.execute<Record<string, unknown>>(
+          sql.raw(`SELECT * FROM ${table}`)
+        )
+        sqlDump += exportRows(rows as unknown as Record<string, unknown>[], table)
+      } catch (error) {
+        console.error(`Fehler beim Export der Tabelle ${table}:`, error)
       }
     }
 
     sqlDump += `-- Export abgeschlossen\n`
 
-    // SQL als Datei zurückgeben
     return new NextResponse(sqlDump, {
       status: 200,
       headers: {

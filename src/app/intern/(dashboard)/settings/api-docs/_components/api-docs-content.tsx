@@ -9,16 +9,26 @@ import { useState } from 'react'
 export function ApiDocsContent() {
   return (
     <Tabs defaultValue="auth" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9">
-        <TabsTrigger value="auth">Auth</TabsTrigger>
-        <TabsTrigger value="companies">Firmen</TabsTrigger>
-        <TabsTrigger value="persons">Personen</TabsTrigger>
-        <TabsTrigger value="leads">Leads</TabsTrigger>
-        <TabsTrigger value="products">Produkte</TabsTrigger>
-        <TabsTrigger value="ai">KI</TabsTrigger>
-        <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
-        <TabsTrigger value="backup">Backup</TabsTrigger>
-        <TabsTrigger value="admin">Admin</TabsTrigger>
+      <TabsList className="flex flex-wrap h-auto gap-1 bg-transparent p-0">
+        <TabsTrigger value="auth" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Auth</TabsTrigger>
+        <TabsTrigger value="companies" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Firmen</TabsTrigger>
+        <TabsTrigger value="persons" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Personen</TabsTrigger>
+        <TabsTrigger value="leads" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Leads</TabsTrigger>
+        <TabsTrigger value="products" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Produkte</TabsTrigger>
+        <TabsTrigger value="documents" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Dokumente</TabsTrigger>
+        <TabsTrigger value="ideas" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Ideen</TabsTrigger>
+        <TabsTrigger value="activities" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Aktivitaeten</TabsTrigger>
+        <TabsTrigger value="cms" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CMS</TabsTrigger>
+        <TabsTrigger value="blog" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Blog</TabsTrigger>
+        <TabsTrigger value="marketing" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Marketing</TabsTrigger>
+        <TabsTrigger value="social" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Social Media</TabsTrigger>
+        <TabsTrigger value="din" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">DIN Audit</TabsTrigger>
+        <TabsTrigger value="media" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Medien</TabsTrigger>
+        <TabsTrigger value="ai" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">KI</TabsTrigger>
+        <TabsTrigger value="webhooks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Webhooks</TabsTrigger>
+        <TabsTrigger value="backup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Backup</TabsTrigger>
+        <TabsTrigger value="public" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Oeffentlich</TabsTrigger>
+        <TabsTrigger value="admin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Admin</TabsTrigger>
       </TabsList>
 
       {/* Authentication */}
@@ -745,7 +755,9 @@ export function ApiDocsContent() {
   -F "file=@backup.sql" \\
   -F "mode=merge"`}
                 </pre>
-                <p className="mt-3"><strong>Tabellen:</strong> tenants, roles, role_permissions, users, api_keys, companies, persons, leads, product_categories, products, ai_providers, ai_logs, ai_prompt_templates, ideas, activities, webhooks, audit_log, documents, document_items</p>
+                <p className="mt-3"><strong>Tabellen (Tenant):</strong> roles, users, api_keys, companies, persons, leads, product_categories, products, ai_providers, ai_logs, ai_prompt_templates, ideas, activities, webhooks, audit_log, documents, document_items, din_audit_sessions, din_answers, cms_pages, cms_blocks, cms_block_templates, cms_navigation_items, blog_posts, media_uploads, company_researches, firecrawl_researches, business_documents, business_profiles, marketing_campaigns, marketing_tasks, marketing_templates, social_media_topics, social_media_posts</p>
+                <p className="mt-1"><strong>Tabellen (Global):</strong> din_requirements, din_grants, cms_block_type_definitions</p>
+                <p className="mt-1"><strong>Sonstige:</strong> tenants (WHERE id), role_permissions (ueber JOIN mit roles)</p>
               </div>
             </div>
           </CardContent>
@@ -886,6 +898,296 @@ export function ApiDocsContent() {
                 },
               }}
             />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/tenant/seed-demo"
+              description="Demo-Daten fuer den Tenant importieren (CMS-Seiten, Blog, Firmen, Personen, Leads, Produkte, Aktivitaeten)"
+              responseExample={{
+                message: 'Demo-Daten erfolgreich importiert',
+                cmsPages: 7,
+                navigation: 10,
+                blogPosts: 3,
+                companies: 5,
+                persons: 8,
+                leads: 5,
+                products: 6,
+                activities: 5,
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/admin/database/tables"
+              description="Datenbank-Tabellen mit Spalteninformationen auflisten (Admin)"
+              responseExample={{
+                data: [
+                  { tableName: 'companies', columns: [{ name: 'id', type: 'uuid' }, { name: 'name', type: 'text' }] },
+                ],
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/email/send"
+              description="E-Mail versenden"
+              requestBody={{
+                to: 'empfaenger@example.com',
+                subject: 'Betreff',
+                body: '<p>HTML-Inhalt</p>',
+              }}
+              responseExample={{ message: 'E-Mail gesendet' }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/health"
+              description="Health-Check Endpunkt"
+              responseExample={{ status: 'ok' }}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Documents */}
+      <TabsContent value="documents" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Dokumente (Angebote & Rechnungen)</CardTitle>
+            <CardDescription>Dokumentenmanagement mit Positionen und Status-Workflows</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/documents" description="Dokumente auflisten" queryParams={['type=offer|invoice', 'status=draft|sent|paid', 'companyId=uuid', 'page=1', 'limit=20']} responseExample={{ data: [{ id: 'uuid', number: 'RE-2026-0001', type: 'invoice', status: 'sent', total: 15000 }], pagination: { page: 1, limit: 20, total: 30 } }} />
+            <EndpointDoc method="POST" path="/api/v1/documents" description="Neues Dokument anlegen" requestBody={{ type: 'invoice', companyId: 'uuid', date: '2026-02-24', dueDate: '2026-03-24' }} responseExample={{ id: 'uuid', number: 'RE-2026-0042', type: 'invoice', status: 'draft' }} />
+            <EndpointDoc method="GET" path="/api/v1/documents/next-number" description="Naechste Dokumentnummer generieren" queryParams={['type=invoice']} responseExample={{ number: 'RE-2026-0043' }} />
+            <EndpointDoc method="GET" path="/api/v1/documents/:id" description="Dokument mit Positionen abrufen" responseExample={{ id: 'uuid', number: 'RE-2026-0042', total: 15000, items: [{ description: 'IT-Beratung', quantity: 10, unitPrice: 150 }] }} />
+            <EndpointDoc method="PUT" path="/api/v1/documents/:id" description="Dokument aktualisieren" requestBody={{ notes: 'Zahlungsziel 14 Tage' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/documents/:id" description="Dokument loeschen" responseExample={{ message: 'Dokument geloescht' }} />
+            <EndpointDoc method="PUT" path="/api/v1/documents/:id/status" description="Dokumentstatus aendern" requestBody={{ status: 'sent' }} responseExample={{ id: 'uuid', status: 'sent' }} />
+            <EndpointDoc method="POST" path="/api/v1/documents/:id/convert" description="Angebot in Rechnung konvertieren" responseExample={{ id: 'new-uuid', type: 'invoice', number: 'RE-2026-0043' }} />
+            <EndpointDoc method="GET" path="/api/v1/documents/:id/items" description="Positionen eines Dokuments abrufen" responseExample={{ data: [{ id: 'uuid', description: 'IT-Beratung', quantity: 10, unitPrice: 150, total: 1500 }] }} />
+            <EndpointDoc method="POST" path="/api/v1/documents/:id/items" description="Position hinzufuegen" requestBody={{ productId: 'uuid', description: 'IT-Beratung', quantity: 10, unitPrice: 150, taxRate: 19 }} responseExample={{ id: 'uuid', total: 1500 }} />
+            <EndpointDoc method="PUT" path="/api/v1/documents/:id/items/:itemId" description="Position aktualisieren" requestBody={{ quantity: 20 }} responseExample={{ id: 'uuid', total: 3000 }} />
+            <EndpointDoc method="DELETE" path="/api/v1/documents/:id/items/:itemId" description="Position entfernen" responseExample={{ message: 'Position entfernt' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Ideas */}
+      <TabsContent value="ideas" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Ideen</CardTitle>
+            <CardDescription>Geschaeftsideen erfassen und in Leads konvertieren</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/ideas" description="Ideen auflisten" queryParams={['page=1', 'limit=20', 'search=Begriff']} responseExample={{ data: [{ id: 'uuid', title: 'Neues SaaS-Produkt', status: 'open' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/ideas" description="Neue Idee anlegen" requestBody={{ title: 'Cloud-Migration Service', description: 'Managed Cloud Migration fuer KMU anbieten' }} responseExample={{ id: 'uuid', title: 'Cloud-Migration Service' }} />
+            <EndpointDoc method="GET" path="/api/v1/ideas/:id" description="Idee abrufen" responseExample={{ id: 'uuid', title: 'Cloud-Migration Service', description: '...' }} />
+            <EndpointDoc method="PUT" path="/api/v1/ideas/:id" description="Idee aktualisieren" requestBody={{ title: 'Cloud-Migration Premium' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/ideas/:id" description="Idee loeschen" responseExample={{ message: 'Idee geloescht' }} />
+            <EndpointDoc method="POST" path="/api/v1/ideas/:id/convert" description="Idee in Lead konvertieren" requestBody={{ targetType: 'lead' }} responseExample={{ leadId: 'uuid', message: 'Idee konvertiert' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Activities */}
+      <TabsContent value="activities" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Aktivitaeten</CardTitle>
+            <CardDescription>Protokollierung von Anrufen, E-Mails, Meetings und Notizen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/activities" description="Aktivitaeten auflisten" queryParams={['page=1', 'limit=20', 'companyId=uuid', 'personId=uuid', 'leadId=uuid', 'type=call|email|meeting|note']} responseExample={{ data: [{ id: 'uuid', type: 'call', subject: 'Erstgespraech', notes: 'Interesse an Produkt X', companyId: 'uuid', createdAt: '2026-02-24T10:00:00Z' }], pagination: { page: 1, limit: 20, total: 50 } }} />
+            <EndpointDoc method="POST" path="/api/v1/activities" description="Neue Aktivitaet anlegen" requestBody={{ type: 'call', subject: 'Nachfass-Anruf', notes: 'Angebot besprochen', companyId: 'uuid', personId: 'uuid' }} responseExample={{ id: 'uuid', type: 'call' }} />
+            <EndpointDoc method="GET" path="/api/v1/activities/:id" description="Einzelne Aktivitaet abrufen" responseExample={{ id: 'uuid', type: 'call', subject: 'Erstgespraech', notes: '...' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/activities/:id" description="Aktivitaet loeschen" responseExample={{ message: 'Aktivitaet geloescht' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* CMS */}
+      <TabsContent value="cms" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>CMS - Seiten</CardTitle>
+            <CardDescription>Block-basiertes Content Management fuer Website-Seiten</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/cms/pages" description="CMS-Seiten auflisten" queryParams={['page=1', 'limit=20', 'status=published|draft']} responseExample={{ data: [{ id: 'uuid', title: 'Startseite', slug: '/', status: 'published' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/pages" description="Neue Seite anlegen" requestBody={{ title: 'Ueber uns', slug: '/ueber-uns', status: 'draft' }} responseExample={{ id: 'uuid', slug: '/ueber-uns' }} />
+            <EndpointDoc method="GET" path="/api/v1/cms/pages/:id" description="Seite mit Bloecken abrufen" responseExample={{ id: 'uuid', title: 'Startseite', blocks: [{ id: 'uuid', type: 'hero', content: {} }] }} />
+            <EndpointDoc method="PUT" path="/api/v1/cms/pages/:id" description="Seite aktualisieren" requestBody={{ title: 'Ueber uns - Neu' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/cms/pages/:id" description="Seite loeschen" responseExample={{ message: 'Seite geloescht' }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/publish" description="Seite veroeffentlichen" responseExample={{ status: 'published' }} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>CMS - Bloecke</CardTitle>
+            <CardDescription>Content-Bloecke innerhalb von Seiten verwalten</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/cms/pages/:id/blocks" description="Bloecke einer Seite auflisten" responseExample={{ data: [{ id: 'uuid', type: 'hero', sortOrder: 0, content: {} }] }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/blocks" description="Block zu Seite hinzufuegen" requestBody={{ blockTypeId: 'uuid', content: { title: 'Willkommen' }, sortOrder: 0 }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="PUT" path="/api/v1/cms/pages/:id/blocks/reorder" description="Block-Reihenfolge aendern" requestBody={{ blockIds: ['uuid-1', 'uuid-2', 'uuid-3'] }} responseExample={{ message: 'Reihenfolge aktualisiert' }} />
+            <EndpointDoc method="PUT" path="/api/v1/cms/blocks/:id" description="Block aktualisieren" requestBody={{ content: { title: 'Neuer Titel' } }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/cms/blocks/:id" description="Block loeschen" responseExample={{ message: 'Block geloescht' }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/blocks/:id/duplicate" description="Block duplizieren" responseExample={{ id: 'new-uuid' }} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>CMS - Navigation, Templates & Block-Typen</CardTitle>
+            <CardDescription>Website-Navigation, Vorlagen und Block-Typ-Definitionen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/cms/navigation" description="Navigationseintraege auflisten" responseExample={{ data: [{ id: 'uuid', label: 'Startseite', url: '/', parentId: null, sortOrder: 0 }] }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/navigation" description="Navigationseintrag anlegen" requestBody={{ label: 'Kontakt', url: '/kontakt', sortOrder: 5 }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="PUT" path="/api/v1/cms/navigation/:id" description="Navigationseintrag aktualisieren" requestBody={{ label: 'Kontakt & Support' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/cms/navigation/:id" description="Navigationseintrag loeschen" responseExample={{ message: 'Eintrag geloescht' }} />
+            <EndpointDoc method="PUT" path="/api/v1/cms/navigation/reorder" description="Navigation umsortieren" requestBody={{ items: [{ id: 'uuid', sortOrder: 0 }] }} responseExample={{ message: 'Sortierung aktualisiert' }} />
+            <EndpointDoc method="GET" path="/api/v1/cms/templates" description="Block-Vorlagen auflisten" responseExample={{ data: [{ id: 'uuid', name: 'Hero Standard', blockType: 'hero', content: {} }] }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/templates" description="Block-Vorlage erstellen" requestBody={{ name: 'Mein Template', blockTypeId: 'uuid', content: { title: 'Vorlage' } }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/cms/block-types" description="Block-Typ-Definitionen auflisten" responseExample={{ data: [{ id: 'uuid', slug: 'hero', name: 'Hero', schema: {} }] }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/block-types" description="Block-Typ erstellen" requestBody={{ slug: 'custom', name: 'Custom Block', schema: {} }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="PUT" path="/api/v1/cms/block-types/:id" description="Block-Typ aktualisieren" requestBody={{ name: 'Custom Block v2' }} responseExample={{ id: 'uuid' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Blog */}
+      <TabsContent value="blog" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Blog</CardTitle>
+            <CardDescription>Blog-Beitraege erstellen, veroeffentlichen und per KI generieren</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/blog/posts" description="Blog-Beitraege auflisten" queryParams={['page=1', 'limit=20', 'status=published|draft', 'search=Titel']} responseExample={{ data: [{ id: 'uuid', title: 'IT-Trends 2026', slug: 'it-trends-2026', status: 'published' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/blog/posts" description="Blog-Beitrag anlegen" requestBody={{ title: 'Neuer Beitrag', content: '<p>Inhalt...</p>', status: 'draft' }} responseExample={{ id: 'uuid', slug: 'neuer-beitrag' }} />
+            <EndpointDoc method="GET" path="/api/v1/blog/posts/:id" description="Beitrag abrufen" responseExample={{ id: 'uuid', title: 'IT-Trends 2026', content: '<p>...</p>', status: 'published' }} />
+            <EndpointDoc method="PUT" path="/api/v1/blog/posts/:id" description="Beitrag aktualisieren" requestBody={{ title: 'IT-Trends 2026 - Update' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/blog/posts/:id" description="Beitrag loeschen" responseExample={{ message: 'Beitrag geloescht' }} />
+            <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/publish" description="Beitrag veroeffentlichen" responseExample={{ status: 'published', publishedAt: '2026-02-24T10:00:00Z' }} />
+            <EndpointDoc method="POST" path="/api/v1/blog/posts/generate" description="Kompletten Blog-Beitrag per KI generieren" requestBody={{ topic: 'Cybersecurity fuer KMU', keywords: ['IT-Sicherheit', 'KMU'], tone: 'professionell', length: 'mittel' }} responseExample={{ id: 'uuid', title: 'Cybersecurity fuer KMU...', content: '<p>...</p>' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Marketing */}
+      <TabsContent value="marketing" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Marketing - Kampagnen</CardTitle>
+            <CardDescription>Marketing-Kampagnen planen und verwalten</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/marketing/campaigns" description="Kampagnen auflisten" queryParams={['page=1', 'limit=20', 'status=active|draft|completed']} responseExample={{ data: [{ id: 'uuid', name: 'Fruehjahrs-Kampagne', status: 'active', budget: 5000 }] }} />
+            <EndpointDoc method="POST" path="/api/v1/marketing/campaigns" description="Kampagne erstellen" requestBody={{ name: 'Newsletter Q1', type: 'email', budget: 1000, startDate: '2026-03-01', endDate: '2026-03-31' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/marketing/campaigns/:id" description="Kampagne abrufen" responseExample={{ id: 'uuid', name: 'Newsletter Q1', status: 'active', tasks: [] }} />
+            <EndpointDoc method="PUT" path="/api/v1/marketing/campaigns/:id" description="Kampagne aktualisieren" requestBody={{ status: 'completed' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/marketing/campaigns/:id" description="Kampagne loeschen" responseExample={{ message: 'Kampagne geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/marketing/campaigns/:id/tasks" description="Aufgaben einer Kampagne abrufen" responseExample={{ data: [{ id: 'uuid', title: 'Landing Page erstellen', status: 'pending' }] }} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Marketing - Aufgaben & Vorlagen</CardTitle>
+            <CardDescription>Kampagnen-Aufgaben und wiederverwendbare Vorlagen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/marketing/tasks" description="Alle Marketing-Aufgaben auflisten" queryParams={['page=1', 'limit=20', 'status=pending|done', 'campaignId=uuid']} responseExample={{ data: [{ id: 'uuid', title: 'Zielgruppen-Analyse', status: 'pending', campaignId: 'uuid' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/marketing/tasks" description="Aufgabe erstellen" requestBody={{ title: 'Social Media Posts planen', campaignId: 'uuid', priority: 'high' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/marketing/tasks/:id" description="Aufgabe abrufen" responseExample={{ id: 'uuid', title: 'Social Media Posts planen', status: 'pending' }} />
+            <EndpointDoc method="PUT" path="/api/v1/marketing/tasks/:id" description="Aufgabe aktualisieren" requestBody={{ status: 'done' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/marketing/tasks/:id" description="Aufgabe loeschen" responseExample={{ message: 'Aufgabe geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/marketing/templates" description="Marketing-Vorlagen auflisten" responseExample={{ data: [{ id: 'uuid', name: 'Email-Kampagne Standard', type: 'email' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/marketing/templates" description="Vorlage erstellen" requestBody={{ name: 'Messe-Kampagne', type: 'event', content: {} }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/marketing/templates/:id" description="Vorlage abrufen" responseExample={{ id: 'uuid', name: 'Messe-Kampagne', content: {} }} />
+            <EndpointDoc method="PUT" path="/api/v1/marketing/templates/:id" description="Vorlage aktualisieren" requestBody={{ name: 'Messe-Kampagne v2' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/marketing/templates/:id" description="Vorlage loeschen" responseExample={{ message: 'Vorlage geloescht' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Social Media */}
+      <TabsContent value="social" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Social Media</CardTitle>
+            <CardDescription>Posts erstellen, planen und per KI optimieren</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/social-media/posts" description="Social-Media-Posts auflisten" queryParams={['page=1', 'limit=20', 'platform=linkedin|facebook|instagram|twitter|xing', 'status=draft|scheduled|published']} responseExample={{ data: [{ id: 'uuid', content: 'Neuer Post...', platform: 'linkedin', status: 'scheduled' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/social-media/posts" description="Post erstellen" requestBody={{ content: 'Spannende Einblicke...', platform: 'linkedin', hashtags: ['IT', 'KMU'], status: 'draft' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/social-media/posts/:id" description="Post abrufen" responseExample={{ id: 'uuid', content: 'Post-Text...', platform: 'linkedin' }} />
+            <EndpointDoc method="PUT" path="/api/v1/social-media/posts/:id" description="Post aktualisieren" requestBody={{ content: 'Aktualisierter Text...' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/social-media/posts/:id" description="Post loeschen" responseExample={{ message: 'Post geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/social-media/topics" description="Themen auflisten" responseExample={{ data: [{ id: 'uuid', name: 'IT-Security', description: 'Beitraege zu IT-Sicherheit' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/social-media/topics" description="Thema anlegen" requestBody={{ name: 'Cloud Computing', description: 'Beitraege zu Cloud-Themen' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/social-media/topics/:id" description="Thema abrufen" responseExample={{ id: 'uuid', name: 'IT-Security' }} />
+            <EndpointDoc method="PUT" path="/api/v1/social-media/topics/:id" description="Thema aktualisieren" requestBody={{ name: 'IT-Sicherheit' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/social-media/topics/:id" description="Thema loeschen" responseExample={{ message: 'Thema geloescht' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* DIN Audit */}
+      <TabsContent value="din" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>DIN SPEC 27076 Audits</CardTitle>
+            <CardDescription>Digitalisierungs-Checks fuer KMU und Foerdermittel</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/din/audits" description="Audits auflisten" responseExample={{ data: [{ id: 'uuid', companyName: 'Musterfirma GmbH', score: 72, status: 'completed' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/din/audits" description="Neues Audit anlegen" requestBody={{ companyId: 'uuid' }} responseExample={{ id: 'uuid', status: 'created' }} />
+            <EndpointDoc method="GET" path="/api/v1/din/audits/:id" description="Audit abrufen" responseExample={{ id: 'uuid', company: { name: 'Musterfirma GmbH' }, score: 72, status: 'completed' }} />
+            <EndpointDoc method="PUT" path="/api/v1/din/audits/:id" description="Audit aktualisieren" requestBody={{ status: 'in_progress' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/din/audits/:id" description="Audit loeschen" responseExample={{ message: 'Audit geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/din/audits/:id/answers" description="Audit-Antworten abrufen" responseExample={{ data: [{ requirementId: 'uuid', score: 3, notes: 'Gut umgesetzt' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/din/audits/:id/answers" description="Audit-Antworten speichern" requestBody={{ answers: [{ requirementId: 'uuid', score: 3, notes: 'Gut umgesetzt' }] }} responseExample={{ message: 'Antworten gespeichert' }} />
+            <EndpointDoc method="GET" path="/api/v1/din/audits/:id/scoring" description="Scoring berechnen" responseExample={{ totalScore: 72, maxScore: 100, categories: [{ name: 'IT-Sicherheit', score: 80 }] }} />
+            <EndpointDoc method="GET" path="/api/v1/din/requirements" description="DIN-Anforderungen auflisten" responseExample={{ data: [{ id: 'uuid', category: 'IT-Sicherheit', question: 'Ist eine Firewall vorhanden?', maxScore: 4 }] }} />
+            <EndpointDoc method="GET" path="/api/v1/din/grants" description="Foerderprogramme auflisten" responseExample={{ data: [{ id: 'uuid', name: 'Digital Jetzt', maxAmount: 50000, region: 'Bundesweit' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/din/grants" description="Foerderprogramm anlegen" requestBody={{ name: 'go-digital', maxAmount: 16500, region: 'Bundesweit' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/din/grants/:id" description="Foerderprogramm abrufen" responseExample={{ id: 'uuid', name: 'go-digital', maxAmount: 16500 }} />
+            <EndpointDoc method="PUT" path="/api/v1/din/grants/:id" description="Foerderprogramm aktualisieren" requestBody={{ maxAmount: 20000 }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/din/grants/:id" description="Foerderprogramm loeschen" responseExample={{ message: 'Foerderprogramm geloescht' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Media */}
+      <TabsContent value="media" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Medien</CardTitle>
+            <CardDescription>Dateien hochladen und verwalten (Bilder, Dokumente etc.)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/media" description="Alle Medien-Uploads auflisten" queryParams={['page=1', 'limit=20']} responseExample={{ data: [{ id: 'uuid', filename: 'logo.png', mimeType: 'image/png', size: 45000, url: '/uploads/logo.png', createdAt: '2026-02-24T10:00:00Z' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/media/upload" description="Datei hochladen (multipart/form-data)" requestBody={{ file: '(Datei als FormData)' }} responseExample={{ id: 'uuid', filename: 'foto.jpg', url: '/uploads/foto.jpg', mimeType: 'image/jpeg', size: 120000 }} />
+            <EndpointDoc method="DELETE" path="/api/v1/media/:id" description="Datei loeschen" responseExample={{ message: 'Datei geloescht' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Public */}
+      <TabsContent value="public" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Oeffentliche API</CardTitle>
+            <CardDescription>Endpunkte ohne Authentifizierung fuer die oeffentliche Website</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/public/blog/posts" description="Veroeffentlichte Blog-Beitraege (oeffentlich, keine Auth)" queryParams={['page=1', 'limit=10']} responseExample={{ data: [{ title: 'IT-Trends', slug: 'it-trends', excerpt: '...', publishedAt: '2026-02-20' }] }} />
+            <EndpointDoc method="GET" path="/api/v1/public/blog/posts/:slug" description="Blog-Beitrag nach Slug (oeffentlich)" responseExample={{ title: 'IT-Trends', content: '<p>...</p>', publishedAt: '2026-02-20' }} />
+            <EndpointDoc method="GET" path="/api/v1/public/pages/:slug" description="CMS-Seite nach Slug (oeffentlich)" responseExample={{ title: 'Ueber uns', blocks: [{ type: 'hero', content: {} }] }} />
+            <EndpointDoc method="GET" path="/api/v1/public/navigation" description="Website-Navigation (oeffentlich)" responseExample={{ data: [{ label: 'Startseite', url: '/', children: [] }] }} />
+            <EndpointDoc method="POST" path="/api/v1/contact" description="Kontaktformular absenden (keine Auth)" requestBody={{ name: 'Max Mustermann', email: 'max@example.com', subject: 'Anfrage', message: 'Ich interessiere mich fuer...' }} responseExample={{ message: 'Nachricht gesendet' }} />
           </CardContent>
         </Card>
       </TabsContent>
