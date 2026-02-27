@@ -4,6 +4,7 @@ import { registerSchema, validateAndParse, formatZodErrors } from '@/lib/utils/v
 import { UserService } from '@/lib/services/user.service'
 import { TenantService } from '@/lib/services/tenant.service'
 import { RoleService } from '@/lib/services/role.service'
+import { TenantSeedService } from '@/lib/services/tenant-seed.service'
 import { createSession } from '@/lib/auth/session'
 import type { SessionUser } from '@/lib/types/auth.types'
 
@@ -47,6 +48,9 @@ export async function POST(request: NextRequest) {
 
     // Default-Rollen seeden
     await RoleService.seedDefaultRoles(tenant.id)
+
+    // Strukturelle Daten seeden (AI Prompts, Kategorien, Block Templates, DIN-Daten etc.)
+    await TenantSeedService.seedStructuralData(tenant.id)
 
     // Admin-Rolle nachschlagen (temporaer: registrierte Benutzer bekommen Admin-Rechte)
     const adminRole = await RoleService.getByName(tenant.id, 'admin')

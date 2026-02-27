@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { ArrowLeft, Save, Building } from 'lucide-react'
+import { ArrowLeft, Save, Building, Database, Loader2 } from 'lucide-react'
 
 interface Tenant {
   id: string
@@ -39,6 +39,7 @@ export default function TenantSettingsPage() {
   const [tenant, setTenant] = useState<Tenant | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [seedingDemo, setSeedingDemo] = useState(false)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -105,6 +106,46 @@ export default function TenantSettingsPage() {
       toast.error(error instanceof Error ? error.message : 'Fehler beim Speichern')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleSeedDemo = async () => {
+    if (!confirm('Moechten Sie Beispieldaten importieren? Bereits vorhandene Daten werden nicht ueberschrieben.')) {
+      return
+    }
+
+    setSeedingDemo(true)
+    try {
+      const response = await fetch('/api/v1/tenant/seed-demo', {
+        method: 'POST',
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        const d = data.data
+        const parts = []
+        if (d.cmsPages > 0) parts.push(`${d.cmsPages} CMS-Seiten`)
+        if (d.navigation > 0) parts.push(`${d.navigation} Navigationseintraege`)
+        if (d.blogPosts > 0) parts.push(`${d.blogPosts} Blog-Posts`)
+        if (d.companies > 0) parts.push(`${d.companies} Firmen`)
+        if (d.persons > 0) parts.push(`${d.persons} Personen`)
+        if (d.leads > 0) parts.push(`${d.leads} Leads`)
+        if (d.products > 0) parts.push(`${d.products} Produkte`)
+        if (d.activities > 0) parts.push(`${d.activities} Aktivitaeten`)
+
+        if (parts.length > 0) {
+          toast.success(`Demo-Daten importiert: ${parts.join(', ')}`)
+        } else {
+          toast.info('Alle Demo-Daten sind bereits vorhanden')
+        }
+      } else {
+        throw new Error(data.error?.message || 'Import fehlgeschlagen')
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Fehler beim Importieren der Demo-Daten')
+    } finally {
+      setSeedingDemo(false)
     }
   }
 
@@ -234,6 +275,36 @@ export default function TenantSettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="h-5 w-5" />
+            Demo-Daten
+          </CardTitle>
+          <CardDescription>
+            Importieren Sie Beispieldaten um das System kennenzulernen.
+            Es werden CMS-Seiten, Blog-Posts, Firmen, Personen, Leads,
+            Produkte und Aktivitaeten angelegt. Bereits vorhandene Daten
+            werden nicht ueberschrieben.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={handleSeedDemo} disabled={seedingDemo} variant="outline">
+            {seedingDemo ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Wird importiert...
+              </>
+            ) : (
+              <>
+                <Database className="mr-2 h-4 w-4" />
+                Demo-Daten importieren
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
