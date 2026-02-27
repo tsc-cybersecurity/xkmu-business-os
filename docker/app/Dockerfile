@@ -43,9 +43,12 @@ FROM base AS production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN apk add --no-cache netcat-openbsd
+RUN apk add --no-cache netcat-openbsd postgresql16-client
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Backup directory for pre-migration dumps
+RUN mkdir -p /backups && chown nextjs:nodejs /backups
 
 # Standalone Next.js output
 COPY --from=builder /app/public ./public

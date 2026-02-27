@@ -40,6 +40,9 @@ yarn-error.log*
 /public/uploads/
 /data/
 
+# database backups
+/backups/
+
 # vercel
 .vercel
 

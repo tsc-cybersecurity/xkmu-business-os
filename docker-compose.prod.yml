@@ -1,5 +1,9 @@
 version: '3.8'
 
+# ACHTUNG: "docker compose down -v" loescht ALLE Volumes inkl. Datenbank!
+# Nutze "docker compose down" (ohne -v) um Daten zu behalten.
+# Backups: ./docker/scripts/backup.sh -f docker-compose.prod.yml
+
 services:
   # ============================================
   # Next.js Application (Production)
@@ -23,6 +27,7 @@ services:
       - REDIS_URL=redis://redis:6379
     volumes:
       - ./data/uploads:/app/data
+      - db_backups:/backups
     depends_on:
       postgres:
         condition: service_healthy
@@ -43,6 +48,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_backups:/backups
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U xkmu -d xkmu_business_os"]
       interval: 10s
@@ -84,3 +90,4 @@ volumes:
   postgres_data:
   ollama_data:
   redis_data:
+  db_backups:
