@@ -36,6 +36,15 @@ export interface UpdateRoleInput {
 export const RoleService = {
   async seedDefaultRoles(tenantId: string): Promise<void> {
     for (const [roleName, config] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
+      // Pruefen ob Rolle bereits existiert
+      const [existing] = await db
+        .select()
+        .from(roles)
+        .where(and(eq(roles.tenantId, tenantId), eq(roles.name, roleName)))
+        .limit(1)
+
+      if (existing) continue
+
       const [role] = await db
         .insert(roles)
         .values({

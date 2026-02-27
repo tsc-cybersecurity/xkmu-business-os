@@ -6,8 +6,6 @@ import {
   cmsBlockTemplates,
   dinRequirements,
   dinGrants,
-  roles,
-  rolePermissions,
   cmsPages,
   cmsBlocks,
   cmsNavigationItems,
@@ -21,7 +19,7 @@ import {
 import { eq, and, count } from 'drizzle-orm'
 import { requirementsSeedData } from '@/lib/db/seeds/din-requirements.seed'
 import { grantsSeedData } from '@/lib/db/seeds/din-grants.seed'
-import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '@/lib/types/permissions'
+import { RoleService } from '@/lib/services/role.service'
 
 // ============================================
 // AI Prompt Templates
@@ -397,12 +395,12 @@ export class TenantSeedService {
    * Called automatically during registration.
    */
   static async seedStructuralData(tenantId: string): Promise<void> {
+    await RoleService.seedDefaultRoles(tenantId)
     await this.seedAiPromptTemplates(tenantId)
     await this.seedProductCategories(tenantId)
     await this.seedCmsBlockTemplates(tenantId)
     await this.seedCmsBlockTypeDefinitions()
     await this.seedDinData()
-    await this.seedAuditorRole(tenantId)
   }
 
   /**
@@ -493,41 +491,6 @@ export class TenantSeedService {
     if (Number(grantCount) === 0) {
       await db.insert(dinGrants).values(grantsSeedData)
     }
-  }
-
-  private static async seedAuditorRole(tenantId: string): Promise<void> {
-    const auditorConfig = DEFAULT_ROLE_PERMISSIONS['auditor']
-    if (!auditorConfig) return
-
-    const [existing] = await db
-      .select()
-      .from(roles)
-      .where(and(eq(roles.tenantId, tenantId), eq(roles.name, 'auditor')))
-      .limit(1)
-
-    if (existing) return
-
-    const [role] = await db
-      .insert(roles)
-      .values({
-        tenantId,
-        name: 'auditor',
-        displayName: auditorConfig.displayName,
-        description: auditorConfig.description,
-        isSystem: true,
-      })
-      .returning()
-
-    const permissionRows = MODULES.map((module) => ({
-      roleId: role.id,
-      module,
-      canCreate: auditorConfig.permissions[module]?.create ?? false,
-      canRead: auditorConfig.permissions[module]?.read ?? false,
-      canUpdate: auditorConfig.permissions[module]?.update ?? false,
-      canDelete: auditorConfig.permissions[module]?.delete ?? false,
-    }))
-
-    await db.insert(rolePermissions).values(permissionRows)
   }
 
   // ---- Demo seed functions ----
