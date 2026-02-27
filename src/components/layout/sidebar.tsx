@@ -86,6 +86,7 @@ const navigation: NavItem[] = [
     icon: Globe,
     children: [
       { name: 'CMS Seiten', href: '/intern/cms', requiredModule: 'cms' },
+      { name: 'Vorlagen', href: '/intern/cms/templates', requiredModule: 'cms' },
       { name: 'Navigation', href: '/intern/cms/navigation', requiredModule: 'cms' },
       { name: 'Blog', href: '/intern/blog', requiredModule: 'blog' },
     ],

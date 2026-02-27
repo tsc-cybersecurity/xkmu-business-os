@@ -37,6 +37,40 @@ export const CmsBlockTemplateService = {
     return template
   },
 
+  async getById(tenantId: string, templateId: string): Promise<CmsBlockTemplate | null> {
+    const [template] = await db
+      .select()
+      .from(cmsBlockTemplates)
+      .where(
+        and(
+          eq(cmsBlockTemplates.tenantId, tenantId),
+          eq(cmsBlockTemplates.id, templateId)
+        )
+      )
+      .limit(1)
+    return template ?? null
+  },
+
+  async update(tenantId: string, templateId: string, data: Partial<CreateCmsBlockTemplateInput>): Promise<CmsBlockTemplate | null> {
+    const updateData: Record<string, unknown> = {}
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.blockType !== undefined) updateData.blockType = data.blockType
+    if (data.content !== undefined) updateData.content = data.content
+    if (data.settings !== undefined) updateData.settings = data.settings
+
+    const [template] = await db
+      .update(cmsBlockTemplates)
+      .set(updateData)
+      .where(
+        and(
+          eq(cmsBlockTemplates.tenantId, tenantId),
+          eq(cmsBlockTemplates.id, templateId)
+        )
+      )
+      .returning()
+    return template ?? null
+  },
+
   async delete(tenantId: string, templateId: string): Promise<boolean> {
     const result = await db
       .delete(cmsBlockTemplates)
