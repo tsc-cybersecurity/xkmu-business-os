@@ -50,10 +50,10 @@ const ALLOWED_TABLES = new Set([
 ])
 
 // Tables that have a tenant_id column
+// Excluded: tenants, role_permissions, din_requirements, din_grants, cms_block_type_definitions (no tenant_id)
 const TENANT_TABLES = new Set([
   'users',
   'roles',
-  'role_permissions',
   'api_keys',
   'companies',
   'persons',
@@ -75,7 +75,6 @@ const TENANT_TABLES = new Set([
   'cms_blocks',
   'cms_block_templates',
   'cms_navigation_items',
-  'cms_block_type_definitions',
   'blog_posts',
   'media_uploads',
   'company_researches',
