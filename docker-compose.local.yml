@@ -52,7 +52,7 @@ services:
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
     volumes:
-      - uploads_data:/app/data
+      - ./data/uploads:/app/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -117,4 +117,3 @@ networks:
 volumes:
   postgres_data:
   redis_data:
-  uploads_data:

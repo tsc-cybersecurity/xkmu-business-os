@@ -22,7 +22,7 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - REDIS_URL=redis://redis:6379
     volumes:
-      - app_uploads:/app/data
+      - ./data/uploads:/app/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,4 +84,3 @@ volumes:
   postgres_data:
   ollama_data:
   redis_data:
-  app_uploads:
