@@ -25,7 +25,6 @@ import {
   Loader2,
   Pencil,
   Trash2,
-  Eye,
   Copy,
   LayoutTemplate,
   Type,
@@ -126,7 +125,6 @@ export function BlockTemplatesManager() {
   // Dialog state
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
-  const [showPreviewDialog, setShowPreviewDialog] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<BlockTemplate | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -297,11 +295,6 @@ export function BlockTemplatesManager() {
     setShowEditDialog(true)
   }
 
-  const openPreviewDialog = (template: BlockTemplate) => {
-    setSelectedTemplate(template)
-    setShowPreviewDialog(true)
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -344,28 +337,29 @@ export function BlockTemplatesManager() {
         </Button>
       </div>
 
-      {/* Templates Grid */}
+      {/* Templates List */}
       {filteredTemplates.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           Keine Vorlagen gefunden
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-6">
           {filteredTemplates.map((template) => {
             const Icon = getBlockTypeIcon(template.blockType)
             return (
               <div
                 key={template.id}
-                className="rounded-lg border bg-card p-4 space-y-3 hover:shadow-md transition-shadow"
+                className="rounded-lg border bg-card overflow-hidden"
               >
-                <div className="flex items-start justify-between">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
                   <div className="flex items-center gap-3">
                     <div className="rounded-md bg-muted p-2">
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
                       <h3 className="font-medium text-sm leading-tight">{template.name}</h3>
-                      <div className="flex items-center gap-1.5 mt-1">
+                      <div className="flex items-center gap-1.5 mt-0.5">
                         <Badge variant="secondary" className="text-xs">
                           {getBlockTypeName(template.blockType)}
                         </Badge>
@@ -377,47 +371,45 @@ export function BlockTemplatesManager() {
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="flex items-center gap-1 pt-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title="Vorschau"
-                    onClick={() => openPreviewDialog(template)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title="Inhalt kopieren"
-                    onClick={() => handleCopyContent(template)}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    title="Bearbeiten"
-                    onClick={() => openEditDialog(template)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  {!template.isSystem && (
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
-                      title="Loeschen"
-                      onClick={() => handleDelete(template)}
+                      title="Inhalt kopieren"
+                      onClick={() => handleCopyContent(template)}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Copy className="h-4 w-4" />
                     </Button>
-                  )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      title="Bearbeiten"
+                      onClick={() => openEditDialog(template)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    {!template.isSystem && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        title="Loeschen"
+                        onClick={() => handleDelete(template)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                {/* Inline Preview */}
+                <div className="bg-background">
+                  <CmsBlockRenderer
+                    blockType={template.blockType}
+                    content={template.content}
+                    settings={template.settings}
+                  />
                 </div>
               </div>
             )
@@ -548,23 +540,6 @@ export function BlockTemplatesManager() {
         </DialogContent>
       </Dialog>
 
-      {/* Preview Dialog */}
-      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Vorschau: {selectedTemplate?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="border rounded-lg overflow-hidden bg-background">
-            {selectedTemplate && (
-              <CmsBlockRenderer
-                blockType={selectedTemplate.blockType}
-                content={selectedTemplate.content}
-                settings={selectedTemplate.settings}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
