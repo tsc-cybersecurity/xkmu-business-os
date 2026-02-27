@@ -45,13 +45,18 @@ export async function POST(
           doc.mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
           doc.mimeType === 'application/vnd.ms-excel'
         ) {
-          const XLSX = await import('xlsx')
-          const workbook = XLSX.read(buffer, { type: 'buffer' })
+          const ExcelJS = await import('exceljs')
+          const workbook = new ExcelJS.Workbook()
+          await workbook.xlsx.load(buffer.buffer as ArrayBuffer)
           const texts: string[] = []
-          for (const sheetName of workbook.SheetNames) {
-            const sheet = workbook.Sheets[sheetName]
-            texts.push(`=== ${sheetName} ===\n${XLSX.utils.sheet_to_csv(sheet)}`)
-          }
+          workbook.eachSheet((sheet) => {
+            const rows: string[] = []
+            sheet.eachRow((row) => {
+              const values = (row.values as unknown[]).slice(1) // exceljs is 1-indexed
+              rows.push(values.map((v) => (v != null ? String(v) : '')).join(','))
+            })
+            texts.push(`=== ${sheet.name} ===\n${rows.join('\n')}`)
+          })
           extractedText = texts.join('\n\n')
         } else if (doc.mimeType === 'text/plain') {
           extractedText = buffer.toString('utf-8')
