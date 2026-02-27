@@ -113,6 +113,28 @@ services:
     networks:
       - xkmu-network
 
+  # ============================================
+  # pgAdmin 4 (Datenbank-Verwaltung)
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: xkmu-pgadmin
+    restart: unless-stopped
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - xkmu-network
+
 networks:
   xkmu-network:
     driver: bridge
@@ -121,3 +143,4 @@ volumes:
   postgres_data:
   redis_data:
   db_backups:
+  pgadmin_data:
