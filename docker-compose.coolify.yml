@@ -38,6 +38,8 @@ services:
     restart: always
     expose:
       - "3000"
+    labels:
+      - "traefik.http.services.app-g0g8wkc4kk8g8wo00s40ckk4.loadbalancer.server.port=3000"
     environment:
       - NODE_ENV=production
       - COOLIFY=true
