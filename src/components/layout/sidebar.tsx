@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Brain,
   Database,
+  Workflow,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
@@ -98,6 +99,7 @@ const navigation: NavItem[] = [
       { name: 'Business Intelligence', href: '/intern/business-intelligence', requiredModule: 'business_intelligence' },
       { name: 'Marketing', href: '/intern/marketing', requiredModule: 'marketing' },
       { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
+      { name: 'n8n Workflows', href: '/intern/n8n-workflows', requiredModule: 'n8n_workflows' },
     ],
   },
   {
@@ -123,6 +125,7 @@ const navigation: NavItem[] = [
       { name: 'API-Schlüssel', href: '/intern/settings/api-keys', requiredModule: 'api_keys' },
       { name: 'Organisation', href: '/intern/settings/tenant', requiredModule: 'settings' },
       { name: 'App-Dokumentation', href: '/intern/settings/app-docs', requiredModule: 'settings' },
+      { name: 'n8n-Verbindung', href: '/intern/settings/n8n', requiredModule: 'n8n_workflows' },
       { name: 'Datenbank', href: '/intern/settings/database', requiredModule: 'database' },
     ],
   },
@@ -182,7 +185,7 @@ export function Sidebar() {
         </Button>
       </div>
 
-      <nav className="flex-1 space-y-1 p-2">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-2">
         {navigation.map((item) => {
           // Top-Level mit requiredModule pruefen
           if (item.href && !canAccessModule(item.requiredModule)) return null
