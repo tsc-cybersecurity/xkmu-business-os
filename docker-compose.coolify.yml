@@ -90,7 +90,6 @@ services:
       start_period: 60s
     networks:
       - coolify
-      - internal
 
   # ============================================
   # PostgreSQL Database
@@ -112,7 +111,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - internal
+      - coolify
 
   # ============================================
   # Redis (Session Cache)
@@ -129,7 +128,7 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - internal
+      - coolify
 
   # ============================================
   # pgAdmin 4 (Datenbank-Verwaltung)
@@ -164,13 +163,10 @@ services:
         condition: service_healthy
     networks:
       - coolify
-      - internal
 
 networks:
   coolify:
     external: true
-  internal:
-    driver: bridge
 
 volumes:
   postgres_data:
