@@ -7,9 +7,10 @@
 # 1. Create new project > Docker Compose
 # 2. Point to this repository
 # 3. Set docker-compose file: docker-compose.coolify.yml
-# 4. Enable "Raw Compose Deployment" in Advanced settings
-# 5. Configure environment variables in Coolify UI
-# 6. Deploy!
+# 4. Set Domains for app: https://boss.xkmu.de:3000
+# 5. Set Domains for pgadmin: https://boss-db.xkmu.de
+# 6. Configure environment variables in Coolify UI
+# 7. Deploy!
 #
 # Required Environment Variables (set in Coolify):
 # - DB_PASSWORD: Strong database password
@@ -36,23 +37,6 @@ services:
     restart: always
     expose:
       - "3000"
-    labels:
-      - traefik.enable=true
-      # HTTP -> HTTPS redirect
-      - traefik.http.routers.xkmu-app-http.entryPoints=http
-      - traefik.http.routers.xkmu-app-http.rule=Host(`boss.xkmu.de`)
-      - traefik.http.routers.xkmu-app-http.middlewares=redirect-to-https
-      # HTTPS
-      - traefik.http.routers.xkmu-app-https.entryPoints=https
-      - traefik.http.routers.xkmu-app-https.rule=Host(`boss.xkmu.de`)
-      - traefik.http.routers.xkmu-app-https.tls=true
-      - traefik.http.routers.xkmu-app-https.tls.certresolver=letsencrypt
-      # Service port
-      - traefik.http.services.xkmu-app.loadbalancer.server.port=3000
-      # Middlewares
-      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
-      - traefik.http.middlewares.gzip.compress=true
-      - traefik.http.routers.xkmu-app-https.middlewares=gzip
     environment:
       - NODE_ENV=production
       - COOLIFY=true
@@ -88,8 +72,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
-    networks:
-      - coolify
 
   # ============================================
   # PostgreSQL Database
@@ -110,8 +92,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    networks:
-      - coolify
 
   # ============================================
   # Redis (Session Cache)
@@ -127,8 +107,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-    networks:
-      - coolify
 
   # ============================================
   # pgAdmin 4 (Datenbank-Verwaltung)
@@ -138,19 +116,6 @@ services:
     restart: always
     expose:
       - "80"
-    labels:
-      - traefik.enable=true
-      # HTTP -> HTTPS redirect
-      - traefik.http.routers.xkmu-pgadmin-http.entryPoints=http
-      - traefik.http.routers.xkmu-pgadmin-http.rule=Host(`boss-db.xkmu.de`)
-      - traefik.http.routers.xkmu-pgadmin-http.middlewares=redirect-to-https
-      # HTTPS
-      - traefik.http.routers.xkmu-pgadmin-https.entryPoints=https
-      - traefik.http.routers.xkmu-pgadmin-https.rule=Host(`boss-db.xkmu.de`)
-      - traefik.http.routers.xkmu-pgadmin-https.tls=true
-      - traefik.http.routers.xkmu-pgadmin-https.tls.certresolver=letsencrypt
-      # Service port
-      - traefik.http.services.xkmu-pgadmin.loadbalancer.server.port=80
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
@@ -161,12 +126,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    networks:
-      - coolify
-
-networks:
-  coolify:
-    external: true
 
 volumes:
   postgres_data:
