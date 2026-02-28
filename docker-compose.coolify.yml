@@ -36,8 +36,10 @@ services:
       dockerfile: docker/app/Dockerfile
       target: production
     restart: always
-    ports:
+    expose:
       - "3000"
+    labels:
+      - traefik.http.services.app.loadbalancer.server.port=3000
     environment:
       - NODE_ENV=production
       - COOLIFY=true
