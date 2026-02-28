@@ -63,6 +63,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   marketingTemplates: many(marketingTemplates),
   socialMediaTopics: many(socialMediaTopics),
   socialMediaPosts: many(socialMediaPosts),
+  n8nConnections: many(n8nConnections),
+  n8nWorkflowLogs: many(n8nWorkflowLogs),
 }))
 
 // ============================================
@@ -1564,3 +1566,63 @@ export type NewSocialMediaTopic = typeof socialMediaTopics.$inferInsert
 
 export type SocialMediaPost = typeof socialMediaPosts.$inferSelect
 export type NewSocialMediaPost = typeof socialMediaPosts.$inferInsert
+
+// ============================================
+// n8n Connections (pro Tenant)
+// ============================================
+export const n8nConnections = pgTable('n8n_connections', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  apiUrl: varchar('api_url', { length: 500 }).notNull(),
+  apiKey: text('api_key').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_n8n_connections_tenant_id').on(table.tenantId),
+])
+
+export const n8nConnectionsRelations = relations(n8nConnections, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [n8nConnections.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+// ============================================
+// n8n Workflow Logs
+// ============================================
+export const n8nWorkflowLogs = pgTable('n8n_workflow_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  n8nWorkflowId: varchar('n8n_workflow_id', { length: 100 }),
+  n8nWorkflowName: varchar('n8n_workflow_name', { length: 255 }),
+  prompt: text('prompt'),
+  generatedJson: jsonb('generated_json'),
+  status: varchar('status', { length: 20 }).notNull().default('draft'), // draft, deployed, active, error
+  errorMessage: text('error_message'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_n8n_workflow_logs_tenant_id').on(table.tenantId),
+  index('idx_n8n_workflow_logs_status').on(table.tenantId, table.status),
+])
+
+export const n8nWorkflowLogsRelations = relations(n8nWorkflowLogs, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [n8nWorkflowLogs.tenantId],
+    references: [tenants.id],
+  }),
+  creator: one(users, {
+    fields: [n8nWorkflowLogs.createdBy],
+    references: [users.id],
+  }),
+}))
+
+export type N8nConnection = typeof n8nConnections.$inferSelect
+export type NewN8nConnection = typeof n8nConnections.$inferInsert
+
+export type N8nWorkflowLog = typeof n8nWorkflowLogs.$inferSelect
+export type NewN8nWorkflowLog = typeof n8nWorkflowLogs.$inferInsert

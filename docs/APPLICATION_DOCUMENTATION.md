@@ -1404,6 +1404,76 @@ Jede Seite und jeder Blog-Beitrag unterstützt:
 
 ---
 
+## n8n Workflow-Integration
+
+### Überblick
+Das BusinessOS bietet eine vollständige n8n-Integration für Workflow-Automatisierung:
+- Verbindung zu n8n Cloud oder Self-Hosted Instanzen
+- Workflows auflisten, erstellen, aktivieren, ausführen und löschen
+- KI-gestützter Workflow-Generator: Workflows aus natürlicher Sprache generieren
+- Automatisches Deployment generierter Workflows auf n8n
+
+### Seiten
+| Route | Beschreibung |
+|-------|-------------|
+| `/intern/n8n-workflows` | Workflow-Übersicht |
+| `/intern/n8n-workflows/new` | Neuen Workflow mit KI erstellen |
+| `/intern/n8n-workflows/:id` | Workflow-Details und Ausführungen |
+| `/intern/settings/n8n` | n8n-Verbindung konfigurieren |
+
+### API-Endpunkte
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/n8n/connection` | Verbindung anzeigen |
+| POST | `/api/v1/n8n/connection` | Verbindung erstellen/aktualisieren |
+| POST | `/api/v1/n8n/connection/test` | Verbindung testen |
+| GET | `/api/v1/n8n/workflows` | Workflows auflisten |
+| POST | `/api/v1/n8n/workflows` | Workflow erstellen (JSON) |
+| GET | `/api/v1/n8n/workflows/:id` | Workflow-Details |
+| PUT | `/api/v1/n8n/workflows/:id` | Workflow aktualisieren |
+| DELETE | `/api/v1/n8n/workflows/:id` | Workflow löschen |
+| POST | `/api/v1/n8n/workflows/:id/activate` | Aktivieren/Deaktivieren |
+| POST | `/api/v1/n8n/workflows/:id/execute` | Workflow ausführen |
+| POST | `/api/v1/n8n/workflows/generate` | KI-Workflow-Generator |
+
+### DB-Tabellen
+- `n8n_connections` - n8n-Verbindungsdaten pro Tenant
+- `n8n_workflow_logs` - Generierungs- und Deploy-Logs
+
+### Berechtigungen
+Modul: `n8n_workflows` (CRUD) - konfigurierbar über Rollenverwaltung
+
+---
+
+## kie.ai Video-Generierung
+
+### Überblick
+kie.ai ist als KI-Provider integriert für Video-Generierung mit Kling 3.0:
+- Text-to-Video und Image-to-Video
+- Asynchrone Verarbeitung mit Task-Status-Abfrage
+- Integration in n8n-Workflows möglich
+
+### Provider anlegen
+In Einstellungen > Integrations als Provider-Typ `kie` mit API Key anlegen.
+
+### API-Endpunkte
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| POST | `/api/v1/kie/generate` | Video-Generierung starten |
+| GET | `/api/v1/kie/status/:taskId` | Status abfragen |
+
+### Parameter für Video-Generierung
+| Parameter | Typ | Beschreibung |
+|-----------|-----|-------------|
+| `prompt` | string | Beschreibung des Videos |
+| `model` | string | z.B. `market/kling/kling-3.0` |
+| `aspectRatio` | string | `9:16`, `16:9`, `1:1` |
+| `mode` | string | `std` oder `pro` |
+| `sound` | boolean | Audio generieren |
+| `imageUrls` | string[] | Bilder für Image-to-Video |
+
+---
+
 ## Anhang: Umgebungsvariablen
 
 | Variable | Beschreibung |
@@ -1415,6 +1485,7 @@ Jede Seite und jeder Blog-Beitrag unterstützt:
 | `OPENAI_API_KEY` | OpenAI API-Key |
 | `OPENROUTER_API_KEY` | OpenRouter API-Key |
 | `DEEPSEEK_API_KEY` | Deepseek API-Key |
+| `KIE_API_KEY` | kie.ai API-Key (optional, alternativ per DB) |
 | `SMTP_HOST` | SMTP-Server |
 | `SMTP_PORT` | SMTP-Port |
 | `SMTP_USER` | SMTP-Benutzername |
@@ -1422,4 +1493,4 @@ Jede Seite und jeder Blog-Beitrag unterstützt:
 
 ---
 
-*Diese Dokumentation wurde automatisch am 2026-02-24 aus der Codebasis generiert.*
+*Diese Dokumentation wurde automatisch am 2026-02-28 aus der Codebasis generiert.*

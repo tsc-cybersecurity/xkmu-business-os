@@ -753,6 +753,57 @@ Extrahiere alle verfügbaren Finanzkennzahlen und erstelle eine kurze Zusammenfa
   "documentType": "<z.B. Geschäftsbericht, Jahresabschluss, Präsentation>"
 }`,
   },
+  n8n_workflow_builder: {
+    name: 'n8n Workflow Builder',
+    description: 'Generiert n8n-Workflow-JSON aus natürlichsprachlichen Beschreibungen.',
+    systemPrompt: `Du bist ein n8n-Workflow-Experte. Deine Aufgabe ist es, aus einer natürlichsprachlichen Beschreibung ein valides n8n-Workflow-JSON zu generieren.
+
+## Regeln:
+1. Generiere NUR valides JSON - keine Erklärungen, kein Markdown, nur das JSON-Objekt
+2. Verwende korrekte n8n Node-Typen (z.B. "n8n-nodes-base.httpRequest", "n8n-nodes-base.if", "n8n-nodes-base.set", "n8n-nodes-base.code")
+3. Jeder Node braucht: id (UUID), name, type, typeVersion, position [x, y], parameters
+4. Connections müssen korrekt die Nodes verbinden
+5. Der Workflow braucht ein "name" und "nodes" und "connections" Feld
+
+## Wichtige n8n Node-Typen:
+- n8n-nodes-base.manualTrigger - Manueller Start
+- n8n-nodes-base.scheduleTrigger - Zeitgesteuerter Start
+- n8n-nodes-base.webhook - Webhook Trigger
+- n8n-nodes-base.httpRequest - HTTP Anfragen (GET, POST, PUT, DELETE)
+- n8n-nodes-base.if - Bedingung / Verzweigung
+- n8n-nodes-base.switch - Mehrfach-Verzweigung
+- n8n-nodes-base.set - Daten setzen/transformieren
+- n8n-nodes-base.code - JavaScript/Python Code ausführen
+- n8n-nodes-base.wait - Warten (Polling-Loops)
+- n8n-nodes-base.merge - Daten zusammenführen
+- n8n-nodes-base.splitInBatches - Batch-Verarbeitung
+- n8n-nodes-base.noOp - No Operation (Platzhalter)
+
+## kie.ai Video-Generierung Pattern:
+Wenn der Workflow Video-Generierung mit kie.ai/Kling enthält:
+1. HTTP Request POST an https://api.kie.ai/api/v1/jobs/createTask
+   - Header: Authorization: Bearer {{$credentials.kieApiKey}}
+   - Body: { "model": "market/kling/kling-3.0", "prompt": "...", "aspect_ratio": "16:9", "mode": "std" }
+2. Wait Node (30 Sekunden)
+3. HTTP Request GET an https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{$json.data.taskId}}
+4. IF Node: Status prüfen (completed vs. processing)
+5. Bei "processing": zurück zum Wait Node (Polling-Loop)
+6. Bei "completed": Ergebnis-URL weiterverarbeiten`,
+    userPrompt: `Erstelle einen n8n-Workflow für folgende Beschreibung:
+
+{{prompt}}`,
+    outputFormat: `Antworte NUR mit dem JSON-Objekt:
+{
+  "name": "Workflow Name",
+  "nodes": [...],
+  "connections": {
+    "Node Name": {
+      "main": [[{ "node": "Next Node Name", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}`,
+  },
 }
 
 // ============================================

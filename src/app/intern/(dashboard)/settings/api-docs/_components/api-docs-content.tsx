@@ -28,6 +28,8 @@ export function ApiDocsContent() {
         <TabsTrigger value="webhooks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Webhooks</TabsTrigger>
         <TabsTrigger value="backup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Backup</TabsTrigger>
         <TabsTrigger value="public" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Oeffentlich</TabsTrigger>
+        <TabsTrigger value="n8n" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">n8n</TabsTrigger>
+        <TabsTrigger value="kie" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">kie.ai</TabsTrigger>
         <TabsTrigger value="admin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Admin</TabsTrigger>
       </TabsList>
 
@@ -1188,6 +1190,61 @@ export function ApiDocsContent() {
             <EndpointDoc method="GET" path="/api/v1/public/pages/:slug" description="CMS-Seite nach Slug (oeffentlich)" responseExample={{ title: 'Ueber uns', blocks: [{ type: 'hero', content: {} }] }} />
             <EndpointDoc method="GET" path="/api/v1/public/navigation" description="Website-Navigation (oeffentlich)" responseExample={{ data: [{ label: 'Startseite', url: '/', children: [] }] }} />
             <EndpointDoc method="POST" path="/api/v1/contact" description="Kontaktformular absenden (keine Auth)" requestBody={{ name: 'Max Mustermann', email: 'max@example.com', subject: 'Anfrage', message: 'Ich interessiere mich fuer...' }} responseExample={{ message: 'Nachricht gesendet' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* n8n Workflows */}
+      <TabsContent value="n8n" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>n8n Verbindung</CardTitle>
+            <CardDescription>n8n-Instanz verbinden und verwalten</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/n8n/connection" description="n8n-Verbindung anzeigen" responseExample={{ success: true, data: { id: '...', name: 'n8n Cloud', apiUrl: 'https://your.app.n8n.cloud', apiKey: '****abcd', isActive: true } }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/connection" description="n8n-Verbindung erstellen oder aktualisieren" requestBody={{ name: 'n8n Cloud', apiUrl: 'https://your.app.n8n.cloud', apiKey: 'n8n_api_...' }} responseExample={{ success: true, data: { id: '...', name: 'n8n Cloud', apiUrl: 'https://your.app.n8n.cloud', apiKey: '****_...' } }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/connection/test" description="n8n-Verbindung testen" responseExample={{ success: true, data: { success: true, message: 'Verbindung erfolgreich' } }} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>n8n Workflows</CardTitle>
+            <CardDescription>Workflows auflisten, erstellen, steuern</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/n8n/workflows" description="Alle Workflows auflisten" responseExample={{ success: true, data: [{ id: '1', name: 'Video Generator', active: true }] }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/workflows" description="Workflow erstellen (JSON)" requestBody={{ name: 'Mein Workflow', nodes: [], connections: {}, settings: { executionOrder: 'v1' } }} responseExample={{ success: true, data: { id: '1', name: 'Mein Workflow', active: false } }} />
+            <EndpointDoc method="GET" path="/api/v1/n8n/workflows/:id" description="Workflow-Details abrufen" responseExample={{ success: true, data: { id: '1', name: 'Video Generator', active: true, nodes: [] } }} />
+            <EndpointDoc method="PUT" path="/api/v1/n8n/workflows/:id" description="Workflow aktualisieren" requestBody={{ name: 'Neuer Name' }} responseExample={{ success: true, data: { id: '1', name: 'Neuer Name' } }} />
+            <EndpointDoc method="DELETE" path="/api/v1/n8n/workflows/:id" description="Workflow loeschen" responseExample={{ success: true, data: { deleted: true } }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/workflows/:id/activate" description="Workflow aktivieren/deaktivieren" requestBody={{ active: true }} responseExample={{ success: true, data: { id: '1', active: true } }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/workflows/:id/execute" description="Workflow ausfuehren" requestBody={{ data: { key: 'value' } }} responseExample={{ success: true, data: { executionId: '123' } }} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>KI-Workflow-Generator</CardTitle>
+            <CardDescription>Workflows aus natürlicher Sprache generieren</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="POST" path="/api/v1/n8n/workflows/generate" description="Workflow aus Beschreibung generieren" requestBody={{ prompt: 'Erstelle einen Workflow der...', autoDeploy: false }} responseExample={{ success: true, data: { workflowJson: { name: 'Generierter Workflow', nodes: [] }, logId: '...', status: 'draft' } }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* kie.ai Video-Generierung */}
+      <TabsContent value="kie" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>kie.ai Video-Generierung</CardTitle>
+            <CardDescription>Videos mit Kling 3.0 generieren und Status abfragen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="POST" path="/api/v1/kie/generate" description="Video-Generierung starten" requestBody={{ prompt: 'Cinematic video of a product showcase', model: 'market/kling/kling-3.0', aspectRatio: '16:9', mode: 'std', sound: false }} responseExample={{ success: true, data: { taskId: 'task_abc123' } }} />
+            <EndpointDoc method="GET" path="/api/v1/kie/status/:taskId" description="Video-Generierungs-Status abfragen" responseExample={{ success: true, data: { taskId: 'task_abc123', status: 'completed', progress: 100, resultUrl: 'https://...' } }} />
           </CardContent>
         </Card>
       </TabsContent>

@@ -44,6 +44,7 @@ export function AppDocsContent() {
         <TabsTrigger value="cyber" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Cybersecurity</TabsTrigger>
         <TabsTrigger value="bi" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">BI</TabsTrigger>
         <TabsTrigger value="ai" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">KI</TabsTrigger>
+        <TabsTrigger value="n8n" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">n8n Workflows</TabsTrigger>
         <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Einstellungen</TabsTrigger>
         <TabsTrigger value="public" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Oeffentlich</TabsTrigger>
       </TabsList>
@@ -1099,6 +1100,46 @@ withPermission(request, 'companies', 'read', async (req, session) => {
       </TabsContent>
 
       {/* ===== EINSTELLUNGEN ===== */}
+      {/* n8n Workflows & kie.ai */}
+      <TabsContent value="n8n" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>n8n Workflow-Automatisierung</CardTitle>
+            <CardDescription>Workflows erstellen, verwalten und per KI generieren lassen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">Funktionen</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>n8n-Verbindung:</strong> Verbinden Sie Ihre n8n Cloud- oder Self-Hosted-Instanz unter Einstellungen &gt; n8n-Verbindung</span></li>
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Workflow-Uebersicht:</strong> Alle Workflows Ihrer n8n-Instanz auflisten, Status sehen, aktivieren/deaktivieren</span></li>
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>KI-Workflow-Generator:</strong> Beschreiben Sie einen Workflow in natuerlicher Sprache und lassen Sie die KI ein n8n-Workflow-JSON generieren</span></li>
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Auto-Deploy:</strong> Generierte Workflows koennen direkt auf Ihre n8n-Instanz deployt werden</span></li>
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Workflow ausfuehren:</strong> Workflows direkt aus dem BusinessOS heraus starten</span></li>
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">kie.ai Video-Generierung</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Provider:</strong> kie.ai als KI-Provider anlegen (Einstellungen &gt; Integrations) mit API Key</span></li>
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Modelle:</strong> Kling 3.0 (Text-to-Video), Image-to-Video</span></li>
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Parameter:</strong> Seitenverhaeltnis (9:16, 16:9, 1:1), Modus (Standard/Pro), Sound</span></li>
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>API:</strong> POST /api/v1/kie/generate zum Starten, GET /api/v1/kie/status/:taskId zum Abfragen</span></li>
+              </ul>
+            </div>
+            <div className="space-y-3">
+              <h4 className="font-semibold text-sm">Seiten</h4>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>/intern/n8n-workflows - Workflow-Uebersicht</li>
+                <li>/intern/n8n-workflows/new - Neuen Workflow mit KI erstellen</li>
+                <li>/intern/n8n-workflows/:id - Workflow-Details und Ausfuehrungen</li>
+                <li>/intern/settings/n8n - n8n-Verbindung konfigurieren</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
       <TabsContent value="settings" className="space-y-4">
         <Card>
           <CardHeader>

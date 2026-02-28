@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSession } from '@/lib/auth/session'
-import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Upload, Book, UserPlus } from 'lucide-react'
+import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Upload, Book, UserPlus, Workflow } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function SettingsPage() {
@@ -124,6 +124,20 @@ export default async function SettingsPage() {
                 <CardTitle className="mt-4">Webhooks</CardTitle>
                 <CardDescription>
                   HTTP-Callbacks fuer externe Automatisierungen
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
+
+        {isAdmin && (
+          <Link href="/intern/settings/n8n">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <Workflow className="h-8 w-8 text-muted-foreground" />
+                <CardTitle className="mt-4">n8n-Verbindung</CardTitle>
+                <CardDescription>
+                  n8n Workflow-Automatisierung verbinden und verwalten
                 </CardDescription>
               </CardHeader>
             </Card>

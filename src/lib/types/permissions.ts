@@ -27,6 +27,7 @@ export const MODULES = [
   'marketing',
   'social_media',
   'database',
+  'n8n_workflows',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -71,6 +72,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   marketing: 'Marketing',
   social_media: 'Social Media',
   database: 'Datenbank-Admin',
+  n8n_workflows: 'n8n Workflows',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {

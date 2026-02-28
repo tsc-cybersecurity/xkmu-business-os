@@ -102,6 +102,9 @@ function createProviderFromConfig(config: AiProvider): AIProvider {
         model: config.model,
       })
     }
+    case 'kie':
+      // kie.ai is a video generation provider, not a text AI provider
+      throw new Error('kie.ai ist ein Video-Generierungs-Provider, kein Text-KI-Provider')
     case 'firecrawl':
       // Firecrawl is not an AI provider, skip
       throw new Error('Firecrawl is not an AI provider')
