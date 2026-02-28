@@ -20,6 +20,10 @@
 # - GOOGLE_AI_API_KEY: For Gemini AI
 # - OPENAI_API_KEY: For OpenAI
 # - SMTP_* variables for email
+# - PGADMIN_EMAIL: pgAdmin login email (default: admin@example.com)
+# - PGADMIN_PASSWORD: pgAdmin login password (default: admin123)
+#
+# pgAdmin: Set FQDN on pgadmin service in Coolify (e.g. https://dbadmin.your-domain.com)
 # ============================================
 
 services:
@@ -105,7 +109,27 @@ services:
       timeout: 5s
       retries: 3
 
+  # ============================================
+  # pgAdmin 4 (Datenbank-Verwaltung)
+  # ============================================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    expose:
+      - "80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:
   db_backups:
+  pgadmin_data:
