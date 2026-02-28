@@ -387,6 +387,9 @@ export class TenantSeedService {
     await this.seedCmsBlockTemplates(tenantId)
     await this.seedCmsBlockTypeDefinitions()
     await this.seedDinData()
+    // CMS-Seiten und Navigation sind essentiell (Startseite, Impressum, AGB, Datenschutz)
+    await this.seedCmsPages(tenantId)
+    await this.seedNavigation(tenantId)
   }
 
   /**
