@@ -7,14 +7,14 @@
 # 1. Create new project > Docker Compose
 # 2. Point to this repository
 # 3. Set docker-compose file: docker-compose.coolify.yml
-# 4. Set FQDN on app service to https://your-domain.com
+# 4. Enable "Raw Compose Deployment" in Advanced settings
 # 5. Configure environment variables in Coolify UI
 # 6. Deploy!
 #
 # Required Environment Variables (set in Coolify):
 # - DB_PASSWORD: Strong database password
 # - JWT_SECRET: Min 32 character secret for auth
-# - NEXT_PUBLIC_APP_URL: Public URL (e.g. https://app.example.com)
+# - NEXT_PUBLIC_APP_URL: https://boss.xkmu.de
 #
 # Optional Environment Variables:
 # - GOOGLE_AI_API_KEY: For Gemini AI
@@ -22,8 +22,6 @@
 # - SMTP_* variables for email
 # - PGADMIN_EMAIL: pgAdmin login email (default: admin@example.com)
 # - PGADMIN_PASSWORD: pgAdmin login password (default: admin123)
-#
-# pgAdmin: Set FQDN on pgadmin service in Coolify (e.g. https://dbadmin.your-domain.com)
 # ============================================
 
 services:
@@ -39,14 +37,29 @@ services:
     expose:
       - "3000"
     labels:
-      - traefik.http.services.app.loadbalancer.server.port=3000
+      - traefik.enable=true
+      # HTTP -> HTTPS redirect
+      - traefik.http.routers.xkmu-app-http.entryPoints=http
+      - traefik.http.routers.xkmu-app-http.rule=Host(`boss.xkmu.de`)
+      - traefik.http.routers.xkmu-app-http.middlewares=redirect-to-https
+      # HTTPS
+      - traefik.http.routers.xkmu-app-https.entryPoints=https
+      - traefik.http.routers.xkmu-app-https.rule=Host(`boss.xkmu.de`)
+      - traefik.http.routers.xkmu-app-https.tls=true
+      - traefik.http.routers.xkmu-app-https.tls.certresolver=letsencrypt
+      # Service port
+      - traefik.http.services.xkmu-app.loadbalancer.server.port=3000
+      # Middlewares
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.gzip.compress=true
+      - traefik.http.routers.xkmu-app-https.middlewares=gzip
     environment:
       - NODE_ENV=production
       - COOLIFY=true
       - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD}@postgres:5432/xkmu_business_os
       - DATABASE_SSL=false
       - JWT_SECRET=${JWT_SECRET}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://boss.xkmu.de}
       # AI Providers (optional - configure in app settings or here)
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -75,6 +88,9 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    networks:
+      - coolify
+      - internal
 
   # ============================================
   # PostgreSQL Database
@@ -95,6 +111,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - internal
 
   # ============================================
   # Redis (Session Cache)
@@ -110,6 +128,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - internal
 
   # ============================================
   # pgAdmin 4 (Datenbank-Verwaltung)
@@ -119,6 +139,19 @@ services:
     restart: always
     expose:
       - "80"
+    labels:
+      - traefik.enable=true
+      # HTTP -> HTTPS redirect
+      - traefik.http.routers.xkmu-pgadmin-http.entryPoints=http
+      - traefik.http.routers.xkmu-pgadmin-http.rule=Host(`boss-db.xkmu.de`)
+      - traefik.http.routers.xkmu-pgadmin-http.middlewares=redirect-to-https
+      # HTTPS
+      - traefik.http.routers.xkmu-pgadmin-https.entryPoints=https
+      - traefik.http.routers.xkmu-pgadmin-https.rule=Host(`boss-db.xkmu.de`)
+      - traefik.http.routers.xkmu-pgadmin-https.tls=true
+      - traefik.http.routers.xkmu-pgadmin-https.tls.certresolver=letsencrypt
+      # Service port
+      - traefik.http.services.xkmu-pgadmin.loadbalancer.server.port=80
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
@@ -129,6 +162,15 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - coolify
+      - internal
+
+networks:
+  coolify:
+    external: true
+  internal:
+    driver: bridge
 
 volumes:
   postgres_data:
