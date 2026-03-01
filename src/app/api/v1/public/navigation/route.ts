@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { tenants } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { asc } from 'drizzle-orm'
 import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
 
 export async function GET(request: NextRequest) {
@@ -16,11 +16,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Resolve tenant (public endpoint - use first active tenant)
+    // Resolve tenant (public endpoint - use first tenant by creation date)
     const [tenant] = await db
       .select({ id: tenants.id })
       .from(tenants)
-      .where(eq(tenants.status, 'active'))
+      .orderBy(asc(tenants.createdAt))
       .limit(1)
 
     if (!tenant) {
