@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Plus, Trash2, Pencil, Tags } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Trash2, Pencil, Tags, CalendarDays, Brain } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Topic {
@@ -26,11 +27,15 @@ interface Topic {
 }
 
 export default function SocialMediaTopicsPage() {
+  const router = useRouter();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [generateCount, setGenerateCount] = useState(5);
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -116,6 +121,29 @@ export default function SocialMediaTopicsPage() {
     }
   };
 
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      const response = await fetch('/api/v1/social-media/topics/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ count: generateCount }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success(`${data.data.length} Themen generiert`);
+        setShowGenerateDialog(false);
+        fetchTopics();
+      } else {
+        toast.error(data.error?.message || 'Generierung fehlgeschlagen');
+      }
+    } catch {
+      toast.error('Generierung fehlgeschlagen');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -141,59 +169,98 @@ export default function SocialMediaTopicsPage() {
             <p className="text-muted-foreground mt-1">Verwalten Sie Ihre Content-Themen</p>
           </div>
         </div>
-        <Dialog open={showDialog} onOpenChange={handleDialogClose}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Neues Thema
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingId ? 'Thema bearbeiten' : 'Neues Thema erstellen'}</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Name *</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  placeholder="Themenname"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Beschreibung</Label>
-                <Textarea
-                  value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  placeholder="Optionale Beschreibung"
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Farbe</Label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={form.color}
-                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                    className="h-10 w-10 rounded border cursor-pointer"
-                  />
+        <div className="flex gap-2">
+          <Dialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Brain className="h-4 w-4 mr-2" />
+                KI-Themen generieren
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Themen aus Unternehmensprofil generieren</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Die KI generiert Themenvorschlaege basierend auf Ihrem Business-Intelligence-Profil
+                  (Branche, Geschaeftsmodell, Zielgruppe, Staerken).
+                </p>
+                <div className="space-y-2">
+                  <Label>Anzahl Themen</Label>
                   <Input
-                    value={form.color}
-                    onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
-                    placeholder="#3b82f6"
-                    className="w-32"
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={generateCount}
+                    onChange={(e) => setGenerateCount(parseInt(e.target.value) || 5)}
                   />
                 </div>
+                <Button onClick={handleGenerate} disabled={generating} className="w-full">
+                  {generating ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Brain className="h-4 w-4 mr-2" />
+                  )}
+                  {generating ? 'Generiere Themen...' : 'Themen generieren'}
+                </Button>
               </div>
-              <Button onClick={handleSave} disabled={saving} className="w-full">
-                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {editingId ? 'Aktualisieren' : 'Erstellen'}
+            </DialogContent>
+          </Dialog>
+          <Dialog open={showDialog} onOpenChange={handleDialogClose}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Neues Thema
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingId ? 'Thema bearbeiten' : 'Neues Thema erstellen'}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Name *</Label>
+                  <Input
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    placeholder="Themenname"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Beschreibung</Label>
+                  <Textarea
+                    value={form.description}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    placeholder="Optionale Beschreibung"
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Farbe</Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={form.color}
+                      onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                      className="h-10 w-10 rounded border cursor-pointer"
+                    />
+                    <Input
+                      value={form.color}
+                      onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+                      placeholder="#3b82f6"
+                      className="w-32"
+                    />
+                  </div>
+                </div>
+                <Button onClick={handleSave} disabled={saving} className="w-full">
+                  {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {editingId ? 'Aktualisieren' : 'Erstellen'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -225,11 +292,20 @@ export default function SocialMediaTopicsPage() {
                   </div>
                 </div>
               </CardHeader>
-              {topic.description && (
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">{topic.description}</p>
-                </CardContent>
-              )}
+              <CardContent>
+                {topic.description && (
+                  <p className="text-sm text-muted-foreground mb-3">{topic.description}</p>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => router.push(`/intern/social-media/content-plan?topic=${encodeURIComponent(topic.name)}`)}
+                >
+                  <CalendarDays className="h-4 w-4 mr-2" />
+                  Contentplan erstellen
+                </Button>
+              </CardContent>
             </Card>
           ))
         )}

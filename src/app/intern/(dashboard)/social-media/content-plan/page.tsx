@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,14 +42,17 @@ const platformLabels: Record<string, string> = {
 
 export default function ContentPlanPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [plan, setPlan] = useState<ContentPlanItem[]>([]);
 
+  const topicFromQuery = searchParams.get('topic') || '';
+
   const [form, setForm] = useState({
     platforms: ['linkedin'] as string[],
-    topics: '',
+    topics: topicFromQuery,
     count: 7,
     tone: 'professional',
   });

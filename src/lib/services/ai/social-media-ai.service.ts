@@ -121,6 +121,55 @@ export const SocialMediaAIService = {
     }
   },
 
+  async generateTopics(
+    params: {
+      count: number
+      companyName?: string
+      industry?: string
+      businessModel?: string
+      targetGroup?: string
+      strengths?: string
+    },
+    context: AIRequestContext
+  ): Promise<Array<{ name: string; description: string }>> {
+    const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'social_media_topic_generation')
+
+    const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
+      count: String(params.count),
+      companyName: params.companyName,
+      industry: params.industry,
+      businessModel: params.businessModel,
+      targetGroup: params.targetGroup,
+      strengths: params.strengths,
+    })
+
+    const fullPrompt = template.outputFormat
+      ? `${userPrompt}\n\n${template.outputFormat}`
+      : userPrompt
+
+    const response = await AIService.completeWithContext(fullPrompt, context, {
+      maxTokens: 3000,
+      temperature: 0.8,
+      systemPrompt: template.systemPrompt,
+    })
+
+    const jsonStr = extractJson(response.text)
+    if (!jsonStr) {
+      throw new Error('KI-Antwort enthielt kein JSON. Bitte erneut versuchen.')
+    }
+
+    try {
+      const parsed = JSON.parse(jsonStr)
+      const items = Array.isArray(parsed) ? parsed : (parsed.topics || parsed.items || [])
+      return items.map((item: Record<string, unknown>) => ({
+        name: String(item.name || '').substring(0, 100),
+        description: String(item.description || ''),
+      }))
+    } catch {
+      throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
+    }
+  },
+
   async improvePost(
     params: {
       currentContent: string

@@ -115,6 +115,14 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'platform', label: 'Plattform', description: 'Social-Media-Plattform' },
     { key: 'instructions', label: 'Anweisungen', description: 'Verbesserungsanweisungen' },
   ],
+  social_media_topic_generation: [
+    { key: 'count', label: 'Anzahl', description: 'Anzahl der zu generierenden Themen' },
+    { key: 'companyName', label: 'Firmenname', description: 'Name des Unternehmens' },
+    { key: 'industry', label: 'Branche', description: 'Branche des Unternehmens' },
+    { key: 'businessModel', label: 'Geschaeftsmodell', description: 'Beschreibung des Geschaeftsmodells' },
+    { key: 'targetGroup', label: 'Zielgruppe', description: 'Informationen zur Zielgruppe' },
+    { key: 'strengths', label: 'Staerken', description: 'Unternehmensstaerken aus SWOT' },
+  ],
 }
 
 // ============================================
@@ -670,6 +678,40 @@ Verbesserungsanweisungen:
   "content": "<Verbesserter Beitragstext>",
   "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"]
 }`,
+  },
+  social_media_topic_generation: {
+    name: 'Social Media Themen-Generierung',
+    description: 'Generiert Social-Media-Themenvorschlaege basierend auf dem Unternehmensprofil.',
+    systemPrompt: `Du bist ein Social-Media-Stratege fuer KMU im deutschsprachigen Raum. Deine Aufgabe ist es, Content-Themen zu generieren, die auf das Unternehmen und dessen Zielgruppe zugeschnitten sind.
+
+KERNREGELN:
+1. Themen muessen zum Unternehmen und dessen Branche passen
+2. Themen sollen die Zielgruppe ansprechen und Mehrwert bieten
+3. Mischung aus Thought-Leadership, praktischen Tipps und Branchennews
+4. Jedes Thema braucht einen kurzen, praegnanten Namen und eine Beschreibung
+5. Antworte immer auf Deutsch
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Array
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codebloecke
+- Beginne deine Antwort direkt mit [ und ende mit ]`,
+    userPrompt: `Generiere {{count}} Social-Media-Themen fuer folgendes Unternehmen:
+
+{{#if companyName}}- Unternehmen: {{companyName}}{{/if}}
+{{#if industry}}- Branche: {{industry}}{{/if}}
+{{#if businessModel}}- Geschaeftsmodell: {{businessModel}}{{/if}}
+{{#if targetGroup}}- Zielgruppe/Markt: {{targetGroup}}{{/if}}
+{{#if strengths}}- Staerken: {{strengths}}{{/if}}
+
+Die Themen sollen abwechslungsreich sein und verschiedene Aspekte des Unternehmens abdecken.`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format (Array):
+[
+  {
+    "name": "<Kurzer Themenname, max 50 Zeichen>",
+    "description": "<Beschreibung in 1-2 Saetzen, was unter diesem Thema gepostet werden kann>"
+  }
+]`,
   },
   business_profile_analysis: {
     name: 'Business-Profil-Analyse',

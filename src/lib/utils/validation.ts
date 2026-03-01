@@ -604,6 +604,10 @@ export const improveSocialPostSchema = z.object({
   instructions: z.string().min(1, 'Anweisungen erforderlich').max(500),
 })
 
+export const generateTopicsSchema = z.object({
+  count: z.number().int().min(1).max(20).default(5),
+})
+
 // ============================================
 // Helper Functions
 // ============================================
