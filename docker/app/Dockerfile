@@ -43,7 +43,7 @@ FROM base AS production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN apk add --no-cache netcat-openbsd postgresql16-client
+RUN apk add --no-cache netcat-openbsd postgresql16-client su-exec
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -72,7 +72,8 @@ ENV BI_UPLOAD_DIR=/app/data/uploads/bi
 COPY --chown=nextjs:nodejs docker/app/entrypoint.prod.sh /entrypoint.prod.sh
 RUN sed -i 's/\r$//' /entrypoint.prod.sh && chmod +x /entrypoint.prod.sh
 
-USER nextjs
+# NOTE: Container starts as root so entrypoint can fix volume permissions,
+# then drops to nextjs user via su-exec for the Node.js server.
 EXPOSE 3000
 ENV PORT=3000
 CMD ["/entrypoint.prod.sh"]

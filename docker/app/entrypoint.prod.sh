@@ -6,6 +6,13 @@ echo "xKMU Business OS - Production Start"
 echo "============================================"
 
 # ------------------------------------
+# Fix volume permissions (runs as root)
+# ------------------------------------
+echo "Ensuring data directories exist and are writable..."
+mkdir -p /app/data/uploads/bi /backups
+chown -R nextjs:nodejs /app/data /backups
+
+# ------------------------------------
 # Wait for database to be ready
 # ------------------------------------
 echo "Waiting for database..."
@@ -94,4 +101,4 @@ npx tsx src/lib/db/seed-check.ts
 # Start the application
 # ------------------------------------
 echo "Starting Next.js production server..."
-exec node server.js
+exec su-exec nextjs node server.js
