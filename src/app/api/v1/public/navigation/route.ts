@@ -4,6 +4,8 @@ import { tenants } from '@/lib/db/schema'
 import { asc } from 'drizzle-orm'
 import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
 
+export const dynamic = 'force-dynamic'
+
 // Global navigation items - always visible, not tenant-dependent
 const GLOBAL_HEADER_ITEMS = [
   { label: 'Startseite', href: '/', sortOrder: 0, openInNewTab: false },
