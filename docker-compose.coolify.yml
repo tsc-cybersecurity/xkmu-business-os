@@ -41,6 +41,12 @@ services:
       # NAT-Hairpinning fix: interne Services über Domain erreichbar machen
       - "n8n.xkmu.de:host-gateway"
       - "boss.xkmu.de:host-gateway"
+    labels:
+      # Coolify generiert automatisch Traefik-Router-Labels, aber NICHT den
+      # loadbalancer.server.port. Ohne dieses Label weiss Traefik nicht auf
+      # welchem Port der Container lauscht -> Bad Gateway.
+      # Diese Labels werden von Coolify ZUSAETZLICH zu den generierten uebernommen.
+      - "traefik.http.services.xkmu-app.loadbalancer.server.port=3000"
     environment:
       - NODE_ENV=production
       - COOLIFY=true
@@ -117,6 +123,8 @@ services:
     restart: always
     expose:
       - "80"
+    labels:
+      - "traefik.http.services.xkmu-pgadmin.loadbalancer.server.port=80"
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
