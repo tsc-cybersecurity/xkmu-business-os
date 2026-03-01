@@ -81,7 +81,24 @@
       "Bash(npm run db:migrate:*)",
       "Bash(npx prettier:*)",
       "Bash(cat:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "WebFetch(domain:xkmu-business-os.vercel.app)",
+      "WebFetch(domain:test.xkmu.de)",
+      "Bash(npx next build --no-lint)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm audit:*)",
+      "Bash(npm outdated:*)",
+      "Bash(npm update:*)",
+      "Bash(/usr/bin/cat 'C:/Daten/xKMU-BusinessOS/src/app/intern/\\(dashboard\\)/settings/app-docs/page.tsx')",
+      "Bash(bash -c:*)",
+      "Bash(stat:*)",
+      "WebFetch(domain:docs.kie.ai)",
+      "WebSearch",
+      "WebFetch(domain:1drv.ms)",
+      "WebFetch(domain:photos.onedrive.com)",
+      "Bash(do echo:*)",
+      "WebFetch(domain:boss.xkmu.de)",
+      "WebFetch(domain:boss-db.xkmu.de)"
     ]
   }
 }
