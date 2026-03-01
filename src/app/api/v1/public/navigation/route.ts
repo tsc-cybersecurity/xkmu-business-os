@@ -6,15 +6,20 @@ import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
 
 // Global navigation items - always visible, not tenant-dependent
 const GLOBAL_HEADER_ITEMS = [
-  { label: 'Cyber Security', href: '/cyber-security', sortOrder: 0, openInNewTab: false },
-  { label: 'KI & Automation', href: '/ki-automation', sortOrder: 1, openInNewTab: false },
-  { label: 'IT Consulting', href: '/it-consulting', sortOrder: 2, openInNewTab: false },
+  { label: 'Startseite', href: '/', sortOrder: 0, openInNewTab: false },
+  { label: 'Cyber Security', href: '/cyber-security', sortOrder: 1, openInNewTab: false },
+  { label: 'KI & Automation', href: '/ki-automation', sortOrder: 2, openInNewTab: false },
+  { label: 'IT Consulting', href: '/it-consulting', sortOrder: 3, openInNewTab: false },
+  { label: 'IT-News', href: '/it-news', sortOrder: 4, openInNewTab: false },
 ]
 
 const GLOBAL_FOOTER_ITEMS = [
-  { label: 'Impressum', href: '/impressum', sortOrder: 0, openInNewTab: false },
-  { label: 'Datenschutz', href: '/datenschutz', sortOrder: 1, openInNewTab: false },
-  { label: 'AGB', href: '/agb', sortOrder: 2, openInNewTab: false },
+  { label: 'Kostenlos starten', href: '/intern/register', sortOrder: 0, openInNewTab: false },
+  { label: 'API-Dokumentation', href: '/api-docs', sortOrder: 1, openInNewTab: false },
+  { label: 'Impressum', href: '/impressum', sortOrder: 2, openInNewTab: false },
+  { label: 'Kontakt', href: '/kontakt', sortOrder: 3, openInNewTab: false },
+  { label: 'AGB', href: '/agb', sortOrder: 4, openInNewTab: false },
+  { label: 'Datenschutz', href: '/datenschutz', sortOrder: 5, openInNewTab: false },
 ]
 
 const GLOBAL_HREFS = new Set([
