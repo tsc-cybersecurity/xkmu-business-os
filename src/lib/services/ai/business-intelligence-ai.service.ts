@@ -28,14 +28,15 @@ export const BusinessIntelligenceAIService = {
       : userPrompt
 
     const response = await AIService.completeWithContext(fullPrompt, context, {
-      maxTokens: 4000,
+      maxTokens: 8000,
       temperature: 0.3,
       systemPrompt: template.systemPrompt,
     })
 
     const jsonStr = extractJson(response.text)
     if (!jsonStr) {
-      throw new Error('KI-Antwort enthielt kein JSON. Bitte erneut versuchen.')
+      // Kein JSON gefunden - rawAnalysis trotzdem speichern
+      return { rawAnalysis: response.text }
     }
 
     try {
@@ -52,7 +53,8 @@ export const BusinessIntelligenceAIService = {
         rawAnalysis: response.text,
       }
     } catch {
-      throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
+      // JSON kaputt (z.B. abgeschnitten) - rawAnalysis trotzdem speichern
+      return { rawAnalysis: response.text }
     }
   },
 }
