@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
-import { socialMediaPosts } from '@/lib/db/schema'
-import { eq, and, count, desc } from 'drizzle-orm'
+import { socialMediaPosts, socialMediaTopics } from '@/lib/db/schema'
+import { eq, and, count, desc, asc } from 'drizzle-orm'
 import type { SocialMediaPost, NewSocialMediaPost } from '@/lib/db/schema'
 
 export interface PostFilters {
@@ -38,7 +38,31 @@ export const SocialMediaPostService = {
     const whereClause = and(...conditions)
 
     const [items, [{ total }]] = await Promise.all([
-      db.select().from(socialMediaPosts).where(whereClause!).orderBy(desc(socialMediaPosts.createdAt)).limit(limit).offset(offset),
+      db.select({
+        id: socialMediaPosts.id,
+        tenantId: socialMediaPosts.tenantId,
+        topicId: socialMediaPosts.topicId,
+        platform: socialMediaPosts.platform,
+        title: socialMediaPosts.title,
+        content: socialMediaPosts.content,
+        hashtags: socialMediaPosts.hashtags,
+        imageUrl: socialMediaPosts.imageUrl,
+        scheduledAt: socialMediaPosts.scheduledAt,
+        postedAt: socialMediaPosts.postedAt,
+        status: socialMediaPosts.status,
+        aiGenerated: socialMediaPosts.aiGenerated,
+        createdBy: socialMediaPosts.createdBy,
+        createdAt: socialMediaPosts.createdAt,
+        updatedAt: socialMediaPosts.updatedAt,
+        topicName: socialMediaTopics.name,
+        topicColor: socialMediaTopics.color,
+      })
+        .from(socialMediaPosts)
+        .leftJoin(socialMediaTopics, eq(socialMediaPosts.topicId, socialMediaTopics.id))
+        .where(whereClause!)
+        .orderBy(desc(socialMediaPosts.createdAt))
+        .limit(limit)
+        .offset(offset),
       db.select({ total: count() }).from(socialMediaPosts).where(whereClause!),
     ])
 
