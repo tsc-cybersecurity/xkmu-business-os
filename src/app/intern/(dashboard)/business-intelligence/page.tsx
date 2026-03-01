@@ -43,6 +43,7 @@ interface BusinessProfile {
   financialSummary: string | null;
   keyMetrics: Record<string, unknown> | null;
   recommendations: string | null;
+  rawAnalysis: string | null;
   lastAnalyzedAt: string | null;
 }
 
@@ -164,8 +165,9 @@ export default function BusinessIntelligencePage() {
       });
       const data = await response.json();
       if (data.success) {
-        setProfile(data.data);
         toast.success('Analyse abgeschlossen');
+        // Daten neu laden um sicherzustellen, dass das Profil korrekt angezeigt wird
+        await fetchData();
       } else {
         toast.error(data.error?.message || 'Analyse fehlgeschlagen');
       }
@@ -423,6 +425,19 @@ export default function BusinessIntelligencePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm whitespace-pre-line">{profile.recommendations}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Fallback: Rohe KI-Analyse anzeigen wenn keine strukturierten Felder */}
+          {!profile.companyName && !profile.swotAnalysis && !profile.financialSummary && !profile.marketAnalysis && !profile.recommendations && profile.rawAnalysis && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">KI-Analyse (Rohtext)</CardTitle>
+                <CardDescription>Die strukturierte Auswertung konnte nicht extrahiert werden. Hier die vollstaendige KI-Antwort:</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm whitespace-pre-line">{profile.rawAnalysis}</p>
               </CardContent>
             </Card>
           )}
