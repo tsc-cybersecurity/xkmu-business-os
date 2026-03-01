@@ -248,6 +248,7 @@ const NAVIGATION_ITEMS = [
   { location: 'footer', label: 'Kontakt', href: '/kontakt', sortOrder: 3 },
   { location: 'footer', label: 'AGB', href: '/agb', sortOrder: 4 },
   { location: 'footer', label: 'Datenschutz', href: '/datenschutz', sortOrder: 5 },
+  { location: 'footer', label: 'Login', href: '/intern/login', sortOrder: 6 },
 ]
 
 // ============================================
