@@ -49,10 +49,12 @@ export default function ContentPlanPage() {
   const [plan, setPlan] = useState<ContentPlanItem[]>([]);
 
   const topicFromQuery = searchParams.get('topic') || '';
+  const topicIdFromQuery = searchParams.get('topicId') || '';
 
   const [form, setForm] = useState({
     platforms: ['linkedin'] as string[],
     topics: topicFromQuery,
+    topicId: topicIdFromQuery,
     count: 7,
     tone: 'professional',
   });
@@ -132,6 +134,7 @@ export default function ContentPlanPage() {
             hashtags: item.hashtags,
             aiGenerated: true,
             status: 'draft',
+            topicId: form.topicId || null,
           }),
         });
         const data = await response.json();
@@ -189,14 +192,33 @@ export default function ContentPlanPage() {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Themen (kommagetrennt)</Label>
-              <Textarea
-                value={form.topics}
-                onChange={(e) => setForm((f) => ({ ...f, topics: e.target.value }))}
-                placeholder="z.B. Digitalisierung, KI, IT-Sicherheit"
-                rows={2}
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Thema zuordnen</Label>
+                <Select
+                  value={form.topicId || 'none'}
+                  onValueChange={(v) => setForm((f) => ({ ...f, topicId: v === 'none' ? '' : v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Thema waehlen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Kein Thema</SelectItem>
+                    {topics.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Themen-Stichworte (kommagetrennt)</Label>
+                <Textarea
+                  value={form.topics}
+                  onChange={(e) => setForm((f) => ({ ...f, topics: e.target.value }))}
+                  placeholder="z.B. Digitalisierung, KI, IT-Sicherheit"
+                  rows={2}
+                />
+              </div>
             </div>
             <div className="space-y-4">
               <div className="space-y-2">

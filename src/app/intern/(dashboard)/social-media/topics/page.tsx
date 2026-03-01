@@ -300,7 +300,7 @@ export default function SocialMediaTopicsPage() {
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  onClick={() => router.push(`/intern/social-media/content-plan?topic=${encodeURIComponent(topic.name)}`)}
+                  onClick={() => router.push(`/intern/social-media/content-plan?topicId=${topic.id}&topic=${encodeURIComponent(topic.name)}`)}
                 >
                   <CalendarDays className="h-4 w-4 mr-2" />
                   Contentplan erstellen
