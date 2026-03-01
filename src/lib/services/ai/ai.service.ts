@@ -360,6 +360,7 @@ class AIServiceClass {
     model: string
     available: boolean
   }>> {
+    // Text-AI-Provider (getActiveProviders filtert firecrawl/kie raus)
     const dbProviders = await AiProviderService.getActiveProviders(tenantId)
     const result = []
 
@@ -383,6 +384,21 @@ class AIServiceClass {
           available: false,
         })
       }
+    }
+
+    // Spezial-Provider (firecrawl, kie) separat prüfen - haben API-Key = verfügbar
+    const allProviders = await AiProviderService.list(tenantId)
+    const specialProviders = allProviders.filter(
+      (p) => ['firecrawl', 'kie'].includes(p.providerType) && p.isActive
+    )
+    for (const config of specialProviders) {
+      result.push({
+        id: config.id,
+        name: config.name,
+        providerType: config.providerType,
+        model: config.model,
+        available: !!config.apiKey,
+      })
     }
 
     return result

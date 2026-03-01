@@ -79,7 +79,8 @@ export const AiProviderService = {
         and(
           eq(aiProviders.tenantId, tenantId),
           eq(aiProviders.isActive, true),
-          ne(aiProviders.providerType, 'firecrawl')
+          ne(aiProviders.providerType, 'firecrawl'),
+          ne(aiProviders.providerType, 'kie')
         )
       )
       .orderBy(asc(aiProviders.priority))
