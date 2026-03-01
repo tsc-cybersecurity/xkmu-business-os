@@ -35,13 +35,6 @@ interface NavItemData {
   openInNewTab?: boolean
 }
 
-const defaultNavItems: NavItemData[] = [
-  { name: 'Cyber Security', href: '/cyber-security' },
-  { name: 'KI & Automation', href: '/ki-automation' },
-  { name: 'IT Consulting', href: '/it-consulting' },
-  { name: 'IT-News', href: '/it-news' },
-]
-
 function getUserInitials(user: SessionUser) {
   const first = user.firstName?.[0] ?? ''
   const last = user.lastName?.[0] ?? ''
@@ -58,7 +51,7 @@ function getUserDisplayName(user: SessionUser) {
 export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [user, setUser] = useState<SessionUser | null>(null)
-  const [navItems, setNavItems] = useState<NavItemData[]>(defaultNavItems)
+  const [navItems, setNavItems] = useState<NavItemData[]>([])
   const {
     font, setFont, fontOptions,
     accent, setAccent, accentOptions,
