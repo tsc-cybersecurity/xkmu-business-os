@@ -37,6 +37,10 @@ services:
     restart: always
     expose:
       - "3000"
+    extra_hosts:
+      # NAT-Hairpinning fix: interne Services über Domain erreichbar machen
+      - "n8n.xkmu.de:host-gateway"
+      - "boss.xkmu.de:host-gateway"
     environment:
       - NODE_ENV=production
       - COOLIFY=true
