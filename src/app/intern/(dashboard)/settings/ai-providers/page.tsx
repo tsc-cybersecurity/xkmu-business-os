@@ -71,6 +71,7 @@ const providerTypes = [
   { value: 'deepseek', label: 'Deepseek', needsKey: true },
   { value: 'kimi', label: 'Kimi (Moonshot)', needsKey: true },
   { value: 'firecrawl', label: 'Firecrawl (Web-Scraping)', needsKey: true },
+  { value: 'kie', label: 'kie.ai (Video-Generierung)', needsKey: true },
 ]
 
 const providerColors: Record<string, string> = {
@@ -81,6 +82,7 @@ const providerColors: Record<string, string> = {
   deepseek: 'bg-teal-500',
   kimi: 'bg-orange-500',
   firecrawl: 'bg-amber-500',
+  kie: 'bg-pink-500',
 }
 
 // Bekannte Modelle pro Provider-Typ
@@ -144,6 +146,7 @@ const defaultBaseUrls: Record<string, string> = {
   deepseek: '',
   kimi: '',
   firecrawl: '',
+  kie: 'https://api.kie.ai',
 }
 
 const emptyForm: ProviderFormData = {
@@ -237,20 +240,22 @@ export default function AiProvidersPage() {
     setFormData((prev) => ({
       ...prev,
       providerType: type,
-      model: type === 'firecrawl' ? 'firecrawl' : (prev.model || defaultModels[type] || ''),
+      model: type === 'firecrawl' ? 'firecrawl' : type === 'kie' ? 'kie-video' : (prev.model || defaultModels[type] || ''),
       baseUrl: prev.baseUrl || defaultBaseUrls[type] || '',
       name: prev.name || providerTypes.find((t) => t.value === type)?.label || '',
     }))
   }
 
   const isFirecrawl = formData.providerType === 'firecrawl'
+  const isKie = formData.providerType === 'kie'
+  const isNoModelProvider = isFirecrawl || isKie
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
       toast.error('Name ist erforderlich')
       return
     }
-    if (!isFirecrawl && !formData.model.trim()) {
+    if (!isNoModelProvider && !formData.model.trim()) {
       toast.error('Modell ist erforderlich')
       return
     }
@@ -506,7 +511,7 @@ export default function AiProvidersPage() {
               </FormField>
             )}
 
-            {!isFirecrawl && (
+            {!isNoModelProvider && (
               <FormField label="Modell" htmlFor="model" required>
                 {providerModels[formData.providerType] ? (
                   <div className="space-y-2">
@@ -559,7 +564,13 @@ export default function AiProvidersPage() {
               </p>
             )}
 
-            {!isFirecrawl && <div className="grid grid-cols-3 gap-4">
+            {isKie && (
+              <p className="text-sm text-muted-foreground bg-muted/50 rounded-md p-3">
+                kie.ai wird für KI-Video-Generierung verwendet. API-Key von <a href="https://docs.kie.ai" target="_blank" rel="noopener noreferrer" className="underline font-medium">docs.kie.ai</a> eintragen. Videos können über die n8n-Workflow-Integration oder die API generiert werden.
+              </p>
+            )}
+
+            {!isNoModelProvider && <div className="grid grid-cols-3 gap-4">
               <FormField label="Max Tokens" htmlFor="maxTokens">
                 <Input
                   id="maxTokens"
