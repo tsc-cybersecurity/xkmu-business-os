@@ -43,12 +43,13 @@ export const CmsNavigationService = {
       .orderBy(asc(cmsNavigationItems.sortOrder))
   },
 
-  async listPublic(location: string): Promise<CmsNavigationItem[]> {
+  async listPublic(tenantId: string, location: string): Promise<CmsNavigationItem[]> {
     return db
       .select()
       .from(cmsNavigationItems)
       .where(
         and(
+          eq(cmsNavigationItems.tenantId, tenantId),
           eq(cmsNavigationItems.location, location),
           eq(cmsNavigationItems.isVisible, true),
         )
