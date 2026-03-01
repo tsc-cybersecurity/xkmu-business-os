@@ -3,9 +3,14 @@ import { mediaUploads } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import type { MediaUpload } from '@/lib/db/schema'
 import { randomUUID } from 'crypto'
+import path from 'path'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
+
+// Use persistent data dir (Docker volume) in production, public/ for local dev
+const MEDIA_UPLOAD_DIR = process.env.MEDIA_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads')
+const USE_DATA_DIR = !!process.env.MEDIA_UPLOAD_DIR
 
 // ============================================
 // Lokales Dateisystem
@@ -13,11 +18,13 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
 async function uploadToLocal(file: File, filename: string, tenantId: string): Promise<string> {
   const { writeFile, mkdir } = await import('fs/promises')
   const { existsSync } = await import('fs')
-  const path = await import('path')
 
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads', tenantId)
+  const uploadDir = path.join(MEDIA_UPLOAD_DIR, tenantId)
   const filePath = path.join(uploadDir, filename)
-  const publicPath = `/uploads/${tenantId}/${filename}`
+  // When using data dir, serve via API route; otherwise serve statically from public/
+  const publicPath = USE_DATA_DIR
+    ? `/api/v1/media/serve/${tenantId}/${filename}`
+    : `/uploads/${tenantId}/${filename}`
 
   if (!existsSync(uploadDir)) {
     await mkdir(uploadDir, { recursive: true })
@@ -33,15 +40,32 @@ async function deleteFromLocal(filePath: string): Promise<void> {
   try {
     const { unlink } = await import('fs/promises')
     const { existsSync } = await import('fs')
-    const path = await import('path')
 
-    const fullPath = path.join(process.cwd(), 'public', filePath)
+    // Handle both formats: /uploads/tid/file or /api/v1/media/serve/tid/file
+    let fullPath: string
+    const serveMatch = filePath.match(/\/api\/v1\/media\/serve\/(.+)/)
+    if (serveMatch) {
+      fullPath = path.join(MEDIA_UPLOAD_DIR, serveMatch[1])
+    } else {
+      // Legacy: /uploads/tid/file
+      fullPath = path.join(process.cwd(), 'public', filePath)
+    }
     if (existsSync(fullPath)) {
       await unlink(fullPath)
     }
   } catch (error) {
     console.error('Failed to delete local file:', error)
   }
+}
+
+/** Resolve a media path to an absolute file path on disk */
+export function resolveMediaPath(relativePath: string): string {
+  const serveMatch = relativePath.match(/\/api\/v1\/media\/serve\/(.+)/)
+  if (serveMatch) {
+    return path.join(MEDIA_UPLOAD_DIR, serveMatch[1])
+  }
+  // Legacy: /uploads/tid/file
+  return path.join(process.cwd(), 'public', relativePath)
 }
 
 // ============================================

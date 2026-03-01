@@ -9,7 +9,7 @@ echo "============================================"
 # Fix volume permissions (runs as root)
 # ------------------------------------
 echo "Ensuring data directories exist and are writable..."
-mkdir -p /app/data/uploads/bi /backups
+mkdir -p /app/data/uploads/bi /app/data/uploads/media /backups
 chown -R nextjs:nodejs /app/data /backups
 
 # ------------------------------------

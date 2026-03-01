@@ -19,6 +19,7 @@ const PUBLIC_PATHS = [
   '/api/v1/auth/register',
   '/api/v1/contact',
   '/api/v1/public',
+  '/api/v1/media/serve',
   '/api/health',
 ]
 
