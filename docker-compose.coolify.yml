@@ -59,7 +59,7 @@ services:
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
     volumes:
-      - ./data/uploads:/app/data
+      - app_data:/app/data
       - db_backups:/backups
     depends_on:
       postgres:
@@ -129,3 +129,4 @@ volumes:
   redis_data:
   db_backups:
   pgadmin_data:
+  app_data:
