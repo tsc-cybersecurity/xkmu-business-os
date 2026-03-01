@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { ArrowLeft, Save, Building, Database, Loader2 } from 'lucide-react'
+import { ArrowLeft, Save, Building, Database, Loader2, ImageIcon, Trash2, Upload } from 'lucide-react'
 
 interface Tenant {
   id: string
@@ -41,6 +41,9 @@ export default function TenantSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [seedingDemo, setSeedingDemo] = useState(false)
 
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -61,6 +64,7 @@ export default function TenantSettingsPage() {
           name: data.data.name,
           slug: data.data.slug,
         })
+        setLogoUrl((data.data.settings?.logoUrl as string) || null)
       }
     } catch (error) {
       console.error('Failed to fetch tenant:', error)
@@ -104,6 +108,75 @@ export default function TenantSettingsPage() {
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Fehler beim Speichern')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingLogo(true)
+    try {
+      const uploadForm = new FormData()
+      uploadForm.append('file', file)
+      const uploadRes = await fetch('/api/v1/media/upload', {
+        method: 'POST',
+        body: uploadForm,
+      })
+      const uploadData = await uploadRes.json()
+
+      if (!uploadRes.ok || !uploadData.success) {
+        throw new Error(uploadData.error?.message || 'Upload fehlgeschlagen')
+      }
+
+      const newLogoUrl = uploadData.data.path as string
+      const settingsRes = await fetch('/api/v1/tenant', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          settings: { ...tenant?.settings, logoUrl: newLogoUrl },
+        }),
+      })
+      const settingsData = await settingsRes.json()
+
+      if (!settingsRes.ok) {
+        throw new Error(settingsData.error?.message || 'Speichern fehlgeschlagen')
+      }
+
+      setLogoUrl(newLogoUrl)
+      setTenant(settingsData.data)
+      toast.success('Logo erfolgreich hochgeladen')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Fehler beim Logo-Upload')
+    } finally {
+      setUploadingLogo(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleLogoRemove = async () => {
+    setSaving(true)
+    try {
+      const { logoUrl: _removed, ...restSettings } = (tenant?.settings ?? {}) as Record<string, unknown>
+      void _removed
+      const res = await fetch('/api/v1/tenant', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings: restSettings }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error?.message || 'Speichern fehlgeschlagen')
+      }
+
+      setLogoUrl(null)
+      setTenant(data.data)
+      toast.success('Logo entfernt – Standard-Logo wird verwendet')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Fehler beim Entfernen')
     } finally {
       setSaving(false)
     }
@@ -275,6 +348,65 @@ export default function TenantSettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Branding
+          </CardTitle>
+          <CardDescription>
+            Logo fuer die oeffentliche Webseite. Wird in der Navigationsleiste angezeigt.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-6">
+            <div className="shrink-0 w-48 h-24 border rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden">
+              {logoUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <div className="text-center text-muted-foreground text-sm">
+                  <ImageIcon className="h-8 w-8 mx-auto mb-1 opacity-40" />
+                  Standard-Logo
+                </div>
+              )}
+            </div>
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="logo-upload" className="cursor-pointer">
+                  <Button variant="outline" asChild disabled={uploadingLogo}>
+                    <span>
+                      {uploadingLogo ? (
+                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Wird hochgeladen...</>
+                      ) : (
+                        <><Upload className="mr-2 h-4 w-4" />Logo hochladen</>
+                      )}
+                    </span>
+                  </Button>
+                </Label>
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                  disabled={uploadingLogo}
+                />
+              </div>
+              {logoUrl && (
+                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={handleLogoRemove}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Logo entfernen
+                </Button>
+              )}
+              <p className="text-xs text-muted-foreground">
+                PNG, JPG, WebP oder GIF. Max. 5 MB.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

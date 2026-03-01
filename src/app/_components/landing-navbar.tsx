@@ -48,10 +48,15 @@ function getUserDisplayName(user: SessionUser) {
   return user.email
 }
 
+const DEFAULT_LOGO_URL = 'https://www.xkmu.de/xkmu_q_gross_slogan.png'
+const DEFAULT_LOGO_ALT = 'xKMU'
+
 export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [user, setUser] = useState<SessionUser | null>(null)
   const [navItems, setNavItems] = useState<NavItemData[]>([])
+  const [logoUrl, setLogoUrl] = useState(DEFAULT_LOGO_URL)
+  const [logoAlt, setLogoAlt] = useState(DEFAULT_LOGO_ALT)
   const {
     font, setFont, fontOptions,
     accent, setAccent, accentOptions,
@@ -79,6 +84,16 @@ export function LandingNavbar() {
         }
       })
       .catch(() => {})
+
+    fetch('/api/v1/public/branding')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && data.data) {
+          setLogoUrl(data.data.logoUrl || DEFAULT_LOGO_URL)
+          setLogoAlt(data.data.logoAlt || DEFAULT_LOGO_ALT)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   const handleLogout = async () => {
@@ -93,8 +108,8 @@ export function LandingNavbar() {
         {/* Logo */}
         <Link href="/" className="shrink-0">
           <img
-            src="https://www.xkmu.de/xkmu_q_gross_slogan.png"
-            alt="xKMU"
+            src={logoUrl}
+            alt={logoAlt}
             className="h-16 w-auto"
           />
         </Link>
