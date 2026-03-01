@@ -9,7 +9,7 @@ import { useState } from 'react'
 export function ApiDocsContent() {
   return (
     <Tabs defaultValue="auth" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-13">
+      <TabsList className="grid w-full grid-cols-4 lg:grid-cols-15">
         <TabsTrigger value="auth">Auth</TabsTrigger>
         <TabsTrigger value="companies">Firmen</TabsTrigger>
         <TabsTrigger value="persons">Personen</TabsTrigger>
@@ -20,6 +20,8 @@ export function ApiDocsContent() {
         <TabsTrigger value="products">Produkte</TabsTrigger>
         <TabsTrigger value="din-audit">DIN Audit</TabsTrigger>
         <TabsTrigger value="ai">KI</TabsTrigger>
+        <TabsTrigger value="media">Medien</TabsTrigger>
+        <TabsTrigger value="public">Oeffentlich</TabsTrigger>
         <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
         <TabsTrigger value="email">E-Mail</TabsTrigger>
         <TabsTrigger value="admin">Admin</TabsTrigger>
@@ -1835,16 +1837,18 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="PUT"
               path="/api/v1/tenant"
-              description="Tenant aktualisieren"
+              description="Tenant aktualisieren (Name, Slug, Settings inkl. Branding)"
               requestBody={{
                 name: 'Neue Firmenbezeichnung',
                 settings: {
-                  theme: 'dark',
+                  logoUrl: '/api/v1/media/serve/tenant-id/logo.png',
+                  logoAlt: 'Meine Firma',
                 },
               }}
               responseExample={{
                 id: 'uuid',
                 name: 'Neue Firmenbezeichnung',
+                settings: { logoUrl: '/api/v1/media/serve/tenant-id/logo.png', logoAlt: 'Meine Firma' },
               }}
             />
 
@@ -1882,6 +1886,137 @@ export function ApiDocsContent() {
               responseExample={{
                 message: 'Import erfolgreich',
                 imported: { companies: 10, persons: 25, leads: 15 },
+              }}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+      {/* Media */}
+      <TabsContent value="media" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Medien-API</CardTitle>
+            <CardDescription>Dateien hochladen, verwalten und ausliefern. Erlaubte Typen: JPEG, PNG, WebP, GIF (max. 5 MB). In Produktion werden Dateien in einem persistierten Docker-Volume gespeichert.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/media/upload"
+              description="Datei hochladen (multipart/form-data, Feld: file)"
+              requestBody={{
+                file: '(Binaerdatei als FormData)',
+              }}
+              responseExample={{
+                id: 'uuid',
+                filename: 'a1b2c3d4.png',
+                originalName: 'logo.png',
+                mimeType: 'image/png',
+                sizeBytes: 45200,
+                path: '/api/v1/media/serve/tenant-id/a1b2c3d4.png',
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/media"
+              description="Alle Mediendateien des Tenants auflisten"
+              responseExample={[
+                { id: 'uuid', filename: 'a1b2c3d4.png', originalName: 'logo.png', path: '/api/v1/media/serve/...' },
+              ]}
+            />
+
+            <EndpointDoc
+              method="DELETE"
+              path="/api/v1/media/[id]"
+              description="Mediendatei loeschen (DB-Eintrag + Datei auf Disk)"
+              responseExample={{
+                message: 'Datei geloescht',
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/media/serve/[tenantId]/[filename]"
+              description="Hochgeladene Datei ausliefern (oeffentlich, kein Auth). Cache: 1 Jahr, immutable."
+              responseExample={{
+                '(Bilddatei als Binary-Response)': true,
+              }}
+            />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Public */}
+      <TabsContent value="public" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Oeffentliche API</CardTitle>
+            <CardDescription>Endpoints ohne Authentifizierung. Fuer die oeffentliche Webseite (Landing, Blog, Navigation, Branding).</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/public/branding"
+              description="Branding-Informationen (Logo, Alt-Text). Fallback auf Standard-Logo wenn keins konfiguriert."
+              responseExample={{
+                logoUrl: '/api/v1/media/serve/tenant-id/logo.png',
+                logoAlt: 'Meine Firma',
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/public/navigation?location=header"
+              description="Website-Navigation fuer Header oder Footer. Parameter location: header|footer"
+              responseExample={[
+                { label: 'Startseite', href: '/', sortOrder: 0, openInNewTab: false },
+                { label: 'IT-News', href: '/it-news', sortOrder: 4, openInNewTab: false },
+              ]}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/public/blog/posts"
+              description="Veroeffentlichte Blog-Beitraege auflisten"
+              responseExample={[
+                { slug: 'mein-beitrag', title: 'Mein Beitrag', excerpt: '...', publishedAt: '2026-01-15' },
+              ]}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/public/blog/posts/[slug]"
+              description="Einzelner Blog-Beitrag nach Slug"
+              responseExample={{
+                slug: 'mein-beitrag',
+                title: 'Mein Beitrag',
+                content: '<p>Inhalt...</p>',
+                publishedAt: '2026-01-15',
+              }}
+            />
+
+            <EndpointDoc
+              method="GET"
+              path="/api/v1/public/pages/[...slug]"
+              description="CMS-Seite nach Slug abrufen"
+              responseExample={{
+                title: 'Ueber uns',
+                slug: 'ueber-uns',
+                content: '<p>Inhalt...</p>',
+              }}
+            />
+
+            <EndpointDoc
+              method="POST"
+              path="/api/v1/contact"
+              description="Kontaktformular absenden"
+              requestBody={{
+                name: 'Max Mustermann',
+                email: 'max@example.com',
+                message: 'Ich habe eine Frage...',
+              }}
+              responseExample={{
+                message: 'Nachricht erfolgreich gesendet',
               }}
             />
           </CardContent>

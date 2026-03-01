@@ -29,7 +29,7 @@ Jede Datenbankentität ist mit einer `tenantId` versehen. Benutzer sehen nur Dat
 | Layout | Pfad | Beschreibung |
 |--------|------|-------------|
 | Root | `/` | Globales Layout mit Font-Konfiguration (Ubuntu, Inter, Roboto), DesignProvider |
-| Public | `/(public)` | Öffentliche Seiten mit Navbar, Footer, Breadcrumb |
+| Public | `/(public)` | Öffentliche Seiten mit Navbar (Logo per Branding-API konfigurierbar), Footer, Breadcrumb |
 | Auth | `/intern/(auth)` | Login/Register mit zentriertem Container |
 | Dashboard | `/intern/(dashboard)` | Geschützt mit Session-Check, Sidebar, Header, PermissionProvider |
 
@@ -481,7 +481,7 @@ Berechtigungen des aktuellen Benutzers abrufen.
 | Seite | URL | Funktion |
 |-------|-----|----------|
 | Übersicht | `/intern/settings` | Einstellungs-Übersicht |
-| Mandant | `/intern/settings/tenant` | Firmendaten des Mandanten |
+| Mandant | `/intern/settings/tenant` | Firmendaten, Branding (Logo-Upload) |
 | Benutzer | `/intern/settings/users` | Benutzerverwaltung |
 | Benutzerdetail | `/intern/settings/users/[id]` | Benutzer bearbeiten |
 | Rollen | `/intern/settings/roles` | Rollenverwaltung |
@@ -1129,7 +1129,11 @@ Medium aktualisieren.
 Medium löschen.
 
 #### `POST /api/v1/media/upload`
-Datei hochladen (multipart/form-data).
+Datei hochladen (multipart/form-data). Erlaubte Typen: JPEG, PNG, WebP, GIF. Max. 5 MB.
+In Produktion werden Dateien unter `MEDIA_UPLOAD_DIR` (Docker-Volume) persistiert statt in `/public/uploads/`.
+
+#### `GET /api/v1/media/serve/[tenantId]/[filename]`
+Hochgeladene Datei ausliefern (öffentlich, kein Auth). Wird automatisch als Pfad bei Uploads in Produktionsumgebung vergeben. Cache-Header: 1 Jahr, immutable.
 
 ---
 
@@ -1268,6 +1272,10 @@ CMS-Seite nach Slug (öffentlich).
 
 #### `GET /api/v1/public/navigation`
 Website-Navigation (öffentlich).
+
+#### `GET /api/v1/public/branding`
+Branding-Informationen (Logo-URL, Alt-Text) aus `tenants.settings`. Fallback auf Standard-Logo wenn keins konfiguriert.
+**Response:** `{ logoUrl: string, logoAlt: string }`
 
 #### `POST /api/v1/contact`
 Kontaktformular absenden (öffentlich).

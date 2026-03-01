@@ -874,16 +874,18 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="PUT"
               path="/api/v1/tenant"
-              description="Tenant aktualisieren"
+              description="Tenant aktualisieren (Name, Slug, Settings inkl. Branding)"
               requestBody={{
                 name: 'Neue Firmenbezeichnung',
                 settings: {
-                  theme: 'dark',
+                  logoUrl: '/api/v1/media/serve/tenant-id/logo.png',
+                  logoAlt: 'Meine Firma',
                 },
               }}
               responseExample={{
                 id: 'uuid',
                 name: 'Neue Firmenbezeichnung',
+                settings: { logoUrl: '/api/v1/media/serve/tenant-id/logo.png', logoAlt: 'Meine Firma' },
               }}
             />
 
@@ -1170,9 +1172,10 @@ export function ApiDocsContent() {
             <CardDescription>Dateien hochladen und verwalten (Bilder, Dokumente etc.)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <EndpointDoc method="GET" path="/api/v1/media" description="Alle Medien-Uploads auflisten" queryParams={['page=1', 'limit=20']} responseExample={{ data: [{ id: 'uuid', filename: 'logo.png', mimeType: 'image/png', size: 45000, url: '/uploads/logo.png', createdAt: '2026-02-24T10:00:00Z' }] }} />
-            <EndpointDoc method="POST" path="/api/v1/media/upload" description="Datei hochladen (multipart/form-data)" requestBody={{ file: '(Datei als FormData)' }} responseExample={{ id: 'uuid', filename: 'foto.jpg', url: '/uploads/foto.jpg', mimeType: 'image/jpeg', size: 120000 }} />
-            <EndpointDoc method="DELETE" path="/api/v1/media/:id" description="Datei loeschen" responseExample={{ message: 'Datei geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/media" description="Alle Medien-Uploads auflisten" queryParams={['page=1', 'limit=20']} responseExample={{ data: [{ id: 'uuid', filename: 'logo.png', mimeType: 'image/png', sizeBytes: 45000, path: '/api/v1/media/serve/tenant-id/logo.png', createdAt: '2026-02-24T10:00:00Z' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/media/upload" description="Datei hochladen (multipart/form-data, Feld: file). Erlaubt: JPEG, PNG, WebP, GIF, max. 5 MB. In Produktion persistent im Docker-Volume." requestBody={{ file: '(Datei als FormData)' }} responseExample={{ id: 'uuid', filename: 'a1b2c3d4.png', originalName: 'foto.jpg', path: '/api/v1/media/serve/tenant-id/a1b2c3d4.png', mimeType: 'image/jpeg', sizeBytes: 120000 }} />
+            <EndpointDoc method="DELETE" path="/api/v1/media/:id" description="Datei loeschen (DB-Eintrag + Datei auf Disk)" responseExample={{ message: 'Datei geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/media/serve/:tenantId/:filename" description="Hochgeladene Datei ausliefern (oeffentlich, kein Auth). Cache: 1 Jahr, immutable." responseExample={{ '(Bilddatei als Binary-Response)': true }} />
           </CardContent>
         </Card>
       </TabsContent>
@@ -1185,6 +1188,7 @@ export function ApiDocsContent() {
             <CardDescription>Endpunkte ohne Authentifizierung fuer die oeffentliche Website</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/public/branding" description="Branding-Informationen (Logo, Alt-Text). Fallback auf Standard-Logo wenn keins in Tenant-Settings konfiguriert." responseExample={{ logoUrl: '/api/v1/media/serve/tenant-id/logo.png', logoAlt: 'Meine Firma' }} />
             <EndpointDoc method="GET" path="/api/v1/public/blog/posts" description="Veroeffentlichte Blog-Beitraege (oeffentlich, keine Auth)" queryParams={['page=1', 'limit=10']} responseExample={{ data: [{ title: 'IT-Trends', slug: 'it-trends', excerpt: '...', publishedAt: '2026-02-20' }] }} />
             <EndpointDoc method="GET" path="/api/v1/public/blog/posts/:slug" description="Blog-Beitrag nach Slug (oeffentlich)" responseExample={{ title: 'IT-Trends', content: '<p>...</p>', publishedAt: '2026-02-20' }} />
             <EndpointDoc method="GET" path="/api/v1/public/pages/:slug" description="CMS-Seite nach Slug (oeffentlich)" responseExample={{ title: 'Ueber uns', blocks: [{ type: 'hero', content: {} }] }} />
