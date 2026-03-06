@@ -183,8 +183,18 @@ export default function LeadsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <p className="text-muted-foreground">Laden...</p>
+            <div className="space-y-3 py-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex gap-4 animate-pulse">
+                  <div className="h-10 flex-[2] rounded bg-muted" />
+                  <div className="h-10 flex-1 rounded bg-muted" />
+                  <div className="h-10 flex-1 rounded bg-muted" />
+                  <div className="h-10 w-16 rounded bg-muted" />
+                  <div className="h-10 flex-1 rounded bg-muted" />
+                  <div className="h-10 flex-1 rounded bg-muted" />
+                  <div className="h-10 flex-1 rounded bg-muted" />
+                </div>
+              ))}
             </div>
           ) : leads.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">

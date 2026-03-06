@@ -11,7 +11,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { LogOut, User, Settings, Globe } from 'lucide-react'
+import { LogOut, User, Settings, Globe, Sun, Moon, Monitor } from 'lucide-react'
+import { useDesign } from '@/app/_components/design-provider'
+import { Breadcrumbs } from './breadcrumbs'
 
 interface HeaderProps {
   user?: {
@@ -23,6 +25,15 @@ interface HeaderProps {
 
 export function Header({ user }: HeaderProps) {
   const router = useRouter()
+  const { theme, setTheme } = useDesign()
+
+  const cycleTheme = () => {
+    const order = ['light', 'dark', 'system'] as const
+    const idx = order.indexOf(theme)
+    setTheme(order[(idx + 1) % order.length])
+  }
+
+  const ThemeIcon = theme === 'dark' ? Moon : theme === 'system' ? Monitor : Sun
 
   const initials = user
     ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() ||
@@ -43,9 +54,18 @@ export function Header({ user }: HeaderProps) {
 
   return (
     <header className="flex h-14 items-center justify-between border-b bg-card px-6">
-      <div>
-        {/* Breadcrumbs or page title can go here */}
-      </div>
+      <Breadcrumbs />
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={cycleTheme}
+          title={`Theme: ${theme === 'light' ? 'Hell' : theme === 'dark' ? 'Dunkel' : 'System'}`}
+          className="h-9 w-9"
+        >
+          <ThemeIcon className="h-4 w-4" />
+        </Button>
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -87,6 +107,7 @@ export function Header({ user }: HeaderProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   )
 }

@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Lock, Eye, EyeOff } from 'lucide-react'
+import { LoadingSpinner } from '@/components/shared/loading-states'
 
 interface UserProfile {
   id: string
@@ -168,11 +169,7 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Laden...</p>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   if (!profile) {

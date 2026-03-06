@@ -123,6 +123,7 @@ function applyAccent(accentId: AccentId) {
   const option = accentOptions.find((a) => a.id === accentId)
   if (!option) return
   const s = document.body.style
+  // Brand shades
   s.setProperty('--brand-50', option.shades[50])
   s.setProperty('--brand-100', option.shades[100])
   s.setProperty('--brand-400', option.shades[400])
@@ -131,6 +132,46 @@ function applyAccent(accentId: AccentId) {
   s.setProperty('--brand-900', option.shades[900])
   s.setProperty('--brand-gradient-from', option.shades[600])
   s.setProperty('--brand-gradient-to', option.gradientTo)
+  // Wire into shadcn theme
+  const isDark = document.documentElement.classList.contains('dark')
+  if (isDark) {
+    s.setProperty('--primary', option.shades[400])
+    s.setProperty('--primary-foreground', option.shades[900])
+    s.setProperty('--ring', option.shades[400])
+    s.setProperty('--sidebar-primary', option.shades[400])
+    s.setProperty('--sidebar-primary-foreground', option.shades[900])
+  } else {
+    s.setProperty('--primary', option.shades[600])
+    s.setProperty('--primary-foreground', 'oklch(0.985 0 0)')
+    s.setProperty('--ring', option.shades[400])
+    s.setProperty('--sidebar-primary', option.shades[600])
+    s.setProperty('--sidebar-primary-foreground', 'oklch(0.985 0 0)')
+  }
+}
+
+// ── Theme (Light / Dark) ─────────────────────────────────────────────────────
+
+const THEME_KEY = 'xkmu-theme'
+const DEFAULT_THEME: ThemeId = 'light'
+
+export const themeOptions = [
+  { id: 'light', label: 'Hell' },
+  { id: 'dark', label: 'Dunkel' },
+  { id: 'system', label: 'System' },
+] as const
+
+export type ThemeId = 'light' | 'dark' | 'system'
+
+function getResolvedTheme(themeId: ThemeId): 'light' | 'dark' {
+  if (themeId === 'system') {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  }
+  return themeId
+}
+
+function applyTheme(themeId: ThemeId) {
+  const resolved = getResolvedTheme(themeId)
+  document.documentElement.classList.toggle('dark', resolved === 'dark')
 }
 
 // ── Border Radius ─────────────────────────────────────────────────────────────
@@ -166,6 +207,10 @@ interface DesignContextValue {
   radius: RadiusId
   setRadius: (radius: RadiusId) => void
   radiusOptions: typeof radiusOptions
+  theme: ThemeId
+  setTheme: (theme: ThemeId) => void
+  themeOptions: typeof themeOptions
+  resolvedTheme: 'light' | 'dark'
 }
 
 const DesignContext = createContext<DesignContextValue | null>(null)
@@ -174,6 +219,8 @@ export function DesignProvider({ children }: { children: ReactNode }) {
   const [font, setFontState] = useState<FontId>(DEFAULT_FONT)
   const [accent, setAccentState] = useState<AccentId>(DEFAULT_ACCENT)
   const [radius, setRadiusState] = useState<RadiusId>(DEFAULT_RADIUS)
+  const [theme, setThemeState] = useState<ThemeId>(DEFAULT_THEME)
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   useEffect(() => {
     const validFonts = fontOptions.map((f) => f.id) as readonly string[]
@@ -184,6 +231,14 @@ export function DesignProvider({ children }: { children: ReactNode }) {
     } else {
       applyFont(DEFAULT_FONT)
     }
+
+    // Theme must be applied before accent (accent reads dark class)
+    const validThemes = themeOptions.map((t) => t.id) as readonly string[]
+    const storedTheme = localStorage.getItem(THEME_KEY) as ThemeId | null
+    const activeTheme = storedTheme && validThemes.includes(storedTheme) ? storedTheme : DEFAULT_THEME
+    setThemeState(activeTheme)
+    applyTheme(activeTheme)
+    setResolvedTheme(getResolvedTheme(activeTheme))
 
     const validAccents = accentOptions.map((a) => a.id) as readonly string[]
     const storedAccent = localStorage.getItem(ACCENT_KEY) as AccentId | null
@@ -202,6 +257,20 @@ export function DesignProvider({ children }: { children: ReactNode }) {
     } else {
       applyRadius(DEFAULT_RADIUS)
     }
+
+    // Listen for system theme changes
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = () => {
+      if ((localStorage.getItem(THEME_KEY) || DEFAULT_THEME) === 'system') {
+        applyTheme('system')
+        setResolvedTheme(getResolvedTheme('system'))
+        // Re-apply accent for dark/light switch
+        const currentAccent = (localStorage.getItem(ACCENT_KEY) || DEFAULT_ACCENT) as AccentId
+        applyAccent(currentAccent)
+      }
+    }
+    mq.addEventListener('change', handleChange)
+    return () => mq.removeEventListener('change', handleChange)
   }, [])
 
   const setFont = (newFont: FontId) => {
@@ -222,12 +291,23 @@ export function DesignProvider({ children }: { children: ReactNode }) {
     applyRadius(newRadius)
   }
 
+  const setTheme = (newTheme: ThemeId) => {
+    setThemeState(newTheme)
+    localStorage.setItem(THEME_KEY, newTheme)
+    applyTheme(newTheme)
+    setResolvedTheme(getResolvedTheme(newTheme))
+    // Re-apply accent to adjust for dark/light
+    const currentAccent = (localStorage.getItem(ACCENT_KEY) || DEFAULT_ACCENT) as AccentId
+    applyAccent(currentAccent)
+  }
+
   return (
     <DesignContext.Provider
       value={{
         font, setFont, fontOptions,
         accent, setAccent, accentOptions,
         radius, setRadius, radiusOptions,
+        theme, setTheme, themeOptions, resolvedTheme,
       }}
     >
       {children}

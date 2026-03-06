@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Building2, Users, TrendingUp, Activity, Target, Globe } from 'lucide-react'
+import { LoadingCards } from '@/components/shared/loading-states'
 
 interface DashboardData {
   stats: {
@@ -113,8 +114,12 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-muted-foreground">Laden...</p>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">Willkommen bei xKMU Business OS</p>
+        </div>
+        <LoadingCards count={5} />
       </div>
     )
   }
