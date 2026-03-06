@@ -98,7 +98,8 @@
       "WebFetch(domain:photos.onedrive.com)",
       "Bash(do echo:*)",
       "WebFetch(domain:boss.xkmu.de)",
-      "WebFetch(domain:boss-db.xkmu.de)"
+      "WebFetch(domain:boss-db.xkmu.de)",
+      "Skill(commit-commands:commit)"
     ]
   }
 }

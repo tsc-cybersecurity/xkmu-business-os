@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSession } from '@/lib/auth/session'
-import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Upload, Book, UserPlus, Workflow } from 'lucide-react'
+import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Upload, Book, UserPlus, Workflow, UserCog } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function SettingsPage() {
@@ -18,6 +18,18 @@ export default async function SettingsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Link href="/intern/settings/profile">
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+            <CardHeader>
+              <UserCog className="h-8 w-8 text-muted-foreground" />
+              <CardTitle className="mt-4">Mein Profil</CardTitle>
+              <CardDescription>
+                Persönliche Daten und Passwort ändern
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
         {isAdmin && (
           <Link href="/intern/settings/users">
             <Card className="cursor-pointer transition-colors hover:bg-muted/50">
@@ -220,6 +232,11 @@ export default async function SettingsPage() {
           <div>
             <span className="text-sm text-muted-foreground">Rolle:</span>
             <p className="font-medium capitalize">{session?.user.role}</p>
+          </div>
+          <div className="pt-2">
+            <Link href="/intern/settings/profile" className="text-sm text-primary hover:underline">
+              Profil bearbeiten &rarr;
+            </Link>
           </div>
         </CardContent>
       </Card>

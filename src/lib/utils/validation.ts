@@ -49,6 +49,11 @@ export const updateUserSchema = z.object({
   status: userStatusSchema.optional(),
 })
 
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Aktuelles Passwort ist erforderlich'),
+  newPassword: passwordSchema,
+})
+
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'Password is required'),
