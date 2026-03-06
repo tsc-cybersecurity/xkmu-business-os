@@ -162,7 +162,7 @@ Antworte NUR als JSON:
       : userPrompt
 
     const response = await AIService.completeWithContext(fullPrompt, context, {
-      maxTokens: 500,
+      maxTokens: 2000,
       temperature: 0.3,
       systemPrompt: template.systemPrompt,
     })

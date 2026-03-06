@@ -25,7 +25,6 @@ export const CmsAIService = {
       : userPrompt
 
     const response = await AIService.completeWithContext(fullPrompt, context, {
-      maxTokens: 500,
       temperature: 0.3,
       systemPrompt: template.systemPrompt,
     })
@@ -63,7 +62,6 @@ Anweisungen: ${instructions}
 Antworte NUR als JSON mit der gleichen Struktur wie der aktuelle Inhalt, aber mit verbesserten Texten.`
 
     const response = await AIService.completeWithContext(prompt, context, {
-      maxTokens: 1500,
       temperature: 0.5,
       systemPrompt: 'Du bist ein Content-Spezialist. Antworte immer auf Deutsch und nur als valides JSON.',
     })

@@ -151,7 +151,7 @@ class AIServiceClass {
 
         // Provider-spezifische Optionen überschreiben
         const mergedOptions: AIOptions = {
-          maxTokens: options?.maxTokens || config.maxTokens || 1000,
+          maxTokens: config.maxTokens || options?.maxTokens || 30000,
           temperature: options?.temperature ?? parseFloat(config.temperature || '0.7'),
           model: options?.model || config.model,
           systemPrompt: options?.systemPrompt,
@@ -315,11 +315,11 @@ class AIServiceClass {
 
     const response = context
       ? await this.completeWithContext(prompt, { ...context, feature: 'extract_entities' }, {
-          maxTokens: 500,
+          maxTokens: 2000,
           temperature: 0.1,
         })
       : await this.complete(prompt, {
-          maxTokens: 500,
+          maxTokens: 2000,
           temperature: 0.1,
         })
 
