@@ -77,4 +77,5 @@ RUN sed -i 's/\r$//' /entrypoint.prod.sh && chmod +x /entrypoint.prod.sh
 # then drops to nextjs user via su-exec for the Node.js server.
 EXPOSE 3000
 ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 CMD ["/entrypoint.prod.sh"]

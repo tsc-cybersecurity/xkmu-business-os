@@ -61,6 +61,8 @@ services:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
       # Redis for session caching
       - REDIS_URL=redis://redis:6379
+      # Next.js standalone binds to HOSTNAME; Docker sets it to container ID.
+      - HOSTNAME=0.0.0.0
       # Email (optional)
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}

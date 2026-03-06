@@ -45,6 +45,9 @@ services:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
       # Redis
       - REDIS_URL=redis://redis:6379
+      # Next.js standalone binds to HOSTNAME; Docker sets it to the container ID
+      # which makes 127.0.0.1 unreachable. Force binding to all interfaces.
+      - HOSTNAME=0.0.0.0
       # Email (optional)
       - SMTP_HOST=${SMTP_HOST:-}
       - SMTP_PORT=${SMTP_PORT:-587}
