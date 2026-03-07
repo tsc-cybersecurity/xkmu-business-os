@@ -1,10 +1,11 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
-import { tenants, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates } from './schema'
+import { tenants, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates, wibaChecklists, wibaPrueffragen } from './schema'
 import { eq, and, count } from 'drizzle-orm'
 import { requirementsSeedData } from './seeds/din-requirements.seed'
 import { grantsSeedData } from './seeds/din-grants.seed'
+import { wibaChecklistsSeedData, wibaPrueffragenSeedData } from './seeds/wiba-checklists.seed'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
 import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.service'
 
@@ -207,6 +208,30 @@ async function seedDinData(db: ReturnType<typeof drizzle>) {
 
   if (!seeded) {
     console.log('DIN SPEC data already exists, skipping...')
+  }
+}
+
+async function seedWibaData(db: ReturnType<typeof drizzle>) {
+  let seeded = false
+
+  // Seed Checklists
+  const [{ total: checklistCount }] = await db.select({ total: count() }).from(wibaChecklists)
+  if (Number(checklistCount) === 0) {
+    await db.insert(wibaChecklists).values(wibaChecklistsSeedData)
+    console.log(`Created ${wibaChecklistsSeedData.length} WiBA checklists`)
+    seeded = true
+  }
+
+  // Seed Prueffragen
+  const [{ total: fragenCount }] = await db.select({ total: count() }).from(wibaPrueffragen)
+  if (Number(fragenCount) === 0) {
+    await db.insert(wibaPrueffragen).values(wibaPrueffragenSeedData)
+    console.log(`Created ${wibaPrueffragenSeedData.length} WiBA Prueffragen`)
+    seeded = true
+  }
+
+  if (!seeded) {
+    console.log('WiBA data already exists, skipping...')
   }
 }
 
@@ -830,18 +855,21 @@ async function seedCheck() {
   // 8. Seed DIN SPEC 27076 data (requirements + grants)
   await seedDinData(db)
 
-  // 9. Seed auditor role
+  // 9. Seed WiBA data (checklists + prueffragen)
+  await seedWibaData(db)
+
+  // 10. Seed auditor role
   await seedAuditorRole(db, tenantId)
 
-  // 10. Seed example business data (companies, persons, leads, products, activities)
+  // 11. Seed example business data (companies, persons, leads, products, activities)
   if (adminUserId) {
     await seedExampleBusinessData(db, tenantId, adminUserId)
   }
 
-  // 11. Seed CMS block type definitions (global, no tenant)
+  // 12. Seed CMS block type definitions (global, no tenant)
   await seedCmsBlockTypeDefinitions(db)
 
-  // 12. Seed CMS block templates (per tenant)
+  // 13. Seed CMS block templates (per tenant)
   await seedCmsBlockTemplates(db, tenantId)
 
   console.log('')

@@ -65,6 +65,8 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   socialMediaPosts: many(socialMediaPosts),
   n8nConnections: many(n8nConnections),
   n8nWorkflowLogs: many(n8nWorkflowLogs),
+  wibaAssessments: many(wibaAssessments),
+  wibaAnswers: many(wibaAnswers),
 }))
 
 // ============================================
@@ -1626,3 +1628,117 @@ export type NewN8nConnection = typeof n8nConnections.$inferInsert
 
 export type N8nWorkflowLog = typeof n8nWorkflowLogs.$inferSelect
 export type NewN8nWorkflowLog = typeof n8nWorkflowLogs.$inferInsert
+
+// ============================================
+// WiBA - Checklisten (statisch, per Seed)
+// ============================================
+export const wibaChecklists = pgTable('wiba_checklists', {
+  id: integer('id').primaryKey(),
+  slug: varchar('slug', { length: 100 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  priority: integer('priority').notNull(), // 1-4
+  sortOrder: integer('sort_order').notNull(), // 1-19
+  groupTag: varchar('group_tag', { length: 100 }),
+  basedOnBausteine: text('based_on_bausteine'),
+  questionCount: integer('question_count').notNull().default(0),
+})
+
+export const wibaChecklistsRelations = relations(wibaChecklists, ({ many }) => ({
+  prueffragen: many(wibaPrueffragen),
+}))
+
+// ============================================
+// WiBA - Prueffragen (statisch, per Seed)
+// ============================================
+export const wibaPrueffragen = pgTable('wiba_prueffragen', {
+  id: integer('id').primaryKey(),
+  checklistId: integer('checklist_id').notNull().references(() => wibaChecklists.id),
+  questionNumber: integer('question_number').notNull(),
+  questionText: text('question_text').notNull(),
+  hilfsmittel: text('hilfsmittel'),
+  aufwandKategorie: integer('aufwand_kategorie'), // 1-4
+  grundschutzRef: varchar('grundschutz_ref', { length: 100 }),
+})
+
+export const wibaPrueffragenRelations = relations(wibaPrueffragen, ({ one, many }) => ({
+  checklist: one(wibaChecklists, {
+    fields: [wibaPrueffragen.checklistId],
+    references: [wibaChecklists.id],
+  }),
+  answers: many(wibaAnswers),
+}))
+
+// ============================================
+// WiBA - Assessments (tenant-scoped)
+// ============================================
+export const wibaAssessments = pgTable('wiba_assessments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  coordinatorId: uuid('coordinator_id').references(() => users.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 20 }).default('draft'), // draft | in_progress | completed
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_wiba_assessments_tenant').on(table.tenantId),
+  index('idx_wiba_assessments_status').on(table.tenantId, table.status),
+])
+
+export const wibaAssessmentsRelations = relations(wibaAssessments, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [wibaAssessments.tenantId],
+    references: [tenants.id],
+  }),
+  coordinator: one(users, {
+    fields: [wibaAssessments.coordinatorId],
+    references: [users.id],
+  }),
+  answers: many(wibaAnswers),
+}))
+
+// ============================================
+// WiBA - Answers (tenant-scoped)
+// ============================================
+export const wibaAnswers = pgTable('wiba_answers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  assessmentId: uuid('assessment_id').notNull().references(() => wibaAssessments.id, { onDelete: 'cascade' }),
+  prueffrageId: integer('prueffrage_id').notNull().references(() => wibaPrueffragen.id),
+  answer: varchar('answer', { length: 20 }).notNull(), // ja | nein | nicht_relevant
+  notizen: text('notizen'),
+  answeredBy: uuid('answered_by').references(() => users.id, { onDelete: 'set null' }),
+  answeredAt: timestamp('answered_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_wiba_answers_assessment').on(table.assessmentId),
+  index('idx_wiba_answers_tenant_assessment').on(table.tenantId, table.assessmentId),
+])
+
+export const wibaAnswersRelations = relations(wibaAnswers, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [wibaAnswers.tenantId],
+    references: [tenants.id],
+  }),
+  assessment: one(wibaAssessments, {
+    fields: [wibaAnswers.assessmentId],
+    references: [wibaAssessments.id],
+  }),
+  prueffrage: one(wibaPrueffragen, {
+    fields: [wibaAnswers.prueffrageId],
+    references: [wibaPrueffragen.id],
+  }),
+  answeredByUser: one(users, {
+    fields: [wibaAnswers.answeredBy],
+    references: [users.id],
+  }),
+}))
+
+export type WibaChecklist = typeof wibaChecklists.$inferSelect
+export type WibaPrueffrage = typeof wibaPrueffragen.$inferSelect
+export type WibaAssessment = typeof wibaAssessments.$inferSelect
+export type NewWibaAssessment = typeof wibaAssessments.$inferInsert
+export type WibaAnswer = typeof wibaAnswers.$inferSelect
+export type NewWibaAnswer = typeof wibaAnswers.$inferInsert
