@@ -1677,6 +1677,7 @@ export const wibaAssessments = pgTable('wiba_assessments', {
   tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
+  clientCompanyId: uuid('client_company_id').references(() => companies.id, { onDelete: 'set null' }),
   coordinatorId: uuid('coordinator_id').references(() => users.id, { onDelete: 'set null' }),
   status: varchar('status', { length: 20 }).default('draft'), // draft | in_progress | completed
   startedAt: timestamp('started_at', { withTimezone: true }),
@@ -1686,12 +1687,17 @@ export const wibaAssessments = pgTable('wiba_assessments', {
 }, (table) => [
   index('idx_wiba_assessments_tenant').on(table.tenantId),
   index('idx_wiba_assessments_status').on(table.tenantId, table.status),
+  index('idx_wiba_assessments_client').on(table.tenantId, table.clientCompanyId),
 ])
 
 export const wibaAssessmentsRelations = relations(wibaAssessments, ({ one, many }) => ({
   tenant: one(tenants, {
     fields: [wibaAssessments.tenantId],
     references: [tenants.id],
+  }),
+  clientCompany: one(companies, {
+    fields: [wibaAssessments.clientCompanyId],
+    references: [companies.id],
   }),
   coordinator: one(users, {
     fields: [wibaAssessments.coordinatorId],

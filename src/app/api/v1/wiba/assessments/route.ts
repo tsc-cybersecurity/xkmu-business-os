@@ -13,6 +13,7 @@ import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 const createAssessmentSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().max(1000).optional(),
+  clientCompanyId: z.string().uuid(),
 })
 
 export async function GET(request: NextRequest) {

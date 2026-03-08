@@ -1,0 +1,72 @@
+import Link from 'next/link'
+import { Shield, ClipboardCheck, Award } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+
+export default function CybersecurityPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Cybersecurity</h1>
+        <p className="text-muted-foreground">
+          IT-Sicherheit fuer Ihr Unternehmen - Audits, Checklisten und Massnahmen
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <Link href="/intern/din-audit">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-blue-500/10 p-3">
+                  <ClipboardCheck className="h-6 w-6 text-blue-500" />
+                </div>
+                <CardTitle className="text-lg">DIN SPEC 27076</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                IT-Sicherheitsaudits nach DIN SPEC 27076 fuer KMU durchfuehren und verwalten.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/intern/din-audit/grants">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-green-500/10 p-3">
+                  <Award className="h-6 w-6 text-green-500" />
+                </div>
+                <CardTitle className="text-lg">Foerdermittel</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Foerderprogramme fuer IT-Sicherheit in kleinen und mittleren Unternehmen.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/intern/cybersecurity/basisabsicherung">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-purple-500/10 p-3">
+                  <Shield className="h-6 w-6 text-purple-500" />
+                </div>
+                <CardTitle className="text-lg">Basisabsicherung</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                BSI Weg in die Basis-Absicherung (WiBA) - 19 Checklisten fuer grundlegende IT-Sicherheit.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+    </div>
+  )
+}

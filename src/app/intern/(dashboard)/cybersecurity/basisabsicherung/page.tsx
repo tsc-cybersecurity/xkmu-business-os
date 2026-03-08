@@ -13,6 +13,7 @@ interface Assessment {
   id: string
   name: string
   description: string | null
+  companyName: string | null
   status: string | null
   createdAt: string
   completedAt: string | null
@@ -135,7 +136,12 @@ export default function BasisabsicherungPage() {
                 <Card className="transition-shadow hover:shadow-md cursor-pointer">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{assessment.name}</CardTitle>
+                      <div>
+                        <CardTitle className="text-lg">{assessment.name}</CardTitle>
+                        {assessment.companyName && (
+                          <p className="text-sm text-muted-foreground">{assessment.companyName}</p>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={statusVariants[assessment.status || 'draft']}>
                           {statusLabels[assessment.status || 'draft']}

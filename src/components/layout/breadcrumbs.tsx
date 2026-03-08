@@ -49,6 +49,9 @@ const segmentLabels: Record<string, string> = {
   navigation: 'Navigation',
   grants: 'Fördermittel',
   new: 'Neu',
+  checklist: 'Checkliste',
+  report: 'Bericht',
+  interview: 'Interview',
 }
 
 // Segments to skip in breadcrumb display

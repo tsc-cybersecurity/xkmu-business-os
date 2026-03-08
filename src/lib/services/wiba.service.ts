@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { wibaChecklists, wibaPrueffragen, wibaAssessments, wibaAnswers } from '@/lib/db/schema'
+import { wibaChecklists, wibaPrueffragen, wibaAssessments, wibaAnswers, companies } from '@/lib/db/schema'
 import { eq, and, count, desc, sql } from 'drizzle-orm'
 import type { WibaAssessment, WibaAnswer } from '@/lib/db/schema'
 
@@ -12,6 +12,7 @@ export interface WibaAssessmentFilters {
 export interface CreateAssessmentInput {
   name: string
   description?: string
+  clientCompanyId: string
 }
 
 export interface SaveAnswerInput {
@@ -88,6 +89,7 @@ export const WibaService = {
         tenantId,
         name: data.name,
         description: data.description || null,
+        clientCompanyId: data.clientCompanyId,
         coordinatorId: userId,
         status: 'draft',
       })
@@ -96,12 +98,26 @@ export const WibaService = {
   },
 
   async getAssessmentById(tenantId: string, id: string) {
-    const [assessment] = await db
-      .select()
+    const [result] = await db
+      .select({
+        id: wibaAssessments.id,
+        tenantId: wibaAssessments.tenantId,
+        name: wibaAssessments.name,
+        description: wibaAssessments.description,
+        clientCompanyId: wibaAssessments.clientCompanyId,
+        coordinatorId: wibaAssessments.coordinatorId,
+        status: wibaAssessments.status,
+        startedAt: wibaAssessments.startedAt,
+        completedAt: wibaAssessments.completedAt,
+        createdAt: wibaAssessments.createdAt,
+        updatedAt: wibaAssessments.updatedAt,
+        companyName: companies.name,
+      })
       .from(wibaAssessments)
+      .leftJoin(companies, eq(wibaAssessments.clientCompanyId, companies.id))
       .where(and(eq(wibaAssessments.tenantId, tenantId), eq(wibaAssessments.id, id)))
       .limit(1)
-    return assessment ?? null
+    return result ?? null
   },
 
   async listAssessments(tenantId: string, filters: WibaAssessmentFilters = {}) {
@@ -115,8 +131,22 @@ export const WibaService = {
 
     const [items, [{ total }]] = await Promise.all([
       db
-        .select()
+        .select({
+          id: wibaAssessments.id,
+          tenantId: wibaAssessments.tenantId,
+          name: wibaAssessments.name,
+          description: wibaAssessments.description,
+          clientCompanyId: wibaAssessments.clientCompanyId,
+          coordinatorId: wibaAssessments.coordinatorId,
+          status: wibaAssessments.status,
+          startedAt: wibaAssessments.startedAt,
+          completedAt: wibaAssessments.completedAt,
+          createdAt: wibaAssessments.createdAt,
+          updatedAt: wibaAssessments.updatedAt,
+          companyName: companies.name,
+        })
         .from(wibaAssessments)
+        .leftJoin(companies, eq(wibaAssessments.clientCompanyId, companies.id))
         .where(whereClause!)
         .orderBy(desc(wibaAssessments.createdAt))
         .limit(limit)

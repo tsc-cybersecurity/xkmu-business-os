@@ -44,6 +44,7 @@ interface Assessment {
   id: string
   name: string
   description: string | null
+  companyName: string | null
   status: string | null
   createdAt: string
 }
@@ -128,9 +129,11 @@ export default function AssessmentDashboardPage({ params }: { params: Promise<{ 
           </Link>
           <div>
             <h1 className="text-3xl font-bold">{assessment.name}</h1>
-            {assessment.description && (
-              <p className="text-muted-foreground">{assessment.description}</p>
-            )}
+            <p className="text-muted-foreground">
+              {assessment.companyName && <>{assessment.companyName}</>}
+              {assessment.companyName && assessment.description && ' - '}
+              {assessment.description && <>{assessment.description}</>}
+            </p>
           </div>
         </div>
         <div className="flex gap-2">
