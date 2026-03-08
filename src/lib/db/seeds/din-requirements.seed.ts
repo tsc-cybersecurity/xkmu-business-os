@@ -8,6 +8,8 @@ import type { NewDinRequirement } from '../schema'
  */
 export const requirementsSeedData: NewDinRequirement[] = [
   // === Themenbereich 1: Organisation & Sensibilisierung ===
+  // === Themenbereich 1: Organisation & Sensibilisierung ===
+  // Anforderung 01: TOP, 3/−3 Punkte (Einzelanforderung)
   {
     id: 1,
     number: '01',
@@ -15,12 +17,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'top',
     topicArea: 1,
+    points: 3,
     officialAnforderungText: 'Die Geschaeftsfuehrung muss die Gesamtverantwortung fuer die Informationssicherheit im Unternehmen tragen.',
     questionText: 'Wer traegt die Gesamtverantwortung fuer IT- und Informationssicherheit in Ihrem Unternehmen?',
     recommendationText: 'Die Geschaeftsfuehrung muss die Gesamtverantwortung fuer die Informationssicherheit im Unternehmen uebernehmen. Das Thema IT- und Informationssicherheit muss als relevantes und immer aktuelles Alltagsthema von der Geschaeftsleitung in alle Abteilungen des Unternehmens hineingetragen werden.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 02: 1/0 Punkte (Gruppe: 02-1, 02-2, 02-3 - alle muessen erfuellt sein)
   {
     id: 2,
     number: '02-1',
@@ -28,6 +32,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 1,
+    points: 1,
     officialAnforderungText: 'Die Geschaeftsfuehrung muss – sofern sie sich nicht alleine um die IT kuemmert – eine verantwortliche Person benennen koennen.',
     questionText: 'Haben Sie jemanden, der fuer die IT- und Informationssicherheit zustaendig ist? Wenn ja, wer ist das?',
     recommendationText: 'Ernennen Sie eine fuer die Informationssicherheit zustaendige Person oder beauftragen Sie formell einen Dienstleister.',
@@ -41,6 +46,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Die Geschaeftsfuehrung muss dafuer sorgen, dass die fuer IT- und Informationssicherheit beauftragte Person fuer die Wahrnehmung ihrer Aufgaben ueber die notwendigen Kapazitaeten verfuegt.',
     questionText: 'Wieviel Kapazitaeten stehen Ihnen oder der von Ihnen benannten Person fuer diese Taetigkeit zur Verfuegung?',
     recommendationText: 'Die zustaendige Person muss ueber genug freie Kapazitaeten verfuegen und sich regelmaessig zur IT- und Informationssicherheit weiterbilden koennen.',
@@ -54,12 +60,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 3,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Die Geschaeftsfuehrung muss dafuer Sorge tragen, dass die beauftragte Person ueber relevante Kenntnisse im Bereich der Informationssicherheit verfuegt.',
     questionText: 'Ueber welche Kenntnisse zur IT- und Informationssicherheit verfuegen Sie bzw. die zustaendige Person?',
     recommendationText: 'Die beauftragte Person muss ueber relevante Kenntnisse im Bereich der Informationssicherheit verfuegen.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 03: 1/0 Punkte (Einzelanforderung)
   {
     id: 5,
     number: '03',
@@ -67,12 +75,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'regular',
     topicArea: 1,
+    points: 1,
     officialAnforderungText: 'Es muss ein Notfallkontakt fuer unregelmaessige oder ungewoehnliche Vorkommnisse zur Verfuegung stehen.',
     questionText: 'An wen wenden sich Beschaeftigte, wenn ein unregelmaessiges oder ungewoehnliches Vorkommnis erkannt wird oder IT-Arbeitsgeraete verloren gehen?',
     recommendationText: 'Beschaeftigte muessen jederzeit eine Ansprechperson (Notfallkontakt) erreichen koennen, um ungewoehnliche Vorkommnisse oder Verluste unverzueglich zu melden.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 04: 1/0 Punkte (Gruppe: 04-1, 04-2)
   {
     id: 6,
     number: '04-1',
@@ -80,6 +90,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 1,
+    points: 1,
     officialAnforderungText: 'Im Falle eines Sicherheitsvorfalles muss jedem Beschaeftigten klar sein, wie er sich zu verhalten hat und wem er was und wann melden muss (Notfallplan)',
     questionText: 'Haben Sie klar geregelt, wie sich Beschaeftigte bei einem IT-Sicherheitsvorfall verhalten und wem sie was und wann mitteilen muessen?',
     recommendationText: 'Es muss ein Notfallplan entwickelt und allen Beschaeftigten zur Verfuegung gestellt werden.',
@@ -93,12 +104,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Es muss eine verantwortliche Person benannt werden, die dafuer Sorge traegt, dass allen Beschaeftigten klar ist, wie sie sich bei einem IT-Notfall zu verhalten haben.',
     questionText: 'Wer kuemmert sich darum, dass Beschaeftigte die Verhaltensweisen bei IT-Notfaellen kennen und beachten?',
     recommendationText: 'Es muss eine Person bestimmt werden, die Beschaeftigte ueber die Verhaltensweisen bei IT-Notfaellen informiert.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 05: TOP, 3/−3 Punkte (Gruppe: 05-1, 05-2)
   {
     id: 8,
     number: '05-1',
@@ -106,6 +119,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'top',
     topicArea: 1,
+    points: 3,
     officialAnforderungText: 'Alle Unternehmensangehoerigen muessen mit der IT und dem Netzwerk sicher umgehen und verdaechtige Vorkommnisse identifizieren koennen. Hierfuer bedarf es Einweisungen, Schulungen und Sensibilisierungsmassnahmen.',
     questionText: 'Wie stellen Sie sicher, dass alle Firmenangehoerigen mit der IT und dem Netzwerk sicher umgehen und verdaechtige Vorkommnisse identifizieren koennen?',
     recommendationText: 'Sie muessen sicherstellen, dass alle Firmenangehoerigen sicher mit der IT und dem Netzwerk umgehen koennen. Hierfuer bedarf es Einweisungen, Schulungen und Sensibilisierungsmassnahmen.',
@@ -119,12 +133,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Externe Personen muessen mit der IT und dem Netzwerk sicher umgehen koennen.',
     questionText: 'Wie stellen Sie sicher, dass externe Personen ueber den gleichen Kenntnisstand verfuegen wie Ihre Beschaeftigten?',
     recommendationText: 'Sie muessen sicherstellen, dass externe Personen sicher mit der IT und dem Netzwerk umgehen koennen.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 06: 1/0 Punkte (Gruppe: 06-1, 06-2)
   {
     id: 10,
     number: '06-1',
@@ -132,6 +148,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 1,
+    points: 1,
     officialAnforderungText: 'Es muessen interne Regelungen zur Vertraulichkeit formuliert sein.',
     questionText: 'Haben Sie interne Regelungen zur Vertraulichkeit formuliert?',
     recommendationText: 'Die Geschaeftsleitung muss interne Regelungen zur Vertraulichkeit im Umgang mit der IT formulieren.',
@@ -145,12 +162,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Externe Personen muessen schriftlich verpflichtet werden, interne Regeln der Vertraulichkeit einzuhalten.',
     questionText: 'Werden externe Personen verpflichtet, interne Regelungen zur Vertraulichkeit einzuhalten?',
     recommendationText: 'Externe Personen muessen schriftlich zur Einhaltung interner Vertraulichkeitsregelungen verpflichtet werden.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 07: 1/0 Punkte (bedingt, abhaengig von Statusabfrage 07-0; Gruppe: 07-1..07-4)
   {
     id: 12,
     number: '07-0',
@@ -158,6 +177,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 0,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Statusabfrage',
     questionText: 'Haben Sie Beschaeftigte, die im Homeoffice oder die mobil arbeiten?',
     recommendationText: '',
@@ -171,6 +191,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 1,
+    points: 1,
     officialAnforderungText: 'Es muss eine Richtlinie existieren, die die Sicherheitsmassnahmen im Homeoffice und beim mobilen Arbeiten festlegt.',
     questionText: 'Haben Sie eine Richtlinie fuer Sicherheitsmassnahmen im Homeoffice und beim mobilen Arbeiten?',
     recommendationText: 'Es muss eine Richtlinie fuer Sicherheitsmassnahmen zum mobilen Arbeiten vorliegen.',
@@ -184,6 +205,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Die Richtlinie muss vom Beschaeftigten unterschrieben ans Unternehmen zurueckgegeben werden.',
     questionText: 'Wie bestaetigen Ihnen die Beschaeftigten den Empfang der Richtlinie zu Sicherheitsmassnahmen?',
     recommendationText: 'Die Kenntnisnahme der Richtlinie muss von allen Beschaeftigten schriftlich bestaetigt werden.',
@@ -197,6 +219,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 3,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Eine Kopie der Richtlinie muss beim Beschaeftigten verbleiben.',
     questionText: 'Erhalten Beschaeftigte eine Kopie?',
     recommendationText: 'Die Richtlinie muss den Beschaeftigten als Kopie ausgehaendigt werden.',
@@ -210,6 +233,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 4,
     type: 'regular',
     topicArea: 1,
+    points: null,
     officialAnforderungText: 'Die Richtlinie muss auf Aktualitaet ueberprueft werden.',
     questionText: 'Wann erfolgt eine Pruefung der Richtlinie im Hinblick auf Aktualitaet?',
     recommendationText: 'Pruefen Sie die Richtlinien auf Aktualitaet bei Aenderungen bzgl. Informationssicherheit.',
@@ -218,6 +242,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
   },
 
   // === Themenbereich 2: Identitaets- & Berechtigungsmanagement ===
+  // Anforderung 08: 1/0 Punkte (Gruppe: 08-1, 08-2)
   {
     id: 17,
     number: '08-1',
@@ -225,6 +250,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 2,
+    points: 1,
     officialAnforderungText: 'Es muss sichergestellt sein, dass nur berechtigte Personen Zutritt zu den Raeumlichkeiten des Unternehmens haben.',
     questionText: 'Wie regeln Sie, dass ausschliesslich berechtigte Personen in Ihr Unternehmen und in bestimmte Raeumlichkeiten gelangen?',
     recommendationText: 'Gewaehren Sie den Zutritt zu den Raeumlichkeiten ausschliesslich Personen, die diesen benoetigen.',
@@ -238,12 +264,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 2,
+    points: null,
     officialAnforderungText: 'Jeder Beschaeftigte darf nur Zugriff auf Daten, Ordner, Anwendungen und Netzwerkbereiche haben, fuer die er zustaendig ist.',
     questionText: 'Haben alle Beschaeftigten uneingeschraenkten Zugriff auf alle Daten, Ordner, Anwendungen und Netzwerkbereiche?',
     recommendationText: 'Gewaehren Sie den Zugriff nur denjenigen Personen, die diese benoetigen.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 09: 1/0 Punkte (Gruppe: 09-1, 09-2)
   {
     id: 19,
     number: '09-1',
@@ -251,6 +279,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 2,
+    points: 1,
     officialAnforderungText: 'Alle Beschaeftigten muessen angewiesen werden, fuer jedes Benutzerkonto ein individuelles Passwort zu benutzen.',
     questionText: 'Muessen alle Ihre Beschaeftigten bei der Anmeldung an ihren Benutzerkonten immer ein individuelles Passwort nutzen?',
     recommendationText: 'Jeder Beschaeftigte muss bei der Anmeldung stets ein individuelles Passwort eingeben.',
@@ -264,12 +293,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 2,
+    points: null,
     officialAnforderungText: 'Verwendete Passwoerter muessen moeglichst lang und komplex sein.',
     questionText: 'Nach welchem Muster sind Ihre Passwoerter zusammengesetzt?',
     recommendationText: 'Nutzen Sie moeglichst lange und komplexe Passwoerter und ggfs. einen Passwortmanager.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 10: 1/0 Punkte (Einzelanforderung)
   {
     id: 21,
     number: '10',
@@ -277,6 +308,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'regular',
     topicArea: 2,
+    points: 1,
     officialAnforderungText: 'Sofern eine 2-Faktor-Authentifizierung angeboten wird, muss sie benutzt werden.',
     questionText: 'Nutzen Sie eine 2-Faktor-Authentifizierung zur Anmeldung?',
     recommendationText: 'Nutzen Sie, wann immer moeglich, die 2-Faktor-Authentifizierung.',
@@ -285,6 +317,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
   },
 
   // === Themenbereich 3: Datensicherung ===
+  // Anforderung 11: TOP, 3/−3 Punkte (bedingt, abhaengig von Statusabfrage 11-0)
   {
     id: 22,
     number: '11-0',
@@ -292,6 +325,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 0,
     type: 'regular',
     topicArea: 3,
+    points: null,
     officialAnforderungText: 'Statusabfrage',
     questionText: 'Fuehren Sie in Ihrem Unternehmen Datensicherungen durch?',
     recommendationText: '',
@@ -305,12 +339,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'top',
     topicArea: 3,
+    points: 3,
     officialAnforderungText: 'Datensicherungen muessen in bestimmten Intervallen durchgefuehrt werden.',
     questionText: 'Wie haeufig fuehren Sie die Datensicherung durch? Wie laeuft die Datensicherung in Ihrem Unternehmen ab?',
     recommendationText: 'Sichern Sie Ihre Daten regelmaessig so, dass bei einem Datenverlust die Fortfuehrung des Geschaeftsbetriebes sichergestellt ist.',
     isStatusQuestion: false,
     dependsOn: 22,
   },
+  // Anforderung 12: 1/0 Punkte (Einzelanforderung)
   {
     id: 24,
     number: '12',
@@ -318,12 +354,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'regular',
     topicArea: 3,
+    points: 1,
     officialAnforderungText: 'Die Datensicherung muss vor unbefugtem Zugriff gesichert werden.',
     questionText: 'Welche Moeglichkeiten nutzen Sie, um Ihre Datensicherung vor unbefugtem Zugriff zu schuetzen?',
     recommendationText: 'Datentraeger mit der Datensicherung muessen an sicheren Orten verwahrt und verschluesselt sein.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 13: 1/0 Punkte (Gruppe: 13-1, 13-2)
   {
     id: 25,
     number: '13-1',
@@ -331,6 +369,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 3,
+    points: 1,
     officialAnforderungText: 'Es muss festgelegt werden, wie die Daten gesichert werden.',
     questionText: 'Ist das Verfahren der Datensicherung verschriftlicht?',
     recommendationText: 'Es wird empfohlen, ein verschriftlichtes Verfahren zu erarbeiten, das Art, Speicherorte und Haeufigkeit der Datensicherung festlegt.',
@@ -344,12 +383,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 3,
+    points: null,
     officialAnforderungText: 'Es muss eine Zustaendigkeit festgelegt werden, wer die Daten sichert.',
     questionText: 'Wer fuehrt die Datensicherung durch?',
     recommendationText: 'Bestimmen Sie eine verantwortliche Person fuer die Datensicherung.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 14: 1/0 Punkte (Gruppe: 14-1, 14-2, 14-3)
   {
     id: 27,
     number: '14-1',
@@ -357,6 +398,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 3,
+    points: 1,
     officialAnforderungText: 'Die Datensicherung muss auf externen Speichermedien abgelegt werden.',
     questionText: 'Wo wird Ihre Datensicherung gespeichert bzw. abgelegt?',
     recommendationText: 'Die Datensicherung muss auf externen Speichermedien erfolgen.',
@@ -370,6 +412,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 3,
+    points: null,
     officialAnforderungText: 'Es muss getestet werden, ob extern gesicherte Daten funktionsfaehig und vollstaendig vorhanden sind.',
     questionText: 'Wie ueberpruefen Sie, ob die externe Datensicherung funktioniert hat und ob die Daten vollstaendig sind?',
     recommendationText: 'Es muessen Tests der Datensicherungen auf Funktionsfaehigkeit und Vollstaendigkeit durchgefuehrt werden.',
@@ -383,6 +426,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 3,
     type: 'regular',
     topicArea: 3,
+    points: null,
     officialAnforderungText: 'Die Testung der externen Datensicherung muss in sinnvollen Abstaenden erfolgen.',
     questionText: 'Wie oft ueberpruefen Sie die externe Datensicherung?',
     recommendationText: 'Es wird empfohlen, regelmaessig die Datensicherung zu testen - mindestens zweimal jaehrlich.',
@@ -391,6 +435,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
   },
 
   // === Themenbereich 4: Patch- & Aenderungsmanagement ===
+  // Anforderung 15: TOP, 3/−3 Punkte (Gruppe: 15-1, 15-2)
   {
     id: 30,
     number: '15-1',
@@ -398,6 +443,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'top',
     topicArea: 4,
+    points: 3,
     officialAnforderungText: 'Updates fuer IT-Systeme und Software muessen installiert werden.',
     questionText: 'Machen Sie Updates?',
     recommendationText: 'Aktivieren Sie die von Herstellern bereitgestellten Update-Funktionen Ihrer IT-Arbeitsgeraete oder Software.',
@@ -411,12 +457,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 4,
+    points: null,
     officialAnforderungText: 'Updates muessen unverzueglich nach ihrer Veroeffentlichung installiert werden.',
     questionText: 'Wie lange dauert es, bis Sie Updates installieren?',
     recommendationText: 'Updates muessen unverzueglich installiert werden, sobald der Hersteller sie anbietet.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 16: 1/0 Punkte (Einzelanforderung)
   {
     id: 32,
     number: '16',
@@ -424,12 +472,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'regular',
     topicArea: 4,
+    points: 1,
     officialAnforderungText: 'Es muss festgelegt werden, wer die Updates installiert.',
     questionText: 'Wer installiert die Updates?',
     recommendationText: 'Bestimmen Sie eine verantwortliche Person fuer Updates.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 17: 1/0 Punkte (Gruppe: 17-1, 17-2)
   {
     id: 33,
     number: '17-1',
@@ -437,6 +487,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 4,
+    points: 1,
     officialAnforderungText: 'Hardware und Software, die keine Sicherheitsupdates mehr erhalten, muessen identifiziert werden.',
     questionText: 'Wie pruefen Sie, ob Ihre verwendete Hard- oder Software herstellerseitig noch Sicherheitsupdates erhaelt?',
     recommendationText: 'Sie muessen pruefen, ob Ihre Hard- oder Software noch Sicherheitsupdates erhaelt.',
@@ -450,6 +501,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 4,
+    points: null,
     officialAnforderungText: 'Hardware und Software, die keine Sicherheitsupdates mehr erhalten, muessen ausgemustert werden.',
     questionText: 'Was machen Sie mit Hard- oder Software, die keine Sicherheitsupdates mehr erhaelt?',
     recommendationText: 'Veraltete Komponenten muessen ausgetauscht werden.',
@@ -458,6 +510,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
   },
 
   // === Themenbereich 5: Schutz vor Schadprogrammen ===
+  // Anforderung 18: 1/0 Punkte (Einzelanforderung)
   {
     id: 35,
     number: '18',
@@ -465,12 +518,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'regular',
     topicArea: 5,
+    points: 1,
     officialAnforderungText: 'IT-Geraete muessen mit einem Schutz vor Schadsoftware ausgestattet sein.',
     questionText: 'Wie schuetzen Sie Ihre IT-Geraete vor Schadsoftware?',
     recommendationText: 'IT-Geraete muessen mit einem Schutz vor Schadsoftware ausgestattet sein.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 19: 1/0 Punkte (Gruppe: 19-1, 19-2)
   {
     id: 36,
     number: '19-1',
@@ -478,6 +533,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 5,
+    points: 1,
     officialAnforderungText: 'Software darf nur von vertrauenswuerdigen Quellen bezogen werden.',
     questionText: 'Woran machen Sie fest, dass eine Quelle zum Herunterladen von Software vertrauenswuerdig ist?',
     recommendationText: 'Software muss immer von vertrauenswuerdigen Quellen bezogen werden.',
@@ -491,12 +547,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 5,
+    points: null,
     officialAnforderungText: 'Nur IT-verantwortliche Personen duerfen Software installieren.',
     questionText: 'Wer kann bei Ihnen Software installieren?',
     recommendationText: 'Software muss immer von IT-verantwortlichen Personen installiert werden.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 20: TOP, 3/−3 Punkte (Gruppe: 20-1, 20-2)
   {
     id: 38,
     number: '20-1',
@@ -504,6 +562,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'top',
     topicArea: 5,
+    points: 3,
     officialAnforderungText: 'Das Ausfuehren von Makros muss standardmaessig deaktiviert sein.',
     questionText: 'Sind Makros bei Ihnen standardmaessig aktiviert?',
     recommendationText: 'Das Ausfuehren von Makros muss standardmaessig deaktiviert sein.',
@@ -517,6 +576,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 5,
+    points: null,
     officialAnforderungText: 'Nur in begruendeten Ausnahmefaellen duerfen autorisierte Personen Makros aktivieren.',
     questionText: 'Wer kann in Ihrem Unternehmen Makros in begruendeten Ausnahmefaellen aktivieren?',
     recommendationText: 'Es muss festgelegt werden, unter welchen Voraussetzungen Makros aktiviert werden duerfen.',
@@ -525,6 +585,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
   },
 
   // === Themenbereich 6: IT-Systeme & Netzwerke ===
+  // Anforderung 21: 1/0 Punkte (Einzelanforderung)
   {
     id: 40,
     number: '21',
@@ -532,12 +593,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'regular',
     topicArea: 6,
+    points: 1,
     officialAnforderungText: 'Eine Firewall muss installiert werden.',
     questionText: 'Setzen Sie eine Firewall ein, um Ihr Firmennetzwerk vor Angriffen zu schuetzen?',
     recommendationText: 'Es muss eine Firewall installiert sein.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 22: 1/0 Punkte (Gruppe: 22-1, 22-2)
   {
     id: 41,
     number: '22-1',
@@ -545,6 +608,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 6,
+    points: 1,
     officialAnforderungText: 'Die Firewall muss so konfiguriert sein, dass nur erforderliche Dienste zugelassen sind.',
     questionText: 'Ist Ihre Firewall individuell konfiguriert?',
     recommendationText: 'Die Firewall muss individuell konfiguriert sein, sodass nur erforderliche Dienste zugelassen sind.',
@@ -558,12 +622,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 6,
+    points: null,
     officialAnforderungText: 'Es muss eine Person bestimmt werden, die ueber die Konfiguration der Firewall entscheidet.',
     questionText: 'Wer entscheidet darueber, wie die Firewall konfiguriert wird?',
     recommendationText: 'Es muss eine Person bestimmt werden, die ueber die Firewall-Konfiguration entscheidet.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 23: 1/0 Punkte (Einzelanforderung)
   {
     id: 43,
     number: '23',
@@ -571,12 +637,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'regular',
     topicArea: 6,
+    points: 1,
     officialAnforderungText: 'Alle Computer, Laptops, Tablets oder Smartphones muessen passwortgeschuetzt sein.',
     questionText: 'Schuetzen Sie Computer, Laptops, Tablets und Smartphones mit einem Passwort?',
     recommendationText: 'Alle IT-Geraete muessen passwortgeschuetzt sein.',
     isStatusQuestion: false,
     dependsOn: null,
   },
+  // Anforderung 24: 1/0 Punkte (bedingt, abhaengig von Statusabfrage 24-0)
   {
     id: 44,
     number: '24-0',
@@ -584,6 +652,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 0,
     type: 'regular',
     topicArea: 6,
+    points: null,
     officialAnforderungText: 'Statusabfrage',
     questionText: 'Greifen Ihre Beschaeftigten von unterwegs oder aus dem Homeoffice auf das Firmennetzwerk zu?',
     recommendationText: '',
@@ -597,12 +666,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 6,
+    points: 1,
     officialAnforderungText: 'Beim mobilen Arbeiten muessen Beschaeftigte eine verschluesselte Verbindung (VPN) nutzen.',
     questionText: 'Nutzen Sie eine verschluesselte Verbindung (VPN) zum externen Zugriff auf das Firmennetzwerk?',
     recommendationText: 'Der Zugriff auf das Firmennetzwerk von extern muss verschluesselt erfolgen (VPN).',
     isStatusQuestion: false,
     dependsOn: 44,
   },
+  // Anforderung 25: 1/0 Punkte (bedingt, abhaengig von Statusabfrage 25-0; Gruppe: 25-1..25-4)
   {
     id: 46,
     number: '25-0',
@@ -610,6 +681,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 0,
     type: 'regular',
     topicArea: 6,
+    points: null,
     officialAnforderungText: 'Statusabfrage',
     questionText: 'Gehen Sie ueber WLAN ins Internet?',
     recommendationText: '',
@@ -623,6 +695,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 6,
+    points: 1,
     officialAnforderungText: 'Das WLAN muss nach aktuellen Standards verschluesselt sein.',
     questionText: 'Wissen Sie, mit welcher Verschluesselung Sie ueber WLAN ins Internet gehen?',
     recommendationText: 'Das WLAN muss mindestens mit WPA-2 verschluesselt werden.',
@@ -636,6 +709,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 6,
+    points: null,
     officialAnforderungText: 'Das WLAN muss mit einem komplexen Passwort (mindestens 20 Zeichen) geschuetzt werden.',
     questionText: 'Nach welchem Muster setzt sich Ihr Passwort fuer das WLAN zusammen?',
     recommendationText: 'Das WLAN muss mit einem mindestens 20 Zeichen langen Passwort geschuetzt werden.',
@@ -649,6 +723,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 3,
     type: 'regular',
     topicArea: 6,
+    points: null,
     officialAnforderungText: 'Statusabfrage',
     questionText: 'Gehen Gaeste oder Beschaeftigte mit privaten Geraeten ueber WLAN ins Internet?',
     recommendationText: '',
@@ -662,12 +737,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 4,
     type: 'regular',
     topicArea: 6,
+    points: null,
     officialAnforderungText: 'Fuer Gaeste oder Mitarbeiter mit privater Hardware muss ein getrenntes WLAN eingerichtet sein.',
     questionText: 'Wie gehen die Gaeste oder Beschaeftigten mit privater Hardware bei Ihnen ins Internet?',
     recommendationText: 'Fuer Gaeste muss ein getrenntes, verschluesseltes WLAN eingerichtet werden.',
     isStatusQuestion: false,
     dependsOn: 49,
   },
+  // Anforderung 26: 1/0 Punkte (bedingt, abhaengig von Statusabfrage 26-0; Gruppe: 26-1, 26-2)
   {
     id: 51,
     number: '26-0',
@@ -675,6 +752,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 0,
     type: 'regular',
     topicArea: 6,
+    points: null,
     officialAnforderungText: 'Statusabfrage',
     questionText: 'Greift jemand mittels Fernwartung auf Server oder Computer in Ihrem Unternehmen zu?',
     recommendationText: '',
@@ -688,6 +766,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 1,
     type: 'regular',
     topicArea: 6,
+    points: 1,
     officialAnforderungText: 'Es muss geregelt werden, unter welchen Bedingungen eine Fernwartung erfolgt.',
     questionText: 'Unter welchen Bedingungen erfolgt bei Ihnen die Fernwartung Ihrer IT-Systeme?',
     recommendationText: 'Es muss geregelt werden, unter welchen Bedingungen und zu welchem Zeitpunkt eine Fernwartung erfolgt.',
@@ -701,12 +780,14 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: 2,
     type: 'regular',
     topicArea: 6,
+    points: null,
     officialAnforderungText: 'Fernwartungen muessen immer verschluesselt sein.',
     questionText: 'Sind die Fernwartungen verschluesselt?',
     recommendationText: 'Fernwartungen muessen immer verschluesselt sein (z.B. via VPN).',
     isStatusQuestion: false,
     dependsOn: 51,
   },
+  // Anforderung 27: 1/0 Punkte (Einzelanforderung)
   {
     id: 54,
     number: '27',
@@ -714,6 +795,7 @@ export const requirementsSeedData: NewDinRequirement[] = [
     componentNumber: null,
     type: 'regular',
     topicArea: 6,
+    points: 1,
     officialAnforderungText: 'Saemtliche IT-Komponenten muessen vor Elementarschaeden geschuetzt werden.',
     questionText: 'Wie schuetzen Sie Ihre IT vor Elementarschaeden?',
     recommendationText: 'IT-Komponenten muessen vor Feuer, Wasser, unguenstigen Temperaturen und Ueberspannung geschuetzt werden.',

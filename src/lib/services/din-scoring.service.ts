@@ -18,6 +18,7 @@ interface RequirementGroup {
   groupNumber: string
   type: string
   topicArea: number
+  points: number
   components: Array<{
     requirement: DinRequirement
     answer?: DinAnswer
@@ -26,14 +27,20 @@ interface RequirementGroup {
 
 export const DinScoringService = {
   /**
-   * Calculate score for an audit session according to DIN SPEC 27076
+   * Calculate score for an audit session according to DIN SPEC 27076.
    *
-   * Scoring Rules (DIN SPEC 27076 page 12):
-   * - TOP requirements: 3 points if fulfilled, -3 if not fulfilled
-   * - Regular requirements: 1 point if fulfilled, 0 if not fulfilled
-   * - Requirements with components: Points only awarded if ALL components fulfilled
+   * Scoring Rules (DIN SPEC 27076, Section 6.4.1, page 12):
+   * - TOP requirements: +3 points if fulfilled, −3 if not fulfilled
+   * - Regular requirements: +1 point if fulfilled, 0 if not fulfilled
+   * - Points are awarded per GROUP (not per component). A group only scores
+   *   if ALL its components are fulfilled.
    * - Irrelevant requirements: reduce max score by their point value
-   * - Floor logic: minimum score is 0
+   * - Maximum possible score: 5×3 + 22×1 = 37 (dynamic based on relevance)
+   * - Floor: score cannot go below 0
+   *
+   * Topic progress (Section 6.4.2.2, page 14):
+   * - Spider diagram shows percentage of fulfilled requirements per topic
+   * - Each fulfilled requirement increases progress proportionally
    */
   async calculateScore(sessionId: string): Promise<ScoringResult> {
     const answers = await db
@@ -56,12 +63,13 @@ export const DinScoringService = {
     const groups = this.groupRequirements(allRequirements, answerMap)
 
     // Standard maximum: 5 TOP requirements (3 points each) + 22 regular (1 point each) = 37
-    let maxScore = 37
+    let maxScore = 0
     let currentScore = 0
 
-    const topicScores = new Map<number, { current: number; max: number }>()
+    // Topic tracking: fulfilled count / total count per topic
+    const topicCounts = new Map<number, { fulfilled: number; total: number }>()
     for (let i = 1; i <= 6; i++) {
-      topicScores.set(i, { current: 0, max: 0 })
+      topicCounts.set(i, { fulfilled: 0, total: 0 })
     }
 
     let fulfilledCount = 0
@@ -69,18 +77,22 @@ export const DinScoringService = {
     let irrelevantCount = 0
 
     for (const group of groups) {
-      const points = group.type === 'top' ? 3 : 1
-      const topic = topicScores.get(group.topicArea)!
+      const points = group.points
+      const topic = topicCounts.get(group.topicArea)!
 
       const hasIrrelevantComponent = group.components.some(
         (c) => c.answer && c.answer.status === 'irrelevant'
       )
 
       if (hasIrrelevantComponent) {
-        maxScore -= points
+        // Per DIN SPEC 6.4.1: irrelevant requirements reduce max achievable score
         irrelevantCount++
         continue
       }
+
+      // This group is relevant - add its points to max score
+      maxScore += points
+      topic.total++
 
       const allAnswered = group.components.every((c) => c.answer !== undefined)
       if (!allAnswered) continue
@@ -93,27 +105,28 @@ export const DinScoringService = {
       )
 
       if (allFulfilled) {
+        // Per DIN SPEC 6.4.1: points only if ALL components fulfilled
         currentScore += points
-        topic.current += points
-        topic.max += points
+        topic.fulfilled++
         fulfilledCount++
       } else if (anyNotFulfilled) {
         if (group.type === 'top') {
-          currentScore -= 3
-          topic.current -= 3
+          // Per DIN SPEC 6.4.1: TOP requirements get −3 if not fulfilled
+          currentScore -= points
         }
-        topic.max += points
+        // Regular: 0 points if not fulfilled (no change to currentScore)
         notFulfilledCount++
       }
-
-      topicScores.set(group.topicArea, topic)
     }
 
+    // Per DIN SPEC 6.4.1: score cannot be negative
     currentScore = Math.max(0, currentScore)
 
+    // Per DIN SPEC 6.4.2.2 page 14: spider diagram shows percentage of
+    // fulfilled requirements per topic area
     const topicProgress: Record<number, number> = {}
-    topicScores.forEach((value, key) => {
-      topicProgress[key] = value.max > 0 ? Math.round((value.current / value.max) * 100) : 0
+    topicCounts.forEach((value, key) => {
+      topicProgress[key] = value.total > 0 ? Math.round((value.fulfilled / value.total) * 100) : 0
     })
 
     return {
@@ -141,10 +154,13 @@ export const DinScoringService = {
       const groupKey = req.groupNumber || req.number
 
       if (!groupMap.has(groupKey)) {
+        // Use points from DB if available, otherwise derive from type
+        const points = req.points ?? (req.type === 'top' ? 3 : 1)
         groupMap.set(groupKey, {
           groupNumber: groupKey,
           type: req.type,
           topicArea: req.topicArea,
+          points,
           components: [],
         })
       }
