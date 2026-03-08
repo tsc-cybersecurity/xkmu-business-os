@@ -8,10 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, ArrowLeft, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft, Save } from 'lucide-react'
+import { Loader2, ArrowLeft, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft, Save, TrendingUp } from 'lucide-react'
 
 const MAX_JUSTIFICATION_LENGTH = 500
-const AUTO_SAVE_INTERVAL = 30000
 
 type AnswerStatus = 'fulfilled' | 'not_fulfilled' | 'irrelevant'
 
@@ -22,6 +21,7 @@ interface Requirement {
   componentNumber: number | null
   type: string
   topicArea: number
+  points: number | null
   officialAnforderungText: string
   questionText: string
   recommendationText: string | null
@@ -34,6 +34,25 @@ interface AnswerData {
   justification: string
 }
 
+interface ScoringData {
+  currentScore: number
+  maxScore: number
+  fulfilledRequirements: number
+  notFulfilledRequirements: number
+  irrelevantRequirements: number
+  answeredRequirements: number
+  riskLevel: { level: string; color: string; description: string }
+}
+
+const RISK_COLORS: Record<string, string> = {
+  green: 'text-green-600',
+  lightgreen: 'text-green-500',
+  yellow: 'text-yellow-600',
+  orange: 'text-orange-600',
+  red: 'text-red-600',
+  gray: 'text-muted-foreground',
+}
+
 export default function InterviewPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
@@ -44,19 +63,22 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
   const [showSidebar, setShowSidebar] = useState(true)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const autoSaveTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [scoring, setScoring] = useState<ScoringData | null>(null)
+  const justificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const currentReq = requirements[currentIndex]
   const currentAnswer = currentReq ? answers.get(currentReq.id) : undefined
 
   const loadData = useCallback(async () => {
     try {
-      const [reqRes, ansRes] = await Promise.all([
+      const [reqRes, ansRes, scoreRes] = await Promise.all([
         fetch('/api/v1/din/requirements'),
         fetch(`/api/v1/din/audits/${id}/answers`),
+        fetch(`/api/v1/din/audits/${id}/scoring`),
       ])
       const reqData = await reqRes.json()
       const ansData = await ansRes.json()
+      const scoreData = await scoreRes.json()
 
       if (reqData.success) {
         setRequirements(reqData.data.requirements)
@@ -72,6 +94,10 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
         }
         setAnswers(existingAnswers)
       }
+
+      if (scoreData.success) {
+        setScoring(scoreData.data)
+      }
     } catch (error) {
       console.error('Failed to load data:', error)
     } finally {
@@ -82,20 +108,6 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
   useEffect(() => {
     loadData()
   }, [loadData])
-
-  // Auto-save
-  useEffect(() => {
-    if (requirements.length === 0) return
-
-    autoSaveTimerRef.current = setInterval(() => {
-      autoSave()
-    }, AUTO_SAVE_INTERVAL)
-
-    return () => {
-      if (autoSaveTimerRef.current) clearInterval(autoSaveTimerRef.current)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requirements, answers])
 
   // Keyboard navigation
   useEffect(() => {
@@ -110,51 +122,35 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
         setCurrentIndex(currentIndex + 1)
       } else if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
-        handleSaveCurrentAnswer()
+        saveAnswer(currentReq?.id, answers.get(currentReq?.id))
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndex, requirements.length])
+  }, [currentIndex, requirements.length, answers])
 
-  const autoSave = async () => {
-    if (answers.size === 0) return
-    setIsSaving(true)
-    try {
-      const answersArray = Array.from(answers.entries()).map(([reqId, answer]) => ({
-        requirementId: reqId,
-        status: answer.status,
-        justification: answer.justification,
-      }))
-      await fetch(`/api/v1/din/audits/${id}/answers`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers: answersArray }),
-      })
-      setLastSaved(new Date())
-    } catch (error) {
-      console.error('Auto-save failed:', error)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleSaveCurrentAnswer = async () => {
-    if (!currentReq || !currentAnswer) return
+  const saveAnswer = async (reqId: number | undefined, answer: AnswerData | undefined) => {
+    if (!reqId || !answer) return
     setIsSaving(true)
     try {
       await fetch(`/api/v1/din/audits/${id}/answers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          requirementId: currentReq.id,
-          status: currentAnswer.status,
-          justification: currentAnswer.justification,
+          requirementId: reqId,
+          status: answer.status,
+          justification: answer.justification,
         }),
       })
       setLastSaved(new Date())
+      // Refresh scoring after save
+      const scoreRes = await fetch(`/api/v1/din/audits/${id}/scoring`)
+      const scoreData = await scoreRes.json()
+      if (scoreData.success) {
+        setScoring(scoreData.data)
+      }
     } catch (error) {
       console.error('Failed to save answer:', error)
     } finally {
@@ -162,8 +158,34 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
     }
   }
 
+  const handleStatusClick = (status: AnswerStatus) => {
+    if (!currentReq) return
+    const justification = currentAnswer?.justification || ''
+    const newAnswers = new Map(answers)
+    const newAnswer: AnswerData = { status, justification }
+    newAnswers.set(currentReq.id, newAnswer)
+    setAnswers(newAnswers)
+    // Immediately save on status click
+    saveAnswer(currentReq.id, newAnswer)
+  }
+
+  const handleJustificationChange = (value: string) => {
+    if (!currentReq) return
+    const limitedValue = value.slice(0, MAX_JUSTIFICATION_LENGTH)
+    const status = currentAnswer?.status || 'fulfilled'
+    const newAnswers = new Map(answers)
+    const newAnswer: AnswerData = { status, justification: limitedValue }
+    newAnswers.set(currentReq.id, newAnswer)
+    setAnswers(newAnswers)
+    // Debounce justification saves (500ms)
+    if (justificationTimerRef.current) clearTimeout(justificationTimerRef.current)
+    justificationTimerRef.current = setTimeout(() => {
+      saveAnswer(currentReq.id, newAnswer)
+    }, 500)
+  }
+
   const handleSaveAndNext = async () => {
-    await handleSaveCurrentAnswer()
+    await saveAnswer(currentReq?.id, currentAnswer)
     if (currentIndex < requirements.length - 1) {
       setCurrentIndex(currentIndex + 1)
     } else {
@@ -175,14 +197,6 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
       })
       router.push(`/intern/din-audit/${id}/report`)
     }
-  }
-
-  const setAnswer = (status: AnswerStatus, justification: string) => {
-    if (!currentReq) return
-    const limitedJustification = justification.slice(0, MAX_JUSTIFICATION_LENGTH)
-    const newAnswers = new Map(answers)
-    newAnswers.set(currentReq.id, { status, justification: limitedJustification })
-    setAnswers(newAnswers)
   }
 
   const getAnswerStatusIcon = (reqId: number) => {
@@ -206,6 +220,55 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
     return requirements.length > 0 ? (answeredCount / requirements.length) * 100 : 0
   }
 
+  // Get scoring info for the current requirement's group
+  const getGroupScoringInfo = (req: Requirement) => {
+    if (req.isStatusQuestion) {
+      return { label: 'Statusabfrage', detail: 'Bestimmt, ob Folgefragen relevant sind', pointsLabel: null }
+    }
+
+    const groupKey = req.groupNumber || req.number
+    const groupReqs = requirements.filter(
+      (r) => !r.isStatusQuestion && (r.groupNumber === groupKey || (!r.groupNumber && r.number === groupKey))
+    )
+    const isGrouped = groupReqs.length > 1
+    const points = req.type === 'top' ? 3 : 1
+
+    // Determine group fulfillment status
+    const groupAnswers = groupReqs.map((r) => answers.get(r.id))
+    const allAnswered = groupAnswers.every((a) => a !== undefined)
+    const allFulfilled = allAnswered && groupAnswers.every((a) => a?.status === 'fulfilled')
+    const anyNotFulfilled = groupAnswers.some((a) => a?.status === 'not_fulfilled')
+    const anyIrrelevant = groupAnswers.some((a) => a?.status === 'irrelevant')
+
+    let statusText = ''
+    let statusColor = 'text-muted-foreground'
+    if (anyIrrelevant) {
+      statusText = 'Nicht relevant - Punkte entfallen'
+      statusColor = 'text-muted-foreground'
+    } else if (allFulfilled) {
+      statusText = req.type === 'top' ? `+${points} Punkte` : `+${points} Punkt`
+      statusColor = 'text-green-600'
+    } else if (anyNotFulfilled && req.type === 'top') {
+      statusText = `\u2212${points} Punkte`
+      statusColor = 'text-red-600'
+    } else if (anyNotFulfilled) {
+      statusText = '0 Punkte'
+      statusColor = 'text-orange-600'
+    }
+
+    const detail = isGrouped
+      ? `Gruppe ${groupKey}: ${groupReqs.length} Teilanforderungen - alle muessen erfuellt sein`
+      : `Einzelanforderung ${groupKey}`
+
+    return {
+      label: req.type === 'top' ? `TOP-Anforderung (${points} Pkt.)` : `Anforderung (${points} Pkt.)`,
+      detail,
+      pointsLabel: statusText || null,
+      pointsColor: statusColor,
+      groupReqs: isGrouped ? groupReqs : null,
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -217,6 +280,8 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
   if (!currentReq) {
     return <p className="text-muted-foreground">Keine Fragen verfuegbar.</p>
   }
+
+  const groupInfo = getGroupScoringInfo(currentReq)
 
   return (
     <div className="flex h-[calc(100vh-64px)] -m-6">
@@ -235,6 +300,28 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
               {requirements.filter((req) => answers.has(req.id)).length} von {requirements.length} beantwortet
             </p>
           </div>
+
+          {/* Live Score in Sidebar */}
+          {scoring && (
+            <div className="p-4 border-b bg-muted/30">
+              <div className="flex items-center gap-2 mb-1">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-semibold">
+                  Punktestand: {scoring.currentScore} / {scoring.maxScore}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Progress
+                  value={scoring.maxScore > 0 ? (scoring.currentScore / scoring.maxScore) * 100 : 0}
+                  className="h-1.5 flex-1"
+                />
+                <span className={`text-xs font-medium ${RISK_COLORS[scoring.riskLevel.color] || 'text-muted-foreground'}`}>
+                  {scoring.riskLevel.level}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="overflow-y-auto flex-1">
             {requirements.map((req, index) => (
               <button
@@ -245,7 +332,14 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{req.number}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium">{req.number}</span>
+                    {req.points !== null && req.points > 0 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        ({req.type === 'top' ? `${req.points}P` : `${req.points}P`})
+                      </span>
+                    )}
+                  </div>
                   <span className={`text-lg ${getAnswerStatusColor(req.id)}`}>
                     {getAnswerStatusIcon(req.id)}
                   </span>
@@ -277,6 +371,11 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            {scoring && (
+              <span className="text-sm font-medium">
+                {scoring.currentScore} / {scoring.maxScore} Punkte
+              </span>
+            )}
             <span className="text-sm text-muted-foreground">
               Frage {currentIndex + 1} von {requirements.length}
             </span>
@@ -313,6 +412,48 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
               </CardHeader>
             </Card>
 
+            {/* Scoring Info Card */}
+            <div className="p-4 bg-muted/50 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm font-semibold">{groupInfo.label}</span>
+                  <p className="text-xs text-muted-foreground mt-0.5">{groupInfo.detail}</p>
+                </div>
+                {groupInfo.pointsLabel && (
+                  <span className={`text-sm font-bold ${groupInfo.pointsColor}`}>
+                    {groupInfo.pointsLabel}
+                  </span>
+                )}
+              </div>
+              {/* Show group component status for grouped requirements */}
+              {groupInfo.groupReqs && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {groupInfo.groupReqs.map((r) => {
+                    const a = answers.get(r.id)
+                    return (
+                      <span
+                        key={r.id}
+                        className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md border ${
+                          a?.status === 'fulfilled'
+                            ? 'bg-green-50 border-green-300 text-green-700 dark:bg-green-950 dark:border-green-800 dark:text-green-300'
+                            : a?.status === 'not_fulfilled'
+                              ? 'bg-red-50 border-red-300 text-red-700 dark:bg-red-950 dark:border-red-800 dark:text-red-300'
+                              : a?.status === 'irrelevant'
+                                ? 'bg-gray-100 border-gray-300 text-gray-600 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400'
+                                : 'bg-muted border-border text-muted-foreground'
+                        }`}
+                      >
+                        {r.number}
+                        {a ? (
+                          a.status === 'fulfilled' ? ' \u2713' : a.status === 'not_fulfilled' ? ' \u2717' : ' \u2212'
+                        ) : ' \u25CB'}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
             {/* Answer Section */}
             <Card>
               <CardHeader>
@@ -329,7 +470,7 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
                     ].map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => setAnswer(option.value, currentAnswer?.justification || '')}
+                        onClick={() => handleStatusClick(option.value)}
                         className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-colors text-left ${
                           currentAnswer?.status === option.value
                             ? option.color
@@ -350,12 +491,7 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
                   <Textarea
                     id="justification"
                     value={currentAnswer?.justification || ''}
-                    onChange={(e) =>
-                      setAnswer(
-                        currentAnswer?.status || 'fulfilled',
-                        e.target.value
-                      )
-                    }
+                    onChange={(e) => handleJustificationChange(e.target.value)}
                     placeholder="Bitte begruenden Sie Ihre Antwort..."
                     rows={4}
                   />
@@ -382,7 +518,7 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
               </Button>
 
               <div className="flex gap-2">
-                <Button variant="outline" onClick={handleSaveCurrentAnswer} disabled={!currentAnswer}>
+                <Button variant="outline" onClick={() => saveAnswer(currentReq?.id, currentAnswer)} disabled={!currentAnswer}>
                   <Save className="mr-1 h-4 w-4" />
                   Speichern
                 </Button>
