@@ -4,7 +4,7 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="relative flex min-h-screen">
+    <div className="dark relative flex min-h-screen bg-background">
       {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center relative overflow-hidden bg-[--brand-600,oklch(0.55_0.20_260)]">
         {/* Background pattern */}
@@ -48,7 +48,7 @@ export default function AuthLayout({
       </div>
 
       {/* Right side - Form */}
-      <div className="flex flex-1 items-center justify-center bg-background p-6">
+      <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="mb-8 lg:hidden text-center">
