@@ -44,7 +44,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
       # Redis
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_secret_2024}@redis:6379
       # Next.js standalone binds to HOSTNAME; Docker sets it to the container ID
       # which makes 127.0.0.1 unreachable. Force binding to all interfaces.
       - HOSTNAME=0.0.0.0
@@ -71,6 +71,7 @@ services:
       start_period: 40s
     networks:
       - xkmu-network
+      - backend
 
   # ============================================
   # PostgreSQL Database
@@ -79,8 +80,9 @@ services:
     image: postgres:16-alpine
     container_name: xkmu-postgres
     restart: unless-stopped
+    # Port only on localhost for admin access, not exposed to internet
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: xkmu
       POSTGRES_PASSWORD: ${DB_PASSWORD:-xkmu_local_2024}
@@ -94,27 +96,26 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - xkmu-network
+      - backend
 
   # ============================================
-  # Redis (Session Cache)
+  # Redis (Session Cache) - internal only, not exposed to host/internet
   # ============================================
   redis:
     image: redis:7-alpine
     container_name: xkmu-redis
     restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
+    # NO ports mapping - Redis is only accessible from other containers via backend network
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-xkmu_redis_secret_2024} --bind 0.0.0.0 --protected-mode yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-xkmu_redis_secret_2024}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
     networks:
-      - xkmu-network
+      - backend
 
   # ============================================
   # pgAdmin 4 (Datenbank-Verwaltung)
@@ -137,10 +138,15 @@ services:
         condition: service_healthy
     networks:
       - xkmu-network
+      - backend
 
 networks:
   xkmu-network:
     driver: bridge
+  backend:
+    # internal: true means no internet gateway - containers on this network
+    # can talk to each other but NOT to the outside world (and vice versa)
+    internal: true
 
 volumes:
   postgres_data:

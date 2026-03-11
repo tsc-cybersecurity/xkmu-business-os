@@ -60,7 +60,7 @@ services:
       # Ollama (optional - only if you want local AI)
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
       # Redis for session caching
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_secret_2024}@redis:6379
       # Next.js standalone binds to HOSTNAME; Docker sets it to container ID.
       - HOSTNAME=0.0.0.0
       # Email (optional)
@@ -73,6 +73,8 @@ services:
     volumes:
       - app_data:/app/data
       - db_backups:/backups
+    networks:
+      - backend
     depends_on:
       postgres:
         condition: service_healthy
@@ -88,6 +90,8 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: always
+    networks:
+      - backend
     environment:
       POSTGRES_USER: xkmu
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -103,19 +107,21 @@ services:
       start_period: 30s
 
   # ============================================
-  # Redis (Session Cache)
+  # Redis (Session Cache) - internal only, not exposed to host/internet
   # ============================================
   redis:
     image: redis:7-alpine
     restart: always
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-xkmu_redis_secret_2024} --bind 0.0.0.0 --protected-mode yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-xkmu_redis_secret_2024}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - backend
 
   # ============================================
   # pgAdmin 4 (Datenbank-Verwaltung)
@@ -127,6 +133,8 @@ services:
       - "80"
     labels:
       - "traefik.http.services.xkmu-pgadmin.loadbalancer.server.port=80"
+    networks:
+      - backend
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
@@ -137,6 +145,10 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+networks:
+  backend:
+    internal: true
 
 volumes:
   postgres_data:
