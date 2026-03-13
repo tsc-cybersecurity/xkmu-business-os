@@ -1,11 +1,11 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
-import { tenants, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates, wibaChecklists, wibaPrueffragen } from './schema'
+import { tenants, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates, wibaRequirements } from './schema'
 import { eq, and, count } from 'drizzle-orm'
 import { requirementsSeedData } from './seeds/din-requirements.seed'
 import { grantsSeedData } from './seeds/din-grants.seed'
-import { wibaChecklistsSeedData, wibaPrueffragenSeedData } from './seeds/wiba-checklists.seed'
+import { wibaRequirementsSeedData } from './seeds/wiba-requirements.seed'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
 import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.service'
 
@@ -214,19 +214,14 @@ async function seedDinData(db: ReturnType<typeof drizzle>) {
 async function seedWibaData(db: ReturnType<typeof drizzle>) {
   let seeded = false
 
-  // Seed Checklists
-  const [{ total: checklistCount }] = await db.select({ total: count() }).from(wibaChecklists)
-  if (Number(checklistCount) === 0) {
-    await db.insert(wibaChecklists).values(wibaChecklistsSeedData)
-    console.log(`Created ${wibaChecklistsSeedData.length} WiBA checklists`)
-    seeded = true
-  }
-
-  // Seed Prueffragen
-  const [{ total: fragenCount }] = await db.select({ total: count() }).from(wibaPrueffragen)
-  if (Number(fragenCount) === 0) {
-    await db.insert(wibaPrueffragen).values(wibaPrueffragenSeedData)
-    console.log(`Created ${wibaPrueffragenSeedData.length} WiBA Prueffragen`)
+  // Seed WiBA Requirements
+  const [{ total: wibaReqCount }] = await db.select({ total: count() }).from(wibaRequirements)
+  if (Number(wibaReqCount) === 0) {
+    for (let i = 0; i < wibaRequirementsSeedData.length; i += 50) {
+      const batch = wibaRequirementsSeedData.slice(i, i + 50)
+      await db.insert(wibaRequirements).values(batch)
+    }
+    console.log(`Created ${wibaRequirementsSeedData.length} WiBA requirements`)
     seeded = true
   }
 

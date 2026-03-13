@@ -20,6 +20,7 @@ export const MODULES = [
   'documents',
   'din_audits',
   'din_grants',
+  'wiba_audits',
   'basisabsicherung',
   'cms',
   'blog',
@@ -65,6 +66,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   documents: 'Dokumente',
   din_audits: 'DIN-Audits',
   din_grants: 'Foerdermittel',
+  wiba_audits: 'WiBA-Checks',
   basisabsicherung: 'Basisabsicherung',
   cms: 'CMS / Seiteneditor',
   blog: 'Blog / IT-News',
@@ -138,7 +140,7 @@ function buildViewerAccess(): Record<Module, Record<Action, boolean>> {
 function buildAuditorAccess(): Record<Module, Record<Action, boolean>> {
   return Object.fromEntries(
     MODULES.map((m) => {
-      if (m === 'din_audits' || m === 'din_grants') return [m, { ...allTrue }]
+      if (m === 'din_audits' || m === 'din_grants' || m === 'wiba_audits') return [m, { ...allTrue }]
       if (m === 'companies' || m === 'persons') return [m, { ...readOnly }]
       return [m, { ...allFalse }]
     })

@@ -64,6 +64,13 @@
       "when": 1771233316090,
       "tag": "0008_outgoing_venom",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1773440497130,
+      "tag": "0009_slim_captain_universe",
+      "breakpoints": true
     }
   ]
 }

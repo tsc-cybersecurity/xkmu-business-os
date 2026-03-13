@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "npx tsx src/lib/db/seed.ts",
-    "db:seed:din": "npx tsx --env-file=.env src/lib/db/seeds/din-seed.ts"
+    "db:seed:din": "npx tsx --env-file=.env src/lib/db/seeds/din-seed.ts",
+    "db:seed:wiba": "npx tsx --env-file=.env src/lib/db/seeds/wiba-seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
