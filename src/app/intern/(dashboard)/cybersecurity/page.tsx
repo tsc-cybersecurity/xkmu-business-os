@@ -49,19 +49,19 @@ export default function CybersecurityPage() {
           </Card>
         </Link>
 
-        <Link href="/intern/cybersecurity/basisabsicherung">
+        <Link href="/intern/wiba">
           <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="rounded-full bg-purple-500/10 p-3">
                   <Shield className="h-6 w-6 text-purple-500" />
                 </div>
-                <CardTitle className="text-lg">Basisabsicherung</CardTitle>
+                <CardTitle className="text-lg">BSI WiBA-Checks</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                BSI Weg in die Basis-Absicherung (WiBA) - 19 Checklisten fuer grundlegende IT-Sicherheit.
+                BSI Weg in die Basis-Absicherung (WiBA) - 257 Prueffragen in 19 Kategorien fuer grundlegende IT-Sicherheit.
               </p>
             </CardContent>
           </Card>
