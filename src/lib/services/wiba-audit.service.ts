@@ -59,9 +59,14 @@ export const WibaAuditService = {
   },
 
   async update(tenantId: string, sessionId: string, data: Partial<NewWibaAuditSession>): Promise<WibaAuditSession | null> {
+    const updateData: Record<string, unknown> = { updatedAt: new Date() }
+    if (data.status !== undefined) updateData.status = data.status
+    if (data.startedAt !== undefined) updateData.startedAt = data.startedAt ? new Date(data.startedAt as unknown as string) : null
+    if (data.completedAt !== undefined) updateData.completedAt = data.completedAt ? new Date(data.completedAt as unknown as string) : null
+
     const [session] = await db
       .update(wibaAuditSessions)
-      .set({ ...data, updatedAt: new Date() })
+      .set(updateData)
       .where(and(eq(wibaAuditSessions.tenantId, tenantId), eq(wibaAuditSessions.id, sessionId)))
       .returning()
     return session ?? null
