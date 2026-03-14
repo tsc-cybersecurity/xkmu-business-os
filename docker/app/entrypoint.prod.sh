@@ -89,9 +89,12 @@ fi
 # ------------------------------------
 echo "Cleaning up legacy tables..."
 PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "
+  DROP TABLE IF EXISTS wiba_answers CASCADE;
   DROP TABLE IF EXISTS wiba_prueffragen CASCADE;
   DROP TABLE IF EXISTS wiba_checklists CASCADE;
   DROP TABLE IF EXISTS wiba_assessments CASCADE;
+  DROP TABLE IF EXISTS wiba_audit_sessions CASCADE;
+  DROP TABLE IF EXISTS wiba_requirements CASCADE;
 " 2>/dev/null || echo "Legacy table cleanup skipped (tables may not exist)"
 
 # ------------------------------------
