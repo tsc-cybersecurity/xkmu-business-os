@@ -85,6 +85,16 @@ else
 fi
 
 # ------------------------------------
+# Drop legacy tables that confuse drizzle-kit push
+# ------------------------------------
+echo "Cleaning up legacy tables..."
+PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "
+  DROP TABLE IF EXISTS wiba_prueffragen CASCADE;
+  DROP TABLE IF EXISTS wiba_checklists CASCADE;
+  DROP TABLE IF EXISTS wiba_assessments CASCADE;
+" 2>/dev/null || echo "Legacy table cleanup skipped (tables may not exist)"
+
+# ------------------------------------
 # Sync database schema via Drizzle
 # ------------------------------------
 echo "Syncing database schema..."
