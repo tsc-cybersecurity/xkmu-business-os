@@ -41,6 +41,7 @@ export function AppDocsContent() {
         <TabsTrigger value="marketing" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Marketing</TabsTrigger>
         <TabsTrigger value="social" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Social Media</TabsTrigger>
         <TabsTrigger value="din" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">DIN Audit</TabsTrigger>
+        <TabsTrigger value="wiba" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">WiBA</TabsTrigger>
         <TabsTrigger value="cyber" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Cybersecurity</TabsTrigger>
         <TabsTrigger value="bi" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">BI</TabsTrigger>
         <TabsTrigger value="ai" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">KI</TabsTrigger>
@@ -958,6 +959,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 'Antworten bewerten (0-4 Punkte pro Frage)',
                 'Scoring automatisch berechnen',
                 'Report mit Handlungsempfehlungen generieren',
+                'DIN-konformen PDF-Bericht herunterladen',
                 'Passende Foerdermittel vorschlagen',
               ]} />
             </SectionBlock>
@@ -987,25 +989,63 @@ withPermission(request, 'companies', 'read', async (req, session) => {
         </Card>
       </TabsContent>
 
-      {/* ===== CYBERSECURITY ===== */}
-      <TabsContent value="cyber" className="space-y-4">
+      {/* ===== BSI WiBA ===== */}
+      <TabsContent value="wiba" className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle><Shield className="inline h-5 w-5 mr-2" />Cybersecurity - Basisabsicherung</CardTitle>
-            <CardDescription>IT-Grundschutz Basisabsicherung nach BSI-Prinzipien</CardDescription>
+            <CardTitle><Shield className="inline h-5 w-5 mr-2" />BSI WiBA-Checks</CardTitle>
+            <CardDescription>Weg in die Basis-Absicherung - 257 Anforderungen in 19 Kategorien nach BSI</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <SectionBlock title="Seiten">
               <PageTable pages={[
-                { url: '/intern/cybersecurity/basisabsicherung', name: 'Basisabsicherung', desc: 'Selbstbewertung der IT-Sicherheit. Checklisten-basierte Erfassung des Sicherheitsstatus nach BSI-Grundschutz.' },
+                { url: '/intern/wiba', name: 'WiBA-Uebersicht', desc: 'Liste aller WiBA-Checks mit Status und Fortschritt.' },
+                { url: '/intern/wiba/new', name: 'Neuer WiBA-Check', desc: 'Neuen Check anlegen und Firma zuordnen.' },
+                { url: '/intern/wiba/[id]', name: 'Check-Detail', desc: 'Uebersicht mit Kategorie-Fortschritt nach BSI-Prioritaet gruppiert.' },
+                { url: '/intern/wiba/[id]/interview', name: 'Interview', desc: 'Fragebogen mit 257 Anforderungen, gruppiert nach BSI-Bearbeitungsreihenfolge (Prioritaet 1-4).' },
+                { url: '/intern/wiba/[id]/report', name: 'Bericht', desc: 'Ergebnisbericht mit Spider-Chart, Kategoriefortschritt und PDF-Download.' },
               ]} />
             </SectionBlock>
 
             <SectionBlock title="Funktionen">
               <FeatureList features={[
-                { name: 'Sicherheits-Checkliste', desc: 'Strukturierte Fragen zu IT-Sicherheitsmassnahmen (Firewall, Backup, Passwoerter, etc.).' },
-                { name: 'Status-Bewertung', desc: 'Bewertung des aktuellen Sicherheitsniveaus mit Farbcodierung (Rot/Gelb/Gruen).' },
-                { name: 'Handlungsempfehlungen', desc: 'Konkrete Massnahmen zur Verbesserung der IT-Sicherheit.' },
+                { name: 'BSI-Bearbeitungsreihenfolge', desc: 'Kategorien nach BSI-Empfehlung in 4 Prioritaetsgruppen sortiert und farblich markiert.' },
+                { name: '257 Anforderungen', desc: 'Vollstaendiger Fragenkatalog mit Ja/Nein/Nicht relevant Antworten und Notizen.' },
+                { name: 'Scoring & Risikobewertung', desc: '5-stufige Risikobewertung mit Prozentanzeige pro Kategorie und Gesamt.' },
+                { name: 'Spider-Chart', desc: 'Radar-Diagramm nach BSI-Prioritaetsreihenfolge fuer visuelle Auswertung.' },
+                { name: 'PDF-Bericht', desc: 'Client-seitiger PDF-Export mit Deckblatt, Kategoriedetails, allen 257 Anforderungen und Handlungsempfehlungen.' },
+                { name: 'Live-Scoring', desc: 'Echtzeit-Aktualisierung des Scores waehrend des Interviews durch Klick auf Status-Icons.' },
+              ]} />
+            </SectionBlock>
+
+            <SectionBlock title="API-Endpunkte">
+              <EndpointDoc method="GET" path="/api/v1/wiba/audits" description="WiBA-Checks auflisten." responseExample={{ data: [{ id: 'uuid', status: 'in_progress' }] }} />
+              <EndpointDoc method="POST" path="/api/v1/wiba/audits" description="Neuen Check anlegen." requestBody={{ companyId: 'uuid' }} responseExample={{ id: 'uuid' }} />
+              <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id/scoring" description="Scoring berechnen." responseExample={{ currentScore: 180, maxScore: 257 }} />
+              <EndpointDoc method="GET" path="/api/v1/wiba/requirements" description="Alle 257 Anforderungen mit Kategorien und BSI-Prioritaeten." responseExample={{ data: { requirements: [], categoryNames: {}, categoryOrder: [], categoryPriorities: {} } }} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== CYBERSECURITY ===== */}
+      <TabsContent value="cyber" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle><Shield className="inline h-5 w-5 mr-2" />Cybersecurity</CardTitle>
+            <CardDescription>IT-Sicherheit mit DIN SPEC 27076 und BSI WiBA-Checks</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Seiten">
+              <PageTable pages={[
+                { url: '/intern/cybersecurity', name: 'Cybersecurity-Dashboard', desc: 'Einstiegsseite mit Links zu DIN SPEC 27076 Audits und BSI WiBA-Checks.' },
+              ]} />
+            </SectionBlock>
+
+            <SectionBlock title="Funktionen">
+              <FeatureList features={[
+                { name: 'DIN SPEC 27076', desc: 'Digitalisierungs-Check fuer KMU mit strukturiertem Fragebogen und PDF-Bericht.' },
+                { name: 'BSI WiBA', desc: 'Weg in die Basis-Absicherung mit 257 Anforderungen in 19 Kategorien (siehe WiBA-Tab).' },
               ]} />
             </SectionBlock>
           </CardContent>

@@ -19,6 +19,12 @@ export function ApiDocsContent() {
         <TabsTrigger value="activities">Aktivitaeten</TabsTrigger>
         <TabsTrigger value="products">Produkte</TabsTrigger>
         <TabsTrigger value="din-audit">DIN Audit</TabsTrigger>
+        <TabsTrigger value="wiba">WiBA</TabsTrigger>
+        <TabsTrigger value="blog">Blog</TabsTrigger>
+        <TabsTrigger value="cms">CMS</TabsTrigger>
+        <TabsTrigger value="marketing">Marketing</TabsTrigger>
+        <TabsTrigger value="social">Social Media</TabsTrigger>
+        <TabsTrigger value="n8n">n8n</TabsTrigger>
         <TabsTrigger value="ai">KI</TabsTrigger>
         <TabsTrigger value="media">Medien</TabsTrigger>
         <TabsTrigger value="public">Oeffentlich</TabsTrigger>
@@ -1209,6 +1215,131 @@ export function ApiDocsContent() {
                 message: 'Foerdermittel geloescht',
               }}
             />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* WiBA */}
+      <TabsContent value="wiba" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>BSI WiBA-Checks</CardTitle>
+            <CardDescription>Weg in die Basis-Absicherung - IT-Sicherheitspruefung mit 257 Anforderungen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/wiba/audits" description="WiBA-Checks auflisten" responseExample={{ data: [{ id: 'uuid', companyName: 'Musterfirma GmbH', status: 'in_progress' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/wiba/audits" description="Neuen WiBA-Check anlegen" requestBody={{ companyId: 'uuid' }} responseExample={{ id: 'uuid', status: 'created' }} />
+            <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id" description="WiBA-Check abrufen" responseExample={{ id: 'uuid', company: { name: 'Musterfirma GmbH' }, status: 'in_progress' }} />
+            <EndpointDoc method="PUT" path="/api/v1/wiba/audits/:id" description="WiBA-Check aktualisieren" requestBody={{ status: 'completed' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/wiba/audits/:id" description="WiBA-Check loeschen" responseExample={{ message: 'Check geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id/answers" description="Antworten abrufen" responseExample={{ data: [{ requirementId: 1, status: 'ja', notes: 'Umgesetzt' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/wiba/audits/:id/answers" description="Antworten speichern" requestBody={{ requirementId: 1, status: 'ja', notes: 'Umgesetzt' }} responseExample={{ message: 'Antwort gespeichert' }} />
+            <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id/scoring" description="Scoring berechnen" responseExample={{ currentScore: 180, maxScore: 257, riskLevel: { level: 'Mittel', color: 'yellow' } }} />
+            <EndpointDoc method="GET" path="/api/v1/wiba/requirements" description="Alle 257 WiBA-Anforderungen auflisten" responseExample={{ data: { requirements: [{ id: 1, category: 1, questionText: 'Sind Sicherheitsrichtlinien definiert?' }], categoryNames: { 1: 'Organisation & Personal' } } }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Blog */}
+      <TabsContent value="blog" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Blog</CardTitle>
+            <CardDescription>Blog-Beitraege verwalten und per KI generieren</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/blog/posts" description="Blog-Beitraege auflisten" responseExample={{ data: [{ id: 'uuid', title: 'Mein Beitrag', status: 'published' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/blog/posts" description="Blog-Beitrag anlegen" requestBody={{ title: 'Neuer Beitrag', content: 'Inhalt...' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/blog/posts/:id" description="Beitrag abrufen" responseExample={{ id: 'uuid', title: 'Mein Beitrag', content: '...' }} />
+            <EndpointDoc method="PUT" path="/api/v1/blog/posts/:id" description="Beitrag aktualisieren" requestBody={{ title: 'Neuer Titel' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/blog/posts/:id" description="Beitrag loeschen" responseExample={{ message: 'Beitrag geloescht' }} />
+            <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/publish" description="Beitrag veroeffentlichen" responseExample={{ id: 'uuid', status: 'published' }} />
+            <EndpointDoc method="POST" path="/api/v1/blog/posts/generate" description="Blog-Beitrag per KI generieren" requestBody={{ topic: 'IT-Sicherheit', keywords: ['KMU', 'Cybersecurity'] }} responseExample={{ id: 'uuid', title: 'Generierter Titel' }} />
+            <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/seo/generate" description="SEO-Metadaten per KI generieren" responseExample={{ seoTitle: '...', seoDescription: '...' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* CMS */}
+      <TabsContent value="cms" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>CMS</CardTitle>
+            <CardDescription>Block-basiertes Content Management System</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/cms/pages" description="CMS-Seiten auflisten" responseExample={{ data: [{ id: 'uuid', title: 'Startseite', slug: 'home' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/pages" description="Neue CMS-Seite anlegen" requestBody={{ title: 'Neue Seite', slug: 'neue-seite' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/cms/pages/:id" description="Seite abrufen" responseExample={{ id: 'uuid', title: 'Startseite', blocks: [] }} />
+            <EndpointDoc method="PUT" path="/api/v1/cms/pages/:id" description="Seite aktualisieren" requestBody={{ title: 'Neuer Titel' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/cms/pages/:id" description="Seite loeschen" responseExample={{ message: 'Seite geloescht' }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/publish" description="Seite veroeffentlichen" responseExample={{ id: 'uuid', status: 'published' }} />
+            <EndpointDoc method="GET" path="/api/v1/cms/pages/:id/blocks" description="Bloecke einer Seite abrufen" responseExample={{ data: [{ id: 'uuid', type: 'hero', order: 0 }] }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/blocks" description="Block hinzufuegen" requestBody={{ type: 'text', content: {} }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="PUT" path="/api/v1/cms/blocks/:id" description="Block aktualisieren" requestBody={{ content: { text: 'Neuer Text' } }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/cms/blocks/:id" description="Block loeschen" responseExample={{ message: 'Block geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/cms/navigation" description="Navigation abrufen" responseExample={{ data: [{ id: 'uuid', label: 'Home', url: '/' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/navigation" description="Navigations-Eintrag anlegen" requestBody={{ label: 'Kontakt', url: '/kontakt' }} responseExample={{ id: 'uuid' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Marketing */}
+      <TabsContent value="marketing" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Marketing</CardTitle>
+            <CardDescription>Kampagnen, Aufgaben und Vorlagen verwalten</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/marketing/campaigns" description="Kampagnen auflisten" responseExample={{ data: [{ id: 'uuid', name: 'Fruehjahrs-Kampagne', status: 'active' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/marketing/campaigns" description="Kampagne anlegen" requestBody={{ name: 'Neue Kampagne', type: 'email' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/marketing/campaigns/:id" description="Kampagne abrufen" responseExample={{ id: 'uuid', name: 'Kampagne', tasks: [] }} />
+            <EndpointDoc method="PUT" path="/api/v1/marketing/campaigns/:id" description="Kampagne aktualisieren" requestBody={{ status: 'completed' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/marketing/campaigns/:id" description="Kampagne loeschen" responseExample={{ message: 'Kampagne geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/marketing/tasks" description="Marketing-Aufgaben auflisten" responseExample={{ data: [{ id: 'uuid', title: 'Newsletter erstellen' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/marketing/tasks" description="Aufgabe anlegen" requestBody={{ title: 'Neue Aufgabe', campaignId: 'uuid' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/marketing/templates" description="Vorlagen auflisten" responseExample={{ data: [{ id: 'uuid', name: 'E-Mail Vorlage' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/marketing/templates" description="Vorlage anlegen" requestBody={{ name: 'Neue Vorlage', content: '...' }} responseExample={{ id: 'uuid' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Social Media */}
+      <TabsContent value="social" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Social Media</CardTitle>
+            <CardDescription>Beitraege, Content-Planung und KI-Generierung</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/social-media/posts" description="Social-Media-Beitraege auflisten" responseExample={{ data: [{ id: 'uuid', content: '...', platform: 'linkedin' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/social-media/posts" description="Beitrag anlegen" requestBody={{ content: 'Neuer Post', platform: 'linkedin' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/social-media/posts/:id" description="Beitrag abrufen" responseExample={{ id: 'uuid', content: '...' }} />
+            <EndpointDoc method="PUT" path="/api/v1/social-media/posts/:id" description="Beitrag aktualisieren" requestBody={{ content: 'Aktualisiert' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/social-media/posts/:id" description="Beitrag loeschen" responseExample={{ message: 'Beitrag geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/social-media/topics" description="Themen auflisten" responseExample={{ data: [{ id: 'uuid', name: 'IT-Sicherheit' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/social-media/topics" description="Thema anlegen" requestBody={{ name: 'Neues Thema' }} responseExample={{ id: 'uuid' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* n8n */}
+      <TabsContent value="n8n" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>n8n Workflow-Integration</CardTitle>
+            <CardDescription>Workflow-Automatisierung mit n8n Cloud oder Self-Hosted</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/n8n/connection" description="n8n-Verbindung anzeigen" responseExample={{ data: { baseUrl: 'https://n8n.example.com', status: 'connected' } }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/connection" description="Verbindung erstellen/aktualisieren" requestBody={{ baseUrl: 'https://n8n.example.com', apiKey: '...' }} responseExample={{ message: 'Verbindung gespeichert' }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/connection/test" description="Verbindung testen" responseExample={{ success: true, version: '1.30.0' }} />
+            <EndpointDoc method="GET" path="/api/v1/n8n/workflows" description="Workflows auflisten" responseExample={{ data: [{ id: '1', name: 'Email-Workflow', active: true }] }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/workflows" description="Workflow erstellen" requestBody={{ name: 'Neuer Workflow', nodes: [] }} responseExample={{ id: '1' }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/workflows/:id/activate" description="Workflow aktivieren/deaktivieren" requestBody={{ active: true }} responseExample={{ id: '1', active: true }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/workflows/:id/execute" description="Workflow ausfuehren" responseExample={{ executionId: '123' }} />
+            <EndpointDoc method="POST" path="/api/v1/n8n/workflows/generate" description="Workflow per KI generieren" requestBody={{ description: 'E-Mail bei neuem Lead senden' }} responseExample={{ workflow: { nodes: [] } }} />
           </CardContent>
         </Card>
       </TabsContent>

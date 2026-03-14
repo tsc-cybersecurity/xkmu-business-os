@@ -23,6 +23,7 @@ export function ApiDocsContent() {
         <TabsTrigger value="marketing" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Marketing</TabsTrigger>
         <TabsTrigger value="social" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Social Media</TabsTrigger>
         <TabsTrigger value="din" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">DIN Audit</TabsTrigger>
+        <TabsTrigger value="wiba" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">WiBA</TabsTrigger>
         <TabsTrigger value="media" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Medien</TabsTrigger>
         <TabsTrigger value="ai" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">KI</TabsTrigger>
         <TabsTrigger value="webhooks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Webhooks</TabsTrigger>
@@ -1160,6 +1161,27 @@ export function ApiDocsContent() {
             <EndpointDoc method="GET" path="/api/v1/din/grants/:id" description="Foerderprogramm abrufen" responseExample={{ id: 'uuid', name: 'go-digital', maxAmount: 16500 }} />
             <EndpointDoc method="PUT" path="/api/v1/din/grants/:id" description="Foerderprogramm aktualisieren" requestBody={{ maxAmount: 20000 }} responseExample={{ id: 'uuid' }} />
             <EndpointDoc method="DELETE" path="/api/v1/din/grants/:id" description="Foerderprogramm loeschen" responseExample={{ message: 'Foerderprogramm geloescht' }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* WiBA */}
+      <TabsContent value="wiba" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>BSI WiBA-Checks</CardTitle>
+            <CardDescription>Weg in die Basis-Absicherung - IT-Sicherheitspruefung mit 257 Anforderungen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="GET" path="/api/v1/wiba/audits" description="WiBA-Checks auflisten" responseExample={{ data: [{ id: 'uuid', companyName: 'Musterfirma GmbH', status: 'in_progress' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/wiba/audits" description="Neuen WiBA-Check anlegen" requestBody={{ companyId: 'uuid' }} responseExample={{ id: 'uuid', status: 'created' }} />
+            <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id" description="WiBA-Check abrufen" responseExample={{ id: 'uuid', company: { name: 'Musterfirma GmbH' }, status: 'in_progress' }} />
+            <EndpointDoc method="PUT" path="/api/v1/wiba/audits/:id" description="WiBA-Check aktualisieren" requestBody={{ status: 'completed' }} responseExample={{ id: 'uuid' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/wiba/audits/:id" description="WiBA-Check loeschen" responseExample={{ message: 'Check geloescht' }} />
+            <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id/answers" description="Antworten abrufen" responseExample={{ data: [{ requirementId: 1, status: 'ja', notes: 'Umgesetzt' }] }} />
+            <EndpointDoc method="POST" path="/api/v1/wiba/audits/:id/answers" description="Antworten speichern (einzeln oder Bulk)" requestBody={{ requirementId: 1, status: 'ja', notes: 'Umgesetzt' }} responseExample={{ message: 'Antwort gespeichert' }} />
+            <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id/scoring" description="Scoring und Risikobewertung berechnen" responseExample={{ currentScore: 180, maxScore: 257, riskLevel: { level: 'Mittel', color: 'yellow' }, categoryProgress: { 1: 85, 2: 60 } }} />
+            <EndpointDoc method="GET" path="/api/v1/wiba/requirements" description="Alle 257 WiBA-Anforderungen auflisten" responseExample={{ data: { requirements: [{ id: 1, category: 1, questionText: 'Sind Sicherheitsrichtlinien definiert?' }], categoryNames: { 1: 'Organisation & Personal' }, categoryOrder: [1, 2, 3], categoryPriorities: { 1: 1, 2: 2 } } }} />
           </CardContent>
         </Card>
       </TabsContent>

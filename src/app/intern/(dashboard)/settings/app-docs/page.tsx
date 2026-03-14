@@ -24,7 +24,7 @@ export default async function AppDocsPage() {
         <Card>
           <CardHeader className="pb-2">
             <Monitor className="h-6 w-6 text-blue-500" />
-            <CardTitle className="mt-2 text-sm">13 Module</CardTitle>
+            <CardTitle className="mt-2 text-sm">15 Module</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">CRM, Finanzen, Marketing u.v.m.</p>
@@ -57,7 +57,7 @@ export default async function AppDocsPage() {
             <CardTitle className="mt-2 text-sm">KI-Integration</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-muted-foreground">6 Provider, Research, Content</p>
+            <p className="text-xs text-muted-foreground">8 Provider, Research, Content</p>
           </CardContent>
         </Card>
 

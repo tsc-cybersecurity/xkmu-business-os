@@ -1,7 +1,7 @@
 # xKMU BusinessOS - Vollständige Anwendungsdokumentation
 
-> **Version:** 1.1.56
-> **Stand:** 2026-02-24
+> **Version:** 1.1.132
+> **Stand:** 2026-03-14
 > **Stack:** Next.js 16 App Router, React 19, Drizzle ORM, PostgreSQL
 > **Sprache:** Deutsch (UI), Englisch (API/Code)
 
@@ -17,6 +17,10 @@
 6. [Module im Detail](#6-module-im-detail)
 7. [KI-Integration](#7-ki-integration)
 8. [CMS-System](#8-cms-system)
+9. [BSI WiBA-Modul](#9-bsi-wiba-modul)
+10. [n8n Workflow-Integration](#10-n8n-workflow-integration)
+11. [kie.ai Video-Generierung](#11-kieai-video-generierung)
+12. [Datenbank-Administration](#12-datenbank-administration)
 
 ---
 
@@ -345,7 +349,14 @@ Berechtigungen des aktuellen Benutzers abrufen.
 1. Audit anlegen und Firma zuordnen
 2. Interview durchführen (strukturierte Fragen nach DIN SPEC)
 3. Antworten speichern und Scoring berechnen
-4. Report generieren mit Handlungsempfehlungen
+4. Report generieren mit Handlungsempfehlungen und passenden Fördermitteln
+
+**PDF-Bericht (DIN-konform):**
+- Seite 1: Unternehmensdaten, Gesamtscore, Ergebnis je Themenbereich
+- Seite 2: TOP- und Basis-Handlungsempfehlungen, Unterschriftenfelder
+- Anhang A: Detailergebnisse aller Anforderungen
+- Anhang B: Passende Förderprogramme (Querformat)
+- Client-seitige Generierung mit jsPDF
 
 ---
 
@@ -353,13 +364,38 @@ Berechtigungen des aktuellen Benutzers abrufen.
 
 | Seite | URL | Funktion |
 |-------|-----|----------|
-| Basisabsicherung | `/intern/cybersecurity/basisabsicherung` | IT-Grundschutz Basisabsicherung |
+| Übersicht | `/intern/cybersecurity` | Cybersecurity-Dashboard mit Links zu DIN- und WiBA-Checks |
 
-**Beschreibung:** Selbstbewertung der IT-Sicherheit nach BSI-Grundschutz-Prinzipien.
+**Beschreibung:** Einstiegsseite für IT-Sicherheit. Verlinkt auf DIN SPEC 27076 Audits und BSI WiBA-Checks.
+
+### 4.8 BSI WiBA-Modul
+
+| Seite | URL | Funktion |
+|-------|-----|----------|
+| Übersicht | `/intern/wiba` | WiBA-Check-Liste |
+| Neu | `/intern/wiba/new` | Neuen WiBA-Check starten |
+| Detail | `/intern/wiba/[id]` | Check-Übersicht mit Kategorie-Fortschritt |
+| Interview | `/intern/wiba/[id]/interview` | Fragebogen mit 257 Anforderungen |
+| Report | `/intern/wiba/[id]/report` | Ergebnisbericht mit PDF-Download |
+
+**Beschreibung:** Weg in die Basis-Absicherung (WiBA) nach BSI. Strukturierte Prüfung von 257 Anforderungen in 19 Kategorien.
+
+**BSI-Bearbeitungsreihenfolge:**
+Kategorien sind nach BSI-Empfehlung in 4 Prioritätsgruppen sortiert:
+- **Priorität 1:** Organisation & Personal, Sensibilisierung und Schulung, Vorfallerkennung und -behandlung
+- **Priorität 2:** Netze und Kommunikation, IT-Systeme, Detektion von sicherheitsrelevanten Ereignissen, u.a.
+- **Priorität 3:** Zugangs-/Zugriffsregelung, Datensicherung, Geschäftskontinuität, u.a.
+- **Priorität 4:** Kryptokonzept, Physische Sicherheit, Entwicklung, u.a.
+
+**PDF-Bericht:**
+- Deckblatt mit Unternehmensdaten und Gesamtscore
+- Kategorieübersicht nach BSI-Priorität gruppiert
+- Alle 257 Anforderungen mit farbcodierten Antworten (Grün=Ja, Rot=Nein, Grau=N/R)
+- Handlungsempfehlungen für nicht-erfüllte Anforderungen
 
 ---
 
-### 4.8 Blog-Modul
+### 4.9 Blog-Modul
 
 | Seite | URL | Funktion |
 |-------|-----|----------|
@@ -388,7 +424,7 @@ Berechtigungen des aktuellen Benutzers abrufen.
 
 ---
 
-### 4.9 CMS-Modul
+### 4.10 CMS-Modul
 
 | Seite | URL | Funktion |
 |-------|-----|----------|
@@ -410,7 +446,7 @@ Berechtigungen des aktuellen Benutzers abrufen.
 
 ---
 
-### 4.10 Marketing-Modul
+### 4.11 Marketing-Modul
 
 | Seite | URL | Funktion |
 |-------|-----|----------|
@@ -436,7 +472,7 @@ Berechtigungen des aktuellen Benutzers abrufen.
 
 ---
 
-### 4.11 Social-Media-Modul
+### 4.12 Social-Media-Modul
 
 | Seite | URL | Funktion |
 |-------|-----|----------|
@@ -464,7 +500,7 @@ Berechtigungen des aktuellen Benutzers abrufen.
 
 ---
 
-### 4.12 Business Intelligence
+### 4.13 Business Intelligence
 
 | Seite | URL | Funktion |
 |-------|-----|----------|
@@ -476,7 +512,7 @@ Berechtigungen des aktuellen Benutzers abrufen.
 
 ---
 
-### 4.13 Einstellungen
+### 4.14 Einstellungen
 
 | Seite | URL | Funktion |
 |-------|-----|----------|
@@ -492,8 +528,10 @@ Berechtigungen des aktuellen Benutzers abrufen.
 | KI-Logs | `/intern/settings/ai-logs` | KI-Nutzungsprotokolle |
 | Webhooks | `/intern/settings/webhooks` | Webhook-Konfiguration |
 | API-Doku | `/intern/settings/api-docs` | Interaktive API-Dokumentation |
-| Datenexport | `/intern/settings/export` | Datenbankexport |
-| Datenimport | `/intern/settings/import` | Datenbankimport |
+| n8n | `/intern/settings/n8n` | n8n-Verbindung konfigurieren |
+| Datenbank | `/intern/settings/database` | Datenbank-Browser (Tabellen anzeigen, bearbeiten, löschen) |
+| Datenexport | `/intern/settings/export` | Datenbankexport als SQL-Datei |
+| Datenimport | `/intern/settings/import` | SQL-Datei importieren (Merge/Replace) |
 
 ---
 
@@ -1241,11 +1279,20 @@ E-Mail versenden.
 
 ### 5.20 Import/Export-API
 
-#### `POST /api/v1/export/database`
-Datenbankexport durchführen.
+#### `GET /api/v1/export/database`
+Datenbankexport als SQL-Datei herunterladen. Exportiert alle Tenant-spezifischen Tabellen (gefiltert nach `tenant_id`), `role_permissions` (über Join), und globale Referenztabellen (`din_requirements`, `din_grants`, `wiba_requirements`, `cms_block_type_definitions`).
+
+**Antwort:** SQL-Datei als Download (`Content-Disposition: attachment`)
 
 #### `POST /api/v1/import/database`
-Datenimport durchführen.
+SQL-Datei importieren. Akzeptiert `.sql`-Dateien bis 50 MB.
+
+| FormData-Parameter | Typ | Pflicht | Beschreibung |
+|-------------------|-----|---------|-------------|
+| `file` | File | Ja | SQL-Datei (.sql) |
+| `mode` | string | Nein | `merge` (Standard, ON CONFLICT DO NOTHING) oder `replace` (bestehende Daten löschen) |
+
+**Unterstützte Tabellen:** 55 Tabellen inkl. CRM, Finanzen, DIN, WiBA, CMS, Marketing, Social Media, n8n
 
 ---
 
@@ -1282,6 +1329,101 @@ Kontaktformular absenden (öffentlich).
 
 ---
 
+### 5.23 WiBA-API (BSI Weg in die Basis-Absicherung)
+
+#### `GET /api/v1/wiba/audits`
+WiBA-Checks auflisten. Unterstützt Pagination und Status-Filter.
+
+#### `POST /api/v1/wiba/audits`
+Neuen WiBA-Check anlegen.
+
+| Body-Parameter | Typ | Pflicht | Beschreibung |
+|---------------|-----|---------|-------------|
+| `companyId` | string | Ja | Zugeordnete Firma |
+
+#### `GET /api/v1/wiba/audits/[id]`
+WiBA-Check abrufen (inkl. Firmen- und Berater-Daten).
+
+#### `PUT /api/v1/wiba/audits/[id]`
+WiBA-Check aktualisieren (Status, Zeitstempel).
+
+#### `DELETE /api/v1/wiba/audits/[id]`
+WiBA-Check löschen.
+
+#### `GET /api/v1/wiba/audits/[id]/answers`
+Antworten eines WiBA-Checks abrufen.
+
+#### `POST /api/v1/wiba/audits/[id]/answers`
+Antworten speichern (einzeln oder als Bulk).
+
+| Body-Parameter | Typ | Pflicht | Beschreibung |
+|---------------|-----|---------|-------------|
+| `requirementId` | number | Ja | Anforderungs-ID |
+| `status` | string | Ja | `ja`, `nein`, `nicht_relevant` |
+| `notes` | string | Nein | Begründung/Notizen |
+
+#### `GET /api/v1/wiba/audits/[id]/scoring`
+Scoring berechnen mit Risikobewertung, Kategorie-Fortschritt, BSI-Prioritätsreihenfolge.
+
+#### `GET /api/v1/wiba/requirements`
+Alle 257 WiBA-Anforderungen auflisten. Liefert zusätzlich `categoryNames`, `categoryOrder` (BSI-Reihenfolge) und `categoryPriorities`.
+
+---
+
+### 5.24 Datenbank-Administration-API
+
+#### `GET /api/v1/admin/database/tables`
+Alle Datenbanktabellen mit Zeilenanzahl auflisten. Berechtigung: `database:read`.
+
+#### `GET /api/v1/admin/database/tables/[tableName]`
+Tabellendaten lesen mit Pagination und Spalten-Metadaten. Tenant-gefiltert bei Tabellen mit `tenant_id`.
+
+#### `PUT /api/v1/admin/database/tables/[tableName]`
+Einzelne Zeile aktualisieren. Berechtigung: `database:update`.
+
+| Body-Parameter | Typ | Pflicht | Beschreibung |
+|---------------|-----|---------|-------------|
+| `id` | string | Ja | Zeilen-ID |
+| `...` | mixed | Ja | Zu aktualisierende Spalten |
+
+#### `DELETE /api/v1/admin/database/tables/[tableName]`
+Einzelne Zeile löschen. Berechtigung: `database:delete`.
+
+| Query-Parameter | Typ | Pflicht | Beschreibung |
+|----------------|-----|---------|-------------|
+| `id` | string | Ja | Zeilen-ID |
+
+**Erlaubte Tabellen:** 55 Tabellen (alle pgTable-Definitionen aus dem Schema)
+
+---
+
+### 5.25 AI-Providers-API
+
+#### `GET /api/v1/ai-providers`
+Alle KI-Anbieter auflisten (API-Keys maskiert).
+
+#### `POST /api/v1/ai-providers`
+Neuen KI-Anbieter anlegen.
+
+| Body-Parameter | Typ | Pflicht | Beschreibung |
+|---------------|-----|---------|-------------|
+| `name` | string | Ja | Anzeigename |
+| `providerType` | string | Ja | `gemini`, `openai`, `openrouter`, `deepseek`, `kimi`, `ollama`, `firecrawl`, `kie` |
+| `model` | string | Nein | Modellname |
+| `apiKey` | string | Ja* | API-Key (*nicht bei Ollama) |
+| `baseUrl` | string | Nein | Basis-URL (für Ollama/Self-Hosted) |
+
+#### `GET /api/v1/ai-providers/[id]`
+KI-Anbieter abrufen.
+
+#### `PUT /api/v1/ai-providers/[id]`
+KI-Anbieter aktualisieren.
+
+#### `DELETE /api/v1/ai-providers/[id]`
+KI-Anbieter löschen.
+
+---
+
 ## 6. Module im Detail
 
 ### Berechtigungssystem
@@ -1300,7 +1442,10 @@ Jedes Modul hat definierte Aktionen. Berechtigungen werden über Rollen vergeben
 | `marketing` | `read`, `create`, `update`, `delete` |
 | `social-media` | `read`, `create`, `update`, `delete` |
 | `din-audit` | `read`, `create`, `update`, `delete` |
+| `wiba` | `read`, `create`, `update`, `delete` |
 | `cybersecurity` | `read`, `create`, `update`, `delete` |
+| `n8n_workflows` | `read`, `create`, `update`, `delete` |
+| `database` | `read`, `update`, `delete` |
 | `settings` | `read`, `update` |
 | `users` | `read`, `create`, `update`, `delete` |
 | `roles` | `read`, `create`, `update`, `delete` |
@@ -1321,6 +1466,8 @@ Jedes Modul hat definierte Aktionen. Berechtigungen werden über Rollen vergeben
 | **Deepseek** | Deepseek-Modelle |
 | **Kimi** | Moonshot AI |
 | **Ollama** | Lokale Modelle |
+| **Firecrawl** | Web-Scraping und Recherche |
+| **kie.ai** | Video-Generierung mit Kling 3.0 (Text-to-Video, Image-to-Video) |
 
 ### KI-API-Endpunkte
 
@@ -1393,6 +1540,50 @@ Jede Seite und jeder Blog-Beitrag unterstützt:
 
 ---
 
+## 9. BSI WiBA-Modul
+
+### Überblick
+Der BSI „Weg in die Basis-Absicherung" (WiBA) Check prüft 257 Anforderungen in 19 Kategorien. Die Kategorien sind nach BSI-Empfehlung in 4 Prioritätsgruppen sortiert.
+
+### Datenmodell
+| Tabelle | Beschreibung |
+|---------|-------------|
+| `wiba_requirements` | 257 Anforderungen mit Kategorie, Hilfetext, Aufwand (global, ohne tenant_id) |
+| `wiba_audit_sessions` | WiBA-Checks pro Tenant mit Status und Zeitstempeln |
+| `wiba_answers` | Antworten (ja/nein/nicht_relevant) mit Notizen |
+
+### Scoring
+- **Gesamtscore:** Prozentuale Erfüllung über alle relevanten Anforderungen
+- **Kategorie-Fortschritt:** Prozent pro Kategorie
+- **Risikobewertung:** 5-stufig (Grün → Rot) basierend auf Gesamtprozent
+- **Spider-Chart:** Radar-Diagramm nach BSI-Prioritätsreihenfolge
+
+### PDF-Bericht
+Client-seitige Generierung mit `jsPDF` und `jspdf-autotable`:
+- Deckblatt mit Unternehmensdaten und Score
+- Kategorieübersicht nach BSI-Priorität
+- Detailtabelle aller 257 Anforderungen (farbcodiert)
+- Handlungsempfehlungen mit Hilfetext und Aufwand
+
+---
+
+## 12. Datenbank-Administration
+
+### Überblick
+Der Datenbank-Browser unter `/intern/settings/database` ermöglicht direkten Zugriff auf alle Tabellen:
+- Tabellen auflisten mit Zeilenanzahl
+- Daten anzeigen mit Pagination
+- Zeilen bearbeiten und löschen
+- Spalten-Metadaten (Typ, Nullable, Default)
+
+### Sicherheit
+- **Tabellen-Whitelist:** Nur 55 definierte Tabellen sind zugänglich
+- **Tenant-Isolation:** Tabellen mit `tenant_id` werden automatisch gefiltert
+- **Berechtigungen:** Modul `database` mit Aktionen `read`, `update`, `delete`
+- **Schutz:** `tenant_id` kann nicht verändert werden
+
+---
+
 ## Anhang: Webhook-Events
 
 | Event | Beschreibung |
@@ -1412,7 +1603,7 @@ Jede Seite und jeder Blog-Beitrag unterstützt:
 
 ---
 
-## n8n Workflow-Integration
+## 10. n8n Workflow-Integration
 
 ### Überblick
 Das BusinessOS bietet eine vollständige n8n-Integration für Workflow-Automatisierung:
@@ -1453,7 +1644,7 @@ Modul: `n8n_workflows` (CRUD) - konfigurierbar über Rollenverwaltung
 
 ---
 
-## kie.ai Video-Generierung
+## 11. kie.ai Video-Generierung
 
 ### Überblick
 kie.ai ist als KI-Provider integriert für Video-Generierung mit Kling 3.0:
@@ -1494,6 +1685,8 @@ In Einstellungen > Integrations als Provider-Typ `kie` mit API Key anlegen.
 | `OPENROUTER_API_KEY` | OpenRouter API-Key |
 | `DEEPSEEK_API_KEY` | Deepseek API-Key |
 | `KIE_API_KEY` | kie.ai API-Key (optional, alternativ per DB) |
+| `FIRECRAWL_API_KEY` | Firecrawl API-Key (optional, alternativ per DB) |
+| `REDIS_URL` | Redis-Verbindungs-URL (für Session-Cache und Rate-Limiting) |
 | `SMTP_HOST` | SMTP-Server |
 | `SMTP_PORT` | SMTP-Port |
 | `SMTP_USER` | SMTP-Benutzername |
@@ -1501,4 +1694,4 @@ In Einstellungen > Integrations als Provider-Typ `kie` mit API Key anlegen.
 
 ---
 
-*Diese Dokumentation wurde automatisch am 2026-02-28 aus der Codebasis generiert.*
+*Diese Dokumentation wurde am 2026-03-14 aktualisiert. Version 1.1.132.*
