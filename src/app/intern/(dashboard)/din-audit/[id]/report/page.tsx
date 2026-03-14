@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, Loader2, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Loader2, ExternalLink, Download } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import { generateDinPdf } from '@/lib/services/din-pdf.service'
 
 const SpiderChart = dynamic(() => import('@/components/din-audit/spider-chart'), { ssr: false })
 
@@ -54,7 +55,15 @@ interface Grant {
 interface AuditDetail {
   id: string
   status: string | null
-  clientCompany: { id: string; name: string; city: string | null; employeeCount: number | null; country: string | null } | null
+  completedAt: string | null
+  clientCompany: {
+    id: string; name: string; legalForm?: string | null
+    street?: string | null; houseNumber?: string | null; postalCode?: string | null
+    city: string | null; country: string | null; phone?: string | null
+    email?: string | null; website?: string | null; industry?: string | null
+    employeeCount: number | null; vatId?: string | null
+  } | null
+  consultant: { firstName?: string | null; lastName?: string | null; email: string } | null
   answers: Answer[]
 }
 
@@ -122,6 +131,21 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
     return <p className="text-muted-foreground">Bericht nicht verfuegbar.</p>
   }
 
+  const handleDownloadPdf = () => {
+    if (!scoring || !audit) return
+    const doc = generateDinPdf({
+      company: audit.clientCompany,
+      consultant: audit.consultant,
+      scoring,
+      requirements,
+      answers: audit.answers || [],
+      grants,
+      auditDate: audit.completedAt,
+    })
+    const fileName = `DIN-SPEC-27076_${(audit.clientCompany?.name || 'Unbekannt').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`
+    doc.save(fileName)
+  }
+
   // Group answers by topic
   const answerMap = new Map<number, Answer>()
   for (const answer of audit.answers || []) {
@@ -134,18 +158,24 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href={`/intern/din-audit/${id}`}>
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">
-            Audit-Bericht: {audit.clientCompany?.name || 'Unbekannt'}
-          </h1>
-          <p className="text-muted-foreground">DIN SPEC 27076 Ergebnisbericht</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href={`/intern/din-audit/${id}`}>
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">
+              Audit-Bericht: {audit.clientCompany?.name || 'Unbekannt'}
+            </h1>
+            <p className="text-muted-foreground">DIN SPEC 27076 Ergebnisbericht</p>
+          </div>
         </div>
+        <Button onClick={handleDownloadPdf} variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          PDF herunterladen
+        </Button>
       </div>
 
       {/* Score Overview */}
