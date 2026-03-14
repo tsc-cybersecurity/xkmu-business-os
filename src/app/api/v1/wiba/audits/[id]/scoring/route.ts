@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { WibaScoringService } from '@/lib/services/wiba-scoring.service'
-import { WIBA_CATEGORY_NAMES } from '@/lib/services/wiba-requirement.service'
+import { WIBA_CATEGORY_NAMES, WIBA_CATEGORY_ORDER_IDS, WIBA_CATEGORY_PRIORITIES } from '@/lib/services/wiba-requirement.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
 export async function GET(
@@ -18,6 +18,8 @@ export async function GET(
         ...scoring,
         riskLevel,
         categoryNames: WIBA_CATEGORY_NAMES,
+        categoryOrder: WIBA_CATEGORY_ORDER_IDS,
+        categoryPriorities: WIBA_CATEGORY_PRIORITIES,
       })
     } catch (error) {
       console.error('Error calculating WiBA score:', error)

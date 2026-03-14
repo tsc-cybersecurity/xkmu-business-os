@@ -14,6 +14,7 @@ import {
 interface SpiderChartProps {
   categoryProgress: Record<number, number>
   categoryNames: Record<number, string>
+  categoryOrder?: number[]
 }
 
 // Short labels for 19 categories to fit in radar chart
@@ -39,11 +40,14 @@ const SHORT_NAMES: Record<number, string> = {
   19: 'Web',
 }
 
-export default function SpiderChart({ categoryProgress, categoryNames }: SpiderChartProps) {
-  const data = Object.entries(categoryProgress).map(([catId, progress]) => ({
-    topic: SHORT_NAMES[parseInt(catId)] || categoryNames[parseInt(catId)] || `Kat. ${catId}`,
-    fullName: categoryNames[parseInt(catId)] || `Kategorie ${catId}`,
-    value: Math.round(progress),
+export default function SpiderChart({ categoryProgress, categoryNames, categoryOrder }: SpiderChartProps) {
+  // Use BSI priority order if provided, otherwise fall back to numeric order
+  const orderedCatIds = categoryOrder || Object.keys(categoryProgress).map(Number).sort((a, b) => a - b)
+
+  const data = orderedCatIds.map((catId) => ({
+    topic: SHORT_NAMES[catId] || categoryNames[catId] || `Kat. ${catId}`,
+    fullName: categoryNames[catId] || `Kategorie ${catId}`,
+    value: Math.round(categoryProgress[catId] || 0),
     fullMark: 100,
   }))
 

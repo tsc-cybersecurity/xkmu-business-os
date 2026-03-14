@@ -16,6 +16,8 @@ interface ScoringData {
   maxScore: number
   categoryProgress: Record<number, number>
   categoryNames: Record<number, string>
+  categoryOrder?: number[]
+  categoryPriorities?: Record<number, number>
   totalRequirements: number
   answeredRequirements: number
   jaCount: number
@@ -193,6 +195,7 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
           <SpiderChart
             categoryProgress={scoring.categoryProgress}
             categoryNames={scoring.categoryNames}
+            categoryOrder={scoring.categoryOrder}
           />
         </CardContent>
       </Card>
@@ -202,16 +205,32 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
         <CardHeader>
           <CardTitle>Detailergebnisse pro Kategorie</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {Object.entries(scoring.categoryNames).map(([catId, name]) => {
-            const progress = scoring.categoryProgress[Number(catId)] || 0
+        <CardContent className="space-y-6">
+          {[
+            { prio: 1, label: 'Prioritaet 1 - Grundlagen & groesste Cyberrisiken', color: 'text-red-700 dark:text-red-400' },
+            { prio: 2, label: 'Prioritaet 2 - Schutz sensitiver IT-Systeme', color: 'text-orange-700 dark:text-orange-400' },
+            { prio: 3, label: 'Prioritaet 3 - Informationsschutz intern/extern', color: 'text-yellow-700 dark:text-yellow-400' },
+            { prio: 4, label: 'Prioritaet 4 - Weitere Bereiche', color: 'text-gray-600 dark:text-gray-400' },
+          ].map((group) => {
+            const catIds = (scoring.categoryOrder || Object.keys(scoring.categoryNames).map(Number))
+              .filter((catId) => scoring.categoryPriorities?.[Number(catId)] === group.prio)
+            if (catIds.length === 0) return null
             return (
-              <div key={catId}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium">{name}</span>
-                  <span className="font-bold">{progress}%</span>
-                </div>
-                <Progress value={progress} className="h-3" />
+              <div key={group.prio} className="space-y-3">
+                <h4 className={`text-sm font-bold ${group.color}`}>{group.label}</h4>
+                {catIds.map((catId) => {
+                  const name = scoring.categoryNames[Number(catId)]
+                  const progress = scoring.categoryProgress[Number(catId)] || 0
+                  return (
+                    <div key={catId}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-medium">{name}</span>
+                        <span className="font-bold">{progress}%</span>
+                      </div>
+                      <Progress value={progress} className="h-3" />
+                    </div>
+                  )
+                })}
               </div>
             )
           })}
@@ -229,10 +248,26 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
           </CardHeader>
           <CardContent className="space-y-6">
             {Array.from(neinByCategory.entries())
-              .sort(([a], [b]) => a - b)
-              .map(([catId, reqs]) => (
+              .sort(([a], [b]) => {
+                const order = scoring.categoryOrder || []
+                const aIdx = order.indexOf(a)
+                const bIdx = order.indexOf(b)
+                if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx
+                return a - b
+              })
+              .map(([catId, reqs]) => {
+                const priority = scoring.categoryPriorities?.[catId]
+                return (
                 <div key={catId}>
-                  <h3 className="font-semibold text-lg mb-3">
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    {priority && (
+                      <span className={`text-xs px-2 py-0.5 rounded font-bold ${
+                        priority === 1 ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400' :
+                        priority === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-400' :
+                        priority === 3 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400' :
+                        'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                      }`}>Prioritaet {priority}</span>
+                    )}
                     {scoring.categoryNames[catId]}
                   </h3>
                   <div className="space-y-3">
@@ -260,7 +295,8 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
                     ))}
                   </div>
                 </div>
-              ))}
+                )
+              })}
           </CardContent>
         </Card>
       )}

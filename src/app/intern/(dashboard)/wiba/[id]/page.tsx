@@ -14,6 +14,8 @@ interface ScoringData {
   maxScore: number
   categoryProgress: Record<number, number>
   categoryNames: Record<number, string>
+  categoryOrder?: number[]
+  categoryPriorities?: Record<number, number>
   totalRequirements: number
   answeredRequirements: number
   jaCount: number
@@ -196,16 +198,32 @@ export default function WibaAuditDetailPage({ params }: { params: Promise<{ id: 
             <CardTitle>Kategorien</CardTitle>
             <CardDescription>Erfuellungsgrad pro Kategorie (19 Bereiche)</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {Object.entries(scoring.categoryNames).map(([catId, name]) => {
-              const progress = scoring.categoryProgress[Number(catId)] || 0
+          <CardContent className="space-y-6">
+            {[
+              { prio: 1, label: 'Prioritaet 1 - Grundlagen & groesste Cyberrisiken', color: 'text-red-700 dark:text-red-400' },
+              { prio: 2, label: 'Prioritaet 2 - Schutz sensitiver IT-Systeme', color: 'text-orange-700 dark:text-orange-400' },
+              { prio: 3, label: 'Prioritaet 3 - Informationsschutz intern/extern', color: 'text-yellow-700 dark:text-yellow-400' },
+              { prio: 4, label: 'Prioritaet 4 - Weitere Bereiche', color: 'text-gray-600 dark:text-gray-400' },
+            ].map((group) => {
+              const catIds = (scoring.categoryOrder || Object.keys(scoring.categoryNames).map(Number))
+                .filter((catId) => scoring.categoryPriorities?.[Number(catId)] === group.prio)
+              if (catIds.length === 0) return null
               return (
-                <div key={catId}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>{name}</span>
-                    <span className="font-medium">{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-2" />
+                <div key={group.prio} className="space-y-3">
+                  <h4 className={`text-sm font-bold ${group.color}`}>{group.label}</h4>
+                  {catIds.map((catId) => {
+                    const name = scoring.categoryNames[Number(catId)]
+                    const progress = scoring.categoryProgress[Number(catId)] || 0
+                    return (
+                      <div key={catId}>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>{name}</span>
+                          <span className="font-medium">{progress}%</span>
+                        </div>
+                        <Progress value={progress} className="h-2" />
+                      </div>
+                    )
+                  })}
                 </div>
               )
             })}

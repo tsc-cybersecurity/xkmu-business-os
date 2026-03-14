@@ -69,6 +69,8 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
   const currentReq = requirements[currentIndex]
   const currentAnswer = currentReq ? answers.get(currentReq.id) : undefined
 
+  const [categoryPriorities, setCategoryPriorities] = useState<Record<number, number>>({})
+
   const loadData = useCallback(async () => {
     try {
       const [reqRes, ansRes, scoreRes] = await Promise.all([
@@ -83,6 +85,9 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
       if (reqData.success) {
         setRequirements(reqData.data.requirements)
         setCategoryNames(reqData.data.categoryNames)
+        if (reqData.data.categoryPriorities) {
+          setCategoryPriorities(reqData.data.categoryPriorities)
+        }
       }
 
       if (ansData.success && ansData.data.length > 0) {
@@ -283,35 +288,51 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
           )}
 
           <div className="overflow-y-auto flex-1">
-            {categoryGroups.map((group) => (
-              <div key={group.category}>
-                <div className="px-3 py-2 bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider sticky top-0">
-                  {group.name}
-                </div>
-                {group.reqs.map((req) => {
-                  const globalIndex = requirements.indexOf(req)
-                  return (
-                    <button
-                      key={req.id}
-                      onClick={() => setCurrentIndex(globalIndex)}
-                      className={`w-full p-2.5 text-left border-b hover:bg-accent transition-colors ${
-                        globalIndex === currentIndex ? 'bg-accent' : ''
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">Frage {req.number}</span>
-                        <span className={`text-lg ${getAnswerStatusColor(req.id)}`}>
-                          {getAnswerStatusIcon(req.id)}
-                        </span>
+            {[
+              { prio: 1, label: 'Prioritaet 1', color: 'bg-red-600 dark:bg-red-700' },
+              { prio: 2, label: 'Prioritaet 2', color: 'bg-orange-600 dark:bg-orange-700' },
+              { prio: 3, label: 'Prioritaet 3', color: 'bg-yellow-600 dark:bg-yellow-700' },
+              { prio: 4, label: 'Prioritaet 4', color: 'bg-gray-500 dark:bg-gray-600' },
+            ].map((prioGroup) => {
+              const groups = categoryGroups.filter(g => categoryPriorities[g.category] === prioGroup.prio)
+              if (groups.length === 0) return null
+              return (
+                <div key={prioGroup.prio}>
+                  <div className={`px-3 py-1.5 text-[10px] font-bold text-white uppercase tracking-widest ${prioGroup.color}`}>
+                    {prioGroup.label}
+                  </div>
+                  {groups.map((group) => (
+                    <div key={group.category}>
+                      <div className="px-3 py-2 bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider sticky top-0">
+                        {group.name}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                        {req.questionText}
-                      </p>
-                    </button>
-                  )
-                })}
-              </div>
-            ))}
+                      {group.reqs.map((req) => {
+                        const globalIndex = requirements.indexOf(req)
+                        return (
+                          <button
+                            key={req.id}
+                            onClick={() => setCurrentIndex(globalIndex)}
+                            className={`w-full p-2.5 text-left border-b hover:bg-accent transition-colors ${
+                              globalIndex === currentIndex ? 'bg-accent' : ''
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium">Frage {req.number}</span>
+                              <span className={`text-lg ${getAnswerStatusColor(req.id)}`}>
+                                {getAnswerStatusIcon(req.id)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                              {req.questionText}
+                            </p>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}
