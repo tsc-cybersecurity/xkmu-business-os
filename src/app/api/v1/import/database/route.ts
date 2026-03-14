@@ -28,43 +28,107 @@ async function getAuthContext(request: NextRequest) {
 
 // Erlaubte Tabellen für den Import (Reihenfolge wichtig wegen Foreign Keys)
 const ALLOWED_TABLES = [
+  // Grundstruktur
   'tenants',
   'roles',
   'role_permissions',
   'users',
   'api_keys',
+  // Kontakte & Katalog
   'companies',
   'persons',
   'leads',
   'product_categories',
   'products',
+  // KI & Integrationen
   'ai_providers',
   'ai_logs',
   'ai_prompt_templates',
+  'n8n_connections',
+  'n8n_workflow_logs',
+  // Allgemein
   'ideas',
   'activities',
   'webhooks',
   'audit_log',
   'documents',
   'document_items',
+  // DIN SPEC 27076
+  'din_requirements',
+  'din_grants',
+  'din_audit_sessions',
+  'din_answers',
+  // BSI WiBA
+  'wiba_requirements',
+  'wiba_audit_sessions',
+  'wiba_answers',
+  // CMS & Blog
+  'cms_block_type_definitions',
+  'cms_pages',
+  'cms_blocks',
+  'cms_block_templates',
+  'cms_navigation_items',
+  'blog_posts',
+  'media_uploads',
+  // Business Intelligence
+  'company_researches',
+  'firecrawl_researches',
+  'business_documents',
+  'business_profiles',
+  // Marketing & Social Media
+  'marketing_campaigns',
+  'marketing_tasks',
+  'marketing_templates',
+  'social_media_topics',
+  'social_media_posts',
 ]
 
 // Tabellen in umgekehrter Reihenfolge löschen (wegen Foreign Keys)
 const DELETE_ORDER = [
+  // Social Media & Marketing
+  'social_media_posts',
+  'social_media_topics',
+  'marketing_templates',
+  'marketing_tasks',
+  'marketing_campaigns',
+  // Business Intelligence
+  'business_profiles',
+  'business_documents',
+  'firecrawl_researches',
+  'company_researches',
+  // CMS & Blog
+  'media_uploads',
+  'blog_posts',
+  'cms_navigation_items',
+  'cms_block_templates',
+  'cms_blocks',
+  'cms_pages',
+  // BSI WiBA
+  'wiba_answers',
+  'wiba_audit_sessions',
+  // DIN SPEC 27076
+  'din_answers',
+  'din_audit_sessions',
+  // Allgemein
   'document_items',
   'documents',
   'audit_log',
   'webhooks',
   'activities',
   'ideas',
+  // KI & Integrationen
+  'n8n_workflow_logs',
+  'n8n_connections',
   'ai_prompt_templates',
   'ai_logs',
   'ai_providers',
+  // Katalog & Kontakte
   'products',
   'product_categories',
   'leads',
   'persons',
   'companies',
+  // Grundstruktur
   'api_keys',
   'role_permissions',
   'users',

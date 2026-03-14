@@ -31,6 +31,11 @@ const ALLOWED_TABLES = new Set([
   'din_audit_sessions',
   'din_answers',
   'din_grants',
+  'wiba_requirements',
+  'wiba_audit_sessions',
+  'wiba_answers',
+  'n8n_connections',
+  'n8n_workflow_logs',
   'cms_pages',
   'cms_blocks',
   'cms_block_templates',
@@ -50,7 +55,7 @@ const ALLOWED_TABLES = new Set([
 ])
 
 // Tables that have a tenant_id column
-// Excluded: tenants, role_permissions, din_requirements, din_grants, cms_block_type_definitions (no tenant_id)
+// Excluded: tenants, role_permissions, din_requirements, din_grants, wiba_requirements, cms_block_type_definitions (no tenant_id)
 const TENANT_TABLES = new Set([
   'users',
   'roles',
@@ -71,6 +76,10 @@ const TENANT_TABLES = new Set([
   'document_items',
   'din_audit_sessions',
   'din_answers',
+  'wiba_audit_sessions',
+  'wiba_answers',
+  'n8n_connections',
+  'n8n_workflow_logs',
   'cms_pages',
   'cms_blocks',
   'cms_block_templates',

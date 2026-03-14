@@ -27,6 +27,10 @@ const TENANT_TABLES = [
   'document_items',
   'din_audit_sessions',
   'din_answers',
+  'wiba_audit_sessions',
+  'wiba_answers',
+  'n8n_connections',
+  'n8n_workflow_logs',
   'cms_pages',
   'cms_blocks',
   'cms_block_templates',
@@ -48,6 +52,7 @@ const TENANT_TABLES = [
 const GLOBAL_TABLES = [
   'din_requirements',
   'din_grants',
+  'wiba_requirements',
   'cms_block_type_definitions',
 ]
 
