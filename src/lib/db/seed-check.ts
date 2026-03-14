@@ -214,19 +214,23 @@ async function seedDinData(db: ReturnType<typeof drizzle>) {
 async function seedWibaData(db: ReturnType<typeof drizzle>) {
   let seeded = false
 
-  // Seed WiBA Requirements
-  const [{ total: wibaReqCount }] = await db.select({ total: count() }).from(wibaRequirements)
-  if (Number(wibaReqCount) === 0) {
-    for (let i = 0; i < wibaRequirementsSeedData.length; i += 50) {
-      const batch = wibaRequirementsSeedData.slice(i, i + 50)
-      await db.insert(wibaRequirements).values(batch)
+  try {
+    // Seed WiBA Requirements
+    const [{ total: wibaReqCount }] = await db.select({ total: count() }).from(wibaRequirements)
+    if (Number(wibaReqCount) === 0) {
+      for (let i = 0; i < wibaRequirementsSeedData.length; i += 50) {
+        const batch = wibaRequirementsSeedData.slice(i, i + 50)
+        await db.insert(wibaRequirements).values(batch)
+      }
+      console.log(`Created ${wibaRequirementsSeedData.length} WiBA requirements`)
+      seeded = true
     }
-    console.log(`Created ${wibaRequirementsSeedData.length} WiBA requirements`)
-    seeded = true
-  }
 
-  if (!seeded) {
-    console.log('WiBA data already exists, skipping...')
+    if (!seeded) {
+      console.log('WiBA data already exists, skipping...')
+    }
+  } catch (error) {
+    console.log('WiBA tables not yet available, skipping seed (will seed on next restart)')
   }
 }
 
