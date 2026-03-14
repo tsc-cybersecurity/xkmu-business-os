@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Download } from 'lucide-react'
 import dynamic from 'next/dynamic'
+import { generateWibaPdf } from '@/lib/services/wiba-pdf.service'
 
 const SpiderChart = dynamic(() => import('@/components/wiba/spider-chart'), { ssr: false })
 
@@ -44,7 +45,14 @@ interface Answer {
 interface AuditDetail {
   id: string
   status: string | null
-  clientCompany: { id: string; name: string; city: string | null; employeeCount: number | null } | null
+  completedAt: string | null
+  clientCompany: {
+    id: string; name: string; legalForm?: string | null
+    street?: string | null; houseNumber?: string | null; postalCode?: string | null
+    city: string | null; phone?: string | null; email?: string | null
+    website?: string | null; industry?: string | null; employeeCount: number | null
+  } | null
+  consultant: { firstName?: string | null; lastName?: string | null; email: string } | null
   answers: Answer[]
 }
 
@@ -101,6 +109,23 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
     return <p className="text-muted-foreground">Bericht nicht verfuegbar.</p>
   }
 
+  const handleDownloadPdf = () => {
+    if (!scoring || !audit) return
+    const doc = generateWibaPdf({
+      company: audit.clientCompany,
+      consultant: audit.consultant,
+      scoring,
+      requirements,
+      answers: audit.answers || [],
+      categoryNames: scoring.categoryNames,
+      categoryOrder: scoring.categoryOrder || Object.keys(scoring.categoryNames).map(Number),
+      categoryPriorities: scoring.categoryPriorities || {},
+      auditDate: audit.completedAt,
+    })
+    const fileName = `WiBA-Bericht_${(audit.clientCompany?.name || 'Unbekannt').replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`
+    doc.save(fileName)
+  }
+
   const answerMap = new Map<number, Answer>()
   for (const answer of audit.answers || []) {
     answerMap.set(answer.requirementId, answer)
@@ -121,18 +146,24 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href={`/intern/wiba/${id}`}>
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold">
-            WiBA-Bericht: {audit.clientCompany?.name || 'Unbekannt'}
-          </h1>
-          <p className="text-muted-foreground">BSI WiBA Ergebnisbericht</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href={`/intern/wiba/${id}`}>
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">
+              WiBA-Bericht: {audit.clientCompany?.name || 'Unbekannt'}
+            </h1>
+            <p className="text-muted-foreground">BSI WiBA Ergebnisbericht</p>
+          </div>
         </div>
+        <Button onClick={handleDownloadPdf} variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          PDF herunterladen
+        </Button>
       </div>
 
       {/* Score Overview */}

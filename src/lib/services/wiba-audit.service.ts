@@ -42,7 +42,21 @@ export const WibaAuditService = {
     if (!session) return null
 
     const [company] = session.clientCompanyId
-      ? await db.select().from(companies).where(eq(companies.id, session.clientCompanyId)).limit(1)
+      ? await db.select({
+          id: companies.id,
+          name: companies.name,
+          legalForm: companies.legalForm,
+          street: companies.street,
+          houseNumber: companies.houseNumber,
+          postalCode: companies.postalCode,
+          city: companies.city,
+          country: companies.country,
+          phone: companies.phone,
+          email: companies.email,
+          website: companies.website,
+          industry: companies.industry,
+          employeeCount: companies.employeeCount,
+        }).from(companies).where(eq(companies.id, session.clientCompanyId)).limit(1)
       : [null]
 
     const [consultant] = session.consultantId
