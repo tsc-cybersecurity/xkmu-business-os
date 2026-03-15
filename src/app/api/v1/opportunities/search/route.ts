@@ -34,12 +34,13 @@ export async function POST(request: NextRequest) {
         return apiError('INVALID_INPUT', 'Mindestens eine Branche und ein Ort erforderlich', 400)
       }
 
-      // Search via SerpAPI
+      // Search via SerpAPI (tenantId for DB-stored API key)
       const searchResults = await SerpApiService.searchMultiple(
         queryList,
         locationList,
         radius || 25,
-        maxPerLocation || 20
+        maxPerLocation || 20,
+        auth.tenantId
       )
 
       // Save results as opportunities - convert nulls to undefined for compatibility

@@ -380,10 +380,10 @@ class AIServiceClass {
       }
     }
 
-    // Spezial-Provider (firecrawl, kie) separat prüfen - haben API-Key = verfügbar
+    // Spezial-Provider (firecrawl, kie, serpapi) separat prüfen - haben API-Key = verfügbar
     const allProviders = await AiProviderService.list(tenantId)
     const specialProviders = allProviders.filter(
-      (p) => ['firecrawl', 'kie'].includes(p.providerType) && p.isActive
+      (p) => ['firecrawl', 'kie', 'serpapi'].includes(p.providerType) && p.isActive
     )
     for (const config of specialProviders) {
       result.push({

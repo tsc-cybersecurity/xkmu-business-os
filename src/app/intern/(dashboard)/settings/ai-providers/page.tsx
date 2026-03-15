@@ -73,6 +73,7 @@ const providerTypes = [
   { value: 'kimi', label: 'Kimi (Moonshot)', needsKey: true },
   { value: 'firecrawl', label: 'Firecrawl (Web-Scraping)', needsKey: true },
   { value: 'kie', label: 'kie.ai (Video-Generierung)', needsKey: true },
+  { value: 'serpapi', label: 'SerpAPI (Google Maps Suche)', needsKey: true },
 ]
 
 const providerColors: Record<string, string> = {
@@ -84,6 +85,7 @@ const providerColors: Record<string, string> = {
   kimi: 'bg-orange-500',
   firecrawl: 'bg-amber-500',
   kie: 'bg-pink-500',
+  serpapi: 'bg-lime-500',
 }
 
 // Bekannte Modelle pro Provider-Typ
@@ -148,6 +150,7 @@ const defaultBaseUrls: Record<string, string> = {
   kimi: '',
   firecrawl: '',
   kie: 'https://api.kie.ai',
+  serpapi: '',
 }
 
 const emptyForm: ProviderFormData = {
@@ -241,7 +244,7 @@ export default function AiProvidersPage() {
     setFormData((prev) => ({
       ...prev,
       providerType: type,
-      model: type === 'firecrawl' ? 'firecrawl' : type === 'kie' ? 'kie-video' : (prev.model || defaultModels[type] || ''),
+      model: type === 'firecrawl' ? 'firecrawl' : type === 'kie' ? 'kie-video' : type === 'serpapi' ? 'google_maps' : (prev.model || defaultModels[type] || ''),
       baseUrl: prev.baseUrl || defaultBaseUrls[type] || '',
       name: prev.name || providerTypes.find((t) => t.value === type)?.label || '',
     }))
@@ -249,7 +252,8 @@ export default function AiProvidersPage() {
 
   const isFirecrawl = formData.providerType === 'firecrawl'
   const isKie = formData.providerType === 'kie'
-  const isNoModelProvider = isFirecrawl || isKie
+  const isSerpApi = formData.providerType === 'serpapi'
+  const isNoModelProvider = isFirecrawl || isKie || isSerpApi
 
   const handleSave = async () => {
     if (!formData.name.trim()) {

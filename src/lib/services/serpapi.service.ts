@@ -4,6 +4,7 @@
 // ============================================
 
 import { logger } from '@/lib/utils/logger'
+import { AiProviderService } from '@/lib/services/ai-provider.service'
 
 interface SerpApiPlace {
   title: string
@@ -41,9 +42,20 @@ export interface OpportunityResult {
   metadata: Record<string, unknown>
 }
 
-function getApiKey(): string {
+async function getApiKey(tenantId?: string): Promise<string> {
+  // 1. Try DB (AI Provider with type 'serpapi')
+  if (tenantId) {
+    try {
+      const providers = await AiProviderService.list(tenantId)
+      const serpapi = providers.find((p) => p.providerType === 'serpapi' && p.isActive && p.apiKey)
+      if (serpapi?.apiKey) return serpapi.apiKey
+    } catch {
+      // Fall through to env
+    }
+  }
+  // 2. Fallback to env
   const key = process.env.SERPAPI_KEY
-  if (!key) throw new Error('SERPAPI_KEY ist nicht konfiguriert. Bitte in den Umgebungsvariablen setzen.')
+  if (!key) throw new Error('SerpAPI ist nicht konfiguriert. Bitte unter Einstellungen → KI-Provider einen SerpAPI-Anbieter anlegen.')
   return key
 }
 
@@ -64,8 +76,8 @@ function parseAddress(address: string): { street: string; city: string; postalCo
 }
 
 export const SerpApiService = {
-  async searchPlaces(query: string, location: string, radius: number = 25, maxResults: number = 20): Promise<OpportunityResult[]> {
-    const apiKey = getApiKey()
+  async searchPlaces(query: string, location: string, radius: number = 25, maxResults: number = 20, tenantId?: string): Promise<OpportunityResult[]> {
+    const apiKey = await getApiKey(tenantId)
 
     const params = new URLSearchParams({
       engine: 'google_maps',
@@ -125,7 +137,8 @@ export const SerpApiService = {
     queries: string[],
     locations: string[],
     radius: number = 25,
-    maxPerLocation: number = 20
+    maxPerLocation: number = 20,
+    tenantId?: string
   ): Promise<{ results: OpportunityResult[]; totalSearches: number; errors: string[] }> {
     const allResults: OpportunityResult[] = []
     const seenPlaceIds = new Set<string>()
@@ -141,7 +154,7 @@ export const SerpApiService = {
             await new Promise(resolve => setTimeout(resolve, 1000))
           }
 
-          const results = await this.searchPlaces(query.trim(), location.trim(), radius, maxPerLocation)
+          const results = await this.searchPlaces(query.trim(), location.trim(), radius, maxPerLocation, tenantId)
 
           for (const result of results) {
             if (!seenPlaceIds.has(result.placeId)) {

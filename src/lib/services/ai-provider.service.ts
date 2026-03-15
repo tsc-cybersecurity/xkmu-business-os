@@ -80,7 +80,8 @@ export const AiProviderService = {
           eq(aiProviders.tenantId, tenantId),
           eq(aiProviders.isActive, true),
           ne(aiProviders.providerType, 'firecrawl'),
-          ne(aiProviders.providerType, 'kie')
+          ne(aiProviders.providerType, 'kie'),
+          ne(aiProviders.providerType, 'serpapi')
         )
       )
       .orderBy(asc(aiProviders.priority))
