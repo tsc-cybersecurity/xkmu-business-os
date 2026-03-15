@@ -6,6 +6,7 @@ import { TenantService } from '@/lib/services/tenant.service'
 import { RoleService } from '@/lib/services/role.service'
 import { TenantSeedService } from '@/lib/services/tenant-seed.service'
 import { createSession } from '@/lib/auth/session'
+import { rateLimit } from '@/lib/utils/rate-limit'
 import type { SessionUser } from '@/lib/types/auth.types'
 
 function generateSlug(name: string): string {
@@ -21,6 +22,10 @@ function generateSlug(name: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: max 5 registrations per minute per IP
+    const limited = rateLimit(request, 'auth-register', 5, 60_000)
+    if (limited) return limited
+
     const body = await request.json()
 
     const validation = validateAndParse(registerSchema, body)

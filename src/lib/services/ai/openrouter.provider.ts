@@ -8,11 +8,13 @@ export class OpenRouterProvider implements AIProvider {
   private apiKey: string
   private model: string
   private baseUrl: string
+  private timeoutMs: number
 
-  constructor(config?: { apiKey?: string; model?: string; baseUrl?: string }) {
+  constructor(config?: { apiKey?: string; model?: string; baseUrl?: string; timeoutMs?: number }) {
     this.apiKey = config?.apiKey || ''
     this.model = config?.model || DEFAULT_MODEL
     this.baseUrl = config?.baseUrl || OPENROUTER_API_URL
+    this.timeoutMs = config?.timeoutMs || 60_000
   }
 
   async isAvailable(): Promise<boolean> {
@@ -34,7 +36,7 @@ export class OpenRouterProvider implements AIProvider {
         'HTTP-Referer': 'https://xkmu-business-os.local',
         'X-Title': 'xKMU Business OS',
       },
-      signal: AbortSignal.timeout(90000),
+      signal: AbortSignal.timeout(this.timeoutMs),
       body: JSON.stringify({
         model,
         messages: [

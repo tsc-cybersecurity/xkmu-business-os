@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
 
   serverExternalPackages: ['postgres', 'pdf-parse'],
 
+  // Limit request body size to 10MB (default is unlimited)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
+
   // CORS headers for API routes
   async headers() {
     return [

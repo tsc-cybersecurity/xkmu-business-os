@@ -96,6 +96,26 @@ export interface PaginatedResult<T> {
   }
 }
 
+/**
+ * Parse JSON body with size limit validation.
+ * Returns parsed body or an error response if body exceeds maxBytes.
+ */
+export async function parseBodyWithLimit(
+  request: Request,
+  maxBytes = 1_048_576 // 1MB default
+): Promise<{ data: Record<string, unknown> } | { error: NextResponse<ApiErrorResponse> }> {
+  const contentLength = request.headers.get('content-length')
+  if (contentLength && parseInt(contentLength, 10) > maxBytes) {
+    return { error: apiError('PAYLOAD_TOO_LARGE', `Request body exceeds ${Math.round(maxBytes / 1024)}KB limit`, 413) }
+  }
+  try {
+    const data = await request.json()
+    return { data }
+  } catch {
+    return { error: apiError('INVALID_BODY', 'Invalid JSON body', 400) }
+  }
+}
+
 export function parsePaginationParams(searchParams: URLSearchParams): PaginationParams {
   const page = parseInt(searchParams.get('page') || '1', 10)
   const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100)

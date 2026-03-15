@@ -104,6 +104,7 @@ export const FirecrawlService = {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
+        signal: AbortSignal.timeout(30_000),
         body: JSON.stringify({
           url,
           limit: 20,
@@ -145,6 +146,7 @@ export const FirecrawlService = {
           headers: {
             Authorization: `Bearer ${apiKey}`,
           },
+          signal: AbortSignal.timeout(15_000),
         })
 
         if (!statusResponse.ok) {

@@ -10,9 +10,11 @@ export const KIE_MODELS = [
 export class KieProvider implements AIProvider {
   name = 'kie'
   private apiKey: string
+  private timeoutMs: number
 
-  constructor(config?: { apiKey?: string; model?: string }) {
+  constructor(config?: { apiKey?: string; model?: string; timeoutMs?: number }) {
     this.apiKey = config?.apiKey || process.env.KIE_API_KEY || ''
+    this.timeoutMs = config?.timeoutMs || 30_000
   }
 
   async isAvailable(): Promise<boolean> {
@@ -63,7 +65,7 @@ export class KieProvider implements AIProvider {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.apiKey}`,
       },
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(this.timeoutMs),
       body: JSON.stringify(body),
     })
 
@@ -96,7 +98,7 @@ export class KieProvider implements AIProvider {
       headers: {
         'Authorization': `Bearer ${this.apiKey}`,
       },
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(this.timeoutMs),
     })
 
     if (!response.ok) {

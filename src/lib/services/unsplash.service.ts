@@ -37,6 +37,7 @@ export const UnsplashService = {
         headers: {
           Authorization: `Client-ID ${accessKey}`,
         },
+        signal: AbortSignal.timeout(15_000),
       })
 
       if (!response.ok) {

@@ -16,10 +16,12 @@ export class GeminiProvider implements AIProvider {
   name = 'gemini'
   private apiKey: string
   private defaultModel: string
+  private timeoutMs: number
 
-  constructor(config?: { apiKey?: string; model?: string }) {
+  constructor(config?: { apiKey?: string; model?: string; timeoutMs?: number }) {
     this.apiKey = config?.apiKey || process.env.GOOGLE_AI_API_KEY || ''
     this.defaultModel = config?.model || DEFAULT_MODEL
+    this.timeoutMs = config?.timeoutMs || 60_000
   }
 
   async isAvailable(): Promise<boolean> {
@@ -39,7 +41,7 @@ export class GeminiProvider implements AIProvider {
       headers: {
         'Content-Type': 'application/json',
       },
-      signal: AbortSignal.timeout(90000),
+      signal: AbortSignal.timeout(this.timeoutMs),
       body: JSON.stringify({
         ...(options?.systemPrompt ? { systemInstruction: { parts: [{ text: options.systemPrompt }] } } : {}),
         contents: [

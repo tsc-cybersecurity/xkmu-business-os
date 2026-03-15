@@ -7,10 +7,12 @@ export class KimiProvider implements AIProvider {
   name = 'kimi'
   private apiKey: string
   private defaultModel: string
+  private timeoutMs: number
 
-  constructor(config?: { apiKey?: string; model?: string }) {
+  constructor(config?: { apiKey?: string; model?: string; timeoutMs?: number }) {
     this.apiKey = config?.apiKey || ''
     this.defaultModel = config?.model || DEFAULT_MODEL
+    this.timeoutMs = config?.timeoutMs || 60_000
   }
 
   async isAvailable(): Promise<boolean> {
@@ -30,7 +32,7 @@ export class KimiProvider implements AIProvider {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${this.apiKey}`,
       },
-      signal: AbortSignal.timeout(90000),
+      signal: AbortSignal.timeout(this.timeoutMs),
       body: JSON.stringify({
         model,
         messages: [

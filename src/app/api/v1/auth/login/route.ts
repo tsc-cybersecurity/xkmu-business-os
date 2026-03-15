@@ -3,9 +3,14 @@ import { apiSuccess, apiError, apiValidationError } from '@/lib/utils/api-respon
 import { loginSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { UserService } from '@/lib/services/user.service'
 import { createSession } from '@/lib/auth/session'
+import { rateLimit } from '@/lib/utils/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: max 10 login attempts per minute per IP
+    const limited = rateLimit(request, 'auth-login', 10, 60_000)
+    if (limited) return limited
+
     const body = await request.json()
 
     // Validate input

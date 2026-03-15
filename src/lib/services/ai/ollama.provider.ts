@@ -6,10 +6,12 @@ export class OllamaProvider implements AIProvider {
   name = 'ollama'
   private baseUrl: string
   private defaultModel: string
+  private timeoutMs: number
 
-  constructor(config?: { baseUrl?: string; model?: string }) {
+  constructor(config?: { baseUrl?: string; model?: string; timeoutMs?: number }) {
     this.baseUrl = config?.baseUrl || process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
     this.defaultModel = config?.model || process.env.OLLAMA_MODEL || DEFAULT_MODEL
+    this.timeoutMs = config?.timeoutMs || 120_000
   }
 
   async isAvailable(): Promise<boolean> {
@@ -33,6 +35,7 @@ export class OllamaProvider implements AIProvider {
       headers: {
         'Content-Type': 'application/json',
       },
+      signal: AbortSignal.timeout(this.timeoutMs),
       body: JSON.stringify({
         model,
         prompt,
@@ -66,7 +69,9 @@ export class OllamaProvider implements AIProvider {
 
   async listModels(): Promise<string[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/tags`)
+      const response = await fetch(`${this.baseUrl}/api/tags`, {
+        signal: AbortSignal.timeout(10_000),
+      })
       if (!response.ok) {
         return []
       }
@@ -84,6 +89,7 @@ export class OllamaProvider implements AIProvider {
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: AbortSignal.timeout(300_000),
         body: JSON.stringify({ name: model, stream: false }),
       })
       return response.ok

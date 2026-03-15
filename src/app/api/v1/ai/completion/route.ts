@@ -2,10 +2,15 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { AIService } from '@/lib/services/ai'
 import { withPermission } from '@/lib/auth/require-permission'
+import { rateLimit } from '@/lib/utils/rate-limit'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'ai_providers', 'read', async (auth) => {
     try {
+      // Rate limit: max 30 AI completions per minute per IP
+      const limited = rateLimit(request, 'ai-completion', 30, 60_000)
+      if (limited) return limited
+
       const body = await request.json()
       const { prompt, maxTokens, temperature, model } = body
 
