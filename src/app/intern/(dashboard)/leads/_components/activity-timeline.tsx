@@ -472,20 +472,39 @@ export function ActivityTimeline({
                     </div>
                   </div>
 
-                  {/* Content with preview + expand */}
+                  {/* Content: KI-Summary as preview, full content expandable */}
                   {condensedContent && (() => {
+                    const meta = (activity.metadata || {}) as Record<string, unknown>
+                    const aiSummary = typeof meta.summary === 'string' ? meta.summary : ''
                     const isExpanded = expandedIds.has(activity.id)
-                    const isLong = condensedContent.length > 400
-                    const preview = isLong && !isExpanded
-                      ? condensedContent.slice(0, 400).replace(/\s+\S*$/, '') + '...'
-                      : condensedContent
+                    const hasFullContent = condensedContent.length > 200
 
                     return (
                       <div className="mt-2 ml-10">
-                        <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
-                          {preview}
-                        </div>
-                        {isLong && (
+                        {/* Show AI summary if available, otherwise first ~400 chars */}
+                        {aiSummary ? (
+                          <div className="text-sm leading-relaxed text-foreground/80">
+                            {aiSummary}
+                          </div>
+                        ) : hasFullContent && !isExpanded ? (
+                          <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                            {condensedContent.slice(0, 400).replace(/\s+\S*$/, '') + '...'}
+                          </div>
+                        ) : !hasFullContent ? (
+                          <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                            {condensedContent}
+                          </div>
+                        ) : null}
+
+                        {/* Expandable full content */}
+                        {(aiSummary || hasFullContent) && isExpanded && (
+                          <div className="mt-3 rounded-md border bg-muted/30 p-3 text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                            {condensedContent}
+                          </div>
+                        )}
+
+                        {/* Toggle button */}
+                        {(aiSummary || hasFullContent) && (
                           <button
                             onClick={() => toggleExpand(activity.id)}
                             className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
@@ -493,12 +512,12 @@ export function ActivityTimeline({
                             {isExpanded ? (
                               <>
                                 <ChevronUp className="h-3.5 w-3.5" />
-                                Weniger anzeigen
+                                Details ausblenden
                               </>
                             ) : (
                               <>
                                 <ChevronDown className="h-3.5 w-3.5" />
-                                Mehr anzeigen
+                                Details anzeigen
                               </>
                             )}
                           </button>

@@ -11,6 +11,7 @@ import {
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { CompanyService } from '@/lib/services/company.service'
+import { CompanyActionsService } from '@/lib/services/ai/company-actions.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
@@ -52,6 +53,11 @@ export async function PUT(
       if (!company) {
         return apiNotFound('Company not found')
       }
+
+      // Fire-and-forget: enrich activities without summaries
+      CompanyActionsService.enrichMissingSummaries(auth.tenantId, id, auth.userId).catch((err) => {
+        logger.error('Background summary enrichment failed', err, { module: 'CompaniesAPI' })
+      })
 
       return apiSuccess(company)
     } catch (error) {

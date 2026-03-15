@@ -144,6 +144,7 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
   const [activeAction, setActiveAction] = useState<ActionDef | null>(null)
   const [subject, setSubject] = useState('')
   const [content, setContent] = useState('')
+  const [summary, setSummary] = useState('')
   const [saving, setSaving] = useState(false)
 
   const handleGenerate = async (action: ActionDef) => {
@@ -162,6 +163,7 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
         setActiveAction(action)
         setSubject(String(data.data.subject || ''))
         setContent(String(data.data.content || ''))
+        setSummary(String(data.data.summary || ''))
         setDialogOpen(true)
       } else {
         toast.error(data.error?.message || 'KI-Aktion fehlgeschlagen')
@@ -186,7 +188,7 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
           type: activeAction.activityType,
           subject: subject || activeAction.name,
           content,
-          metadata: { source: 'company_action', actionSlug: activeAction.slug },
+          metadata: { source: 'company_action', actionSlug: activeAction.slug, ...(summary ? { summary } : {}) },
         }),
       })
 

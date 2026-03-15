@@ -122,6 +122,21 @@ function stringifyObject(obj: Record<string, unknown>, index?: number): string {
   return lines.join('\n')
 }
 
+/** Generate a 4-5 line German summary of activity content */
+async function generateSummary(tenantId: string, content: string, userId?: string | null): Promise<string> {
+  try {
+    const response = await AIService.completeWithContext(
+      `Fasse den folgenden Text in exakt 4-5 Saetzen zusammen. Schreibe praegnant und sachlich im Business-Stil. Antworte NUR mit der Zusammenfassung, ohne Einleitung oder Formatierung.\n\nText:\n${content}`,
+      { tenantId, userId, feature: 'activity_summary' },
+      { temperature: 0.3, maxTokens: 300 }
+    )
+    return response.text.trim()
+  } catch (e) {
+    logger.error('Failed to generate activity summary', e, { module: 'CompanyActionsService' })
+    return ''
+  }
+}
+
 export const CompanyActionsService = {
   async generate(tenantId: string, companyId: string, actionSlug: string, userId?: string | null) {
     // 1. Load company data
@@ -202,20 +217,54 @@ export const CompanyActionsService = {
       // Ensure content is always a readable string (AI may return nested objects/arrays)
       const textContent = stringifyAiContent(rawContent)
 
-      return {
-        subject: typeof rawSubject === 'string' ? rawSubject : String(rawSubject),
-        content: textContent,
-        actionSlug,
-      }
+      const subject = typeof rawSubject === 'string' ? rawSubject : String(rawSubject)
+
+      // Generate 4-5 line summary for preview
+      const summary = textContent.length > 300
+        ? await generateSummary(tenantId, textContent, userId)
+        : ''
+
+      return { subject, content: textContent, summary, actionSlug }
     } catch (e) {
       logger.error('Failed to parse company action response', e, { module: 'CompanyActionsService' })
     }
 
     // Fallback: use raw text
-    return {
-      subject: '',
-      content: response.text,
-      actionSlug,
+    const fallbackSummary = response.text.length > 300
+      ? await generateSummary(tenantId, response.text, userId)
+      : ''
+    return { subject: '', content: response.text, summary: fallbackSummary, actionSlug }
+  },
+
+  /**
+   * Generate summaries for activities that don't have one yet.
+   * Called on company update to progressively enrich data.
+   */
+  async enrichMissingSummaries(tenantId: string, companyId: string, userId?: string | null): Promise<number> {
+    try {
+      const result = await ActivityService.listByCompany(tenantId, companyId, { limit: 20 })
+      const activities = result.items || []
+      let enriched = 0
+
+      for (const activity of activities) {
+        const meta = (activity.metadata || {}) as Record<string, unknown>
+        if (meta.summary) continue // already has summary
+        if (!activity.content || activity.content.length < 300) continue // too short
+
+        const summary = await generateSummary(tenantId, activity.content, userId)
+        if (!summary) continue
+
+        // Update activity metadata with summary
+        await ActivityService.update(tenantId, activity.id, {
+          metadata: { ...meta, summary },
+        })
+        enriched++
+      }
+
+      return enriched
+    } catch (e) {
+      logger.error('Failed to enrich activity summaries', e, { module: 'CompanyActionsService' })
+      return 0
     }
   },
 }

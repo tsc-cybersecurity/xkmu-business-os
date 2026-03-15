@@ -119,10 +119,17 @@ export default function ChancenPage() {
       }
 
       const response = await fetch(`/api/v1/opportunities?${params}`)
+      if (!response.ok) {
+        // Table may not exist yet after deploy
+        setOpportunities([])
+        setTotal(0)
+        setTotalPages(1)
+        return
+      }
       const data = await response.json()
 
       if (data.success) {
-        setOpportunities(data.data)
+        setOpportunities(data.data || [])
         if (data.meta) {
           setTotalPages(data.meta.totalPages || 1)
           setTotal(data.meta.total || 0)
@@ -130,6 +137,7 @@ export default function ChancenPage() {
       }
     } catch (error) {
       logger.error('Failed to fetch opportunities', error, { module: 'ChancenPage' })
+      setOpportunities([])
     } finally {
       setLoading(false)
     }
@@ -165,6 +173,12 @@ export default function ChancenPage() {
         }),
       })
 
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null)
+        toast.error(errData?.error?.message || `Suche fehlgeschlagen (${response.status})`)
+        return
+      }
+
       const data = await response.json()
 
       if (data.success) {
@@ -176,7 +190,7 @@ export default function ChancenPage() {
       }
     } catch (error) {
       logger.error('Search failed', error, { module: 'ChancenPage' })
-      toast.error('Suche fehlgeschlagen')
+      toast.error('Suche fehlgeschlagen: ' + (error instanceof Error ? error.message : 'Netzwerkfehler'))
     } finally {
       setSearching(false)
     }
@@ -348,8 +362,9 @@ export default function ChancenPage() {
             </div>
             <DialogFooter>
               <Button
+                type="button"
                 onClick={handleSearch}
-                disabled={searching}
+                disabled={searching || !searchQueries.trim() || !searchLocations.trim()}
               >
                 {searching ? (
                   <>
@@ -357,7 +372,10 @@ export default function ChancenPage() {
                     Suche laeuft...
                   </>
                 ) : (
-                  'Suchen'
+                  <>
+                    <Search className="mr-2 h-4 w-4" />
+                    Suchen
+                  </>
                 )}
               </Button>
             </DialogFooter>

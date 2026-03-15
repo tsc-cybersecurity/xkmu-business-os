@@ -50,6 +50,15 @@ export const ActivityService = {
     return activity ?? null
   },
 
+  async update(tenantId: string, activityId: string, data: { subject?: string | null; content?: string | null; metadata?: Record<string, unknown> }) {
+    const result = await db
+      .update(activities)
+      .set(data)
+      .where(and(eq(activities.tenantId, tenantId), eq(activities.id, activityId)))
+      .returning()
+    return result[0] || null
+  },
+
   async delete(tenantId: string, activityId: string): Promise<boolean> {
     const result = await db
       .delete(activities)
