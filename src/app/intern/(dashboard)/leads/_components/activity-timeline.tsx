@@ -32,6 +32,8 @@ import {
   Send,
   ExternalLink,
   Clock,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared'
 import { toast } from 'sonner'
@@ -90,6 +92,17 @@ export function ActivityTimeline({
   const [outreachResult, setOutreachResult] = useState<{ subject: string; body: string; tone: string } | null>(null)
   const [showOutreachDialog, setShowOutreachDialog] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  // Expanded content tracking
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   // Activity detail/edit dialog
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
@@ -459,12 +472,40 @@ export function ActivityTimeline({
                     </div>
                   </div>
 
-                  {/* Content */}
-                  {condensedContent && (
-                    <div className="mt-2 ml-10 text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
-                      {condensedContent}
-                    </div>
-                  )}
+                  {/* Content with preview + expand */}
+                  {condensedContent && (() => {
+                    const isExpanded = expandedIds.has(activity.id)
+                    const isLong = condensedContent.length > 400
+                    const preview = isLong && !isExpanded
+                      ? condensedContent.slice(0, 400).replace(/\s+\S*$/, '') + '...'
+                      : condensedContent
+
+                    return (
+                      <div className="mt-2 ml-10">
+                        <div className="text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                          {preview}
+                        </div>
+                        {isLong && (
+                          <button
+                            onClick={() => toggleExpand(activity.id)}
+                            className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                          >
+                            {isExpanded ? (
+                              <>
+                                <ChevronUp className="h-3.5 w-3.5" />
+                                Weniger anzeigen
+                              </>
+                            ) : (
+                              <>
+                                <ChevronDown className="h-3.5 w-3.5" />
+                                Mehr anzeigen
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })()}
 
                   {/* Meta */}
                   <div className="mt-2 ml-10 flex items-center gap-2 text-xs text-muted-foreground">
