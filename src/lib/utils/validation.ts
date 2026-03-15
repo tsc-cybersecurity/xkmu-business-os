@@ -621,8 +621,8 @@ export const opportunityStatusSchema = z.enum(['new', 'contacted', 'qualified', 
 export const searchOpportunitiesSchema = z.object({
   queries: z.string().min(1, 'Mindestens eine Branche angeben'),
   locations: z.string().min(1, 'Mindestens ein Ort angeben'),
-  radius: z.number().min(1).max(100).default(25),
-  maxPerLocation: z.number().min(1).max(60).default(20),
+  radius: z.coerce.number().min(1).max(100).default(25),
+  maxPerLocation: z.coerce.number().min(1).max(60).default(20),
 })
 
 export const updateOpportunitySchema = z.object({

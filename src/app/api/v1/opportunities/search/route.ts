@@ -66,8 +66,9 @@ export async function POST(request: NextRequest) {
         errors: searchResults.errors,
       })
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unbekannter Fehler'
       logger.error('Search opportunities error', error, { module: 'OpportunitiesAPI' })
-      return apiError('SEARCH_FAILED', 'Failed to search opportunities', 500)
+      return apiError('SEARCH_FAILED', message, 500)
     }
   })
 }

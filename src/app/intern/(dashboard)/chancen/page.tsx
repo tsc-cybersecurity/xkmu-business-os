@@ -153,6 +153,8 @@ export default function ChancenPage() {
   }, [search, statusFilter])
 
   const handleSearch = async () => {
+    toast.info('Suche wird gestartet...')
+
     if (!searchQueries.trim() || !searchLocations.trim()) {
       toast.error('Bitte Branchen und Orte angeben')
       return
