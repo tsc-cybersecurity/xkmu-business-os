@@ -10,6 +10,8 @@ RUN apk add --no-cache libc6-compat
 # ============================================
 FROM base AS deps
 COPY package.json package-lock.json* ./
+# Sync lock file version if CI bumped package.json without updating package-lock.json
+RUN npm install --package-lock-only --ignore-scripts 2>/dev/null || true
 RUN npm ci
 
 # ============================================
