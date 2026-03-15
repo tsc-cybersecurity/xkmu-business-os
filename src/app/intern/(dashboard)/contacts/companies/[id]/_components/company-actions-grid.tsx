@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -157,16 +158,16 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
 
       const data = await response.json()
 
-      if (data.success) {
+      if (data.success && data.data) {
         setActiveAction(action)
-        setSubject(data.data.subject || '')
-        setContent(data.data.content || '')
+        setSubject(String(data.data.subject || ''))
+        setContent(String(data.data.content || ''))
         setDialogOpen(true)
       } else {
         toast.error(data.error?.message || 'KI-Aktion fehlgeschlagen')
       }
-    } catch {
-      toast.error('Fehler bei der KI-Aktion')
+    } catch (error) {
+      toast.error('Fehler bei der KI-Aktion: ' + (error instanceof Error ? error.message : 'Unbekannt'))
     } finally {
       setLoadingSlug(null)
     }
@@ -261,6 +262,9 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{activeAction?.name || 'KI-Ergebnis'}</DialogTitle>
+            <DialogDescription>
+              KI-generiertes Ergebnis. Sie koennen den Inhalt bearbeiten und als Aktivitaet speichern.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
