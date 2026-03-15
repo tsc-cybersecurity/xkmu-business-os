@@ -4,10 +4,13 @@
 // Extracted from ai-prompt-template.service.ts
 // Contains TEMPLATE_PLACEHOLDERS and DEFAULT_TEMPLATES
 
+import { COMPANY_ACTION_PLACEHOLDERS, COMPANY_ACTION_TEMPLATES } from '@/lib/services/ai-prompt-template.company-actions'
+
 // ============================================
 // Platzhalter-Definitionen pro Slug
 // ============================================
 export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: string; description: string }>> = {
+  ...COMPANY_ACTION_PLACEHOLDERS,
   lead_research: [
     { key: 'companyName', label: 'Firmenname', description: 'Name der Firma des Leads' },
     { key: 'personName', label: 'Kontaktperson', description: 'Name der Kontaktperson' },
@@ -121,6 +124,7 @@ export const DEFAULT_TEMPLATES: Record<string, {
   userPrompt: string
   outputFormat: string
 }> = {
+  ...COMPANY_ACTION_TEMPLATES,
   lead_research: {
     name: 'Lead-Recherche',
     description: 'Analysiert Lead-Informationen und erstellt einen strukturierten Bericht mit Scoring.',

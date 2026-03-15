@@ -5,13 +5,14 @@ import { useParams, useRouter } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmDialog } from '@/components/shared'
 import { toast } from 'sonner'
-import { Brain } from 'lucide-react'
+import { Brain, Sparkles } from 'lucide-react'
 import { ActivityTimeline } from '@/app/intern/(dashboard)/leads/_components/activity-timeline'
 import { logger } from '@/lib/utils/logger'
 import { CompanyDetailsHeader } from './_components/company-details-header'
 import { CompanyInfoCard } from './_components/company-info-card'
 import { CompanyContactsSection } from './_components/company-contacts-section'
 import { CompanyResearchSection } from './_components/company-research-section'
+import { CompanyActionsGrid } from './_components/company-actions-grid'
 
 interface AIResearchData {
   lastResearchedAt?: string
@@ -294,6 +295,10 @@ export default function CompanyDetailPage() {
             <Brain className="h-4 w-4 mr-1" />
             KI-Recherche
           </TabsTrigger>
+          <TabsTrigger value="ai-actions">
+            <Sparkles className="h-4 w-4 mr-1" />
+            KI-Aktionen
+          </TabsTrigger>
           <TabsTrigger value="activity">Aktivitäten</TabsTrigger>
         </TabsList>
 
@@ -328,6 +333,10 @@ export default function CompanyDetailPage() {
             company={company}
             onResearchComplete={() => fetchCompany()}
           />
+        </TabsContent>
+
+        <TabsContent value="ai-actions">
+          <CompanyActionsGrid companyId={companyId} />
         </TabsContent>
 
         <TabsContent value="activity">
