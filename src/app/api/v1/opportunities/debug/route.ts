@@ -48,7 +48,37 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 5. Quick SerpAPI test (1 result)
+    // 5. Test full search+save flow with 1 result
+    try {
+      const { SerpApiService } = await import('@/lib/services/serpapi.service')
+      const { OpportunityService } = await import('@/lib/services/opportunity.service')
+
+      const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1, auth.tenantId)
+      checks.serpApiCallOk = true
+      checks.serpApiResultCount = results.length
+
+      if (results.length > 0) {
+        try {
+          const saveResult = await OpportunityService.createMany(auth.tenantId, results.map(r => ({
+            ...r,
+            phone: r.phone ?? undefined,
+            email: r.email ?? undefined,
+            website: r.website ?? undefined,
+            rating: r.rating ?? undefined,
+            reviewCount: r.reviewCount ?? undefined,
+            searchQuery: 'debug-test',
+            searchLocation: 'Berlin',
+          })))
+          checks.saveTest = { success: true, inserted: saveResult.inserted, skipped: saveResult.skipped }
+        } catch (e) {
+          checks.saveTest = { success: false, error: e instanceof Error ? e.message : String(e), stack: e instanceof Error ? e.stack?.split('\n').slice(0, 5) : undefined }
+        }
+      }
+    } catch (e) {
+      checks.fullTest = { success: false, error: e instanceof Error ? e.message : String(e) }
+    }
+
+    // 6. Quick SerpAPI test (1 result)
     if (checks.serpApiProvider || checks.serpApiEnvKey) {
       try {
         const { SerpApiService } = await import('@/lib/services/serpapi.service')
