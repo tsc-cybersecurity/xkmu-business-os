@@ -35,16 +35,16 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER=true
-      - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD}@postgres:5432/xkmu_business_os
+      - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD:-changeMe_db_2026!}@postgres:5432/xkmu_business_os
       - DATABASE_SSL=${DATABASE_SSL:-false}
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_SECRET=${JWT_SECRET:-changeMe_jwt_secret_min32chars_2026!}
       - NEXT_PUBLIC_APP_URL=http://localhost:${APP_PORT:-3000}
       # AI Providers (optional)
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
       # Redis
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-changeMe_redis_2026!}@redis:6379
       # Next.js standalone binds to HOSTNAME; Docker sets it to the container ID
       # which makes 127.0.0.1 unreachable. Force binding to all interfaces.
       - HOSTNAME=0.0.0.0
@@ -85,7 +85,7 @@ services:
       - "127.0.0.1:${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: xkmu
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeMe_db_2026!}
       POSTGRES_DB: xkmu_business_os
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -108,9 +108,9 @@ services:
     # NO ports mapping - Redis is only accessible from other containers via backend network
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD} --bind 0.0.0.0 --protected-mode yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeMe_redis_2026!} --bind 0.0.0.0 --protected-mode yes
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeMe_redis_2026!}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -127,8 +127,8 @@ services:
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-changeMe_pgadmin_2026!}
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     volumes:
