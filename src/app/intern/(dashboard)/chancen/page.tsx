@@ -48,16 +48,20 @@ import { logger } from '@/lib/utils/logger'
 interface Opportunity {
   id: string
   name: string
+  industry: string | null
   address: string | null
   city: string | null
   phone: string | null
+  email: string | null
   website: string | null
   rating: number | null
   reviewCount: number | null
-  category: string | null
   status: string
+  source: string | null
+  searchQuery: string | null
+  searchLocation: string | null
   notes: string | null
-  googlePlaceId: string | null
+  placeId: string | null
   createdAt: string
 }
 
@@ -439,7 +443,7 @@ export default function ChancenPage() {
                         {opp.name}
                       </TableCell>
                       <TableCell className="text-muted-foreground max-w-[150px] truncate">
-                        {opp.category || '-'}
+                        {opp.industry || '-'}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {opp.city || '-'}
