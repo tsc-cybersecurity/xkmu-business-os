@@ -1,0 +1,7 @@
+{
+  "source": "jezweb/claude-skills",
+  "sourceType": "git",
+  "repoUrl": "https://github.com/jezweb/claude-skills",
+  "subpath": "plugins\\wordpress\\skills\\wordpress-elementor",
+  "installedAt": "2026-03-15T17:13:53.521Z"
+}

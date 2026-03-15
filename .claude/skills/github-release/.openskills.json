@@ -1,0 +1,7 @@
+{
+  "source": "jezweb/claude-skills",
+  "sourceType": "git",
+  "repoUrl": "https://github.com/jezweb/claude-skills",
+  "subpath": "plugins\\dev-tools\\skills\\github-release",
+  "installedAt": "2026-03-15T17:13:53.114Z"
+}
