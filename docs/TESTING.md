@@ -299,12 +299,12 @@ Kopiere `companies.route.test.ts` und ersetze:
 
 | Kategorie | Dateien | Tests |
 |-----------|---------|-------|
-| Validation (Zod) | 16 | ~615 |
-| Service (Unit) | 1 | 30 |
+| Validation (Zod) | 18 | ~755 |
+| Service (Unit) | 18 | ~416 |
 | Integration (API) | 1 | 20 |
-| **Gesamt** | **18** | **~685** |
+| **Gesamt** | **37** | **~1171** |
 
-### Getestete Module (Validation)
+### Validation Tests (alle Schemas abgedeckt)
 
 | Modul | Tests | Schemas |
 |-------|-------|---------|
@@ -324,14 +324,37 @@ Kopiere `companies.route.test.ts` und ersetze:
 | CMS | 60 | Pages, Blocks, Navigation Schemas |
 | Marketing | 65 | Campaigns, Tasks, Templates Schemas |
 | Social Media | 40 | Posts, Topics Schemas |
+| Misc | 49 | contactForm, businessDocumentUpload, pagination, convertIdea |
+| AI Schemas | 65 | generateMarketing/Social/ContentPlan/Topics, improveSocialPost |
 
-### Referenz-Implementierung (Companies - vollstaendig)
+### Service Unit Tests
 
-| Typ | Tests |
-|-----|-------|
-| Validation | 20 |
-| Service (CRUD, Tags, Search, Duplicates) | 30 |
-| API Routes (POST, GET, PUT, DELETE + Auth) | 20 |
+| Modul | Tests | Methoden |
+|-------|-------|----------|
+| Company | 30 | create, getById, update, delete, list, search, addTag, removeTag, getPersons, checkDuplicate |
+| Person | 38 | create, getById, update, delete, list, search, addTag, removeTag, setPrimaryContact |
+| Lead | 28 | create, getById, update, delete, list, updateStatus, assignTo, getStatusCounts, updateAIResearch |
+| Idea | 22 | create, getById, update, delete, list, listGroupedByStatus |
+| Activity | 22 | create, getById, delete, list, listByLead, listByCompany |
+| Product | 30 | create, getById, update, delete, list, search, addTag, removeTag, generateSlug |
+| Document | 30 | create, getById, update, delete, list, generateNumber, updateStatus, addItem, removeItem |
+| User | 25 | create, authenticate, getById, getByEmail, update, updatePassword, delete, list, emailExists |
+| Role | 25 | getById, getByName, list, getWithPermissions, create, update, delete, setPermissions, getUserPermissions |
+| Webhook | 26 | create, getById, update, delete, list, getByEvent, fire, sendWebhook |
+| BlogPost | 22 | create, getById, getBySlug, update, delete, publish, unpublish, list, listPublished, generateSlug |
+| CmsPage | 14 | create, getById, getBySlug, update, delete, publish, list |
+| CmsBlock | 15 | listByPage, create, update, delete, reorder, duplicate |
+| CmsNavigation | 13 | list, create, update, delete, reorder |
+| MarketingCampaign | 16 | create, getById, update, delete, list |
+| MarketingTask | 16 | create, getById, update, delete, list, listByCampaign |
+| SocialMediaPost | 19 | create, getById, update, delete, list, bulkCreate |
+| SocialMediaTopic | 14 | list, getById, create, update, delete |
+
+### API Route Integration Tests
+
+| Modul | Tests | Endpoints |
+|-------|-------|-----------|
+| Companies | 20 | POST, GET, GET [id], PUT [id], DELETE [id] + Auth |
 
 ## Konfiguration
 
