@@ -9,6 +9,7 @@ import {
   Package,
   FileText,
   TrendingUp,
+  Telescope,
   Lightbulb,
   Settings,
   Shield,
@@ -75,6 +76,12 @@ const navigation: NavItem[] = [
     href: '/intern/leads',
     icon: TrendingUp,
     requiredModule: 'leads',
+  },
+  {
+    name: 'Chancen',
+    href: '/intern/chancen',
+    icon: Telescope,
+    requiredModule: 'opportunities',
   },
   {
     name: 'Ideen',

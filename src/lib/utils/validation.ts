@@ -183,7 +183,7 @@ export const leadStatusSchema = z.enum([
   'lost',
 ])
 
-export const leadSourceSchema = z.enum(['api', 'form', 'import', 'manual', 'idea', 'website'])
+export const leadSourceSchema = z.enum(['api', 'form', 'import', 'manual', 'idea', 'website', 'google_maps'])
 
 export const createLeadSchema = z.object({
   companyId: uuidSchema.nullable().optional(),
@@ -611,6 +611,23 @@ export const improveSocialPostSchema = z.object({
 
 export const generateTopicsSchema = z.object({
   count: z.number().int().min(1).max(20).default(5),
+})
+
+// ============================================
+// Opportunity Schemas
+// ============================================
+export const opportunityStatusSchema = z.enum(['new', 'contacted', 'qualified', 'rejected', 'converted'])
+
+export const searchOpportunitiesSchema = z.object({
+  queries: z.string().min(1, 'Mindestens eine Branche angeben'),
+  locations: z.string().min(1, 'Mindestens ein Ort angeben'),
+  radius: z.number().min(1).max(100).default(25),
+  maxPerLocation: z.number().min(1).max(60).default(20),
+})
+
+export const updateOpportunitySchema = z.object({
+  status: opportunityStatusSchema.optional(),
+  notes: z.string().optional().or(z.literal('')),
 })
 
 // ============================================

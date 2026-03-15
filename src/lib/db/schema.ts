@@ -8,6 +8,7 @@ import {
   boolean,
   integer,
   decimal,
+  real,
   inet,
   index,
 } from 'drizzle-orm/pg-core'
@@ -67,6 +68,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   socialMediaPosts: many(socialMediaPosts),
   n8nConnections: many(n8nConnections),
   n8nWorkflowLogs: many(n8nWorkflowLogs),
+  opportunities: many(opportunities),
 }))
 
 // ============================================
@@ -1727,5 +1729,48 @@ export type NewN8nConnection = typeof n8nConnections.$inferInsert
 
 export type N8nWorkflowLog = typeof n8nWorkflowLogs.$inferSelect
 export type NewN8nWorkflowLog = typeof n8nWorkflowLogs.$inferInsert
+
+// ============================================
+// Opportunities (Google Maps Prospecting)
+// ============================================
+export const opportunities = pgTable('opportunities', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  industry: varchar('industry', { length: 255 }),
+  address: varchar('address', { length: 500 }),
+  city: varchar('city', { length: 255 }),
+  postalCode: varchar('postal_code', { length: 20 }),
+  country: varchar('country', { length: 10 }).default('DE'),
+  phone: varchar('phone', { length: 100 }),
+  email: varchar('email', { length: 255 }),
+  website: varchar('website', { length: 500 }),
+  rating: real('rating'),
+  reviewCount: integer('review_count'),
+  placeId: varchar('place_id', { length: 255 }),
+  status: varchar('status', { length: 30 }).default('new').notNull(),
+  source: varchar('source', { length: 50 }).default('google_maps'),
+  searchQuery: varchar('search_query', { length: 255 }),
+  searchLocation: varchar('search_location', { length: 255 }),
+  convertedCompanyId: uuid('converted_company_id').references(() => companies.id, { onDelete: 'set null' }),
+  notes: text('notes'),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_opportunities_tenant').on(table.tenantId),
+  index('idx_opportunities_status').on(table.tenantId, table.status),
+  index('idx_opportunities_created_at').on(table.tenantId, table.createdAt),
+  index('idx_opportunities_city').on(table.tenantId, table.city),
+  index('idx_opportunities_place_id').on(table.tenantId, table.placeId),
+])
+
+export const opportunitiesRelations = relations(opportunities, ({ one }) => ({
+  tenant: one(tenants, { fields: [opportunities.tenantId], references: [tenants.id] }),
+  convertedCompany: one(companies, { fields: [opportunities.convertedCompanyId], references: [companies.id] }),
+}))
+
+export type Opportunity = typeof opportunities.$inferSelect
+export type NewOpportunity = typeof opportunities.$inferInsert
 
 

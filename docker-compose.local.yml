@@ -43,6 +43,7 @@ services:
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
+      - SERPAPI_KEY=${SERPAPI_KEY:-}
       # Redis
       - REDIS_URL=redis://:${REDIS_PASSWORD:-changeMe_redis_2026!}@redis:6379
       # Next.js standalone binds to HOSTNAME; Docker sets it to the container ID
