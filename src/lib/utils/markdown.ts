@@ -19,11 +19,17 @@ export function renderMarkdown(md: string): string {
   // Inline code
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
 
-  // Images
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-lg" />')
+  // Images (only allow http/https URLs to prevent XSS via data:/javascript: URIs)
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
+    const safeSrc = /^https?:\/\//.test(src) ? src : ''
+    return safeSrc ? `<img src="${safeSrc}" alt="${alt}" class="rounded-lg" loading="lazy" />` : ''
+  })
 
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-primary hover:underline">$1</a>')
+  // Links (block javascript:/data:/vbscript: protocols, add safe target)
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, href) => {
+    const safeHref = /^(https?:\/\/|\/|#|mailto:)/.test(href) ? href : ''
+    return safeHref ? `<a href="${safeHref}" class="text-primary hover:underline" target="_blank" rel="noopener noreferrer">${text}</a>` : text
+  })
 
   // Headings
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')

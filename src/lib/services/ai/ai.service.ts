@@ -1,5 +1,11 @@
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import type { AiProvider } from '@/lib/db/schema'
+import { OllamaProvider } from './ollama.provider'
+import { OpenRouterProvider } from './openrouter.provider'
+import { GeminiProvider } from './gemini.provider'
+import { OpenAIProvider } from './openai.provider'
+import { DeepseekProvider } from './deepseek.provider'
+import { KimiProvider } from './kimi.provider'
 
 export interface AIOptions {
   maxTokens?: number
@@ -52,56 +58,43 @@ export interface AIRequestContext {
 function createProviderFromConfig(config: AiProvider): AIProvider {
   switch (config.providerType) {
     case 'ollama': {
-      // Ollama benoetigt OLLAMA_BASE_URL oder baseUrl in config
       if (!config.baseUrl && !process.env.OLLAMA_BASE_URL) {
         throw new Error(
           'Ollama ist nicht konfiguriert. ' +
           'Bitte OLLAMA_BASE_URL setzen oder einen anderen KI-Provider (Gemini, OpenAI) verwenden.'
         )
       }
-      const { OllamaProvider } = require('./ollama.provider')
-      const provider = new OllamaProvider({
+      return new OllamaProvider({
         baseUrl: config.baseUrl || undefined,
         model: config.model,
       })
-      return provider
     }
-    case 'openrouter': {
-      const { OpenRouterProvider } = require('./openrouter.provider')
+    case 'openrouter':
       return new OpenRouterProvider({
         apiKey: config.apiKey || undefined,
         model: config.model,
         baseUrl: config.baseUrl || undefined,
       })
-    }
-    case 'gemini': {
-      const { GeminiProvider } = require('./gemini.provider')
+    case 'gemini':
       return new GeminiProvider({
         apiKey: config.apiKey || undefined,
         model: config.model,
       })
-    }
-    case 'openai': {
-      const { OpenAIProvider } = require('./openai.provider')
+    case 'openai':
       return new OpenAIProvider({
         apiKey: config.apiKey || undefined,
         model: config.model,
       })
-    }
-    case 'deepseek': {
-      const { DeepseekProvider } = require('./deepseek.provider')
+    case 'deepseek':
       return new DeepseekProvider({
         apiKey: config.apiKey || undefined,
         model: config.model,
       })
-    }
-    case 'kimi': {
-      const { KimiProvider } = require('./kimi.provider')
+    case 'kimi':
       return new KimiProvider({
         apiKey: config.apiKey || undefined,
         model: config.model,
       })
-    }
     case 'kie':
       // kie.ai is a video generation provider, not a text AI provider
       throw new Error('kie.ai ist ein Video-Generierungs-Provider, kein Text-KI-Provider')

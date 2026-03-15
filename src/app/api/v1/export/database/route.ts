@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     // 1. Tenant selbst (WHERE id = ...)
     try {
       const rows = await db.execute<Record<string, unknown>>(
-        sql.raw(`SELECT * FROM tenants WHERE id = '${tenantId}'`)
+        sql`SELECT * FROM tenants WHERE id = ${tenantId}`
       )
       sqlDump += exportRows(rows as unknown as Record<string, unknown>[], 'tenants')
     } catch (error) {
@@ -147,7 +147,7 @@ export async function GET(request: NextRequest) {
     for (const table of TENANT_TABLES) {
       try {
         const rows = await db.execute<Record<string, unknown>>(
-          sql.raw(`SELECT * FROM ${table} WHERE tenant_id = '${tenantId}'`)
+          sql`SELECT * FROM ${sql.identifier(table)} WHERE tenant_id = ${tenantId}`
         )
         sqlDump += exportRows(rows as unknown as Record<string, unknown>[], table)
       } catch (error) {
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
     // 3. role_permissions (ueber roles.tenant_id verknuepft)
     try {
       const rows = await db.execute<Record<string, unknown>>(
-        sql.raw(`SELECT rp.* FROM ${ROLE_PERMISSIONS_TABLE} rp INNER JOIN roles r ON rp.role_id = r.id WHERE r.tenant_id = '${tenantId}'`)
+        sql`SELECT rp.* FROM ${sql.identifier(ROLE_PERMISSIONS_TABLE)} rp INNER JOIN roles r ON rp.role_id = r.id WHERE r.tenant_id = ${tenantId}`
       )
       sqlDump += exportRows(rows as unknown as Record<string, unknown>[], ROLE_PERMISSIONS_TABLE)
     } catch (error) {
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
     for (const table of GLOBAL_TABLES) {
       try {
         const rows = await db.execute<Record<string, unknown>>(
-          sql.raw(`SELECT * FROM ${table}`)
+          sql`SELECT * FROM ${sql.identifier(table)}`
         )
         sqlDump += exportRows(rows as unknown as Record<string, unknown>[], table)
       } catch (error) {

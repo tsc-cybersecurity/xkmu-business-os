@@ -35,16 +35,16 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER=true
-      - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD:-xkmu_local_2024}@postgres:5432/xkmu_business_os
-      - DATABASE_SSL=false
-      - JWT_SECRET=${JWT_SECRET:-local_dev_jwt_secret_min_32_chars_change_me}
+      - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD}@postgres:5432/xkmu_business_os
+      - DATABASE_SSL=${DATABASE_SSL:-false}
+      - JWT_SECRET=${JWT_SECRET}
       - NEXT_PUBLIC_APP_URL=http://localhost:${APP_PORT:-3000}
       # AI Providers (optional)
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
       # Redis
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_secret_2024}@redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       # Next.js standalone binds to HOSTNAME; Docker sets it to the container ID
       # which makes 127.0.0.1 unreachable. Force binding to all interfaces.
       - HOSTNAME=0.0.0.0
@@ -85,7 +85,7 @@ services:
       - "127.0.0.1:${DB_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: xkmu
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-xkmu_local_2024}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: xkmu_business_os
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -108,9 +108,9 @@ services:
     # NO ports mapping - Redis is only accessible from other containers via backend network
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-xkmu_redis_secret_2024} --bind 0.0.0.0 --protected-mode yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD} --bind 0.0.0.0 --protected-mode yes
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-xkmu_redis_secret_2024}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -127,8 +127,8 @@ services:
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
     volumes:

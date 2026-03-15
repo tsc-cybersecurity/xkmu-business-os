@@ -182,6 +182,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       return apiError('INVALID_TABLE', `Tabelle "${tableName}" ist nicht erlaubt`, 400)
     }
 
+    // Global tables can only be modified by owners
+    if (GLOBAL_TABLES.has(tableName) && auth.role !== 'owner') {
+      return apiError('FORBIDDEN', 'Nur Owner duerfen globale Tabellen aendern', 403)
+    }
+
     try {
       const body = await request.json()
       const { id, ...updates } = body
@@ -248,6 +253,16 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   })
 }
 
+// Global tables (no tenant_id) - only owner can modify
+const GLOBAL_TABLES = new Set([
+  'tenants',
+  'role_permissions',
+  'din_requirements',
+  'din_grants',
+  'wiba_requirements',
+  'cms_block_type_definitions',
+])
+
 // DELETE /api/v1/admin/database/tables/[tableName] - Delete a row
 export async function DELETE(request: NextRequest, context: RouteContext) {
   return withPermission(request, 'database', 'delete', async (auth) => {
@@ -255,6 +270,11 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     if (!ALLOWED_TABLES.has(tableName)) {
       return apiError('INVALID_TABLE', `Tabelle "${tableName}" ist nicht erlaubt`, 400)
+    }
+
+    // Global tables can only be modified by owners
+    if (GLOBAL_TABLES.has(tableName) && auth.role !== 'owner') {
+      return apiError('FORBIDDEN', 'Nur Owner duerfen globale Tabellen aendern', 403)
     }
 
     try {
