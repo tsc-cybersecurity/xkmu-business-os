@@ -117,80 +117,86 @@ async function getAuthContext(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  try {
-    const auth = await getAuthContext(request)
+  const auth = await getAuthContext(request)
 
-    if ('error' in auth) {
-      if (auth.error === 'unauthorized') {
-        return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
-      }
-      return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
+  if ('error' in auth) {
+    if (auth.error === 'unauthorized') {
+      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
-
-    const tenantId = auth.tenantId
-
-    let sqlDump = `-- SQL Export fuer Tenant: ${tenantId}\n`
-    sqlDump += `-- Erstellt am: ${new Date().toISOString()}\n`
-    sqlDump += `-- =============================================\n\n`
-
-    // 1. Tenant selbst (WHERE id = ...)
-    try {
-      const rows = await db.execute<Record<string, unknown>>(
-        sql`SELECT * FROM tenants WHERE id = ${tenantId}`
-      )
-      sqlDump += exportRows(rows as unknown as Record<string, unknown>[], 'tenants')
-    } catch (error) {
-      console.error('Fehler beim Export der Tabelle tenants:', error)
-    }
-
-    // 2. Tenant-spezifische Tabellen (WHERE tenant_id = ...)
-    for (const table of TENANT_TABLES) {
-      try {
-        const rows = await db.execute<Record<string, unknown>>(
-          sql`SELECT * FROM ${sql.identifier(table)} WHERE tenant_id = ${tenantId}`
-        )
-        sqlDump += exportRows(rows as unknown as Record<string, unknown>[], table)
-      } catch (error) {
-        console.error(`Fehler beim Export der Tabelle ${table}:`, error)
-      }
-    }
-
-    // 3. role_permissions (ueber roles.tenant_id verknuepft)
-    try {
-      const rows = await db.execute<Record<string, unknown>>(
-        sql`SELECT rp.* FROM ${sql.identifier(ROLE_PERMISSIONS_TABLE)} rp INNER JOIN roles r ON rp.role_id = r.id WHERE r.tenant_id = ${tenantId}`
-      )
-      sqlDump += exportRows(rows as unknown as Record<string, unknown>[], ROLE_PERMISSIONS_TABLE)
-    } catch (error) {
-      console.error('Fehler beim Export der Tabelle role_permissions:', error)
-    }
-
-    // 4. Globale Tabellen (komplett, ohne Filter)
-    for (const table of GLOBAL_TABLES) {
-      try {
-        const rows = await db.execute<Record<string, unknown>>(
-          sql`SELECT * FROM ${sql.identifier(table)}`
-        )
-        sqlDump += exportRows(rows as unknown as Record<string, unknown>[], table)
-      } catch (error) {
-        console.error(`Fehler beim Export der Tabelle ${table}:`, error)
-      }
-    }
-
-    sqlDump += `-- Export abgeschlossen\n`
-
-    return new NextResponse(sqlDump, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Content-Disposition': `attachment; filename="database-export-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}.sql"`,
-      },
-    })
-  } catch (error) {
-    console.error('Database export error:', error)
-    return NextResponse.json(
-      { error: 'Export fehlgeschlagen' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
   }
+
+  const tenantId = auth.tenantId
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder()
+      const write = (text: string) => controller.enqueue(encoder.encode(text))
+
+      // Write header
+      write(`-- SQL Export fuer Tenant: ${tenantId}\n`)
+      write(`-- Erstellt am: ${new Date().toISOString()}\n`)
+      write(`-- =============================================\n\n`)
+
+      try {
+        // 1. Tenant selbst (WHERE id = ...)
+        try {
+          const rows = await db.execute<Record<string, unknown>>(
+            sql`SELECT * FROM tenants WHERE id = ${tenantId}`
+          )
+          write(exportRows(rows as unknown as Record<string, unknown>[], 'tenants'))
+        } catch (error) {
+          console.error('Fehler beim Export der Tabelle tenants:', error)
+        }
+
+        // 2. Tenant-spezifische Tabellen (WHERE tenant_id = ...)
+        for (const table of TENANT_TABLES) {
+          try {
+            const rows = await db.execute<Record<string, unknown>>(
+              sql`SELECT * FROM ${sql.identifier(table)} WHERE tenant_id = ${tenantId}`
+            )
+            write(exportRows(rows as unknown as Record<string, unknown>[], table))
+          } catch (error) {
+            console.error(`Fehler beim Export der Tabelle ${table}:`, error)
+          }
+        }
+
+        // 3. role_permissions (ueber roles.tenant_id verknuepft)
+        try {
+          const rows = await db.execute<Record<string, unknown>>(
+            sql`SELECT rp.* FROM ${sql.identifier(ROLE_PERMISSIONS_TABLE)} rp INNER JOIN roles r ON rp.role_id = r.id WHERE r.tenant_id = ${tenantId}`
+          )
+          write(exportRows(rows as unknown as Record<string, unknown>[], ROLE_PERMISSIONS_TABLE))
+        } catch (error) {
+          console.error('Fehler beim Export der Tabelle role_permissions:', error)
+        }
+
+        // 4. Globale Tabellen (komplett, ohne Filter)
+        for (const table of GLOBAL_TABLES) {
+          try {
+            const rows = await db.execute<Record<string, unknown>>(
+              sql`SELECT * FROM ${sql.identifier(table)}`
+            )
+            write(exportRows(rows as unknown as Record<string, unknown>[], table))
+          } catch (error) {
+            console.error(`Fehler beim Export der Tabelle ${table}:`, error)
+          }
+        }
+
+        write(`-- Export abgeschlossen\n`)
+        controller.close()
+      } catch (error) {
+        controller.error(error)
+      }
+    },
+  })
+
+  return new NextResponse(stream, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Content-Disposition': `attachment; filename="database-export-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}.sql"`,
+      'Transfer-Encoding': 'chunked',
+    },
+  })
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -20,8 +21,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Menu, X, User, LogOut, Type, Palette, RectangleHorizontal, LayoutDashboard } from 'lucide-react'
 import { useDesign, type FontId, type AccentId, type RadiusId } from './design-provider'
-/* eslint-disable @next/next/no-img-element */
-
 interface SessionUser {
   id: string
   email: string
@@ -107,10 +106,13 @@ export function LandingNavbar() {
       <div className="container mx-auto px-4 h-full flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="shrink-0">
-          <img
+          <Image
             src={logoUrl}
             alt={logoAlt}
+            width={200}
+            height={64}
             className="h-16 w-auto"
+            unoptimized
           />
         </Link>
 

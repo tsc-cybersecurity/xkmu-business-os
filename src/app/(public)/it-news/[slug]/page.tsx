@@ -2,6 +2,7 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { MarkdownRenderer } from '../../../_components/markdown-renderer'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Calendar } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -53,12 +54,13 @@ export default async function BlogPostPage({ params }: Props) {
       </Link>
 
       {post.featuredImage && (
-        <div className="aspect-video overflow-hidden rounded-lg mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="relative aspect-video overflow-hidden rounded-lg mb-8">
+          <Image
             src={post.featuredImage}
             alt={post.featuredImageAlt || post.title}
             className="w-full h-full object-cover"
+            fill
+            unoptimized
           />
         </div>
       )}

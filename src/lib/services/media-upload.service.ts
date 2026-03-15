@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { mediaUploads } from '@/lib/db/schema'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, and, desc, count } from 'drizzle-orm'
 import type { MediaUpload } from '@/lib/db/schema'
 import { randomUUID } from 'crypto'
 import path from 'path'
@@ -107,12 +107,33 @@ export const MediaUploadService = {
     return upload
   },
 
-  async list(tenantId: string): Promise<MediaUpload[]> {
-    return db
-      .select()
-      .from(mediaUploads)
-      .where(eq(mediaUploads.tenantId, tenantId))
-      .orderBy(desc(mediaUploads.createdAt))
+  async list(tenantId: string, pagination?: { page?: number; limit?: number }) {
+    const page = pagination?.page ?? 1
+    const limit = pagination?.limit ?? 50
+    const offset = (page - 1) * limit
+
+    const whereClause = eq(mediaUploads.tenantId, tenantId)
+
+    const [items, [{ total }]] = await Promise.all([
+      db
+        .select()
+        .from(mediaUploads)
+        .where(whereClause)
+        .orderBy(desc(mediaUploads.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db.select({ total: count() }).from(mediaUploads).where(whereClause),
+    ])
+
+    return {
+      items,
+      meta: {
+        page,
+        limit,
+        total: Number(total),
+        totalPages: Math.ceil(Number(total) / limit),
+      },
+    }
   },
 
   async delete(tenantId: string, uploadId: string): Promise<boolean> {

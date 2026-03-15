@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
@@ -54,10 +55,12 @@ export function GalleryBlock({
               onClick={() => setLightboxIndex(i)}
               className="group relative aspect-square rounded-lg overflow-hidden bg-muted"
             >
-              <img
+              <Image
                 src={img.src}
                 alt={img.alt || ''}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                fill
+                unoptimized
               />
               {img.caption && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -81,11 +84,14 @@ export function GalleryBlock({
           >
             <X className="h-8 w-8" />
           </button>
-          <img
+          <Image
             src={items[lightboxIndex].src}
             alt={items[lightboxIndex].alt || ''}
             className="max-w-full max-h-[90vh] object-contain rounded-lg"
+            width={1200}
+            height={800}
             onClick={(e) => e.stopPropagation()}
+            unoptimized
           />
           {items[lightboxIndex].caption && (
             <p className="absolute bottom-8 text-white/80 text-sm text-center">

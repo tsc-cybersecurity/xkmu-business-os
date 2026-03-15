@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+import Image from 'next/image'
 
 interface ImageBlockContent {
   src?: string
@@ -29,11 +29,15 @@ export function ImageBlock({ content, settings }: ImageBlockProps) {
         paddingBottom: settings?.paddingBottom ? `${settings.paddingBottom}px` : undefined,
       }}
     >
-      <img
-        src={content.src}
-        alt={content.alt || ''}
-        className="w-full rounded-lg"
-      />
+      <div className="relative w-full aspect-video">
+        <Image
+          src={content.src}
+          alt={content.alt || ''}
+          className="w-full rounded-lg object-cover"
+          fill
+          unoptimized
+        />
+      </div>
       {content.caption && (
         <figcaption className="text-center text-sm text-muted-foreground mt-3">
           {content.caption}

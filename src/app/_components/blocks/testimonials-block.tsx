@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Star, Quote } from 'lucide-react'
 
 interface TestimonialItem {
@@ -70,10 +71,13 @@ export function TestimonialsBlock({
               </blockquote>
               <div className="flex items-center gap-3 pt-4 border-t">
                 {item.avatar ? (
-                  <img
+                  <Image
                     src={item.avatar}
                     alt={item.name}
+                    width={40}
+                    height={40}
                     className="h-10 w-10 rounded-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="h-10 w-10 rounded-full bg-[var(--brand-100)] dark:bg-[var(--brand-900)]/30 flex items-center justify-center text-sm font-semibold text-[var(--brand-600)]">

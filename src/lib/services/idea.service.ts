@@ -96,12 +96,14 @@ export const IdeaService = {
     }
   },
 
-  async listGroupedByStatus(tenantId: string): Promise<Record<string, Idea[]>> {
+  async listGroupedByStatus(tenantId: string, maxPerGroup = 100): Promise<Record<string, Idea[]>> {
+    // Limit total rows fetched to prevent unbounded memory usage
     const allIdeas = await db
       .select()
       .from(ideas)
       .where(eq(ideas.tenantId, tenantId))
       .orderBy(desc(ideas.createdAt))
+      .limit(maxPerGroup * 3)
 
     const grouped: Record<string, Idea[]> = {
       backlog: [],
@@ -112,7 +114,9 @@ export const IdeaService = {
     for (const idea of allIdeas) {
       const key = idea.status || 'backlog'
       if (!grouped[key]) grouped[key] = []
-      grouped[key].push(idea)
+      if (grouped[key].length < maxPerGroup) {
+        grouped[key].push(idea)
+      }
     }
 
     return grouped

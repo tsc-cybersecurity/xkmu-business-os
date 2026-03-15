@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiSuccess, apiValidationError, apiServerError } from '@/lib/utils/api-response'
+import { apiSuccess, apiValidationError, apiServerError, parsePaginationParams } from '@/lib/utils/api-response'
 import { DinGrantService } from '@/lib/services/din-grant.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
@@ -18,15 +18,16 @@ const createGrantSchema = z.object({
 export async function GET(request: NextRequest) {
   return withPermission(request, 'din_grants', 'read', async () => {
     const { searchParams } = new URL(request.url)
+    const { page, limit } = parsePaginationParams(searchParams)
     const region = searchParams.get('region') || undefined
     const employeeCount = searchParams.get('employeeCount')
       ? parseInt(searchParams.get('employeeCount')!)
       : undefined
 
-    const grants = await DinGrantService.list({ region, employeeCount })
+    const result = await DinGrantService.list({ region, employeeCount, page, limit })
     const regions = await DinGrantService.getRegions()
 
-    return apiSuccess({ grants, regions })
+    return apiSuccess({ grants: result.items, regions }, result.meta)
   })
 }
 

@@ -3,6 +3,7 @@ import {
   apiSuccess,
   apiValidationError,
   apiError,
+  parsePaginationParams,
 } from '@/lib/utils/api-response'
 import {
   createDocumentSchema,
@@ -17,15 +18,15 @@ export async function GET(request: NextRequest) {
   return withPermission(request, 'documents', 'read', async (auth) => {
     try {
       const searchParams = request.nextUrl.searchParams
+      const pagination = parsePaginationParams(searchParams)
       const filters = {
+        ...pagination,
         type: searchParams.get('type') || undefined,
         status: searchParams.get('status') || undefined,
         companyId: searchParams.get('companyId') || undefined,
         dateFrom: searchParams.get('dateFrom') || undefined,
         dateTo: searchParams.get('dateTo') || undefined,
         search: searchParams.get('search') || undefined,
-        page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined,
-        limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
       }
 
       const result = await DocumentService.list(auth.tenantId, filters)

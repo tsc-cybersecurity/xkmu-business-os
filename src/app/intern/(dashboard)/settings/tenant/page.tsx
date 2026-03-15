@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -363,8 +364,7 @@ export default function TenantSettingsPage() {
           <div className="flex items-start gap-6">
             <div className="shrink-0 w-48 h-24 border rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden">
               {logoUrl ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={logoUrl} alt="Logo" className="max-h-full max-w-full object-contain" />
+                <Image src={logoUrl} alt="Logo" width={192} height={96} className="max-h-full max-w-full object-contain" unoptimized />
               ) : (
                 <div className="text-center text-muted-foreground text-sm">
                   <ImageIcon className="h-8 w-8 mx-auto mb-1 opacity-40" />

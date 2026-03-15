@@ -1,11 +1,13 @@
 import { db } from '@/lib/db'
 import { dinGrants } from '@/lib/db/schema'
-import { eq, and, gte, lte, asc, or } from 'drizzle-orm'
+import { eq, and, gte, lte, asc, or, count } from 'drizzle-orm'
 import type { DinGrant, NewDinGrant } from '@/lib/db/schema'
 
 export interface GrantFilters {
   region?: string
   employeeCount?: number
+  page?: number
+  limit?: number
 }
 
 export interface GrantInput {
@@ -19,7 +21,9 @@ export interface GrantInput {
 }
 
 export const DinGrantService = {
-  async list(filters: GrantFilters = {}): Promise<DinGrant[]> {
+  async list(filters: GrantFilters = {}) {
+    const { page = 1, limit = 50 } = filters
+    const offset = (page - 1) * limit
     const conditions = []
 
     if (filters.region) {
@@ -50,11 +54,26 @@ export const DinGrantService = {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
-    return db
-      .select()
-      .from(dinGrants)
-      .where(whereClause)
-      .orderBy(asc(dinGrants.region), asc(dinGrants.name))
+    const [items, [{ total }]] = await Promise.all([
+      db
+        .select()
+        .from(dinGrants)
+        .where(whereClause)
+        .orderBy(asc(dinGrants.region), asc(dinGrants.name))
+        .limit(limit)
+        .offset(offset),
+      db.select({ total: count() }).from(dinGrants).where(whereClause),
+    ])
+
+    return {
+      items,
+      meta: {
+        page,
+        limit,
+        total: Number(total),
+        totalPages: Math.ceil(Number(total) / limit),
+      },
+    }
   },
 
   async getById(id: string): Promise<DinGrant | null> {

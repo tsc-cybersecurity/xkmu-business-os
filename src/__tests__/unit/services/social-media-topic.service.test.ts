@@ -36,22 +36,26 @@ describe('SocialMediaTopicService', () => {
   describe('list', () => {
     it('returns all topics for tenant', async () => {
       const topics = [topicFixture(), topicFixture({ id: TEST_TOPIC_ID_2, name: 'Cyber Security' })]
-      dbMock.mockSelect.mockResolvedValue(topics)
+      dbMock.mockSelect.mockResolvedValueOnce(topics)
+      dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
       const result = await service.list(TEST_TENANT_ID)
 
-      expect(result).toHaveLength(2)
+      expect(result.items).toHaveLength(2)
+      expect(result.meta.total).toBe(2)
       expect(dbMock.db.select).toHaveBeenCalled()
     })
 
     it('returns empty array when no topics', async () => {
-      dbMock.mockSelect.mockResolvedValue([])
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
       const result = await service.list(TEST_TENANT_ID)
 
-      expect(result).toEqual([])
+      expect(result.items).toEqual([])
+      expect(result.meta.total).toBe(0)
     })
   })
 

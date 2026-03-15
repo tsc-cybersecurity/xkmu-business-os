@@ -37,7 +37,7 @@ function createClient() {
     const connectionString = getConnectionString()
 
     _client = postgres(connectionString, {
-      max: 5,
+      max: 20,
       idle_timeout: 20,
       connect_timeout: 10,
       ssl: getSslConfig(),

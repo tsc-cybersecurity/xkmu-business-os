@@ -221,6 +221,7 @@ export const companies = pgTable('companies', {
   index('idx_companies_tenant_id').on(table.tenantId),
   index('idx_companies_status').on(table.tenantId, table.status),
   index('idx_companies_name').on(table.tenantId, table.name),
+  index('idx_companies_created_at').on(table.tenantId, table.createdAt),
 ])
 
 export const companiesRelations = relations(companies, ({ one, many }) => ({
@@ -278,6 +279,7 @@ export const persons = pgTable('persons', {
   index('idx_persons_company_id').on(table.tenantId, table.companyId),
   index('idx_persons_email').on(table.tenantId, table.email),
   index('idx_persons_name').on(table.tenantId, table.lastName, table.firstName),
+  index('idx_persons_created_at').on(table.tenantId, table.createdAt),
 ])
 
 export const personsRelations = relations(persons, ({ one, many }) => ({
@@ -335,6 +337,9 @@ export const leads = pgTable('leads', {
   index('idx_leads_status').on(table.tenantId, table.status),
   index('idx_leads_ai_status').on(table.tenantId, table.aiResearchStatus),
   index('idx_leads_assigned_to').on(table.tenantId, table.assignedTo),
+  index('idx_leads_company_id').on(table.tenantId, table.companyId),
+  index('idx_leads_person_id').on(table.tenantId, table.personId),
+  index('idx_leads_created_at').on(table.tenantId, table.createdAt),
 ])
 
 export const leadsRelations = relations(leads, ({ one, many }) => ({
@@ -634,6 +639,7 @@ export const activities = pgTable('activities', {
   index('idx_activities_company').on(table.tenantId, table.companyId),
   index('idx_activities_person').on(table.tenantId, table.personId),
   index('idx_activities_created_at').on(table.tenantId, table.createdAt),
+  index('idx_activities_type').on(table.tenantId, table.type),
 ])
 
 export const activitiesRelations = relations(activities, ({ one }) => ({
@@ -1234,6 +1240,7 @@ export const mediaUploads = pgTable('media_uploads', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
   index('idx_media_uploads_tenant').on(table.tenantId),
+  index('idx_media_uploads_created_at').on(table.tenantId, table.createdAt),
 ])
 
 export const mediaUploadsRelations = relations(mediaUploads, ({ one }) => ({

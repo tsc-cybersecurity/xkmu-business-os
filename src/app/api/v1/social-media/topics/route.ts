@@ -3,6 +3,7 @@ import {
   apiSuccess,
   apiValidationError,
   apiServerError,
+  parsePaginationParams,
 } from '@/lib/utils/api-response'
 import {
   createSocialMediaTopicSchema,
@@ -14,8 +15,10 @@ import { withPermission } from '@/lib/auth/require-permission'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'social_media', 'read', async (auth) => {
-    const topics = await SocialMediaTopicService.list(auth.tenantId)
-    return apiSuccess(topics)
+    const { searchParams } = new URL(request.url)
+    const { page, limit } = parsePaginationParams(searchParams)
+    const result = await SocialMediaTopicService.list(auth.tenantId, { page, limit })
+    return apiSuccess(result.items, result.meta)
   })
 }
 

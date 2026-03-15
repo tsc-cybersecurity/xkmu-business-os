@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { iconMap } from '@/lib/utils/icon-map'
 
 interface TeamMember {
@@ -52,10 +53,12 @@ export function TeamBlock({
             <div key={i} className="text-center group">
               <div className="mb-4 relative mx-auto w-32 h-32 rounded-full overflow-hidden bg-[var(--brand-100)] dark:bg-[var(--brand-900)]/30">
                 {member.image ? (
-                  <img
+                  <Image
                     src={member.image}
                     alt={member.name}
                     className="w-full h-full object-cover"
+                    fill
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-[var(--brand-600)] dark:text-[var(--brand-400)]">

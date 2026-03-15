@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { socialMediaTopics } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, count } from 'drizzle-orm'
 import type { SocialMediaTopic, NewSocialMediaTopic } from '@/lib/db/schema'
 
 export interface CreateTopicInput {
@@ -12,12 +12,33 @@ export interface CreateTopicInput {
 export type UpdateTopicInput = Partial<CreateTopicInput>
 
 export const SocialMediaTopicService = {
-  async list(tenantId: string): Promise<SocialMediaTopic[]> {
-    return db
-      .select()
-      .from(socialMediaTopics)
-      .where(eq(socialMediaTopics.tenantId, tenantId))
-      .orderBy(socialMediaTopics.name)
+  async list(tenantId: string, pagination?: { page?: number; limit?: number }) {
+    const page = pagination?.page ?? 1
+    const limit = pagination?.limit ?? 50
+    const offset = (page - 1) * limit
+
+    const whereClause = eq(socialMediaTopics.tenantId, tenantId)
+
+    const [items, [{ total }]] = await Promise.all([
+      db
+        .select()
+        .from(socialMediaTopics)
+        .where(whereClause)
+        .orderBy(socialMediaTopics.name)
+        .limit(limit)
+        .offset(offset),
+      db.select({ total: count() }).from(socialMediaTopics).where(whereClause),
+    ])
+
+    return {
+      items,
+      meta: {
+        page,
+        limit,
+        total: Number(total),
+        totalPages: Math.ceil(Number(total) / limit),
+      },
+    }
   },
 
   async getById(tenantId: string, id: string): Promise<SocialMediaTopic | null> {

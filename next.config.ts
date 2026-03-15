@@ -4,6 +4,15 @@ const nextConfig: NextConfig = {
   // Standalone output for Docker deployments
   output: 'standalone',
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'www.xkmu.de',
+      },
+    ],
+  },
+
   serverExternalPackages: ['postgres', 'pdf-parse'],
 
   // Limit request body size to 10MB (default is unlimited)

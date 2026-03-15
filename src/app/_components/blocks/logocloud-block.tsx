@@ -1,5 +1,7 @@
 'use client'
 
+import Image from 'next/image'
+
 interface LogoItem {
   name: string
   image?: string
@@ -40,10 +42,13 @@ export function LogoCloudBlock({
         <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
           {items.map((item, i) => {
             const inner = item.image ? (
-              <img
+              <Image
                 src={item.image}
                 alt={item.name}
+                width={140}
+                height={40}
                 className="h-8 md:h-10 max-w-[140px] object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all"
+                unoptimized
               />
             ) : (
               <span className="text-lg font-semibold text-muted-foreground/50 hover:text-foreground transition-colors">
