@@ -38,18 +38,18 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'providerType und name sind erforderlich', 400)
       }
 
-      // Firecrawl und kie brauchen kein Model, alle anderen schon
-      if (!['firecrawl', 'kie'].includes(body.providerType) && !body.model) {
+      // Firecrawl, kie und serpapi brauchen kein Model
+      if (!['firecrawl', 'kie', 'serpapi'].includes(body.providerType) && !body.model) {
         return apiError('VALIDATION_ERROR', 'model ist für diesen Anbieter erforderlich', 400)
       }
 
-      const validTypes = ['ollama', 'openrouter', 'gemini', 'openai', 'deepseek', 'kimi', 'firecrawl', 'kie']
+      const validTypes = ['ollama', 'openrouter', 'gemini', 'openai', 'deepseek', 'kimi', 'firecrawl', 'kie', 'serpapi']
       if (!validTypes.includes(body.providerType)) {
         return apiError('VALIDATION_ERROR', `Ungültiger Provider-Typ. Erlaubt: ${validTypes.join(', ')}`, 400)
       }
 
       // Cloud-Provider brauchen einen API Key
-      if (['openrouter', 'gemini', 'openai', 'deepseek', 'kimi', 'firecrawl', 'kie'].includes(body.providerType) && !body.apiKey) {
+      if (['openrouter', 'gemini', 'openai', 'deepseek', 'kimi', 'firecrawl', 'kie', 'serpapi'].includes(body.providerType) && !body.apiKey) {
         return apiError('VALIDATION_ERROR', 'API-Schlüssel ist für diesen Anbieter erforderlich', 400)
       }
 
