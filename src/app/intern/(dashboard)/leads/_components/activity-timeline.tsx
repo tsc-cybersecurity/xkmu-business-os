@@ -16,13 +16,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
   Mail,
   Phone,
   FileText,
@@ -34,7 +27,6 @@ import {
   Check,
   Sparkles,
   MessageSquare,
-  MoreHorizontal,
   Pencil,
   Trash2,
   Send,
@@ -429,96 +421,53 @@ export function ActivityTimeline({
               const isOutreach = activity.type === 'ai_outreach'
 
               return (
-                <div key={activity.id} className="relative flex gap-4 pb-6 last:pb-0 group">
+                <div key={activity.id} className="relative flex gap-4 pb-6 last:pb-0">
                   {/* Icon circle */}
-                  <div
-                    className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background ${config.color} ${isOutreach ? 'cursor-pointer hover:ring-2 hover:ring-amber-400/50' : ''}`}
-                    onClick={() => isOutreach && openActivityDetail(activity)}
-                  >
+                  <div className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background ${config.color}`}>
                     <Icon className="h-4 w-4" />
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0 pt-0.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Badge
-                        variant="secondary"
-                        className={`text-xs ${isOutreach ? 'cursor-pointer hover:bg-amber-100' : ''}`}
-                        onClick={() => isOutreach && openActivityDetail(activity)}
-                      >
+                      <Badge variant="secondary" className="text-xs">
                         {config.label}
                       </Badge>
                       {activity.subject && (
-                        <span
-                          className={`text-sm font-medium truncate ${isOutreach ? 'cursor-pointer hover:text-amber-600' : ''}`}
-                          onClick={() => isOutreach && openActivityDetail(activity)}
-                        >
+                        <span className="text-sm font-medium">
                           {activity.subject}
                         </span>
                       )}
 
-                      {/* Actions dropdown */}
-                      <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => openActivityDetail(activity)}>
-                              <FileText className="mr-2 h-4 w-4" />
-                              Anzeigen
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCopyActivity(activity)}>
-                              <Copy className="mr-2 h-4 w-4" />
-                              Kopieren
-                            </DropdownMenuItem>
-                            {(isOutreach || activity.type === 'email') && (
-                              <DropdownMenuItem onClick={() => openEmailDialog(activity)}>
-                                <Send className="mr-2 h-4 w-4" />
-                                Als E-Mail senden
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedActivity(activity)
-                                setEditSubject(activity.subject || '')
-                                setEditContent(activity.content || '')
-                                setEditMode(true)
-                                setShowActivityDialog(true)
-                              }}
-                            >
-                              <Pencil className="mr-2 h-4 w-4" />
-                              Bearbeiten
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => {
-                                setSelectedActivity(activity)
-                                handleDeleteActivity()
-                              }}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Loeschen
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
                     </div>
                     {activity.content && (
-                      <p
-                        className={`mt-1 text-sm text-muted-foreground whitespace-pre-wrap line-clamp-4 ${isOutreach ? 'cursor-pointer hover:text-foreground' : ''}`}
-                        onClick={() => isOutreach && openActivityDetail(activity)}
-                      >
-                        {activity.content}
+                      <p className="mt-1.5 text-sm text-muted-foreground whitespace-pre-wrap">
+                        {activity.content.replace(/\n{3,}/g, '\n\n').trim()}
                       </p>
                     )}
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                       <span>{formatDate(activity.createdAt)}</span>
-                      <span>·</span>
+                      <span className="mx-1">·</span>
                       <span>{getUserName(activity.user)}</span>
+                      <div className="ml-auto flex items-center gap-0.5">
+                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Anzeigen" onClick={() => openActivityDetail(activity)}>
+                          <FileText className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Bearbeiten" onClick={() => { setSelectedActivity(activity); setEditSubject(activity.subject || ''); setEditContent(activity.content || ''); setEditMode(true); setShowActivityDialog(true) }}>
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Kopieren" onClick={() => handleCopyActivity(activity)}>
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                        {(activity.type === 'email' || activity.type === 'ai_outreach') && (
+                          <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Als E-Mail senden" onClick={() => openEmailDialog(activity)}>
+                            <Send className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" aria-label="Loeschen" onClick={() => { setSelectedActivity(activity); handleDeleteActivity() }}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
