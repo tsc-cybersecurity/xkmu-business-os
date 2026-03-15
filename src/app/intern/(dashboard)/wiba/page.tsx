@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ShieldCheck, Plus, Loader2, CheckCircle2, XCircle, MinusCircle, ClipboardList } from 'lucide-react'
+import { EmptyState } from '@/components/shared'
 import { logger } from '@/lib/utils/logger'
 
 interface AuditSession {
@@ -132,18 +133,20 @@ export default function WibaAuditPage() {
         </div>
       ) : audits.length === 0 ? (
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <ShieldCheck className="h-12 w-12 text-muted-foreground/40" />
-            <h3 className="mt-4 text-lg font-semibold">Noch keine WiBA-Checks</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Erstellen Sie Ihren ersten IT-Sicherheitscheck nach BSI WiBA (257 Prueffragen).
-            </p>
-            <Link href="/intern/wiba/new" className="mt-4">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Ersten Check erstellen
-              </Button>
-            </Link>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={ShieldCheck}
+              title="Noch keine WiBA-Checks"
+              description="Erstellen Sie Ihren ersten IT-Sicherheitscheck nach BSI WiBA (257 Prueffragen)."
+              action={
+                <Link href="/intern/wiba/new">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Ersten Check erstellen
+                  </Button>
+                </Link>
+              }
+            />
           </CardContent>
         </Card>
       ) : (

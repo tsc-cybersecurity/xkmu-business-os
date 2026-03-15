@@ -175,6 +175,7 @@ export function Sidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setCollapsed(!collapsed)}
+          aria-label={collapsed ? 'Seitenleiste ausklappen' : 'Seitenleiste einklappen'}
           className="h-8 w-8"
         >
           {collapsed ? (

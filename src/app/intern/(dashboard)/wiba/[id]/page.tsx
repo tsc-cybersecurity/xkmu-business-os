@@ -119,7 +119,7 @@ export default function WibaAuditDetailPage({ params }: { params: Promise<{ id: 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/wiba">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Zurueck">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -134,7 +134,7 @@ export default function WibaAuditDetailPage({ params }: { params: Promise<{ id: 
         </div>
         <div className="flex gap-2">
           <Badge variant="secondary">{statusLabels[audit.status || 'draft']}</Badge>
-          <Button variant="ghost" size="icon" onClick={handleDelete}>
+          <Button variant="ghost" size="icon" aria-label="Loeschen" onClick={handleDelete}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>

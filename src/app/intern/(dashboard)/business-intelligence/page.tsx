@@ -284,6 +284,7 @@ export default function BusinessIntelligencePage() {
                             variant="ghost"
                             size="icon"
                             title="Text extrahieren"
+                            aria-label="Text extrahieren"
                             onClick={() => handleExtract(doc)}
                             disabled={extracting === doc.id}
                           >
@@ -298,6 +299,7 @@ export default function BusinessIntelligencePage() {
                           variant="ghost"
                           size="icon"
                           title="Loeschen"
+                          aria-label="Loeschen"
                           onClick={() => handleDelete(doc.id)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />

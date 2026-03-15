@@ -143,7 +143,7 @@ export default function BlogPostsPage() {
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Link href={`/intern/blog/${post.id}`}>
-                        <Button variant="ghost" size="icon" title="Bearbeiten">
+                        <Button variant="ghost" size="icon" title="Bearbeiten" aria-label="Bearbeiten">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -151,11 +151,12 @@ export default function BlogPostsPage() {
                         variant="ghost"
                         size="icon"
                         title={post.status === 'published' ? 'Zurueckziehen' : 'Veroeffentlichen'}
+                        aria-label={post.status === 'published' ? 'Zurueckziehen' : 'Veroeffentlichen'}
                         onClick={() => handlePublish(post.id, post.status === 'published')}
                       >
                         {post.status === 'published' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
-                      <Button variant="ghost" size="icon" title="Loeschen" onClick={() => handleDelete(post.id)}>
+                      <Button variant="ghost" size="icon" title="Loeschen" aria-label="Loeschen" onClick={() => handleDelete(post.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>

@@ -243,6 +243,7 @@ export default function CategoriesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Bearbeiten"
                           onClick={() => openEditDialog(category)}
                         >
                           <Pencil className="h-4 w-4" />
@@ -250,6 +251,7 @@ export default function CategoriesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Loeschen"
                           onClick={() => openDeleteDialog(category)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />

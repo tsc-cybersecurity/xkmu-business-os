@@ -192,7 +192,7 @@ export default function BlogPostEditorPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/intern/blog">
-            <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" aria-label="Zurueck"><ArrowLeft className="h-4 w-4" /></Button>
           </Link>
           <div>
             <h1 className="text-2xl font-bold">Beitrag bearbeiten</h1>

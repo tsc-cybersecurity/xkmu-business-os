@@ -371,6 +371,7 @@ export function DatabaseAdmin() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
+                                    aria-label="Speichern"
                                     className="h-7 w-7"
                                     onClick={saveEdit}
                                   >
@@ -379,6 +380,7 @@ export function DatabaseAdmin() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
+                                    aria-label="Abbrechen"
                                     className="h-7 w-7"
                                     onClick={cancelEdit}
                                   >
@@ -409,6 +411,7 @@ export function DatabaseAdmin() {
                             <Button
                               size="icon"
                               variant="ghost"
+                              aria-label="Loeschen"
                               className="h-7 w-7 text-destructive hover:text-destructive"
                               onClick={() =>
                                 setDeleteTarget({

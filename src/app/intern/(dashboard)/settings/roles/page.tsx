@@ -140,7 +140,7 @@ export default function RolesPage() {
                       <div className="flex items-center justify-end gap-2">
                         <Can module="roles" action="update">
                           <Link href={`/intern/settings/roles/${role.id}`}>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" aria-label="Bearbeiten">
                               <Pencil className="h-4 w-4" />
                             </Button>
                           </Link>
@@ -150,6 +150,7 @@ export default function RolesPage() {
                             <Button
                               variant="ghost"
                               size="icon"
+                              aria-label="Loeschen"
                               onClick={() => handleDelete(role.id)}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />

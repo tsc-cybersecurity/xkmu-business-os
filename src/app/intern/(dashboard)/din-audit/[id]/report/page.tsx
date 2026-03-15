@@ -162,7 +162,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href={`/intern/din-audit/${id}`}>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Zurueck">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -321,7 +321,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
                   </div>
                   {grant.url && (
                     <a href={grant.url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Extern oeffnen">
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </a>

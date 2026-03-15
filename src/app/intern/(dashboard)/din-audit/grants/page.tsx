@@ -21,7 +21,8 @@ import {
   DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { ExternalLink, Loader2, Plus, Pencil, Trash2 } from 'lucide-react'
+import { ExternalLink, Loader2, Plus, Pencil, Trash2, Search } from 'lucide-react'
+import { EmptyState } from '@/components/shared'
 import { toast } from 'sonner'
 import { Textarea } from '@/components/ui/textarea'
 import { logger } from '@/lib/utils/logger'
@@ -237,8 +238,11 @@ export default function GrantsPage() {
         </div>
       ) : grants.length === 0 ? (
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-muted-foreground">Keine Foerderprogramme gefunden.</p>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={Search}
+              title="Keine Foerderprogramme gefunden"
+            />
           </CardContent>
         </Card>
       ) : (
@@ -259,6 +263,7 @@ export default function GrantsPage() {
                       className="h-8 w-8"
                       onClick={() => openEditDialog(grant)}
                       title="Bearbeiten"
+                      aria-label="Bearbeiten"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -268,12 +273,13 @@ export default function GrantsPage() {
                       className="h-8 w-8 text-destructive hover:text-destructive"
                       onClick={() => setDeletingId(grant.id)}
                       title="Loeschen"
+                      aria-label="Loeschen"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                     {grant.url && (
                       <a href={grant.url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" aria-label="Extern oeffnen" className="h-8 w-8">
                           <ExternalLink className="h-4 w-4" />
                         </Button>
                       </a>

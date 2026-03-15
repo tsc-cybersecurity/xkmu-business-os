@@ -258,7 +258,7 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
           <div className="p-4 border-b">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-semibold">Prueffragen ({requirements.length})</h2>
-              <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)}>
+              <Button variant="ghost" size="icon" aria-label="Seitenleiste schliessen" onClick={() => setShowSidebar(false)}>
                 <PanelLeftClose className="h-4 w-4" />
               </Button>
             </div>
@@ -344,7 +344,7 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
         <div className="border-b bg-muted/30 px-6 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             {!showSidebar && (
-              <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)}>
+              <Button variant="ghost" size="icon" aria-label="Seitenleiste oeffnen" onClick={() => setShowSidebar(true)}>
                 <PanelLeft className="h-4 w-4" />
               </Button>
             )}

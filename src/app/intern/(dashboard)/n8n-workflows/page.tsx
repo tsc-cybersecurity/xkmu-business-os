@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { toast } from 'sonner'
 import { Plus, Loader2, Workflow, Play, Power, PowerOff, Trash2, Eye, AlertCircle } from 'lucide-react'
+import { EmptyState } from '@/components/shared'
 import Link from 'next/link'
 
 interface N8nWorkflow {
@@ -153,20 +154,20 @@ export default function N8nWorkflowsPage() {
         </Card>
       ) : workflows.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center gap-4 py-12">
-            <Workflow className="h-12 w-12 text-muted-foreground" />
-            <div className="text-center">
-              <p className="font-medium">Keine Workflows vorhanden</p>
-              <p className="text-sm text-muted-foreground">
-                Erstellen Sie Ihren ersten Workflow mit KI-Unterstützung
-              </p>
-            </div>
-            <Link href="/intern/n8n-workflows/new">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Workflow erstellen
-              </Button>
-            </Link>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={Workflow}
+              title="Keine Workflows vorhanden"
+              description="Erstellen Sie Ihren ersten Workflow mit KI-Unterstützung"
+              action={
+                <Link href="/intern/n8n-workflows/new">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Workflow erstellen
+                  </Button>
+                </Link>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -202,7 +203,7 @@ export default function N8nWorkflowsPage() {
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Link href={`/intern/n8n-workflows/${wf.id}`}>
-                          <Button variant="ghost" size="icon" title="Details">
+                          <Button variant="ghost" size="icon" title="Details" aria-label="Anzeigen">
                             <Eye className="h-4 w-4" />
                           </Button>
                         </Link>
@@ -210,6 +211,7 @@ export default function N8nWorkflowsPage() {
                           variant="ghost"
                           size="icon"
                           title="Ausführen"
+                          aria-label="Ausfuehren"
                           onClick={() => handleExecute(wf.id)}
                           disabled={actionLoading === wf.id}
                         >
@@ -223,6 +225,7 @@ export default function N8nWorkflowsPage() {
                           variant="ghost"
                           size="icon"
                           title={wf.active ? 'Deaktivieren' : 'Aktivieren'}
+                          aria-label={wf.active ? 'Deaktivieren' : 'Aktivieren'}
                           onClick={() => handleActivate(wf.id, !wf.active)}
                           disabled={actionLoading === wf.id}
                         >
@@ -236,6 +239,7 @@ export default function N8nWorkflowsPage() {
                           variant="ghost"
                           size="icon"
                           title="Löschen"
+                          aria-label="Loeschen"
                           onClick={() => handleDelete(wf.id, wf.name)}
                           disabled={actionLoading === wf.id}
                           className="text-destructive hover:text-destructive"

@@ -196,7 +196,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href={`/intern/cybersecurity/basisabsicherung/${id}`}>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="Zurueck">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>

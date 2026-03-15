@@ -405,6 +405,7 @@ function NavigationList({
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Nach oben"
               className="h-6 w-6"
               disabled={index === 0}
               onClick={() => onMove(item, 'up')}
@@ -414,6 +415,7 @@ function NavigationList({
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Nach unten"
               className="h-6 w-6"
               disabled={index === items.length - 1}
               onClick={() => onMove(item, 'down')}
@@ -436,14 +438,15 @@ function NavigationList({
               variant="ghost"
               size="icon"
               title={item.isVisible ? 'Ausblenden' : 'Einblenden'}
+              aria-label={item.isVisible ? 'Ausblenden' : 'Einblenden'}
               onClick={() => onToggleVisibility(item)}
             >
               {item.isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
             </Button>
-            <Button variant="ghost" size="icon" title="Bearbeiten" onClick={() => onEdit(item)}>
+            <Button variant="ghost" size="icon" title="Bearbeiten" aria-label="Bearbeiten" onClick={() => onEdit(item)}>
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" title="Loeschen" onClick={() => onDelete(item.id)}>
+            <Button variant="ghost" size="icon" title="Loeschen" aria-label="Loeschen" onClick={() => onDelete(item.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>

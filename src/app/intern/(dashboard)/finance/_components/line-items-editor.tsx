@@ -334,6 +334,7 @@ export function LineItemsEditor({
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Speichern"
                         className="h-8 w-8 text-green-600"
                         onClick={() => handleSaveEdit(item.id)}
                         disabled={savingEdit}
@@ -343,6 +344,7 @@ export function LineItemsEditor({
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Abbrechen"
                         className="h-8 w-8"
                         onClick={cancelEditing}
                         disabled={savingEdit}
@@ -378,6 +380,7 @@ export function LineItemsEditor({
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Bearbeiten"
                           className="h-8 w-8"
                           onClick={() => startEditing(item)}
                         >
@@ -386,6 +389,7 @@ export function LineItemsEditor({
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Loeschen"
                           className="h-8 w-8 text-destructive"
                           onClick={() => handleRemoveItem(item.id)}
                         >

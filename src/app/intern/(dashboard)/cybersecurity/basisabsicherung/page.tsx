@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Shield, Plus, Loader2, CheckCircle2, XCircle, MinusCircle, Trash2 } from 'lucide-react'
+import { EmptyState } from '@/components/shared'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 
@@ -109,20 +110,20 @@ export default function BasisabsicherungPage() {
         </div>
       ) : assessments.length === 0 ? (
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Shield className="h-12 w-12 text-muted-foreground/40" />
-            <h3 className="mt-4 text-lg font-semibold">Noch keine Assessments</h3>
-            <p className="mt-2 text-sm text-muted-foreground max-w-md">
-              Starten Sie Ihre erste Basisabsicherung nach BSI WiBA.
-              19 thematische Checklisten helfen Ihnen, die wichtigsten
-              IT-Sicherheitsmassnahmen systematisch umzusetzen.
-            </p>
-            <Link href="/intern/cybersecurity/basisabsicherung/new" className="mt-4">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Erstes Assessment starten
-              </Button>
-            </Link>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={Shield}
+              title="Noch keine Assessments"
+              description="Starten Sie Ihre erste Basisabsicherung nach BSI WiBA. 19 thematische Checklisten helfen Ihnen, die wichtigsten IT-Sicherheitsmassnahmen systematisch umzusetzen."
+              action={
+                <Link href="/intern/cybersecurity/basisabsicherung/new">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Erstes Assessment starten
+                  </Button>
+                </Link>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -150,6 +151,7 @@ export default function BasisabsicherungPage() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Loeschen"
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
                           onClick={(e) => handleDelete(e, assessment.id)}
                         >

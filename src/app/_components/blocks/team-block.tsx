@@ -92,6 +92,7 @@ export function TeamBlock({
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
+                        aria-label={`${member.name} – ${link.icon || 'Link'}`}
                         className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       >
                         <Icon className="h-4 w-4" />

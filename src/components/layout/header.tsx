@@ -62,6 +62,7 @@ export function Header({ user }: HeaderProps) {
           size="icon"
           onClick={cycleTheme}
           title={`Theme: ${theme === 'light' ? 'Hell' : theme === 'dark' ? 'Dunkel' : 'System'}`}
+          aria-label={`Design wechseln (aktuell: ${theme === 'light' ? 'Hell' : theme === 'dark' ? 'Dunkel' : 'System'})`}
           className="h-9 w-9"
         >
           <ThemeIcon className="h-4 w-4" />

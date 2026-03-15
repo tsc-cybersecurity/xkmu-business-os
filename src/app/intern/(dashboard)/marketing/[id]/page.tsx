@@ -221,7 +221,7 @@ export default function CampaignDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/marketing">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Zurueck">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -434,6 +434,7 @@ export default function CampaignDetailPage() {
                         variant="ghost"
                         size="icon"
                         title="Loeschen"
+                        aria-label="Loeschen"
                         onClick={() => handleDeleteTask(task.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />

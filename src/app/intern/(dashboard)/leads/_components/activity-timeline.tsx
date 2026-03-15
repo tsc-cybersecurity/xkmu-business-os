@@ -39,7 +39,9 @@ import {
   Trash2,
   Send,
   ExternalLink,
+  Clock,
 } from 'lucide-react'
+import { EmptyState } from '@/components/shared'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 
@@ -412,9 +414,10 @@ export function ActivityTimeline({
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Noch keine Aktivitaeten vorhanden.
-          </p>
+          <EmptyState
+            icon={Clock}
+            title="Noch keine Aktivitaeten vorhanden"
+          />
         ) : (
           <div className="relative space-y-0">
             {/* Vertical line */}

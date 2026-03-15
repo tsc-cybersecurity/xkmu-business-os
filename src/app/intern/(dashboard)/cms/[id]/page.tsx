@@ -334,7 +334,7 @@ export default function CmsPageEditorPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/intern/cms">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Zurueck">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -446,6 +446,7 @@ export default function CmsPageEditorPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Nach oben"
                         className="h-6 w-6"
                         disabled={index === 0}
                         onClick={() => handleMoveBlock(index, 'up')}
@@ -455,6 +456,7 @@ export default function CmsPageEditorPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Nach unten"
                         className="h-6 w-6"
                         disabled={index === page.blocks.length - 1}
                         onClick={() => handleMoveBlock(index, 'down')}
@@ -475,7 +477,7 @@ export default function CmsPageEditorPage() {
 
                     <div className="flex items-center gap-1 shrink-0">
                       <Link href={`/intern/cms/${pageId}/blocks/${block.id}`}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Bearbeiten">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Bearbeiten" aria-label="Bearbeiten">
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                       </Link>
@@ -484,6 +486,7 @@ export default function CmsPageEditorPage() {
                         size="icon"
                         className="h-8 w-8"
                         title={block.isVisible ? 'Ausblenden' : 'Einblenden'}
+                        aria-label={block.isVisible ? 'Ausblenden' : 'Einblenden'}
                         onClick={() => handleToggleVisibility(block)}
                       >
                         {block.isVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
@@ -493,6 +496,7 @@ export default function CmsPageEditorPage() {
                         size="icon"
                         className="h-8 w-8"
                         title="Duplizieren"
+                        aria-label="Duplizieren"
                         onClick={() => handleDuplicateBlock(block.id)}
                       >
                         <Copy className="h-3.5 w-3.5" />
@@ -502,6 +506,7 @@ export default function CmsPageEditorPage() {
                         size="icon"
                         className="h-8 w-8"
                         title="Loeschen"
+                        aria-label="Loeschen"
                         onClick={() => handleDeleteBlock(block.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />

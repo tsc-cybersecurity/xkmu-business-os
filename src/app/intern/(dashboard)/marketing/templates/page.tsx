@@ -122,7 +122,7 @@ export default function MarketingTemplatesPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/marketing">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Zurueck">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -212,7 +212,7 @@ export default function MarketingTemplatesPage() {
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{typeLabels[template.type] || template.type}</Badge>
                     {!template.isDefault && (
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(template.id)}>
+                      <Button variant="ghost" size="icon" aria-label="Loeschen" onClick={() => handleDelete(template.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     )}

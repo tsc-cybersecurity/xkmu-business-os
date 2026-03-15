@@ -164,7 +164,7 @@ export default function ApiKeysPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
             <Link href="/intern/settings">
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -258,6 +258,7 @@ export default function ApiKeysPage() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="Loeschen"
                         onClick={() => handleDeleteClick(apiKey)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -304,6 +305,7 @@ export default function ApiKeysPage() {
                   <Button
                     variant="outline"
                     size="icon"
+                    aria-label="Kopieren"
                     onClick={() => handleCopyKey(newKey.rawKey!)}
                   >
                     <Copy className="h-4 w-4" />

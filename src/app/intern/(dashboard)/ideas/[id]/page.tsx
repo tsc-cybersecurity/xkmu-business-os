@@ -180,6 +180,7 @@ export default function IdeaDetailPage() {
           <Button
             variant="destructive"
             size="icon"
+            aria-label="Loeschen"
             onClick={() => setShowDeleteDialog(true)}
           >
             <Trash2 className="h-4 w-4" />

@@ -6,8 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { FormField } from '@/components/shared'
-import { ConfirmDialog } from '@/components/shared'
+import { FormField, ConfirmDialog, EmptyState } from '@/components/shared'
 import { toast } from 'sonner'
 import {
   ArrowLeft,
@@ -250,7 +249,7 @@ export default function AiPromptsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
             <Link href="/intern/settings">
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -275,20 +274,22 @@ export default function AiPromptsPage() {
       {/* Template-Liste */}
       {templates.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-1">Keine Prompt-Vorlagen vorhanden</h3>
-            <p className="text-muted-foreground text-sm mb-4">
-              Laden Sie die Standard-Vorlagen, um die KI-Recherche zu konfigurieren.
-            </p>
-            <Button onClick={handleSeed} disabled={seeding}>
-              {seeding ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              Standard-Vorlagen laden
-            </Button>
+          <CardContent className="p-0">
+            <EmptyState
+              icon={FileText}
+              title="Keine Prompt-Vorlagen vorhanden"
+              description="Laden Sie die Standard-Vorlagen, um die KI-Recherche zu konfigurieren."
+              action={
+                <Button onClick={handleSeed} disabled={seeding}>
+                  {seeding ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="mr-2 h-4 w-4" />
+                  )}
+                  Standard-Vorlagen laden
+                </Button>
+              }
+            />
           </CardContent>
         </Card>
       ) : (
@@ -376,7 +377,7 @@ export default function AiPromptsPage() {
           {/* Fester Header */}
           <div className="flex items-center justify-between px-8 py-4 border-b shrink-0 bg-background">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => setDialogOpen(false)}>
+              <Button variant="ghost" size="icon" aria-label="Schliessen" onClick={() => setDialogOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
               <h2 className="text-xl font-semibold">Vorlage bearbeiten</h2>

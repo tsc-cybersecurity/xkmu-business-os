@@ -182,7 +182,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
+          <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
             <Link href="/intern/settings">
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -280,6 +280,7 @@ export default function ProfilePage() {
                   type="button"
                   variant="ghost"
                   size="icon"
+                  aria-label={showCurrentPassword ? 'Passwort verbergen' : 'Passwort anzeigen'}
                   className="absolute right-0 top-0 h-full px-3"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 >
@@ -310,6 +311,7 @@ export default function ProfilePage() {
                   type="button"
                   variant="ghost"
                   size="icon"
+                  aria-label={showNewPassword ? 'Passwort verbergen' : 'Passwort anzeigen'}
                   className="absolute right-0 top-0 h-full px-3"
                   onClick={() => setShowNewPassword(!showNewPassword)}
                 >

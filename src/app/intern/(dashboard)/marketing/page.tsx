@@ -207,7 +207,7 @@ export default function MarketingPage() {
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Link href={`/intern/marketing/${campaign.id}`}>
-                        <Button variant="ghost" size="icon" title="Bearbeiten">
+                        <Button variant="ghost" size="icon" title="Bearbeiten" aria-label="Bearbeiten">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -215,6 +215,7 @@ export default function MarketingPage() {
                         variant="ghost"
                         size="icon"
                         title="Loeschen"
+                        aria-label="Loeschen"
                         onClick={() => handleDelete(campaign.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />

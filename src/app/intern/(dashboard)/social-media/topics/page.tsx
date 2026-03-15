@@ -15,7 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Plus, Trash2, Pencil, Tags, CalendarDays, Brain } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Trash2, Pencil, Tags, CalendarDays, Brain, Inbox } from 'lucide-react';
+import { EmptyState } from '@/components/shared';
 import { toast } from 'sonner';
 import { logger } from '@/lib/utils/logger'
 
@@ -158,7 +159,7 @@ export default function SocialMediaTopicsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/social-media">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="Zurueck">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -267,8 +268,11 @@ export default function SocialMediaTopicsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {topics.length === 0 ? (
           <Card className="col-span-full">
-            <CardContent className="text-center py-8 text-muted-foreground">
-              Noch keine Themen vorhanden
+            <CardContent className="p-0">
+              <EmptyState
+                icon={Inbox}
+                title="Noch keine Themen vorhanden"
+              />
             </CardContent>
           </Card>
         ) : (
@@ -284,10 +288,10 @@ export default function SocialMediaTopicsPage() {
                     <CardTitle className="text-base">{topic.name}</CardTitle>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(topic)}>
+                    <Button variant="ghost" size="icon" aria-label="Bearbeiten" onClick={() => handleEdit(topic)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(topic.id)}>
+                    <Button variant="ghost" size="icon" aria-label="Loeschen" onClick={() => handleDelete(topic.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>

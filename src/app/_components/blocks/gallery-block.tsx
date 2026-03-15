@@ -57,7 +57,7 @@ export function GalleryBlock({
             >
               <Image
                 src={img.src}
-                alt={img.alt || ''}
+                alt={img.alt || img.caption || 'Galeriebild'}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 fill
                 unoptimized
@@ -80,13 +80,14 @@ export function GalleryBlock({
         >
           <button
             className="absolute top-4 right-4 text-white/80 hover:text-white"
+            aria-label="Schliessen"
             onClick={() => setLightboxIndex(null)}
           >
             <X className="h-8 w-8" />
           </button>
           <Image
             src={items[lightboxIndex].src}
-            alt={items[lightboxIndex].alt || ''}
+            alt={items[lightboxIndex].alt || items[lightboxIndex].caption || 'Galeriebild'}
             className="max-w-full max-h-[90vh] object-contain rounded-lg"
             width={1200}
             height={800}

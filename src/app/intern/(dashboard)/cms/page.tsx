@@ -170,7 +170,7 @@ export default function CmsPagesPage() {
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <Link href={`/intern/cms/${page.id}`}>
-                        <Button variant="ghost" size="icon" title="Bearbeiten">
+                        <Button variant="ghost" size="icon" title="Bearbeiten" aria-label="Bearbeiten">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -178,6 +178,7 @@ export default function CmsPagesPage() {
                         variant="ghost"
                         size="icon"
                         title={page.status === 'published' ? 'Zurueckziehen' : 'Veroeffentlichen'}
+                        aria-label={page.status === 'published' ? 'Zurueckziehen' : 'Veroeffentlichen'}
                         onClick={() => handlePublish(page.id, page.status === 'published')}
                       >
                         {page.status === 'published' ? (
@@ -190,6 +191,7 @@ export default function CmsPagesPage() {
                         variant="ghost"
                         size="icon"
                         title="Loeschen"
+                        aria-label="Loeschen"
                         onClick={() => handleDelete(page.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />

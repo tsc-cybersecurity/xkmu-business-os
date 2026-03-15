@@ -378,6 +378,7 @@ export function BlockTemplatesManager() {
                       size="icon"
                       className="h-8 w-8"
                       title="Inhalt kopieren"
+                      aria-label="Kopieren"
                       onClick={() => handleCopyContent(template)}
                     >
                       <Copy className="h-4 w-4" />
@@ -387,6 +388,7 @@ export function BlockTemplatesManager() {
                       size="icon"
                       className="h-8 w-8"
                       title="Bearbeiten"
+                      aria-label="Bearbeiten"
                       onClick={() => openEditDialog(template)}
                     >
                       <Pencil className="h-4 w-4" />
@@ -397,6 +399,7 @@ export function BlockTemplatesManager() {
                         size="icon"
                         className="h-8 w-8"
                         title="Loeschen"
+                        aria-label="Loeschen"
                         onClick={() => handleDelete(template)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />

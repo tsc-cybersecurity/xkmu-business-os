@@ -325,6 +325,7 @@ export default function SocialMediaPage() {
                       variant="ghost"
                       size="icon"
                       title="Loeschen"
+                      aria-label="Loeschen"
                       onClick={() => handleDelete(post.id)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
