@@ -43,7 +43,7 @@ export const TENANT_TABLES = [
   'marketing_templates',
   'social_media_topics',
   'social_media_posts',
-] as const
+]
 
 // Global tables (no tenant_id, exported completely)
 export const GLOBAL_TABLES = [
@@ -51,7 +51,7 @@ export const GLOBAL_TABLES = [
   'din_grants',
   'wiba_requirements',
   'cms_block_type_definitions',
-] as const
+]
 
 // All allowed tables (union of tenant + global + special)
 export const ALLOWED_TABLES = new Set([

@@ -2,16 +2,9 @@
 
 import { AIResearchCard } from '@/components/shared'
 
-interface Company {
-  id: string
-  name: string
-  website: string | null
-  [key: string]: unknown
-}
-
 interface CompanyResearchSectionProps {
   companyId: string
-  company: Company
+  company: { id: string; name: string; website: string | null }
   onResearchComplete: () => void
 }
 

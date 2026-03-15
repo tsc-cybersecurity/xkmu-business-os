@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'KI-Generierung fehlgeschlagen'
-      logger.error('FAILED after', Date.now() - startTime, 'ms:', message, { module: 'BlogPostsGenerateAPI' })
+      logger.error(`Blog generation failed after ${Date.now() - startTime}ms: ${message}`, error, { module: 'BlogPostsGenerateAPI' })
       return apiServerError(message)
     }
   })
