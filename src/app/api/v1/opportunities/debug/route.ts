@@ -48,6 +48,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 5. Quick SerpAPI test (1 result)
+    if (checks.serpApiProvider || checks.serpApiEnvKey) {
+      try {
+        const { SerpApiService } = await import('@/lib/services/serpapi.service')
+        const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1, auth.tenantId)
+        checks.serpApiTest = { success: true, resultCount: results.length, firstResult: results[0]?.name || null }
+      } catch (e) {
+        checks.serpApiTest = { success: false, error: e instanceof Error ? e.message : String(e) }
+      }
+    }
+
     return apiSuccess(checks)
   })
 }

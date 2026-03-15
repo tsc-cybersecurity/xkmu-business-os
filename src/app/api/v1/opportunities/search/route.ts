@@ -34,37 +34,50 @@ export async function POST(request: NextRequest) {
         return apiError('INVALID_INPUT', 'Mindestens eine Branche und ein Ort erforderlich', 400)
       }
 
-      // Search via SerpAPI (tenantId for DB-stored API key)
-      const searchResults = await SerpApiService.searchMultiple(
-        queryList,
-        locationList,
-        radius || 25,
-        maxPerLocation || 20,
-        auth.tenantId
-      )
+      // Step 1: Search via SerpAPI
+      let searchResults
+      try {
+        searchResults = await SerpApiService.searchMultiple(
+          queryList,
+          locationList,
+          radius || 25,
+          maxPerLocation || 20,
+          auth.tenantId
+        )
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'Unbekannter Fehler'
+        logger.error('SerpAPI search failed', error, { module: 'OpportunitiesAPI' })
+        return apiError('SERPAPI_ERROR', `SerpAPI Fehler: ${msg}`, 500)
+      }
 
-      // Save results as opportunities - convert nulls to undefined for compatibility
-      const items = searchResults.results.map((r) => ({
-        ...r,
-        phone: r.phone ?? undefined,
-        email: r.email ?? undefined,
-        website: r.website ?? undefined,
-        rating: r.rating ?? undefined,
-        reviewCount: r.reviewCount ?? undefined,
-        searchQuery: queryList.join(', '),
-        searchLocation: locationList.join(', '),
-      }))
+      // Step 2: Save results
+      try {
+        const items = searchResults.results.map((r) => ({
+          ...r,
+          phone: r.phone ?? undefined,
+          email: r.email ?? undefined,
+          website: r.website ?? undefined,
+          rating: r.rating ?? undefined,
+          reviewCount: r.reviewCount ?? undefined,
+          searchQuery: queryList.join(', '),
+          searchLocation: locationList.join(', '),
+        }))
 
-      const saveResult = await OpportunityService.createMany(
-        auth.tenantId,
-        items
-      )
+        const saveResult = await OpportunityService.createMany(
+          auth.tenantId,
+          items
+        )
 
-      return apiSuccess({
-        saved: saveResult.inserted,
-        duplicates: saveResult.skipped,
-        errors: searchResults.errors,
-      })
+        return apiSuccess({
+          saved: saveResult.inserted,
+          duplicates: saveResult.skipped,
+          errors: searchResults.errors,
+        })
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : 'Unbekannter Fehler'
+        logger.error('Save opportunities failed', error, { module: 'OpportunitiesAPI' })
+        return apiError('SAVE_ERROR', `Speichern fehlgeschlagen: ${msg}`, 500)
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unbekannter Fehler'
       logger.error('Search opportunities error', error, { module: 'OpportunitiesAPI' })
