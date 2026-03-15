@@ -13,6 +13,7 @@ import {
 } from '@/lib/utils/validation'
 import { MarketingTaskService } from '@/lib/services/marketing-task.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
       })
       return apiSuccess(task, undefined, 201)
     } catch (error) {
-      console.error('Error creating marketing task:', error)
+      logger.error('Error creating marketing task', error, { module: 'MarketingTasksAPI' })
       return apiServerError()
     }
   })

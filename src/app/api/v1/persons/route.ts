@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { PersonService } from '@/lib/services/person.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'persons', 'read', async (auth) => {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(person, undefined, 201)
     } catch (error) {
-      console.error('Create person error:', error)
+      logger.error('Create person error', error, { module: 'PersonsAPI' })
       return apiError('CREATE_FAILED', 'Failed to create person', 500)
     }
   })

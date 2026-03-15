@@ -5,6 +5,7 @@ import {
 } from '@/lib/utils/api-response'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/ai-logs/stats - Aggregierte Statistiken
 export async function GET(request: NextRequest) {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
       const stats = await AiProviderService.getLogStats(auth.tenantId)
       return apiSuccess(stats)
     } catch (error) {
-      console.error('Failed to get AI log stats:', error)
+      logger.error('Failed to get AI log stats', error, { module: 'AiLogsStatsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der Statistiken', 500)
     }
   })

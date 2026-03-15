@@ -4,6 +4,7 @@ import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { z } from 'zod'
 import { CmsBlockTemplateService } from '@/lib/services/cms-block-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 const updateTemplateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -41,7 +42,7 @@ export async function PUT(
       if (!template) return apiNotFound('Vorlage nicht gefunden')
       return apiSuccess(template)
     } catch (error) {
-      console.error('Error updating CMS template:', error)
+      logger.error('Error updating CMS template', error, { module: 'CmsTemplatesAPI' })
       return apiServerError()
     }
   })

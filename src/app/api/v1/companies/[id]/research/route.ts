@@ -12,6 +12,7 @@ import { LeadResearchService } from '@/lib/services/ai'
 import type { CompanyResearchResult, CompanyAddress } from '@/lib/services/ai'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -212,7 +213,7 @@ export async function POST(
       return apiNotFound('Company not found')
     }
 
-    console.log(`[Company Research] Starting research for: ${company.name}`)
+    logger.info(`Starting research for: ${company.name}`, { module: 'CompaniesResearchAPI' })
 
     // Check if there's a recent firecrawl crawl to use as context
     let firecrawlContent: string | undefined
@@ -228,10 +229,10 @@ export async function POST(
             return text
           })
           firecrawlContent = parts.join('\n\n')
-          console.log(`[Company Research] Using firecrawl data as context (${firecrawlContent.length} chars, ${pages.length} pages)`)
+          logger.info(`Using firecrawl data as context (${firecrawlContent.length} chars, ${pages.length} pages)`, { module: 'CompaniesResearchAPI' })
         }
       } catch (err) {
-        console.warn('[Company Research] Could not load firecrawl data:', err)
+        logger.warn('Could not load firecrawl data', { module: 'CompaniesResearchAPI' })
       }
     }
 
@@ -309,7 +310,7 @@ export async function POST(
       updatedFields: Object.keys(crmUpdates),
     })
   } catch (error) {
-    console.error('Company research error:', error)
+    logger.error('Company research error', error, { module: 'CompaniesResearchAPI' })
 
     return apiError(
       'RESEARCH_FAILED',

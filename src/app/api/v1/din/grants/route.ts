@@ -4,6 +4,7 @@ import { DinGrantService } from '@/lib/services/din-grant.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
+import { logger } from '@/lib/utils/logger'
 
 const createGrantSchema = z.object({
   name: z.string().min(1, 'Name ist erforderlich'),
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
       })
       return apiSuccess(grant, undefined, 201)
     } catch (error) {
-      console.error('Error creating grant:', error)
+      logger.error('Error creating grant', error, { module: 'DinGrantsAPI' })
       return apiServerError()
     }
   })

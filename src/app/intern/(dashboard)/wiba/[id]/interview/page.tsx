@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, ArrowLeft, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft, Save, TrendingUp } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 type AnswerStatus = 'ja' | 'nein' | 'nicht_relevant'
 
@@ -105,7 +106,7 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
         setScoring(scoreData.data)
       }
     } catch (error) {
-      console.error('Failed to load data:', error)
+      logger.error('Failed to load data', error, { module: 'WibaInterviewPage' })
     } finally {
       setLoading(false)
     }
@@ -156,7 +157,7 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
         setScoring(scoreData.data)
       }
     } catch (error) {
-      console.error('Failed to save answer:', error)
+      logger.error('Failed to save answer', error, { module: 'WibaInterviewPage' })
     } finally {
       setIsSaving(false)
     }

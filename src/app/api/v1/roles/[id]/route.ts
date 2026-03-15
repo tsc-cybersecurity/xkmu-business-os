@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { RoleService } from '@/lib/services/role.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -49,7 +50,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
       return apiSuccess(role)
     } catch (error) {
-      console.error('Update role error:', error)
+      logger.error('Update role error', error, { module: 'RolesAPI' })
       return apiError('UPDATE_FAILED', 'Rolle konnte nicht aktualisiert werden', 500)
     }
   })

@@ -32,6 +32,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus, Search, Users } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface User {
   id: string
@@ -95,7 +96,7 @@ export default function UsersPage() {
         setUsers(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch users:', error)
+      logger.error('Failed to fetch users', error, { module: 'SettingsUsersPage' })
     } finally {
       setLoading(false)
     }

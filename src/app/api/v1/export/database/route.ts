@@ -2,59 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest, hasPermission } from '@/lib/auth/api-key'
 import { db } from '@/lib/db'
+import { TENANT_TABLES, GLOBAL_TABLES } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
-
-// Tabellen mit tenant_id Spalte (gefiltert nach Tenant)
-const TENANT_TABLES = [
-  'roles',
-  'users',
-  'api_keys',
-  'companies',
-  'persons',
-  'leads',
-  'product_categories',
-  'products',
-  'ai_providers',
-  'ai_logs',
-  'ai_prompt_templates',
-  'ideas',
-  'activities',
-  'webhooks',
-  'audit_log',
-  'documents',
-  'document_items',
-  'din_audit_sessions',
-  'din_answers',
-  'wiba_audit_sessions',
-  'wiba_answers',
-  'n8n_connections',
-  'n8n_workflow_logs',
-  'cms_pages',
-  'cms_blocks',
-  'cms_block_templates',
-  'cms_navigation_items',
-  'blog_posts',
-  'media_uploads',
-  'company_researches',
-  'firecrawl_researches',
-  'business_documents',
-  'business_profiles',
-  'marketing_campaigns',
-  'marketing_tasks',
-  'marketing_templates',
-  'social_media_topics',
-  'social_media_posts',
-]
-
-// Globale Tabellen (ohne tenant_id, komplett exportiert)
-const GLOBAL_TABLES = [
-  'din_requirements',
-  'din_grants',
-  'wiba_requirements',
-  'cms_block_type_definitions',
-]
 
 // role_permissions hat kein tenant_id, aber roleId -> export ueber JOIN
 const ROLE_PERMISSIONS_TABLE = 'role_permissions'
@@ -146,7 +98,7 @@ export async function GET(request: NextRequest) {
           )
           write(exportRows(rows as unknown as Record<string, unknown>[], 'tenants'))
         } catch (error) {
-          console.error('Fehler beim Export der Tabelle tenants:', error)
+          logger.error('Fehler beim Export der Tabelle tenants', error, { module: 'ExportDatabaseAPI' })
         }
 
         // 2. Tenant-spezifische Tabellen (WHERE tenant_id = ...)
@@ -157,7 +109,7 @@ export async function GET(request: NextRequest) {
             )
             write(exportRows(rows as unknown as Record<string, unknown>[], table))
           } catch (error) {
-            console.error(`Fehler beim Export der Tabelle ${table}:`, error)
+            logger.error(`Fehler beim Export der Tabelle ${table}`, error, { module: 'ExportDatabaseAPI' })
           }
         }
 
@@ -168,7 +120,7 @@ export async function GET(request: NextRequest) {
           )
           write(exportRows(rows as unknown as Record<string, unknown>[], ROLE_PERMISSIONS_TABLE))
         } catch (error) {
-          console.error('Fehler beim Export der Tabelle role_permissions:', error)
+          logger.error('Fehler beim Export der Tabelle role_permissions', error, { module: 'ExportDatabaseAPI' })
         }
 
         // 4. Globale Tabellen (komplett, ohne Filter)
@@ -179,7 +131,7 @@ export async function GET(request: NextRequest) {
             )
             write(exportRows(rows as unknown as Record<string, unknown>[], table))
           } catch (error) {
-            console.error(`Fehler beim Export der Tabelle ${table}:`, error)
+            logger.error(`Fehler beim Export der Tabelle ${table}`, error, { module: 'ExportDatabaseAPI' })
           }
         }
 

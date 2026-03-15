@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Lock, Eye, EyeOff } from 'lucide-react'
 import { LoadingSpinner } from '@/components/shared/loading-states'
+import { logger } from '@/lib/utils/logger'
 
 interface UserProfile {
   id: string
@@ -78,7 +79,7 @@ export default function ProfilePage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch profile:', error)
+      logger.error('Failed to fetch profile', error, { module: 'SettingsProfilePage' })
       toast.error('Fehler beim Laden des Profils')
     } finally {
       setLoading(false)

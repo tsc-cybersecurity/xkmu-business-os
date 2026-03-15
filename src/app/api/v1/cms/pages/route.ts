@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { CmsPageService } from '@/lib/services/cms-page.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'cms', 'read', async (auth) => {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       const page = await CmsPageService.create(auth.tenantId, validation.data, auth.userId ?? undefined)
       return apiSuccess(page, undefined, 201)
     } catch (error) {
-      console.error('Error creating CMS page:', error)
+      logger.error('Error creating CMS page', error, { module: 'CmsPagesAPI' })
       return apiServerError()
     }
   })

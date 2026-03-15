@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { Building2, Users, TrendingUp, Activity, Target, Globe } from 'lucide-react'
 import { LoadingCards } from '@/components/shared/loading-states'
+import { logger } from '@/lib/utils/logger'
 
 interface DashboardData {
   stats: {
@@ -98,7 +99,7 @@ export default function DashboardPage() {
         setData(result.data)
       }
     } catch (error) {
-      console.error('Failed to fetch dashboard:', error)
+      logger.error('Failed to fetch dashboard', error, { module: 'DashboardPage' })
     } finally {
       setLoading(false)
     }

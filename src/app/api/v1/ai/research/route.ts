@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { AIService } from '@/lib/services/ai'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'ai_providers', 'read', async (auth) => {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(result)
     } catch (error) {
-      console.error('AI research error:', error)
+      logger.error('AI research failed', error, { module: 'AIResearchAPI' })
       const message = error instanceof Error ? error.message : 'AI research failed'
       return apiError('AI_ERROR', message, 500)
     }

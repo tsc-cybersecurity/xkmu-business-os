@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { KieService } from '@/lib/services/ai/kie.service'
+import { logger } from '@/lib/utils/logger'
 
 // POST /api/v1/kie/generate - Video-Generierung starten
 export async function POST(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(result, undefined, 201)
     } catch (error) {
-      console.error('Failed to generate video:', error)
+      logger.error('Failed to generate video', error, { module: 'KieGenerateAPI' })
       const message = error instanceof Error ? error.message : 'Fehler bei der Video-Generierung'
       return apiError('INTERNAL_ERROR', message, 500)
     }

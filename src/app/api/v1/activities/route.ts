@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { ActivityService } from '@/lib/services/activity.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'activities', 'read', async (auth) => {
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
       const activity = await ActivityService.create(auth.tenantId, validation.data, auth.userId)
       return apiSuccess(activity, undefined, 201)
     } catch (error) {
-      console.error('Error creating activity:', error)
+      logger.error('Error creating activity', error, { module: 'ActivitiesAPI' })
       return apiServerError()
     }
   })

@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { ArrowLeft, Loader2, Plus, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface Template {
   id: string;
@@ -59,7 +60,7 @@ export default function MarketingTemplatesPage() {
       const data = await response.json();
       if (data.success) setTemplates(data.data);
     } catch (error) {
-      console.error('Failed to fetch templates:', error);
+      logger.error('Failed to fetch templates', error, { module: 'MarketingTemplatesPage' });
     } finally {
       setLoading(false);
     }

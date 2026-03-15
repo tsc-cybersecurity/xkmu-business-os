@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { N8nService } from '@/lib/services/n8n.service'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/n8n/connection - Verbindung anzeigen
 export async function GET(request: NextRequest) {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
         apiKey: conn.apiKey ? `****${conn.apiKey.slice(-4)}` : null,
       })
     } catch (error) {
-      console.error('Failed to get n8n connection:', error)
+      logger.error('Failed to get n8n connection', error, { module: 'N8nConnectionAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der n8n-Verbindung', 500)
     }
   })
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
         apiKey: conn.apiKey ? `****${conn.apiKey.slice(-4)}` : null,
       })
     } catch (error) {
-      console.error('Failed to save n8n connection:', error)
+      logger.error('Failed to save n8n connection', error, { module: 'N8nConnectionAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Speichern der n8n-Verbindung', 500)
     }
   })

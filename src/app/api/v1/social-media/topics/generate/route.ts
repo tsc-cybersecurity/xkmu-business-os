@@ -14,6 +14,7 @@ import { SocialMediaAIService } from '@/lib/services/ai/social-media-ai.service'
 import { SocialMediaTopicService } from '@/lib/services/social-media-topic.service'
 import { BusinessProfileService } from '@/lib/services/business-profile.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'social_media', 'create', async (auth) => {
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(saved, undefined, 201)
     } catch (error) {
-      console.error('Error generating topics:', error)
+      logger.error('Error generating topics', error, { module: 'SocialMediaTopicsGenerateAPI' })
       if (error instanceof Error) {
         return apiError('GENERATION_FAILED', error.message, 500)
       }

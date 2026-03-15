@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { FormField, QuickCreateCompanyDialog } from '@/components/shared'
 import { toast } from 'sonner'
 import { Loader2, Save, X, Plus } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface PersonFormData {
   salutation: string
@@ -116,7 +117,7 @@ export function PersonForm({ person, mode }: PersonFormProps) {
         setCompanies(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch companies:', error)
+      logger.error('Failed to fetch companies', error, { module: 'ContactsPersonsPage' })
     }
   }
 

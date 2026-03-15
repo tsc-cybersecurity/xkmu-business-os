@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Loader2, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface Topic {
   id: string;
@@ -59,7 +60,7 @@ export default function NewSocialMediaPostPage() {
       const data = await response.json();
       if (data.success) setTopics(data.data);
     } catch (error) {
-      console.error('Failed to fetch topics:', error);
+      logger.error('Failed to fetch topics', error, { module: 'SocialMediaNewPage' });
     }
   }, []);
 

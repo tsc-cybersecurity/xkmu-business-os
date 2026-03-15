@@ -9,6 +9,7 @@ import { EmailService } from '@/lib/services/email.service'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
 import { z } from 'zod'
+import { logger } from '@/lib/utils/logger'
 
 const sendEmailSchema = z.object({
   to: z.string().email(),
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       return apiError('EMAIL_SEND_FAILED', result.error || 'E-Mail-Versand fehlgeschlagen', 500)
     }
   } catch (error) {
-    console.error('Email send route error:', error)
+    logger.error('Email send route error', error, { module: 'EmailSendAPI' })
     return apiError('INTERNAL_ERROR', 'Interner Serverfehler', 500)
   }
 }

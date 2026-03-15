@@ -8,6 +8,7 @@ import { WibaAuditService } from '@/lib/services/wiba-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
+import { logger } from '@/lib/utils/logger'
 
 const answerSchema = z.object({
   requirementId: z.number().int().positive(),
@@ -56,7 +57,7 @@ export async function POST(
       const answer = await WibaAuditService.saveAnswer(auth.tenantId, id, validation.data)
       return apiSuccess(answer)
     } catch (error) {
-      console.error('Error saving WiBA audit answer:', error)
+      logger.error('Error saving WiBA audit answer', error, { module: 'WibaAuditsAnswersAPI' })
       return apiServerError()
     }
   })

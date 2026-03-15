@@ -4,6 +4,7 @@
 
 import { AIService, type AIRequestContext } from './ai.service'
 import { WebsiteScraperService } from './website-scraper.service'
+import { logger } from '@/lib/utils/logger'
 
 // ============================================
 // Types
@@ -206,7 +207,7 @@ function parseJsonFromResponse<T>(text: string): T {
         // Dann repariertes JSON versuchen (abgeschnittene Antwort)
         try {
           const repaired = repairTruncatedJson(jsonMatch[0])
-          console.warn('[JSON Parser] Repariertes JSON verwendet (Antwort war abgeschnitten)')
+          logger.warn('Repariertes JSON verwendet (Antwort war abgeschnitten)', { module: 'LeadResearchService' })
           return JSON.parse(repaired) as T
         } catch {
           // Letzter Versuch: Alles bis zur letzten schließenden Klammer
@@ -500,7 +501,7 @@ export const LeadResearchService = {
         result.summary = 'KI-Recherche wurde durchgeführt. Zusammenfassung konnte nicht vollständig erstellt werden.'
       }
     } catch (parseError) {
-      console.error('[Lead Research] Parse error:', parseError)
+      logger.error('Lead research parse error', parseError, { module: 'LeadResearchService' })
       // Ensure fallback summary doesn't contain raw JSON
       let fallbackSummary = response.text.substring(0, 500)
       if (fallbackSummary.trim().startsWith('{') || fallbackSummary.trim().startsWith('```')) {
@@ -543,10 +544,10 @@ export const LeadResearchService = {
 
         if (provider?.apiKey) {
           firecrawlApiKey = provider.apiKey
-          console.log('[Company Research] Firecrawl API key loaded from DB')
+          logger.info('Firecrawl API key loaded from DB', { module: 'LeadResearchService' })
         }
       } catch (err) {
-        console.warn('[Company Research] Could not load Firecrawl API key:', err)
+        logger.warn('Could not load Firecrawl API key', { module: 'LeadResearchService' })
       }
     }
 
@@ -554,12 +555,12 @@ export const LeadResearchService = {
     let enrichedInput = { ...input }
     const scrapedPages: Array<{ url: string; title: string; content: string; scrapedAt: string }> = []
     if (input.website && !input.websiteContent) {
-      console.log(`[Company Research] Scraping website: ${input.website}`)
+      logger.info(`Scraping website: ${input.website}`, { module: 'LeadResearchService' })
       try {
         const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(input.website, firecrawlApiKey)
         if (scrapeResult.success && scrapeResult.combinedText) {
           enrichedInput.websiteContent = scrapeResult.combinedText
-          console.log(`[Company Research] Website scraped successfully (${scrapeResult.combinedText.length} chars)`)
+          logger.info(`Website scraped successfully (${scrapeResult.combinedText.length} chars)`, { module: 'LeadResearchService' })
 
           // Collect scraped pages for persistence
           const now = new Date().toISOString()
@@ -583,7 +584,7 @@ export const LeadResearchService = {
           }
         }
       } catch (scrapeError) {
-        console.error('[Company Research] Website scraping failed:', scrapeError)
+        logger.error('Website scraping failed', scrapeError, { module: 'LeadResearchService' })
       }
     }
 
@@ -634,7 +635,7 @@ export const LeadResearchService = {
         result.description = 'Beschreibung konnte nicht vollständig erstellt werden.'
       }
     } catch (parseError) {
-      console.error('[Company Research] Parse error:', parseError)
+      logger.error('Company research parse error', parseError, { module: 'LeadResearchService' })
       result = {
         description: response.text.substring(0, 500),
         industry: 'Nicht ermittelbar',
@@ -698,7 +699,7 @@ export const LeadResearchService = {
     try {
       result = parseJsonFromResponse(response.text)
     } catch (parseError) {
-      console.error('[Person Research] Parse error:', parseError)
+      logger.error('Person research parse error', parseError, { module: 'LeadResearchService' })
       result = {
         fullName: `${input.firstName} ${input.lastName}`,
         jobTitle: input.jobTitle || 'Nicht ermittelbar',

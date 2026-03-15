@@ -11,11 +11,12 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { cmsPages, cmsBlocks, tenants } from '../schema'
 import { eq } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 async function seed() {
   const connectionString = process.env.DATABASE_URL
   if (!connectionString) {
-    console.error('DATABASE_URL not set')
+    logger.error('DATABASE_URL not set', undefined, { module: 'CmsSeed' })
     process.exit(1)
   }
 
@@ -32,12 +33,12 @@ async function seed() {
   // Get first tenant (system tenant)
   const [tenant] = await db.select().from(tenants).limit(1)
   if (!tenant) {
-    console.error('No tenant found. Create a tenant first.')
+    logger.error('No tenant found. Create a tenant first.', undefined, { module: 'CmsSeed' })
     process.exit(1)
   }
 
   const tenantId = tenant.id
-  console.log(`Seeding CMS for tenant: ${tenant.name} (${tenantId})`)
+  logger.info(`Seeding CMS for tenant: ${tenant.name} (${tenantId})`)
 
   // Define pages with their blocks
   const pages = [
@@ -357,7 +358,7 @@ Wir uebermitteln personenbezogene Daten an Dritte nur dann, wenn dies im Rahmen 
 
   // Insert pages and blocks
   for (const pageData of pages) {
-    console.log(`  Creating page: ${pageData.slug}`)
+    logger.info(`  Creating page: ${pageData.slug}`)
 
     // Check if page already exists
     const existing = await db
@@ -367,7 +368,7 @@ Wir uebermitteln personenbezogene Daten an Dritte nur dann, wenn dies im Rahmen 
       .limit(1)
 
     if (existing.length > 0) {
-      console.log(`    -> Already exists, skipping`)
+      logger.info(`    -> Already exists, skipping`)
       continue
     }
 
@@ -394,15 +395,15 @@ Wir uebermitteln personenbezogene Daten an Dritte nur dann, wenn dies im Rahmen 
       })
     }
 
-    console.log(`    -> Created with ${pageData.blocks.length} blocks`)
+    logger.info(`    -> Created with ${pageData.blocks.length} blocks`)
   }
 
-  console.log('\nCMS seed completed!')
+  logger.info('\nCMS seed completed!')
   await client.end()
   process.exit(0)
 }
 
 seed().catch((error) => {
-  console.error('Seed failed:', error)
+  logger.error('Seed failed', error, { module: 'CmsSeed' })
   process.exit(1)
 })

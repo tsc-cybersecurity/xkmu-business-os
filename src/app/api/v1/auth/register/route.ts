@@ -3,6 +3,7 @@ import { apiSuccess, apiError, apiValidationError } from '@/lib/utils/api-respon
 import { registerSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { UserService } from '@/lib/services/user.service'
 import { TenantService } from '@/lib/services/tenant.service'
+import { logger } from '@/lib/utils/logger'
 import { RoleService } from '@/lib/services/role.service'
 import { TenantSeedService } from '@/lib/services/tenant-seed.service'
 import { createSession } from '@/lib/auth/session'
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       201
     )
   } catch (error) {
-    console.error('Registration error:', error)
+    logger.error('Registration failed', error, { module: 'AuthRegister' })
     return apiError('REGISTRATION_FAILED', 'Registrierung fehlgeschlagen', 500)
   }
 }

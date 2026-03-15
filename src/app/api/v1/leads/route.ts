@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'leads', 'read', async (auth) => {
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(lead, undefined, 201)
     } catch (error) {
-      console.error('Create lead error:', error)
+      logger.error('Create lead error', error, { module: 'LeadsAPI' })
       return apiError('CREATE_FAILED', 'Failed to create lead', 500)
     }
   })

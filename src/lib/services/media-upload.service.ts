@@ -4,6 +4,7 @@ import { eq, and, desc, count } from 'drizzle-orm'
 import type { MediaUpload } from '@/lib/db/schema'
 import { randomUUID } from 'crypto'
 import path from 'path'
+import { logger } from '@/lib/utils/logger'
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const MAX_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
@@ -54,7 +55,7 @@ async function deleteFromLocal(filePath: string): Promise<void> {
       await unlink(fullPath)
     }
   } catch (error) {
-    console.error('Failed to delete local file:', error)
+    logger.error('Failed to delete local file', error, { module: 'MediaUploadService' })
   }
 }
 

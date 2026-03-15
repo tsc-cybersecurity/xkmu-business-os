@@ -3,6 +3,7 @@ import { webhooks } from '@/lib/db/schema'
 import { eq, and, count, desc } from 'drizzle-orm'
 import type { Webhook, NewWebhook } from '@/lib/db/schema'
 import crypto from 'crypto'
+import { logger } from '@/lib/utils/logger'
 
 export interface WebhookFilters {
   isActive?: boolean
@@ -112,7 +113,7 @@ export const WebhookService = {
     // Fire all webhooks in parallel, don't await
     for (const wh of matchingWebhooks) {
       this.sendWebhook(wh, event, payload).catch((error) => {
-        console.error(`[Webhook] Fehler beim Senden an ${wh.url}:`, error)
+        logger.error(`Fehler beim Senden an ${wh.url}`, error, { module: 'WebhookService' })
       })
     }
   },

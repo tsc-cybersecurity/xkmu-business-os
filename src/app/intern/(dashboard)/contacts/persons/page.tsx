@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Users } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Person {
   id: string
@@ -56,7 +57,7 @@ export default function PersonsPage() {
         setPersons(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch persons:', error)
+      logger.error('Failed to fetch persons', error, { module: 'ContactsPersonsPage' })
     } finally {
       setLoading(false)
     }

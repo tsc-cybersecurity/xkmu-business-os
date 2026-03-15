@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Newspaper, Plus, Loader2, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface BlogPost {
   id: string
@@ -41,7 +42,7 @@ export default function BlogPostsPage() {
       const data = await response.json()
       if (data.success) setPosts(data.data)
     } catch (error) {
-      console.error('Failed to fetch blog posts:', error)
+      logger.error('Failed to fetch blog posts', error, { module: 'BlogPage' })
     } finally {
       setLoading(false)
     }
@@ -58,7 +59,7 @@ export default function BlogPostsPage() {
       })
       fetchPosts()
     } catch (error) {
-      console.error('Failed to publish/unpublish:', error)
+      logger.error('Failed to publish/unpublish', error, { module: 'BlogPage' })
     }
   }
 
@@ -68,7 +69,7 @@ export default function BlogPostsPage() {
       await fetch(`/api/v1/blog/posts/${id}`, { method: 'DELETE' })
       fetchPosts()
     } catch (error) {
-      console.error('Failed to delete post:', error)
+      logger.error('Failed to delete post', error, { module: 'BlogPage' })
     }
   }
 

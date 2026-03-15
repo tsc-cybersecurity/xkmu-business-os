@@ -1,4 +1,5 @@
 import { apiSuccess, apiUnauthorized, apiError } from '@/lib/utils/api-response'
+import { logger } from '@/lib/utils/logger'
 import { getSession } from '@/lib/auth/session'
 import { getPermissionsForRole } from '@/lib/auth/permissions'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '@/lib/types/permissions'
@@ -44,7 +45,7 @@ export async function GET() {
 
     return apiSuccess({ permissions: {} })
   } catch (error) {
-    console.error('Permissions fetch error:', error)
+    logger.error('Permissions fetch failed', error, { module: 'AuthPermissions' })
     return apiError('PERMISSIONS_FAILED', 'Berechtigungen konnten nicht geladen werden', 500)
   }
 }

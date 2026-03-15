@@ -7,6 +7,7 @@ import {
 import { TenantService } from '@/lib/services/tenant.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
+import { logger } from '@/lib/utils/logger'
 
 const updateTenantSchema = z.object({
   name: z.string().min(1).max(255).optional(),
@@ -68,7 +69,7 @@ export async function PUT(request: NextRequest) {
 
       return apiSuccess(tenant)
     } catch (error) {
-      console.error('Update tenant error:', error)
+      logger.error('Update tenant error', error, { module: 'TenantAPI' })
       return apiError('UPDATE_FAILED', 'Failed to update tenant', 500)
     }
   })

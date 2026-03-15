@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { logger } from '@/lib/utils/logger'
 
 interface TableInfo {
   name: string
@@ -82,7 +83,7 @@ export function DatabaseAdmin() {
           setFilteredTables(data.data)
         }
       } catch (error) {
-        console.error('Failed to fetch tables:', error)
+        logger.error('Failed to fetch tables', error, { module: 'SettingsDatabasePage' })
         toast.error('Fehler beim Laden der Tabellenliste')
       } finally {
         setLoading(false)
@@ -119,7 +120,7 @@ export function DatabaseAdmin() {
         toast.error(data.error?.message || 'Fehler beim Laden')
       }
     } catch (error) {
-      console.error('Failed to fetch table data:', error)
+      logger.error('Failed to fetch table data', error, { module: 'SettingsDatabasePage' })
       toast.error('Fehler beim Laden der Tabellendaten')
     } finally {
       setDataLoading(false)
@@ -177,7 +178,7 @@ export function DatabaseAdmin() {
         toast.error(data.error?.message || 'Fehler beim Speichern')
       }
     } catch (error) {
-      console.error('Failed to save edit:', error)
+      logger.error('Failed to save edit', error, { module: 'SettingsDatabasePage' })
       toast.error('Fehler beim Speichern')
     }
     setEditingCell(null)
@@ -218,7 +219,7 @@ export function DatabaseAdmin() {
         toast.error(data.error?.message || 'Fehler beim Loeschen')
       }
     } catch (error) {
-      console.error('Failed to delete row:', error)
+      logger.error('Failed to delete row', error, { module: 'SettingsDatabasePage' })
       toast.error('Fehler beim Loeschen')
     }
     setDeleteTarget(null)

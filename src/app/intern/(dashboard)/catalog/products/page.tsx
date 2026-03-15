@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Search, Package } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Category {
   id: string
@@ -98,7 +99,7 @@ export default function ProductsPage() {
       const data = await response.json()
       if (data.success) setCategories(data.data)
     } catch (error) {
-      console.error('Failed to fetch categories:', error)
+      logger.error('Failed to fetch categories', error, { module: 'CatalogProductsPage' })
     }
   }
 
@@ -119,7 +120,7 @@ export default function ProductsPage() {
         setMeta(data.meta)
       }
     } catch (error) {
-      console.error('Failed to fetch products:', error)
+      logger.error('Failed to fetch products', error, { module: 'CatalogProductsPage' })
     } finally {
       setLoading(false)
     }

@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -57,7 +58,7 @@ export async function PUT(
       return apiSuccess(document)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Fehler beim Aktualisieren'
-      console.error('Failed to update document:', error)
+      logger.error('Failed to update document', error, { module: 'DocumentsAPI' })
       return apiError('INTERNAL_ERROR', message, error instanceof Error && error.message.includes('Entwurf') ? 400 : 500)
     }
   })
@@ -81,7 +82,7 @@ export async function DELETE(
       return apiSuccess({ message: 'Dokument erfolgreich gelöscht' })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Fehler beim Löschen'
-      console.error('Failed to delete document:', error)
+      logger.error('Failed to delete document', error, { module: 'DocumentsAPI' })
       return apiError('INTERNAL_ERROR', message, error instanceof Error && error.message.includes('Entwurf') ? 400 : 500)
     }
   })

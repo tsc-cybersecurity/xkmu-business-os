@@ -6,6 +6,7 @@ import {
 } from '@/lib/utils/api-response'
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -30,7 +31,7 @@ export async function DELETE(
       if (!deleted) return apiNotFound('Dokument nicht gefunden')
       return apiSuccess({ deleted: true })
     } catch (error) {
-      console.error('Error deleting business document:', error)
+      logger.error('Error deleting business document', error, { module: 'BusinessIntelligenceDocumentsAPI' })
       return apiServerError()
     }
   })

@@ -3,6 +3,7 @@ import postgres from 'postgres'
 import { tenants, roles, rolePermissions } from '../schema'
 import { eq, and } from 'drizzle-orm'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../../types/permissions'
+import { logger } from '@/lib/utils/logger'
 
 function getSslConfig(): 'require' | false {
   const sslEnv = process.env.DATABASE_SSL
@@ -22,7 +23,7 @@ async function seedAuditorRole() {
   const client = postgres(connectionString, { ssl: getSslConfig() })
   const db = drizzle(client)
 
-  console.log('Creating IT-Auditor A role...')
+  logger.info('Creating IT-Auditor A role...', { module: 'DinAuditorRoleSeed' })
 
   // Get all tenants
   const allTenants = await db.select().from(tenants)
@@ -41,7 +42,7 @@ async function seedAuditorRole() {
       .limit(1)
 
     if (existing) {
-      console.log(`Tenant "${tenant.name}": auditor role already exists, skipping.`)
+      logger.info(`Tenant "${tenant.name}": auditor role already exists, skipping.`, { module: 'DinAuditorRoleSeed' })
       continue
     }
 
@@ -69,14 +70,14 @@ async function seedAuditorRole() {
 
     await db.insert(rolePermissions).values(permissionRows)
 
-    console.log(`Tenant "${tenant.name}": auditor role created with ${permissionRows.length} permissions.`)
+    logger.info(`Tenant "${tenant.name}": auditor role created with ${permissionRows.length} permissions.`, { module: 'DinAuditorRoleSeed' })
   }
 
-  console.log('Done!')
+  logger.info('Done!', { module: 'DinAuditorRoleSeed' })
   await client.end()
 }
 
 seedAuditorRole().catch((error) => {
-  console.error('Failed:', error)
+  logger.error('Failed', error, { module: 'DinAuditorRoleSeed' })
   process.exit(1)
 })

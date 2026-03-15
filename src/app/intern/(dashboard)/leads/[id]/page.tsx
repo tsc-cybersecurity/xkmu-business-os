@@ -40,6 +40,7 @@ import {
   Tag,
 } from 'lucide-react'
 import { ActivityTimeline } from '../_components/activity-timeline'
+import { logger } from '@/lib/utils/logger'
 
 interface Lead {
   id: string
@@ -169,7 +170,7 @@ export default function LeadDetailPage() {
         router.push('/intern/leads')
       }
     } catch (error) {
-      console.error('Failed to fetch lead:', error)
+      logger.error('Failed to fetch lead', error, { module: 'LeadsPage' })
       toast.error('Fehler beim Laden des Leads')
     } finally {
       setLoading(false)
@@ -185,7 +186,7 @@ export default function LeadDetailPage() {
         setUsers(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch users:', error)
+      logger.error('Failed to fetch users', error, { module: 'LeadsPage' })
     }
   }
 
@@ -202,7 +203,7 @@ export default function LeadDetailPage() {
         setCompanies(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch companies:', error)
+      logger.error('Failed to fetch companies', error, { module: 'LeadsPage' })
     }
   }
 
@@ -219,7 +220,7 @@ export default function LeadDetailPage() {
         setPersons(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch persons:', error)
+      logger.error('Failed to fetch persons', error, { module: 'LeadsPage' })
     }
   }
 

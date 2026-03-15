@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { PersonService } from '@/lib/services/person.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -54,7 +55,7 @@ export async function PUT(
 
       return apiSuccess(person)
     } catch (error) {
-      console.error('Update person error:', error)
+      logger.error('Update person error', error, { module: 'PersonsAPI' })
       return apiError('UPDATE_FAILED', 'Failed to update person', 500)
     }
   })

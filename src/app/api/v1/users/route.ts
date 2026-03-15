@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { UserService } from '@/lib/services/user.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'users', 'read', async (auth) => {
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(userWithoutPassword, undefined, 201)
     } catch (error) {
-      console.error('Create user error:', error)
+      logger.error('Create user error', error, { module: 'UsersAPI' })
       return apiError('CREATE_FAILED', 'Failed to create user', 500)
     }
   })

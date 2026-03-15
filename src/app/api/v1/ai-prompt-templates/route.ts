@@ -5,6 +5,7 @@ import {
 } from '@/lib/utils/api-response'
 import { AiPromptTemplateService, TEMPLATE_PLACEHOLDERS } from '@/lib/services/ai-prompt-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/ai-prompt-templates - Alle Templates auflisten
 export async function GET(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
         placeholders: TEMPLATE_PLACEHOLDERS,
       })
     } catch (error) {
-      console.error('Failed to list AI prompt templates:', error)
+      logger.error('Failed to list AI prompt templates', error, { module: 'AiPromptTemplatesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der KI-Prompt-Vorlagen', 500)
     }
   })
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(template, undefined, 201)
     } catch (error) {
-      console.error('Failed to create AI prompt template:', error)
+      logger.error('Failed to create AI prompt template', error, { module: 'AiPromptTemplatesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Erstellen der KI-Prompt-Vorlage', 500)
     }
   })

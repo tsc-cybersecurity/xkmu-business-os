@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/validation'
 import { CmsBlockService } from '@/lib/services/cms-block.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function PUT(
   request: NextRequest,
@@ -28,7 +29,7 @@ export async function PUT(
       await CmsBlockService.reorder(auth.tenantId, id, validation.data.blockIds)
       return apiSuccess({ reordered: true })
     } catch (error) {
-      console.error('Error reordering CMS blocks:', error)
+      logger.error('Error reordering CMS blocks', error, { module: 'CmsPagesBlocksReorderAPI' })
       return apiServerError()
     }
   })

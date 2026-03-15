@@ -5,6 +5,7 @@ import {
 } from '@/lib/utils/api-response'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/ai-providers - Alle Provider auflisten
 export async function GET(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
       return apiSuccess(safeProviders)
     } catch (error) {
-      console.error('Failed to list AI providers:', error)
+      logger.error('Failed to list AI providers', error, { module: 'AiProvidersAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der KI-Anbieter', 500)
     }
   })
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
         apiKey: provider.apiKey ? `****${provider.apiKey.slice(-4)}` : null,
       }, undefined, 201)
     } catch (error) {
-      console.error('Failed to create AI provider:', error)
+      logger.error('Failed to create AI provider', error, { module: 'AiProvidersAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Erstellen des KI-Anbieters', 500)
     }
   })

@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { MarketingTaskService } from '@/lib/services/marketing-task.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -13,7 +14,7 @@ export async function GET(
       const tasks = await MarketingTaskService.listByCampaign(auth.tenantId, id)
       return apiSuccess(tasks)
     } catch (error) {
-      console.error('Error fetching campaign tasks:', error)
+      logger.error('Error fetching campaign tasks', error, { module: 'MarketingCampaignsTasksAPI' })
       return apiServerError()
     }
   })

@@ -6,6 +6,7 @@ import {
 } from '@/lib/utils/api-response'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -66,7 +67,7 @@ export async function PUT(
         apiKey: provider.apiKey ? `****${provider.apiKey.slice(-4)}` : null,
       })
     } catch (error) {
-      console.error('Failed to update AI provider:', error)
+      logger.error('Failed to update AI provider', error, { module: 'AiProvidersAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Aktualisieren des KI-Anbieters', 500)
     }
   })

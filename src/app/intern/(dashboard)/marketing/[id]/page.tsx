@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { ArrowLeft, Loader2, Trash2, Plus, Brain, Save } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface Campaign {
   id: string;
@@ -107,7 +108,7 @@ export default function CampaignDetailPage() {
       if (campaignData.success) setCampaign(campaignData.data);
       if (tasksData.success) setTasks(tasksData.data);
     } catch (error) {
-      console.error('Failed to fetch campaign:', error);
+      logger.error('Failed to fetch campaign', error, { module: 'MarketingPage' });
     } finally {
       setLoading(false);
     }

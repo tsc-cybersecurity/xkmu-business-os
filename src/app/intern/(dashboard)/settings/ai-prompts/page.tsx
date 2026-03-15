@@ -23,6 +23,7 @@ import {
   X,
 } from 'lucide-react'
 import Link from 'next/link'
+import { logger } from '@/lib/utils/logger'
 
 interface AiPromptTemplate {
   id: string
@@ -99,7 +100,7 @@ export default function AiPromptsPage() {
         setPlaceholders(data.data.placeholders)
       }
     } catch (error) {
-      console.error('Failed to fetch templates:', error)
+      logger.error('Failed to fetch templates', error, { module: 'SettingsAiPromptsPage' })
       toast.error('Fehler beim Laden der Prompt-Vorlagen')
     } finally {
       setLoading(false)

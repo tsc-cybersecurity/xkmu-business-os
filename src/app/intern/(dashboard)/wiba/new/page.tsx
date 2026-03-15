@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { logger } from '@/lib/utils/logger'
 
 interface Company {
   id: string
@@ -37,7 +38,7 @@ export default function NewWibaAuditPage() {
           setCompanies(data.data)
         }
       } catch (error) {
-        console.error('Failed to fetch companies:', error)
+        logger.error('Failed to fetch companies', error, { module: 'WibaNewPage' })
       } finally {
         setLoading(false)
       }
@@ -59,7 +60,7 @@ export default function NewWibaAuditPage() {
         router.push(`/intern/wiba/${data.data.id}`)
       }
     } catch (error) {
-      console.error('Failed to create WiBA check:', error)
+      logger.error('Failed to create WiBA check', error, { module: 'WibaNewPage' })
     } finally {
       setCreating(false)
     }

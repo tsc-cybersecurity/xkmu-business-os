@@ -16,6 +16,7 @@ import { FormField } from '@/components/shared'
 import { toast } from 'sonner'
 import { Loader2, Plus, Save, Trash2, X } from 'lucide-react'
 import { Label } from '@/components/ui/label'
+import { logger } from '@/lib/utils/logger'
 
 interface Category {
   id: string
@@ -145,7 +146,7 @@ export function ProductForm({ product, mode, productType, onSaved, onCancel }: P
       const data = await response.json()
       if (data.success) setCategories(data.data)
     } catch (error) {
-      console.error('Failed to fetch categories:', error)
+      logger.error('Failed to fetch categories', error, { module: 'CatalogPage' })
     }
   }
 

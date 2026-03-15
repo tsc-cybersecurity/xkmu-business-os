@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { ProductService } from '@/lib/services/product.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -56,7 +57,7 @@ export async function PUT(
 
       return apiSuccess(product)
     } catch (error) {
-      console.error('Failed to update product:', error)
+      logger.error('Failed to update product', error, { module: 'ProductsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Aktualisieren des Produkts', 500)
     }
   })

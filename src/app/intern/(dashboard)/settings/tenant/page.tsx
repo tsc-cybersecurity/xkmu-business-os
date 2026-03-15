@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Building, Database, Loader2, ImageIcon, Trash2, Upload } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Tenant {
   id: string
@@ -68,7 +69,7 @@ export default function TenantSettingsPage() {
         setLogoUrl((data.data.settings?.logoUrl as string) || null)
       }
     } catch (error) {
-      console.error('Failed to fetch tenant:', error)
+      logger.error('Failed to fetch tenant', error, { module: 'SettingsTenantPage' })
       toast.error('Fehler beim Laden der Organisation')
     } finally {
       setLoading(false)

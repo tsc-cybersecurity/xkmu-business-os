@@ -9,6 +9,7 @@ import {
 } from '@/lib/utils/api-response'
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 const UPLOAD_DIR = process.env.BI_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads', 'bi')
 
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(doc, undefined, 201)
     } catch (error) {
-      console.error('Error uploading business document:', error)
+      logger.error('Error uploading business document', error, { module: 'BusinessIntelligenceDocumentsAPI' })
       return apiServerError()
     }
   })

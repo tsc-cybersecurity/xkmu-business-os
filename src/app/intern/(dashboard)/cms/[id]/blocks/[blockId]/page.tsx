@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select'
 import { ArrowLeft, Loader2, Save, Plus, Trash2, Sparkles, Eye, Check } from 'lucide-react'
 import { CmsBlockRenderer } from '@/app/_components/cms-block-renderer'
+import { logger } from '@/lib/utils/logger'
 
 interface CmsBlock {
   id: string
@@ -53,7 +54,7 @@ export default function BlockEditorPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch block:', error)
+      logger.error('Failed to fetch block', error, { module: 'CmsBlocksPage' })
     } finally {
       setLoading(false)
     }
@@ -73,7 +74,7 @@ export default function BlockEditorPage() {
       })
       router.push(`/intern/cms/${pageId}`)
     } catch (error) {
-      console.error('Failed to save block:', error)
+      logger.error('Failed to save block', error, { module: 'CmsBlocksPage' })
     } finally {
       setSaving(false)
     }

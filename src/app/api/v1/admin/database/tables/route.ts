@@ -3,6 +3,7 @@ import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/admin/database/tables - List all tables with row counts
 export async function GET(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
 
       return apiSuccess(tables)
     } catch (error) {
-      console.error('Database tables list error:', error)
+      logger.error('Database tables list error', error, { module: 'AdminDatabaseTablesAPI' })
       return apiServerError('Fehler beim Laden der Tabellenliste')
     }
   })

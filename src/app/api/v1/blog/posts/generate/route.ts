@@ -5,6 +5,7 @@ import { BlogAIService } from '@/lib/services/ai/blog-ai.service'
 import { BlogPostService } from '@/lib/services/blog-post.service'
 import { UnsplashService } from '@/lib/services/unsplash.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'blog', 'create', async (auth) => {
@@ -17,14 +18,14 @@ export async function POST(request: NextRequest) {
       }
 
       const { topic, language, tone, length } = validation.data
-      console.log('[BlogGenerate] Step 1: Validated input, calling AI...', { topic: topic.substring(0, 50) })
+      logger.info('Step 1: Validated input, calling AI...', { module: 'BlogPostsGenerateAPI' })
 
       const generated = await BlogAIService.generatePost(topic, { language, tone, length }, {
         tenantId: auth.tenantId,
         userId: auth.userId,
         feature: 'blog_generate',
       })
-      console.log('[BlogGenerate] Step 2: AI responded after', Date.now() - startTime, 'ms. Title:', generated.title?.substring(0, 50))
+      logger.info('Step 2: AI responded after', { module: 'BlogPostsGenerateAPI' })
 
       // Fetch featured image from Unsplash (non-blocking, with timeout)
       let featuredImage = ''
@@ -41,10 +42,10 @@ export async function POST(request: NextRequest) {
             featuredImageAlt = generated.featuredImageAlt || photo.alt
           }
         } catch (error) {
-          console.warn('[BlogGenerate] Unsplash failed:', error)
+          logger.warn('Unsplash failed', { module: 'BlogPostsGenerateAPI' })
         }
       }
-      console.log('[BlogGenerate] Step 3: Unsplash done after', Date.now() - startTime, 'ms')
+      logger.info('Step 3: Unsplash done after', { module: 'BlogPostsGenerateAPI' })
 
       // Save as draft — handle duplicate slugs
       let slug = generated.slug
@@ -63,14 +64,14 @@ export async function POST(request: NextRequest) {
           source: 'ai',
           aiMetadata: { topic, language, tone, length },
         }, auth.userId ?? undefined)
-        console.log('[BlogGenerate] Step 4: Post saved after', Date.now() - startTime, 'ms. ID:', post.id)
+        logger.info('Step 4: Post saved after', { module: 'BlogPostsGenerateAPI' })
 
         return apiSuccess(post, undefined, 201)
       } catch (dbError) {
         // If slug already exists, retry with generated unique slug
         const dbMessage = dbError instanceof Error ? dbError.message : String(dbError)
         if (dbMessage.includes('unique') || dbMessage.includes('duplicate') || dbMessage.includes('23505')) {
-          console.warn('[BlogGenerate] Slug conflict for:', slug, '— generating unique slug')
+          logger.warn('Slug conflict for', { module: 'BlogPostsGenerateAPI' })
           const uniqueSlug = await BlogPostService.generateSlug(generated.title, auth.tenantId)
           const post = await BlogPostService.create(auth.tenantId, {
             title: generated.title,
@@ -86,14 +87,14 @@ export async function POST(request: NextRequest) {
             source: 'ai',
             aiMetadata: { topic, language, tone, length },
           }, auth.userId ?? undefined)
-          console.log('[BlogGenerate] Step 4b: Post saved with unique slug after', Date.now() - startTime, 'ms. ID:', post.id)
+          logger.info('Step 4b: Post saved with unique slug after', { module: 'BlogPostsGenerateAPI' })
           return apiSuccess(post, undefined, 201)
         }
         throw dbError
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'KI-Generierung fehlgeschlagen'
-      console.error('[BlogGenerate] FAILED after', Date.now() - startTime, 'ms:', message)
+      logger.error('FAILED after', Date.now() - startTime, 'ms:', message, { module: 'BlogPostsGenerateAPI' })
       return apiServerError(message)
     }
   })

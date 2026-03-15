@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/shared'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Trash2 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface User {
   id: string
@@ -86,7 +87,7 @@ export default function UserDetailPage() {
         router.push('/intern/settings/users')
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error)
+      logger.error('Failed to fetch user', error, { module: 'SettingsUsersPage' })
       toast.error('Fehler beim Laden des Benutzers')
     } finally {
       setLoading(false)

@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { CompanyService } from '@/lib/services/company.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -54,7 +55,7 @@ export async function PUT(
 
       return apiSuccess(company)
     } catch (error) {
-      console.error('Update company error:', error)
+      logger.error('Update company error', error, { module: 'CompaniesAPI' })
       return apiError('UPDATE_FAILED', 'Failed to update company', 500)
     }
   })

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Brain, CheckCircle2, ChevronDown, ChevronRight, ExternalLink, Globe, Loader2, MapPin, Sparkles, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 interface CompanyData {
   street?: string | null
@@ -655,7 +656,7 @@ export function AIResearchCard({
         })
       }
     } catch (error) {
-      console.error('Failed to load existing research:', error)
+      logger.error('Failed to load existing research', error, { module: 'AiResearchCard' })
     } finally {
       if (mountedRef.current) {
         setLoadingExisting(false)
@@ -674,7 +675,7 @@ export function AIResearchCard({
         setCrawls(data.data.crawls as CrawlRecord[])
       }
     } catch (error) {
-      console.error('Failed to load existing crawls:', error)
+      logger.error('Failed to load existing crawls', error, { module: 'AiResearchCard' })
     }
   }, [crawlApiPath])
 
@@ -763,15 +764,15 @@ export function AIResearchCard({
   }
 
   const handleStartCrawl = async () => {
-    console.log('[Crawl UI] Starting crawl...', { crawlApiPath, hasWebsite })
+    logger.info('Starting crawl...', { module: 'AiResearchCard' })
     setCrawling(true)
 
     const crawlPromise = (async () => {
       try {
         const response = await fetch(crawlApiPath, { method: 'POST' })
-        console.log('[Crawl UI] Response status:', response.status)
+        logger.info(`Crawl response status: ${response.status}`, { module: 'AiResearchCard' })
         const data = await response.json()
-        console.log('[Crawl UI] Response data:', JSON.stringify(data).substring(0, 500))
+        logger.info('Crawl response received', { module: 'AiResearchCard' })
 
         if (response.ok && data.success) {
           const crawlResult = data.data.crawl as CrawlRecord
@@ -789,7 +790,7 @@ export function AIResearchCard({
           }
         } else {
           const errorMsg = data.error?.message || 'Website-Crawl fehlgeschlagen'
-          console.error('[Crawl UI] API error:', errorMsg)
+          logger.error('API error', errorMsg, { module: 'AiResearchCard' })
           globalCrawlStore.set(stateKey, {
             crawling: false,
             crawlResult: null,
@@ -801,7 +802,7 @@ export function AIResearchCard({
           }
         }
       } catch (error) {
-        console.error('[Crawl UI] Fetch error:', error)
+        logger.error('Fetch error', error, { module: 'AiResearchCard' })
         globalCrawlStore.set(stateKey, {
           crawling: false,
           crawlResult: null,

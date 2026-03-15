@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { activities } from '@/lib/db/schema'
 import nodemailer from 'nodemailer'
+import { logger } from '@/lib/utils/logger'
 
 export interface EmailConfig {
   provider: 'smtp' | 'gmail'
@@ -132,7 +133,7 @@ export const EmailService = {
         messageId: info.messageId,
       }
     } catch (error) {
-      console.error('Email send error:', error)
+      logger.error('Email send error', error, { module: 'EmailService' })
       return {
         success: false,
         error: error instanceof Error ? error.message : 'E-Mail-Versand fehlgeschlagen',

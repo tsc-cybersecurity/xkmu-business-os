@@ -8,6 +8,7 @@ import { DinAuditService } from '@/lib/services/din-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
+import { logger } from '@/lib/utils/logger'
 
 const answerSchema = z.object({
   requirementId: z.number().int().positive(),
@@ -56,7 +57,7 @@ export async function POST(
       const answer = await DinAuditService.saveAnswer(auth.tenantId, id, validation.data)
       return apiSuccess(answer)
     } catch (error) {
-      console.error('Error saving DIN audit answer:', error)
+      logger.error('Error saving DIN audit answer', error, { module: 'DinAuditsAnswersAPI' })
       return apiServerError()
     }
   })

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { logger } from '@/lib/utils/logger'
 import {
   apiSuccess,
   apiError,
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({ message: 'Passwort erfolgreich geändert' })
   } catch (error) {
-    console.error('Change password error:', error)
+    logger.error('Change password failed', error, { module: 'AuthChangePassword' })
     return apiError(
       'CHANGE_PASSWORD_FAILED',
       'Fehler beim Ändern des Passworts',

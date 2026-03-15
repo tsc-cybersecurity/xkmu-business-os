@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, FileText, Loader2, CheckCircle2, XCircle, HelpCircle } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface ChecklistProgress {
   checklistId: number
@@ -80,7 +81,7 @@ export default function AssessmentDashboardPage({ params }: { params: Promise<{ 
       if (assessmentData.success) setAssessment(assessmentData.data)
       if (progressData.success) setProgress(progressData.data)
     } catch (error) {
-      console.error('Failed to fetch assessment:', error)
+      logger.error('Failed to fetch assessment', error, { module: 'CybersecurityBasisabsicherungPage' })
     } finally {
       setLoading(false)
     }

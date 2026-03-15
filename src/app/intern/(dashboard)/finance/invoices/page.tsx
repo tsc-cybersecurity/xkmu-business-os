@@ -23,6 +23,7 @@ import {
 import { Plus, Search, FileText } from 'lucide-react'
 import { DocumentStatusBadge, invoiceStatuses } from '../_components/status-badge'
 import { Can } from '@/hooks/use-permissions'
+import { logger } from '@/lib/utils/logger'
 
 interface DocumentListItem {
   id: string
@@ -80,7 +81,7 @@ export default function InvoicesPage() {
         setMeta(data.meta)
       }
     } catch (error) {
-      console.error('Failed to fetch invoices:', error)
+      logger.error('Failed to fetch invoices', error, { module: 'FinanceInvoicesPage' })
     } finally {
       setLoading(false)
     }

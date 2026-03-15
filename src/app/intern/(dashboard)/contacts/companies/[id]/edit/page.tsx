@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { CompanyForm } from '../../_components/company-form'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 interface Company {
   id: string
@@ -69,7 +70,7 @@ export default function EditCompanyPage() {
         router.push('/intern/contacts/companies')
       }
     } catch (error) {
-      console.error('Failed to fetch company:', error)
+      logger.error('Failed to fetch company', error, { module: 'ContactsCompaniesEditPage' })
       toast.error('Fehler beim Laden der Firma')
       router.push('/intern/contacts/companies')
     } finally {

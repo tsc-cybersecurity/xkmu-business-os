@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/validation'
 import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function PUT(request: NextRequest) {
   return withPermission(request, 'cms', 'update', async (auth) => {
@@ -24,7 +25,7 @@ export async function PUT(request: NextRequest) {
       await CmsNavigationService.reorder(auth.tenantId, validation.data.itemIds)
       return apiSuccess({ reordered: true })
     } catch (error) {
-      console.error('Error reordering navigation items:', error)
+      logger.error('Error reordering navigation items', error, { module: 'CmsNavigationReorderAPI' })
       return apiServerError()
     }
   })

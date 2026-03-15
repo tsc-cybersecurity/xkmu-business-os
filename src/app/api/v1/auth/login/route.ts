@@ -3,6 +3,7 @@ import { apiSuccess, apiError, apiValidationError } from '@/lib/utils/api-respon
 import { loginSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { UserService } from '@/lib/services/user.service'
 import { createSession } from '@/lib/auth/session'
+import { logger } from '@/lib/utils/logger'
 import { rateLimit } from '@/lib/utils/rate-limit'
 
 export async function POST(request: NextRequest) {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       user: result.user,
     })
   } catch (error) {
-    console.error('Login error:', error)
+    logger.error('Login failed', error, { module: 'AuthLogin' })
     return apiError('LOGIN_FAILED', 'Login failed', 500)
   }
 }

@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { BlogPostService } from '@/lib/services/blog-post.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'blog', 'read', async (auth) => {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       const post = await BlogPostService.create(auth.tenantId, validation.data, auth.userId ?? undefined)
       return apiSuccess(post, undefined, 201)
     } catch (error) {
-      console.error('Error creating blog post:', error)
+      logger.error('Error creating blog post', error, { module: 'BlogPostsAPI' })
       return apiServerError()
     }
   })

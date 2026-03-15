@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/validation'
 import { CmsBlockService } from '@/lib/services/cms-block.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -39,7 +40,7 @@ export async function POST(
       const block = await CmsBlockService.create(auth.tenantId, id, validation.data)
       return apiSuccess(block, undefined, 201)
     } catch (error) {
-      console.error('Error creating CMS block:', error)
+      logger.error('Error creating CMS block', error, { module: 'CmsPagesBlocksAPI' })
       return apiServerError()
     }
   })

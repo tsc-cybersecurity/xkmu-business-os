@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ShieldCheck, Plus, Loader2, CheckCircle2, XCircle, MinusCircle, ClipboardList } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface AuditSession {
   id: string
@@ -47,7 +48,7 @@ export default function DinAuditPage() {
         setAudits(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch audits:', error)
+      logger.error('Failed to fetch audits', error, { module: 'DinAuditPage' })
     } finally {
       setLoading(false)
     }

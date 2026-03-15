@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Search, Wrench } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Category {
   id: string
@@ -98,7 +99,7 @@ export default function ServicesPage() {
       const data = await response.json()
       if (data.success) setCategories(data.data)
     } catch (error) {
-      console.error('Failed to fetch categories:', error)
+      logger.error('Failed to fetch categories', error, { module: 'CatalogServicesPage' })
     }
   }
 
@@ -119,7 +120,7 @@ export default function ServicesPage() {
         setMeta(data.meta)
       }
     } catch (error) {
-      console.error('Failed to fetch services:', error)
+      logger.error('Failed to fetch services', error, { module: 'CatalogServicesPage' })
     } finally {
       setLoading(false)
     }

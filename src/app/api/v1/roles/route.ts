@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/validation'
 import { RoleService } from '@/lib/services/role.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'roles', 'read', async (auth) => {
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(role, undefined, 201)
     } catch (error) {
-      console.error('Create role error:', error)
+      logger.error('Create role error', error, { module: 'RolesAPI' })
       return apiError('CREATE_FAILED', 'Rolle konnte nicht erstellt werden', 500)
     }
   })

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, ArrowLeft, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft, Save, TrendingUp } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 const MAX_JUSTIFICATION_LENGTH = 500
 
@@ -99,7 +100,7 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
         setScoring(scoreData.data)
       }
     } catch (error) {
-      console.error('Failed to load data:', error)
+      logger.error('Failed to load data', error, { module: 'DinAuditInterviewPage' })
     } finally {
       setLoading(false)
     }
@@ -152,7 +153,7 @@ export default function InterviewPage({ params }: { params: Promise<{ id: string
         setScoring(scoreData.data)
       }
     } catch (error) {
-      console.error('Failed to save answer:', error)
+      logger.error('Failed to save answer', error, { module: 'DinAuditInterviewPage' })
     } finally {
       setIsSaving(false)
     }

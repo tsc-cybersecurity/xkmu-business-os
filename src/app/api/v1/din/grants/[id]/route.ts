@@ -4,6 +4,7 @@ import { DinGrantService } from '@/lib/services/din-grant.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
+import { logger } from '@/lib/utils/logger'
 
 const updateGrantSchema = z.object({
   name: z.string().min(1).optional(),
@@ -47,7 +48,7 @@ export async function PUT(
       if (!grant) return apiNotFound('Foerdermittel nicht gefunden')
       return apiSuccess(grant)
     } catch (error) {
-      console.error('Error updating grant:', error)
+      logger.error('Error updating grant', error, { module: 'DinGrantsAPI' })
       return apiServerError()
     }
   })
@@ -64,7 +65,7 @@ export async function DELETE(
       if (!deleted) return apiNotFound('Foerdermittel nicht gefunden')
       return apiSuccess({ message: 'Foerdermittel geloescht' })
     } catch (error) {
-      console.error('Error deleting grant:', error)
+      logger.error('Error deleting grant', error, { module: 'DinGrantsAPI' })
       return apiServerError()
     }
   })

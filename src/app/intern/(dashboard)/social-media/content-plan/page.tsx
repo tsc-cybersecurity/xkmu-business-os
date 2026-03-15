@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, Loader2, Brain, Save, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface Topic {
   id: string;
@@ -65,7 +66,7 @@ export default function ContentPlanPage() {
       const data = await response.json();
       if (data.success) setTopics(data.data);
     } catch (error) {
-      console.error('Failed to fetch topics:', error);
+      logger.error('Failed to fetch topics', error, { module: 'SocialMediaContentPlanPage' });
     }
   }, []);
 

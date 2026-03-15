@@ -13,6 +13,7 @@ import {
 import { IdeaService } from '@/lib/services/idea.service'
 import { IdeaAIService } from '@/lib/services/ai/idea-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'ideas', 'read', async (auth) => {
@@ -54,12 +55,12 @@ export async function POST(request: NextRequest) {
           tags: result.tags,
         })
       }).catch((error) => {
-        console.error('[Ideas] KI-Verarbeitung fehlgeschlagen:', error)
+        logger.error('KI-Verarbeitung fehlgeschlagen', error, { module: 'IdeasAPI' })
       })
 
       return apiSuccess(idea, undefined, 201)
     } catch (error) {
-      console.error('Error creating idea:', error)
+      logger.error('Error creating idea', error, { module: 'IdeasAPI' })
       return apiServerError()
     }
   })

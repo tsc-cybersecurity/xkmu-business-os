@@ -16,6 +16,7 @@ import { FormField } from '@/components/shared'
 import { toast } from 'sonner'
 import { Loader2, Save, Plus } from 'lucide-react'
 import { QuickCreateCompanyDialog, QuickCreatePersonDialog } from '@/components/shared'
+import { logger } from '@/lib/utils/logger'
 
 interface Company {
   id: string
@@ -118,7 +119,7 @@ export function DocumentForm({ mode, documentType, document, onSaved, onCancel }
         setFormData(prev => ({ ...prev, number: data.data.number }))
       }
     } catch (error) {
-      console.error('Failed to fetch next number:', error)
+      logger.error('Failed to fetch next number', error, { module: 'FinancePage' })
     }
   }
 
@@ -128,7 +129,7 @@ export function DocumentForm({ mode, documentType, document, onSaved, onCancel }
       const data = await response.json()
       if (data.success) setCompanies(data.data)
     } catch (error) {
-      console.error('Failed to fetch companies:', error)
+      logger.error('Failed to fetch companies', error, { module: 'FinancePage' })
     }
   }
 
@@ -138,7 +139,7 @@ export function DocumentForm({ mode, documentType, document, onSaved, onCancel }
       const data = await response.json()
       if (data.success) setPersons(data.data)
     } catch (error) {
-      console.error('Failed to fetch persons:', error)
+      logger.error('Failed to fetch persons', error, { module: 'FinancePage' })
     }
   }
 

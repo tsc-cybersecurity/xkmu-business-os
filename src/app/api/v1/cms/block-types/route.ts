@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { CmsBlockTypeService } from '@/lib/services/cms-block-type.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'cms', 'read', async () => {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
       }
       return apiSuccess(types)
     } catch (error) {
-      console.error('Error fetching block types:', error)
+      logger.error('Error fetching block types', error, { module: 'CmsBlockTypesAPI' })
       return apiServerError()
     }
   })
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
       const seeded = await CmsBlockTypeService.seedDefaults()
       return apiSuccess({ seeded })
     } catch (error) {
-      console.error('Error seeding block types:', error)
+      logger.error('Error seeding block types', error, { module: 'CmsBlockTypesAPI' })
       return apiServerError()
     }
   })

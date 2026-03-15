@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -40,7 +41,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 
       return apiSuccess(webhook)
     } catch (error) {
-      console.error('Error updating webhook:', error)
+      logger.error('Error updating webhook', error, { module: 'WebhooksAPI' })
       return apiServerError()
     }
   })

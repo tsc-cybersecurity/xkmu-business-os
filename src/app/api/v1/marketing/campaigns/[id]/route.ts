@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { MarketingCampaignService } from '@/lib/services/marketing-campaign.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -42,7 +43,7 @@ export async function PUT(
       if (!campaign) return apiNotFound('Kampagne nicht gefunden')
       return apiSuccess(campaign)
     } catch (error) {
-      console.error('Error updating marketing campaign:', error)
+      logger.error('Error updating marketing campaign', error, { module: 'MarketingCampaignsAPI' })
       return apiServerError()
     }
   })

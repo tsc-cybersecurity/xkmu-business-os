@@ -11,6 +11,7 @@ import { OutreachService } from '@/lib/services/ai/outreach.service'
 import { ActivityService } from '@/lib/services/activity.service'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { logger } from '@/lib/utils/logger'
 
 async function getAuthContext(request: NextRequest) {
   const session = await getSession()
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return apiSuccess(outreach)
   } catch (error) {
-    console.error('Error generating outreach:', error)
+    logger.error('Error generating outreach', error, { module: 'LeadsOutreachAPI' })
     return apiServerError()
   }
 }

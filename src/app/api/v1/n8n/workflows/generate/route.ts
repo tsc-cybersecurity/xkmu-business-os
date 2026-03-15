@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { N8nWorkflowBuilderService } from '@/lib/services/ai/n8n-workflow-builder.service'
+import { logger } from '@/lib/utils/logger'
 
 // POST /api/v1/n8n/workflows/generate - Workflow aus Beschreibung generieren
 export async function POST(request: NextRequest) {
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
         status: 'draft',
       })
     } catch (error) {
-      console.error('Failed to generate n8n workflow:', error)
+      logger.error('Failed to generate n8n workflow', error, { module: 'N8nWorkflowsGenerateAPI' })
       const message = error instanceof Error ? error.message : 'Fehler bei der Workflow-Generierung'
       return apiError('INTERNAL_ERROR', message, 500)
     }

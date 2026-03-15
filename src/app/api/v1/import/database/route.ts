@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest, hasPermission } from '@/lib/auth/api-key'
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -312,7 +313,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Database import error:', error)
+    logger.error('Database import error', error, { module: 'ImportDatabaseAPI' })
     return NextResponse.json(
       {
         error:

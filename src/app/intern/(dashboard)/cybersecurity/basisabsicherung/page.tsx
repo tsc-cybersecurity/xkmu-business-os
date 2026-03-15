@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Shield, Plus, Loader2, CheckCircle2, XCircle, MinusCircle, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 interface Assessment {
   id: string
@@ -48,7 +49,7 @@ export default function BasisabsicherungPage() {
         setAssessments(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch assessments:', error)
+      logger.error('Failed to fetch assessments', error, { module: 'CybersecurityBasisabsicherungPage' })
     } finally {
       setLoading(false)
     }
@@ -71,7 +72,7 @@ export default function BasisabsicherungPage() {
         setAssessments((prev) => prev.filter((a) => a.id !== id))
       }
     } catch (error) {
-      console.error('Failed to delete assessment:', error)
+      logger.error('Failed to delete assessment', error, { module: 'CybersecurityBasisabsicherungPage' })
       toast.error('Fehler beim Loeschen')
     }
   }

@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
 import { tenants, users } from './schema'
+import { logger } from '@/lib/utils/logger'
 
 const SEED_DATA = {
   tenant: {
@@ -36,7 +37,7 @@ async function seed() {
   const client = postgres(connectionString, { ssl: getSslConfig() })
   const db = drizzle(client)
 
-  console.log('Seeding database...')
+  logger.info('Seeding database...', { module: 'Seed' })
 
   // 1. Create Tenant
   const [tenant] = await db
@@ -44,7 +45,7 @@ async function seed() {
     .values(SEED_DATA.tenant)
     .returning()
 
-  console.log(`Created tenant: ${tenant.name} (${tenant.slug})`)
+  logger.info(`Created tenant: ${tenant.name} (${tenant.slug})`, { module: 'Seed' })
 
   // 2. Create Admin User
   const passwordHash = await bcrypt.hash(SEED_DATA.user.password, 10)
@@ -60,21 +61,14 @@ async function seed() {
     })
     .returning()
 
-  console.log(`Created user: ${user.email} (${user.role})`)
-  console.log('')
-  console.log('='.repeat(50))
-  console.log('Seed completed successfully!')
-  console.log('='.repeat(50))
-  console.log('')
-  console.log('Login credentials:')
-  console.log(`  Email:    ${SEED_DATA.user.email}`)
-  console.log(`  Password: ${SEED_DATA.user.password}`)
-  console.log('')
+  logger.info(`Created user: ${user.email} (${user.role})`, { module: 'Seed' })
+  logger.info('Seed completed successfully!', { module: 'Seed' })
+  logger.info(`Login: ${SEED_DATA.user.email} / ${SEED_DATA.user.password}`, { module: 'Seed' })
 
   await client.end()
 }
 
 seed().catch((error) => {
-  console.error('Seed failed:', error)
+  logger.error('Seed failed', error, { module: 'Seed' })
   process.exit(1)
 })

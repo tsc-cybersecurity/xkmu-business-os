@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { MarketingTemplateService } from '@/lib/services/marketing-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       const template = await MarketingTemplateService.create(auth.tenantId, validation.data)
       return apiSuccess(template, undefined, 201)
     } catch (error) {
-      console.error('Error creating marketing template:', error)
+      logger.error('Error creating marketing template', error, { module: 'MarketingTemplatesAPI' })
       return apiServerError()
     }
   })

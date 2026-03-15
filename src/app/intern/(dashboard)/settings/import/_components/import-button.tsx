@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { logger } from '@/lib/utils/logger'
 
 interface ImportStats {
   totalStatements: number
@@ -99,7 +100,7 @@ export function ImportButton() {
         fileInputRef.current.value = ''
       }
     } catch (error) {
-      console.error('Import error:', error)
+      logger.error('Import error', error, { module: 'SettingsImportPage' })
       toast.error(
         error instanceof Error ? error.message : 'Import fehlgeschlagen'
       )

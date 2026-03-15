@@ -5,6 +5,7 @@ import { LeadService } from '@/lib/services/lead.service'
 import { db } from '@/lib/db'
 import { tenants } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   // Step 1: Find tenant
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
     tenantId = tenant.id
   } catch (error) {
-    console.error('Contact form - tenant lookup failed:', error)
+    logger.error('Contact form - tenant lookup failed', error, { module: 'ContactAPI' })
     const msg = error instanceof Error ? error.message : 'Unknown'
     return apiError('DATABASE_ERROR', `Datenbankfehler beim Mandanten-Lookup: ${msg}`, 500)
   }
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({ id: lead.id }, undefined)
   } catch (error) {
-    console.error('Contact form - lead creation failed:', error)
+    logger.error('Contact form - lead creation failed', error, { module: 'ContactAPI' })
     const msg = error instanceof Error ? error.message : 'Unknown'
     return apiError('LEAD_CREATE_ERROR', `Lead konnte nicht erstellt werden: ${msg}`, 500)
   }

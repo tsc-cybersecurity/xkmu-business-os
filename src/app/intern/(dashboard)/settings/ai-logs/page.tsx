@@ -29,6 +29,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import Link from 'next/link'
+import { logger } from '@/lib/utils/logger'
 
 interface AiLog {
   id: string
@@ -143,7 +144,7 @@ export default function AiLogsPage() {
         setTotal(data.meta?.total || 0)
       }
     } catch (error) {
-      console.error('Failed to fetch logs:', error)
+      logger.error('Failed to fetch logs', error, { module: 'SettingsAiLogsPage' })
     } finally {
       setLoading(false)
     }
@@ -157,7 +158,7 @@ export default function AiLogsPage() {
         setStats(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch stats:', error)
+      logger.error('Failed to fetch stats', error, { module: 'SettingsAiLogsPage' })
     }
   }
 
@@ -169,7 +170,7 @@ export default function AiLogsPage() {
         setSelectedLog(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch log detail:', error)
+      logger.error('Failed to fetch log detail', error, { module: 'SettingsAiLogsPage' })
     }
   }
 

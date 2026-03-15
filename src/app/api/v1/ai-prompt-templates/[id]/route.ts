@@ -6,6 +6,7 @@ import {
 } from '@/lib/utils/api-response'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -24,7 +25,7 @@ export async function GET(
       }
       return apiSuccess(template)
     } catch (error) {
-      console.error('Failed to get AI prompt template:', error)
+      logger.error('Failed to get AI prompt template', error, { module: 'AiPromptTemplatesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der KI-Prompt-Vorlage', 500)
     }
   })
@@ -56,7 +57,7 @@ export async function PUT(
 
       return apiSuccess(template)
     } catch (error) {
-      console.error('Failed to update AI prompt template:', error)
+      logger.error('Failed to update AI prompt template', error, { module: 'AiPromptTemplatesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Aktualisieren der KI-Prompt-Vorlage', 500)
     }
   })
@@ -77,7 +78,7 @@ export async function PATCH(
       }
       return apiSuccess(template)
     } catch (error) {
-      console.error('Failed to reset AI prompt template:', error)
+      logger.error('Failed to reset AI prompt template', error, { module: 'AiPromptTemplatesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Zurücksetzen der KI-Prompt-Vorlage', 500)
     }
   })
@@ -98,7 +99,7 @@ export async function DELETE(
       }
       return apiSuccess({ deleted: true })
     } catch (error) {
-      console.error('Failed to delete AI prompt template:', error)
+      logger.error('Failed to delete AI prompt template', error, { module: 'AiPromptTemplatesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Löschen der KI-Prompt-Vorlage', 500)
     }
   })

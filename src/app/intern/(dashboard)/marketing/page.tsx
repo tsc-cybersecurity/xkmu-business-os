@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Megaphone, Plus, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface Campaign {
   id: string;
@@ -72,7 +73,7 @@ export default function MarketingPage() {
       const data = await response.json();
       if (data.success) setCampaigns(data.data);
     } catch (error) {
-      console.error('Failed to fetch campaigns:', error);
+      logger.error('Failed to fetch campaigns', error, { module: 'MarketingPage' });
     } finally {
       setLoading(false);
     }

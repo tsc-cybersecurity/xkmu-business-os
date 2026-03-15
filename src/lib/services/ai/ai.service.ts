@@ -1,4 +1,5 @@
 import { AiProviderService } from '@/lib/services/ai-provider.service'
+import { logger } from '@/lib/utils/logger'
 import type { AiProvider } from '@/lib/db/schema'
 import { OllamaProvider } from './ollama.provider'
 import { OpenRouterProvider } from './openrouter.provider'
@@ -171,13 +172,13 @@ class AIServiceClass {
           entityType: context.entityType || null,
           entityId: context.entityId || null,
         }).catch((err) => {
-          console.error('Failed to log AI request:', err)
+          logger.error('Failed to log AI request', err, { module: 'AIService' })
         })
 
         return response
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error))
-        console.error(`Provider ${config.name} (${config.providerType}) failed:`, error)
+        logger.error(`Provider ${config.name} (${config.providerType}) failed`, error, { module: 'AIService' })
 
         // Fehler loggen (fire-and-forget)
         AiProviderService.createLog({
@@ -194,7 +195,7 @@ class AIServiceClass {
           entityType: context.entityType || null,
           entityId: context.entityId || null,
         }).catch((err) => {
-          console.error('Failed to log AI error:', err)
+          logger.error('Failed to log AI error', err, { module: 'AIService' })
         })
 
         continue
@@ -214,7 +215,7 @@ class AIServiceClass {
           return await provider.complete(prompt, options)
         }
       } catch (error) {
-        console.error(`Provider ${provider.name} failed:`, error)
+        logger.error(`Provider ${provider.name} failed`, error, { module: 'AIService' })
         continue
       }
     }

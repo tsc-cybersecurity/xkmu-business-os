@@ -13,6 +13,7 @@ import {
 import { CompanyService } from '@/lib/services/company.service'
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'companies', 'read', async (auth) => {
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(company, undefined, 201)
     } catch (error) {
-      console.error('Create company error:', error)
+      logger.error('Create company error', error, { module: 'CompaniesAPI' })
       return apiError('CREATE_FAILED', 'Failed to create company', 500)
     }
   })

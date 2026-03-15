@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft, Loader2, Save, Globe, EyeOff, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 interface BlogPost {
   id: string
@@ -71,7 +72,7 @@ export default function BlogPostEditorPage() {
         setCategory(p.category || '')
       }
     } catch (error) {
-      console.error('Failed to fetch blog post:', error)
+      logger.error('Failed to fetch blog post', error, { module: 'BlogPage' })
     } finally {
       setLoading(false)
     }
@@ -109,7 +110,7 @@ export default function BlogPostEditorPage() {
         toast.error(data.error?.message || 'Speichern fehlgeschlagen')
       }
     } catch (error) {
-      console.error('Failed to save post:', error)
+      logger.error('Failed to save post', error, { module: 'BlogPage' })
       toast.error('Speichern fehlgeschlagen')
     } finally {
       setSaving(false)
@@ -124,7 +125,7 @@ export default function BlogPostEditorPage() {
       })
       fetchPost()
     } catch (error) {
-      console.error('Failed to publish/unpublish:', error)
+      logger.error('Failed to publish/unpublish', error, { module: 'BlogPage' })
     }
   }
 
@@ -144,7 +145,7 @@ export default function BlogPostEditorPage() {
         toast.error(data.error?.message || 'SEO-Generierung fehlgeschlagen')
       }
     } catch (error) {
-      console.error('Failed to generate SEO:', error)
+      logger.error('Failed to generate SEO', error, { module: 'BlogPage' })
       toast.error('SEO-Generierung fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
     } finally {
       setGeneratingSeo(false)
@@ -169,7 +170,7 @@ export default function BlogPostEditorPage() {
         toast.error(data.error?.message || 'Upload fehlgeschlagen')
       }
     } catch (error) {
-      console.error('Failed to upload image:', error)
+      logger.error('Failed to upload image', error, { module: 'BlogPage' })
       toast.error('Bild-Upload fehlgeschlagen')
     }
   }

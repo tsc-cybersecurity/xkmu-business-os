@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { N8nService } from '@/lib/services/n8n.service'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/n8n/workflows - Workflows auflisten
 export async function GET(request: NextRequest) {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
       const workflows = await N8nService.listWorkflows(auth.tenantId)
       return apiSuccess(workflows)
     } catch (error) {
-      console.error('Failed to list n8n workflows:', error)
+      logger.error('Failed to list n8n workflows', error, { module: 'N8nWorkflowsAPI' })
       const message = error instanceof Error ? error.message : 'Fehler beim Laden der Workflows'
       return apiError('INTERNAL_ERROR', message, 500)
     }
@@ -37,12 +38,12 @@ export async function POST(request: NextRequest) {
         status: 'deployed',
         createdBy: auth.userId || undefined,
       }).catch((err) => {
-        console.error('Failed to log n8n workflow creation:', err)
+        logger.error('Failed to log n8n workflow creation', err, { module: 'N8nWorkflowsAPI' })
       })
 
       return apiSuccess(workflow, undefined, 201)
     } catch (error) {
-      console.error('Failed to create n8n workflow:', error)
+      logger.error('Failed to create n8n workflow', error, { module: 'N8nWorkflowsAPI' })
       const message = error instanceof Error ? error.message : 'Fehler beim Erstellen des Workflows'
       return apiError('INTERNAL_ERROR', message, 500)
     }

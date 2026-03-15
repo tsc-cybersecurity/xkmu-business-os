@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { MediaUploadService } from '@/lib/services/media-upload.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'blog', 'create', async (auth) => {
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
       if (error instanceof Error) {
         return apiError('UPLOAD_ERROR', error.message, 400)
       }
-      console.error('Error uploading file:', error)
+      logger.error('Error uploading file', error, { module: 'MediaUploadAPI' })
       return apiServerError()
     }
   })

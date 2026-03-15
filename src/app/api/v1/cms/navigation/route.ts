@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/validation'
 import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'cms', 'read', async (auth) => {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       const item = await CmsNavigationService.create(auth.tenantId, validation.data)
       return apiSuccess(item, undefined, 201)
     } catch (error) {
-      console.error('Error creating navigation item:', error)
+      logger.error('Error creating navigation item', error, { module: 'CmsNavigationAPI' })
       return apiServerError()
     }
   })

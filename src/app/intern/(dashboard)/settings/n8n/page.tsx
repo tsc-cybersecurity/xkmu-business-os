@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { Loader2, CheckCircle2, XCircle, Workflow } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface N8nConnection {
   id: string
@@ -42,7 +43,7 @@ export default function N8nSettingsPage() {
         // apiKey is masked, don't overwrite
       }
     } catch (error) {
-      console.error('Failed to load connection:', error)
+      logger.error('Failed to load connection', error, { module: 'SettingsN8nPage' })
     } finally {
       setLoading(false)
     }

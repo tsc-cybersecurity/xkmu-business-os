@@ -41,6 +41,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 interface ActivityUser {
   id: string
@@ -125,7 +126,7 @@ export function ActivityTimeline({
         setActivities(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch activities:', error)
+      logger.error('Failed to fetch activities', error, { module: 'LeadsPage' })
     } finally {
       setLoading(false)
     }

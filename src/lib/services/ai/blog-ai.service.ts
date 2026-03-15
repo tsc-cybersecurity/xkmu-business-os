@@ -1,5 +1,6 @@
 import { AIService, type AIRequestContext } from './ai.service'
 import { AiPromptTemplateService } from '../ai-prompt-template.service'
+import { logger } from '@/lib/utils/logger'
 
 export interface GeneratedPost {
   title: string
@@ -55,7 +56,7 @@ export const BlogAIService = {
   parseGeneratedPost(text: string): GeneratedPost {
     const jsonStr = extractJson(text)
     if (!jsonStr) {
-      console.error('[BlogAI] No JSON found in response. First 500 chars:', text.substring(0, 500))
+      logger.error('No JSON found in response', undefined, { module: 'BlogAIService' })
       throw new Error('KI-Antwort enthielt kein JSON. Bitte erneut versuchen.')
     }
 
@@ -64,7 +65,7 @@ export const BlogAIService = {
 
       // Validate required fields
       if (!parsed.title || !parsed.content) {
-        console.error('[BlogAI] Parsed JSON missing required fields:', Object.keys(parsed))
+        logger.error('Parsed JSON missing required fields', undefined, { module: 'BlogAIService' })
         throw new Error('KI-Antwort unvollstaendig (Titel oder Inhalt fehlt). Bitte erneut versuchen.')
       }
 
@@ -82,8 +83,7 @@ export const BlogAIService = {
       }
     } catch (error) {
       if (error instanceof SyntaxError) {
-        console.error('[BlogAI] JSON parse error:', error.message)
-        console.error('[BlogAI] Attempted to parse:', jsonStr.substring(0, 300))
+        logger.error('JSON parse error', error, { module: 'BlogAIService' })
         throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
       }
       throw error

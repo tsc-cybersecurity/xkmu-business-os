@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { KieService } from '@/lib/services/ai/kie.service'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/kie/status/[taskId] - Video-Generierung Status abfragen
 export async function GET(
@@ -20,7 +21,7 @@ export async function GET(
 
       return apiSuccess(result)
     } catch (error) {
-      console.error('Failed to get task status:', error)
+      logger.error('Failed to get task status', error, { module: 'KieStatusAPI' })
       const message = error instanceof Error ? error.message : 'Fehler beim Abrufen des Status'
       return apiError('INTERNAL_ERROR', message, 500)
     }

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Search, Building2 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Company {
   id: string
@@ -66,7 +67,7 @@ export default function CompaniesPage() {
         setCompanies(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch companies:', error)
+      logger.error('Failed to fetch companies', error, { module: 'ContactsCompaniesPage' })
     } finally {
       setLoading(false)
     }

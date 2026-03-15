@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -54,7 +55,7 @@ export async function PUT(
 
       return apiSuccess(lead)
     } catch (error) {
-      console.error('Update lead error:', error)
+      logger.error('Update lead error', error, { module: 'LeadsAPI' })
       return apiError('UPDATE_FAILED', 'Failed to update lead', 500)
     }
   })

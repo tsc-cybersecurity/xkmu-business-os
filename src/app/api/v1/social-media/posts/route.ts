@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { SocialMediaPostService } from '@/lib/services/social-media-post.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'social_media', 'read', async (auth) => {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       const post = await SocialMediaPostService.create(auth.tenantId, validation.data, auth.userId ?? undefined)
       return apiSuccess(post, undefined, 201)
     } catch (error) {
-      console.error('Error creating social media post:', error)
+      logger.error('Error creating social media post', error, { module: 'SocialMediaPostsAPI' })
       return apiServerError()
     }
   })

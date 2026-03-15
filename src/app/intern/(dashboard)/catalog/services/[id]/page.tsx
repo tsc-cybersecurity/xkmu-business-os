@@ -15,6 +15,7 @@ import {
   Trash2,
   Wrench,
 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Service {
   id: string
@@ -97,7 +98,7 @@ export default function ServiceDetailPage() {
         router.push('/intern/catalog/services')
       }
     } catch (error) {
-      console.error('Failed to fetch service:', error)
+      logger.error('Failed to fetch service', error, { module: 'CatalogServicesPage' })
       toast.error('Fehler beim Laden der Dienstleistung')
     } finally {
       setLoading(false)

@@ -3,6 +3,7 @@ import { companies, persons, leads, auditLog } from '@/lib/db/schema'
 import { eq, desc, sql, and, gte } from 'drizzle-orm'
 import { getSession } from '@/lib/auth/session'
 import { apiSuccess, apiUnauthorized, apiServerError } from '@/lib/utils/api-response'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET() {
   try {
@@ -171,7 +172,7 @@ export async function GET() {
       companyStatuses,
     })
   } catch (error) {
-    console.error('Dashboard error:', error)
+    logger.error('Dashboard error', error, { module: 'DashboardAPI' })
     return apiServerError('Interner Serverfehler')
   }
 }

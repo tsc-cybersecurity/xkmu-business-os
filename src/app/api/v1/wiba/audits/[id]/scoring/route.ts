@@ -3,6 +3,7 @@ import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { WibaScoringService } from '@/lib/services/wiba-scoring.service'
 import { WIBA_CATEGORY_NAMES, WIBA_CATEGORY_ORDER_IDS, WIBA_CATEGORY_PRIORITIES } from '@/lib/services/wiba-requirement.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -22,7 +23,7 @@ export async function GET(
         categoryPriorities: WIBA_CATEGORY_PRIORITIES,
       })
     } catch (error) {
-      console.error('Error calculating WiBA score:', error)
+      logger.error('Error calculating WiBA score', error, { module: 'WibaAuditsScoringAPI' })
       return apiServerError()
     }
   })

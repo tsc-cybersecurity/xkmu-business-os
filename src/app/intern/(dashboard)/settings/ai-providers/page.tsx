@@ -33,6 +33,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
+import { logger } from '@/lib/utils/logger'
 
 interface AiProvider {
   id: string
@@ -187,7 +188,7 @@ export default function AiProvidersPage() {
         setProviders(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch providers:', error)
+      logger.error('Failed to fetch providers', error, { module: 'SettingsAiProvidersPage' })
       toast.error('Fehler beim Laden der Integrations')
     } finally {
       setLoading(false)
@@ -207,7 +208,7 @@ export default function AiProvidersPage() {
         setProviderStatus(status)
       }
     } catch (error) {
-      console.error('Failed to check status:', error)
+      logger.error('Failed to check status', error, { module: 'SettingsAiProvidersPage' })
     } finally {
       setCheckingStatus(false)
     }

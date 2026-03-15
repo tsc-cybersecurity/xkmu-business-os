@@ -8,6 +8,7 @@ import { grantsSeedData } from './seeds/din-grants.seed'
 import { wibaRequirementsSeedData } from './seeds/wiba-requirements.seed'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
 import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.service'
+import { logger } from '@/lib/utils/logger'
 
 const SEED_DATA = {
   tenant: {
@@ -194,7 +195,7 @@ async function seedDinData(db: ReturnType<typeof drizzle>) {
   const [{ total: reqCount }] = await db.select({ total: count() }).from(dinRequirements)
   if (Number(reqCount) === 0) {
     await db.insert(dinRequirements).values(requirementsSeedData)
-    console.log(`Created ${requirementsSeedData.length} DIN SPEC 27076 requirements`)
+    logger.info(`Created ${requirementsSeedData.length} DIN SPEC 27076 requirements`)
     seeded = true
   }
 
@@ -202,12 +203,12 @@ async function seedDinData(db: ReturnType<typeof drizzle>) {
   const [{ total: grantCount }] = await db.select({ total: count() }).from(dinGrants)
   if (Number(grantCount) === 0) {
     await db.insert(dinGrants).values(grantsSeedData)
-    console.log(`Created ${grantsSeedData.length} Foerderprogramme`)
+    logger.info(`Created ${grantsSeedData.length} Foerderprogramme`)
     seeded = true
   }
 
   if (!seeded) {
-    console.log('DIN SPEC data already exists, skipping...')
+    logger.info('DIN SPEC data already exists, skipping...')
   }
 }
 
@@ -222,15 +223,15 @@ async function seedWibaData(db: ReturnType<typeof drizzle>) {
         const batch = wibaRequirementsSeedData.slice(i, i + 50)
         await db.insert(wibaRequirements).values(batch)
       }
-      console.log(`Created ${wibaRequirementsSeedData.length} WiBA requirements`)
+      logger.info(`Created ${wibaRequirementsSeedData.length} WiBA requirements`)
       seeded = true
     }
 
     if (!seeded) {
-      console.log('WiBA data already exists, skipping...')
+      logger.info('WiBA data already exists, skipping...')
     }
   } catch (error) {
-    console.log('WiBA tables not yet available, skipping seed (will seed on next restart)')
+    logger.info('WiBA tables not yet available, skipping seed (will seed on next restart)')
   }
 }
 
@@ -246,7 +247,7 @@ async function seedAuditorRole(db: ReturnType<typeof drizzle>, tenantId: string)
     .limit(1)
 
   if (existing) {
-    console.log('Auditor role already exists, skipping...')
+    logger.info('Auditor role already exists, skipping...')
     return
   }
 
@@ -271,7 +272,7 @@ async function seedAuditorRole(db: ReturnType<typeof drizzle>, tenantId: string)
   }))
 
   await db.insert(rolePermissions).values(permissionRows)
-  console.log(`Created auditor role with ${permissionRows.length} permissions`)
+  logger.info(`Created auditor role with ${permissionRows.length} permissions`)
 }
 
 // ============================================
@@ -295,7 +296,7 @@ const NAVIGATION_ITEMS = [
 async function seedNavigation(db: ReturnType<typeof drizzle>, tenantId: string) {
   const [{ total }] = await db.select({ total: count() }).from(cmsNavigationItems).where(eq(cmsNavigationItems.tenantId, tenantId))
   if (Number(total) > 0) {
-    console.log('Navigation already exists, skipping...')
+    logger.info('Navigation already exists, skipping...')
     return 0
   }
 
@@ -310,7 +311,7 @@ async function seedNavigation(db: ReturnType<typeof drizzle>, tenantId: string) 
   }))
 
   await db.insert(cmsNavigationItems).values(items)
-  console.log(`Created ${items.length} navigation items`)
+  logger.info(`Created ${items.length} navigation items`)
   return items.length
 }
 
@@ -439,7 +440,7 @@ Mit XKMU Business OS koennen Sie direkt loslegen. Die Plattform integriert versc
 async function seedBlogPosts(db: ReturnType<typeof drizzle>, tenantId: string, authorId: string) {
   const [{ total }] = await db.select({ total: count() }).from(blogPosts).where(eq(blogPosts.tenantId, tenantId))
   if (Number(total) > 0) {
-    console.log('Blog posts already exist, skipping...')
+    logger.info('Blog posts already exist, skipping...')
     return 0
   }
 
@@ -463,7 +464,7 @@ async function seedBlogPosts(db: ReturnType<typeof drizzle>, tenantId: string, a
     })
     created++
   }
-  console.log(`Created ${created} blog posts`)
+  logger.info(`Created ${created} blog posts`)
   return created
 }
 
@@ -475,7 +476,7 @@ const AI_PROMPT_TEMPLATE_SLUGS = Object.keys(DEFAULT_TEMPLATES)
 async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>, tenantId: string) {
   const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates).where(eq(aiPromptTemplates.tenantId, tenantId))
   if (Number(total) > 0) {
-    console.log('AI prompt templates already exist, skipping...')
+    logger.info('AI prompt templates already exist, skipping...')
     return 0
   }
 
@@ -494,7 +495,7 @@ async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>, tenantId: s
     })
     created++
   }
-  console.log(`Created ${created} AI prompt templates`)
+  logger.info(`Created ${created} AI prompt templates`)
   return created
 }
 
@@ -512,7 +513,7 @@ const PRODUCT_CATEGORIES = [
 async function seedProductCategories(db: ReturnType<typeof drizzle>, tenantId: string) {
   const [{ total }] = await db.select({ total: count() }).from(productCategories).where(eq(productCategories.tenantId, tenantId))
   if (Number(total) > 0) {
-    console.log('Product categories already exist, skipping...')
+    logger.info('Product categories already exist, skipping...')
     return 0
   }
 
@@ -526,7 +527,7 @@ async function seedProductCategories(db: ReturnType<typeof drizzle>, tenantId: s
     })
     created++
   }
-  console.log(`Created ${created} product categories`)
+  logger.info(`Created ${created} product categories`)
   return created
 }
 
@@ -559,14 +560,14 @@ const BLOCK_TYPE_DEFAULTS = [
 async function seedCmsBlockTypeDefinitions(db: ReturnType<typeof drizzle>) {
   const [{ total }] = await db.select({ total: count() }).from(cmsBlockTypeDefinitions)
   if (Number(total) > 0) {
-    console.log('CMS block type definitions already exist, skipping...')
+    logger.info('CMS block type definitions already exist, skipping...')
     return 0
   }
 
   for (const def of BLOCK_TYPE_DEFAULTS) {
     await db.insert(cmsBlockTypeDefinitions).values(def)
   }
-  console.log(`Created ${BLOCK_TYPE_DEFAULTS.length} CMS block type definitions`)
+  logger.info(`Created ${BLOCK_TYPE_DEFAULTS.length} CMS block type definitions`)
   return BLOCK_TYPE_DEFAULTS.length
 }
 
@@ -658,14 +659,14 @@ const BLOCK_TEMPLATES = [
 async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>, tenantId: string) {
   const [{ total }] = await db.select({ total: count() }).from(cmsBlockTemplates).where(eq(cmsBlockTemplates.tenantId, tenantId))
   if (Number(total) > 0) {
-    console.log('CMS block templates already exist, skipping...')
+    logger.info('CMS block templates already exist, skipping...')
     return 0
   }
 
   for (const tmpl of BLOCK_TEMPLATES) {
     await db.insert(cmsBlockTemplates).values({ tenantId, ...tmpl })
   }
-  console.log(`Created ${BLOCK_TEMPLATES.length} CMS block templates`)
+  logger.info(`Created ${BLOCK_TEMPLATES.length} CMS block templates`)
   return BLOCK_TEMPLATES.length
 }
 
@@ -676,7 +677,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
   // Check if companies already exist for this tenant
   const [{ total }] = await db.select({ total: count() }).from(companies).where(eq(companies.tenantId, tenantId))
   if (Number(total) > 0) {
-    console.log('Business data already exists, skipping...')
+    logger.info('Business data already exists, skipping...')
     return
   }
 
@@ -694,7 +695,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
     const [company] = await db.insert(companies).values({ tenantId, ...c, country: 'DE', createdBy: adminUserId }).returning()
     createdCompanies.push(company)
   }
-  console.log(`Created ${createdCompanies.length} example companies`)
+  logger.info(`Created ${createdCompanies.length} example companies`)
 
   const [techVision, cloudFirst, secureNet, digitalManufaktur, greenEnergy] = createdCompanies
 
@@ -715,7 +716,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
     const [person] = await db.insert(persons).values({ tenantId, ...p, status: 'active', createdBy: adminUserId }).returning()
     createdPersons.push(person)
   }
-  console.log(`Created ${createdPersons.length} example persons`)
+  logger.info(`Created ${createdPersons.length} example persons`)
 
   const [, , berger, , wagner, schneider, , fischer] = createdPersons
 
@@ -733,7 +734,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
     const [lead] = await db.insert(leads).values({ tenantId, ...l, assignedTo: adminUserId }).returning()
     createdLeads.push(lead)
   }
-  console.log(`Created ${createdLeads.length} example leads`)
+  logger.info(`Created ${createdLeads.length} example leads`)
 
   // --- 4. Products ---
   // Look up existing categories
@@ -752,7 +753,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
   for (const p of productData) {
     await db.insert(products).values({ tenantId, ...p, status: 'active', vatRate: '19.00', createdBy: adminUserId })
   }
-  console.log(`Created ${productData.length} example products`)
+  logger.info(`Created ${productData.length} example products`)
 
   // --- 5. Activities ---
   const activityData = [
@@ -766,7 +767,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
   for (const a of activityData) {
     await db.insert(activities).values({ tenantId, ...a, userId: adminUserId })
   }
-  console.log(`Created ${activityData.length} example activities`)
+  logger.info(`Created ${activityData.length} example activities`)
 }
 
 async function seedCheck() {
@@ -789,7 +790,7 @@ async function seedCheck() {
   let adminUserId: string | null = null
 
   if (existingTenant.length > 0) {
-    console.log('Tenant already exists, skipping tenant/user seed...')
+    logger.info('Tenant already exists, skipping tenant/user seed...')
     tenantId = existingTenant[0].id
 
     // Find admin user for blog authorship
@@ -800,7 +801,7 @@ async function seedCheck() {
       .limit(1)
     adminUserId = adminUser?.id ?? null
   } else {
-    console.log('Seeding database...')
+    logger.info('Seeding database...')
 
     // 1. Create Tenant
     const [tenant] = await db
@@ -809,7 +810,7 @@ async function seedCheck() {
       .returning()
 
     tenantId = tenant.id
-    console.log(`Created tenant: ${tenant.name} (${tenant.slug})`)
+    logger.info(`Created tenant: ${tenant.name} (${tenant.slug})`)
 
     // 2. Create Admin User
     const passwordHash = await bcrypt.hash(SEED_DATA.user.password, 10)
@@ -826,15 +827,15 @@ async function seedCheck() {
       .returning()
 
     adminUserId = user.id
-    console.log(`Created user: ${user.email} (${user.role})`)
+    logger.info(`Created user: ${user.email} (${user.role})`)
   }
 
   // 3. Seed CMS pages (always check, even for existing tenants)
   const cmsCreated = await seedCmsPages(db, tenantId)
   if (cmsCreated > 0) {
-    console.log(`Created ${cmsCreated} CMS pages`)
+    logger.info(`Created ${cmsCreated} CMS pages`)
   } else {
-    console.log('CMS pages already exist, skipping...')
+    logger.info('CMS pages already exist, skipping...')
   }
 
   // 4. Seed CMS navigation
@@ -871,20 +872,13 @@ async function seedCheck() {
   // 13. Seed CMS block templates (per tenant)
   await seedCmsBlockTemplates(db, tenantId)
 
-  console.log('')
-  console.log('='.repeat(50))
-  console.log('Seed check completed!')
-  console.log('='.repeat(50))
-  console.log('')
-  console.log('Login credentials:')
-  console.log(`  Email:    ${SEED_DATA.user.email}`)
-  console.log(`  Password: ${SEED_DATA.user.password}`)
-  console.log('')
+  logger.info('Seed check completed!', { module: 'SeedCheck' })
+  logger.info(`Login: ${SEED_DATA.user.email} / ${SEED_DATA.user.password}`, { module: 'SeedCheck' })
 
   await client.end()
 }
 
 seedCheck().catch((error) => {
-  console.error('Seed check failed:', error)
+  logger.error('Seed check failed', error, { module: 'SeedCheck' })
   process.exit(1)
 })

@@ -13,6 +13,7 @@ import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
 import { db } from '@/lib/db'
 import { aiProviders } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -82,7 +83,7 @@ export async function POST(
       )
     }
 
-    console.log(`[Firecrawl Crawl] Starting crawl for: ${company.website}`)
+    logger.info(`Starting crawl for: ${company.website}`, { module: 'CompaniesCrawlAPI' })
 
     // Create initial record with status 'crawling'
     const crawlRecord = await FirecrawlResearchService.create(auth.tenantId, id, {
@@ -101,7 +102,7 @@ export async function POST(
         pages: result.pages,
       })
 
-      console.log(`[Firecrawl Crawl] Completed: ${result.pages.length} pages crawled`)
+      logger.info(`Completed: ${result.pages.length} pages crawled`, { module: 'CompaniesCrawlAPI' })
 
       return apiSuccess({
         crawl: updated,
@@ -117,7 +118,7 @@ export async function POST(
       return apiError('CRAWL_FAILED', result.error || 'Website-Crawl fehlgeschlagen', 500)
     }
   } catch (error) {
-    console.error('Firecrawl crawl error:', error)
+    logger.error('Firecrawl crawl error', error, { module: 'CompaniesCrawlAPI' })
     return apiError(
       'CRAWL_FAILED',
       error instanceof Error ? error.message : 'Website-Crawl fehlgeschlagen',

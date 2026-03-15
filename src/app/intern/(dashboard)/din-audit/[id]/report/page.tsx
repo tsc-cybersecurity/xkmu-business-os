@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, Loader2, ExternalLink, Download } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { generateDinPdf } from '@/lib/services/din-pdf.service'
+import { logger } from '@/lib/utils/logger'
 
 const SpiderChart = dynamic(() => import('@/components/din-audit/spider-chart'), { ssr: false })
 
@@ -109,7 +110,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
         if (grantsData.success) setGrants(grantsData.data.grants)
       }
     } catch (error) {
-      console.error('Failed to fetch report data:', error)
+      logger.error('Failed to fetch report data', error, { module: 'DinAuditReportPage' })
     } finally {
       setLoading(false)
     }

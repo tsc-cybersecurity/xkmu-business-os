@@ -13,6 +13,7 @@ import {
 } from '@/lib/utils/validation'
 import { UserService } from '@/lib/services/user.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -90,7 +91,7 @@ export async function PUT(
 
       return apiSuccess(userWithoutPassword)
     } catch (error) {
-      console.error('Update user error:', error)
+      logger.error('Update user error', error, { module: 'UsersAPI' })
       return apiError('UPDATE_FAILED', 'Failed to update user', 500)
     }
   })

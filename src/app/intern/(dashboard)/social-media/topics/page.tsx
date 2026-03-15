@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { ArrowLeft, Loader2, Plus, Trash2, Pencil, Tags, CalendarDays, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface Topic {
   id: string;
@@ -48,7 +49,7 @@ export default function SocialMediaTopicsPage() {
       const data = await response.json();
       if (data.success) setTopics(data.data);
     } catch (error) {
-      console.error('Failed to fetch topics:', error);
+      logger.error('Failed to fetch topics', error, { module: 'SocialMediaTopicsPage' });
     } finally {
       setLoading(false);
     }

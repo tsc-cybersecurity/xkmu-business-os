@@ -3,6 +3,8 @@
 // Fetches images from Unsplash for blog posts
 // ============================================
 
+import { logger } from '@/lib/utils/logger'
+
 export interface UnsplashPhoto {
   url: string
   alt: string
@@ -41,7 +43,7 @@ export const UnsplashService = {
       })
 
       if (!response.ok) {
-        console.warn(`[Unsplash API] HTTP ${response.status}, falling back to source URL`)
+        logger.warn(`Unsplash API HTTP ${response.status}, falling back to source URL`, { module: 'UnsplashService' })
         return this.searchWithSource(query)
       }
 
@@ -56,7 +58,7 @@ export const UnsplashService = {
         credit: photo.user?.name ? `Photo by ${photo.user.name} on Unsplash` : 'Unsplash',
       }
     } catch (error) {
-      console.error('[Unsplash API] Error:', error)
+      logger.error('Unsplash API error', error, { module: 'UnsplashService' })
       return this.searchWithSource(query)
     }
   },
@@ -64,7 +66,7 @@ export const UnsplashService = {
   async searchWithSource(query: string): Promise<UnsplashPhoto | null> {
     // source.unsplash.com was deprecated in 2023 and is unreliable
     // Without an API key, we cannot fetch Unsplash images
-    console.warn('[Unsplash] No UNSPLASH_ACCESS_KEY configured, skipping image fetch')
+    logger.warn('No UNSPLASH_ACCESS_KEY configured, skipping image fetch', { module: 'UnsplashService' })
     return null
   },
 }

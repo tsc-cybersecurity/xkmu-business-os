@@ -4,6 +4,7 @@ import { dinRequirements, dinGrants } from '../schema'
 import { requirementsSeedData } from './din-requirements.seed'
 import { grantsSeedData } from './din-grants.seed'
 import { count } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 function getSslConfig(): 'require' | false {
   const sslEnv = process.env.DATABASE_SSL
@@ -23,40 +24,34 @@ async function seedDin() {
   const client = postgres(connectionString, { ssl: getSslConfig() })
   const db = drizzle(client)
 
-  console.log('Seeding DIN SPEC 27076 data...')
-  console.log('='.repeat(50))
+  logger.info('Seeding DIN SPEC 27076 data...', { module: 'DinSeed' })
 
   // Seed Requirements
   const [{ total: reqCount }] = await db.select({ total: count() }).from(dinRequirements)
   if (Number(reqCount) === 0) {
-    console.log('Seeding requirements...')
+    logger.info('Seeding requirements...', { module: 'DinSeed' })
     await db.insert(dinRequirements).values(requirementsSeedData)
-    console.log(`Created ${requirementsSeedData.length} requirements`)
+    logger.info(`Created ${requirementsSeedData.length} requirements`, { module: 'DinSeed' })
   } else {
-    console.log(`Requirements already seeded (${reqCount} found), skipping...`)
+    logger.info(`Requirements already seeded (${reqCount} found), skipping...`, { module: 'DinSeed' })
   }
 
   // Seed Grants
   const [{ total: grantCount }] = await db.select({ total: count() }).from(dinGrants)
   if (Number(grantCount) === 0) {
-    console.log('Seeding grants...')
+    logger.info('Seeding grants...', { module: 'DinSeed' })
     await db.insert(dinGrants).values(grantsSeedData)
-    console.log(`Created ${grantsSeedData.length} grants`)
+    logger.info(`Created ${grantsSeedData.length} grants`, { module: 'DinSeed' })
   } else {
-    console.log(`Grants already seeded (${grantCount} found), skipping...`)
+    logger.info(`Grants already seeded (${grantCount} found), skipping...`, { module: 'DinSeed' })
   }
 
-  console.log('='.repeat(50))
-  console.log('DIN SPEC 27076 seed completed!')
-  console.log('')
-  console.log('Summary:')
-  console.log(`- 54 Requirements (27 groups, 6 topics)`)
-  console.log(`- ${grantsSeedData.length} Foerderprogramme`)
+  logger.info(`DIN SPEC 27076 seed completed! 54 Requirements, ${grantsSeedData.length} Foerderprogramme`, { module: 'DinSeed' })
 
   await client.end()
 }
 
 seedDin().catch((error) => {
-  console.error('DIN seed failed:', error)
+  logger.error('DIN seed failed', error, { module: 'DinSeed' })
   process.exit(1)
 })

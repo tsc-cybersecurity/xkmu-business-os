@@ -12,6 +12,7 @@ import { LeadResearchService, WebsiteScraperService } from '@/lib/services/ai'
 import { WebhookService } from '@/lib/services/webhook.service'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -99,15 +100,15 @@ export async function POST(
 
         // Scrape website if available (provides real data instead of hallucination)
         if (website) {
-          console.log(`[Lead Research] Scraping company website: ${website}`)
+          logger.info(`Scraping company website: ${website}`, { module: 'LeadsResearchAPI' })
           try {
             const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(website)
             if (scrapeResult.success && scrapeResult.combinedText) {
               websiteContent = scrapeResult.combinedText
-              console.log(`[Lead Research] Website scraped (${websiteContent.length} chars)`)
+              logger.info(`Website scraped (${websiteContent.length} chars)`, { module: 'LeadsResearchAPI' })
             }
           } catch (scrapeError) {
-            console.error('[Lead Research] Website scraping failed:', scrapeError)
+            logger.error('Website scraping failed', scrapeError, { module: 'LeadsResearchAPI' })
           }
         }
       }
@@ -190,7 +191,7 @@ export async function POST(
       research: researchResult,
     })
   } catch (error) {
-    console.error('Lead research error:', error)
+    logger.error('Lead research error', error, { module: 'LeadsResearchAPI' })
 
     // Update status to "failed"
     await LeadService.updateAIResearch(auth.tenantId, id, 'failed', {

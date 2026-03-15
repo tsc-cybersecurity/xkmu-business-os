@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner'
 import { Loader2, ArrowLeft, Play, Power, PowerOff, Trash2, Clock } from 'lucide-react'
 import Link from 'next/link'
+import { logger } from '@/lib/utils/logger'
 
 interface N8nWorkflow {
   id: string
@@ -64,7 +65,7 @@ export default function N8nWorkflowDetailPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to load workflow:', error)
+      logger.error('Failed to load workflow', error, { module: 'N8nWorkflowsPage' })
       toast.error('Fehler beim Laden des Workflows')
     } finally {
       setLoading(false)

@@ -9,6 +9,7 @@ import { CompanyService } from '@/lib/services/company.service'
 import { CompanyResearchService } from '@/lib/services/company-research.service'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string; researchId: string }>
 
@@ -76,7 +77,7 @@ export async function POST(
       appliedFields: Object.keys(proposedChanges),
     })
   } catch (error) {
-    console.error('Apply research error:', error)
+    logger.error('Apply research error', error, { module: 'CompaniesResearchApplyAPI' })
     return apiError(
       'APPLY_FAILED',
       error instanceof Error ? error.message : 'Übernahme fehlgeschlagen',

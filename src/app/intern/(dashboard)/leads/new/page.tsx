@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { ArrowLeft, Save, Search, Plus } from 'lucide-react'
 import { QuickCreateCompanyDialog, QuickCreatePersonDialog } from '@/components/shared'
+import { logger } from '@/lib/utils/logger'
 
 interface Company {
   id: string
@@ -98,7 +99,7 @@ export default function NewLeadPage() {
         setCompanies(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch companies:', error)
+      logger.error('Failed to fetch companies', error, { module: 'LeadsNewPage' })
     }
   }
 
@@ -115,7 +116,7 @@ export default function NewLeadPage() {
         setPersons(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch persons:', error)
+      logger.error('Failed to fetch persons', error, { module: 'LeadsNewPage' })
     }
   }
 
@@ -128,7 +129,7 @@ export default function NewLeadPage() {
         setUsers(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch users:', error)
+      logger.error('Failed to fetch users', error, { module: 'LeadsNewPage' })
     }
   }
 

@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { ProductCategoryService } from '@/lib/services/product-category.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -56,7 +57,7 @@ export async function PUT(
 
       return apiSuccess(category)
     } catch (error) {
-      console.error('Failed to update category:', error)
+      logger.error('Failed to update category', error, { module: 'ProductCategoriesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Aktualisieren der Kategorie', 500)
     }
   })
@@ -99,7 +100,7 @@ export async function DELETE(
 
       return apiSuccess({ message: 'Kategorie erfolgreich gelöscht' })
     } catch (error) {
-      console.error('Failed to delete category:', error)
+      logger.error('Failed to delete category', error, { module: 'ProductCategoriesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Löschen der Kategorie', 500)
     }
   })

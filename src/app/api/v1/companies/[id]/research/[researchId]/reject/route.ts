@@ -8,6 +8,7 @@ import {
 import { CompanyResearchService } from '@/lib/services/company-research.service'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string; researchId: string }>
 
@@ -58,7 +59,7 @@ export async function POST(
 
     return apiSuccess({ research: updated })
   } catch (error) {
-    console.error('Reject research error:', error)
+    logger.error('Reject research error', error, { module: 'CompaniesResearchRejectAPI' })
     return apiError(
       'REJECT_FAILED',
       error instanceof Error ? error.message : 'Verwerfen fehlgeschlagen',

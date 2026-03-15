@@ -15,6 +15,7 @@ import {
   Package,
   Trash2,
 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Product {
   id: string
@@ -103,7 +104,7 @@ export default function ProductDetailPage() {
         router.push('/intern/catalog/products')
       }
     } catch (error) {
-      console.error('Failed to fetch product:', error)
+      logger.error('Failed to fetch product', error, { module: 'CatalogProductsPage' })
       toast.error('Fehler beim Laden des Produkts')
     } finally {
       setLoading(false)

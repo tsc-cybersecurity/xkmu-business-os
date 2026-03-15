@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -40,7 +41,7 @@ export async function PUT(
       return apiSuccess(document)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Fehler beim Statuswechsel'
-      console.error('Failed to update document status:', error)
+      logger.error('Failed to update document status', error, { module: 'DocumentsStatusAPI' })
       return apiError('VALIDATION_ERROR', message, 400)
     }
   })

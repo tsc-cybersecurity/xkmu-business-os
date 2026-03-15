@@ -1,5 +1,6 @@
 import { AIService, type AIRequestContext } from './ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
+import { logger } from '@/lib/utils/logger'
 
 export interface IdeaProcessingResult {
   summary: string
@@ -44,7 +45,7 @@ export const IdeaAIService = {
         }
       }
     } catch (error) {
-      console.error('[IdeaAI] Fehler bei der Verarbeitung:', error)
+      logger.error('Fehler bei der Verarbeitung', error, { module: 'IdeaAIService' })
     }
 
     // Fallback: Einfache Zusammenfassung

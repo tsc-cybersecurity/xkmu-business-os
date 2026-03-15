@@ -11,6 +11,7 @@ import { DocumentAnalysisService } from '@/lib/services/ai/document-analysis.ser
 import { ActivityService } from '@/lib/services/activity.service'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { logger } from '@/lib/utils/logger'
 
 async function getAuthContext(request: NextRequest) {
   const session = await getSession()
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return apiSuccess(result)
   } catch (error) {
-    console.error('Error analyzing document:', error)
+    logger.error('Error analyzing document', error, { module: 'CompaniesAnalyzeDocumentAPI' })
     return apiServerError()
   }
 }

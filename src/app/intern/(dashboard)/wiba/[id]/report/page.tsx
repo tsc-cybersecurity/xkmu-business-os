@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, Loader2, Download } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { generateWibaPdf } from '@/lib/services/wiba-pdf.service'
+import { logger } from '@/lib/utils/logger'
 
 const SpiderChart = dynamic(() => import('@/components/wiba/spider-chart'), { ssr: false })
 
@@ -87,7 +88,7 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
       if (auditData.success) setAudit(auditData.data)
       if (reqData.success) setRequirements(reqData.data.requirements)
     } catch (error) {
-      console.error('Failed to fetch report data:', error)
+      logger.error('Failed to fetch report data', error, { module: 'WibaReportPage' })
     } finally {
       setLoading(false)
     }

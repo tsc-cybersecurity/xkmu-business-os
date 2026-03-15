@@ -21,6 +21,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { Can } from '@/hooks/use-permissions'
+import { logger } from '@/lib/utils/logger'
 
 interface DocumentItem {
   id: string
@@ -98,7 +99,7 @@ export default function OfferDetailPage() {
         router.push('/intern/finance/offers')
       }
     } catch (error) {
-      console.error('Failed to fetch offer:', error)
+      logger.error('Failed to fetch offer', error, { module: 'FinanceOffersPage' })
       toast.error('Fehler beim Laden des Angebots')
     } finally {
       setLoading(false)

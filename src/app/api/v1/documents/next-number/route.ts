@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/documents/next-number?type=invoice
 export async function GET(request: NextRequest) {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
       const number = await DocumentService.getNextNumber(auth.tenantId, type)
       return apiSuccess({ number })
     } catch (error) {
-      console.error('Failed to get next number:', error)
+      logger.error('Failed to get next number', error, { module: 'DocumentsNextNumberAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Ermitteln der nächsten Nummer', 500)
     }
   })

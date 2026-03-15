@@ -7,6 +7,7 @@ import {
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { logger } from '@/lib/utils/logger'
 
 async function getAuthContext(request: NextRequest) {
   const session = await getSession()
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     const templates = await AiPromptTemplateService.list(auth.tenantId)
     return apiSuccess({ templates, seeded: true })
   } catch (error) {
-    console.error('Failed to seed AI prompt templates:', error)
+    logger.error('Failed to seed AI prompt templates', error, { module: 'AiPromptTemplatesSeedAPI' })
     return apiError('INTERNAL_ERROR', 'Fehler beim Erstellen der Standard-Vorlagen', 500)
   }
 }

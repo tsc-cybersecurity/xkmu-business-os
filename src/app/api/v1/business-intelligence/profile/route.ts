@@ -8,6 +8,7 @@ import { BusinessProfileService } from '@/lib/services/business-profile.service'
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { BusinessIntelligenceAIService } from '@/lib/services/ai/business-intelligence-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'business_intelligence', 'read', async (auth) => {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(profile)
     } catch (error) {
-      console.error('Error analyzing business documents:', error)
+      logger.error('Error analyzing business documents', error, { module: 'BusinessIntelligenceProfileAPI' })
       if (error instanceof Error) {
         return apiError('ANALYSIS_FAILED', error.message, 500)
       }

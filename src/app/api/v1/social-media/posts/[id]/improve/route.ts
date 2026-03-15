@@ -14,6 +14,7 @@ import {
 import { SocialMediaPostService } from '@/lib/services/social-media-post.service'
 import { SocialMediaAIService } from '@/lib/services/ai/social-media-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(
   request: NextRequest,
@@ -48,7 +49,7 @@ export async function POST(
 
       return apiSuccess(result)
     } catch (error) {
-      console.error('Error improving social media post:', error)
+      logger.error('Error improving social media post', error, { module: 'SocialMediaPostsImproveAPI' })
       if (error instanceof Error) {
         return apiError('IMPROVEMENT_FAILED', error.message, 500)
       }

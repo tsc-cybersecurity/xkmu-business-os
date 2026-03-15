@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string; itemId: string }>
 
@@ -39,7 +40,7 @@ export async function PUT(
 
       return apiSuccess(item)
     } catch (error) {
-      console.error('Failed to update document item:', error)
+      logger.error('Failed to update document item', error, { module: 'DocumentsItemsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Aktualisieren der Position', 500)
     }
   })

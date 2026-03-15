@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Share2, Plus, Loader2, Trash2, CalendarDays, Tags, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface Post {
   id: string;
@@ -94,7 +95,7 @@ export default function SocialMediaPage() {
       if (postsData.success) setPosts(postsData.data);
       if (topicsData.success) setTopics(topicsData.data);
     } catch (error) {
-      console.error('Failed to fetch social media data:', error);
+      logger.error('Failed to fetch social media data', error, { module: 'SocialMediaPage' });
     } finally {
       setLoading(false);
     }

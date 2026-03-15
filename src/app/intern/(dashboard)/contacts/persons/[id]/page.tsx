@@ -21,6 +21,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Person {
   id: string
@@ -93,7 +94,7 @@ export default function PersonDetailPage() {
         router.push('/intern/contacts/persons')
       }
     } catch (error) {
-      console.error('Failed to fetch person:', error)
+      logger.error('Failed to fetch person', error, { module: 'ContactsPersonsPage' })
       toast.error('Fehler beim Laden der Person')
     } finally {
       setLoading(false)
@@ -108,7 +109,7 @@ export default function PersonDetailPage() {
         setCompany(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch company:', error)
+      logger.error('Failed to fetch company', error, { module: 'ContactsPersonsPage' })
     }
   }
 

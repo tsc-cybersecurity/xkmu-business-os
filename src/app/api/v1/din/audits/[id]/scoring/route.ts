@@ -3,6 +3,7 @@ import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { DinScoringService } from '@/lib/services/din-scoring.service'
 import { TOPIC_NAMES } from '@/lib/services/din-requirement.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
         topicNames: TOPIC_NAMES,
       })
     } catch (error) {
-      console.error('Error calculating DIN score:', error)
+      logger.error('Error calculating DIN score', error, { module: 'DinAuditsScoringAPI' })
       return apiServerError()
     }
   })

@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { MarketingTemplateService } from '@/lib/services/marketing-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -42,7 +43,7 @@ export async function PUT(
       if (!template) return apiNotFound('Vorlage nicht gefunden')
       return apiSuccess(template)
     } catch (error) {
-      console.error('Error updating marketing template:', error)
+      logger.error('Error updating marketing template', error, { module: 'MarketingTemplatesAPI' })
       return apiServerError()
     }
   })

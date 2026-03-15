@@ -6,6 +6,7 @@ import {
 } from '@/lib/utils/api-response'
 import { WibaAuditService } from '@/lib/services/wiba-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -31,7 +32,7 @@ export async function PUT(
       if (!session) return apiNotFound('Audit-Session nicht gefunden')
       return apiSuccess(session)
     } catch (error) {
-      console.error('Error updating WiBA audit:', error)
+      logger.error('Error updating WiBA audit', error, { module: 'WibaAuditsAPI' })
       return apiServerError()
     }
   })

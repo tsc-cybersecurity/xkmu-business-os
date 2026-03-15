@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Module, Action } from '@/lib/types/permissions'
+import { logger } from '@/lib/utils/logger'
 
 type PermissionMap = Record<string, Record<string, boolean>>
 
@@ -36,7 +37,7 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
           setPermissions(data.data.permissions)
         }
       } catch {
-        console.error('Fehler beim Laden der Berechtigungen')
+        logger.error('Fehler beim Laden der Berechtigungen', undefined, { module: 'UsePermissions' })
       } finally {
         setLoading(false)
       }

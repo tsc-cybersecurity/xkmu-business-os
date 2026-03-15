@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { tenants } from '@/lib/db/schema'
 import { asc } from 'drizzle-orm'
 import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
+import { logger } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
     const allItems = [...globalItems, ...tenantItems]
     return NextResponse.json({ success: true, data: allItems })
   } catch (error) {
-    console.error('Error fetching public navigation:', error)
+    logger.error('Error fetching public navigation', error, { module: 'PublicNavigationAPI' })
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
       { status: 500 }

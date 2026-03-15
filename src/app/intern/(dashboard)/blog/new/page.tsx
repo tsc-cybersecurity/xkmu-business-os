@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/tabs'
 import { ArrowLeft, Loader2, PenLine, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 export default function NewBlogPostPage() {
   const router = useRouter()
@@ -61,7 +62,7 @@ export default function NewBlogPostPage() {
         toast.error(data.error?.message || 'Upload fehlgeschlagen')
       }
     } catch (error) {
-      console.error('Failed to upload image:', error)
+      logger.error('Failed to upload image', error, { module: 'BlogNewPage' })
       toast.error('Bild-Upload fehlgeschlagen')
     }
   }
@@ -91,7 +92,7 @@ export default function NewBlogPostPage() {
         toast.error(data.error?.message || 'Erstellen fehlgeschlagen')
       }
     } catch (error) {
-      console.error('Failed to create post:', error)
+      logger.error('Failed to create post', error, { module: 'BlogNewPage' })
       toast.error('Beitrag konnte nicht erstellt werden')
     } finally {
       setCreating(false)
@@ -134,7 +135,7 @@ export default function NewBlogPostPage() {
         toast.error(data.error?.message || 'Generierung fehlgeschlagen')
       }
     } catch (error) {
-      console.error('Failed to generate post:', error)
+      logger.error('Failed to generate post', error, { module: 'BlogNewPage' })
       toast.error('Netzwerkfehler – Beitrag konnte nicht generiert werden')
     } finally {
       setCreating(false)

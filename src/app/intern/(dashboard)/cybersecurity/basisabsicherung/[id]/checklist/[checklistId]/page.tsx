@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, ArrowLeft, ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft, Save, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 const MAX_NOTIZEN_LENGTH = 2000
 const AUTO_SAVE_INTERVAL = 30000
@@ -99,7 +100,7 @@ export default function ChecklistInterviewPage({
         setAnswers(existingAnswers)
       }
     } catch (error) {
-      console.error('Failed to load data:', error)
+      logger.error('Failed to load data', error, { module: 'CybersecurityBasisabsicherungChecklistPage' })
     } finally {
       setLoading(false)
     }
@@ -172,7 +173,7 @@ export default function ChecklistInterviewPage({
       })
       setLastSaved(new Date())
     } catch (error) {
-      console.error('Auto-save failed:', error)
+      logger.error('Auto-save failed', error, { module: 'CybersecurityBasisabsicherungChecklistPage' })
     } finally {
       setIsSaving(false)
     }
@@ -194,7 +195,7 @@ export default function ChecklistInterviewPage({
       setLastSaved(new Date())
       toast.success('Gespeichert')
     } catch (error) {
-      console.error('Failed to save answer:', error)
+      logger.error('Failed to save answer', error, { module: 'CybersecurityBasisabsicherungChecklistPage' })
       toast.error('Speichern fehlgeschlagen')
     } finally {
       setIsSaving(false)

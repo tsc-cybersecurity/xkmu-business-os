@@ -9,6 +9,7 @@ import { DinAuditService } from '@/lib/services/din-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
+import { logger } from '@/lib/utils/logger'
 
 const createAuditSchema = z.object({
   clientCompanyId: z.string().uuid(),
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       )
       return apiSuccess(session, undefined, 201)
     } catch (error) {
-      console.error('Error creating DIN audit:', error)
+      logger.error('Error creating DIN audit', error, { module: 'DinAuditsAPI' })
       return apiServerError()
     }
   })

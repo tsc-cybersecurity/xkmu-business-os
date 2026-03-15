@@ -3,6 +3,7 @@ import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-respons
 import { CmsPageService } from '@/lib/services/cms-page.service'
 import { CmsAIService } from '@/lib/services/ai/cms-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(
   request: NextRequest,
@@ -27,7 +28,7 @@ export async function POST(
 
       return apiSuccess(seo)
     } catch (error) {
-      console.error('Error generating SEO:', error)
+      logger.error('Error generating SEO', error, { module: 'CmsPagesSeoGenerateAPI' })
       return apiServerError('KI-SEO-Generierung fehlgeschlagen')
     }
   })

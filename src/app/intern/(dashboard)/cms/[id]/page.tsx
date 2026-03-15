@@ -92,6 +92,7 @@ interface BlockTypeDefinition {
 }
 
 import type { LucideIcon } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 const iconMap: Record<string, LucideIcon> = {
   LayoutTemplate,
   Type,
@@ -150,7 +151,7 @@ export default function CmsPageEditorPage() {
         setOgImage(data.data.ogImage || '')
       }
     } catch (error) {
-      console.error('Failed to fetch CMS page:', error)
+      logger.error('Failed to fetch CMS page', error, { module: 'CmsPage' })
     } finally {
       setLoading(false)
     }
@@ -164,7 +165,7 @@ export default function CmsPageEditorPage() {
         setBlockTypes(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch block types:', error)
+      logger.error('Failed to fetch block types', error, { module: 'CmsPage' })
     }
   }, [])
 
@@ -190,7 +191,7 @@ export default function CmsPageEditorPage() {
       })
       fetchPage()
     } catch (error) {
-      console.error('Failed to save page:', error)
+      logger.error('Failed to save page', error, { module: 'CmsPage' })
     } finally {
       setSaving(false)
     }
@@ -220,7 +221,7 @@ export default function CmsPageEditorPage() {
       setNewBlockType('text')
       fetchPage()
     } catch (error) {
-      console.error('Failed to add block:', error)
+      logger.error('Failed to add block', error, { module: 'CmsPage' })
     }
   }
 
@@ -230,7 +231,7 @@ export default function CmsPageEditorPage() {
       await fetch(`/api/v1/cms/blocks/${blockId}`, { method: 'DELETE' })
       fetchPage()
     } catch (error) {
-      console.error('Failed to delete block:', error)
+      logger.error('Failed to delete block', error, { module: 'CmsPage' })
     }
   }
 
@@ -239,7 +240,7 @@ export default function CmsPageEditorPage() {
       await fetch(`/api/v1/cms/blocks/${blockId}/duplicate`, { method: 'POST' })
       fetchPage()
     } catch (error) {
-      console.error('Failed to duplicate block:', error)
+      logger.error('Failed to duplicate block', error, { module: 'CmsPage' })
     }
   }
 
@@ -252,7 +253,7 @@ export default function CmsPageEditorPage() {
       })
       fetchPage()
     } catch (error) {
-      console.error('Failed to toggle visibility:', error)
+      logger.error('Failed to toggle visibility', error, { module: 'CmsPage' })
     }
   }
 
@@ -273,7 +274,7 @@ export default function CmsPageEditorPage() {
       })
       fetchPage()
     } catch (error) {
-      console.error('Failed to reorder blocks:', error)
+      logger.error('Failed to reorder blocks', error, { module: 'CmsPage' })
     }
   }
 
@@ -285,7 +286,7 @@ export default function CmsPageEditorPage() {
       })
       fetchPage()
     } catch (error) {
-      console.error('Failed to publish/unpublish:', error)
+      logger.error('Failed to publish/unpublish', error, { module: 'CmsPage' })
     }
   }
 
@@ -305,7 +306,7 @@ export default function CmsPageEditorPage() {
         toast.error(data.error?.message || 'SEO-Generierung fehlgeschlagen')
       }
     } catch (error) {
-      console.error('Failed to generate SEO:', error)
+      logger.error('Failed to generate SEO', error, { module: 'CmsPage' })
       toast.error('SEO-Generierung fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
     } finally {
       setGeneratingSeo(false)

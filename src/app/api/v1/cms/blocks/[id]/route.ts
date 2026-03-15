@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { CmsBlockService } from '@/lib/services/cms-block.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function PUT(
   request: NextRequest,
@@ -30,7 +31,7 @@ export async function PUT(
       if (!block) return apiNotFound('Block nicht gefunden')
       return apiSuccess(block)
     } catch (error) {
-      console.error('Error updating CMS block:', error)
+      logger.error('Error updating CMS block', error, { module: 'CmsBlocksAPI' })
       return apiServerError()
     }
   })

@@ -21,6 +21,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Lightbulb, Plus, Loader2, Sparkles } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Idea {
   id: string
@@ -66,7 +67,7 @@ export default function IdeasPage() {
         })
       }
     } catch (error) {
-      console.error('Failed to fetch ideas:', error)
+      logger.error('Failed to fetch ideas', error, { module: 'IdeasPage' })
     } finally {
       setLoading(false)
     }
@@ -92,7 +93,7 @@ export default function IdeasPage() {
         await fetchIdeas()
       }
     } catch (error) {
-      console.error('Failed to create idea:', error)
+      logger.error('Failed to create idea', error, { module: 'IdeasPage' })
     } finally {
       setCreating(false)
     }
@@ -107,7 +108,7 @@ export default function IdeasPage() {
       })
       await fetchIdeas()
     } catch (error) {
-      console.error('Failed to update idea status:', error)
+      logger.error('Failed to update idea status', error, { module: 'IdeasPage' })
     }
   }
 

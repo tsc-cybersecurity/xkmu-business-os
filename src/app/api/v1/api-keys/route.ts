@@ -7,6 +7,7 @@ import {
 import { ApiKeyService } from '@/lib/services/api-key.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
+import { logger } from '@/lib/utils/logger'
 
 const createApiKeySchema = z.object({
   name: z.string().min(1).max(100),
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(safeApiKey, undefined, 201)
     } catch (error) {
-      console.error('Create API key error:', error)
+      logger.error('Create API key error', error, { module: 'ApiKeysAPI' })
       return apiError('CREATE_FAILED', 'Failed to create API key', 500)
     }
   })

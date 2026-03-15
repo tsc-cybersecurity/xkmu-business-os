@@ -25,6 +25,7 @@ import {
   Tag,
   FileText,
 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Idea {
   id: string
@@ -78,7 +79,7 @@ export default function IdeaDetailPage() {
         setIdea(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch idea:', error)
+      logger.error('Failed to fetch idea', error, { module: 'IdeasPage' })
     } finally {
       setLoading(false)
     }
@@ -97,7 +98,7 @@ export default function IdeaDetailPage() {
         await fetchIdea()
       }
     } catch (error) {
-      console.error('Failed to convert idea:', error)
+      logger.error('Failed to convert idea', error, { module: 'IdeasPage' })
     } finally {
       setConverting(false)
     }
@@ -113,7 +114,7 @@ export default function IdeaDetailPage() {
         router.push('/intern/ideas')
       }
     } catch (error) {
-      console.error('Failed to delete idea:', error)
+      logger.error('Failed to delete idea', error, { module: 'IdeasPage' })
     } finally {
       setDeleting(false)
     }

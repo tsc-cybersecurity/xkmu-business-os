@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiError } from '@/lib/utils/api-response'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -27,7 +28,7 @@ export async function POST(
       return apiSuccess(invoice, undefined, 201)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Fehler bei der Umwandlung'
-      console.error('Failed to convert offer to invoice:', error)
+      logger.error('Failed to convert offer to invoice', error, { module: 'DocumentsConvertAPI' })
       return apiError('VALIDATION_ERROR', message, 400)
     }
   })

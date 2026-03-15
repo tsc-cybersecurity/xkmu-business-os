@@ -51,6 +51,7 @@ import {
 import { CmsBlockRenderer } from '@/app/_components/cms-block-renderer'
 import { toast } from 'sonner'
 import type { LucideIcon } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface BlockTemplate {
   id: string
@@ -143,7 +144,7 @@ export function BlockTemplatesManager() {
       const data = await response.json()
       if (data.success) setTemplates(data.data)
     } catch (error) {
-      console.error('Failed to fetch templates:', error)
+      logger.error('Failed to fetch templates', error, { module: 'CmsTemplatesPage' })
       toast.error('Fehler beim Laden der Vorlagen')
     } finally {
       setLoading(false)
@@ -156,7 +157,7 @@ export function BlockTemplatesManager() {
       const data = await response.json()
       if (data.success) setBlockTypes(data.data)
     } catch (error) {
-      console.error('Failed to fetch block types:', error)
+      logger.error('Failed to fetch block types', error, { module: 'CmsTemplatesPage' })
     }
   }, [])
 

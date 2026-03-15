@@ -24,6 +24,7 @@ import {
 import { ExternalLink, Loader2, Plus, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Textarea } from '@/components/ui/textarea'
+import { logger } from '@/lib/utils/logger'
 
 interface Grant {
   id: string
@@ -87,7 +88,7 @@ export default function GrantsPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch grants:', error)
+      logger.error('Failed to fetch grants', error, { module: 'DinAuditGrantsPage' })
     } finally {
       setLoading(false)
     }

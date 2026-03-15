@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Download, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 export function ExportButton() {
   const [isExporting, setIsExporting] = useState(false)
@@ -40,7 +41,7 @@ export function ExportButton() {
 
       toast.success('Datenbank erfolgreich exportiert')
     } catch (error) {
-      console.error('Export error:', error)
+      logger.error('Export error', error, { module: 'SettingsExportPage' })
       toast.error(error instanceof Error ? error.message : 'Export fehlgeschlagen')
     } finally {
       setIsExporting(false)

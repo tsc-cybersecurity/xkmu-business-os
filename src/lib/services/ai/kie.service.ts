@@ -1,5 +1,6 @@
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { KieProvider } from './kie.provider'
+import { logger } from '@/lib/utils/logger'
 
 interface VideoGenerationParams {
   prompt: string
@@ -73,7 +74,7 @@ export const KieService = {
         entityType: null,
         entityId: null,
       }).catch((err) => {
-        console.error('Failed to log kie.ai request:', err)
+        logger.error('Failed to log kie.ai request', err, { module: 'KieService' })
       })
 
       return result
@@ -95,7 +96,7 @@ export const KieService = {
         entityType: null,
         entityId: null,
       }).catch((err) => {
-        console.error('Failed to log kie.ai error:', err)
+        logger.error('Failed to log kie.ai error', err, { module: 'KieService' })
       })
 
       throw error

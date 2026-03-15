@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, Upload, Loader2, Trash2, FileText, Brain, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface BusinessDocument {
   id: string;
@@ -86,7 +87,7 @@ export default function BusinessIntelligencePage() {
       if (docsData.success) setDocuments(docsData.data);
       if (profileData.success) setProfile(profileData.data);
     } catch (error) {
-      console.error('Failed to fetch BI data:', error);
+      logger.error('Failed to fetch BI data', error, { module: 'BusinessIntelligencePage' });
     } finally {
       setLoading(false);
     }

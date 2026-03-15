@@ -62,6 +62,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import { ActivityTimeline } from '@/app/intern/(dashboard)/leads/_components/activity-timeline'
+import { logger } from '@/lib/utils/logger'
 
 interface AIResearchData {
   lastResearchedAt?: string
@@ -517,7 +518,7 @@ export default function CompanyDetailPage() {
         router.push('/intern/contacts/companies')
       }
     } catch (error) {
-      console.error('Failed to fetch company:', error)
+      logger.error('Failed to fetch company', error, { module: 'ContactsCompaniesPage' })
       toast.error('Fehler beim Laden der Firma')
     } finally {
       setLoading(false)
@@ -533,7 +534,7 @@ export default function CompanyDetailPage() {
         setPersons(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch persons:', error)
+      logger.error('Failed to fetch persons', error, { module: 'ContactsCompaniesPage' })
     }
   }
 
@@ -555,7 +556,7 @@ export default function CompanyDetailPage() {
         setAvailablePersons(filtered)
       }
     } catch (error) {
-      console.error('Failed to fetch available persons:', error)
+      logger.error('Failed to fetch available persons', error, { module: 'ContactsCompaniesPage' })
     } finally {
       setLoadingPersons(false)
     }

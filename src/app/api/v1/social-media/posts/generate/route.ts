@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { SocialMediaAIService } from '@/lib/services/ai/social-media-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'social_media', 'create', async (auth) => {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(result)
     } catch (error) {
-      console.error('Error generating social media post:', error)
+      logger.error('Error generating social media post', error, { module: 'SocialMediaPostsGenerateAPI' })
       if (error instanceof Error) {
         return apiError('GENERATION_FAILED', error.message, 500)
       }

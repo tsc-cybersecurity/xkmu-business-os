@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/validation'
 import { ProductCategoryService } from '@/lib/services/product-category.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/product-categories - List all categories
 export async function GET(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
 
       return apiSuccess(items)
     } catch (error) {
-      console.error('Failed to list categories:', error)
+      logger.error('Failed to list categories', error, { module: 'ProductCategoriesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der Kategorien', 500)
     }
   })
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       const category = await ProductCategoryService.create(auth.tenantId, validation.data)
       return apiSuccess(category, undefined, 201)
     } catch (error) {
-      console.error('Failed to create category:', error)
+      logger.error('Failed to create category', error, { module: 'ProductCategoriesAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Erstellen der Kategorie', 500)
     }
   })

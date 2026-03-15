@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, Play, FileText, Loader2, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { logger } from '@/lib/utils/logger'
 
 interface ScoringData {
   currentScore: number
@@ -68,7 +69,7 @@ export default function DinAuditDetailPage({ params }: { params: Promise<{ id: s
       if (auditData.success) setAudit(auditData.data)
       if (scoringData.success) setScoring(scoringData.data)
     } catch (error) {
-      console.error('Failed to fetch audit:', error)
+      logger.error('Failed to fetch audit', error, { module: 'DinAuditPage' })
     } finally {
       setLoading(false)
     }

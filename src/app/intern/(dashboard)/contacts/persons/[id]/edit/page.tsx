@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { PersonForm } from '../../_components/person-form'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 interface Person {
   id: string
@@ -69,7 +70,7 @@ function EditPersonForm() {
         router.push('/intern/contacts/persons')
       }
     } catch (error) {
-      console.error('Failed to fetch person:', error)
+      logger.error('Failed to fetch person', error, { module: 'ContactsPersonsEditPage' })
       toast.error('Fehler beim Laden der Person')
       router.push('/intern/contacts/persons')
     } finally {

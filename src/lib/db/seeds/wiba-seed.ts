@@ -3,6 +3,7 @@ import postgres from 'postgres'
 import { wibaRequirements } from '../schema'
 import { wibaRequirementsSeedData } from './wiba-requirements.seed'
 import { count } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 function getSslConfig(): 'require' | false {
   const sslEnv = process.env.DATABASE_SSL
@@ -22,32 +23,27 @@ async function seedWiba() {
   const client = postgres(connectionString, { ssl: getSslConfig() })
   const db = drizzle(client)
 
-  console.log('Seeding BSI WiBA data...')
-  console.log('='.repeat(50))
+  logger.info('Seeding BSI WiBA data...', { module: 'WibaSeed' })
 
   const [{ total: reqCount }] = await db.select({ total: count() }).from(wibaRequirements)
   if (Number(reqCount) === 0) {
-    console.log('Seeding WiBA requirements...')
+    logger.info('Seeding WiBA requirements...', { module: 'WibaSeed' })
     // Insert in batches of 50 to avoid query size limits
     for (let i = 0; i < wibaRequirementsSeedData.length; i += 50) {
       const batch = wibaRequirementsSeedData.slice(i, i + 50)
       await db.insert(wibaRequirements).values(batch)
     }
-    console.log(`Created ${wibaRequirementsSeedData.length} requirements`)
+    logger.info(`Created ${wibaRequirementsSeedData.length} requirements`, { module: 'WibaSeed' })
   } else {
-    console.log(`WiBA requirements already seeded (${reqCount} found), skipping...`)
+    logger.info(`WiBA requirements already seeded (${reqCount} found), skipping...`, { module: 'WibaSeed' })
   }
 
-  console.log('='.repeat(50))
-  console.log('BSI WiBA seed completed!')
-  console.log('')
-  console.log('Summary:')
-  console.log(`- ${wibaRequirementsSeedData.length} Prueffragen (19 Kategorien)`)
+  logger.info(`BSI WiBA seed completed! ${wibaRequirementsSeedData.length} Prueffragen (19 Kategorien)`, { module: 'WibaSeed' })
 
   await client.end()
 }
 
 seedWiba().catch((error) => {
-  console.error('WiBA seed failed:', error)
+  logger.error('WiBA seed failed', error, { module: 'WibaSeed' })
   process.exit(1)
 })

@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { MarketingCampaignService } from '@/lib/services/marketing-campaign.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       const campaign = await MarketingCampaignService.create(auth.tenantId, validation.data, auth.userId ?? undefined)
       return apiSuccess(campaign, undefined, 201)
     } catch (error) {
-      console.error('Error creating marketing campaign:', error)
+      logger.error('Error creating marketing campaign', error, { module: 'MarketingCampaignsAPI' })
       return apiServerError()
     }
   })

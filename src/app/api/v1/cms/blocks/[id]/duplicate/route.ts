@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
 import { CmsBlockService } from '@/lib/services/cms-block.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(
   request: NextRequest,
@@ -14,7 +15,7 @@ export async function POST(
       if (!block) return apiNotFound('Block nicht gefunden')
       return apiSuccess(block, undefined, 201)
     } catch (error) {
-      console.error('Error duplicating CMS block:', error)
+      logger.error('Error duplicating CMS block', error, { module: 'CmsBlocksDuplicateAPI' })
       return apiServerError()
     }
   })

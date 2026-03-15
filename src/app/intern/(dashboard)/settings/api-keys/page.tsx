@@ -31,6 +31,7 @@ import { Label } from '@/components/ui/label'
 import { ConfirmDialog } from '@/components/shared'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus, Key, Copy, AlertTriangle, Trash2 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface ApiKey {
   id: string
@@ -67,7 +68,7 @@ export default function ApiKeysPage() {
         setApiKeys(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch API keys:', error)
+      logger.error('Failed to fetch API keys', error, { module: 'SettingsApiKeysPage' })
     } finally {
       setLoading(false)
     }

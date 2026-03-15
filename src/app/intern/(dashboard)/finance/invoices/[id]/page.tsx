@@ -20,6 +20,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { Can } from '@/hooks/use-permissions'
+import { logger } from '@/lib/utils/logger'
 
 interface DocumentItem {
   id: string
@@ -96,7 +97,7 @@ export default function InvoiceDetailPage() {
         router.push('/intern/finance/invoices')
       }
     } catch (error) {
-      console.error('Failed to fetch invoice:', error)
+      logger.error('Failed to fetch invoice', error, { module: 'FinanceInvoicesPage' })
       toast.error('Fehler beim Laden der Rechnung')
     } finally {
       setLoading(false)

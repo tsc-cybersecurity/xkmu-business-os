@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { Plus, Pencil, Trash2, FolderTree } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Category {
   id: string
@@ -75,7 +76,7 @@ export default function CategoriesPage() {
       if (treeData.success) setCategories(treeData.data)
       if (flatData.success) setFlatCategories(flatData.data)
     } catch (error) {
-      console.error('Failed to fetch categories:', error)
+      logger.error('Failed to fetch categories', error, { module: 'CatalogCategoriesPage' })
     } finally {
       setLoading(false)
     }
@@ -131,7 +132,7 @@ export default function CategoriesPage() {
         fetchCategories()
       }
     } catch (error) {
-      console.error('Failed to save category:', error)
+      logger.error('Failed to save category', error, { module: 'CatalogCategoriesPage' })
     } finally {
       setSaving(false)
     }
@@ -154,7 +155,7 @@ export default function CategoriesPage() {
         setDeleteError(data.error?.message || 'Fehler beim Löschen')
       }
     } catch (error) {
-      console.error('Failed to delete category:', error)
+      logger.error('Failed to delete category', error, { module: 'CatalogCategoriesPage' })
       setDeleteError('Fehler beim Löschen der Kategorie')
     }
   }

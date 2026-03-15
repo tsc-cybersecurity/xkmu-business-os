@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { Plus, Trash2, Loader2, Pencil, Check, X, Package } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface DocumentItem {
   id: string
@@ -117,7 +118,7 @@ export function LineItemsEditor({
       const data = await response.json()
       if (data.success) setProducts(data.data)
     } catch (error) {
-      console.error('Failed to fetch products:', error)
+      logger.error('Failed to fetch products', error, { module: 'FinancePage' })
     }
   }
 

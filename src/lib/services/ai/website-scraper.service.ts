@@ -3,6 +3,8 @@
 // Fetches and extracts text content from websites
 // ============================================
 
+import { logger } from '@/lib/utils/logger'
+
 export interface ScrapedWebsite {
   url: string
   title: string
@@ -211,7 +213,7 @@ export const WebsiteScraperService = {
     if (firecrawlApiKey) {
       try {
         const { FirecrawlService } = await import('@/lib/services/firecrawl.service')
-        console.log(`[WebsiteScraper] Using Firecrawl for: ${url}`)
+        logger.info(`Using Firecrawl for: ${url}`, { module: 'WebsiteScraperService' })
         const result = await FirecrawlService.scrape(url, firecrawlApiKey)
 
         if (result.success && result.markdown) {
@@ -237,19 +239,19 @@ export const WebsiteScraperService = {
           }
         }
 
-        console.warn(`[WebsiteScraper] Firecrawl failed, falling back to HTML scraper: ${result.error}`)
+        logger.warn(`Firecrawl failed, falling back to HTML scraper: ${result.error}`, { module: 'WebsiteScraperService' })
       } catch (error) {
-        console.warn('[WebsiteScraper] Firecrawl import/call failed, falling back to HTML scraper:', error)
+        logger.warn('Firecrawl import/call failed, falling back to HTML scraper', { module: 'WebsiteScraperService' })
       }
     }
 
-    console.log(`[WebsiteScraper] Starting HTML scrape of: ${url}`)
+    logger.info(`Starting HTML scrape of: ${url}`, { module: 'WebsiteScraperService' })
 
     // 1. Scrape main page
     const mainPage = await scrapePage(url)
 
     if (!mainPage.success) {
-      console.error(`[WebsiteScraper] Failed to scrape main page: ${mainPage.error}`)
+      logger.error(`Failed to scrape main page: ${mainPage.error}`, undefined, { module: 'WebsiteScraperService' })
       return {
         mainPage,
         subPages: [],
@@ -261,7 +263,7 @@ export const WebsiteScraperService = {
     // 2. Scrape subpages
     const subPages = await scrapeSubpages(url)
 
-    console.log(`[WebsiteScraper] Scraped ${subPages.length} subpages successfully`)
+    logger.info(`Scraped ${subPages.length} subpages successfully`, { module: 'WebsiteScraperService' })
 
     // 3. Combine all text
     const parts: string[] = []

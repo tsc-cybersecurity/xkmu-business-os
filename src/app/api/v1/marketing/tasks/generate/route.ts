@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { MarketingAIService } from '@/lib/services/ai/marketing-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'marketing', 'create', async (auth) => {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
       return apiSuccess(result)
     } catch (error) {
-      console.error('Error generating marketing content:', error)
+      logger.error('Error generating marketing content', error, { module: 'MarketingTasksGenerateAPI' })
       if (error instanceof Error) {
         return apiError('GENERATION_FAILED', error.message, 500)
       }

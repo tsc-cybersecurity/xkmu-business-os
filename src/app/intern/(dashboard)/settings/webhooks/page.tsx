@@ -39,6 +39,7 @@ import {
   CheckCircle2,
   XCircle,
 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface WebhookData {
   id: string
@@ -87,7 +88,7 @@ export default function WebhooksPage() {
         setWebhooks(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch webhooks:', error)
+      logger.error('Failed to fetch webhooks', error, { module: 'SettingsWebhooksPage' })
     } finally {
       setLoading(false)
     }

@@ -32,6 +32,7 @@ import {
   ExternalLink,
   FileText,
 } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface NavItem {
   id: string
@@ -87,7 +88,7 @@ export default function CmsNavigationPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to fetch navigation items:', error)
+      logger.error('Failed to fetch navigation items', error, { module: 'CmsNavigationPage' })
     } finally {
       setLoading(false)
     }
@@ -99,7 +100,7 @@ export default function CmsNavigationPage() {
       const data = await response.json()
       if (data.success) setPages(data.data.filter((p: CmsPage) => p.status === 'published'))
     } catch (error) {
-      console.error('Failed to fetch CMS pages:', error)
+      logger.error('Failed to fetch CMS pages', error, { module: 'CmsNavigationPage' })
     }
   }, [])
 
@@ -173,7 +174,7 @@ export default function CmsNavigationPage() {
       setShowDialog(false)
       fetchItems()
     } catch (error) {
-      console.error('Failed to save navigation item:', error)
+      logger.error('Failed to save navigation item', error, { module: 'CmsNavigationPage' })
     } finally {
       setSaving(false)
     }
@@ -185,7 +186,7 @@ export default function CmsNavigationPage() {
       await fetch(`/api/v1/cms/navigation/${id}`, { method: 'DELETE' })
       fetchItems()
     } catch (error) {
-      console.error('Failed to delete navigation item:', error)
+      logger.error('Failed to delete navigation item', error, { module: 'CmsNavigationPage' })
     }
   }
 
@@ -198,7 +199,7 @@ export default function CmsNavigationPage() {
       })
       fetchItems()
     } catch (error) {
-      console.error('Failed to toggle visibility:', error)
+      logger.error('Failed to toggle visibility', error, { module: 'CmsNavigationPage' })
     }
   }
 
@@ -219,7 +220,7 @@ export default function CmsNavigationPage() {
       })
       fetchItems()
     } catch (error) {
-      console.error('Failed to reorder:', error)
+      logger.error('Failed to reorder', error, { module: 'CmsNavigationPage' })
     }
   }
 

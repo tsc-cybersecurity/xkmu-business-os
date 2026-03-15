@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { BlogPostService } from '@/lib/services/blog-post.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -42,7 +43,7 @@ export async function PUT(
       if (!post) return apiNotFound('Beitrag nicht gefunden')
       return apiSuccess(post)
     } catch (error) {
-      console.error('Error updating blog post:', error)
+      logger.error('Error updating blog post', error, { module: 'BlogPostsAPI' })
       return apiServerError()
     }
   })

@@ -9,6 +9,7 @@ import {
 } from '@/lib/utils/api-response'
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 const UPLOAD_DIR = process.env.BI_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads', 'bi')
 
@@ -68,12 +69,12 @@ export async function POST(
         const updated = await BusinessDocumentService.updateExtraction(auth.tenantId, id, extractedText, 'completed')
         return apiSuccess(updated)
       } catch (extractError) {
-        console.error('Text extraction failed:', extractError)
+        logger.error('Text extraction failed', extractError, { module: 'BusinessIntelligenceDocumentsExtractAPI' })
         await BusinessDocumentService.updateExtraction(auth.tenantId, id, null, 'failed')
         return apiError('EXTRACTION_FAILED', 'Textextraktion fehlgeschlagen', 500)
       }
     } catch (error) {
-      console.error('Error in document extraction:', error)
+      logger.error('Error in document extraction', error, { module: 'BusinessIntelligenceDocumentsExtractAPI' })
       return apiServerError()
     }
   })

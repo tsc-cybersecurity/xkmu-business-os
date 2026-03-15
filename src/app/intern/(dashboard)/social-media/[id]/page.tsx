@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { ArrowLeft, Loader2, Save, Brain } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/lib/utils/logger'
 
 interface Post {
   id: string;
@@ -52,7 +53,7 @@ export default function EditSocialMediaPostPage() {
       const data = await response.json();
       if (data.success) setPost(data.data);
     } catch (error) {
-      console.error('Failed to fetch post:', error);
+      logger.error('Failed to fetch post', error, { module: 'SocialMediaPage' });
     } finally {
       setLoading(false);
     }

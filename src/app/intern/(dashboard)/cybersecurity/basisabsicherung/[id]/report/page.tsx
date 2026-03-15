@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { ArrowLeft, Loader2, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface ChecklistProgress {
   checklistId: number
@@ -125,7 +126,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
         setAllPrueffragen(allFragen)
       }
     } catch (error) {
-      console.error('Failed to fetch report data:', error)
+      logger.error('Failed to fetch report data', error, { module: 'CybersecurityBasisabsicherungReportPage' })
     } finally {
       setLoading(false)
     }

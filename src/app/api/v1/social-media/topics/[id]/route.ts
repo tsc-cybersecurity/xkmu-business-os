@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { SocialMediaTopicService } from '@/lib/services/social-media-topic.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -42,7 +43,7 @@ export async function PUT(
       if (!topic) return apiNotFound('Thema nicht gefunden')
       return apiSuccess(topic)
     } catch (error) {
-      console.error('Error updating social media topic:', error)
+      logger.error('Error updating social media topic', error, { module: 'SocialMediaTopicsAPI' })
       return apiServerError()
     }
   })

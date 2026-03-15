@@ -10,6 +10,7 @@ import { CompanyService } from '@/lib/services/company.service'
 import { LeadResearchService } from '@/lib/services/ai'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -98,7 +99,7 @@ export async function POST(
       hasResearch: true,
     })
   } catch (error) {
-    console.error('Person research error:', error)
+    logger.error('Person research error', error, { module: 'PersonsResearchAPI' })
 
     return apiError(
       'RESEARCH_FAILED',

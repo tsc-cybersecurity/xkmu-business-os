@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { CmsBlockTypeService } from '@/lib/services/cms-block-type.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function PUT(
   request: NextRequest,
@@ -30,7 +31,7 @@ export async function PUT(
       }
       return apiSuccess(result)
     } catch (error) {
-      console.error('Error updating block type:', error)
+      logger.error('Error updating block type', error, { module: 'CmsBlockTypesAPI' })
       return apiServerError()
     }
   })

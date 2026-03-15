@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -26,7 +27,7 @@ export async function GET(
       const items = await DocumentService.getItems(auth.tenantId, id)
       return apiSuccess(items)
     } catch (error) {
-      console.error('Failed to get document items:', error)
+      logger.error('Failed to get document items', error, { module: 'DocumentsItemsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der Positionen', 500)
     }
   })
@@ -51,7 +52,7 @@ export async function POST(
       const item = await DocumentService.addItem(auth.tenantId, id, validation.data)
       return apiSuccess(item, undefined, 201)
     } catch (error) {
-      console.error('Failed to add document item:', error)
+      logger.error('Failed to add document item', error, { module: 'DocumentsItemsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Hinzufügen der Position', 500)
     }
   })

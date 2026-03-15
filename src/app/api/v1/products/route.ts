@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { ProductService } from '@/lib/services/product.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/products - List products with filters
 export async function GET(request: NextRequest) {
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
       const result = await ProductService.list(auth.tenantId, filters)
       return apiSuccess(result.items, result.meta)
     } catch (error) {
-      console.error('Failed to list products:', error)
+      logger.error('Failed to list products', error, { module: 'ProductsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der Produkte', 500)
     }
   })
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       )
       return apiSuccess(product, undefined, 201)
     } catch (error) {
-      console.error('Failed to create product:', error)
+      logger.error('Failed to create product', error, { module: 'ProductsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Erstellen des Produkts', 500)
     }
   })

@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Search, TrendingUp, Filter } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface Lead {
   id: string
@@ -109,7 +110,7 @@ export default function LeadsPage() {
         setLeads(data.data)
       }
     } catch (error) {
-      console.error('Failed to fetch leads:', error)
+      logger.error('Failed to fetch leads', error, { module: 'LeadsPage' })
     } finally {
       setLoading(false)
     }

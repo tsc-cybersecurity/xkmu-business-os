@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function PUT(
   request: NextRequest,
@@ -30,7 +31,7 @@ export async function PUT(
       if (!item) return apiNotFound('Navigations-Item nicht gefunden')
       return apiSuccess(item)
     } catch (error) {
-      console.error('Error updating navigation item:', error)
+      logger.error('Error updating navigation item', error, { module: 'CmsNavigationAPI' })
       return apiServerError()
     }
   })

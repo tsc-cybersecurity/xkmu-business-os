@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { CmsPageService } from '@/lib/services/cms-page.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -42,7 +43,7 @@ export async function PUT(
       if (!page) return apiNotFound('Seite nicht gefunden')
       return apiSuccess(page)
     } catch (error) {
-      console.error('Error updating CMS page:', error)
+      logger.error('Error updating CMS page', error, { module: 'CmsPagesAPI' })
       return apiServerError()
     }
   })

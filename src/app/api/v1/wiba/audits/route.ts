@@ -9,6 +9,7 @@ import { WibaAuditService } from '@/lib/services/wiba-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
+import { logger } from '@/lib/utils/logger'
 
 const createAuditSchema = z.object({
   clientCompanyId: z.string().uuid(),
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       )
       return apiSuccess(session, undefined, 201)
     } catch (error) {
-      console.error('Error creating WiBA audit:', error)
+      logger.error('Error creating WiBA audit', error, { module: 'WibaAuditsAPI' })
       return apiServerError()
     }
   })

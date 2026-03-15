@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { SocialMediaTopicService } from '@/lib/services/social-media-topic.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'social_media', 'read', async (auth) => {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
       const topic = await SocialMediaTopicService.create(auth.tenantId, validation.data)
       return apiSuccess(topic, undefined, 201)
     } catch (error) {
-      console.error('Error creating social media topic:', error)
+      logger.error('Error creating social media topic', error, { module: 'SocialMediaTopicsAPI' })
       return apiServerError()
     }
   })

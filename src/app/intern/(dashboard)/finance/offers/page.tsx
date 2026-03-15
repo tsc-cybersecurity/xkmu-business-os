@@ -23,6 +23,7 @@ import {
 import { Plus, Search, FileText } from 'lucide-react'
 import { DocumentStatusBadge, offerStatuses } from '../_components/status-badge'
 import { Can } from '@/hooks/use-permissions'
+import { logger } from '@/lib/utils/logger'
 
 interface DocumentListItem {
   id: string
@@ -80,7 +81,7 @@ export default function OffersPage() {
         setMeta(data.meta)
       }
     } catch (error) {
-      console.error('Failed to fetch offers:', error)
+      logger.error('Failed to fetch offers', error, { module: 'FinanceOffersPage' })
     } finally {
       setLoading(false)
     }

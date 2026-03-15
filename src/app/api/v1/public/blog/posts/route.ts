@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BlogPostService } from '@/lib/services/blog-post.service'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest) {
     const result = await BlogPostService.listPublished({ page, limit, category })
     return NextResponse.json({ success: true, data: result.items, meta: result.meta })
   } catch (error) {
-    console.error('Error fetching public blog posts:', error)
+    logger.error('Error fetching public blog posts', error, { module: 'PublicBlogPostsAPI' })
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
       { status: 500 }

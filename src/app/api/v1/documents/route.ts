@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 // GET /api/v1/documents - List documents with filters
 export async function GET(request: NextRequest) {
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
       const result = await DocumentService.list(auth.tenantId, filters)
       return apiSuccess(result.items, result.meta)
     } catch (error) {
-      console.error('Failed to list documents:', error)
+      logger.error('Failed to list documents', error, { module: 'DocumentsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden der Dokumente', 500)
     }
   })
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       )
       return apiSuccess(document, undefined, 201)
     } catch (error) {
-      console.error('Failed to create document:', error)
+      logger.error('Failed to create document', error, { module: 'DocumentsAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Erstellen des Dokuments', 500)
     }
   })

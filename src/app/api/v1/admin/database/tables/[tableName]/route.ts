@@ -2,100 +2,11 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiServerError, parsePaginationParams } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
+import { ALLOWED_TABLES, TENANT_TABLES_SET, OWNER_ONLY_TABLES } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 type Row = Record<string, unknown>
-
-// Whitelist of allowed table names (all pgTable names from schema.ts)
-const ALLOWED_TABLES = new Set([
-  'tenants',
-  'roles',
-  'role_permissions',
-  'users',
-  'api_keys',
-  'companies',
-  'persons',
-  'leads',
-  'product_categories',
-  'products',
-  'ai_providers',
-  'ai_logs',
-  'ai_prompt_templates',
-  'ideas',
-  'activities',
-  'webhooks',
-  'audit_log',
-  'documents',
-  'document_items',
-  'din_requirements',
-  'din_audit_sessions',
-  'din_answers',
-  'din_grants',
-  'wiba_requirements',
-  'wiba_audit_sessions',
-  'wiba_answers',
-  'n8n_connections',
-  'n8n_workflow_logs',
-  'cms_pages',
-  'cms_blocks',
-  'cms_block_templates',
-  'cms_navigation_items',
-  'cms_block_type_definitions',
-  'blog_posts',
-  'media_uploads',
-  'company_researches',
-  'firecrawl_researches',
-  'business_documents',
-  'business_profiles',
-  'marketing_campaigns',
-  'marketing_tasks',
-  'marketing_templates',
-  'social_media_topics',
-  'social_media_posts',
-])
-
-// Tables that have a tenant_id column
-// Excluded: tenants, role_permissions, din_requirements, din_grants, wiba_requirements, cms_block_type_definitions (no tenant_id)
-const TENANT_TABLES = new Set([
-  'users',
-  'roles',
-  'api_keys',
-  'companies',
-  'persons',
-  'leads',
-  'product_categories',
-  'products',
-  'ai_providers',
-  'ai_logs',
-  'ai_prompt_templates',
-  'ideas',
-  'activities',
-  'webhooks',
-  'audit_log',
-  'documents',
-  'document_items',
-  'din_audit_sessions',
-  'din_answers',
-  'wiba_audit_sessions',
-  'wiba_answers',
-  'n8n_connections',
-  'n8n_workflow_logs',
-  'cms_pages',
-  'cms_blocks',
-  'cms_block_templates',
-  'cms_navigation_items',
-  'blog_posts',
-  'media_uploads',
-  'company_researches',
-  'firecrawl_researches',
-  'business_documents',
-  'business_profiles',
-  'marketing_campaigns',
-  'marketing_tasks',
-  'marketing_templates',
-  'social_media_topics',
-  'social_media_posts',
-])
 
 function toRows(result: unknown): Row[] {
   return result as Row[]
@@ -135,7 +46,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       }))
 
       // Build query with tenant filter if applicable
-      const hasTenantId = TENANT_TABLES.has(tableName)
+      const hasTenantId = TENANT_TABLES_SET.has(tableName)
       const tableIdent = sql.identifier(tableName)
 
       let countRows: Row[]
@@ -167,7 +78,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         { page: page ?? 1, limit: limit ?? 20, total, totalPages }
       )
     } catch (error) {
-      console.error(`Database table read error (${tableName}):`, error)
+      logger.error(`Database table read error (${tableName})`, error, { module: 'AdminDatabaseTablesAPI' })
       return apiServerError('Fehler beim Laden der Tabellendaten')
     }
   })
@@ -183,7 +94,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     // Global tables can only be modified by owners
-    if (GLOBAL_TABLES.has(tableName) && auth.role !== 'owner') {
+    if (OWNER_ONLY_TABLES.has(tableName) && auth.role !== 'owner') {
       return apiError('FORBIDDEN', 'Nur Owner duerfen globale Tabellen aendern', 403)
     }
 
@@ -213,7 +124,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       }
 
       // Verify tenant ownership if applicable
-      const hasTenantId = TENANT_TABLES.has(tableName)
+      const hasTenantId = TENANT_TABLES_SET.has(tableName)
       const tableIdent = sql.identifier(tableName)
 
       if (hasTenantId) {
@@ -247,21 +158,11 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
       return apiSuccess(result[0])
     } catch (error) {
-      console.error(`Database table update error (${tableName}):`, error)
+      logger.error(`Database table update error (${tableName})`, error, { module: 'AdminDatabaseTablesAPI' })
       return apiServerError('Fehler beim Aktualisieren des Datensatzes')
     }
   })
 }
-
-// Global tables (no tenant_id) - only owner can modify
-const GLOBAL_TABLES = new Set([
-  'tenants',
-  'role_permissions',
-  'din_requirements',
-  'din_grants',
-  'wiba_requirements',
-  'cms_block_type_definitions',
-])
 
 // DELETE /api/v1/admin/database/tables/[tableName] - Delete a row
 export async function DELETE(request: NextRequest, context: RouteContext) {
@@ -273,7 +174,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     }
 
     // Global tables can only be modified by owners
-    if (GLOBAL_TABLES.has(tableName) && auth.role !== 'owner') {
+    if (OWNER_ONLY_TABLES.has(tableName) && auth.role !== 'owner') {
       return apiError('FORBIDDEN', 'Nur Owner duerfen globale Tabellen aendern', 403)
     }
 
@@ -285,7 +186,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         return apiError('MISSING_ID', 'ID ist erforderlich', 400)
       }
 
-      const hasTenantId = TENANT_TABLES.has(tableName)
+      const hasTenantId = TENANT_TABLES_SET.has(tableName)
       const tableIdent = sql.identifier(tableName)
 
       // Verify tenant ownership if applicable
@@ -312,7 +213,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
       return apiSuccess({ deleted: true, id })
     } catch (error) {
-      console.error(`Database table delete error (${tableName}):`, error)
+      logger.error(`Database table delete error (${tableName})`, error, { module: 'AdminDatabaseTablesAPI' })
       return apiServerError('Fehler beim Loeschen des Datensatzes')
     }
   })

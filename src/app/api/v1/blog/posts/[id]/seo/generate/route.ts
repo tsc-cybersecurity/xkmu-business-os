@@ -3,6 +3,7 @@ import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-respons
 import { BlogPostService } from '@/lib/services/blog-post.service'
 import { BlogAIService } from '@/lib/services/ai/blog-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 export async function POST(
   request: NextRequest,
@@ -22,7 +23,7 @@ export async function POST(
 
       return apiSuccess(seo)
     } catch (error) {
-      console.error('Error generating blog SEO:', error)
+      logger.error('Error generating blog SEO', error, { module: 'BlogPostsSeoGenerateAPI' })
       return apiServerError('KI-SEO-Generierung fehlgeschlagen')
     }
   })

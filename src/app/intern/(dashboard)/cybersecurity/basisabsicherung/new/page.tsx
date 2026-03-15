@@ -16,6 +16,7 @@ import {
 import { Loader2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { logger } from '@/lib/utils/logger'
 
 interface Company {
   id: string
@@ -41,7 +42,7 @@ export default function NewAssessmentPage() {
           setCompanies(data.data)
         }
       } catch (error) {
-        console.error('Failed to fetch companies:', error)
+        logger.error('Failed to fetch companies', error, { module: 'CybersecurityBasisabsicherungNewPage' })
       } finally {
         setLoading(false)
       }
@@ -70,7 +71,7 @@ export default function NewAssessmentPage() {
         toast.error(data.error?.message || 'Fehler beim Erstellen')
       }
     } catch (error) {
-      console.error('Failed to create assessment:', error)
+      logger.error('Failed to create assessment', error, { module: 'CybersecurityBasisabsicherungNewPage' })
       toast.error('Fehler beim Erstellen')
     } finally {
       setCreating(false)

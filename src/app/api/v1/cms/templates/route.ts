@@ -4,6 +4,7 @@ import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { z } from 'zod'
 import { CmsBlockTemplateService } from '@/lib/services/cms-block-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 const createTemplateSchema = z.object({
   name: z.string().min(1).max(100),
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
       const template = await CmsBlockTemplateService.create(auth.tenantId, validation.data)
       return apiSuccess(template, undefined, 201)
     } catch (error) {
-      console.error('Error creating CMS template:', error)
+      logger.error('Error creating CMS template', error, { module: 'CmsTemplatesAPI' })
       return apiServerError()
     }
   })

@@ -22,6 +22,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Globe, Plus, Loader2, Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
+import { logger } from '@/lib/utils/logger'
 
 interface CmsPage {
   id: string
@@ -46,7 +47,7 @@ export default function CmsPagesPage() {
       const data = await response.json()
       if (data.success) setPages(data.data)
     } catch (error) {
-      console.error('Failed to fetch CMS pages:', error)
+      logger.error('Failed to fetch CMS pages', error, { module: 'CmsPage' })
     } finally {
       setLoading(false)
     }
@@ -76,7 +77,7 @@ export default function CmsPagesPage() {
         fetchPages()
       }
     } catch (error) {
-      console.error('Failed to create page:', error)
+      logger.error('Failed to create page', error, { module: 'CmsPage' })
     } finally {
       setCreating(false)
     }
@@ -89,7 +90,7 @@ export default function CmsPagesPage() {
       })
       fetchPages()
     } catch (error) {
-      console.error('Failed to publish/unpublish:', error)
+      logger.error('Failed to publish/unpublish', error, { module: 'CmsPage' })
     }
   }
 
@@ -99,7 +100,7 @@ export default function CmsPagesPage() {
       await fetch(`/api/v1/cms/pages/${id}`, { method: 'DELETE' })
       fetchPages()
     } catch (error) {
-      console.error('Failed to delete page:', error)
+      logger.error('Failed to delete page', error, { module: 'CmsPage' })
     }
   }
 

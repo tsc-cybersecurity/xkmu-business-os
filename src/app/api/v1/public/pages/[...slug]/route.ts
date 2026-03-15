@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { CmsPageService } from '@/lib/services/cms-page.service'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: page })
   } catch (error) {
-    console.error('Error fetching public page:', error)
+    logger.error('Error fetching public page', error, { module: 'PublicPagesAPI' })
     return NextResponse.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } },
       { status: 500 }

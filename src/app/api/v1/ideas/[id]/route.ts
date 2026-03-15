@@ -12,6 +12,7 @@ import {
 } from '@/lib/utils/validation'
 import { IdeaService } from '@/lib/services/idea.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
@@ -40,7 +41,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 
       return apiSuccess(idea)
     } catch (error) {
-      console.error('Error updating idea:', error)
+      logger.error('Error updating idea', error, { module: 'IdeasAPI' })
       return apiServerError()
     }
   })
