@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { opportunities, companies } from '@/lib/db/schema'
-import { eq, and, ilike, count, desc, or, sql } from 'drizzle-orm'
+import { eq, and, ilike, count, desc, or, inArray } from 'drizzle-orm'
 import type { Opportunity, NewOpportunity } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 import { CompanyService } from './company.service'
@@ -117,7 +117,7 @@ export const OpportunityService = {
         .where(
           and(
             eq(opportunities.tenantId, tenantId),
-            sql`${opportunities.placeId} = ANY(${placeIds})`
+            inArray(opportunities.placeId, placeIds)
           )
         )
       existingPlaceIds = new Set(existing.map((e) => e.placeId!))
