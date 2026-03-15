@@ -39,6 +39,89 @@ export type CompanyActionSlug = (typeof COMPANY_ACTIONS)[number]['slug']
 
 export type CompanyActionDef = (typeof COMPANY_ACTIONS)[number]
 
+/** Convert any AI response value into readable German text */
+function stringifyAiContent(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (value === null || value === undefined) return ''
+
+  if (Array.isArray(value)) {
+    return value.map((item, i) => {
+      if (typeof item === 'string') return `${i + 1}. ${item}`
+      if (typeof item === 'object' && item !== null) {
+        return stringifyObject(item as Record<string, unknown>, i + 1)
+      }
+      return String(item)
+    }).join('\n\n')
+  }
+
+  if (typeof value === 'object') {
+    return Object.entries(value).map(([key, val]) => {
+      if (Array.isArray(val)) return `${formatKey(key)}:\n${stringifyAiContent(val)}`
+      if (typeof val === 'object' && val !== null) return `${formatKey(key)}:\n${stringifyAiContent(val)}`
+      return `${formatKey(key)}: ${val}`
+    }).join('\n\n')
+  }
+
+  return String(value)
+}
+
+const KEY_LABELS: Record<string, string> = {
+  priority: 'Prioritaet',
+  description: 'Beschreibung',
+  solution: 'Loesung',
+  need: 'Bedarf',
+  recommendation: 'Empfehlung',
+  risk: 'Risiko',
+  impact: 'Auswirkung',
+  action: 'Massnahme',
+  strength: 'Staerke',
+  weakness: 'Schwaeche',
+  opportunity: 'Chance',
+  threat: 'Bedrohung',
+  title: 'Titel',
+  content: 'Inhalt',
+  summary: 'Zusammenfassung',
+  name: 'Name',
+  status: 'Status',
+  category: 'Kategorie',
+  type: 'Typ',
+  score: 'Bewertung',
+}
+
+function formatKey(key: string): string {
+  return KEY_LABELS[key.toLowerCase()] || key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')
+}
+
+function stringifyObject(obj: Record<string, unknown>, index?: number): string {
+  const lines: string[] = []
+  const prefix = index !== undefined ? `${index}. ` : ''
+
+  // If object has a title/name/description, use it as header
+  const header = obj.title || obj.name || obj.need || obj.action
+  if (header && typeof header === 'string') {
+    lines.push(`${prefix}${header}`)
+  } else if (prefix) {
+    lines.push(`${prefix}Punkt`)
+  }
+
+  for (const [key, val] of Object.entries(obj)) {
+    if (['title', 'name'].includes(key) && key === 'title' && val === header) continue
+    if (['name'].includes(key) && val === header) continue
+    if (val === null || val === undefined || val === '') continue
+
+    if (typeof val === 'string') {
+      lines.push(`   ${formatKey(key)}: ${val}`)
+    } else if (Array.isArray(val)) {
+      lines.push(`   ${formatKey(key)}:`)
+      val.forEach((v) => lines.push(`   - ${typeof v === 'string' ? v : JSON.stringify(v)}`))
+    } else {
+      lines.push(`   ${formatKey(key)}: ${String(val)}`)
+    }
+  }
+
+  return lines.join('\n')
+}
+
 export const CompanyActionsService = {
   async generate(tenantId: string, companyId: string, actionSlug: string, userId?: string | null) {
     // 1. Load company data
@@ -113,9 +196,15 @@ export const CompanyActionsService = {
       }
 
       const parsed = JSON.parse(content)
+      const rawSubject = parsed.subject || parsed.betreff || parsed.title || ''
+      const rawContent = parsed.content || parsed.body || parsed.inhalt || parsed
+
+      // Ensure content is always a readable string (AI may return nested objects/arrays)
+      const textContent = stringifyAiContent(rawContent)
+
       return {
-        subject: parsed.subject || parsed.betreff || parsed.title || '',
-        content: parsed.content || parsed.body || parsed.inhalt || '',
+        subject: typeof rawSubject === 'string' ? rawSubject : String(rawSubject),
+        content: textContent,
         actionSlug,
       }
     } catch (e) {

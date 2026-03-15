@@ -380,13 +380,13 @@ export function ActivityTimeline({
       <CardContent className="space-y-4">
         {/* Inline Note Form */}
         {showNoteForm && (
-          <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+          <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
             <Textarea
               placeholder="Notiz schreiben..."
               value={noteContent}
               onChange={(e) => setNoteContent(e.target.value)}
               rows={3}
-              className="resize-none"
+              className="resize-none bg-background"
             />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" size="sm" onClick={() => { setShowNoteForm(false); setNoteContent('') }}>
@@ -411,64 +411,67 @@ export function ActivityTimeline({
             title="Noch keine Aktivitaeten vorhanden"
           />
         ) : (
-          <div className="relative space-y-0">
-            {/* Vertical line */}
-            <div className="absolute left-4 top-2 bottom-2 w-px bg-border" />
-
+          <div className="divide-y">
             {activities.map((activity) => {
               const config = typeConfig[activity.type] || typeConfig.note
               const Icon = config.icon
-              const isOutreach = activity.type === 'ai_outreach'
+              const condensedContent = activity.content
+                ? activity.content.replace(/\n{3,}/g, '\n\n').replace(/^\s+$/gm, '').trim()
+                : null
 
               return (
-                <div key={activity.id} className="relative flex gap-4 pb-6 last:pb-0">
-                  {/* Icon circle */}
-                  <div className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border bg-background ${config.color}`}>
-                    <Icon className="h-4 w-4" />
+                <div key={activity.id} className="py-4 first:pt-0 last:pb-0">
+                  {/* Header row */}
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md border ${config.color} bg-background`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </div>
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {config.label}
+                      </span>
+                      {activity.subject && (
+                        <>
+                          <span className="text-muted-foreground/40">|</span>
+                          <span className="text-sm font-medium truncate">{activity.subject}</span>
+                        </>
+                      )}
+                    </div>
+                    {/* Inline actions */}
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" aria-label="Anzeigen" onClick={() => openActivityDetail(activity)}>
+                        <FileText className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" aria-label="Bearbeiten" onClick={() => { setSelectedActivity(activity); setEditSubject(activity.subject || ''); setEditContent(activity.content || ''); setEditMode(true); setShowActivityDialog(true) }}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" aria-label="Kopieren" onClick={() => handleCopyActivity(activity)}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      {(activity.type === 'email' || activity.type === 'ai_outreach') && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" aria-label="Als E-Mail senden" onClick={() => openEmailDialog(activity)}>
+                          <Send className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" aria-label="Loeschen" onClick={() => { setSelectedActivity(activity); handleDeleteActivity() }}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 min-w-0 pt-0.5">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="secondary" className="text-xs">
-                        {config.label}
-                      </Badge>
-                      {activity.subject && (
-                        <span className="text-sm font-medium">
-                          {activity.subject}
-                        </span>
-                      )}
+                  {condensedContent && (
+                    <div className="mt-2 ml-10 text-sm leading-relaxed text-foreground/80 whitespace-pre-wrap">
+                      {condensedContent}
+                    </div>
+                  )}
 
-                    </div>
-                    {activity.content && (
-                      <p className="mt-1.5 text-sm text-muted-foreground whitespace-pre-wrap">
-                        {activity.content.replace(/\n{3,}/g, '\n\n').trim()}
-                      </p>
-                    )}
-                    <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-                      <span>{formatDate(activity.createdAt)}</span>
-                      <span className="mx-1">·</span>
-                      <span>{getUserName(activity.user)}</span>
-                      <div className="ml-auto flex items-center gap-0.5">
-                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Anzeigen" onClick={() => openActivityDetail(activity)}>
-                          <FileText className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Bearbeiten" onClick={() => { setSelectedActivity(activity); setEditSubject(activity.subject || ''); setEditContent(activity.content || ''); setEditMode(true); setShowActivityDialog(true) }}>
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Kopieren" onClick={() => handleCopyActivity(activity)}>
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                        {(activity.type === 'email' || activity.type === 'ai_outreach') && (
-                          <Button variant="ghost" size="icon" className="h-6 w-6" aria-label="Als E-Mail senden" onClick={() => openEmailDialog(activity)}>
-                            <Send className="h-3 w-3" />
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" aria-label="Loeschen" onClick={() => { setSelectedActivity(activity); handleDeleteActivity() }}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
+                  {/* Meta */}
+                  <div className="mt-2 ml-10 flex items-center gap-2 text-xs text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>{formatDate(activity.createdAt)}</span>
+                    <span>·</span>
+                    <span>{getUserName(activity.user)}</span>
                   </div>
                 </div>
               )
