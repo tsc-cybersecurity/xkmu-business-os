@@ -626,6 +626,15 @@ export const searchOpportunitiesSchema = z.object({
 })
 
 export const updateOpportunitySchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  industry: z.string().max(255).optional().or(z.literal('')),
+  address: z.string().max(500).optional().or(z.literal('')),
+  city: z.string().max(255).optional().or(z.literal('')),
+  postalCode: z.string().max(20).optional().or(z.literal('')),
+  country: z.string().max(10).optional().or(z.literal('')),
+  phone: z.string().max(100).optional().or(z.literal('')),
+  email: z.string().max(255).optional().or(z.literal('')),
+  website: z.string().max(500).optional().or(z.literal('')),
   status: opportunityStatusSchema.optional(),
   notes: z.string().optional().or(z.literal('')),
 })

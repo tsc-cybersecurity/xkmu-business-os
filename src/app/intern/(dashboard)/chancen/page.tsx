@@ -111,6 +111,54 @@ export default function ChancenPage() {
   const [searching, setSearching] = useState(false)
   const [searchResult, setSearchResult] = useState<{ saved: number; enriched: number; duplicates: number; errors: string[] } | null>(null)
 
+  // Detail/Edit dialog state
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [editOpp, setEditOpp] = useState<Opportunity | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', industry: '', address: '', city: '', postalCode: '', country: '', phone: '', email: '', website: '', notes: '', status: '' })
+  const [savingEdit, setSavingEdit] = useState(false)
+
+  const openDetail = (opp: Opportunity) => {
+    setEditOpp(opp)
+    setEditForm({
+      name: opp.name || '',
+      industry: opp.industry || '',
+      address: opp.address || '',
+      city: opp.city || '',
+      postalCode: opp.postalCode || '',
+      country: opp.country || 'DE',
+      phone: opp.phone || '',
+      email: opp.email || '',
+      website: opp.website || '',
+      notes: opp.notes || '',
+      status: opp.status || 'new',
+    })
+    setDetailOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editOpp) return
+    setSavingEdit(true)
+    try {
+      const response = await fetch(`/api/v1/opportunities/${editOpp.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast.success('Chance aktualisiert')
+        setDetailOpen(false)
+        fetchOpportunities()
+      } else {
+        toast.error(data.error?.message || 'Speichern fehlgeschlagen')
+      }
+    } catch {
+      toast.error('Fehler beim Speichern')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
   const fetchOpportunities = useCallback(async () => {
     try {
       setLoading(true)
@@ -464,7 +512,7 @@ export default function ChancenPage() {
                 <TableBody>
                   {opportunities.map((opp) => (
                     <TableRow key={opp.id}>
-                      <TableCell className="font-medium max-w-[200px] truncate">
+                      <TableCell className="font-medium max-w-[200px] truncate cursor-pointer hover:text-primary" onClick={() => openDetail(opp)}>
                         {opp.name}
                       </TableCell>
                       <TableCell className="text-muted-foreground max-w-[150px] truncate">
@@ -575,6 +623,107 @@ export default function ChancenPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Detail/Edit Dialog */}
+      <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Chance bearbeiten</DialogTitle>
+            <DialogDescription>
+              Daten bearbeiten und speichern
+            </DialogDescription>
+          </DialogHeader>
+          {editOpp && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2 col-span-2">
+                  <Label htmlFor="edit-name">Name</Label>
+                  <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-industry">Branche</Label>
+                  <Input id="edit-industry" value={editForm.industry} onChange={(e) => setEditForm(f => ({ ...f, industry: e.target.value }))} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-status">Status</Label>
+                  <Select value={editForm.status} onValueChange={(val) => setEditForm(f => ({ ...f, status: val }))}>
+                    <SelectTrigger id="edit-status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">Neu</SelectItem>
+                      <SelectItem value="contacted">Kontaktiert</SelectItem>
+                      <SelectItem value="qualified">Qualifiziert</SelectItem>
+                      <SelectItem value="rejected">Abgelehnt</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold mb-3">Adresse</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="edit-address">Strasse</Label>
+                    <Input id="edit-address" value={editForm.address} onChange={(e) => setEditForm(f => ({ ...f, address: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-postalCode">PLZ</Label>
+                    <Input id="edit-postalCode" value={editForm.postalCode} onChange={(e) => setEditForm(f => ({ ...f, postalCode: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-city">Ort</Label>
+                    <Input id="edit-city" value={editForm.city} onChange={(e) => setEditForm(f => ({ ...f, city: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-country">Land</Label>
+                    <Input id="edit-country" value={editForm.country} onChange={(e) => setEditForm(f => ({ ...f, country: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold mb-3">Kontakt</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-phone">Telefon</Label>
+                    <Input id="edit-phone" value={editForm.phone} onChange={(e) => setEditForm(f => ({ ...f, phone: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-email">E-Mail</Label>
+                    <Input id="edit-email" type="email" value={editForm.email} onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <Label htmlFor="edit-website">Website</Label>
+                    <Input id="edit-website" value={editForm.website} onChange={(e) => setEditForm(f => ({ ...f, website: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <Label htmlFor="edit-notes">Notizen</Label>
+                <textarea id="edit-notes" value={editForm.notes} onChange={(e) => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm resize-y" placeholder="Notizen..." />
+              </div>
+
+              {/* Metadata info */}
+              {editOpp.rating !== null && (
+                <div className="border-t pt-4 flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>Bewertung: {editOpp.rating?.toFixed(1)} <span className="text-yellow-500">&#9733;</span> ({editOpp.reviewCount || 0})</span>
+                  <span>Quelle: {editOpp.source || 'Google Maps'}</span>
+                  <span>Erstellt: {new Date(editOpp.createdAt).toLocaleDateString('de-DE')}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailOpen(false)}>Abbrechen</Button>
+            <Button onClick={handleSaveEdit} disabled={savingEdit}>
+              {savingEdit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

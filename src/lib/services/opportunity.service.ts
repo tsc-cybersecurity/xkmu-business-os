@@ -6,6 +6,33 @@ import type { PaginatedResult } from '@/lib/utils/api-response'
 import { CompanyService } from './company.service'
 import { LeadService } from './lead.service'
 
+/** Extract street name and house number from address string */
+function parseStreetAndNumber(address: string | null): { street: string; houseNumber: string } {
+  if (!address) return { street: '', houseNumber: '' }
+
+  const trimmed = address.trim()
+
+  // "Musterstraße 12a" or "Musterstr. 12" or "Am Markt 3-5"
+  const match = trimmed.match(/^(.+?)\s+(\d+[\s\-/]*\w*)$/)
+  if (match) {
+    return { street: match[1].trim(), houseNumber: match[2].trim() }
+  }
+
+  // If the address contains a comma, it might be "Street 12, 80331 München"
+  // Just take the first part
+  const commaParts = trimmed.split(',')
+  if (commaParts.length > 1) {
+    const firstPart = commaParts[0].trim()
+    const matchFirst = firstPart.match(/^(.+?)\s+(\d+[\s\-/]*\w*)$/)
+    if (matchFirst) {
+      return { street: matchFirst[1].trim(), houseNumber: matchFirst[2].trim() }
+    }
+    return { street: firstPart, houseNumber: '' }
+  }
+
+  return { street: trimmed, houseNumber: '' }
+}
+
 export interface OpportunityFilters {
   status?: string | string[]
   city?: string
@@ -297,15 +324,37 @@ export const OpportunityService = {
       throw new Error('Opportunity wurde bereits konvertiert')
     }
 
-    // 2. Create company via CompanyService
+    // 2. Parse street and house number from address field
+    const { street, houseNumber } = parseStreetAndNumber(opportunity.address)
+
+    // Use opportunity fields, fall back to parsing fullAddress from metadata
+    let city = opportunity.city
+    let postalCode = opportunity.postalCode
+    if (!city || !postalCode) {
+      const meta = (opportunity.metadata || {}) as Record<string, unknown>
+      const fullAddress = typeof meta.fullAddress === 'string' ? meta.fullAddress : ''
+      if (fullAddress) {
+        const parts = fullAddress.split(',').map(p => p.trim())
+        for (const part of parts) {
+          const plzMatch = part.match(/(\d{4,5})\s+(.+)/)
+          if (plzMatch) {
+            if (!postalCode) postalCode = plzMatch[1]
+            if (!city) city = plzMatch[2]
+          }
+        }
+      }
+    }
+
+    // 3. Create company via CompanyService
     const company = await CompanyService.create(
       tenantId,
       {
         name: opportunity.name,
         industry: opportunity.industry || undefined,
-        street: opportunity.address || undefined,
-        city: opportunity.city || undefined,
-        postalCode: opportunity.postalCode || undefined,
+        street: street || undefined,
+        houseNumber: houseNumber || undefined,
+        city: city || undefined,
+        postalCode: postalCode || undefined,
         country: opportunity.country || 'DE',
         phone: opportunity.phone || undefined,
         email: opportunity.email || undefined,
