@@ -15,8 +15,14 @@ chown -R nextjs:nodejs /app/data /backups
 # ------------------------------------
 # Wait for database to be ready
 # ------------------------------------
-echo "Waiting for database..."
-until nc -z postgres 5432; do
+# Extract host and port from DATABASE_URL
+DB_HOST=$(echo "$DATABASE_URL" | sed -n 's|.*@\([^:/]*\).*|\1|p')
+DB_PORT=$(echo "$DATABASE_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
+DB_HOST=${DB_HOST:-postgres}
+DB_PORT=${DB_PORT:-5432}
+
+echo "Waiting for database at ${DB_HOST}:${DB_PORT}..."
+until nc -z "$DB_HOST" "$DB_PORT"; do
   echo "Database not ready, waiting..."
   sleep 2
 done
