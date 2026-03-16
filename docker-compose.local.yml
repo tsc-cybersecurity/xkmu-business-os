@@ -1,22 +1,20 @@
 # ============================================
-# xKMU Business OS - Lokales Docker Setup
+# xKMU Business OS - Docker Setup (Supabase DB)
 # ============================================
-# Einfach starten mit:
+# Voraussetzung: Supabase Stack laeuft separat (supabase-db Container)
 #
+# Starten:
 #   docker compose -f docker-compose.local.yml up -d --build
 #
 # Stoppen:
 #   docker compose -f docker-compose.local.yml down
 #
-# Stoppen + Daten loeschen (ACHTUNG: loescht Datenbank!):
-#   docker compose -f docker-compose.local.yml down -v
-#   Vorher Backup erstellen: ./docker/scripts/backup.sh
-#
-# Logs anzeigen:
+# Logs:
 #   docker compose -f docker-compose.local.yml logs -f app
 #
 # Nach dem Start erreichbar unter: http://localhost:3000
 # Login: siehe SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD in .env
+# Supabase Dashboard: https://db.xkmu.de
 # ============================================
 
 services:
@@ -35,10 +33,11 @@ services:
     environment:
       - NODE_ENV=production
       - DOCKER=true
-      - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD:-changeMe_db_2026!}@postgres:5432/xkmu_business_os
-      - DATABASE_SSL=${DATABASE_SSL:-false}
+      # Supabase PostgreSQL (external stack)
+      - DATABASE_URL=postgresql://postgres:${SUPABASE_DB_PASSWORD:-48cc2ba9bf03963c170c83798ef1419a}@supabase-db:5432/postgres
+      - DATABASE_SSL=false
       - JWT_SECRET=${JWT_SECRET:-changeMe_jwt_secret_min32chars_2026!}
-      - NEXT_PUBLIC_APP_URL=http://localhost:${APP_PORT:-3000}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       # AI Providers (optional)
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -46,8 +45,7 @@ services:
       - SERPAPI_KEY=${SERPAPI_KEY:-}
       # Redis
       - REDIS_URL=redis://:${REDIS_PASSWORD:-changeMe_redis_2026!}@redis:6379
-      # Next.js standalone binds to HOSTNAME; Docker sets it to the container ID
-      # which makes 127.0.0.1 unreachable. Force binding to all interfaces.
+      # Next.js
       - HOSTNAME=0.0.0.0
       # Email (optional)
       - SMTP_HOST=${SMTP_HOST:-}
@@ -56,12 +54,12 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
+      # Seed admin credentials
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-}
     volumes:
       - ./data/uploads:/app/data
-      - db_backups:/backups
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -71,42 +69,16 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - xkmu-network
-      - backend
+      - supabase_default
+      - internal
 
   # ============================================
-  # PostgreSQL Database
-  # ============================================
-  postgres:
-    image: postgres:16-alpine
-    container_name: xkmu-postgres
-    restart: unless-stopped
-    # Port only on localhost for admin access, not exposed to internet
-    ports:
-      - "127.0.0.1:${DB_PORT:-5432}:5432"
-    environment:
-      POSTGRES_USER: xkmu
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeMe_db_2026!}
-      POSTGRES_DB: xkmu_business_os
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - db_backups:/backups
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U xkmu -d xkmu_business_os"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - backend
-
-  # ============================================
-  # Redis (Session Cache) - internal only, not exposed to host/internet
+  # Redis (Session Cache)
   # ============================================
   redis:
     image: redis:7-alpine
     container_name: xkmu-redis
     restart: unless-stopped
-    # NO ports mapping - Redis is only accessible from other containers via backend network
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeMe_redis_2026!} --bind 0.0.0.0 --protected-mode yes
@@ -116,41 +88,14 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - backend
-
-  # ============================================
-  # pgAdmin 4 (Datenbank-Verwaltung)
-  # ============================================
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: xkmu-pgadmin
-    restart: unless-stopped
-    ports:
-      - "${PGADMIN_PORT:-5050}:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-changeMe_pgadmin_2026!}
-      PGADMIN_CONFIG_SERVER_MODE: "False"
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - xkmu-network
-      - backend
+      - internal
 
 networks:
-  xkmu-network:
-    driver: bridge
-  backend:
-    # internal: true means no internet gateway - containers on this network
-    # can talk to each other but NOT to the outside world (and vice versa)
+  # Connect to Supabase's Docker network (where supabase-db lives)
+  supabase_default:
+    external: true
+  internal:
     internal: true
 
 volumes:
-  postgres_data:
   redis_data:
-  db_backups:
-  pgadmin_data:
