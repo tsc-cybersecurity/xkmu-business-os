@@ -16,7 +16,7 @@
 #   docker compose -f docker-compose.local.yml logs -f app
 #
 # Nach dem Start erreichbar unter: http://localhost:3000
-# Standard-Login: admin@example.com / admin123
+# Login: siehe SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD in .env
 # ============================================
 
 services:

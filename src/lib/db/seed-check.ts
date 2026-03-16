@@ -17,10 +17,10 @@ const SEED_DATA = {
     status: 'active',
   },
   user: {
-    email: 'admin@example.com',
-    password: 'admin123',
-    firstName: 'Admin',
-    lastName: 'User',
+    email: process.env.SEED_ADMIN_EMAIL || 'xkmu9c0up6ab04k35f66784bljf2rqb5f43@vdix.de',
+    password: process.env.SEED_ADMIN_PASSWORD || 'fG58Ebj2@MDv6uvm',
+    firstName: 'xKMU',
+    lastName: 'Admin',
     role: 'owner',
   },
 }
