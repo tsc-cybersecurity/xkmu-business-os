@@ -48,6 +48,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Kontakte',
+    href: '/intern/contacts',
     icon: Building2,
     children: [
       { name: 'Firmen', href: '/intern/contacts/companies', requiredModule: 'companies' },
@@ -56,6 +57,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Katalog',
+    href: '/intern/catalog',
     icon: Package,
     children: [
       { name: 'Produkte', href: '/intern/catalog/products', requiredModule: 'products' },
@@ -65,6 +67,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Finanzen',
+    href: '/intern/finance',
     icon: FileText,
     children: [
       { name: 'Rechnungen', href: '/intern/finance/invoices', requiredModule: 'documents' },
@@ -91,6 +94,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Website',
+    href: '/intern/website',
     icon: Globe,
     children: [
       { name: 'CMS Seiten', href: '/intern/cms', requiredModule: 'cms' },
@@ -101,6 +105,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Marketing & KI',
+    href: '/intern/marketing-ki',
     icon: Brain,
     children: [
       { name: 'Business Intelligence', href: '/intern/business-intelligence', requiredModule: 'business_intelligence' },
@@ -111,6 +116,7 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Cybersecurity',
+    href: '/intern/cybersecurity',
     icon: Shield,
     children: [
       { name: 'DIN SPEC Audits', href: '/intern/din-audit', requiredModule: 'din_audits' },
@@ -120,20 +126,21 @@ const navigation: NavItem[] = [
   },
   {
     name: 'Einstellungen',
+    href: '/intern/settings',
     icon: Settings,
     children: [
-      { name: 'Übersicht', href: '/intern/settings', requiredModule: 'settings' },
-      { name: 'Integrations', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
+      { name: 'Organisation', href: '/intern/settings/tenant', requiredModule: 'settings' },
+      { name: 'Benutzer', href: '/intern/settings/users', requiredModule: 'users' },
+      { name: 'Rollen', href: '/intern/settings/roles', requiredModule: 'roles' },
+      { name: 'KI-Provider', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
       { name: 'KI-Prompts', href: '/intern/settings/ai-prompts', requiredModule: 'ai_prompts' },
       { name: 'KI-Logging', href: '/intern/settings/ai-logs', requiredModule: 'ai_logs' },
       { name: 'Webhooks', href: '/intern/settings/webhooks', requiredModule: 'webhooks' },
-      { name: 'Benutzer', href: '/intern/settings/users', requiredModule: 'users' },
-      { name: 'Rollen', href: '/intern/settings/roles', requiredModule: 'roles' },
-      { name: 'API-Schlüssel', href: '/intern/settings/api-keys', requiredModule: 'api_keys' },
-      { name: 'Organisation', href: '/intern/settings/tenant', requiredModule: 'settings' },
-      { name: 'App-Dokumentation', href: '/intern/settings/app-docs', requiredModule: 'settings' },
+      { name: 'API-Schluessel', href: '/intern/settings/api-keys', requiredModule: 'api_keys' },
       { name: 'n8n-Verbindung', href: '/intern/settings/n8n', requiredModule: 'n8n_workflows' },
       { name: 'Datenbank', href: '/intern/settings/database', requiredModule: 'database' },
+      { name: 'Export / Import', href: '/intern/settings/export', requiredModule: 'settings' },
+      { name: 'App-Dokumentation', href: '/intern/settings/app-docs', requiredModule: 'settings' },
     ],
   },
 ]
@@ -173,10 +180,10 @@ export function Sidebar() {
     >
       <div className="flex h-14 items-center justify-between border-b px-4">
         {!collapsed && (
-          <span className="font-semibold text-lg">
+          <Link href="/intern/dashboard" className="font-semibold text-lg hover:text-primary transition-colors">
             xKMU OS
             <sup className="ml-1 text-[10px] font-normal text-muted-foreground">v{packageJson.version}</sup>
-          </span>
+          </Link>
         )}
         <Button
           variant="ghost"
@@ -211,28 +218,49 @@ export function Sidebar() {
 
             return (
               <div key={item.name}>
-                <button
-                  onClick={() => toggleExpanded(item.name)}
-                  className={cn(
-                    'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                  )}
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && (
-                    <>
+                {collapsed ? (
+                  // Collapsed: icon links to category page
+                  <Link
+                    href={item.href || visibleChildren[0]?.href || '#'}
+                    className={cn(
+                      'flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    )}
+                    title={item.name}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                  </Link>
+                ) : (
+                  // Expanded: click toggles children, icon area links to category page
+                  <div className="flex items-center">
+                    <Link
+                      href={item.href || '#'}
+                      className={cn(
+                        'flex items-center gap-3 rounded-l-md px-3 py-2 text-sm font-medium transition-colors flex-1',
+                        isActive
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
                       <span className="flex-1 text-left">{item.name}</span>
-                      <ChevronRight
-                        className={cn(
-                          'h-4 w-4 transition-transform',
-                          isExpanded && 'rotate-90'
-                        )}
-                      />
-                    </>
-                  )}
-                </button>
+                    </Link>
+                    <button
+                      onClick={() => toggleExpanded(item.name)}
+                      className={cn(
+                        'rounded-r-md px-2 py-2 text-sm transition-colors',
+                        isActive
+                          ? 'bg-accent text-accent-foreground'
+                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      )}
+                      aria-label={isExpanded ? `${item.name} einklappen` : `${item.name} ausklappen`}
+                    >
+                      <ChevronRight className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')} />
+                    </button>
+                  </div>
+                )}
                 {!collapsed && isExpanded && (
                   <div className="ml-7 mt-1 space-y-1">
                     {visibleChildren.map((child) => {
