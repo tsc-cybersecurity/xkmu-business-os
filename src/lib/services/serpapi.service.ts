@@ -6,6 +6,14 @@
 import { logger } from '@/lib/utils/logger'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 
+async function getProviderId(tenantId?: string): Promise<string | null> {
+  if (!tenantId) return null
+  try {
+    const providers = await AiProviderService.list(tenantId)
+    return providers.find((p) => p.providerType === 'serpapi' && p.isActive)?.id || null
+  } catch { return null }
+}
+
 interface SerpApiPlace {
   title: string
   place_id: string
@@ -133,31 +141,60 @@ function parseAddress(address: string): { street: string; city: string; postalCo
 export const SerpApiService = {
   async searchPlaces(query: string, location: string, radius: number = 25, maxResults: number = 20, tenantId?: string): Promise<OpportunityResult[]> {
     const apiKey = await getApiKey(tenantId)
+    const startTime = Date.now()
+    const prompt = `${query} in ${location}`
+    const providerId = await getProviderId(tenantId)
 
     const params = new URLSearchParams({
       engine: 'google_maps',
-      q: `${query} in ${location}`,
+      q: prompt,
       type: 'search',
       hl: 'de',
       gl: 'de',
-      num: String(Math.min(maxResults, 20)), // SerpAPI max per request
+      num: String(Math.min(maxResults, 20)),
     })
 
     const url = `https://serpapi.com/search?${params}&api_key=${apiKey}`
 
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(30_000),
-    })
+    let response: Response
+    try {
+      response = await fetch(url, { signal: AbortSignal.timeout(30_000) })
+    } catch (error) {
+      const durationMs = Date.now() - startTime
+      if (tenantId) {
+        AiProviderService.createLog({
+          tenantId, providerId, providerType: 'serpapi', model: 'google_maps',
+          prompt, status: 'error', errorMessage: error instanceof Error ? error.message : 'Timeout',
+          durationMs, feature: 'opportunity_search',
+        }).catch(() => {})
+      }
+      throw error
+    }
 
     if (!response.ok) {
       const text = await response.text()
-      logger.error('SerpAPI request failed', new Error(text), { module: 'SerpApiService', query, location })
+      const durationMs = Date.now() - startTime
+      if (tenantId) {
+        AiProviderService.createLog({
+          tenantId, providerId, providerType: 'serpapi', model: 'google_maps',
+          prompt, status: 'error', errorMessage: `HTTP ${response.status}: ${text.substring(0, 200)}`,
+          durationMs, feature: 'opportunity_search',
+        }).catch(() => {})
+      }
       throw new Error(`SerpAPI Fehler: ${response.status}`)
     }
 
     const data: SerpApiResponse = await response.json()
 
     if (data.error) {
+      const durationMs = Date.now() - startTime
+      if (tenantId) {
+        AiProviderService.createLog({
+          tenantId, providerId, providerType: 'serpapi', model: 'google_maps',
+          prompt, status: 'error', errorMessage: data.error,
+          durationMs, feature: 'opportunity_search',
+        }).catch(() => {})
+      }
       throw new Error(`SerpAPI: ${data.error}`)
     }
 
@@ -192,6 +229,16 @@ export const SerpApiService = {
         },
       }
     })
+
+    // Log success
+    const durationMs = Date.now() - startTime
+    if (tenantId) {
+      AiProviderService.createLog({
+        tenantId, providerId, providerType: 'serpapi', model: 'google_maps',
+        prompt, response: `${results.length} Ergebnisse gefunden`,
+        status: 'success', durationMs, feature: 'opportunity_search',
+      }).catch(() => {})
+    }
 
     return results
   },

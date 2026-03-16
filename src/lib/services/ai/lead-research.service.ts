@@ -557,7 +557,7 @@ export const LeadResearchService = {
     if (input.website && !input.websiteContent) {
       logger.info(`Scraping website: ${input.website}`, { module: 'LeadResearchService' })
       try {
-        const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(input.website, firecrawlApiKey)
+        const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(input.website, firecrawlApiKey, context?.tenantId)
         if (scrapeResult.success && scrapeResult.combinedText) {
           enrichedInput.websiteContent = scrapeResult.combinedText
           logger.info(`Website scraped successfully (${scrapeResult.combinedText.length} chars)`, { module: 'LeadResearchService' })

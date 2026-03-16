@@ -203,7 +203,7 @@ export const WebsiteScraperService = {
    * Scrape a website using Firecrawl API if available, otherwise fallback to HTML scraper.
    * Returns combined text content for AI analysis.
    */
-  async scrapeCompanyWebsite(url: string, firecrawlApiKey?: string): Promise<{
+  async scrapeCompanyWebsite(url: string, firecrawlApiKey?: string, tenantId?: string): Promise<{
     mainPage: ScrapedWebsite
     subPages: ScrapedWebsite[]
     combinedText: string
@@ -214,7 +214,7 @@ export const WebsiteScraperService = {
       try {
         const { FirecrawlService } = await import('@/lib/services/firecrawl.service')
         logger.info(`Using Firecrawl for: ${url}`, { module: 'WebsiteScraperService' })
-        const result = await FirecrawlService.scrape(url, firecrawlApiKey)
+        const result = await FirecrawlService.scrape(url, firecrawlApiKey, tenantId)
 
         if (result.success && result.markdown) {
           let combinedText = `=== HAUPTSEITE: ${result.url} ===\n`
