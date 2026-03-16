@@ -133,7 +133,7 @@ export const OpportunityService = {
           )
         )
       for (const row of existing) {
-        if (row.placeId) existingMap.set(row.placeId, row)
+        if (row.placeId) existingMap.set(row.placeId, { ...row, metadata: (row.metadata as Record<string, unknown>) || null })
       }
     }
 

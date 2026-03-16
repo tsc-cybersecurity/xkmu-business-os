@@ -109,7 +109,7 @@ export default function ChancenPage() {
   const [searchRadius, setSearchRadius] = useState('25')
   const [searchMaxPerLocation, setSearchMaxPerLocation] = useState('20')
   const [searching, setSearching] = useState(false)
-  const [searchResult, setSearchResult] = useState<{ saved: number; duplicates: number; errors: string[] } | null>(null)
+  const [searchResult, setSearchResult] = useState<{ saved: number; enriched: number; duplicates: number; errors: string[] } | null>(null)
 
   const fetchOpportunities = useCallback(async () => {
     try {
