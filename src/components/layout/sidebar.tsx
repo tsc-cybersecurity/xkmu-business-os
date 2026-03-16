@@ -148,15 +148,25 @@ const navigation: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Kontakte'])
+  const [manualToggles, setManualToggles] = useState<Record<string, boolean>>({})
   const { hasPermission, loading: permissionsLoading } = usePermissions()
 
+  // Auto-expand groups whose href or children match the current path
+  const isGroupActive = (item: NavItem): boolean => {
+    if (item.href && pathname.startsWith(item.href)) return true
+    if (item.children) return item.children.some((c) => pathname.startsWith(c.href))
+    return false
+  }
+
+  const isExpanded = (name: string, item: NavItem): boolean => {
+    // Manual toggle overrides auto-expand
+    if (manualToggles[name] !== undefined) return manualToggles[name]
+    // Auto-expand if active
+    return isGroupActive(item)
+  }
+
   const toggleExpanded = (name: string) => {
-    setExpandedItems((prev) =>
-      prev.includes(name)
-        ? prev.filter((item) => item !== name)
-        : [...prev, name]
-    )
+    setManualToggles((prev) => ({ ...prev, [name]: !isExpanded(name, navigation.find(n => n.name === name)!) }))
   }
 
   // Berechtigungscheck: Mindestens Lesen fuer das Modul
@@ -209,7 +219,7 @@ export function Sidebar() {
             const visibleChildren = filterChildren(item.children)
             if (visibleChildren.length === 0) return null
 
-            const isExpanded = expandedItems.includes(item.name)
+            const expanded = isExpanded(item.name, item)
             const isActive = visibleChildren.some((child) =>
               child.href.length <= 10
                 ? pathname === child.href
@@ -255,13 +265,13 @@ export function Sidebar() {
                           ? 'bg-accent text-accent-foreground'
                           : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                       )}
-                      aria-label={isExpanded ? `${item.name} einklappen` : `${item.name} ausklappen`}
+                      aria-label={expanded ? `${item.name} einklappen` : `${item.name} ausklappen`}
                     >
-                      <ChevronRight className={cn('h-4 w-4 transition-transform', isExpanded && 'rotate-90')} />
+                      <ChevronRight className={cn('h-4 w-4 transition-transform', expanded && 'rotate-90')} />
                     </button>
                   </div>
                 )}
-                {!collapsed && isExpanded && (
+                {!collapsed && expanded && (
                   <div className="ml-7 mt-1 space-y-1">
                     {visibleChildren.map((child) => {
                       // Exact match for short paths like /settings, startsWith for longer paths
