@@ -19,6 +19,7 @@ import {
   Brain,
   Database,
   Workflow,
+  Monitor,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
@@ -45,6 +46,12 @@ const navigation: NavItem[] = [
     name: 'Dashboard',
     href: '/intern/dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    name: 'Cockpit',
+    href: '/intern/cockpit',
+    icon: Monitor,
+    requiredModule: 'cockpit',
   },
   {
     name: 'Kontakte',

@@ -94,6 +94,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   n8nWorkflowLogs: many(n8nWorkflowLogs),
   opportunities: many(opportunities),
   chatConversations: many(chatConversations),
+  cockpitSystems: many(cockpitSystems),
 }))
 
 // ============================================
@@ -1854,3 +1855,46 @@ export type NewChatConversation = typeof chatConversations.$inferInsert
 
 export type ChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+
+// ============================================
+// Cockpit Systems (IT-Infrastruktur)
+// ============================================
+export const cockpitSystems = pgTable('cockpit_systems', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  hostname: varchar('hostname', { length: 500 }),
+  url: varchar('url', { length: 500 }),
+  username: varchar('username', { length: 255 }),
+  password: text('password'),
+  category: varchar('category', { length: 100 }),
+  function: varchar('function', { length: 255 }),
+  description: text('description'),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  port: integer('port'),
+  protocol: varchar('protocol', { length: 20 }),
+  status: varchar('status', { length: 20 }).default('active'),
+  tags: jsonb('tags').default([]),
+  notes: text('notes'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cockpit_systems_tenant').on(table.tenantId),
+  index('idx_cockpit_systems_category').on(table.tenantId, table.category),
+  index('idx_cockpit_systems_status').on(table.tenantId, table.status),
+])
+
+export const cockpitSystemsRelations = relations(cockpitSystems, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [cockpitSystems.tenantId],
+    references: [tenants.id],
+  }),
+  creator: one(users, {
+    fields: [cockpitSystems.createdBy],
+    references: [users.id],
+  }),
+}))
+
+export type CockpitSystem = typeof cockpitSystems.$inferSelect
+export type NewCockpitSystem = typeof cockpitSystems.$inferInsert

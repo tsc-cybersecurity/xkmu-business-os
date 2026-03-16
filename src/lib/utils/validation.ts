@@ -640,6 +640,28 @@ export const updateOpportunitySchema = z.object({
 })
 
 // ============================================
+// Cockpit System Schemas
+// ============================================
+export const cockpitSystemSchema = z.object({
+  name: z.string().min(1).max(255),
+  hostname: z.string().max(500).optional().or(z.literal('')),
+  url: z.string().max(500).optional().or(z.literal('')),
+  username: z.string().max(255).optional().or(z.literal('')),
+  password: z.string().optional().or(z.literal('')),
+  category: z.string().max(100).optional().or(z.literal('')),
+  function: z.string().max(255).optional().or(z.literal('')),
+  description: z.string().optional().or(z.literal('')),
+  ipAddress: z.string().max(45).optional().or(z.literal('')),
+  port: z.coerce.number().min(1).max(65535).optional().nullable(),
+  protocol: z.string().max(20).optional().or(z.literal('')),
+  status: z.enum(['active', 'inactive', 'maintenance']).default('active'),
+  tags: z.array(z.string()).optional().default([]),
+  notes: z.string().optional().or(z.literal('')),
+})
+
+export const updateCockpitSystemSchema = cockpitSystemSchema.partial()
+
+// ============================================
 // Helper Functions
 // ============================================
 export function validateAndParse<T>(

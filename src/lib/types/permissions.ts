@@ -31,6 +31,7 @@ export const MODULES = [
   'n8n_workflows',
   'opportunities',
   'chat',
+  'cockpit',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -79,6 +80,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   n8n_workflows: 'n8n Workflows',
   opportunities: 'Chancen',
   chat: 'KI-Chatbot',
+  cockpit: 'Cockpit',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {
