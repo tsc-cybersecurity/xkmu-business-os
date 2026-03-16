@@ -21,7 +21,7 @@ import {
   Workflow,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { Module } from '@/lib/types/permissions'
 import packageJson from '../../../package.json'
@@ -151,6 +151,11 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [manualToggles, setManualToggles] = useState<Record<string, boolean>>({})
   const { hasPermission, loading: permissionsLoading } = usePermissions()
+
+  // Clear manual overrides on navigation so auto-expand takes effect
+  useEffect(() => {
+    setManualToggles({})
+  }, [pathname])
 
   // Auto-expand groups whose href or children match the current path
   const isGroupActive = (item: NavItem): boolean => {
