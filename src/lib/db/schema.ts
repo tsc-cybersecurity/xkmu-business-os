@@ -21,6 +21,30 @@ export const tenants = pgTable('tenants', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 100 }).unique().notNull(),
+  // Adresse
+  street: varchar('street', { length: 255 }),
+  houseNumber: varchar('house_number', { length: 20 }),
+  postalCode: varchar('postal_code', { length: 20 }),
+  city: varchar('city', { length: 255 }),
+  country: varchar('country', { length: 10 }).default('DE'),
+  // Rechtliches
+  legalForm: varchar('legal_form', { length: 100 }),
+  managingDirector: varchar('managing_director', { length: 255 }),
+  tradeRegister: varchar('trade_register', { length: 255 }),
+  vatId: varchar('vat_id', { length: 50 }),
+  taxNumber: varchar('tax_number', { length: 50 }),
+  // Bankverbindungen
+  bankName1: varchar('bank_name_1', { length: 255 }),
+  bankIban1: varchar('bank_iban_1', { length: 40 }),
+  bankBic1: varchar('bank_bic_1', { length: 20 }),
+  bankName2: varchar('bank_name_2', { length: 255 }),
+  bankIban2: varchar('bank_iban_2', { length: 40 }),
+  bankBic2: varchar('bank_bic_2', { length: 20 }),
+  // Kontakt
+  phone: varchar('phone', { length: 100 }),
+  email: varchar('email', { length: 255 }),
+  website: varchar('website', { length: 500 }),
+  // System
   settings: jsonb('settings').default({}),
   status: varchar('status', { length: 20 }).default('active'),
   trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),

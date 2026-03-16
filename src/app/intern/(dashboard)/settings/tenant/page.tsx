@@ -16,6 +16,25 @@ interface Tenant {
   id: string
   name: string
   slug: string
+  street: string | null
+  houseNumber: string | null
+  postalCode: string | null
+  city: string | null
+  country: string | null
+  legalForm: string | null
+  managingDirector: string | null
+  tradeRegister: string | null
+  vatId: string | null
+  taxNumber: string | null
+  bankName1: string | null
+  bankIban1: string | null
+  bankBic1: string | null
+  bankName2: string | null
+  bankIban2: string | null
+  bankBic2: string | null
+  phone: string | null
+  email: string | null
+  website: string | null
   status: string
   settings: Record<string, unknown>
   trialEndsAt: string | null
@@ -49,6 +68,25 @@ export default function TenantSettingsPage() {
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
+    street: '',
+    houseNumber: '',
+    postalCode: '',
+    city: '',
+    country: 'DE',
+    legalForm: '',
+    managingDirector: '',
+    tradeRegister: '',
+    vatId: '',
+    taxNumber: '',
+    bankName1: '',
+    bankIban1: '',
+    bankBic1: '',
+    bankName2: '',
+    bankIban2: '',
+    bankBic2: '',
+    phone: '',
+    email: '',
+    website: '',
   })
 
   useEffect(() => {
@@ -63,8 +101,27 @@ export default function TenantSettingsPage() {
       if (data.success) {
         setTenant(data.data)
         setFormData({
-          name: data.data.name,
-          slug: data.data.slug,
+          name: data.data.name || '',
+          slug: data.data.slug || '',
+          street: data.data.street || '',
+          houseNumber: data.data.houseNumber || '',
+          postalCode: data.data.postalCode || '',
+          city: data.data.city || '',
+          country: data.data.country || 'DE',
+          legalForm: data.data.legalForm || '',
+          managingDirector: data.data.managingDirector || '',
+          tradeRegister: data.data.tradeRegister || '',
+          vatId: data.data.vatId || '',
+          taxNumber: data.data.taxNumber || '',
+          bankName1: data.data.bankName1 || '',
+          bankIban1: data.data.bankIban1 || '',
+          bankBic1: data.data.bankBic1 || '',
+          bankName2: data.data.bankName2 || '',
+          bankIban2: data.data.bankIban2 || '',
+          bankBic2: data.data.bankBic2 || '',
+          phone: data.data.phone || '',
+          email: data.data.email || '',
+          website: data.data.website || '',
         })
         setLogoUrl((data.data.settings?.logoUrl as string) || null)
       }
@@ -263,7 +320,7 @@ export default function TenantSettingsPage() {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -305,9 +362,146 @@ export default function TenantSettingsPage() {
                 Bindestriche erlaubt.
               </p>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="legalForm">Rechtsform</Label>
+                <Input id="legalForm" value={formData.legalForm} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} placeholder="z.B. GmbH, UG, e.K." />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="managingDirector">Geschaeftsfuehrer</Label>
+                <Input id="managingDirector" value={formData.managingDirector} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} placeholder="Max Mustermann" />
+              </div>
+            </div>
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Adresse</CardTitle>
+            <CardDescription>Firmenanschrift</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="street">Strasse</Label>
+                <Input id="street" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} placeholder="Musterstrasse" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="houseNumber">Hausnummer</Label>
+                <Input id="houseNumber" value={formData.houseNumber} onChange={(e) => setFormData({ ...formData, houseNumber: e.target.value })} placeholder="42" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="postalCode">PLZ</Label>
+                <Input id="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} placeholder="12345" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">Ort</Label>
+                <Input id="city" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Berlin" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="country">Land</Label>
+                <Input id="country" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="DE" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Kontakt</CardTitle>
+            <CardDescription>Erreichbarkeit der Organisation</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="orgPhone">Telefon</Label>
+                <Input id="orgPhone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+49 30 12345678" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="orgEmail">E-Mail</Label>
+                <Input id="orgEmail" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="info@firma.de" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="orgWebsite">Website</Label>
+              <Input id="orgWebsite" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://www.firma.de" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Rechtliche Angaben</CardTitle>
+            <CardDescription>Handelsregister, Steuernummern</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="tradeRegister">Handelsregister</Label>
+              <Input id="tradeRegister" value={formData.tradeRegister} onChange={(e) => setFormData({ ...formData, tradeRegister: e.target.value })} placeholder="HRB 12345, Amtsgericht Berlin-Charlottenburg" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="vatId">Umsatzsteuer-ID</Label>
+                <Input id="vatId" value={formData.vatId} onChange={(e) => setFormData({ ...formData, vatId: e.target.value })} placeholder="DE123456789" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="taxNumber">Steuernummer</Label>
+                <Input id="taxNumber" value={formData.taxNumber} onChange={(e) => setFormData({ ...formData, taxNumber: e.target.value })} placeholder="27/123/12345" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Bankverbindung 1</CardTitle>
+            <CardDescription>Primaere Bankverbindung</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="bankName1">Bank</Label>
+              <Input id="bankName1" value={formData.bankName1} onChange={(e) => setFormData({ ...formData, bankName1: e.target.value })} placeholder="Deutsche Bank" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bankIban1">IBAN</Label>
+                <Input id="bankIban1" value={formData.bankIban1} onChange={(e) => setFormData({ ...formData, bankIban1: e.target.value })} placeholder="DE89 3704 0044 0532 0130 00" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bankBic1">BIC</Label>
+                <Input id="bankBic1" value={formData.bankBic1} onChange={(e) => setFormData({ ...formData, bankBic1: e.target.value })} placeholder="COBADEFFXXX" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Bankverbindung 2</CardTitle>
+            <CardDescription>Optionale zweite Bankverbindung</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="bankName2">Bank</Label>
+              <Input id="bankName2" value={formData.bankName2} onChange={(e) => setFormData({ ...formData, bankName2: e.target.value })} placeholder="Sparkasse" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="bankIban2">IBAN</Label>
+                <Input id="bankIban2" value={formData.bankIban2} onChange={(e) => setFormData({ ...formData, bankIban2: e.target.value })} placeholder="DE89 3704 0044 0532 0130 00" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bankBic2">BIC</Label>
+                <Input id="bankBic2" value={formData.bankBic2} onChange={(e) => setFormData({ ...formData, bankBic2: e.target.value })} placeholder="COBADEFFXXX" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Status & Abonnement</CardTitle>
