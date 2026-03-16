@@ -1,3 +1,5 @@
+'use client'
+
 import { CategoryPage } from '../_components/category-page'
 import { Globe, FileCode, Layout, Navigation, BookOpen } from 'lucide-react'
 

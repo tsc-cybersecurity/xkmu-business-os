@@ -1,3 +1,5 @@
+'use client'
+
 import { CategoryPage } from '../_components/category-page'
 import { FileText, Receipt, FileCheck } from 'lucide-react'
 

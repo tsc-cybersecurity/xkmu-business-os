@@ -1,3 +1,5 @@
+'use client'
+
 import { CategoryPage } from '../_components/category-page'
 import { Building2, Users } from 'lucide-react'
 

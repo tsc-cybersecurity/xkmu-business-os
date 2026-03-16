@@ -1,3 +1,5 @@
+'use client'
+
 import { CategoryPage } from '../_components/category-page'
 import { Package, Briefcase, FolderTree } from 'lucide-react'
 

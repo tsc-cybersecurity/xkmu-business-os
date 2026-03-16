@@ -1,3 +1,5 @@
+'use client'
+
 import { CategoryPage } from '../_components/category-page'
 import { Brain, BarChart3, Megaphone, Share2, Workflow } from 'lucide-react'
 
