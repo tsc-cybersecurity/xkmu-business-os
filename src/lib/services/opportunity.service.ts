@@ -163,7 +163,7 @@ export const OpportunityService = {
 
     if (status) {
       if (Array.isArray(status)) {
-        conditions.push(sql`${opportunities.status} = ANY(${status})`)
+        conditions.push(inArray(opportunities.status, status))
       } else {
         conditions.push(eq(opportunities.status, status))
       }
