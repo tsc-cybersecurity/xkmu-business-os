@@ -92,3 +92,16 @@ export async function GET(request: NextRequest) {
     return apiSuccess(checks)
   })
 }
+
+// POST /api/v1/opportunities/debug - Repair all addresses
+export async function POST(request: NextRequest) {
+  return withPermission(request, 'opportunities', 'update', async (auth) => {
+    try {
+      const { OpportunityService } = await import('@/lib/services/opportunity.service')
+      const fixed = await OpportunityService.repairAddresses(auth.tenantId)
+      return apiSuccess({ repaired: fixed })
+    } catch (e) {
+      return apiError('REPAIR_FAILED', e instanceof Error ? e.message : 'Fehler', 500)
+    }
+  })
+}

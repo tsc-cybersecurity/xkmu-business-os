@@ -68,6 +68,9 @@ export async function POST(request: NextRequest) {
           items
         )
 
+        // Repair addresses for all opportunities (including just-inserted ones)
+        await OpportunityService.repairAddresses(auth.tenantId).catch(() => {})
+
         return apiSuccess({
           saved: saveResult.inserted,
           enriched: saveResult.enriched,

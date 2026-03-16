@@ -297,6 +297,60 @@ export const OpportunityService = {
     return opportunity ?? null
   },
 
+  /**
+   * Re-parse addresses for all opportunities that have data in address but
+   * are missing city/postalCode. Uses metadata.fullAddress as source.
+   */
+  async repairAddresses(tenantId: string): Promise<number> {
+    const all = await db
+      .select()
+      .from(opportunities)
+      .where(eq(opportunities.tenantId, tenantId))
+
+    let fixed = 0
+    for (const opp of all) {
+      const meta = (opp.metadata || {}) as Record<string, unknown>
+      const fullAddress = typeof meta.fullAddress === 'string' ? meta.fullAddress : opp.address || ''
+      if (!fullAddress) continue
+
+      // Parse full address: "Musterstr. 1, 80331 München, Germany"
+      const parts = fullAddress.split(',').map((p: string) => p.trim())
+      const updates: Record<string, unknown> = {}
+
+      // Extract street + house number from first part
+      if (parts.length >= 1) {
+        const { street, houseNumber } = parseStreetAndNumber(parts[0])
+        if (street && (!opp.address || opp.address === fullAddress || opp.address.includes(','))) {
+          updates.address = houseNumber ? `${street} ${houseNumber}` : street
+        }
+      }
+
+      // Extract PLZ + City
+      for (const part of parts) {
+        const plzMatch = part.match(/(\d{4,5})\s+(.+)/)
+        if (plzMatch) {
+          if (!opp.postalCode) updates.postalCode = plzMatch[1]
+          if (!opp.city || opp.city === opp.searchLocation) updates.city = plzMatch[2]
+          break
+        }
+      }
+
+      // Extract country from last part
+      const lastPart = parts[parts.length - 1] || ''
+      if (/^(Germany|Deutschland)$/i.test(lastPart) && (!opp.country || opp.country === 'DE')) {
+        updates.country = 'DE'
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updates.updatedAt = new Date()
+        await db.update(opportunities).set(updates).where(eq(opportunities.id, opp.id))
+        fixed++
+      }
+    }
+
+    return fixed
+  },
+
   async delete(tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(opportunities)
