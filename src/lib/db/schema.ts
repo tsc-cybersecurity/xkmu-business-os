@@ -93,6 +93,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   n8nConnections: many(n8nConnections),
   n8nWorkflowLogs: many(n8nWorkflowLogs),
   opportunities: many(opportunities),
+  chatConversations: many(chatConversations),
 }))
 
 // ============================================
@@ -1797,4 +1798,59 @@ export const opportunitiesRelations = relations(opportunities, ({ one }) => ({
 export type Opportunity = typeof opportunities.$inferSelect
 export type NewOpportunity = typeof opportunities.$inferInsert
 
+// ============================================
+// Chat
+// ============================================
+export const chatConversations = pgTable('chat_conversations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).default('Neuer Chat'),
+  providerId: uuid('provider_id').references(() => aiProviders.id, { onDelete: 'set null' }),
+  model: varchar('model', { length: 100 }),
+  context: jsonb('context'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_chat_conversations_tenant_user').on(table.tenantId, table.userId),
+  index('idx_chat_conversations_created').on(table.tenantId, table.createdAt),
+])
 
+export const chatConversationsRelations = relations(chatConversations, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [chatConversations.tenantId],
+    references: [tenants.id],
+  }),
+  user: one(users, {
+    fields: [chatConversations.userId],
+    references: [users.id],
+  }),
+  provider: one(aiProviders, {
+    fields: [chatConversations.providerId],
+    references: [aiProviders.id],
+  }),
+  messages: many(chatMessages),
+}))
+
+export const chatMessages = pgTable('chat_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  conversationId: uuid('conversation_id').notNull().references(() => chatConversations.id, { onDelete: 'cascade' }),
+  role: varchar('role', { length: 20 }).notNull(), // user, assistant, system
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_chat_messages_conversation').on(table.conversationId),
+])
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  conversation: one(chatConversations, {
+    fields: [chatMessages.conversationId],
+    references: [chatConversations.id],
+  }),
+}))
+
+export type ChatConversation = typeof chatConversations.$inferSelect
+export type NewChatConversation = typeof chatConversations.$inferInsert
+
+export type ChatMessage = typeof chatMessages.$inferSelect
+export type NewChatMessage = typeof chatMessages.$inferInsert

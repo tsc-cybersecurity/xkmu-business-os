@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmDialog } from '@/components/shared'
 import { toast } from 'sonner'
 import { Brain, Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useChatContext } from '@/components/chat/chat-provider'
 import { ActivityTimeline } from '@/app/intern/(dashboard)/leads/_components/activity-timeline'
 import { logger } from '@/lib/utils/logger'
 import { CompanyDetailsHeader } from './_components/company-details-header'
@@ -112,6 +114,7 @@ export default function CompanyDetailPage() {
   const [loadingPersons, setLoadingPersons] = useState(false)
   const [assigningPerson, setAssigningPerson] = useState<string | null>(null)
 
+  const { openChat } = useChatContext()
   const companyId = params.id as string
 
   useEffect(() => {
@@ -279,10 +282,33 @@ export default function CompanyDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <CompanyDetailsHeader
-        company={company}
-        onDeleteClick={() => setDeleteDialogOpen(true)}
-      />
+      <div className="flex items-start justify-between">
+        <CompanyDetailsHeader
+          company={company}
+          onDeleteClick={() => setDeleteDialogOpen(true)}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => openChat({
+            type: 'company',
+            title: company.name,
+            data: {
+              name: company.name,
+              industry: company.industry,
+              city: company.city,
+              status: company.status,
+              phone: company.phone,
+              email: company.email,
+              website: company.website,
+              notes: company.notes,
+            },
+          })}
+        >
+          <Brain className="mr-2 h-4 w-4" />
+          KI fragen
+        </Button>
+      </div>
 
       {/* Content */}
       <Tabs defaultValue="overview" className="w-full">

@@ -112,6 +112,7 @@ const navigation: NavItem[] = [
       { name: 'Marketing', href: '/intern/marketing', requiredModule: 'marketing' },
       { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
       { name: 'n8n Workflows', href: '/intern/n8n-workflows', requiredModule: 'n8n_workflows' },
+      { name: 'KI-Chat', href: '/intern/chat', requiredModule: 'chat' },
     ],
   },
   {

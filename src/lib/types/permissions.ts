@@ -30,6 +30,7 @@ export const MODULES = [
   'database',
   'n8n_workflows',
   'opportunities',
+  'chat',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -77,6 +78,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   database: 'Datenbank-Admin',
   n8n_workflows: 'n8n Workflows',
   opportunities: 'Chancen',
+  chat: 'KI-Chatbot',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {

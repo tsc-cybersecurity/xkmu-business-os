@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { ConfirmDialog } from '@/components/shared'
 import { toast } from 'sonner'
+import { Brain } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { logger } from '@/lib/utils/logger'
+import { useChatContext } from '@/components/chat/chat-provider'
 import { LeadDetailsHeader } from './_components/lead-details-header'
 import { LeadInfoCard } from './_components/lead-info-card'
 import { LeadOutreachSection } from './_components/lead-outreach-section'
@@ -56,6 +59,7 @@ interface Person {
 export default function LeadDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { openChat } = useChatContext()
   const leadId = params.id as string
 
   const [lead, setLead] = useState<Lead | null>(null)
@@ -334,17 +338,41 @@ export default function LeadDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <LeadDetailsHeader
-        lead={lead}
-        editing={editing}
-        saving={saving}
-        editTitle={editData.title}
-        onEditTitleChange={(title) => setEditData({ ...editData, title })}
-        onStartEditing={startEditing}
-        onCancelEditing={cancelEditing}
-        onSave={saveChanges}
-        onDeleteClick={() => setDeleteDialogOpen(true)}
-      />
+      <div className="flex items-start justify-between">
+        <LeadDetailsHeader
+          lead={lead}
+          editing={editing}
+          saving={saving}
+          editTitle={editData.title}
+          onEditTitleChange={(title) => setEditData({ ...editData, title })}
+          onStartEditing={startEditing}
+          onCancelEditing={cancelEditing}
+          onSave={saveChanges}
+          onDeleteClick={() => setDeleteDialogOpen(true)}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => openChat({
+            type: 'lead',
+            title: lead.title || `Lead #${lead.id.slice(0, 8)}`,
+            data: {
+              title: lead.title,
+              source: lead.source,
+              status: lead.status,
+              score: lead.score,
+              company: lead.company?.name || lead.contactCompany,
+              contactName: [lead.contactFirstName, lead.contactLastName].filter(Boolean).join(' ') || [lead.person?.firstName, lead.person?.lastName].filter(Boolean).join(' '),
+              contactEmail: lead.contactEmail || lead.person?.email,
+              contactPhone: lead.contactPhone,
+              notes: lead.notes,
+            },
+          })}
+        >
+          <Brain className="mr-2 h-4 w-4" />
+          KI fragen
+        </Button>
+      </div>
 
       {/* Content - Info Card with sidebar */}
       <LeadInfoCard

@@ -43,7 +43,9 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { Brain } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
+import { useChatContext } from '@/components/chat/chat-provider'
 
 interface Opportunity {
   id: string
@@ -116,6 +118,7 @@ export default function ChancenPage() {
   const [editOpp, setEditOpp] = useState<Opportunity | null>(null)
   const [editForm, setEditForm] = useState({ name: '', industry: '', address: '', city: '', postalCode: '', country: '', phone: '', email: '', website: '', notes: '', status: '' })
   const [savingEdit, setSavingEdit] = useState(false)
+  const { openChat } = useChatContext()
 
   const openDetail = (opp: Opportunity) => {
     setEditOpp(opp)
@@ -715,12 +718,41 @@ export default function ChancenPage() {
               )}
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailOpen(false)}>Abbrechen</Button>
-            <Button onClick={handleSaveEdit} disabled={savingEdit}>
-              {savingEdit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Speichern
+          <DialogFooter className="flex items-center justify-between sm:justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (editOpp) {
+                  openChat({
+                    type: 'opportunity',
+                    title: editOpp.name,
+                    data: {
+                      name: editOpp.name,
+                      industry: editOpp.industry,
+                      city: editOpp.city,
+                      address: editOpp.address,
+                      phone: editOpp.phone,
+                      email: editOpp.email,
+                      website: editOpp.website,
+                      rating: editOpp.rating,
+                      status: editOpp.status,
+                      notes: editOpp.notes,
+                    },
+                  })
+                }
+              }}
+            >
+              <Brain className="mr-2 h-4 w-4" />
+              KI fragen
             </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setDetailOpen(false)}>Abbrechen</Button>
+              <Button onClick={handleSaveEdit} disabled={savingEdit}>
+                {savingEdit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Speichern
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
