@@ -79,10 +79,10 @@ export const OpportunityService = {
   async createMany(
     tenantId: string,
     items: CreateOpportunityInput[]
-  ): Promise<{ inserted: number; skipped: number }> {
-    if (items.length === 0) return { inserted: 0, skipped: 0 }
+  ): Promise<{ inserted: number; enriched: number; skipped: number }> {
+    if (items.length === 0) return { inserted: 0, enriched: 0, skipped: 0 }
 
-    const values: NewOpportunity[] = items.map((data) => ({
+    const values = items.map((data) => ({
       tenantId,
       name: data.name,
       industry: emptyToNull(data.industry),
@@ -96,7 +96,7 @@ export const OpportunityService = {
       rating: data.rating ?? null,
       reviewCount: data.reviewCount ?? null,
       placeId: emptyToNull(data.placeId),
-      status: data.status || 'new',
+      status: 'new' as const,
       source: data.source || 'google_maps',
       searchQuery: emptyToNull(data.searchQuery),
       searchLocation: emptyToNull(data.searchLocation),
@@ -104,15 +104,27 @@ export const OpportunityService = {
       metadata: data.metadata || {},
     }))
 
-    // Filter out items whose placeId already exists for this tenant
+    // Find existing records by placeId to enrich instead of duplicate
     const placeIds = values
       .map((v) => v.placeId)
       .filter((p): p is string => p !== null && p !== undefined)
 
-    let existingPlaceIds = new Set<string>()
+    const existingMap = new Map<string, { id: string; phone: string | null; website: string | null; address: string | null; postalCode: string | null; city: string | null; rating: number | null; reviewCount: number | null; metadata: Record<string, unknown> | null }>()
+
     if (placeIds.length > 0) {
       const existing = await db
-        .select({ placeId: opportunities.placeId })
+        .select({
+          id: opportunities.id,
+          placeId: opportunities.placeId,
+          phone: opportunities.phone,
+          website: opportunities.website,
+          address: opportunities.address,
+          postalCode: opportunities.postalCode,
+          city: opportunities.city,
+          rating: opportunities.rating,
+          reviewCount: opportunities.reviewCount,
+          metadata: opportunities.metadata,
+        })
         .from(opportunities)
         .where(
           and(
@@ -120,25 +132,57 @@ export const OpportunityService = {
             inArray(opportunities.placeId, placeIds)
           )
         )
-      existingPlaceIds = new Set(existing.map((e) => e.placeId!))
+      for (const row of existing) {
+        if (row.placeId) existingMap.set(row.placeId, row)
+      }
     }
 
-    const newValues = values.filter(
-      (v) => !v.placeId || !existingPlaceIds.has(v.placeId)
-    )
+    let inserted = 0
+    let enriched = 0
 
-    if (newValues.length === 0) {
-      return { inserted: 0, skipped: items.length }
+    // Separate new items from existing ones to enrich
+    const newValues = []
+    for (const val of values) {
+      const existing = val.placeId ? existingMap.get(val.placeId) : null
+      if (!existing) {
+        newValues.push(val)
+      } else {
+        // Enrich: update fields that were empty with new data
+        const updates: Record<string, unknown> = {}
+        if (!existing.phone && val.phone) updates.phone = val.phone
+        if (!existing.website && val.website) updates.website = val.website
+        if (!existing.address && val.address) updates.address = val.address
+        if (!existing.postalCode && val.postalCode) updates.postalCode = val.postalCode
+        if (!existing.city && val.city) updates.city = val.city
+        if (val.rating !== null && (existing.rating === null || val.rating !== existing.rating)) updates.rating = val.rating
+        if (val.reviewCount !== null && (existing.reviewCount === null || val.reviewCount !== existing.reviewCount)) updates.reviewCount = val.reviewCount
+        // Merge metadata
+        if (val.metadata && Object.keys(val.metadata).length > 0) {
+          const merged = { ...(existing.metadata as Record<string, unknown> || {}), ...val.metadata }
+          updates.metadata = merged
+        }
+        updates.updatedAt = new Date()
+
+        if (Object.keys(updates).length > 1) { // > 1 because updatedAt is always there
+          await db.update(opportunities).set(updates).where(eq(opportunities.id, existing.id))
+          enriched++
+        }
+      }
     }
 
-    const result = await db
-      .insert(opportunities)
-      .values(newValues)
-      .returning({ id: opportunities.id })
+    // Insert truly new records
+    if (newValues.length > 0) {
+      const result = await db
+        .insert(opportunities)
+        .values(newValues)
+        .returning({ id: opportunities.id })
+      inserted = result.length
+    }
 
     return {
-      inserted: result.length,
-      skipped: items.length - result.length,
+      inserted,
+      enriched,
+      skipped: items.length - inserted - enriched,
     }
   },
 

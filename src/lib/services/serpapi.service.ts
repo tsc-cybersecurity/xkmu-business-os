@@ -14,10 +14,18 @@ interface SerpApiPlace {
   website?: string
   rating?: number
   reviews?: number
+  reviews_link?: string
   type?: string
+  types?: string[]
+  description?: string
+  service_options?: Record<string, boolean>
+  price?: string
+  hours?: string
   gps_coordinates?: { latitude: number; longitude: number }
   operating_hours?: Record<string, string>
   thumbnail?: string
+  images?: string[]
+  extensions?: string[]
 }
 
 interface SerpApiResponse {
@@ -60,19 +68,66 @@ async function getApiKey(tenantId?: string): Promise<string> {
 }
 
 function parseAddress(address: string): { street: string; city: string; postalCode: string; country: string } {
-  // German address: "Musterstr. 1, 80331 München, Germany"
-  const parts = address.split(',').map(p => p.trim())
-  const street = parts[0] || ''
-  const cityPart = parts[1] || ''
-  const country = parts[2] || 'Deutschland'
+  if (!address) return { street: '', city: '', postalCode: '', country: 'DE' }
 
-  const plzMatch = cityPart.match(/(\d{4,5})\s+(.+)/)
-  return {
-    street,
-    city: plzMatch ? plzMatch[2] : cityPart,
-    postalCode: plzMatch ? plzMatch[1] : '',
-    country: country.includes('Germany') || country.includes('Deutschland') ? 'DE' : country.substring(0, 10),
+  // Typical formats:
+  // "Musterstr. 1, 80331 München, Germany"
+  // "Musterstr. 1, München, Deutschland"
+  // "80331 München"
+  // "Musterstr. 1, 80331 München"
+  const parts = address.split(',').map(p => p.trim())
+
+  let street = ''
+  let city = ''
+  let postalCode = ''
+  let country = 'DE'
+
+  // Last part might be country
+  const lastPart = parts[parts.length - 1] || ''
+  if (/^(Germany|Deutschland|DE|AT|CH|Österreich|Schweiz)$/i.test(lastPart)) {
+    country = lastPart.includes('sterreich') || lastPart === 'AT' ? 'AT'
+      : lastPart.includes('Schweiz') || lastPart === 'CH' ? 'CH' : 'DE'
+    parts.pop()
   }
+
+  // First part is usually street
+  if (parts.length >= 1) {
+    street = parts[0]
+  }
+
+  // Look for PLZ+City in any remaining part
+  for (let i = 1; i < parts.length; i++) {
+    const plzMatch = parts[i].match(/(\d{4,5})\s+(.+)/)
+    if (plzMatch) {
+      postalCode = plzMatch[1]
+      city = plzMatch[2]
+      break
+    }
+  }
+
+  // If no PLZ found, second part is city
+  if (!city && parts.length >= 2) {
+    // Maybe the second part contains PLZ without space separator
+    const plzMatch2 = parts[1].match(/^(\d{4,5})\s*(.*)/)
+    if (plzMatch2) {
+      postalCode = plzMatch2[1]
+      city = plzMatch2[2] || ''
+    } else {
+      city = parts[1]
+    }
+  }
+
+  // If street itself contains PLZ (e.g. "80331 München" with no street)
+  if (!postalCode && !city) {
+    const plzMatch3 = street.match(/^(\d{4,5})\s+(.+)/)
+    if (plzMatch3) {
+      postalCode = plzMatch3[1]
+      city = plzMatch3[2]
+      street = ''
+    }
+  }
+
+  return { street, city, postalCode, country }
 }
 
 export const SerpApiService = {
@@ -111,21 +166,29 @@ export const SerpApiService = {
       return {
         name: place.title,
         placeId: place.place_id,
-        address: place.address || '',
+        address: parsed.street || place.address || '',
         city: parsed.city || location,
         postalCode: parsed.postalCode,
         country: parsed.country,
         phone: place.phone || null,
-        email: null, // SerpAPI doesn't return email
+        email: null,
         website: place.website || null,
         rating: place.rating || null,
         reviewCount: place.reviews || null,
         industry: query,
         metadata: {
+          fullAddress: place.address || null,
           gpsCoordinates: place.gps_coordinates || null,
           operatingHours: place.operating_hours || null,
           thumbnail: place.thumbnail || null,
           type: place.type || null,
+          types: place.types || null,
+          description: place.description || null,
+          serviceOptions: place.service_options || null,
+          price: place.price || null,
+          hours: place.hours || null,
+          reviewsLink: place.reviews_link || null,
+          extensions: place.extensions || null,
         },
       }
     })

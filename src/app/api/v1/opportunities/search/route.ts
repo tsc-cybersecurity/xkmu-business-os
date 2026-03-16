@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
 
         return apiSuccess({
           saved: saveResult.inserted,
+          enriched: saveResult.enriched,
           duplicates: saveResult.skipped,
           errors: searchResults.errors,
         })

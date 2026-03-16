@@ -51,6 +51,8 @@ interface Opportunity {
   industry: string | null
   address: string | null
   city: string | null
+  postalCode: string | null
+  country: string | null
   phone: string | null
   email: string | null
   website: string | null
@@ -62,6 +64,7 @@ interface Opportunity {
   searchLocation: string | null
   notes: string | null
   placeId: string | null
+  metadata: Record<string, unknown> | null
   createdAt: string
 }
 
@@ -185,7 +188,10 @@ export default function ChancenPage() {
 
       if (data.success) {
         setSearchResult(data.data)
-        toast.success(`${data.data.saved} neue Chancen gefunden`)
+        const parts = [`${data.data.saved} neu`]
+        if (data.data.enriched > 0) parts.push(`${data.data.enriched} angereichert`)
+        if (data.data.duplicates > 0) parts.push(`${data.data.duplicates} unverändert`)
+        toast.success(parts.join(', '))
         fetchOpportunities()
       } else {
         toast.error(data.error?.message || 'Suche fehlgeschlagen')
@@ -350,7 +356,7 @@ export default function ChancenPage() {
               {searchResult && (
                 <div className="rounded-md bg-muted p-3 text-sm">
                   <p className="font-medium">
-                    {searchResult.saved} neue Chancen gefunden, {searchResult.duplicates} Duplikate uebersprungen
+                    {searchResult.saved} neu, {searchResult.enriched || 0} angereichert, {searchResult.duplicates} unveraendert
                   </p>
                   {searchResult.errors.length > 0 && (
                     <ul className="mt-2 text-destructive">
@@ -448,10 +454,9 @@ export default function ChancenPage() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Branche</TableHead>
-                    <TableHead>Stadt</TableHead>
+                    <TableHead>Adresse</TableHead>
                     <TableHead>Bewertung</TableHead>
-                    <TableHead>Telefon</TableHead>
-                    <TableHead>Website</TableHead>
+                    <TableHead>Kontakt</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Aktionen</TableHead>
                   </TableRow>
@@ -465,40 +470,29 @@ export default function ChancenPage() {
                       <TableCell className="text-muted-foreground max-w-[150px] truncate">
                         {opp.industry || '-'}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {opp.city || '-'}
+                      <TableCell className="text-muted-foreground text-xs max-w-[200px]">
+                        <div>{opp.address || ''}</div>
+                        <div>{[opp.postalCode, opp.city].filter(Boolean).join(' ') || '-'}</div>
                       </TableCell>
                       <TableCell>
                         {renderRating(opp.rating, opp.reviewCount)}
                       </TableCell>
                       <TableCell>
-                        {opp.phone ? (
-                          <a
-                            href={`tel:${opp.phone}`}
-                            className="inline-flex items-center gap-1 text-sm hover:underline"
-                            title={opp.phone}
-                          >
-                            <Phone className="h-3 w-3" />
-                            <span className="max-w-[100px] truncate">{opp.phone}</span>
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {opp.website ? (
-                          <a
-                            href={opp.website.startsWith('http') ? opp.website : `https://${opp.website}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            Link
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
+                        <div className="flex flex-col gap-0.5">
+                          {opp.phone && (
+                            <a href={`tel:${opp.phone}`} className="inline-flex items-center gap-1 text-xs hover:underline" title={opp.phone}>
+                              <Phone className="h-3 w-3 shrink-0" />
+                              <span className="truncate max-w-[120px]">{opp.phone}</span>
+                            </a>
+                          )}
+                          {opp.website && (
+                            <a href={opp.website.startsWith('http') ? opp.website : `https://${opp.website}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                              <ExternalLink className="h-3 w-3 shrink-0" />
+                              <span className="truncate max-w-[120px]">{opp.website.replace(/^https?:\/\/(www\.)?/, '')}</span>
+                            </a>
+                          )}
+                          {!opp.phone && !opp.website && <span className="text-muted-foreground text-xs">-</span>}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[opp.status]}>
