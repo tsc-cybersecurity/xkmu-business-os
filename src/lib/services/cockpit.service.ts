@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
-import { cockpitSystems } from '@/lib/db/schema'
+import { cockpitSystems, cockpitCredentials } from '@/lib/db/schema'
 import { eq, and, ilike, count, sql } from 'drizzle-orm'
-import type { CockpitSystem, NewCockpitSystem } from '@/lib/db/schema'
+import type { CockpitSystem, NewCockpitSystem, CockpitCredential } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 
 export interface CockpitSystemFilters {
@@ -16,8 +16,6 @@ export interface CreateCockpitSystemInput {
   name: string
   hostname?: string
   url?: string
-  username?: string
-  password?: string
   category?: string
   function?: string
   description?: string
@@ -30,6 +28,16 @@ export interface CreateCockpitSystemInput {
 }
 
 export type UpdateCockpitSystemInput = Partial<CreateCockpitSystemInput>
+
+export interface CreateCredentialInput {
+  type: string
+  label: string
+  username?: string
+  password?: string
+  notes?: string
+}
+
+export type UpdateCredentialInput = Partial<CreateCredentialInput>
 
 function emptyToNull<T>(value: T): T | null {
   if (value === '' || value === undefined) return null
@@ -49,8 +57,6 @@ export const CockpitService = {
         name: data.name,
         hostname: emptyToNull(data.hostname),
         url: emptyToNull(data.url),
-        username: emptyToNull(data.username),
-        password: emptyToNull(data.password),
         category: emptyToNull(data.category),
         function: emptyToNull(data.function),
         description: emptyToNull(data.description),
@@ -67,14 +73,22 @@ export const CockpitService = {
     return system
   },
 
-  async getById(tenantId: string, id: string): Promise<CockpitSystem | null> {
+  async getById(tenantId: string, id: string): Promise<(CockpitSystem & { credentials: CockpitCredential[] }) | null> {
     const [system] = await db
       .select()
       .from(cockpitSystems)
       .where(and(eq(cockpitSystems.tenantId, tenantId), eq(cockpitSystems.id, id)))
       .limit(1)
 
-    return system ?? null
+    if (!system) return null
+
+    const credentials = await db
+      .select()
+      .from(cockpitCredentials)
+      .where(eq(cockpitCredentials.systemId, id))
+      .orderBy(cockpitCredentials.label)
+
+    return { ...system, credentials }
   },
 
   async update(
@@ -108,7 +122,7 @@ export const CockpitService = {
   async list(
     tenantId: string,
     filters: CockpitSystemFilters = {}
-  ): Promise<PaginatedResult<CockpitSystem>> {
+  ): Promise<PaginatedResult<CockpitSystem & { credentialCount: number }>> {
     const { category, status, search, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -130,10 +144,39 @@ export const CockpitService = {
 
     const whereClause = and(...conditions)
 
+    const credentialCountSq = db
+      .select({
+        systemId: cockpitCredentials.systemId,
+        count: count().as('credential_count'),
+      })
+      .from(cockpitCredentials)
+      .groupBy(cockpitCredentials.systemId)
+      .as('cc')
+
     const [items, [{ count: total }]] = await Promise.all([
       db
-        .select()
+        .select({
+          id: cockpitSystems.id,
+          tenantId: cockpitSystems.tenantId,
+          name: cockpitSystems.name,
+          hostname: cockpitSystems.hostname,
+          url: cockpitSystems.url,
+          category: cockpitSystems.category,
+          function: cockpitSystems.function,
+          description: cockpitSystems.description,
+          ipAddress: cockpitSystems.ipAddress,
+          port: cockpitSystems.port,
+          protocol: cockpitSystems.protocol,
+          status: cockpitSystems.status,
+          tags: cockpitSystems.tags,
+          notes: cockpitSystems.notes,
+          createdBy: cockpitSystems.createdBy,
+          createdAt: cockpitSystems.createdAt,
+          updatedAt: cockpitSystems.updatedAt,
+          credentialCount: sql<number>`coalesce(${credentialCountSq.count}, 0)`.as('credentialCount'),
+        })
         .from(cockpitSystems)
+        .leftJoin(credentialCountSq, eq(cockpitSystems.id, credentialCountSq.systemId))
         .where(whereClause)
         .orderBy(cockpitSystems.category, cockpitSystems.name)
         .limit(limit)
@@ -142,7 +185,10 @@ export const CockpitService = {
     ])
 
     return {
-      items,
+      items: items.map(item => ({
+        ...item,
+        credentialCount: Number(item.credentialCount),
+      })),
       meta: {
         page,
         limit,
@@ -206,5 +252,79 @@ export const CockpitService = {
     }
 
     return { total, byStatus, byCategory }
+  },
+
+  // ============================================
+  // Credential Methods
+  // ============================================
+
+  async getCredentials(systemId: string): Promise<CockpitCredential[]> {
+    return db
+      .select()
+      .from(cockpitCredentials)
+      .where(eq(cockpitCredentials.systemId, systemId))
+      .orderBy(cockpitCredentials.label)
+  },
+
+  async addCredential(systemId: string, data: CreateCredentialInput): Promise<CockpitCredential> {
+    const [credential] = await db
+      .insert(cockpitCredentials)
+      .values({
+        systemId,
+        type: data.type,
+        label: data.label,
+        username: emptyToNull(data.username),
+        password: emptyToNull(data.password),
+        notes: emptyToNull(data.notes),
+      })
+      .returning()
+
+    return credential
+  },
+
+  async updateCredential(credentialId: string, data: UpdateCredentialInput): Promise<CockpitCredential | null> {
+    const updateData: Record<string, unknown> = {
+      updatedAt: new Date(),
+    }
+    if (data.type !== undefined) updateData.type = data.type
+    if (data.label !== undefined) updateData.label = data.label
+    if (data.username !== undefined) updateData.username = emptyToNull(data.username)
+    if (data.password !== undefined) updateData.password = emptyToNull(data.password)
+    if (data.notes !== undefined) updateData.notes = emptyToNull(data.notes)
+
+    const [credential] = await db
+      .update(cockpitCredentials)
+      .set(updateData)
+      .where(eq(cockpitCredentials.id, credentialId))
+      .returning()
+
+    return credential ?? null
+  },
+
+  async deleteCredential(credentialId: string): Promise<boolean> {
+    const result = await db
+      .delete(cockpitCredentials)
+      .where(eq(cockpitCredentials.id, credentialId))
+      .returning({ id: cockpitCredentials.id })
+
+    return result.length > 0
+  },
+
+  /** Verify a credential belongs to a system owned by the tenant */
+  async verifyCredentialOwnership(tenantId: string, systemId: string, credentialId: string): Promise<boolean> {
+    const rows = await db
+      .select({ id: cockpitCredentials.id })
+      .from(cockpitCredentials)
+      .innerJoin(cockpitSystems, eq(cockpitCredentials.systemId, cockpitSystems.id))
+      .where(
+        and(
+          eq(cockpitCredentials.id, credentialId),
+          eq(cockpitCredentials.systemId, systemId),
+          eq(cockpitSystems.tenantId, tenantId)
+        )
+      )
+      .limit(1)
+
+    return rows.length > 0
   },
 }

@@ -49,16 +49,27 @@ import {
   Activity,
   AlertTriangle,
   Search,
+  KeyRound,
 } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
+
+interface CockpitCredential {
+  id: string
+  systemId: string
+  type: string
+  label: string
+  username: string | null
+  password: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+}
 
 interface CockpitSystem {
   id: string
   name: string
   hostname: string | null
   url: string | null
-  username: string | null
-  password: string | null
   category: string | null
   function: string | null
   description: string | null
@@ -68,6 +79,7 @@ interface CockpitSystem {
   status: string | null
   tags: string[] | null
   notes: string | null
+  credentialCount: number
   createdAt: string
   updatedAt: string
 }
@@ -82,8 +94,6 @@ interface FormData {
   name: string
   hostname: string
   url: string
-  username: string
-  password: string
   category: string
   function: string
   description: string
@@ -95,12 +105,18 @@ interface FormData {
   notes: string
 }
 
+interface CredentialFormData {
+  type: string
+  label: string
+  username: string
+  password: string
+  notes: string
+}
+
 const emptyForm: FormData = {
   name: '',
   hostname: '',
   url: '',
-  username: '',
-  password: '',
   category: '',
   function: '',
   description: '',
@@ -109,6 +125,14 @@ const emptyForm: FormData = {
   protocol: '',
   status: 'active',
   tags: '',
+  notes: '',
+}
+
+const emptyCredentialForm: CredentialFormData = {
+  type: 'login',
+  label: '',
+  username: '',
+  password: '',
   notes: '',
 }
 
@@ -140,6 +164,39 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   maintenance: { label: 'Wartung', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' },
 }
 
+const credentialTypeLabels: Record<string, string> = {
+  login: 'Login',
+  api_key: 'API-Schluessel',
+  ssh_key: 'SSH-Key',
+  certificate: 'Zertifikat',
+  token: 'Token',
+  database: 'Datenbank',
+  ftp: 'FTP',
+  other: 'Sonstige',
+}
+
+const credentialTypeBadgeColors: Record<string, string> = {
+  login: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  api_key: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+  ssh_key: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+  certificate: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+  token: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300',
+  database: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
+  ftp: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-300',
+  other: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300',
+}
+
+const credentialTypes = [
+  { value: 'login', label: 'Login' },
+  { value: 'api_key', label: 'API-Schluessel' },
+  { value: 'ssh_key', label: 'SSH-Key' },
+  { value: 'certificate', label: 'Zertifikat' },
+  { value: 'token', label: 'Token' },
+  { value: 'database', label: 'Datenbank' },
+  { value: 'ftp', label: 'FTP' },
+  { value: 'other', label: 'Sonstige' },
+]
+
 export default function CockpitPage() {
   const [systems, setSystems] = useState<CockpitSystem[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
@@ -153,8 +210,19 @@ export default function CockpitPage() {
   const [deleting, setDeleting] = useState(false)
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('alle')
+
+  // Credential state
+  const [credentials, setCredentials] = useState<CockpitCredential[]>([])
+  const [credentialsLoading, setCredentialsLoading] = useState(false)
+  const [credentialForm, setCredentialForm] = useState<CredentialFormData>(emptyCredentialForm)
+  const [showCredentialForm, setShowCredentialForm] = useState(false)
+  const [editingCredentialId, setEditingCredentialId] = useState<string | null>(null)
+  const [savingCredential, setSavingCredential] = useState(false)
+  const [deleteCredentialDialogOpen, setDeleteCredentialDialogOpen] = useState(false)
+  const [deletingCredentialId, setDeletingCredentialId] = useState<string | null>(null)
+  const [deletingCredential, setDeletingCredential] = useState(false)
   const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set())
-  const [formPasswordVisible, setFormPasswordVisible] = useState(false)
+  const [credFormPasswordVisible, setCredFormPasswordVisible] = useState(false)
 
   const fetchSystems = useCallback(async () => {
     try {
@@ -188,6 +256,22 @@ export default function CockpitPage() {
     }
   }, [])
 
+  const fetchCredentials = useCallback(async (systemId: string) => {
+    setCredentialsLoading(true)
+    try {
+      const response = await fetch(`/api/v1/cockpit/${systemId}/credentials`)
+      const data = await response.json()
+      if (data.success) {
+        setCredentials(data.data)
+      }
+    } catch (error) {
+      logger.error('Failed to fetch credentials', error, { module: 'CockpitPage' })
+      toast.error('Fehler beim Laden der Zugangsdaten')
+    } finally {
+      setCredentialsLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchSystems()
     fetchStats()
@@ -196,7 +280,9 @@ export default function CockpitPage() {
   const openCreate = () => {
     setEditingId(null)
     setFormData(emptyForm)
-    setFormPasswordVisible(false)
+    setCredentials([])
+    setShowCredentialForm(false)
+    setEditingCredentialId(null)
     setDialogOpen(true)
   }
 
@@ -206,8 +292,6 @@ export default function CockpitPage() {
       name: system.name || '',
       hostname: system.hostname || '',
       url: system.url || '',
-      username: system.username || '',
-      password: system.password || '',
       category: system.category || '',
       function: system.function || '',
       description: system.description || '',
@@ -218,8 +302,10 @@ export default function CockpitPage() {
       tags: (system.tags || []).join(', '),
       notes: system.notes || '',
     })
-    setFormPasswordVisible(false)
+    setShowCredentialForm(false)
+    setEditingCredentialId(null)
     setDialogOpen(true)
+    fetchCredentials(system.id)
   }
 
   const handleSave = async () => {
@@ -234,8 +320,6 @@ export default function CockpitPage() {
         name: formData.name,
         hostname: formData.hostname,
         url: formData.url,
-        username: formData.username,
-        password: formData.password,
         category: formData.category,
         function: formData.function,
         description: formData.description,
@@ -294,6 +378,89 @@ export default function CockpitPage() {
       toast.error(error instanceof Error ? error.message : 'Fehler beim Loeschen')
     } finally {
       setDeleting(false)
+    }
+  }
+
+  // Credential handlers
+  const openCredentialCreate = () => {
+    setEditingCredentialId(null)
+    setCredentialForm(emptyCredentialForm)
+    setCredFormPasswordVisible(false)
+    setShowCredentialForm(true)
+  }
+
+  const openCredentialEdit = (cred: CockpitCredential) => {
+    setEditingCredentialId(cred.id)
+    setCredentialForm({
+      type: cred.type,
+      label: cred.label,
+      username: cred.username || '',
+      password: cred.password || '',
+      notes: cred.notes || '',
+    })
+    setCredFormPasswordVisible(false)
+    setShowCredentialForm(true)
+  }
+
+  const handleSaveCredential = async () => {
+    if (!editingId) return
+    if (!credentialForm.label.trim()) {
+      toast.error('Bezeichnung ist erforderlich')
+      return
+    }
+
+    setSavingCredential(true)
+    try {
+      const url = editingCredentialId
+        ? `/api/v1/cockpit/${editingId}/credentials/${editingCredentialId}`
+        : `/api/v1/cockpit/${editingId}/credentials`
+
+      const response = await fetch(url, {
+        method: editingCredentialId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentialForm),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Fehler beim Speichern')
+      }
+
+      toast.success(editingCredentialId ? 'Zugang aktualisiert' : 'Zugang erstellt')
+      setShowCredentialForm(false)
+      setEditingCredentialId(null)
+      fetchCredentials(editingId)
+      fetchSystems()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Fehler beim Speichern')
+    } finally {
+      setSavingCredential(false)
+    }
+  }
+
+  const handleDeleteCredential = async () => {
+    if (!editingId || !deletingCredentialId) return
+    setDeletingCredential(true)
+    try {
+      const response = await fetch(
+        `/api/v1/cockpit/${editingId}/credentials/${deletingCredentialId}`,
+        { method: 'DELETE' }
+      )
+      if (response.ok) {
+        toast.success('Zugang geloescht')
+        setDeleteCredentialDialogOpen(false)
+        setDeletingCredentialId(null)
+        fetchCredentials(editingId)
+        fetchSystems()
+      } else {
+        const data = await response.json()
+        throw new Error(data.error?.message || 'Fehler beim Loeschen')
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Fehler beim Loeschen')
+    } finally {
+      setDeletingCredential(false)
     }
   }
 
@@ -470,7 +637,7 @@ export default function CockpitPage() {
                   <TableHead>Kategorie</TableHead>
                   <TableHead>Funktion</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Zugangsdaten</TableHead>
+                  <TableHead>Zugaenge</TableHead>
                   <TableHead className="text-right">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
@@ -529,39 +696,11 @@ export default function CockpitPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {(system.username || system.password) ? (
-                          <div className="flex items-center gap-1">
-                            {system.username && (
-                              <span className="text-xs text-muted-foreground">{system.username}</span>
-                            )}
-                            {system.password && (
-                              <>
-                                <span className="text-xs mx-1">
-                                  {visiblePasswords.has(system.id)
-                                    ? system.password
-                                    : '••••••'}
-                                </span>
-                                <button
-                                  onClick={() => togglePasswordVisibility(system.id)}
-                                  className="text-muted-foreground hover:text-foreground"
-                                  title={visiblePasswords.has(system.id) ? 'Verbergen' : 'Anzeigen'}
-                                >
-                                  {visiblePasswords.has(system.id) ? (
-                                    <EyeOff className="h-3.5 w-3.5" />
-                                  ) : (
-                                    <Eye className="h-3.5 w-3.5" />
-                                  )}
-                                </button>
-                                <button
-                                  onClick={() => copyToClipboard(system.password!, 'Passwort')}
-                                  className="text-muted-foreground hover:text-foreground"
-                                  title="Passwort kopieren"
-                                >
-                                  <Copy className="h-3.5 w-3.5" />
-                                </button>
-                              </>
-                            )}
-                          </div>
+                        {system.credentialCount > 0 ? (
+                          <Badge variant="secondary" className="gap-1">
+                            <KeyRound className="h-3 w-3" />
+                            {system.credentialCount} {system.credentialCount === 1 ? 'Zugang' : 'Zugaenge'}
+                          </Badge>
                         ) : (
                           <span className="text-xs text-muted-foreground">-</span>
                         )}
@@ -744,44 +883,214 @@ export default function CockpitPage() {
               </div>
             </div>
 
-            {/* Zugangsdaten */}
-            <div>
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3">Zugangsdaten</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField label="Benutzer" htmlFor="username">
-                  <Input
-                    id="username"
-                    value={formData.username}
-                    onChange={(e) => setFormData((p) => ({ ...p, username: e.target.value }))}
-                    placeholder="z.B. admin"
-                  />
-                </FormField>
+            {/* Zugangsdaten / Credentials */}
+            {editingId && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground">Zugangsdaten</h3>
+                  {!showCredentialForm && (
+                    <Button variant="outline" size="sm" onClick={openCredentialCreate}>
+                      <Plus className="mr-1 h-3 w-3" />
+                      Neuer Zugang
+                    </Button>
+                  )}
+                </div>
 
-                <FormField label="Passwort" htmlFor="password">
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={formPasswordVisible ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))}
-                      placeholder="Passwort"
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setFormPasswordVisible(!formPasswordVisible)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {formPasswordVisible ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
+                {credentialsLoading ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
-                </FormField>
+                ) : (
+                  <>
+                    {/* Credential list */}
+                    {credentials.length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {credentials.map((cred) => (
+                          <div
+                            key={cred.id}
+                            className="flex items-center gap-3 rounded-lg border p-3"
+                          >
+                            <Badge className={credentialTypeBadgeColors[cred.type] || credentialTypeBadgeColors.other}>
+                              {credentialTypeLabels[cred.type] || cred.type}
+                            </Badge>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm font-medium">{cred.label}</div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {cred.username && (
+                                  <span className="text-xs text-muted-foreground">{cred.username}</span>
+                                )}
+                                {cred.password && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {visiblePasswords.has(cred.id) ? cred.password : '••••••'}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              {cred.password && (
+                                <>
+                                  <button
+                                    onClick={() => togglePasswordVisibility(cred.id)}
+                                    className="p-1 text-muted-foreground hover:text-foreground"
+                                    title={visiblePasswords.has(cred.id) ? 'Verbergen' : 'Anzeigen'}
+                                  >
+                                    {visiblePasswords.has(cred.id) ? (
+                                      <EyeOff className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <Eye className="h-3.5 w-3.5" />
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => copyToClipboard(cred.password!, 'Passwort')}
+                                    className="p-1 text-muted-foreground hover:text-foreground"
+                                    title="Passwort kopieren"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </button>
+                                </>
+                              )}
+                              {cred.username && (
+                                <button
+                                  onClick={() => copyToClipboard(cred.username!, 'Benutzer')}
+                                  className="p-1 text-muted-foreground hover:text-foreground"
+                                  title="Benutzer kopieren"
+                                >
+                                  <Copy className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => openCredentialEdit(cred)}
+                                title="Bearbeiten"
+                              >
+                                <Edit className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-destructive hover:text-destructive"
+                                onClick={() => {
+                                  setDeletingCredentialId(cred.id)
+                                  setDeleteCredentialDialogOpen(true)
+                                }}
+                                title="Loeschen"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {credentials.length === 0 && !showCredentialForm && (
+                      <p className="text-sm text-muted-foreground py-2">
+                        Keine Zugangsdaten vorhanden.
+                      </p>
+                    )}
+
+                    {/* Credential inline form */}
+                    {showCredentialForm && (
+                      <div className="rounded-lg border p-4 space-y-3">
+                        <h4 className="text-sm font-medium">
+                          {editingCredentialId ? 'Zugang bearbeiten' : 'Neuer Zugang'}
+                        </h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <FormField label="Typ" htmlFor="cred-type">
+                            <Select
+                              value={credentialForm.type}
+                              onValueChange={(v) => setCredentialForm((p) => ({ ...p, type: v }))}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {credentialTypes.map((ct) => (
+                                  <SelectItem key={ct.value} value={ct.value}>
+                                    {ct.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormField>
+
+                          <FormField label="Bezeichnung" htmlFor="cred-label" required>
+                            <Input
+                              id="cred-label"
+                              value={credentialForm.label}
+                              onChange={(e) => setCredentialForm((p) => ({ ...p, label: e.target.value }))}
+                              placeholder="z.B. Admin-Login"
+                            />
+                          </FormField>
+
+                          <FormField label="Benutzer" htmlFor="cred-username">
+                            <Input
+                              id="cred-username"
+                              value={credentialForm.username}
+                              onChange={(e) => setCredentialForm((p) => ({ ...p, username: e.target.value }))}
+                              placeholder="z.B. admin"
+                            />
+                          </FormField>
+
+                          <FormField label="Passwort" htmlFor="cred-password">
+                            <div className="relative">
+                              <Input
+                                id="cred-password"
+                                type={credFormPasswordVisible ? 'text' : 'password'}
+                                value={credentialForm.password}
+                                onChange={(e) => setCredentialForm((p) => ({ ...p, password: e.target.value }))}
+                                placeholder="Passwort"
+                                className="pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setCredFormPasswordVisible(!credFormPasswordVisible)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                              >
+                                {credFormPasswordVisible ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
+                          </FormField>
+                        </div>
+
+                        <FormField label="Notizen" htmlFor="cred-notes">
+                          <Textarea
+                            id="cred-notes"
+                            value={credentialForm.notes}
+                            onChange={(e) => setCredentialForm((p) => ({ ...p, notes: e.target.value }))}
+                            placeholder="Zusaetzliche Notizen..."
+                            rows={2}
+                          />
+                        </FormField>
+
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setShowCredentialForm(false)
+                              setEditingCredentialId(null)
+                            }}
+                          >
+                            Abbrechen
+                          </Button>
+                          <Button size="sm" onClick={handleSaveCredential} disabled={savingCredential}>
+                            {savingCredential && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                            {editingCredentialId ? 'Speichern' : 'Erstellen'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-            </div>
+            )}
 
             {/* Sonstiges */}
             <div>
@@ -821,7 +1130,7 @@ export default function CockpitPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Dialog */}
+      {/* Delete System Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -831,6 +1140,18 @@ export default function CockpitPage() {
         variant="destructive"
         onConfirm={handleDelete}
         loading={deleting}
+      />
+
+      {/* Delete Credential Dialog */}
+      <ConfirmDialog
+        open={deleteCredentialDialogOpen}
+        onOpenChange={setDeleteCredentialDialogOpen}
+        title="Zugang loeschen"
+        description="Moechten Sie diesen Zugang wirklich loeschen? Dies kann nicht rueckgaengig gemacht werden."
+        confirmLabel="Loeschen"
+        variant="destructive"
+        onConfirm={handleDeleteCredential}
+        loading={deletingCredential}
       />
     </div>
   )

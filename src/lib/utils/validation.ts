@@ -646,8 +646,6 @@ export const cockpitSystemSchema = z.object({
   name: z.string().min(1).max(255),
   hostname: z.string().max(500).optional().or(z.literal('')),
   url: z.string().max(500).optional().or(z.literal('')),
-  username: z.string().max(255).optional().or(z.literal('')),
-  password: z.string().optional().or(z.literal('')),
   category: z.string().max(100).optional().or(z.literal('')),
   function: z.string().max(255).optional().or(z.literal('')),
   description: z.string().optional().or(z.literal('')),
@@ -660,6 +658,16 @@ export const cockpitSystemSchema = z.object({
 })
 
 export const updateCockpitSystemSchema = cockpitSystemSchema.partial()
+
+export const cockpitCredentialSchema = z.object({
+  type: z.enum(['login', 'api_key', 'ssh_key', 'certificate', 'token', 'database', 'ftp', 'other']),
+  label: z.string().min(1).max(255),
+  username: z.string().max(255).optional().or(z.literal('')),
+  password: z.string().optional().or(z.literal('')),
+  notes: z.string().optional().or(z.literal('')),
+})
+
+export const updateCockpitCredentialSchema = cockpitCredentialSchema.partial()
 
 // ============================================
 // Helper Functions

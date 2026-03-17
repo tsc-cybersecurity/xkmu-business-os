@@ -1865,8 +1865,6 @@ export const cockpitSystems = pgTable('cockpit_systems', {
   name: varchar('name', { length: 255 }).notNull(),
   hostname: varchar('hostname', { length: 500 }),
   url: varchar('url', { length: 500 }),
-  username: varchar('username', { length: 255 }),
-  password: text('password'),
   category: varchar('category', { length: 100 }),
   function: varchar('function', { length: 255 }),
   description: text('description'),
@@ -1885,7 +1883,21 @@ export const cockpitSystems = pgTable('cockpit_systems', {
   index('idx_cockpit_systems_status').on(table.tenantId, table.status),
 ])
 
-export const cockpitSystemsRelations = relations(cockpitSystems, ({ one }) => ({
+export const cockpitCredentials = pgTable('cockpit_credentials', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  systemId: uuid('system_id').notNull().references(() => cockpitSystems.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 50 }).notNull(), // login, api_key, ssh_key, certificate, token, database, ftp, other
+  label: varchar('label', { length: 255 }).notNull(), // e.g. "Admin-Login", "API-Schluessel", "Root SSH"
+  username: varchar('username', { length: 255 }),
+  password: text('password'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cockpit_credentials_system').on(table.systemId),
+])
+
+export const cockpitSystemsRelations = relations(cockpitSystems, ({ one, many }) => ({
   tenant: one(tenants, {
     fields: [cockpitSystems.tenantId],
     references: [tenants.id],
@@ -1894,7 +1906,17 @@ export const cockpitSystemsRelations = relations(cockpitSystems, ({ one }) => ({
     fields: [cockpitSystems.createdBy],
     references: [users.id],
   }),
+  credentials: many(cockpitCredentials),
+}))
+
+export const cockpitCredentialsRelations = relations(cockpitCredentials, ({ one }) => ({
+  system: one(cockpitSystems, {
+    fields: [cockpitCredentials.systemId],
+    references: [cockpitSystems.id],
+  }),
 }))
 
 export type CockpitSystem = typeof cockpitSystems.$inferSelect
 export type NewCockpitSystem = typeof cockpitSystems.$inferInsert
+export type CockpitCredential = typeof cockpitCredentials.$inferSelect
+export type NewCockpitCredential = typeof cockpitCredentials.$inferInsert
