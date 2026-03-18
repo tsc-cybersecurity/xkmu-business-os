@@ -166,21 +166,21 @@ export default function PersonDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-center gap-4 min-w-0">
+          <Button variant="ghost" size="icon" aria-label="Zurueck" asChild className="shrink-0">
             <Link href="/intern/contacts/persons">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold">{fullName}</h1>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+              <h1 className="text-2xl sm:text-3xl font-bold truncate">{fullName}</h1>
               {person.isPrimaryContact && (
                 <Badge variant="secondary">Hauptkontakt</Badge>
               )}
             </div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <Badge className={statusColors[person.status]}>
                 {statusLabels[person.status] || person.status}
               </Badge>
@@ -196,8 +196,8 @@ export default function PersonDetailPage() {
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
+        <div className="flex gap-2 shrink-0 self-start">
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/intern/contacts/persons/${personId}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
               Bearbeiten
@@ -205,6 +205,7 @@ export default function PersonDetailPage() {
           </Button>
           <Button
             variant="destructive"
+            size="sm"
             onClick={() => setDeleteDialogOpen(true)}
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -215,7 +216,7 @@ export default function PersonDetailPage() {
 
       {/* Content */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="ai-research">
             <Brain className="h-4 w-4 mr-1" />

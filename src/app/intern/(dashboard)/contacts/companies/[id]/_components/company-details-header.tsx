@@ -38,23 +38,23 @@ interface CompanyDetailsHeaderProps {
 
 export function CompanyDetailsHeader({ company, onDeleteClick }: CompanyDetailsHeaderProps) {
   return (
-    <div className="flex items-start justify-between">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex items-center gap-4 min-w-0">
+        <Button variant="ghost" size="icon" aria-label="Zurueck" asChild className="shrink-0">
           <Link href="/intern/contacts/companies">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{company.name}</h1>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold truncate">{company.name}</h1>
             {company.legalForm && (
               <span className="text-muted-foreground">
                 {company.legalForm}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-1">
+          <div className="flex flex-wrap items-center gap-2 mt-1">
             <Badge className={statusColors[company.status]}>
               {statusLabels[company.status] || company.status}
             </Badge>
@@ -67,8 +67,8 @@ export function CompanyDetailsHeader({ company, onDeleteClick }: CompanyDetailsH
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button variant="outline" asChild>
+      <div className="flex gap-2 shrink-0 self-start">
+        <Button variant="outline" size="sm" asChild>
           <Link href={`/intern/contacts/companies/${company.id}/edit`}>
             <Edit className="mr-2 h-4 w-4" />
             Bearbeiten
@@ -76,6 +76,7 @@ export function CompanyDetailsHeader({ company, onDeleteClick }: CompanyDetailsH
         </Button>
         <Button
           variant="destructive"
+          size="sm"
           onClick={onDeleteClick}
         >
           <Trash2 className="mr-2 h-4 w-4" />

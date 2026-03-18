@@ -261,7 +261,7 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
 
       {/* Result Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{activeAction?.name || 'KI-Ergebnis'}</DialogTitle>
             <DialogDescription>

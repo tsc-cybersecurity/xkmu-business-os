@@ -218,7 +218,7 @@ export function PersonForm({ person, mode }: PersonFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-3 h-auto">
           <TabsTrigger value="basic">Allgemein</TabsTrigger>
           <TabsTrigger value="contact">Kontakt</TabsTrigger>
           <TabsTrigger value="address">Adresse</TabsTrigger>

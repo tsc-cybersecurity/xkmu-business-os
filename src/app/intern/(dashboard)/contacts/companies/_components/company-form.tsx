@@ -200,7 +200,7 @@ export function CompanyForm({ company, mode }: CompanyFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
           <TabsTrigger value="basic">Allgemein</TabsTrigger>
           <TabsTrigger value="address">Adresse</TabsTrigger>
           <TabsTrigger value="contact">Kontakt</TabsTrigger>

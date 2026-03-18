@@ -84,14 +84,14 @@ export function CompanyContactsSection({
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Ansprechpartner
           </CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button>
+              <Button size="sm" className="self-start sm:self-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Person hinzufügen
                 <ChevronDown className="ml-2 h-4 w-4" />
@@ -117,6 +117,7 @@ export function CompanyContactsSection({
               Keine Ansprechpartner vorhanden
             </p>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -160,13 +161,14 @@ export function CompanyContactsSection({
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
       {/* Select Person Dialog */}
       <Dialog open={selectPersonDialogOpen} onOpenChange={onSelectPersonDialogOpenChange}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-w-[calc(100vw-2rem)]">
           <DialogHeader>
             <DialogTitle>Bestehende Person auswählen</DialogTitle>
             <DialogDescription>

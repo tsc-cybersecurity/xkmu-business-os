@@ -548,12 +548,12 @@ export function CompanyInfoCard({ company, analyzingDoc, onAnalyzeDocument }: Co
       {/* Dokumentanalyse */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
               Dokumentanalyse
             </CardTitle>
-            <div className="relative">
+            <div className="relative shrink-0 self-start sm:self-auto">
               <input
                 type="file"
                 accept=".pdf"
