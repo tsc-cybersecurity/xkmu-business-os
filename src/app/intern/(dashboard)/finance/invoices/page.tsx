@@ -89,7 +89,7 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Rechnungen</h1>
           <p className="text-muted-foreground">Verwalten Sie Ihre Rechnungen</p>
@@ -106,7 +106,7 @@ export default function InvoicesPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -117,7 +117,7 @@ export default function InvoicesPage() {
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder="Alle Status" />
               </SelectTrigger>
               <SelectContent>
@@ -152,6 +152,7 @@ export default function InvoicesPage() {
             </div>
           ) : (
             <>
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -185,9 +186,10 @@ export default function InvoicesPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
 
               {meta && meta.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-4">
                   <p className="text-sm text-muted-foreground">{meta.total} Rechnungen gesamt</p>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>

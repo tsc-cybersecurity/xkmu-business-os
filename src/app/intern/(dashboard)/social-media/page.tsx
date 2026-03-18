@@ -160,7 +160,7 @@ export default function SocialMediaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Share2 className="h-8 w-8" />
@@ -168,7 +168,7 @@ export default function SocialMediaPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Verwalten Sie Ihre Social-Media-Beitraege</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href="/intern/social-media/topics">
             <Button variant="outline">
               <Tags className="h-4 w-4 mr-2" />
@@ -192,7 +192,7 @@ export default function SocialMediaPage() {
 
       <div className="flex gap-3 flex-wrap">
         <Select value={platformFilter} onValueChange={setPlatformFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Plattform" />
           </SelectTrigger>
           <SelectContent>
@@ -205,7 +205,7 @@ export default function SocialMediaPage() {
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -217,7 +217,7 @@ export default function SocialMediaPage() {
           </SelectContent>
         </Select>
         <Select value={topicFilter} onValueChange={setTopicFilter}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Thema" />
           </SelectTrigger>
           <SelectContent>
@@ -237,7 +237,7 @@ export default function SocialMediaPage() {
         </Select>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

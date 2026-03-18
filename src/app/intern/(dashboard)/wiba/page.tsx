@@ -74,14 +74,14 @@ export default function WibaAuditPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">BSI WiBA-Checks</h1>
           <p className="text-muted-foreground">
             Weg in die Basis-Absicherung - IT-Sicherheitschecks durchfuehren und verwalten
           </p>
         </div>
-        <Link href="/intern/wiba/new">
+        <Link href="/intern/wiba/new" className="self-start sm:self-auto">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Neuer Check
@@ -90,7 +90,7 @@ export default function WibaAuditPage() {
       </div>
 
       {!loading && audits.length > 0 && (
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
           <Card>
             <CardContent className="pt-4 pb-3">
               <div className="flex items-center justify-between">

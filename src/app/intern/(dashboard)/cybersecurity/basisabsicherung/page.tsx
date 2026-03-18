@@ -89,14 +89,14 @@ export default function BasisabsicherungPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Basisabsicherung</h1>
           <p className="text-muted-foreground">
             BSI Weg in die Basis-Absicherung (WiBA) - IT-Sicherheit systematisch umsetzen
           </p>
         </div>
-        <Link href="/intern/cybersecurity/basisabsicherung/new">
+        <Link href="/intern/cybersecurity/basisabsicherung/new" className="self-start sm:self-auto">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Neues Assessment

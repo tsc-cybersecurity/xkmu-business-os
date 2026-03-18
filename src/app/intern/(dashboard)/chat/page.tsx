@@ -437,9 +437,9 @@ export default function ChatPage() {
 
   // ─── Render ───────────────────────────────────
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex flex-col sm:flex-row h-[calc(100vh-4rem)]">
       {/* Left: Conversation List */}
-      <div className="w-72 border-r flex flex-col bg-card">
+      <div className="w-full sm:w-72 border-b sm:border-b-0 sm:border-r flex flex-col bg-card max-h-[30vh] sm:max-h-none">
         <div className="p-4 border-b">
           <Button className="w-full" onClick={handleNewChat}>
             <Plus className="mr-2 h-4 w-4" />
@@ -499,17 +499,17 @@ export default function ChatPage() {
       {/* Right: Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="border-b p-4 flex items-center justify-between bg-card">
-          <div className="flex items-center gap-3">
-            <Bot className="h-5 w-5 text-primary" />
-            <h1 className="font-semibold">
+        <header className="border-b p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-card">
+          <div className="flex items-center gap-3 min-w-0">
+            <Bot className="h-5 w-5 text-primary shrink-0" />
+            <h1 className="font-semibold truncate">
               {activeConversation?.title || 'KI-Chat'}
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Provider:</span>
+            <span className="text-sm text-muted-foreground shrink-0 hidden sm:inline">Provider:</span>
             <Select value={selectedProvider} onValueChange={setSelectedProvider}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-full sm:w-[220px]">
                 <SelectValue placeholder="Provider waehlen..." />
               </SelectTrigger>
               <SelectContent>

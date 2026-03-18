@@ -330,7 +330,7 @@ export default function AiProvidersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
             <Link href="/intern/settings">
@@ -344,7 +344,7 @@ export default function AiProvidersPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={checkStatus} disabled={checkingStatus}>
             {checkingStatus ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -379,10 +379,10 @@ export default function AiProvidersPage() {
         <div className="grid gap-4">
           {providers.map((provider) => (
             <Card key={provider.id} className={!provider.isActive ? 'opacity-60' : ''}>
-              <CardContent className="flex items-center justify-between py-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
+              <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between py-4">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold text-lg">{provider.name}</span>
                       <Badge className={providerColors[provider.providerType] || 'bg-gray-500'}>
                         {provider.providerType}
@@ -410,7 +410,7 @@ export default function AiProvidersPage() {
                         )
                       )}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
                       {provider.providerType !== 'firecrawl' && (
                         <>
                           <span>Modell: <code className="bg-muted px-1 rounded">{provider.model}</code></span>
@@ -575,7 +575,7 @@ export default function AiProvidersPage() {
               </p>
             )}
 
-            {!isNoModelProvider && <div className="grid grid-cols-3 gap-4">
+            {!isNoModelProvider && <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <FormField label="Max Tokens" htmlFor="maxTokens">
                 <Input
                   id="maxTokens"

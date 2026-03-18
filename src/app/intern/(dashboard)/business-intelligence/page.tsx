@@ -191,7 +191,7 @@ export default function BusinessIntelligencePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <BarChart3 className="h-8 w-8" />
@@ -201,7 +201,7 @@ export default function BusinessIntelligencePage() {
             Laden Sie Geschaeftsdokumente hoch und lassen Sie ein KI-Profil erstellen
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" disabled={uploading} asChild>
             <label className="cursor-pointer">
               <Upload className="h-4 w-4 mr-2" />

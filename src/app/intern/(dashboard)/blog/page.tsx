@@ -83,7 +83,7 @@ export default function BlogPostsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Newspaper className="h-8 w-8" />
@@ -91,7 +91,7 @@ export default function BlogPostsPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Verwalten Sie Ihre Blog-Beitraege</p>
         </div>
-        <Link href="/intern/blog/new">
+        <Link href="/intern/blog/new" className="self-start sm:self-auto">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Neuer Beitrag
@@ -99,7 +99,7 @@ export default function BlogPostsPage() {
         </Link>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

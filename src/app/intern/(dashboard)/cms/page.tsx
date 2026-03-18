@@ -114,7 +114,7 @@ export default function CmsPagesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Globe className="h-8 w-8" />
@@ -122,13 +122,13 @@ export default function CmsPagesPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Verwalten Sie die Inhalte Ihrer oeffentlichen Webseiten</p>
         </div>
-        <Button onClick={() => setShowNewDialog(true)}>
+        <Button onClick={() => setShowNewDialog(true)} className="self-start sm:self-auto">
           <Plus className="h-4 w-4 mr-2" />
           Neue Seite
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

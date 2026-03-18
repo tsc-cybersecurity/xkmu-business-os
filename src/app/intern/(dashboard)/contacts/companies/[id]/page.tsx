@@ -282,7 +282,7 @@ export default function CompanyDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <CompanyDetailsHeader
           company={company}
           onDeleteClick={() => setDeleteDialogOpen(true)}
@@ -290,6 +290,7 @@ export default function CompanyDetailPage() {
         <Button
           variant="outline"
           size="sm"
+          className="self-start sm:self-auto shrink-0"
           onClick={() => openChat({
             type: 'company',
             title: company.name,
@@ -312,7 +313,7 @@ export default function CompanyDetailPage() {
 
       {/* Content */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="contacts">
             Ansprechpartner ({persons.length})

@@ -77,14 +77,14 @@ export default function DinAuditPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">DIN SPEC 27076 Audits</h1>
           <p className="text-muted-foreground">
             IT-Sicherheitsaudits nach DIN SPEC 27076 durchfuehren und verwalten
           </p>
         </div>
-        <Link href="/intern/din-audit/new">
+        <Link href="/intern/din-audit/new" className="self-start sm:self-auto">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Neues Audit

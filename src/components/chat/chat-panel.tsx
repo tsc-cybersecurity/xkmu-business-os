@@ -215,7 +215,7 @@ export function ChatPanel() {
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="w-[500px] sm:max-w-[500px] flex flex-col p-0 gap-0"
+        className="w-full sm:w-[500px] sm:max-w-[500px] max-w-[calc(100vw-2rem)] flex flex-col p-0 gap-0"
       >
         {/* Hidden accessible description */}
         <SheetDescription className="sr-only">

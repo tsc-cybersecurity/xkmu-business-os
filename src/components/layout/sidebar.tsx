@@ -159,6 +159,17 @@ export function Sidebar() {
   const [manualToggles, setManualToggles] = useState<Record<string, boolean>>({})
   const { hasPermission, loading: permissionsLoading } = usePermissions()
 
+  // Auto-collapse sidebar on small screens
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)')
+    const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) setCollapsed(true)
+    }
+    handleChange(mq)
+    mq.addEventListener('change', handleChange)
+    return () => mq.removeEventListener('change', handleChange)
+  }, [])
+
   // Clear manual overrides on navigation so auto-expand takes effect
   useEffect(() => {
     setManualToggles({})

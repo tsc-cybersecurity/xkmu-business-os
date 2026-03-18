@@ -506,14 +506,14 @@ export default function CockpitPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Cockpit</h1>
           <p className="text-muted-foreground">
             IT-Systeme und Infrastruktur verwalten
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="self-start sm:self-auto">
           <Plus className="mr-2 h-4 w-4" />
           Neues System
         </Button>
@@ -521,7 +521,7 @@ export default function CockpitPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -628,7 +628,7 @@ export default function CockpitPage() {
         </Card>
       ) : (
         <Card>
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -741,7 +741,7 @@ export default function CockpitPage() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingId ? 'System bearbeiten' : 'Neues System hinzufuegen'}
@@ -751,7 +751,7 @@ export default function CockpitPage() {
             {/* Grunddaten */}
             <div>
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">Grunddaten</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Name" htmlFor="name" required>
                   <Input
                     id="name"
@@ -822,7 +822,7 @@ export default function CockpitPage() {
             {/* Verbindung */}
             <div>
               <h3 className="text-sm font-semibold text-muted-foreground mb-3">Verbindung</h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField label="Hostname" htmlFor="hostname">
                   <Input
                     id="hostname"

@@ -104,7 +104,7 @@ export default function MarketingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
             <Megaphone className="h-8 w-8" />
@@ -112,7 +112,7 @@ export default function MarketingPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Verwalten Sie Ihre Marketing-Kampagnen</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href="/intern/marketing/templates">
             <Button variant="outline">Vorlagen</Button>
           </Link>
@@ -125,9 +125,9 @@ export default function MarketingPage() {
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -140,7 +140,7 @@ export default function MarketingPage() {
           </SelectContent>
         </Select>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Typ" />
           </SelectTrigger>
           <SelectContent>
@@ -153,7 +153,7 @@ export default function MarketingPage() {
         </Select>
       </div>
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>

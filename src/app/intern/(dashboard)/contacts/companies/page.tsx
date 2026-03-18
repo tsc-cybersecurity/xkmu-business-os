@@ -75,14 +75,14 @@ export default function CompaniesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Firmen</h1>
           <p className="text-muted-foreground">
             Verwalten Sie Ihre Firmenkontakte
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="self-start sm:self-auto">
           <Link href="/intern/contacts/companies/new">
             <Plus className="mr-2 h-4 w-4" />
             Neue Firma
@@ -124,6 +124,7 @@ export default function CompaniesPage() {
               </Button>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -173,6 +174,7 @@ export default function CompaniesPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

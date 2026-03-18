@@ -128,14 +128,14 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Produkte</h1>
           <p className="text-muted-foreground">
             Verwalten Sie Ihre Produkte
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="self-start sm:self-auto">
           <Link href="/intern/catalog/products/new">
             <Plus className="mr-2 h-4 w-4" />
             Neues Produkt
@@ -145,7 +145,7 @@ export default function ProductsPage() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -155,8 +155,9 @@ export default function ProductsPage() {
                 className="pl-9"
               />
             </div>
+            <div className="flex flex-wrap gap-2">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue placeholder="Alle Status" />
               </SelectTrigger>
               <SelectContent>
@@ -167,7 +168,7 @@ export default function ProductsPage() {
               </SelectContent>
             </Select>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <SelectValue placeholder="Alle Kategorien" />
               </SelectTrigger>
               <SelectContent>
@@ -179,6 +180,7 @@ export default function ProductsPage() {
                 ))}
               </SelectContent>
             </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -202,6 +204,7 @@ export default function ProductsPage() {
             </div>
           ) : (
             <>
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -265,6 +268,7 @@ export default function ProductsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
 
               {/* Pagination */}
               {meta && meta.totalPages > 1 && (

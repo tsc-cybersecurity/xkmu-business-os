@@ -127,7 +127,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">
@@ -136,7 +136,7 @@ export default function DashboardPage() {
         </div>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors self-start sm:self-auto"
         >
           <Globe className="h-4 w-4" />
           Zur Webseite
@@ -283,6 +283,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {data?.recentCompanies && data.recentCompanies.length > 0 ? (
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -314,6 +315,7 @@ export default function DashboardPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
             ) : (
               <p className="text-sm text-muted-foreground py-4 text-center">
                 Noch keine Firmen vorhanden.{' '}
@@ -343,6 +345,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {data?.recentPersons && data.recentPersons.length > 0 ? (
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -372,6 +375,7 @@ export default function DashboardPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
             ) : (
               <p className="text-sm text-muted-foreground py-4 text-center">
                 Noch keine Personen vorhanden.{' '}
@@ -402,6 +406,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           {data?.openLeads && data.openLeads.length > 0 ? (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -428,6 +433,7 @@ export default function DashboardPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground py-4 text-center">
               Keine offenen Leads vorhanden.

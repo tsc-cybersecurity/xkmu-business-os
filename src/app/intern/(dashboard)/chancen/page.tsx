@@ -335,7 +335,7 @@ export default function ChancenPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Chancen</h1>
           <p className="text-muted-foreground">
@@ -344,12 +344,12 @@ export default function ChancenPage() {
         </div>
         <Dialog open={searchDialogOpen} onOpenChange={(open) => { setSearchDialogOpen(open); if (!open) setSearchResult(null) }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="self-start sm:self-auto">
               <Telescope className="mr-2 h-4 w-4" />
               Neue Suche
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] max-w-[calc(100vw-2rem)]">
             <DialogHeader>
               <DialogTitle>Neue Chancen suchen</DialogTitle>
               <DialogDescription>
@@ -375,7 +375,7 @@ export default function ChancenPage() {
                   onChange={(e) => setSearchLocations(e.target.value)}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Radius</Label>
                   <Select value={searchRadius} onValueChange={setSearchRadius}>
@@ -444,7 +444,7 @@ export default function ChancenPage() {
 
       {/* Status Tabs */}
       <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-        <TabsList>
+        <TabsList className="flex-wrap h-auto">
           {statusTabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
@@ -500,6 +500,7 @@ export default function ChancenPage() {
             </div>
           ) : (
             <>
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -593,6 +594,7 @@ export default function ChancenPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
 
               {/* Pagination */}
               {totalPages > 1 && (
@@ -629,7 +631,7 @@ export default function ChancenPage() {
 
       {/* Detail/Edit Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-2xl max-w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Chance bearbeiten</DialogTitle>
             <DialogDescription>
@@ -638,8 +640,8 @@ export default function ChancenPage() {
           </DialogHeader>
           {editOpp && (
             <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="edit-name">Name</Label>
                   <Input id="edit-name" value={editForm.name} onChange={(e) => setEditForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
@@ -665,8 +667,8 @@ export default function ChancenPage() {
 
               <div className="border-t pt-4">
                 <h4 className="text-sm font-semibold mb-3">Adresse</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2 col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="edit-address">Strasse</Label>
                     <Input id="edit-address" value={editForm.address} onChange={(e) => setEditForm(f => ({ ...f, address: e.target.value }))} />
                   </div>
@@ -687,7 +689,7 @@ export default function ChancenPage() {
 
               <div className="border-t pt-4">
                 <h4 className="text-sm font-semibold mb-3">Kontakt</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-phone">Telefon</Label>
                     <Input id="edit-phone" value={editForm.phone} onChange={(e) => setEditForm(f => ({ ...f, phone: e.target.value }))} />
@@ -696,7 +698,7 @@ export default function ChancenPage() {
                     <Label htmlFor="edit-email">E-Mail</Label>
                     <Input id="edit-email" type="email" value={editForm.email} onChange={(e) => setEditForm(f => ({ ...f, email: e.target.value }))} />
                   </div>
-                  <div className="space-y-2 col-span-2">
+                  <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="edit-website">Website</Label>
                     <Input id="edit-website" value={editForm.website} onChange={(e) => setEditForm(f => ({ ...f, website: e.target.value }))} />
                   </div>

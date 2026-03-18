@@ -152,7 +152,7 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
             <Link href="/intern/settings">
@@ -166,7 +166,7 @@ export default function UsersPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => setCreateDialogOpen(true)} className="self-start sm:self-auto">
           <Plus className="mr-2 h-4 w-4" />
           Neuer Benutzer
         </Button>
@@ -207,6 +207,7 @@ export default function UsersPage() {
               </Button>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -248,6 +249,7 @@ export default function UsersPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -263,7 +265,7 @@ export default function UsersPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">Vorname</Label>
                 <Input

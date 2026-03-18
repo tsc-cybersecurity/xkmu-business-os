@@ -124,14 +124,14 @@ export default function N8nWorkflowsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">n8n Workflows</h1>
           <p className="text-muted-foreground">
             Workflows erstellen, verwalten und automatisieren
           </p>
         </div>
-        <Link href="/intern/n8n-workflows/new">
+        <Link href="/intern/n8n-workflows/new" className="self-start sm:self-auto">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Workflow erstellen
@@ -179,6 +179,7 @@ export default function N8nWorkflowsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -252,6 +253,7 @@ export default function N8nWorkflowsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           </CardContent>
         </Card>
       )}

@@ -162,7 +162,7 @@ export default function ApiKeysPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
             <Link href="/intern/settings">
@@ -176,7 +176,7 @@ export default function ApiKeysPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
+        <Button onClick={() => setCreateDialogOpen(true)} className="self-start sm:self-auto">
           <Plus className="mr-2 h-4 w-4" />
           Neuer API-Schlussel
         </Button>
@@ -211,6 +211,7 @@ export default function ApiKeysPage() {
               </Button>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -268,6 +269,7 @@ export default function ApiKeysPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

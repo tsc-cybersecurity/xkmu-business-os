@@ -223,14 +223,14 @@ export default function WebhooksPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Webhooks</h1>
           <p className="text-muted-foreground">
             Automatisieren Sie Workflows mit HTTP-Callbacks
           </p>
         </div>
-        <Button onClick={openCreateDialog}>
+        <Button onClick={openCreateDialog} className="self-start sm:self-auto">
           <Plus className="mr-2 h-4 w-4" />
           Neuer Webhook
         </Button>
@@ -255,6 +255,7 @@ export default function WebhooksPage() {
               </Button>
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -337,6 +338,7 @@ export default function WebhooksPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

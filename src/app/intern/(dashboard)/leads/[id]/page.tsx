@@ -338,7 +338,7 @@ export default function LeadDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <LeadDetailsHeader
           lead={lead}
           editing={editing}
@@ -353,6 +353,7 @@ export default function LeadDetailPage() {
         <Button
           variant="outline"
           size="sm"
+          className="self-start sm:self-auto shrink-0"
           onClick={() => openChat({
             type: 'lead',
             title: lead.title || `Lead #${lead.id.slice(0, 8)}`,
