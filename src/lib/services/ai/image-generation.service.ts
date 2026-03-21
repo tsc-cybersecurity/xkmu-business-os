@@ -18,7 +18,7 @@ import path from 'path'
 
 export interface ImageGenerationParams {
   prompt: string
-  provider: 'openai' | 'kie'
+  provider: 'gemini' | 'openai' | 'kie'
   model?: string
   size?: string
   style?: string // DALL-E: vivid | natural
@@ -150,6 +150,65 @@ async function generateWithOpenAI(
 }
 
 // ============================================
+// Provider: Google Gemini (Imagen)
+// ============================================
+
+async function generateWithGemini(
+  params: ImageGenerationParams,
+  apiKey: string
+): Promise<{ b64: string; model: string; size: string }> {
+  const model = params.model || 'gemini-2.5-flash-preview-image-generation'
+
+  const aspectRatio = params.aspectRatio || '1:1'
+
+  const body = {
+    contents: [{
+      parts: [{ text: params.prompt }],
+    }],
+    generationConfig: {
+      responseModalities: ['TEXT', 'IMAGE'],
+      imageConfig: {
+        aspectRatio,
+      },
+    },
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(120_000),
+      body: JSON.stringify(body),
+    }
+  )
+
+  if (!response.ok) {
+    const err = await response.text()
+    throw new Error(`Gemini Image error (${response.status}): ${err.substring(0, 300)}`)
+  }
+
+  const data = await response.json()
+
+  // Find the image part in the response (skip thinking parts)
+  const candidates = data.candidates || []
+  for (const candidate of candidates) {
+    const parts = candidate.content?.parts || []
+    for (const part of parts) {
+      if (part.inlineData?.mimeType?.startsWith('image/')) {
+        return {
+          b64: part.inlineData.data,
+          model,
+          size: aspectRatio,
+        }
+      }
+    }
+  }
+
+  throw new Error('Gemini returned no image data. Möglicherweise wurde der Prompt abgelehnt.')
+}
+
+// ============================================
 // Provider: kie.ai (Nano Banana, FLUX, etc.)
 // ============================================
 
@@ -217,7 +276,19 @@ export const ImageGenerationService = {
     let actualModel: string
     let actualSize: string
 
-    if (params.provider === 'openai') {
+    if (params.provider === 'gemini') {
+      const geminiConfig = providers.find(p => p.providerType === 'gemini')
+      const apiKey = geminiConfig?.apiKey || process.env.GEMINI_API_KEY
+      if (!apiKey) throw new Error('Kein Gemini API-Key konfiguriert.')
+
+      const result = await generateWithGemini(params, apiKey)
+      actualModel = result.model
+      actualSize = result.size
+
+      const saved = await saveBase64(result.b64, tenantId)
+      servePath = saved.servePath
+      sizeBytes = saved.sizeBytes
+    } else if (params.provider === 'openai') {
       const openaiConfig = providers.find(p => p.providerType === 'openai')
       const apiKey = openaiConfig?.apiKey || process.env.OPENAI_API_KEY
       if (!apiKey) throw new Error('Kein OpenAI API-Key konfiguriert.')

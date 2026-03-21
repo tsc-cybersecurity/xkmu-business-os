@@ -8,7 +8,7 @@ import { logger } from '@/lib/utils/logger'
 
 const generateSchema = z.object({
   prompt: z.string().min(1, 'Prompt ist erforderlich').max(4000),
-  provider: z.enum(['openai', 'kie']).default('kie'),
+  provider: z.enum(['gemini', 'openai', 'kie']).default('gemini'),
   model: z.string().max(100).optional(),
   size: z.string().max(30).optional(),
   style: z.enum(['vivid', 'natural']).optional(),

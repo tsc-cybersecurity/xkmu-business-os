@@ -69,14 +69,17 @@ const CATEGORIES = [
 ]
 
 const PROVIDERS = [
+  { value: 'gemini', label: 'Google Gemini', models: [
+    { value: 'gemini-2.5-flash-preview-image-generation', label: 'Gemini 2.5 Flash' },
+  ]},
   { value: 'kie', label: 'kie.ai', models: [
-    { value: 'nano-banana-2', label: 'Nano Banana 2 (schnell)' },
+    { value: 'nano-banana-2', label: 'Nano Banana 2' },
     { value: 'flux-2/flex-text-to-image', label: 'Flux 2' },
     { value: 'mj', label: 'Midjourney' },
     { value: '4o', label: 'GPT-4o Image' },
     { value: 'ghibli', label: 'Ghibli AI' },
   ]},
-  { value: 'openai', label: 'DALL-E 3 (OpenAI direkt)', models: [
+  { value: 'openai', label: 'DALL-E 3 (OpenAI)', models: [
     { value: 'dall-e-3', label: 'DALL-E 3' },
   ]},
 ]
@@ -94,6 +97,7 @@ const providerLabels: Record<string, string> = {
 }
 
 const modelLabels: Record<string, string> = {
+  'gemini-2.5-flash-preview-image-generation': 'Gemini 2.5 Flash',
   'dall-e-3': 'DALL-E 3',
   'nano-banana-2': 'Nano Banana 2',
   'flux-2/flex-text-to-image': 'Flux 2',
@@ -117,8 +121,8 @@ export default function ImagesPage() {
   const [generateOpen, setGenerateOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [prompt, setPrompt] = useState('')
-  const [provider, setProvider] = useState('kie')
-  const [model, setModel] = useState('nano-banana-2')
+  const [provider, setProvider] = useState('gemini')
+  const [model, setModel] = useState('gemini-2.5-flash-preview-image-generation')
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [category, setCategory] = useState('general')
   const [style, setStyle] = useState('vivid')
