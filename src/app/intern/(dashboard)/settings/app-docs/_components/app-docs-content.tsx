@@ -21,6 +21,7 @@ import {
   Share2,
   ChevronRight,
   ExternalLink,
+  Monitor,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -45,9 +46,11 @@ export function AppDocsContent() {
         <TabsTrigger value="cyber" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Cybersecurity</TabsTrigger>
         <TabsTrigger value="bi" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">BI</TabsTrigger>
         <TabsTrigger value="ai" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">KI</TabsTrigger>
+        <TabsTrigger value="images" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Bildgenerierung</TabsTrigger>
+        <TabsTrigger value="cockpit" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Cockpit</TabsTrigger>
         <TabsTrigger value="n8n" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">n8n Workflows</TabsTrigger>
         <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Einstellungen</TabsTrigger>
-        <TabsTrigger value="public" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Oeffentlich</TabsTrigger>
+        <TabsTrigger value="public" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Öffentlich</TabsTrigger>
       </TabsList>
 
       {/* ===== ÜBERSICHT ===== */}
@@ -783,10 +786,10 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               ]} />
             </SectionBlock>
 
-            <SectionBlock title="Oeffentliche Seiten">
+            <SectionBlock title="Öffentliche Seiten">
               <PageTable pages={[
-                { url: '/it-news', name: 'IT-News (öffentlich)', desc: 'Oeffentliche Auflistung aller veröffentlichten Blog-Beitraege.' },
-                { url: '/it-news/[slug]', name: 'Beitrag (öffentlich)', desc: 'Oeffentliche Einzelansicht eines Blog-Beitrags.' },
+                { url: '/it-news', name: 'IT-News (öffentlich)', desc: 'Öffentliche Auflistung aller veröffentlichten Blog-Beitraege.' },
+                { url: '/it-news/[slug]', name: 'Beitrag (öffentlich)', desc: 'Öffentliche Einzelansicht eines Blog-Beitrags.' },
               ]} />
             </SectionBlock>
 
@@ -839,8 +842,20 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { url: '/intern/marketing', name: 'Kampagnen-Uebersicht', desc: 'Liste aller Kampagnen mit Status, Zeitraum und Budget.' },
                 { url: '/intern/marketing/new', name: 'Neue Kampagne', desc: 'Kampagne mit Zielgruppe, Budget und Zeitraum erstellen.' },
                 { url: '/intern/marketing/[id]', name: 'Kampagnendetail', desc: 'Detailansicht mit Aufgaben, Fortschritt und Status.' },
-                { url: '/intern/marketing/templates', name: 'Vorlagen', desc: 'Kampagnenvorlagen fuer wiederkehrende Marketing-Aktionen.' },
+                { url: '/intern/marketing/templates', name: 'Vorlagen', desc: 'Kampagnenvorlagen für wiederkehrende Marketing-Aktionen.' },
+                { url: '/intern/marketing/agent', name: 'AI Marketing Agent', desc: 'KI-gestützter Marketing-Agent: URL eingeben → automatische Analyse mit Research, SEO und Social-Media-Content.' },
               ]} />
+            </SectionBlock>
+
+            <SectionBlock title="AI Marketing Agent (AI CMO)">
+              <FeatureList features={[
+                { name: 'Website-Scraping', desc: 'Automatisches Scraping der eingegebenen URL inkl. Unterseiten via Firecrawl oder HTML-Fallback.' },
+                { name: 'Marketing-Research', desc: 'KI analysiert Positionierung: Firmenname, Branche, Zielgruppe, USPs, Wettbewerber, Produkte, Marken-Ton.' },
+                { name: 'SEO-Analyse', desc: 'Primäre/sekundäre Keywords, Content-Lücken, Meta-Description-Vorschlag, AI-Search-Visibility-Score (0-100).' },
+                { name: 'Social-Media-Entwürfe', desc: 'Plattformspezifische Posts (LinkedIn, X, Instagram, Facebook, XING) mit Hashtags und Call-to-Action.' },
+                { name: 'Post speichern', desc: 'Generierte Posts direkt als Social-Media-Entwürfe in die Social-Media-Verwaltung übernehmen.' },
+              ]} />
+              <EndpointDoc method="POST" path="/api/v1/marketing/agent/analyze" description="AI Marketing Agent starten." requestBody={{ url: 'https://firma.de', language: 'de', platforms: ['linkedin', 'twitter', 'instagram'], tone: 'professional', additionalContext: 'Fokus auf Cybersecurity' }} responseExample={{ research: { companyName: 'Firma GmbH', industry: 'IT', uniqueSellingPoints: ['USP 1'] }, seoAnalysis: { primaryKeywords: ['keyword1'], searchVisibilityScore: 72 }, socialMediaDrafts: [{ platform: 'linkedin', content: '...', hashtags: ['#IT'] }], executiveSummary: '...' }} />
             </SectionBlock>
 
             <SectionBlock title="Datenmodell - Kampagne">
@@ -917,6 +932,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { name: 'Post generieren', desc: 'KI erstellt plattformspezifischen Post basierend auf Thema und Zielgruppe.' },
                 { name: 'Post verbessern', desc: 'Bestehenden Post per KI optimieren (Tonalität, Hashtags, Struktur).' },
                 { name: 'Content-Plan generieren', desc: 'KI erstellt automatisch einen Redaktionsplan für einen Zeitraum.' },
+                { name: 'Bildgenerierung', desc: 'KI-Bilder direkt im Post-Editor generieren (Gemini, kie.ai, DALL-E 3) und als Post-Bild anhängen.' },
               ]} />
             </SectionBlock>
 
@@ -1098,6 +1114,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 ['Deepseek', 'Deepseek-Modelle fuer kosteneffiziente KI-Aufgaben'],
                 ['Kimi', 'Moonshot AI - Spezialisiert auf lange Kontexte'],
                 ['Ollama', 'Lokale Modelle - Datenschutzkonform, keine Cloud-Anbindung'],
+                ['kie.ai', 'Video-Generierung (Kling 3.0) und Bildgenerierung (Nano Banana 2, Flux, Midjourney, GPT-4o Image)'],
               ]} />
             </SectionBlock>
 
@@ -1112,7 +1129,9 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { name: 'SEO-Generierung', desc: 'Automatische SEO-Metadaten fuer Seiten und Blog-Posts.' },
                 { name: 'Social-Media-Posts', desc: 'Plattformspezifische Posts generieren und optimieren.' },
                 { name: 'Content-Planung', desc: 'Automatische Redaktionsplaene erstellen.' },
-                { name: 'Marketing-Aufgaben', desc: 'KI erstellt Aufgabenlisten fuer Kampagnen.' },
+                { name: 'Marketing-Aufgaben', desc: 'KI erstellt Aufgabenlisten für Kampagnen.' },
+                { name: 'AI Marketing Agent', desc: 'Mehrstufige Pipeline: URL → Scraping → Research → SEO → Content-Generierung.' },
+                { name: 'Bildgenerierung', desc: 'KI-Bilder via Gemini (Flash Image, Nano Banana Pro, Imagen 4.0), kie.ai oder OpenAI DALL-E 3.' },
               ]} />
             </SectionBlock>
 
@@ -1134,6 +1153,105 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/ai-prompt-templates" description="Prompt-Vorlage anlegen." requestBody={{ slug: 'custom-prompt', name: 'Eigener Prompt', template: 'Analysiere {{input}}...' }} responseExample={{ id: 'uuid' }} />
               <EndpointDoc method="GET" path="/api/v1/ai-logs" description="KI-Nutzungslogs abrufen." queryParams={['page=1', 'limit=50']} responseExample={{ data: [{ id: 'uuid', model: 'gemini-2.5-flash', tokens: 1500, duration: 2300, cost: 0.003 }] }} />
               <EndpointDoc method="GET" path="/api/v1/ai-logs/stats" description="KI-Nutzungsstatistik." responseExample={{ totalRequests: 1250, totalTokens: 2500000, totalCost: 12.50, byModel: [{ model: 'gemini-2.5-flash', requests: 800 }] }} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== BILDGENERIERUNG ===== */}
+      <TabsContent value="images" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle><Brain className="inline h-5 w-5 mr-2" />Bildgenerierung & Galerie</CardTitle>
+            <CardDescription>KI-generierte Bilder für Social Media, Website und Marketing</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Seiten">
+              <PageTable pages={[
+                { url: '/intern/images', name: 'Bildgenerierung & Galerie', desc: 'Bilder per KI generieren, Galerie mit Filtern, Kategorien und Detail-Ansicht.' },
+              ]} />
+            </SectionBlock>
+
+            <SectionBlock title="Provider & Modelle">
+              <InfoTable rows={[
+                ['Google Gemini (Standard)', 'gemini-2.5-flash-image — Schnelle Bildgenerierung über bestehenden Gemini API-Key'],
+                ['Nano Banana Pro', 'nano-banana-pro-preview — Über Gemini API verfügbar'],
+                ['Imagen 4.0', 'imagen-4.0-fast-generate-001 / imagen-4.0-generate-001 — Google Imagen'],
+                ['kie.ai', 'nano-banana-2, flux-2, midjourney, ghibli, 4o — Erfordert kie.ai Credits'],
+                ['OpenAI DALL-E 3', 'dall-e-3 — Direkte OpenAI API, Stil-Optionen (vivid/natural)'],
+              ]} />
+            </SectionBlock>
+
+            <SectionBlock title="Funktionen">
+              <FeatureList features={[
+                { name: 'Multi-Provider', desc: 'Wahl zwischen Gemini, kie.ai und OpenAI mit verschiedenen Modellen pro Provider.' },
+                { name: 'Seitenverhältnis', desc: 'Konfigurierbar: 1:1 (Quadrat), 16:9 (Landscape), 9:16 (Portrait), 4:3.' },
+                { name: 'Galerie', desc: 'Grid-Ansicht aller generierten Bilder mit Suche, Kategorie-Filter und Detail-Dialog.' },
+                { name: 'Kategorien', desc: 'Bilder nach Verwendungszweck kategorisieren: Social Media, Website, Blog, Marketing, Allgemein.' },
+                { name: 'Social Media Integration', desc: 'Bildgenerierung direkt im Post-Editor (Erstellen + Bearbeiten).' },
+                { name: 'CMS Integration', desc: 'Bildgenerierung im CMS Block-Editor (Image-Block, Hero-Hintergrundbild).' },
+                { name: 'Async für kie.ai', desc: 'kie.ai Tasks werden asynchron gestartet, Frontend pollt Status alle 2 Sekunden.' },
+              ]} />
+            </SectionBlock>
+
+            <SectionBlock title="Datenmodell - generated_images">
+              <FieldTable fields={[
+                { name: 'prompt', type: 'text', required: true, desc: 'Bildgenerierungs-Prompt' },
+                { name: 'provider', type: 'string', required: true, desc: 'gemini | openai | kie' },
+                { name: 'model', type: 'string', required: true, desc: 'Model-ID (z.B. gemini-2.5-flash-image)' },
+                { name: 'imageUrl', type: 'text', required: true, desc: 'Lokaler Pfad zum gespeicherten Bild' },
+                { name: 'size', type: 'string', required: false, desc: 'Größe/Seitenverhältnis' },
+                { name: 'category', type: 'string', required: false, desc: 'social_media | website | blog | marketing | general' },
+                { name: 'tags', type: 'text[]', required: false, desc: 'Tags zur Kategorisierung' },
+                { name: 'sizeBytes', type: 'integer', required: false, desc: 'Dateigröße in Bytes' },
+              ]} />
+            </SectionBlock>
+
+            <SectionBlock title="API-Endpunkte">
+              <EndpointDoc method="POST" path="/api/v1/images/generate" description="Bild generieren. Für Gemini/OpenAI synchron, für kie.ai async mit taskId." requestBody={{ prompt: 'Ein modernes Büro bei Sonnenuntergang', provider: 'gemini', model: 'gemini-2.5-flash-image', aspectRatio: '16:9', category: 'website' }} responseExample={{ id: 'uuid', imageUrl: '/api/v1/media/serve/generated/...', prompt: '...', provider: 'gemini', model: 'gemini-2.5-flash-image' }} />
+              <EndpointDoc method="POST" path="/api/v1/images/status" description="kie.ai Task-Status abfragen (Polling)." requestBody={{ taskId: 'abc123', prompt: '...', model: 'nano-banana-2', category: 'general' }} responseExample={{ status: 'completed', imageUrl: '/api/v1/media/serve/generated/...', id: 'uuid' }} />
+              <EndpointDoc method="GET" path="/api/v1/images" description="Galerie-Bilder auflisten." queryParams={['page=1', 'limit=30', 'category=social_media', 'search=büro']} responseExample={{ data: [{ id: 'uuid', prompt: '...', imageUrl: '...', provider: 'gemini', model: '...' }] }} />
+              <EndpointDoc method="GET" path="/api/v1/images/:id" description="Einzelnes Bild abrufen." responseExample={{ id: 'uuid', prompt: '...', imageUrl: '...' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/images/:id" description="Bild löschen (DB + Datei)." responseExample={{ deleted: true }} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== COCKPIT ===== */}
+      <TabsContent value="cockpit" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle><Monitor className="inline h-5 w-5 mr-2" />IT Cockpit</CardTitle>
+            <CardDescription>IT-Infrastruktur-Dokumentation und Systemverwaltung</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Seiten">
+              <PageTable pages={[
+                { url: '/intern/cockpit', name: 'IT Cockpit', desc: 'Übersicht aller IT-Systeme mit Kategorie-Filter, Status und Schnellaktionen.' },
+              ]} />
+            </SectionBlock>
+
+            <SectionBlock title="Funktionen">
+              <FeatureList features={[
+                { name: 'Systemdokumentation', desc: 'Alle IT-Systeme mit Hostname, URL, IP, Port, Protokoll und Beschreibung erfassen.' },
+                { name: 'Kategorien', desc: 'Systeme nach Kategorie gruppieren (Server, Netzwerk, Anwendung, etc.).' },
+                { name: 'Zugangsdaten', desc: 'Mehrere Zugangsdaten pro System (Login, API-Key, SSH-Key, Zertifikat, Token, etc.).' },
+                { name: 'Status-Tracking', desc: 'System-Status verwalten (aktiv, inaktiv, Wartung).' },
+              ]} />
+            </SectionBlock>
+
+            <SectionBlock title="Datenmodell">
+              <FieldTable fields={[
+                { name: 'name', type: 'string', required: true, desc: 'Systemname' },
+                { name: 'hostname', type: 'string', required: false, desc: 'Hostname' },
+                { name: 'url', type: 'string', required: false, desc: 'Zugangs-URL' },
+                { name: 'category', type: 'string', required: false, desc: 'Kategorie (Server, Netzwerk, etc.)' },
+                { name: 'ipAddress', type: 'string', required: false, desc: 'IP-Adresse' },
+                { name: 'port', type: 'integer', required: false, desc: 'Port' },
+                { name: 'status', type: 'enum', required: false, desc: 'active | inactive | maintenance' },
+                { name: 'credentials', type: 'relation', required: false, desc: 'Mehrere Zugangsdaten (type, label, username, password)' },
+              ]} />
             </SectionBlock>
           </CardContent>
         </Card>
@@ -1265,8 +1383,8 @@ withPermission(request, 'companies', 'read', async (req, session) => {
       <TabsContent value="public" className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle><Globe className="inline h-5 w-5 mr-2" />Oeffentliche Seiten</CardTitle>
-            <CardDescription>Oeffentlich zugaengliche Website-Seiten (ohne Login)</CardDescription>
+            <CardTitle><Globe className="inline h-5 w-5 mr-2" />Öffentliche Seiten</CardTitle>
+            <CardDescription>Öffentlich zugaengliche Website-Seiten (ohne Login)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <SectionBlock title="Statische Seiten">
@@ -1290,7 +1408,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               ]} />
             </SectionBlock>
 
-            <SectionBlock title="Oeffentliche API-Endpunkte">
+            <SectionBlock title="Öffentliche API-Endpunkte">
               <EndpointDoc method="POST" path="/api/v1/contact" description="Kontaktformular absenden (keine Authentifizierung noetig)." requestBody={{ name: 'Max Mustermann', email: 'max@example.com', subject: 'Anfrage', message: 'Ich interessiere mich fuer...' }} responseExample={{ message: 'Nachricht gesendet' }} />
               <EndpointDoc method="GET" path="/api/v1/public/blog/posts" description="Veröffentlichte Blog-Beitraege (öffentlich)." queryParams={['page=1', 'limit=10']} responseExample={{ data: [{ title: 'IT-Trends', slug: 'it-trends', excerpt: '...' }] }} />
               <EndpointDoc method="GET" path="/api/v1/public/blog/posts/:slug" description="Blog-Beitrag nach Slug (öffentlich)." responseExample={{ title: 'IT-Trends', content: '<p>...</p>', publishedAt: '2026-02-20' }} />

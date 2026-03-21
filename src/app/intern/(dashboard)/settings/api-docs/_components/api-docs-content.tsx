@@ -24,11 +24,12 @@ export function ApiDocsContent() {
         <TabsTrigger value="social" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Social Media</TabsTrigger>
         <TabsTrigger value="din" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">DIN Audit</TabsTrigger>
         <TabsTrigger value="wiba" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">WiBA</TabsTrigger>
+        <TabsTrigger value="images" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Bildgenerierung</TabsTrigger>
         <TabsTrigger value="media" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Medien</TabsTrigger>
         <TabsTrigger value="ai" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">KI</TabsTrigger>
         <TabsTrigger value="webhooks" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Webhooks</TabsTrigger>
         <TabsTrigger value="backup" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Backup</TabsTrigger>
-        <TabsTrigger value="public" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Oeffentlich</TabsTrigger>
+        <TabsTrigger value="public" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Öffentlich</TabsTrigger>
         <TabsTrigger value="n8n" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">n8n</TabsTrigger>
         <TabsTrigger value="kie" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">kie.ai</TabsTrigger>
         <TabsTrigger value="admin" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Admin</TabsTrigger>
@@ -1115,6 +1116,15 @@ export function ApiDocsContent() {
             <EndpointDoc method="DELETE" path="/api/v1/marketing/templates/:id" description="Vorlage löschen" responseExample={{ message: 'Vorlage gelöscht' }} />
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Marketing - AI Agent (AI CMO)</CardTitle>
+            <CardDescription>Mehrstufige KI-Pipeline: URL → Scraping → Research → SEO → Content</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="POST" path="/api/v1/marketing/agent/analyze" description="AI Marketing Agent starten. Scraped die URL, analysiert Positionierung, SEO und generiert Social-Media-Entwürfe." requestBody={{ url: 'https://firma.de', language: 'de', platforms: ['linkedin', 'twitter', 'instagram'], tone: 'professional', additionalContext: 'Fokus auf Cybersecurity' }} responseExample={{ research: { companyName: 'Firma GmbH', industry: 'IT-Sicherheit', targetAudience: 'KMU', uniqueSellingPoints: ['BSI-zertifiziert'], competitors: ['Konkurrent AG'], keyProducts: ['Penetration Testing'], brandTone: 'professionell, vertrauenswürdig', summary: 'Firma GmbH ist...' }, seoAnalysis: { primaryKeywords: ['IT-Sicherheit KMU'], secondaryKeywords: ['Penetration Test'], contentGaps: ['Blog fehlt'], metaDescriptionSuggestion: '...', searchVisibilityScore: 72, recommendations: ['FAQ-Seite erstellen'] }, socialMediaDrafts: [{ platform: 'linkedin', title: 'Cyber Security für KMU', content: '...', hashtags: ['#ITSicherheit'], callToAction: 'Kontaktieren Sie uns' }], executiveSummary: '...', scrapedUrl: 'https://firma.de', scrapedPagesCount: 5 }} />
+          </CardContent>
+        </Card>
       </TabsContent>
 
       {/* Social Media */}
@@ -1186,6 +1196,23 @@ export function ApiDocsContent() {
         </Card>
       </TabsContent>
 
+      {/* Bildgenerierung */}
+      <TabsContent value="images" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Bildgenerierung</CardTitle>
+            <CardDescription>KI-Bilder generieren und Galerie verwalten. Provider: Gemini (Standard), kie.ai, OpenAI DALL-E 3.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <EndpointDoc method="POST" path="/api/v1/images/generate" description="Bild generieren. Gemini/OpenAI: synchron. kie.ai: async mit taskId." requestBody={{ prompt: 'Ein modernes Büro bei Sonnenuntergang', provider: 'gemini', model: 'gemini-2.5-flash-image', aspectRatio: '16:9', category: 'website' }} responseExample={{ id: 'uuid', imageUrl: '/api/v1/media/serve/generated/tenant/file.png', prompt: '...', provider: 'gemini', model: 'gemini-2.5-flash-image', size: '16:9' }} />
+            <EndpointDoc method="POST" path="/api/v1/images/status" description="kie.ai Task-Status abfragen (Frontend-Polling). Wenn completed, wird das Bild heruntergeladen und in der Galerie gespeichert." requestBody={{ taskId: 'abc123', prompt: 'Originaler Prompt', model: 'nano-banana-2', category: 'general' }} responseExample={{ status: 'completed', imageUrl: '/api/v1/media/serve/generated/...', id: 'uuid' }} />
+            <EndpointDoc method="GET" path="/api/v1/images" description="Galerie-Bilder auflisten mit Pagination und Filtern." queryParams={['page=1', 'limit=30', 'category=social_media', 'search=büro']} responseExample={{ data: [{ id: 'uuid', prompt: '...', imageUrl: '...', provider: 'gemini', model: 'gemini-2.5-flash-image', category: 'website', createdAt: '...' }], meta: { page: 1, limit: 30, total: 42 } }} />
+            <EndpointDoc method="GET" path="/api/v1/images/:id" description="Einzelnes generiertes Bild abrufen." responseExample={{ id: 'uuid', prompt: '...', imageUrl: '...', provider: 'gemini', model: '...', sizeBytes: 245000 }} />
+            <EndpointDoc method="DELETE" path="/api/v1/images/:id" description="Bild löschen (Datenbank-Eintrag und Datei auf Disk)." responseExample={{ deleted: true }} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
       {/* Media */}
       <TabsContent value="media" className="space-y-4">
         <Card>
@@ -1206,7 +1233,7 @@ export function ApiDocsContent() {
       <TabsContent value="public" className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Oeffentliche API</CardTitle>
+            <CardTitle>Öffentliche API</CardTitle>
             <CardDescription>Endpunkte ohne Authentifizierung für die öffentliche Website</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
