@@ -157,7 +157,7 @@ async function generateWithGemini(
   params: ImageGenerationParams,
   apiKey: string
 ): Promise<{ b64: string; model: string; size: string }> {
-  const model = params.model || 'gemini-2.5-flash-preview-image-generation'
+  const model = params.model || 'gemini-2.5-flash-image'
 
   const aspectRatio = params.aspectRatio || '1:1'
 

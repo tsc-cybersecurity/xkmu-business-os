@@ -30,7 +30,9 @@ interface ImageGeneratorDialogProps {
 
 const PROVIDERS = [
   { value: 'gemini', label: 'Google Gemini', models: [
-    { value: 'gemini-2.5-flash-preview-image-generation', label: 'Gemini 2.5 Flash' },
+    { value: 'gemini-2.5-flash-image', label: 'Gemini 2.5 Flash Image' },
+    { value: 'nano-banana-pro-preview', label: 'Nano Banana Pro' },
+    { value: 'imagen-4.0-fast-generate-001', label: 'Imagen 4.0 Fast' },
   ]},
   { value: 'kie', label: 'kie.ai', models: [
     { value: 'nano-banana-2', label: 'Nano Banana 2' },
@@ -55,7 +57,7 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
   const [generating, setGenerating] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [provider, setProvider] = useState('gemini')
-  const [model, setModel] = useState('gemini-2.5-flash-preview-image-generation')
+  const [model, setModel] = useState('gemini-2.5-flash-image')
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
