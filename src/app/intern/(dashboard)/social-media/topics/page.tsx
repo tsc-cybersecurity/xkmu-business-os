@@ -105,13 +105,13 @@ export default function SocialMediaTopicsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Thema wirklich loeschen?')) return;
+    if (!confirm('Thema wirklich löschen?')) return;
     try {
       await fetch(`/api/v1/social-media/topics/${id}`, { method: 'DELETE' });
-      toast.success('Thema geloescht');
+      toast.success('Thema gelöscht');
       fetchTopics();
     } catch {
-      toast.error('Loeschen fehlgeschlagen');
+      toast.error('Löschen fehlgeschlagen');
     }
   };
 
@@ -159,7 +159,7 @@ export default function SocialMediaTopicsPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/social-media">
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -186,7 +186,7 @@ export default function SocialMediaTopicsPage() {
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
                   Die KI generiert Themenvorschlaege basierend auf Ihrem Business-Intelligence-Profil
-                  (Branche, Geschaeftsmodell, Zielgruppe, Staerken).
+                  (Branche, Geschäftsmodell, Zielgruppe, Staerken).
                 </p>
                 <div className="space-y-2">
                   <Label>Anzahl Themen</Label>
@@ -291,7 +291,7 @@ export default function SocialMediaTopicsPage() {
                     <Button variant="ghost" size="icon" aria-label="Bearbeiten" onClick={() => handleEdit(topic)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label="Loeschen" onClick={() => handleDelete(topic.id)}>
+                    <Button variant="ghost" size="icon" aria-label="Löschen" onClick={() => handleDelete(topic.id)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>

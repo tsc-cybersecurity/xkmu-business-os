@@ -72,32 +72,32 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
   marketing_email: [
     { key: 'recipientName', label: 'Empfaengername', description: 'Name des Empfaengers' },
     { key: 'recipientCompany', label: 'Empfaengerfirma', description: 'Firma des Empfaengers' },
-    { key: 'context', label: 'Kontext', description: 'Zusaetzlicher Kontext fuer die Generierung' },
-    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+    { key: 'context', label: 'Kontext', description: 'Zusaetzlicher Kontext für die Generierung' },
+    { key: 'tone', label: 'Tonalität', description: 'Gewuenschte Tonalität' },
   ],
   marketing_call_script: [
     { key: 'recipientName', label: 'Empfaengername', description: 'Name des Gespraechspartners' },
     { key: 'recipientCompany', label: 'Empfaengerfirma', description: 'Firma des Gespraechspartners' },
-    { key: 'context', label: 'Kontext', description: 'Zusaetzlicher Kontext fuer das Gespraech' },
-    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+    { key: 'context', label: 'Kontext', description: 'Zusaetzlicher Kontext für das Gespraech' },
+    { key: 'tone', label: 'Tonalität', description: 'Gewuenschte Tonalität' },
   ],
   marketing_sms: [
     { key: 'recipientName', label: 'Empfaengername', description: 'Name des Empfaengers' },
     { key: 'context', label: 'Kontext', description: 'Zusaetzlicher Kontext' },
-    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+    { key: 'tone', label: 'Tonalität', description: 'Gewuenschte Tonalität' },
   ],
   social_media_post: [
     { key: 'platform', label: 'Plattform', description: 'Social-Media-Plattform' },
     { key: 'topic', label: 'Thema', description: 'Thema des Beitrags' },
-    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+    { key: 'tone', label: 'Tonalität', description: 'Gewuenschte Tonalität' },
     { key: 'includeHashtags', label: 'Hashtags', description: 'Ob Hashtags enthalten sein sollen' },
     { key: 'includeEmoji', label: 'Emojis', description: 'Ob Emojis enthalten sein sollen' },
   ],
   social_media_content_plan: [
     { key: 'platforms', label: 'Plattformen', description: 'Ziel-Plattformen' },
-    { key: 'topics', label: 'Themen', description: 'Themen fuer den Contentplan' },
+    { key: 'topics', label: 'Themen', description: 'Themen für den Contentplan' },
     { key: 'count', label: 'Anzahl', description: 'Anzahl der zu erstellenden Beitraege' },
-    { key: 'tone', label: 'Tonalitaet', description: 'Gewuenschte Tonalitaet' },
+    { key: 'tone', label: 'Tonalität', description: 'Gewuenschte Tonalität' },
   ],
   social_media_improve: [
     { key: 'currentContent', label: 'Aktueller Inhalt', description: 'Der bestehende Beitrag' },
@@ -108,7 +108,7 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'count', label: 'Anzahl', description: 'Anzahl der zu generierenden Themen' },
     { key: 'companyName', label: 'Firmenname', description: 'Name des Unternehmens' },
     { key: 'industry', label: 'Branche', description: 'Branche des Unternehmens' },
-    { key: 'businessModel', label: 'Geschaeftsmodell', description: 'Beschreibung des Geschaeftsmodells' },
+    { key: 'businessModel', label: 'Geschäftsmodell', description: 'Beschreibung des Geschäftsmodells' },
     { key: 'targetGroup', label: 'Zielgruppe', description: 'Informationen zur Zielgruppe' },
     { key: 'strengths', label: 'Staerken', description: 'Unternehmensstaerken aus SWOT' },
   ],
@@ -443,7 +443,7 @@ WICHTIG - AUSGABEFORMAT:
 - KEIN Text davor, KEIN Text danach
 - KEINE Markdown-Codebloecke, KEIN \`\`\`json
 - Beginne deine Antwort direkt mit { und ende mit }`,
-    userPrompt: `Generiere optimierte SEO-Metadaten fuer die folgende Webseite.
+    userPrompt: `Generiere optimierte SEO-Metadaten für die folgende Webseite.
 
 Seiten-URL: {{pageSlug}}
 
@@ -474,7 +474,7 @@ WICHTIG - AUSGABEFORMAT:
 - KEIN Text davor, KEIN Text danach
 - KEINE Markdown-Codebloecke, KEIN \`\`\`json
 - Beginne deine Antwort direkt mit { und ende mit }`,
-    userPrompt: `Generiere optimierte SEO-Metadaten fuer den folgenden Blogbeitrag.
+    userPrompt: `Generiere optimierte SEO-Metadaten für den folgenden Blogbeitrag.
 
 Titel: {{title}}
 
@@ -492,7 +492,7 @@ Erstelle SEO-Titel, Meta-Description und Keywords im vorgegebenen JSON-Format.`,
   marketing_email: {
     name: 'Marketing E-Mail',
     description: 'Generiert professionelle Marketing-E-Mails fuer Kampagnen.',
-    systemPrompt: `Du bist ein erfahrener Marketing-Spezialist fuer den deutschsprachigen Markt. Erstelle professionelle Marketing-E-Mails.
+    systemPrompt: `Du bist ein erfahrener Marketing-Spezialist für den deutschsprachigen Markt. Erstelle professionelle Marketing-E-Mails.
 
 KERNREGELN:
 1. Professioneller, aber einladender Ton
@@ -510,7 +510,7 @@ WICHTIG - AUSGABEFORMAT:
 
 {{#if recipientName}}- Empfaenger: {{recipientName}}{{/if}}
 {{#if recipientCompany}}- Firma: {{recipientCompany}}{{/if}}
-- Tonalitaet: {{tone}}
+- Tonalität: {{tone}}
 
 {{#if context}}Kontext/Ziel:
 {{context}}{{/if}}`,
@@ -518,7 +518,7 @@ WICHTIG - AUSGABEFORMAT:
 {
   "subject": "<E-Mail Betreff>",
   "content": "<E-Mail Inhalt mit Absaetzen>",
-  "tone": "<verwendete Tonalitaet>"
+  "tone": "<verwendete Tonalität>"
 }`,
   },
   marketing_call_script: {
@@ -537,19 +537,19 @@ WICHTIG - AUSGABEFORMAT:
 - Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
 - KEIN Text davor, KEIN Text danach
 - Beginne deine Antwort direkt mit { und ende mit }`,
-    userPrompt: `Erstelle einen Gespraechsleitfaden mit folgenden Parametern:
+    userPrompt: `Erstelle einen Gesprächsleitfaden mit folgenden Parametern:
 
 {{#if recipientName}}- Gespraechspartner: {{recipientName}}{{/if}}
 {{#if recipientCompany}}- Firma: {{recipientCompany}}{{/if}}
-- Tonalitaet: {{tone}}
+- Tonalität: {{tone}}
 
 {{#if context}}Kontext/Ziel:
 {{context}}{{/if}}`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
   "subject": "<Thema des Gespraechs>",
-  "content": "<Strukturierter Gespraechsleitfaden>",
-  "tone": "<verwendete Tonalitaet>"
+  "content": "<Strukturierter Gesprächsleitfaden>",
+  "tone": "<verwendete Tonalität>"
 }`,
   },
   marketing_sms: {
@@ -558,7 +558,7 @@ WICHTIG - AUSGABEFORMAT:
     systemPrompt: `Du bist ein Marketing-Spezialist fuer SMS-Kommunikation. Erstelle kurze, wirkungsvolle SMS-Texte.
 
 KERNREGELN:
-1. Maximal 160 Zeichen fuer den Content
+1. Maximal 160 Zeichen für den Content
 2. Klare Botschaft
 3. Call-to-Action
 4. Deutsch
@@ -569,7 +569,7 @@ WICHTIG - AUSGABEFORMAT:
     userPrompt: `Erstelle eine Marketing-SMS mit folgenden Parametern:
 
 {{#if recipientName}}- Empfaenger: {{recipientName}}{{/if}}
-- Tonalitaet: {{tone}}
+- Tonalität: {{tone}}
 
 {{#if context}}Kontext/Ziel:
 {{context}}{{/if}}`,
@@ -577,17 +577,17 @@ WICHTIG - AUSGABEFORMAT:
 {
   "subject": "<Kurzes Thema>",
   "content": "<SMS-Text, max 160 Zeichen>",
-  "tone": "<verwendete Tonalitaet>"
+  "tone": "<verwendete Tonalität>"
 }`,
   },
   social_media_post: {
     name: 'Social Media Beitrag',
     description: 'Generiert plattformspezifische Social-Media-Beitraege.',
-    systemPrompt: `Du bist ein Social-Media-Experte fuer den deutschsprachigen Markt. Erstelle ansprechende, plattformspezifische Beitraege.
+    systemPrompt: `Du bist ein Social-Media-Experte für den deutschsprachigen Markt. Erstelle ansprechende, plattformspezifische Beitraege.
 
 KERNREGELN:
 1. Beachte die Zeichenlimits der Plattform (Twitter: 280 Zeichen, LinkedIn: laenger erlaubt)
-2. Plattformspezifischer Stil und Tonalitaet
+2. Plattformspezifischer Stil und Tonalität
 3. Relevante Hashtags (3-8 Stueck)
 4. Deutsch als Standardsprache
 
@@ -598,7 +598,7 @@ WICHTIG - AUSGABEFORMAT:
 
 - Plattform: {{platform}}
 - Thema: {{topic}}
-- Tonalitaet: {{tone}}
+- Tonalität: {{tone}}
 - Hashtags einbeziehen: {{includeHashtags}}
 - Emojis einbeziehen: {{includeEmoji}}`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
@@ -628,7 +628,7 @@ WICHTIG - AUSGABEFORMAT:
 - Plattformen: {{platforms}}
 - Themen: {{topics}}
 - Anzahl Beitraege: {{count}}
-- Tonalitaet: {{tone}}`,
+- Tonalität: {{tone}}`,
     outputFormat: `Antworte NUR mit diesem JSON-Format (Array):
 [
   {
@@ -648,7 +648,7 @@ WICHTIG - AUSGABEFORMAT:
 KERNREGELN:
 1. Behalte die Kernaussage bei
 2. Verbessere Engagement und Reichweite
-3. Optimiere fuer die Zielplattform
+3. Optimiere für die Zielplattform
 4. Deutsch als Standardsprache
 
 WICHTIG - AUSGABEFORMAT:
@@ -690,7 +690,7 @@ WICHTIG - AUSGABEFORMAT:
 
 {{#if companyName}}- Unternehmen: {{companyName}}{{/if}}
 {{#if industry}}- Branche: {{industry}}{{/if}}
-{{#if businessModel}}- Geschaeftsmodell: {{businessModel}}{{/if}}
+{{#if businessModel}}- Geschäftsmodell: {{businessModel}}{{/if}}
 {{#if targetGroup}}- Zielgruppe/Markt: {{targetGroup}}{{/if}}
 {{#if strengths}}- Staerken: {{strengths}}{{/if}}
 
@@ -705,8 +705,8 @@ Die Themen sollen abwechslungsreich sein und verschiedene Aspekte des Unternehme
   },
   business_profile_analysis: {
     name: 'Business-Profil-Analyse',
-    description: 'Analysiert hochgeladene Geschaeftsdokumente und erstellt ein umfassendes Unternehmensprofil mit SWOT-Analyse.',
-    systemPrompt: `Du bist ein erfahrener Business-Analyst und Unternehmensberater. Deine Aufgabe ist es, Geschaeftsdokumente zu analysieren und ein strukturiertes Unternehmensprofil zu erstellen.
+    description: 'Analysiert hochgeladene Geschäftsdokumente und erstellt ein umfassendes Unternehmensprofil mit SWOT-Analyse.',
+    systemPrompt: `Du bist ein erfahrener Business-Analyst und Unternehmensberater. Deine Aufgabe ist es, Geschäftsdokumente zu analysieren und ein strukturiertes Unternehmensprofil zu erstellen.
 
 KERNREGELN:
 1. Verwende AUSSCHLIESSLICH die bereitgestellten Dokumentinhalte
@@ -720,7 +720,7 @@ WICHTIG - AUSGABEFORMAT:
 - KEIN Text davor, KEIN Text danach
 - KEINE Markdown-Codebloecke, KEIN \`\`\`json
 - Beginne deine Antwort direkt mit { und ende mit }`,
-    userPrompt: `Analysiere die folgenden Geschaeftsdokumente und erstelle ein umfassendes Unternehmensprofil:
+    userPrompt: `Analysiere die folgenden Geschäftsdokumente und erstelle ein umfassendes Unternehmensprofil:
 
 === DOKUMENTINHALTE ===
 {{documentTexts}}
@@ -731,7 +731,7 @@ Erstelle basierend auf diesen Dokumenten ein strukturiertes Unternehmensprofil i
 {
   "companyName": "Firmenname (aus den Dokumenten)",
   "industry": "Branche",
-  "businessModel": "Beschreibung des Geschaeftsmodells (3-5 Saetze)",
+  "businessModel": "Beschreibung des Geschäftsmodells (3-5 Saetze)",
   "swotAnalysis": {
     "strengths": ["Staerke 1", "Staerke 2", "Staerke 3"],
     "weaknesses": ["Schwaeche 1", "Schwaeche 2"],

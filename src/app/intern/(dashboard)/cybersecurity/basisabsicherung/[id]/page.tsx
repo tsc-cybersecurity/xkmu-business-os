@@ -124,7 +124,7 @@ export default function AssessmentDashboardPage({ params }: { params: Promise<{ 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/cybersecurity/basisabsicherung">
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>

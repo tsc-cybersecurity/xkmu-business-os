@@ -92,7 +92,7 @@ export default function WibaAuditDetailPage({ params }: { params: Promise<{ id: 
   }
 
   const handleDelete = async () => {
-    if (!confirm('WiBA-Check wirklich loeschen?')) return
+    if (!confirm('WiBA-Check wirklich löschen?')) return
     const res = await fetch(`/api/v1/wiba/audits/${id}`, { method: 'DELETE' })
     const data = await res.json()
     if (data.success) router.push('/intern/wiba')
@@ -119,7 +119,7 @@ export default function WibaAuditDetailPage({ params }: { params: Promise<{ id: 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/wiba">
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -134,7 +134,7 @@ export default function WibaAuditDetailPage({ params }: { params: Promise<{ id: 
         </div>
         <div className="flex gap-2">
           <Badge variant="secondary">{statusLabels[audit.status || 'draft']}</Badge>
-          <Button variant="ghost" size="icon" aria-label="Loeschen" onClick={handleDelete}>
+          <Button variant="ghost" size="icon" aria-label="Löschen" onClick={handleDelete}>
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>
         </div>

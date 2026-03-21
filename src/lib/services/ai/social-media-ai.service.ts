@@ -68,7 +68,7 @@ export const SocialMediaAIService = {
         hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags.map(String) : [],
       }
     } catch {
-      throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
+      throw new Error('KI-Antwort war kein gültiges JSON. Bitte erneut versuchen.')
     }
   },
 
@@ -117,7 +117,7 @@ export const SocialMediaAIService = {
         scheduledDay: typeof item.scheduledDay === 'number' ? item.scheduledDay : undefined,
       }))
     } catch {
-      throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
+      throw new Error('KI-Antwort war kein gültiges JSON. Bitte erneut versuchen.')
     }
   },
 
@@ -166,7 +166,7 @@ export const SocialMediaAIService = {
         description: String(item.description || ''),
       }))
     } catch {
-      throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
+      throw new Error('KI-Antwort war kein gültiges JSON. Bitte erneut versuchen.')
     }
   },
 
@@ -208,7 +208,7 @@ export const SocialMediaAIService = {
         hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags.map(String) : [],
       }
     } catch {
-      throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
+      throw new Error('KI-Antwort war kein gültiges JSON. Bitte erneut versuchen.')
     }
   },
 }

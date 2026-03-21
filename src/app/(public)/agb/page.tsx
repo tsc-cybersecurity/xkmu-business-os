@@ -11,14 +11,14 @@ export async function generateMetadata(): Promise<Metadata> {
     const page = await CmsPageService.getBySlugPublic('/agb')
     if (page) {
       return {
-        title: page.seoTitle || page.title || 'Allgemeine Geschaeftsbedingungen',
+        title: page.seoTitle || page.title || 'Allgemeine Geschäftsbedingungen',
         description: page.seoDescription || undefined,
       }
     }
   } catch {
     // DB not available
   }
-  return { title: 'Allgemeine Geschaeftsbedingungen' }
+  return { title: 'Allgemeine Geschäftsbedingungen' }
 }
 
 export default function AGBPage() {

@@ -166,7 +166,7 @@ export default function NewSocialMediaPostPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/intern/social-media">
-          <Button variant="ghost" size="icon" aria-label="Zurueck">
+          <Button variant="ghost" size="icon" aria-label="Zurück">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
@@ -331,7 +331,7 @@ export default function NewSocialMediaPostPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Tonalitaet</Label>
+                  <Label>Tonalität</Label>
                   <Select
                     value={aiForm.tone}
                     onValueChange={(v) => setAiForm((f) => ({ ...f, tone: v }))}

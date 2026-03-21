@@ -389,7 +389,7 @@ export function LineItemsEditor({
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="Loeschen"
+                          aria-label="Löschen"
                           className="h-8 w-8 text-destructive"
                           onClick={() => handleRemoveItem(item.id)}
                         >

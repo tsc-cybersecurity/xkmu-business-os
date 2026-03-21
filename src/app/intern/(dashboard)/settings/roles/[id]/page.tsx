@@ -208,7 +208,7 @@ export default function RoleEditPage({ params }: { params: Promise<{ id: string 
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/intern/settings/roles">
-          <Button variant="ghost" size="icon" aria-label="Zurueck">
+          <Button variant="ghost" size="icon" aria-label="Zurück">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
@@ -219,7 +219,7 @@ export default function RoleEditPage({ params }: { params: Promise<{ id: string 
           <p className="text-muted-foreground">
             {isOwner
               ? 'Die Eigentuemer-Rolle hat immer vollen Zugriff'
-              : 'Berechtigungen fuer diese Rolle konfigurieren'}
+              : 'Berechtigungen für diese Rolle konfigurieren'}
           </p>
         </div>
       </div>

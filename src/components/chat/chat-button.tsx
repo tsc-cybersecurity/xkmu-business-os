@@ -21,7 +21,7 @@ export function ChatButton() {
         onClick={() => openChat()}
         className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg"
         size="icon-lg"
-        aria-label="KI-Chat oeffnen"
+        aria-label="KI-Chat öffnen"
       >
         <Brain className="!size-5 sm:!size-6" />
       </Button>

@@ -10,7 +10,7 @@ const updateGrantSchema = z.object({
   name: z.string().min(1).optional(),
   provider: z.string().min(1).optional(),
   purpose: z.string().optional().nullable(),
-  url: z.string().url('Ungueltige URL').optional().nullable().or(z.literal('')),
+  url: z.string().url('Ungültige URL').optional().nullable().or(z.literal('')),
   region: z.string().min(1).optional(),
   minEmployees: z.number().int().min(0).optional().nullable(),
   maxEmployees: z.number().int().min(0).optional().nullable(),
@@ -23,7 +23,7 @@ export async function GET(
   return withPermission(request, 'din_grants', 'read', async () => {
     const { id } = await params
     const grant = await DinGrantService.getById(id)
-    if (!grant) return apiNotFound('Foerdermittel nicht gefunden')
+    if (!grant) return apiNotFound('Fördermittel nicht gefunden')
     return apiSuccess(grant)
   })
 }
@@ -45,7 +45,7 @@ export async function PUT(
         ...validation.data,
         url: validation.data.url !== undefined ? (validation.data.url || null) : undefined,
       })
-      if (!grant) return apiNotFound('Foerdermittel nicht gefunden')
+      if (!grant) return apiNotFound('Fördermittel nicht gefunden')
       return apiSuccess(grant)
     } catch (error) {
       logger.error('Error updating grant', error, { module: 'DinGrantsAPI' })
@@ -62,8 +62,8 @@ export async function DELETE(
     try {
       const { id } = await params
       const deleted = await DinGrantService.delete(id)
-      if (!deleted) return apiNotFound('Foerdermittel nicht gefunden')
-      return apiSuccess({ message: 'Foerdermittel geloescht' })
+      if (!deleted) return apiNotFound('Fördermittel nicht gefunden')
+      return apiSuccess({ message: 'Fördermittel gelöscht' })
     } catch (error) {
       logger.error('Error deleting grant', error, { module: 'DinGrantsAPI' })
       return apiServerError()

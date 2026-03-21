@@ -294,7 +294,7 @@ export const MarketingAgentService = {
 
     // Build executive summary
     const executiveSummary = language === 'de'
-      ? `Marketing-Analyse fuer "${research.companyName}" (${research.industry}). ${research.uniqueSellingPoints.length} USPs identifiziert, ${seoAnalysis.primaryKeywords.length} primaere Keywords, SEO-Score: ${seoAnalysis.searchVisibilityScore}/100. ${socialMediaDrafts.length} Social-Media-Entwuerfe generiert.`
+      ? `Marketing-Analyse fuer "${research.companyName}" (${research.industry}). ${research.uniqueSellingPoints.length} USPs identifiziert, ${seoAnalysis.primaryKeywords.length} primaere Keywords, SEO-Score: ${seoAnalysis.searchVisibilityScore}/100. ${socialMediaDrafts.length} Social-Media-Entwürfe generiert.`
       : `Marketing analysis for "${research.companyName}" (${research.industry}). ${research.uniqueSellingPoints.length} USPs identified, ${seoAnalysis.primaryKeywords.length} primary keywords, SEO score: ${seoAnalysis.searchVisibilityScore}/100. ${socialMediaDrafts.length} social media drafts generated.`
 
     return {

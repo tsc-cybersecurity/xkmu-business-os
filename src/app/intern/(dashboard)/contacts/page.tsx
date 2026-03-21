@@ -10,7 +10,7 @@ export default function ContactsPage() {
       description="Firmen und Personen verwalten"
       icon={Building2}
       items={[
-        { name: 'Firmen', href: '/intern/contacts/companies', description: 'Firmenstammdaten, KI-Recherche, Aktivitaeten', icon: Building2 },
+        { name: 'Firmen', href: '/intern/contacts/companies', description: 'Firmenstammdaten, KI-Recherche, Aktivitäten', icon: Building2 },
         { name: 'Personen', href: '/intern/contacts/persons', description: 'Ansprechpartner und Kontaktpersonen', icon: Users },
       ]}
     />

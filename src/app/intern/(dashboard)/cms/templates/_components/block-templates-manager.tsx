@@ -266,12 +266,12 @@ export function BlockTemplatesManager() {
   }
 
   const handleDelete = async (template: BlockTemplate) => {
-    if (!confirm(`Vorlage "${template.name}" wirklich loeschen?`)) return
+    if (!confirm(`Vorlage "${template.name}" wirklich löschen?`)) return
     try {
       const response = await fetch(`/api/v1/cms/templates/${template.id}`, { method: 'DELETE' })
       const data = await response.json()
       if (data.success) {
-        toast.success('Vorlage geloescht')
+        toast.success('Vorlage gelöscht')
         fetchTemplates()
       } else {
         toast.error(data.error?.message || 'Fehler beim Loeschen')
@@ -398,8 +398,8 @@ export function BlockTemplatesManager() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        title="Loeschen"
-                        aria-label="Loeschen"
+                        title="Löschen"
+                        aria-label="Löschen"
                         onClick={() => handleDelete(template)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -440,7 +440,7 @@ export function BlockTemplatesManager() {
               <Label>Blocktyp</Label>
               <Select value={formBlockType} onValueChange={setFormBlockType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Blocktyp waehlen..." />
+                  <SelectValue placeholder="Blocktyp wählen..." />
                 </SelectTrigger>
                 <SelectContent>
                   {blockTypes.map((bt) => (

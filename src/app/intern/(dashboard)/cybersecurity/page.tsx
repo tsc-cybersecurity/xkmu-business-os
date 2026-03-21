@@ -38,7 +38,7 @@ export default function CybersecurityPage() {
                 <div className="rounded-full bg-green-500/10 p-3">
                   <Award className="h-6 w-6 text-green-500" />
                 </div>
-                <CardTitle className="text-lg">Foerdermittel</CardTitle>
+                <CardTitle className="text-lg">Fördermittel</CardTitle>
               </div>
             </CardHeader>
             <CardContent>

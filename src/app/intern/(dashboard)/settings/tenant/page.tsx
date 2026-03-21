@@ -242,7 +242,7 @@ export default function TenantSettingsPage() {
   }
 
   const handleSeedDemo = async () => {
-    if (!confirm('Moechten Sie Beispieldaten importieren? Bereits vorhandene Daten werden nicht ueberschrieben.')) {
+    if (!confirm('Möchten Sie Beispieldaten importieren? Bereits vorhandene Daten werden nicht ueberschrieben.')) {
       return
     }
 
@@ -264,7 +264,7 @@ export default function TenantSettingsPage() {
         if (d.persons > 0) parts.push(`${d.persons} Personen`)
         if (d.leads > 0) parts.push(`${d.leads} Leads`)
         if (d.products > 0) parts.push(`${d.products} Produkte`)
-        if (d.activities > 0) parts.push(`${d.activities} Aktivitaeten`)
+        if (d.activities > 0) parts.push(`${d.activities} Aktivitäten`)
 
         if (parts.length > 0) {
           toast.success(`Demo-Daten importiert: ${parts.join(', ')}`)
@@ -302,7 +302,7 @@ export default function TenantSettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
+          <Button variant="ghost" size="icon" aria-label="Zurück" asChild>
             <Link href="/intern/settings">
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -368,7 +368,7 @@ export default function TenantSettingsPage() {
                 <Input id="legalForm" value={formData.legalForm} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} placeholder="z.B. GmbH, UG, e.K." />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="managingDirector">Geschaeftsfuehrer</Label>
+                <Label htmlFor="managingDirector">Geschäftsfuehrer</Label>
                 <Input id="managingDirector" value={formData.managingDirector} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} placeholder="Max Mustermann" />
               </div>
             </div>
@@ -552,7 +552,7 @@ export default function TenantSettingsPage() {
             Branding
           </CardTitle>
           <CardDescription>
-            Logo fuer die oeffentliche Webseite. Wird in der Navigationsleiste angezeigt.
+            Logo für die öffentliche Webseite. Wird in der Navigationsleiste angezeigt.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -612,7 +612,7 @@ export default function TenantSettingsPage() {
           <CardDescription>
             Importieren Sie Beispieldaten um das System kennenzulernen.
             Es werden CMS-Seiten, Blog-Posts, Firmen, Personen, Leads,
-            Produkte und Aktivitaeten angelegt. Bereits vorhandene Daten
+            Produkte und Aktivitäten angelegt. Bereits vorhandene Daten
             werden nicht ueberschrieben.
           </CardDescription>
         </CardHeader>

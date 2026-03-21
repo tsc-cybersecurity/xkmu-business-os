@@ -40,7 +40,7 @@ export function CompanyDetailsHeader({ company, onDeleteClick }: CompanyDetailsH
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div className="flex items-center gap-4 min-w-0">
-        <Button variant="ghost" size="icon" aria-label="Zurueck" asChild className="shrink-0">
+        <Button variant="ghost" size="icon" aria-label="Zurück" asChild className="shrink-0">
           <Link href="/intern/contacts/companies">
             <ArrowLeft className="h-4 w-4" />
           </Link>

@@ -106,13 +106,13 @@ export default function SocialMediaPage() {
   }, [fetchData]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Beitrag wirklich loeschen?')) return;
+    if (!confirm('Beitrag wirklich löschen?')) return;
     try {
       await fetch(`/api/v1/social-media/posts/${id}`, { method: 'DELETE' });
-      toast.success('Beitrag geloescht');
+      toast.success('Beitrag gelöscht');
       fetchData();
     } catch {
-      toast.error('Loeschen fehlgeschlagen');
+      toast.error('Löschen fehlgeschlagen');
     }
   };
 
@@ -324,8 +324,8 @@ export default function SocialMediaPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      title="Loeschen"
-                      aria-label="Loeschen"
+                      title="Löschen"
+                      aria-label="Löschen"
                       onClick={() => handleDelete(post.id)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />

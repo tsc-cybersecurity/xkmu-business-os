@@ -120,7 +120,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
     createdEntities.leadId = lead.id
 
-    // Aktivitaet erstellen – Konvertierungs-Historie
+    // Aktivität erstellen – Konvertierungs-Historie
     const activityContent = aiSummary
       ? `Idee konvertiert zu Lead.\n\nKI-Zusammenfassung:\n${aiSummary}\n\nOriginal:\n${idea.rawContent}`
       : `Idee konvertiert zu Lead.\n\nOriginal:\n${idea.rawContent}`

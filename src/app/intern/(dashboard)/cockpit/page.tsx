@@ -366,7 +366,7 @@ export default function CockpitPage() {
         method: 'DELETE',
       })
       if (response.ok) {
-        toast.success('System geloescht')
+        toast.success('System gelöscht')
         setDeleteDialogOpen(false)
         fetchSystems()
         fetchStats()
@@ -448,7 +448,7 @@ export default function CockpitPage() {
         { method: 'DELETE' }
       )
       if (response.ok) {
-        toast.success('Zugang geloescht')
+        toast.success('Zugang gelöscht')
         setDeleteCredentialDialogOpen(false)
         setDeletingCredentialId(null)
         fetchCredentials(editingId)
@@ -724,7 +724,7 @@ export default function CockpitPage() {
                               setDeletingId(system.id)
                               setDeleteDialogOpen(true)
                             }}
-                            title="Loeschen"
+                            title="Löschen"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -767,7 +767,7 @@ export default function CockpitPage() {
                     onValueChange={(v) => setFormData((p) => ({ ...p, category: v === '_none' ? '' : v }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Kategorie waehlen..." />
+                      <SelectValue placeholder="Kategorie wählen..." />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none">Keine Kategorie</SelectItem>
@@ -975,7 +975,7 @@ export default function CockpitPage() {
                                   setDeletingCredentialId(cred.id)
                                   setDeleteCredentialDialogOpen(true)
                                 }}
-                                title="Loeschen"
+                                title="Löschen"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
@@ -1134,8 +1134,8 @@ export default function CockpitPage() {
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="System loeschen"
-        description="Moechten Sie dieses System wirklich loeschen? Dies kann nicht rueckgaengig gemacht werden."
+        title="System löschen"
+        description="Möchten Sie dieses System wirklich löschen? Dies kann nicht rückgängig gemacht werden."
         confirmLabel="Loeschen"
         variant="destructive"
         onConfirm={handleDelete}
@@ -1146,8 +1146,8 @@ export default function CockpitPage() {
       <ConfirmDialog
         open={deleteCredentialDialogOpen}
         onOpenChange={setDeleteCredentialDialogOpen}
-        title="Zugang loeschen"
-        description="Moechten Sie diesen Zugang wirklich loeschen? Dies kann nicht rueckgaengig gemacht werden."
+        title="Zugang löschen"
+        description="Möchten Sie diesen Zugang wirklich löschen? Dies kann nicht rückgängig gemacht werden."
         confirmLabel="Loeschen"
         variant="destructive"
         onConfirm={handleDeleteCredential}

@@ -251,7 +251,7 @@ export default function ChecklistInterviewPage({
   }
 
   if (!checklist || !currentFrage) {
-    return <p className="text-muted-foreground">Keine Prueffragen verfuegbar.</p>
+    return <p className="text-muted-foreground">Keine Prueffragen verfügbar.</p>
   }
 
   return (
@@ -301,7 +301,7 @@ export default function ChecklistInterviewPage({
         <div className="border-b bg-muted/30 px-6 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             {!showSidebar && (
-              <Button variant="ghost" size="icon" aria-label="Seitenleiste oeffnen" onClick={() => setShowSidebar(true)}>
+              <Button variant="ghost" size="icon" aria-label="Seitenleiste öffnen" onClick={() => setShowSidebar(true)}>
                 <PanelLeft className="h-4 w-4" />
               </Button>
             )}

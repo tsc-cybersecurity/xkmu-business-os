@@ -58,7 +58,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   products: 'Produkte',
   product_categories: 'Produktkategorien',
   ideas: 'Ideen',
-  activities: 'Aktivitaeten',
+  activities: 'Aktivitäten',
   webhooks: 'Webhooks',
   users: 'Benutzer',
   settings: 'Einstellungen',
@@ -69,7 +69,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   roles: 'Rollen',
   documents: 'Dokumente',
   din_audits: 'DIN-Audits',
-  din_grants: 'Foerdermittel',
+  din_grants: 'Fördermittel',
   wiba_audits: 'WiBA-Checks',
   basisabsicherung: 'Basisabsicherung',
   cms: 'CMS / Seiteneditor',
@@ -190,7 +190,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<
   },
   auditor: {
     displayName: 'IT-Auditor A',
-    description: 'DIN SPEC 27076 Audits durchfuehren und Foerdermittel verwalten',
+    description: 'DIN SPEC 27076 Audits durchfuehren und Fördermittel verwalten',
     permissions: buildAuditorAccess(),
   },
   designer: {

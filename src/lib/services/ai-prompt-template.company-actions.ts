@@ -15,7 +15,7 @@ const COMPANY_ACTION_COMMON_PLACEHOLDERS = [
   { key: 'contactPersonName', label: 'Ansprechpartner', description: 'Name der Kontaktperson' },
   { key: 'contactPersonTitle', label: 'Position', description: 'Jobtitel der Kontaktperson' },
   { key: 'contactPersonEmail', label: 'E-Mail', description: 'E-Mail-Adresse der Kontaktperson' },
-  { key: 'recentActivities', label: 'Letzte Aktivitaeten', description: 'Die letzten 5 Aktivitaeten als Textzusammenfassung' },
+  { key: 'recentActivities', label: 'Letzte Aktivitäten', description: 'Die letzten 5 Aktivitäten als Textzusammenfassung' },
   { key: 'companyNotes', label: 'Notizen', description: 'Vorhandene Notizen zur Firma' },
 ]
 
@@ -62,8 +62,8 @@ export const COMPANY_ACTION_TEMPLATES: Record<string, {
 
   company_first_contact: {
     name: 'Erstansprache-E-Mail',
-    description: 'Personalisierte B2B-Erstansprache fuer eine Firma.',
-    systemPrompt: `Du bist ein erfahrener B2B-Vertriebsexperte im deutschsprachigen Markt. Du verfasst personalisierte Erstansprache-E-Mails, die auf den Empfaenger und sein Unternehmen zugeschnitten sind. Du vermeidest generische Floskeln und beziehst dich stattdessen auf konkrete Firmendaten wie Branche, Standort und aktuelle Entwicklungen. Der Ton ist professionell, wertschaetzend und auf Augenhoehe. Du schreibst in der Sie-Form und auf Deutsch. Deine E-Mails sind praegnant (max. 150 Woerter), enthalten einen klaren Mehrwert fuer den Empfaenger und schliessen mit einem konkreten, unverbindlichen Call-to-Action ab. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    description: 'Personalisierte B2B-Erstansprache für eine Firma.',
+    systemPrompt: `Du bist ein erfahrener B2B-Vertriebsexperte im deutschsprachigen Markt. Du verfasst personalisierte Erstansprache-E-Mails, die auf den Empfaenger und sein Unternehmen zugeschnitten sind. Du vermeidest generische Floskeln und beziehst dich stattdessen auf konkrete Firmendaten wie Branche, Standort und aktuelle Entwicklungen. Der Ton ist professionell, wertschaetzend und auf Augenhoehe. Du schreibst in der Sie-Form und auf Deutsch. Deine E-Mails sind praegnant (max. 150 Woerter), enthalten einen klaren Mehrwert für den Empfaenger und schliessen mit einem konkreten, unverbindlichen Call-to-Action ab. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle eine personalisierte Erstansprache-E-Mail fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -74,7 +74,7 @@ export const COMPANY_ACTION_TEMPLATES: Record<string, {
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Letzte Aktivitaeten:
+{{#if recentActivities}}Letzte Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -91,7 +91,7 @@ Erstelle eine E-Mail, die sich konkret auf das Unternehmen bezieht und einen ech
   company_follow_up: {
     name: 'Follow-Up E-Mail',
     description: 'Nachfass-Mail nach erstem Kontakt mit einer Firma.',
-    systemPrompt: `Du bist ein versierter B2B-Sales-Profi fuer den deutschsprachigen Markt. Du schreibst Follow-Up-E-Mails, die an vorherige Interaktionen anknuepfen und den Dialog natuerlich fortsetzen. Du beziehst dich auf konkrete vergangene Aktivitaeten und bringst einen neuen Impuls ein, ohne aufdringlich zu wirken. Der Ton ist freundlich-professionell in der Sie-Form. Du haltst die E-Mail kurz (max. 120 Woerter) und schliesst mit einer konkreten Frage oder einem sanften Call-to-Action ab. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    systemPrompt: `Du bist ein versierter B2B-Sales-Profi für den deutschsprachigen Markt. Du schreibst Follow-Up-E-Mails, die an vorherige Interaktionen anknuepfen und den Dialog natuerlich fortsetzen. Du beziehst dich auf konkrete vergangene Aktivitäten und bringst einen neuen Impuls ein, ohne aufdringlich zu wirken. Der Ton ist freundlich-professionell in der Sie-Form. Du haltst die E-Mail kurz (max. 120 Woerter) und schliesst mit einer konkreten Frage oder einem sanften Call-to-Action ab. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle eine Follow-Up-E-Mail fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -102,7 +102,7 @@ Erstelle eine E-Mail, die sich konkret auf das Unternehmen bezieht und einen ech
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten/Kontakte:
+{{#if recentActivities}}Bisherige Aktivitäten/Kontakte:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -118,8 +118,8 @@ Knuepfe an den bisherigen Kontakt an und bringe einen neuen Mehrwert ein.`,
 
   company_appointment: {
     name: 'Terminvereinbarung',
-    description: 'E-Mail mit konkretem Terminvorschlag fuer eine Firma.',
-    systemPrompt: `Du bist ein erfahrener Vertriebsmitarbeiter im B2B-Bereich des deutschsprachigen Markts. Du formulierst E-Mails zur Terminvereinbarung, die hoeflich, direkt und verbindlich sind. Du schlägst konkrete Zeitfenster vor und erlaeuterst kurz den Nutzen des Gespraechs fuer den Empfaenger. Der Ton ist professionell und respektvoll in der Sie-Form. Die E-Mail ist kurz (max. 100 Woerter) und enthaelt einen klaren naechsten Schritt. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    description: 'E-Mail mit konkretem Terminvorschlag für eine Firma.',
+    systemPrompt: `Du bist ein erfahrener Vertriebsmitarbeiter im B2B-Bereich des deutschsprachigen Markts. Du formulierst E-Mails zur Terminvereinbarung, die hoeflich, direkt und verbindlich sind. Du schlägst konkrete Zeitfenster vor und erlaeuterst kurz den Nutzen des Gespraechs für den Empfaenger. Der Ton ist professionell und respektvoll in der Sie-Form. Die E-Mail ist kurz (max. 100 Woerter) und enthaelt einen klaren nächsten Schritt. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle eine E-Mail zur Terminvereinbarung fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -130,7 +130,7 @@ Knuepfe an den bisherigen Kontakt an und bringe einen neuen Mehrwert ein.`,
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -147,7 +147,7 @@ Schlage konkrete Terminoptionen vor und erlaeutere kurz den Mehrwert des Gesprae
   company_thank_you: {
     name: 'Dankesschreiben',
     description: 'Dankes-E-Mail nach Meeting oder Termin mit einer Firma.',
-    systemPrompt: `Du bist ein professioneller B2B-Kommunikationsexperte im deutschsprachigen Markt. Du verfasst Dankes-E-Mails nach Meetings und Terminen, die authentisch und wertschaetzend wirken. Du fasst kurz die wesentlichen besprochenen Punkte zusammen und bekraeftigst das Interesse an der weiteren Zusammenarbeit. Der Ton ist herzlich-professionell in der Sie-Form. Die E-Mail ist kurz (max. 100 Woerter) und enthaelt einen konkreten Ausblick auf die naechsten Schritte. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    systemPrompt: `Du bist ein professioneller B2B-Kommunikationsexperte im deutschsprachigen Markt. Du verfasst Dankes-E-Mails nach Meetings und Terminen, die authentisch und wertschaetzend wirken. Du fasst kurz die wesentlichen besprochenen Punkte zusammen und bekraeftigst das Interesse an der weiteren Zusammenarbeit. Der Ton ist herzlich-professionell in der Sie-Form. Die E-Mail ist kurz (max. 100 Woerter) und enthaelt einen konkreten Ausblick auf die nächsten Schritte. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle ein Dankesschreiben fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -158,17 +158,17 @@ Schlage konkrete Terminoptionen vor und erlaeutere kurz den Mehrwert des Gesprae
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Letzte Aktivitaeten (inkl. Meeting-Details):
+{{#if recentActivities}}Letzte Aktivitäten (inkl. Meeting-Details):
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
 {{companyNotes}}{{/if}}
 
-Bedanke dich fuer das Gespraech, fasse die wichtigsten Punkte zusammen und gib einen Ausblick.`,
+Bedanke dich für das Gespraech, fasse die wichtigsten Punkte zusammen und gib einen Ausblick.`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
   "subject": "<Betreffzeile mit Dankesbezug>",
-  "content": "<Dankes-E-Mail mit Zusammenfassung und naechsten Schritten>"
+  "content": "<Dankes-E-Mail mit Zusammenfassung und nächsten Schritten>"
 }`,
   },
 
@@ -178,8 +178,8 @@ Bedanke dich fuer das Gespraech, fasse die wichtigsten Punkte zusammen und gib e
 
   company_offer_letter: {
     name: 'Angebots-Begleitschreiben',
-    description: 'Begleittext zu einem Angebot fuer eine Firma.',
-    systemPrompt: `Du bist ein erfahrener Vertriebsprofi im deutschsprachigen B2B-Markt. Du schreibst ueberzeugende Angebots-Begleitschreiben, die den Nutzen der angebotenen Loesung fuer den Kunden hervorheben. Du beziehst dich auf die spezifische Situation und die Beduerfnisse der Firma, ohne uebertrieben werblich zu klingen. Der Ton ist sachlich-ueberzeugend in der Sie-Form. Das Begleitschreiben ist strukturiert (max. 180 Woerter) und enthaelt eine klare Handlungsaufforderung. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    description: 'Begleittext zu einem Angebot für eine Firma.',
+    systemPrompt: `Du bist ein erfahrener Vertriebsprofi im deutschsprachigen B2B-Markt. Du schreibst ueberzeugende Angebots-Begleitschreiben, die den Nutzen der angebotenen Loesung für den Kunden hervorheben. Du beziehst dich auf die spezifische Situation und die Beduerfnisse der Firma, ohne uebertrieben werblich zu klingen. Der Ton ist sachlich-ueberzeugend in der Sie-Form. Das Begleitschreiben ist strukturiert (max. 180 Woerter) und enthaelt eine klare Handlungsaufforderung. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle ein Angebots-Begleitschreiben fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -190,13 +190,13 @@ Bedanke dich fuer das Gespraech, fasse die wichtigsten Punkte zusammen und gib e
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
 {{companyNotes}}{{/if}}
 
-Hebe den spezifischen Nutzen fuer diese Firma hervor und formuliere eine klare Handlungsaufforderung.`,
+Hebe den spezifischen Nutzen für diese Firma hervor und formuliere eine klare Handlungsaufforderung.`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
   "subject": "<Betreffzeile mit Angebotsbezug>",
@@ -206,8 +206,8 @@ Hebe den spezifischen Nutzen fuer diese Firma hervor und formuliere eine klare H
 
   company_cross_selling: {
     name: 'Cross-Selling Vorschlag',
-    description: 'Zusatzprodukte und -dienste fuer eine Firma identifizieren.',
-    systemPrompt: `Du bist ein strategischer B2B-Vertriebsberater im deutschsprachigen Markt mit Expertise in Cross-Selling. Du analysierst die bestehende Geschaeftsbeziehung und die Branche einer Firma, um passende Zusatzprodukte und -dienstleistungen zu identifizieren. Du begruendest jeden Vorschlag mit konkretem Nutzen fuer den Kunden. Der Ton ist beratend und loesungsorientiert in der Sie-Form. Du lieferst 3-5 konkrete, priorisierte Cross-Selling-Moeglichkeiten mit Umsetzungsvorschlaegen. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    description: 'Zusatzprodukte und -dienste für eine Firma identifizieren.',
+    systemPrompt: `Du bist ein strategischer B2B-Vertriebsberater im deutschsprachigen Markt mit Expertise in Cross-Selling. Du analysierst die bestehende Geschäftsbeziehung und die Branche einer Firma, um passende Zusatzprodukte und -dienstleistungen zu identifizieren. Du begruendest jeden Vorschlag mit konkretem Nutzen für den Kunden. Der Ton ist beratend und loesungsorientiert in der Sie-Form. Du lieferst 3-5 konkrete, priorisierte Cross-Selling-Moeglichkeiten mit Umsetzungsvorschlaegen. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle Cross-Selling-Vorschlaege fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -218,7 +218,7 @@ Hebe den spezifischen Nutzen fuer diese Firma hervor und formuliere eine klare H
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten und Kaeufe:
+{{#if recentActivities}}Bisherige Aktivitäten und Kaeufe:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -234,8 +234,8 @@ Identifiziere 3-5 konkrete Cross-Selling-Moeglichkeiten mit Begruendung und Prio
 
   company_upselling: {
     name: 'Upselling Pitch',
-    description: 'Upgrade-Moeglichkeiten fuer eine bestehende Kundenbeziehung aufzeigen.',
-    systemPrompt: `Du bist ein erfahrener B2B-Vertriebsstratege im deutschsprachigen Markt mit Fokus auf Bestandskundenentwicklung. Du erkennst Upselling-Potenziale anhand der aktuellen Nutzung und der Firmenentwicklung. Du argumentierst wertbasiert und zeigst den konkreten ROI eines Upgrades auf. Der Ton ist partnerschaftlich und loesungsorientiert in der Sie-Form. Du lieferst einen strukturierten Pitch mit klarer Nutzenargumentation und konkretem naechsten Schritt. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    description: 'Upgrade-Moeglichkeiten für eine bestehende Kundenbeziehung aufzeigen.',
+    systemPrompt: `Du bist ein erfahrener B2B-Vertriebsstratege im deutschsprachigen Markt mit Fokus auf Bestandskundenentwicklung. Du erkennst Upselling-Potenziale anhand der aktuellen Nutzung und der Firmenentwicklung. Du argumentierst wertbasiert und zeigst den konkreten ROI eines Upgrades auf. Der Ton ist partnerschaftlich und loesungsorientiert in der Sie-Form. Du lieferst einen strukturierten Pitch mit klarer Nutzenargumentation und konkretem nächsten Schritt. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle einen Upselling-Pitch fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -246,7 +246,7 @@ Identifiziere 3-5 konkrete Cross-Selling-Moeglichkeiten mit Begruendung und Prio
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten und aktuelle Nutzung:
+{{#if recentActivities}}Bisherige Aktivitäten und aktuelle Nutzung:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -256,14 +256,14 @@ Zeige Upgrade-Moeglichkeiten auf, argumentiere wertbasiert und formuliere einen 
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
   "title": "Upselling Pitch: <Firmenname>",
-  "content": "<Strukturierter Pitch mit aktuellem Stand, Upgrade-Optionen, ROI-Argumentation und konkretem naechsten Schritt>"
+  "content": "<Strukturierter Pitch mit aktuellem Stand, Upgrade-Optionen, ROI-Argumentation und konkretem nächsten Schritt>"
 }`,
   },
 
   company_reactivation: {
     name: 'Reaktivierung',
     description: 'Inaktive Firma wieder ansprechen und Beziehung neu beleben.',
-    systemPrompt: `Du bist ein einfuehlsamer B2B-Vertriebsexperte im deutschsprachigen Markt mit Erfahrung in der Kundenreaktivierung. Du formulierst Reaktivierungs-E-Mails, die nicht vorwurfsvoll klingen, sondern echtes Interesse an der erneuten Zusammenarbeit zeigen. Du beziehst dich auf die gemeinsame Historie und bietest einen konkreten neuen Anlass fuer den Kontakt. Der Ton ist wertschaetzend und offen in der Sie-Form. Die E-Mail ist kurz (max. 130 Woerter) und enthaelt einen niedrigschwelligen Call-to-Action. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    systemPrompt: `Du bist ein einfuehlsamer B2B-Vertriebsexperte im deutschsprachigen Markt mit Erfahrung in der Kundenreaktivierung. Du formulierst Reaktivierungs-E-Mails, die nicht vorwurfsvoll klingen, sondern echtes Interesse an der erneuten Zusammenarbeit zeigen. Du beziehst dich auf die gemeinsame Historie und bietest einen konkreten neuen Anlass für den Kontakt. Der Ton ist wertschaetzend und offen in der Sie-Form. Die E-Mail ist kurz (max. 130 Woerter) und enthaelt einen niedrigschwelligen Call-to-Action. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle eine Reaktivierungs-E-Mail fuer folgende inaktive Firma:
 
 - Firmenname: {{companyName}}
@@ -274,7 +274,7 @@ Zeige Upgrade-Moeglichkeiten auf, argumentiere wertbasiert und formuliere einen 
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Letzte bekannte Aktivitaeten:
+{{#if recentActivities}}Letzte bekannte Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -294,9 +294,9 @@ Formuliere eine wertschaetzende Reaktivierungs-E-Mail mit einem konkreten neuen 
 
   company_swot: {
     name: 'SWOT-Analyse',
-    description: 'Staerken, Schwaechen, Chancen und Risiken der Geschaeftsbeziehung analysieren.',
-    systemPrompt: `Du bist ein strategischer Unternehmensberater mit Expertise in Geschaeftsbeziehungsanalysen im deutschsprachigen B2B-Markt. Du erstellst fundierte SWOT-Analysen, die sich auf die konkrete Geschaeftsbeziehung zwischen unserem Unternehmen und der analysierten Firma beziehen. Du stuetzt dich ausschliesslich auf die bereitgestellten Daten und kennzeichnest Annahmen klar. Jeder SWOT-Punkt ist konkret und handlungsorientiert formuliert. Du lieferst zusaetzlich priorisierte Handlungsempfehlungen. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
-    userPrompt: `Erstelle eine SWOT-Analyse der Geschaeftsbeziehung mit folgender Firma:
+    description: 'Staerken, Schwaechen, Chancen und Risiken der Geschäftsbeziehung analysieren.',
+    systemPrompt: `Du bist ein strategischer Unternehmensberater mit Expertise in Geschäftsbeziehungsanalysen im deutschsprachigen B2B-Markt. Du erstellst fundierte SWOT-Analysen, die sich auf die konkrete Geschäftsbeziehung zwischen unserem Unternehmen und der analysierten Firma beziehen. Du stuetzt dich ausschliesslich auf die bereitgestellten Daten und kennzeichnest Annahmen klar. Jeder SWOT-Punkt ist konkret und handlungsorientiert formuliert. Du lieferst zusaetzlich priorisierte Handlungsempfehlungen. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    userPrompt: `Erstelle eine SWOT-Analyse der Geschäftsbeziehung mit folgender Firma:
 
 - Firmenname: {{companyName}}
 - Branche: {{companyIndustry}}
@@ -306,16 +306,16 @@ Formuliere eine wertschaetzende Reaktivierungs-E-Mail mit einem konkreten neuen 
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
 {{companyNotes}}{{/if}}
 
-Analysiere Staerken, Schwaechen, Chancen und Risiken der Geschaeftsbeziehung und leite Handlungsempfehlungen ab.`,
+Analysiere Staerken, Schwaechen, Chancen und Risiken der Geschäftsbeziehung und leite Handlungsempfehlungen ab.`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
-  "title": "SWOT-Analyse: Geschaeftsbeziehung mit <Firmenname>",
+  "title": "SWOT-Analyse: Geschäftsbeziehung mit <Firmenname>",
   "content": "<Strukturierte SWOT-Analyse mit je 3-5 Punkten pro Kategorie (Staerken, Schwaechen, Chancen, Risiken), gefolgt von 3 priorisierten Handlungsempfehlungen>"
 }`,
   },
@@ -334,7 +334,7 @@ Analysiere Staerken, Schwaechen, Chancen und Risiken der Geschaeftsbeziehung und
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -362,7 +362,7 @@ Analysiere die Wettbewerbssituation und entwickle konkrete Differenzierungsstrat
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -378,8 +378,8 @@ Identifiziere Beduerfnisse und Pain Points, priorisiere sie und verknuepfe sie m
 
   company_development_plan: {
     name: 'Kundenentwicklungsplan',
-    description: '90-Tage Roadmap fuer die Zusammenarbeit mit einer Firma.',
-    systemPrompt: `Du bist ein strategischer Account Manager im deutschsprachigen B2B-Markt. Du erstellst konkrete 90-Tage-Kundenentwicklungsplaene, die auf den aktuellen Status der Geschaeftsbeziehung aufbauen. Dein Plan enthaelt messbare Meilensteine, konkrete Massnahmen und klare Verantwortlichkeiten fuer jede Phase (30/60/90 Tage). Du beruecksichtigst Branchenspezifika und den aktuellen Firmenstatus. Der Plan ist realistisch und umsetzbar. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    description: '90-Tage Roadmap für die Zusammenarbeit mit einer Firma.',
+    systemPrompt: `Du bist ein strategischer Account Manager im deutschsprachigen B2B-Markt. Du erstellst konkrete 90-Tage-Kundenentwicklungsplaene, die auf den aktuellen Status der Geschäftsbeziehung aufbauen. Dein Plan enthaelt messbare Meilensteine, konkrete Massnahmen und klare Verantwortlichkeiten fuer jede Phase (30/60/90 Tage). Du beruecksichtigst Branchenspezifika und den aktuellen Firmenstatus. Der Plan ist realistisch und umsetzbar. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle einen 90-Tage-Kundenentwicklungsplan fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -390,7 +390,7 @@ Identifiziere Beduerfnisse und Pain Points, priorisiere sie und verknuepfe sie m
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -411,7 +411,7 @@ Erstelle einen realistischen 90-Tage-Plan mit Meilensteinen fuer Phase 1 (Tag 1-
   company_social_post: {
     name: 'Social Media Post',
     description: 'LinkedIn-Post ueber die Zusammenarbeit mit einer Firma.',
-    systemPrompt: `Du bist ein Social-Media-Spezialist fuer B2B-Kommunikation auf LinkedIn im deutschsprachigen Raum. Du erstellst authentische, engagierende Posts ueber Geschaeftsbeziehungen und Kooperationen. Du achtest auf LinkedIn-Best-Practices: persoenlicher Einstieg, Storytelling, Mehrwert fuer die Community, passende Hashtags (3-5 Stueck). Der Ton ist professionell aber nahbar. Der Post hat max. 200 Woerter und enthaelt einen Call-to-Action oder eine Frage an die Community. Antworte auf Deutsch. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    systemPrompt: `Du bist ein Social-Media-Spezialist fuer B2B-Kommunikation auf LinkedIn im deutschsprachigen Raum. Du erstellst authentische, engagierende Posts ueber Geschäftsbeziehungen und Kooperationen. Du achtest auf LinkedIn-Best-Practices: persoenlicher Einstieg, Storytelling, Mehrwert für die Community, passende Hashtags (3-5 Stueck). Der Ton ist professionell aber nahbar. Der Post hat max. 200 Woerter und enthaelt einen Call-to-Action oder eine Frage an die Community. Antworte auf Deutsch. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle einen LinkedIn-Post ueber die Zusammenarbeit mit folgender Firma:
 
 - Firmenname: {{companyName}}
@@ -431,7 +431,7 @@ Erstelle einen realistischen 90-Tage-Plan mit Meilensteinen fuer Phase 1 (Tag 1-
 Erstelle einen authentischen LinkedIn-Post, der die Zusammenarbeit positiv hervorhebt.`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
-  "subject": "<Kurzer Hook/Titel fuer den Post>",
+  "subject": "<Kurzer Hook/Titel für den Post>",
   "content": "<LinkedIn-Post mit persoenlichem Einstieg, Storytelling, Mehrwert und Hashtags>"
 }`,
   },
@@ -494,8 +494,8 @@ Erstelle einen personalisierten Newsletter-Abschnitt mit branchen-relevantem Meh
 
   company_event_invite: {
     name: 'Event-Einladung',
-    description: 'Einladung zu Webinar, Messe oder Event fuer eine Firma.',
-    systemPrompt: `Du bist ein Event-Marketing-Spezialist im deutschsprachigen B2B-Markt. Du formulierst persoenliche und ueberzeugende Einladungen zu Veranstaltungen wie Webinaren, Messen, Workshops oder Networking-Events. Du betonst den spezifischen Nutzen der Teilnahme fuer die eingeladene Firma und deren Branche. Der Ton ist einladend und professionell in der Sie-Form. Die Einladung enthaelt alle relevanten Eckdaten und einen klaren Anmelde-CTA. Max. 150 Woerter. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    description: 'Einladung zu Webinar, Messe oder Event für eine Firma.',
+    systemPrompt: `Du bist ein Event-Marketing-Spezialist im deutschsprachigen B2B-Markt. Du formulierst persoenliche und ueberzeugende Einladungen zu Veranstaltungen wie Webinaren, Messen, Workshops oder Networking-Events. Du betonst den spezifischen Nutzen der Teilnahme für die eingeladene Firma und deren Branche. Der Ton ist einladend und professionell in der Sie-Form. Die Einladung enthaelt alle relevanten Eckdaten und einen klaren Anmelde-CTA. Max. 150 Woerter. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle eine Event-Einladung fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -512,7 +512,7 @@ Erstelle einen personalisierten Newsletter-Abschnitt mit branchen-relevantem Meh
 {{#if companyNotes}}Notizen zur Firma:
 {{companyNotes}}{{/if}}
 
-Erstelle eine persoenliche Einladung, die den Nutzen der Veranstaltung fuer diese Firma hervorhebt.`,
+Erstelle eine persoenliche Einladung, die den Nutzen der Veranstaltung für diese Firma hervorhebt.`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
   "subject": "<Einladungs-Betreffzeile mit Event-Bezug>",
@@ -527,7 +527,7 @@ Erstelle eine persoenliche Einladung, die den Nutzen der Veranstaltung fuer dies
   company_meeting_summary: {
     name: 'Meeting-Zusammenfassung',
     description: 'Strukturiertes Gespraechsprotokoll nach einem Meeting mit einer Firma.',
-    systemPrompt: `Du bist ein erfahrener Projektmanager im deutschsprachigen B2B-Umfeld. Du erstellst strukturierte Meeting-Zusammenfassungen, die alle wesentlichen Punkte, Entscheidungen und naechsten Schritte erfassen. Du gliederst das Protokoll klar in Teilnehmer, besprochene Themen, getroffene Entscheidungen, offene Punkte und naechste Schritte mit Verantwortlichkeiten und Deadlines. Der Ton ist sachlich und praezise. Du schreibst auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    systemPrompt: `Du bist ein erfahrener Projektmanager im deutschsprachigen B2B-Umfeld. Du erstellst strukturierte Meeting-Zusammenfassungen, die alle wesentlichen Punkte, Entscheidungen und nächsten Schritte erfassen. Du gliederst das Protokoll klar in Teilnehmer, besprochene Themen, getroffene Entscheidungen, offene Punkte und naechste Schritte mit Verantwortlichkeiten und Deadlines. Der Ton ist sachlich und praezise. Du schreibst auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle eine Meeting-Zusammenfassung fuer ein Gespraech mit folgender Firma:
 
 - Firmenname: {{companyName}}
@@ -538,25 +538,25 @@ Erstelle eine persoenliche Einladung, die den Nutzen der Veranstaltung fuer dies
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Meeting-Details und bisherige Aktivitaeten:
+{{#if recentActivities}}Meeting-Details und bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma und zum Gespraech:
 {{companyNotes}}{{/if}}
 
-Erstelle ein strukturiertes Gespraechsprotokoll mit Entscheidungen und naechsten Schritten.`,
+Erstelle ein strukturiertes Gespraechsprotokoll mit Entscheidungen und nächsten Schritten.`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
   "title": "Meeting-Protokoll: <Firmenname> - <Datum>",
-  "content": "<Strukturiertes Protokoll mit Teilnehmern, besprochenen Themen, Entscheidungen, offenen Punkten und naechsten Schritten (inkl. Verantwortliche und Deadlines)>"
+  "content": "<Strukturiertes Protokoll mit Teilnehmern, besprochenen Themen, Entscheidungen, offenen Punkten und nächsten Schritten (inkl. Verantwortliche und Deadlines)>"
 }`,
   },
 
   company_call_guide: {
-    name: 'Gespraechsleitfaden',
+    name: 'Gesprächsleitfaden',
     description: 'Vorbereitung auf ein Telefonat mit strukturiertem Gespraechsablauf.',
-    systemPrompt: `Du bist ein erfahrener Vertriebstrainer im deutschsprachigen B2B-Markt. Du erstellst praxisnahe Gespraechsleitfaeden, die auf die konkrete Firma und Situation zugeschnitten sind. Dein Leitfaden enthaelt eine klare Gespraechsstruktur: Eroeffnung, Bedarfsermittlung, Kernbotschaften, moegliche Einwaende mit Antworten und Gespraechsabschluss. Du beruecksichtigst den Firmenstatus und die bisherige Historie. Der Ton ist natuerlich und praxisnah. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
-    userPrompt: `Erstelle einen Gespraechsleitfaden fuer ein Telefonat mit folgender Firma:
+    systemPrompt: `Du bist ein erfahrener Vertriebstrainer im deutschsprachigen B2B-Markt. Du erstellst praxisnahe Gespraechsleitfaeden, die auf die konkrete Firma und Situation zugeschnitten sind. Dein Leitfaden enthaelt eine klare Gespraechsstruktur: Eröffnung, Bedarfsermittlung, Kernbotschaften, moegliche Einwände mit Antworten und Gesprächsabschluss. Du beruecksichtigst den Firmenstatus und die bisherige Historie. Der Ton ist natuerlich und praxisnah. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    userPrompt: `Erstelle einen Gesprächsleitfaden fuer ein Telefonat mit folgender Firma:
 
 - Firmenname: {{companyName}}
 - Branche: {{companyIndustry}}
@@ -566,24 +566,24 @@ Erstelle ein strukturiertes Gespraechsprotokoll mit Entscheidungen und naechsten
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
 {{companyNotes}}{{/if}}
 
-Erstelle einen strukturierten Gespraechsleitfaden mit Eroeffnung, Kernfragen, Einwandbehandlung und Abschluss.`,
+Erstelle einen strukturierten Gesprächsleitfaden mit Eröffnung, Kernfragen, Einwandbehandlung und Abschluss.`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
-  "title": "Gespraechsleitfaden: Telefonat mit <Firmenname>",
-  "content": "<Strukturierter Leitfaden mit Gespraechsziel, Eroeffnung, Bedarfsermittlungsfragen, Kernbotschaften, Einwandbehandlung (3-4 Einwaende mit Antworten) und Gespraechsabschluss>"
+  "title": "Gesprächsleitfaden: Telefonat mit <Firmenname>",
+  "content": "<Strukturierter Leitfaden mit Gesprächsziel, Eröffnung, Bedarfsermittlungsfragen, Kernbotschaften, Einwandbehandlung (3-4 Einwände mit Antworten) und Gesprächsabschluss>"
 }`,
   },
 
   company_next_steps: {
     name: 'Handlungsempfehlung',
-    description: 'Naechste konkrete Schritte fuer die Zusammenarbeit mit einer Firma vorschlagen.',
-    systemPrompt: `Du bist ein strategischer B2B-Berater im deutschsprachigen Markt. Du analysierst den aktuellen Stand einer Geschaeftsbeziehung und leitest daraus priorisierte, konkrete Handlungsempfehlungen ab. Jede Empfehlung enthaelt eine klare Beschreibung, den erwarteten Nutzen, den Zeitrahmen und den Verantwortlichen. Du beruecksichtigst den Firmenstatus, die bisherigen Aktivitaeten und die Branchenspezifika. Der Ton ist sachlich und handlungsorientiert. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    description: 'Naechste konkrete Schritte für die Zusammenarbeit mit einer Firma vorschlagen.',
+    systemPrompt: `Du bist ein strategischer B2B-Berater im deutschsprachigen Markt. Du analysierst den aktuellen Stand einer Geschäftsbeziehung und leitest daraus priorisierte, konkrete Handlungsempfehlungen ab. Jede Empfehlung enthaelt eine klare Beschreibung, den erwarteten Nutzen, den Zeitrahmen und den Verantwortlichen. Du beruecksichtigst den Firmenstatus, die bisherigen Aktivitäten und die Branchenspezifika. Der Ton ist sachlich und handlungsorientiert. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
     userPrompt: `Erstelle Handlungsempfehlungen fuer folgende Firma:
 
 - Firmenname: {{companyName}}
@@ -594,7 +594,7 @@ Erstelle einen strukturierten Gespraechsleitfaden mit Eroeffnung, Kernfragen, Ei
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:
@@ -611,8 +611,8 @@ Leite 5-7 priorisierte, konkrete naechste Schritte mit Zeitrahmen und Begruendun
   company_risk_assessment: {
     name: 'Risikobewertung',
     description: 'Kundenrisiko und Abhaengigkeiten einer Firma einschaetzen.',
-    systemPrompt: `Du bist ein erfahrener Risikomanager im deutschsprachigen B2B-Markt. Du bewertest systematisch die Risiken einer Geschaeftsbeziehung in den Dimensionen Zahlungsausfallrisiko, Abhaengigkeitsrisiko, Reputationsrisiko und operatives Risiko. Du stuetzt dich auf die bereitgestellten Daten und kennzeichnest Annahmen klar. Jedes Risiko wird mit Eintrittswahrscheinlichkeit, Auswirkung und konkreten Minderungsmassnahmen bewertet. Du lieferst eine Gesamtrisikobewertung. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
-    userPrompt: `Erstelle eine Risikobewertung fuer die Geschaeftsbeziehung mit folgender Firma:
+    systemPrompt: `Du bist ein erfahrener Risikomanager im deutschsprachigen B2B-Markt. Du bewertest systematisch die Risiken einer Geschäftsbeziehung in den Dimensionen Zahlungsausfallrisiko, Abhaengigkeitsrisiko, Reputationsrisiko und operatives Risiko. Du stuetzt dich auf die bereitgestellten Daten und kennzeichnest Annahmen klar. Jedes Risiko wird mit Eintrittswahrscheinlichkeit, Auswirkung und konkreten Minderungsmassnahmen bewertet. Du lieferst eine Gesamtrisikobewertung. Antworte auf Deutsch in der Sie-Form. Antworte ausschliesslich mit dem JSON-Objekt, ohne Markdown-Codeblöcke.`,
+    userPrompt: `Erstelle eine Risikobewertung für die Geschäftsbeziehung mit folgender Firma:
 
 - Firmenname: {{companyName}}
 - Branche: {{companyIndustry}}
@@ -622,7 +622,7 @@ Leite 5-7 priorisierte, konkrete naechste Schritte mit Zeitrahmen und Begruendun
 - Position: {{contactPersonTitle}}
 - E-Mail: {{contactPersonEmail}}
 
-{{#if recentActivities}}Bisherige Aktivitaeten:
+{{#if recentActivities}}Bisherige Aktivitäten:
 {{recentActivities}}{{/if}}
 
 {{#if companyNotes}}Notizen zur Firma:

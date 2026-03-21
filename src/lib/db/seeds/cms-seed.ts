@@ -90,7 +90,7 @@ async function seed() {
           sortOrder: 2,
           content: {
             headline: 'Bereit durchzustarten?',
-            description: 'Starten Sie jetzt kostenlos und erleben Sie, wie XKMU Business OS Ihre Geschaeftsprozesse vereinfacht und automatisiert.',
+            description: 'Starten Sie jetzt kostenlos und erleben Sie, wie XKMU Business OS Ihre Geschäftsprozesse vereinfacht und automatisiert.',
             buttons: [
               { label: 'Jetzt registrieren', href: '/intern/register', variant: 'secondary' },
               { label: 'Zum Login', href: '/intern/login', variant: 'outline' },
@@ -131,7 +131,7 @@ async function seed() {
           content: {
             icon: 'Bot',
             title: 'KI & Automation',
-            description: 'Nutzen Sie die Kraft kuenstlicher Intelligenz, um Ihre Geschaeftsprozesse zu automatisieren und zu optimieren.',
+            description: 'Nutzen Sie die Kraft kuenstlicher Intelligenz, um Ihre Geschäftsprozesse zu automatisieren und zu optimieren.',
           },
         },
       ],
@@ -147,20 +147,20 @@ async function seed() {
           content: {
             icon: 'Monitor',
             title: 'IT Consulting',
-            description: 'Strategische IT-Beratung fuer die digitale Transformation Ihres Unternehmens.',
+            description: 'Strategische IT-Beratung für die digitale Transformation Ihres Unternehmens.',
           },
         },
       ],
     },
     {
       slug: '/agb',
-      title: 'Allgemeine Geschaeftsbedingungen',
+      title: 'Allgemeine Geschäftsbedingungen',
       status: 'published',
       blocks: [
         {
           blockType: 'heading',
           sortOrder: 0,
-          content: { text: 'Allgemeine Geschaeftsbedingungen', level: 1 },
+          content: { text: 'Allgemeine Geschäftsbedingungen', level: 1 },
         },
         {
           blockType: 'text',
@@ -168,7 +168,7 @@ async function seed() {
           content: {
             content: `## § 1 Geltungsbereich
 
-Diese Allgemeinen Geschaeftsbedingungen (AGB) gelten fuer alle Vertraege ueber die Nutzung der XKMU Business OS Plattform, die zwischen dem Betreiber und den Nutzern geschlossen werden.
+Diese Allgemeinen Geschäftsbedingungen (AGB) gelten fuer alle Vertraege ueber die Nutzung der XKMU Business OS Plattform, die zwischen dem Betreiber und den Nutzern geschlossen werden.
 
 ## § 2 Vertragsgegenstand
 
@@ -190,17 +190,17 @@ Der Betreiber stellt dem Nutzer eine cloudbasierte Business-Management-Plattform
 
 Der Betreiber verpflichtet sich zur Einhaltung der geltenden Datenschutzbestimmungen, insbesondere der DSGVO. Weitere Informationen finden Sie in unserer Datenschutzerklaerung.
 
-## § 6 Verfuegbarkeit
+## § 6 Verfügbarkeit
 
-(1) Der Betreiber bemueht sich um eine hohe Verfuegbarkeit der Plattform.
-(2) Wartungsarbeiten werden nach Moeglichkeit ausserhalb der ueblichen Geschaeftszeiten durchgefuehrt.
-(3) Ein Anspruch auf 100%ige Verfuegbarkeit besteht nicht.
+(1) Der Betreiber bemueht sich um eine hohe Verfügbarkeit der Plattform.
+(2) Wartungsarbeiten werden nach Moeglichkeit ausserhalb der ueblichen Geschäftszeiten durchgefuehrt.
+(3) Ein Anspruch auf 100%ige Verfügbarkeit besteht nicht.
 
 ## § 7 Verguetung und Zahlungsbedingungen
 
 (1) Die Verguetung richtet sich nach dem gewaehlten Tarif.
 (2) Die Abrechnung erfolgt monatlich im Voraus.
-(3) Bei Zahlungsverzug koennen Mahngebuehren erhoben werden.
+(3) Bei Zahlungsverzug können Mahngebuehren erhoben werden.
 
 ## § 8 Vertragslaufzeit und Kuendigung
 
@@ -266,7 +266,7 @@ Als Diensteanbieter sind wir gemaess § 7 Abs.1 TMG fuer eigene Inhalte auf dies
 
 ### Haftung fuer Links
 
-Unser Angebot enthaelt Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb koennen wir fuer diese fremden Inhalte auch keine Gewaehr uebernehmen.
+Unser Angebot enthaelt Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewaehr uebernehmen.
 
 ### Urheberrecht
 
@@ -298,8 +298,8 @@ Die folgenden Hinweise geben einen einfachen Ueberblick darueber, was mit Ihren 
 
 ### Datenerfassung auf dieser Website
 
-**Wer ist verantwortlich fuer die Datenerfassung auf dieser Website?**
-Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten koennen Sie dem Impressum dieser Website entnehmen.
+**Wer ist verantwortlich für die Datenerfassung auf dieser Website?**
+Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber. Dessen Kontaktdaten können Sie dem Impressum dieser Website entnehmen.
 
 ## 2. Hosting
 
@@ -335,7 +335,7 @@ Wenn Sie uns per Kontaktformular Anfragen zukommen lassen, werden Ihre Angaben a
 
 ### Registrierung auf dieser Website
 
-Sie koennen sich auf dieser Website registrieren, um zusaetzliche Funktionen auf der Seite zu nutzen.
+Sie können sich auf dieser Website registrieren, um zusaetzliche Funktionen auf der Seite zu nutzen.
 
 ## 5. Ihre Rechte
 

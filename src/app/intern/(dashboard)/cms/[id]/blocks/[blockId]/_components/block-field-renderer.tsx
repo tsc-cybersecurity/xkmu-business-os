@@ -570,7 +570,7 @@ function ArrayField({
               />
             ))}
           </div>
-          <Button variant="ghost" size="icon" aria-label="Loeschen" className="h-8 w-8 shrink-0" onClick={() => removeItem(i)}>
+          <Button variant="ghost" size="icon" aria-label="Löschen" className="h-8 w-8 shrink-0" onClick={() => removeItem(i)}>
             <Trash2 className="h-3.5 w-3.5 text-destructive" />
           </Button>
         </div>
@@ -621,7 +621,7 @@ function PricingPlansField({
                 {plan.highlighted && <Check className="h-3 w-3" />}
                 Hervorgehoben
               </button>
-              <Button variant="ghost" size="icon" aria-label="Loeschen" className="h-7 w-7" onClick={() => removePlan(i)}>
+              <Button variant="ghost" size="icon" aria-label="Löschen" className="h-7 w-7" onClick={() => removePlan(i)}>
                 <Trash2 className="h-3.5 w-3.5 text-destructive" />
               </Button>
             </div>
@@ -714,7 +714,7 @@ function ComparisonField({
             >
               {col.highlighted ? 'Hervorgehoben' : 'Normal'}
             </button>
-            <Button variant="ghost" size="icon" aria-label="Loeschen" className="h-8 w-8 shrink-0" onClick={() => removeColumn(i)}>
+            <Button variant="ghost" size="icon" aria-label="Löschen" className="h-8 w-8 shrink-0" onClick={() => removeColumn(i)}>
               <Trash2 className="h-3.5 w-3.5 text-destructive" />
             </Button>
           </div>
@@ -731,7 +731,7 @@ function ComparisonField({
           <div key={ri} className="rounded-lg border p-3 space-y-2">
             <div className="flex gap-2 items-center">
               <Input placeholder="Feature-Name" value={row.feature} onChange={(e) => updateRow(ri, 'feature', e.target.value)} className="text-sm font-medium" />
-              <Button variant="ghost" size="icon" aria-label="Loeschen" className="h-8 w-8 shrink-0" onClick={() => removeRow(ri)}>
+              <Button variant="ghost" size="icon" aria-label="Löschen" className="h-8 w-8 shrink-0" onClick={() => removeRow(ri)}>
                 <Trash2 className="h-3.5 w-3.5 text-destructive" />
               </Button>
             </div>

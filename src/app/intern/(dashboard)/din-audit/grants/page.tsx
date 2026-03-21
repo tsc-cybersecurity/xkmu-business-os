@@ -160,7 +160,7 @@ export default function GrantsPage() {
         throw new Error(data.error?.message || 'Fehler beim Speichern')
       }
 
-      toast.success(editingGrant ? 'Foerdermittel aktualisiert' : 'Foerdermittel erstellt')
+      toast.success(editingGrant ? 'Fördermittel aktualisiert' : 'Fördermittel erstellt')
       setShowDialog(false)
       setEditingGrant(null)
       await fetchGrants()
@@ -178,7 +178,7 @@ export default function GrantsPage() {
       if (!response.ok) {
         throw new Error('Fehler beim Loeschen')
       }
-      toast.success('Foerdermittel geloescht')
+      toast.success('Fördermittel gelöscht')
       setDeletingId(null)
       await fetchGrants()
     } catch (error) {
@@ -196,14 +196,14 @@ export default function GrantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Foerdermittel</h1>
+          <h1 className="text-3xl font-bold">Fördermittel</h1>
           <p className="text-muted-foreground">
             Bundes- und Landesfoerderprogramme fuer IT-Sicherheit und Digitalisierung
           </p>
         </div>
         <Button onClick={openCreateDialog}>
           <Plus className="mr-2 h-4 w-4" />
-          Neues Foerdermittel
+          Neues Fördermittel
         </Button>
       </div>
 
@@ -272,14 +272,14 @@ export default function GrantsPage() {
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
                       onClick={() => setDeletingId(grant.id)}
-                      title="Loeschen"
-                      aria-label="Loeschen"
+                      title="Löschen"
+                      aria-label="Löschen"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                     {grant.url && (
                       <a href={grant.url} target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="icon" aria-label="Extern oeffnen" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" aria-label="Extern öffnen" className="h-8 w-8">
                           <ExternalLink className="h-4 w-4" />
                         </Button>
                       </a>
@@ -305,7 +305,7 @@ export default function GrantsPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingGrant ? 'Foerdermittel bearbeiten' : 'Neues Foerdermittel'}
+              {editingGrant ? 'Fördermittel bearbeiten' : 'Neues Fördermittel'}
             </DialogTitle>
             <DialogDescription>
               {editingGrant
@@ -403,9 +403,9 @@ export default function GrantsPage() {
       <Dialog open={!!deletingId} onOpenChange={(open) => { if (!open) setDeletingId(null) }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Foerdermittel loeschen</DialogTitle>
+            <DialogTitle>Fördermittel loeschen</DialogTitle>
             <DialogDescription>
-              Moechten Sie dieses Foerderprogramm wirklich loeschen? Diese Aktion kann nicht rueckgaengig gemacht werden.
+              Möchten Sie dieses Foerderprogramm wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

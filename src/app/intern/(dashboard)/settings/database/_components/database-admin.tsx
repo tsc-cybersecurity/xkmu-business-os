@@ -205,7 +205,7 @@ export function DatabaseAdmin() {
 
       const data = await res.json()
       if (data.success) {
-        toast.success('Datensatz geloescht')
+        toast.success('Datensatz gelöscht')
         if (selectedTable) {
           fetchTableData(selectedTable, currentPage)
         }
@@ -411,7 +411,7 @@ export function DatabaseAdmin() {
                             <Button
                               size="icon"
                               variant="ghost"
-                              aria-label="Loeschen"
+                              aria-label="Löschen"
                               className="h-7 w-7 text-destructive hover:text-destructive"
                               onClick={() =>
                                 setDeleteTarget({
@@ -480,8 +480,8 @@ export function DatabaseAdmin() {
           <AlertDialogHeader>
             <AlertDialogTitle>Datensatz loeschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Moechten Sie diesen Datensatz wirklich loeschen? Diese Aktion kann
-              nicht rueckgaengig gemacht werden.
+              Möchten Sie diesen Datensatz wirklich löschen? Diese Aktion kann
+              nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

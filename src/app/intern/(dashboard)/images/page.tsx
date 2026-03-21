@@ -179,14 +179,14 @@ export default function ImagesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bild wirklich loeschen?')) return
+    if (!confirm('Bild wirklich löschen?')) return
     try {
       await fetch(`/api/v1/images/${id}`, { method: 'DELETE' })
-      toast.success('Bild geloescht')
+      toast.success('Bild gelöscht')
       setImages(prev => prev.filter(i => i.id !== id))
       if (selectedImage?.id === id) setSelectedImage(null)
     } catch {
-      toast.error('Loeschen fehlgeschlagen')
+      toast.error('Löschen fehlgeschlagen')
     }
   }
 
@@ -222,7 +222,7 @@ export default function ImagesPage() {
             <DialogHeader>
               <DialogTitle>Neues Bild generieren</DialogTitle>
               <DialogDescription>
-                Beschreiben Sie das gewuenschte Bild und waehlen Sie den Provider.
+                Beschreiben Sie das gewünschte Bild und wählen Sie den Provider.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
@@ -231,7 +231,7 @@ export default function ImagesPage() {
                 <Textarea
                   value={prompt}
                   onChange={e => setPrompt(e.target.value)}
-                  placeholder="z.B. Ein modernes Buerogebaeude bei Sonnenuntergang, minimalistisch, professionell"
+                  placeholder="z.B. Ein modernes Bürogebäude bei Sonnenuntergang, minimalistisch, professionell"
                   rows={3}
                   disabled={generating}
                 />
@@ -273,7 +273,7 @@ export default function ImagesPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Seitenverhaeltnis</Label>
+                  <Label>Seitenverhältnis</Label>
                   <Select value={aspectRatio} onValueChange={setAspectRatio} disabled={generating}>
                     <SelectTrigger>
                       <SelectValue />
@@ -310,7 +310,7 @@ export default function ImagesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="vivid">Lebendig</SelectItem>
-                      <SelectItem value="natural">Natuerlich</SelectItem>
+                      <SelectItem value="natural">Natürlich</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -437,7 +437,7 @@ export default function ImagesPage() {
                   </div>
                   {selectedImage.revisedPrompt && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Ueberarbeiteter Prompt (KI)</p>
+                      <p className="text-sm text-muted-foreground">Überarbeiteter Prompt (KI)</p>
                       <p className="text-xs text-muted-foreground">{selectedImage.revisedPrompt}</p>
                     </div>
                   )}
@@ -478,7 +478,7 @@ export default function ImagesPage() {
                     onClick={() => handleDelete(selectedImage.id)}
                   >
                     <Trash2 className="mr-1 h-3 w-3" />
-                    Loeschen
+                    Löschen
                   </Button>
                 </div>
               </div>

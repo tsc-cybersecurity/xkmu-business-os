@@ -16,7 +16,7 @@ export function ApiDocsContent() {
         <TabsTrigger value="leads">Leads</TabsTrigger>
         <TabsTrigger value="ideas">Ideen</TabsTrigger>
         <TabsTrigger value="documents">Dokumente</TabsTrigger>
-        <TabsTrigger value="activities">Aktivitaeten</TabsTrigger>
+        <TabsTrigger value="activities">Aktivitäten</TabsTrigger>
         <TabsTrigger value="products">Produkte</TabsTrigger>
         <TabsTrigger value="din-audit">DIN Audit</TabsTrigger>
         <TabsTrigger value="wiba">WiBA</TabsTrigger>
@@ -199,9 +199,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/companies/:id"
-              description="Firma loeschen"
+              description="Firma löschen"
               responseExample={{
-                message: 'Firma geloescht',
+                message: 'Firma gelöscht',
               }}
             />
 
@@ -215,7 +215,7 @@ export function ApiDocsContent() {
                     id: 'uuid',
                     firstName: 'Max',
                     lastName: 'Mustermann',
-                    jobTitle: 'Geschaeftsfuehrer',
+                    jobTitle: 'Geschäftsfuehrer',
                     email: 'max@musterfirma.de',
                   },
                 ],
@@ -304,7 +304,7 @@ export function ApiDocsContent() {
                 email: 'max@example.com',
                 phone: '+49 30 12345678',
                 mobile: '+49 170 1234567',
-                jobTitle: 'Geschaeftsfuehrer',
+                jobTitle: 'Geschäftsfuehrer',
                 department: 'Management',
               }}
               responseExample={{
@@ -343,9 +343,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/persons/:id"
-              description="Person loeschen"
+              description="Person löschen"
               responseExample={{
-                message: 'Person geloescht',
+                message: 'Person gelöscht',
               }}
             />
 
@@ -450,9 +450,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/leads/:id"
-              description="Lead loeschen"
+              description="Lead löschen"
               responseExample={{
-                message: 'Lead geloescht',
+                message: 'Lead gelöscht',
               }}
             />
 
@@ -509,7 +509,7 @@ export function ApiDocsContent() {
                 data: [
                   {
                     id: 'uuid',
-                    title: 'Neue Geschaeftsidee',
+                    title: 'Neue Geschäftsidee',
                     type: 'lead',
                     status: 'new',
                     source: 'manual',
@@ -570,9 +570,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/ideas/:id"
-              description="Idee loeschen"
+              description="Idee löschen"
               responseExample={{
-                message: 'Idee geloescht',
+                message: 'Idee gelöscht',
               }}
             />
 
@@ -680,9 +680,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/documents/:id"
-              description="Dokument loeschen (nur Entwuerfe)"
+              description="Dokument löschen (nur Entwürfe)"
               responseExample={{
-                message: 'Dokument geloescht',
+                message: 'Dokument gelöscht',
               }}
             />
 
@@ -749,9 +749,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/documents/:id/items/:itemId"
-              description="Dokumentposition loeschen"
+              description="Dokumentposition löschen"
               responseExample={{
-                message: 'Position geloescht',
+                message: 'Position gelöscht',
               }}
             />
 
@@ -787,14 +787,14 @@ export function ApiDocsContent() {
       <TabsContent value="activities" className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>Aktivitaeten</CardTitle>
+            <CardTitle>Aktivitäten</CardTitle>
             <CardDescription>Notizen, E-Mails, Anrufe und Termine</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <EndpointDoc
               method="GET"
               path="/api/v1/activities"
-              description="Aktivitaeten abrufen"
+              description="Aktivitäten abrufen"
               queryParams={['leadId=uuid', 'companyId=uuid', 'personId=uuid', 'type=note', 'page=1', 'limit=20']}
               responseExample={{
                 data: [
@@ -813,25 +813,25 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="POST"
               path="/api/v1/activities"
-              description="Neue Aktivitaet erstellen"
+              description="Neue Aktivität erstellen"
               requestBody={{
                 leadId: 'uuid',
                 companyId: 'uuid',
                 type: 'note',
-                subject: 'Erstgespraech',
+                subject: 'Erstgespräch',
                 content: 'Kunde zeigt Interesse an IT-Sicherheit',
               }}
               responseExample={{
                 id: 'uuid',
                 type: 'note',
-                subject: 'Erstgespraech',
+                subject: 'Erstgespräch',
               }}
             />
 
             <EndpointDoc
               method="GET"
               path="/api/v1/activities/:id"
-              description="Einzelne Aktivitaet abrufen"
+              description="Einzelne Aktivität abrufen"
               responseExample={{
                 id: 'uuid',
                 type: 'note',
@@ -844,7 +844,7 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/activities/:id"
-              description="Aktivitaet loeschen"
+              description="Aktivität löschen"
               responseExample={{
                 deleted: true,
               }}
@@ -936,9 +936,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/products/:id"
-              description="Produkt loeschen"
+              description="Produkt löschen"
               responseExample={{
-                message: 'Produkt geloescht',
+                message: 'Produkt gelöscht',
               }}
             />
 
@@ -1004,9 +1004,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/product-categories/:id"
-              description="Kategorie loeschen (nur wenn keine Unterkategorien oder Produkte zugeordnet)"
+              description="Kategorie löschen (nur wenn keine Unterkategorien oder Produkte zugeordnet)"
               responseExample={{
-                message: 'Kategorie geloescht',
+                message: 'Kategorie gelöscht',
               }}
             />
           </CardContent>
@@ -1018,7 +1018,7 @@ export function ApiDocsContent() {
         <Card>
           <CardHeader>
             <CardTitle>DIN SPEC 27076</CardTitle>
-            <CardDescription>IT-Sicherheitsaudits und Foerdermittel</CardDescription>
+            <CardDescription>IT-Sicherheitsaudits und Fördermittel</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <EndpointDoc
@@ -1085,9 +1085,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/din/audits/:id"
-              description="DIN-Audit loeschen"
+              description="DIN-Audit löschen"
               responseExample={{
-                message: 'Audit geloescht',
+                message: 'Audit gelöscht',
               }}
             />
 
@@ -1150,7 +1150,7 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="GET"
               path="/api/v1/din/grants"
-              description="Verfuegbare Foerdermittel abrufen"
+              description="Verfügbare Fördermittel abrufen"
               queryParams={['region=bundesweit', 'employeeCount=50']}
               responseExample={{
                 data: [
@@ -1168,7 +1168,7 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="POST"
               path="/api/v1/din/grants"
-              description="Neues Foerdermittel anlegen"
+              description="Neues Fördermittel anlegen"
               requestBody={{
                 name: 'Neues Foerderprogramm',
                 description: 'Beschreibung des Programms',
@@ -1184,7 +1184,7 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="GET"
               path="/api/v1/din/grants/:id"
-              description="Einzelnes Foerdermittel abrufen"
+              description="Einzelnes Fördermittel abrufen"
               responseExample={{
                 id: 'uuid',
                 name: 'go-digital',
@@ -1197,7 +1197,7 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="PUT"
               path="/api/v1/din/grants/:id"
-              description="Foerdermittel aktualisieren"
+              description="Fördermittel aktualisieren"
               requestBody={{
                 maxAmount: 18000,
               }}
@@ -1210,9 +1210,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/din/grants/:id"
-              description="Foerdermittel loeschen"
+              description="Fördermittel löschen"
               responseExample={{
-                message: 'Foerdermittel geloescht',
+                message: 'Fördermittel gelöscht',
               }}
             />
           </CardContent>
@@ -1231,7 +1231,7 @@ export function ApiDocsContent() {
             <EndpointDoc method="POST" path="/api/v1/wiba/audits" description="Neuen WiBA-Check anlegen" requestBody={{ companyId: 'uuid' }} responseExample={{ id: 'uuid', status: 'created' }} />
             <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id" description="WiBA-Check abrufen" responseExample={{ id: 'uuid', company: { name: 'Musterfirma GmbH' }, status: 'in_progress' }} />
             <EndpointDoc method="PUT" path="/api/v1/wiba/audits/:id" description="WiBA-Check aktualisieren" requestBody={{ status: 'completed' }} responseExample={{ id: 'uuid' }} />
-            <EndpointDoc method="DELETE" path="/api/v1/wiba/audits/:id" description="WiBA-Check loeschen" responseExample={{ message: 'Check geloescht' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/wiba/audits/:id" description="WiBA-Check löschen" responseExample={{ message: 'Check gelöscht' }} />
             <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id/answers" description="Antworten abrufen" responseExample={{ data: [{ requirementId: 1, status: 'ja', notes: 'Umgesetzt' }] }} />
             <EndpointDoc method="POST" path="/api/v1/wiba/audits/:id/answers" description="Antworten speichern" requestBody={{ requirementId: 1, status: 'ja', notes: 'Umgesetzt' }} responseExample={{ message: 'Antwort gespeichert' }} />
             <EndpointDoc method="GET" path="/api/v1/wiba/audits/:id/scoring" description="Scoring berechnen" responseExample={{ currentScore: 180, maxScore: 257, riskLevel: { level: 'Mittel', color: 'yellow' } }} />
@@ -1252,8 +1252,8 @@ export function ApiDocsContent() {
             <EndpointDoc method="POST" path="/api/v1/blog/posts" description="Blog-Beitrag anlegen" requestBody={{ title: 'Neuer Beitrag', content: 'Inhalt...' }} responseExample={{ id: 'uuid' }} />
             <EndpointDoc method="GET" path="/api/v1/blog/posts/:id" description="Beitrag abrufen" responseExample={{ id: 'uuid', title: 'Mein Beitrag', content: '...' }} />
             <EndpointDoc method="PUT" path="/api/v1/blog/posts/:id" description="Beitrag aktualisieren" requestBody={{ title: 'Neuer Titel' }} responseExample={{ id: 'uuid' }} />
-            <EndpointDoc method="DELETE" path="/api/v1/blog/posts/:id" description="Beitrag loeschen" responseExample={{ message: 'Beitrag geloescht' }} />
-            <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/publish" description="Beitrag veroeffentlichen" responseExample={{ id: 'uuid', status: 'published' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/blog/posts/:id" description="Beitrag löschen" responseExample={{ message: 'Beitrag gelöscht' }} />
+            <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/publish" description="Beitrag veröffentlichen" responseExample={{ id: 'uuid', status: 'published' }} />
             <EndpointDoc method="POST" path="/api/v1/blog/posts/generate" description="Blog-Beitrag per KI generieren" requestBody={{ topic: 'IT-Sicherheit', keywords: ['KMU', 'Cybersecurity'] }} responseExample={{ id: 'uuid', title: 'Generierter Titel' }} />
             <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/seo/generate" description="SEO-Metadaten per KI generieren" responseExample={{ seoTitle: '...', seoDescription: '...' }} />
           </CardContent>
@@ -1272,12 +1272,12 @@ export function ApiDocsContent() {
             <EndpointDoc method="POST" path="/api/v1/cms/pages" description="Neue CMS-Seite anlegen" requestBody={{ title: 'Neue Seite', slug: 'neue-seite' }} responseExample={{ id: 'uuid' }} />
             <EndpointDoc method="GET" path="/api/v1/cms/pages/:id" description="Seite abrufen" responseExample={{ id: 'uuid', title: 'Startseite', blocks: [] }} />
             <EndpointDoc method="PUT" path="/api/v1/cms/pages/:id" description="Seite aktualisieren" requestBody={{ title: 'Neuer Titel' }} responseExample={{ id: 'uuid' }} />
-            <EndpointDoc method="DELETE" path="/api/v1/cms/pages/:id" description="Seite loeschen" responseExample={{ message: 'Seite geloescht' }} />
-            <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/publish" description="Seite veroeffentlichen" responseExample={{ id: 'uuid', status: 'published' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/cms/pages/:id" description="Seite löschen" responseExample={{ message: 'Seite gelöscht' }} />
+            <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/publish" description="Seite veröffentlichen" responseExample={{ id: 'uuid', status: 'published' }} />
             <EndpointDoc method="GET" path="/api/v1/cms/pages/:id/blocks" description="Bloecke einer Seite abrufen" responseExample={{ data: [{ id: 'uuid', type: 'hero', order: 0 }] }} />
             <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/blocks" description="Block hinzufuegen" requestBody={{ type: 'text', content: {} }} responseExample={{ id: 'uuid' }} />
             <EndpointDoc method="PUT" path="/api/v1/cms/blocks/:id" description="Block aktualisieren" requestBody={{ content: { text: 'Neuer Text' } }} responseExample={{ id: 'uuid' }} />
-            <EndpointDoc method="DELETE" path="/api/v1/cms/blocks/:id" description="Block loeschen" responseExample={{ message: 'Block geloescht' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/cms/blocks/:id" description="Block löschen" responseExample={{ message: 'Block gelöscht' }} />
             <EndpointDoc method="GET" path="/api/v1/cms/navigation" description="Navigation abrufen" responseExample={{ data: [{ id: 'uuid', label: 'Home', url: '/' }] }} />
             <EndpointDoc method="POST" path="/api/v1/cms/navigation" description="Navigations-Eintrag anlegen" requestBody={{ label: 'Kontakt', url: '/kontakt' }} responseExample={{ id: 'uuid' }} />
           </CardContent>
@@ -1296,7 +1296,7 @@ export function ApiDocsContent() {
             <EndpointDoc method="POST" path="/api/v1/marketing/campaigns" description="Kampagne anlegen" requestBody={{ name: 'Neue Kampagne', type: 'email' }} responseExample={{ id: 'uuid' }} />
             <EndpointDoc method="GET" path="/api/v1/marketing/campaigns/:id" description="Kampagne abrufen" responseExample={{ id: 'uuid', name: 'Kampagne', tasks: [] }} />
             <EndpointDoc method="PUT" path="/api/v1/marketing/campaigns/:id" description="Kampagne aktualisieren" requestBody={{ status: 'completed' }} responseExample={{ id: 'uuid' }} />
-            <EndpointDoc method="DELETE" path="/api/v1/marketing/campaigns/:id" description="Kampagne loeschen" responseExample={{ message: 'Kampagne geloescht' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/marketing/campaigns/:id" description="Kampagne löschen" responseExample={{ message: 'Kampagne gelöscht' }} />
             <EndpointDoc method="GET" path="/api/v1/marketing/tasks" description="Marketing-Aufgaben auflisten" responseExample={{ data: [{ id: 'uuid', title: 'Newsletter erstellen' }] }} />
             <EndpointDoc method="POST" path="/api/v1/marketing/tasks" description="Aufgabe anlegen" requestBody={{ title: 'Neue Aufgabe', campaignId: 'uuid' }} responseExample={{ id: 'uuid' }} />
             <EndpointDoc method="GET" path="/api/v1/marketing/templates" description="Vorlagen auflisten" responseExample={{ data: [{ id: 'uuid', name: 'E-Mail Vorlage' }] }} />
@@ -1317,7 +1317,7 @@ export function ApiDocsContent() {
             <EndpointDoc method="POST" path="/api/v1/social-media/posts" description="Beitrag anlegen" requestBody={{ content: 'Neuer Post', platform: 'linkedin' }} responseExample={{ id: 'uuid' }} />
             <EndpointDoc method="GET" path="/api/v1/social-media/posts/:id" description="Beitrag abrufen" responseExample={{ id: 'uuid', content: '...' }} />
             <EndpointDoc method="PUT" path="/api/v1/social-media/posts/:id" description="Beitrag aktualisieren" requestBody={{ content: 'Aktualisiert' }} responseExample={{ id: 'uuid' }} />
-            <EndpointDoc method="DELETE" path="/api/v1/social-media/posts/:id" description="Beitrag loeschen" responseExample={{ message: 'Beitrag geloescht' }} />
+            <EndpointDoc method="DELETE" path="/api/v1/social-media/posts/:id" description="Beitrag löschen" responseExample={{ message: 'Beitrag gelöscht' }} />
             <EndpointDoc method="GET" path="/api/v1/social-media/topics" description="Themen auflisten" responseExample={{ data: [{ id: 'uuid', name: 'IT-Sicherheit' }] }} />
             <EndpointDoc method="POST" path="/api/v1/social-media/topics" description="Thema anlegen" requestBody={{ name: 'Neues Thema' }} responseExample={{ id: 'uuid' }} />
           </CardContent>
@@ -1355,7 +1355,7 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="GET"
               path="/api/v1/ai/status"
-              description="Verfuegbare KI-Provider und deren Status pruefen"
+              description="Verfügbare KI-Provider und deren Status pruefen"
               responseExample={{
                 available: true,
                 providers: [
@@ -1464,9 +1464,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/ai-providers/:id"
-              description="KI-Provider loeschen"
+              description="KI-Provider löschen"
               responseExample={{
-                message: 'Provider geloescht',
+                message: 'Provider gelöscht',
               }}
             />
 
@@ -1598,9 +1598,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/ai-prompt-templates/:id"
-              description="Prompt-Template loeschen (nur benutzerdefinierte)"
+              description="Prompt-Template löschen (nur benutzerdefinierte)"
               responseExample={{
-                message: 'Template geloescht',
+                message: 'Template gelöscht',
               }}
             />
 
@@ -1689,9 +1689,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/webhooks/:id"
-              description="Webhook loeschen"
+              description="Webhook löschen"
               responseExample={{
-                message: 'Webhook geloescht',
+                message: 'Webhook gelöscht',
               }}
             />
           </CardContent>
@@ -1703,7 +1703,7 @@ export function ApiDocsContent() {
         <Card>
           <CardHeader>
             <CardTitle>E-Mail & Kontakt</CardTitle>
-            <CardDescription>E-Mail-Versand und oeffentliches Kontaktformular</CardDescription>
+            <CardDescription>E-Mail-Versand und öffentliches Kontaktformular</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <EndpointDoc
@@ -1738,7 +1738,7 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="POST"
               path="/api/v1/contact"
-              description="Kontaktformular absenden (oeffentlicher Endpunkt, erstellt automatisch einen Lead)"
+              description="Kontaktformular absenden (öffentlicher Endpunkt, erstellt automatisch einen Lead)"
               requestBody={{
                 name: 'Max Mustermann',
                 email: 'max@example.com',
@@ -1831,9 +1831,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/users/:id"
-              description="Benutzer loeschen (nicht den eigenen Account)"
+              description="Benutzer löschen (nicht den eigenen Account)"
               responseExample={{
-                message: 'Benutzer geloescht',
+                message: 'Benutzer gelöscht',
               }}
             />
 
@@ -1905,9 +1905,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/roles/:id"
-              description="Rolle loeschen (keine System-Rollen)"
+              description="Rolle löschen (keine System-Rollen)"
               responseExample={{
-                message: 'Rolle geloescht',
+                message: 'Rolle gelöscht',
               }}
             />
 
@@ -1947,9 +1947,9 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/api-keys/:id"
-              description="API-Key loeschen"
+              description="API-Key löschen"
               responseExample={{
-                message: 'API-Key geloescht',
+                message: 'API-Key gelöscht',
               }}
             />
 
@@ -2059,16 +2059,16 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="DELETE"
               path="/api/v1/media/[id]"
-              description="Mediendatei loeschen (DB-Eintrag + Datei auf Disk)"
+              description="Mediendatei löschen (DB-Eintrag + Datei auf Disk)"
               responseExample={{
-                message: 'Datei geloescht',
+                message: 'Datei gelöscht',
               }}
             />
 
             <EndpointDoc
               method="GET"
               path="/api/v1/media/serve/[tenantId]/[filename]"
-              description="Hochgeladene Datei ausliefern (oeffentlich, kein Auth). Cache: 1 Jahr, immutable."
+              description="Hochgeladene Datei ausliefern (öffentlich, kein Auth). Cache: 1 Jahr, immutable."
               responseExample={{
                 '(Bilddatei als Binary-Response)': true,
               }}
@@ -2082,7 +2082,7 @@ export function ApiDocsContent() {
         <Card>
           <CardHeader>
             <CardTitle>Oeffentliche API</CardTitle>
-            <CardDescription>Endpoints ohne Authentifizierung. Fuer die oeffentliche Webseite (Landing, Blog, Navigation, Branding).</CardDescription>
+            <CardDescription>Endpoints ohne Authentifizierung. Fuer die öffentliche Webseite (Landing, Blog, Navigation, Branding).</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <EndpointDoc
@@ -2108,7 +2108,7 @@ export function ApiDocsContent() {
             <EndpointDoc
               method="GET"
               path="/api/v1/public/blog/posts"
-              description="Veroeffentlichte Blog-Beitraege auflisten"
+              description="Veröffentlichte Blog-Beitraege auflisten"
               responseExample={[
                 { slug: 'mein-beitrag', title: 'Mein Beitrag', excerpt: '...', publishedAt: '2026-01-15' },
               ]}

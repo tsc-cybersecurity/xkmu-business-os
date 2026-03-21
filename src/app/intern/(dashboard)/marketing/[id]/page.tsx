@@ -187,13 +187,13 @@ export default function CampaignDetailPage() {
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!confirm('Task wirklich loeschen?')) return;
+    if (!confirm('Task wirklich löschen?')) return;
     try {
       await fetch(`/api/v1/marketing/tasks/${taskId}`, { method: 'DELETE' });
-      toast.success('Task geloescht');
+      toast.success('Task gelöscht');
       fetchData();
     } catch {
-      toast.error('Loeschen fehlgeschlagen');
+      toast.error('Löschen fehlgeschlagen');
     }
   };
 
@@ -221,7 +221,7 @@ export default function CampaignDetailPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/marketing">
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -354,7 +354,7 @@ export default function CampaignDetailPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Tonalitaet</Label>
+                    <Label>Tonalität</Label>
                     <Select
                       value={genForm.tone}
                       onValueChange={(v) => setGenForm((f) => ({ ...f, tone: v }))}
@@ -433,8 +433,8 @@ export default function CampaignDetailPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Loeschen"
-                        aria-label="Loeschen"
+                        title="Löschen"
+                        aria-label="Löschen"
                         onClick={() => handleDeleteTask(task.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />

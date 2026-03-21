@@ -107,7 +107,7 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
   }
 
   if (!scoring || !audit) {
-    return <p className="text-muted-foreground">Bericht nicht verfuegbar.</p>
+    return <p className="text-muted-foreground">Bericht nicht verfügbar.</p>
   }
 
   const handleDownloadPdf = () => {
@@ -150,7 +150,7 @@ export default function WibaReportPage({ params }: { params: Promise<{ id: strin
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href={`/intern/wiba/${id}`}>
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>

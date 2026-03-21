@@ -240,7 +240,7 @@ export default function N8nWorkflowsPage() {
                           variant="ghost"
                           size="icon"
                           title="Löschen"
-                          aria-label="Loeschen"
+                          aria-label="Löschen"
                           onClick={() => handleDelete(wf.id, wf.name)}
                           disabled={actionLoading === wf.id}
                           className="text-destructive hover:text-destructive"

@@ -34,7 +34,7 @@ export function BlockEditor({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href={`/intern/cms/${pageId}`}>
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>

@@ -42,7 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     if (!lead) return apiNotFound('Lead nicht gefunden')
 
     if (!lead.aiResearchResult) {
-      return apiError('NO_RESEARCH', 'Bitte fuehren Sie zuerst eine KI-Recherche fuer diesen Lead durch', 400)
+      return apiError('NO_RESEARCH', 'Bitte fuehren Sie zuerst eine KI-Recherche für diesen Lead durch', 400)
     }
 
     const outreach = await OutreachService.generateOutreach(auth.tenantId, id, {

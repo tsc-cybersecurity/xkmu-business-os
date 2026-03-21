@@ -84,13 +84,13 @@ export default function MarketingPage() {
   }, [fetchCampaigns]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Kampagne wirklich loeschen?')) return;
+    if (!confirm('Kampagne wirklich löschen?')) return;
     try {
       await fetch(`/api/v1/marketing/campaigns/${id}`, { method: 'DELETE' });
-      toast.success('Kampagne geloescht');
+      toast.success('Kampagne gelöscht');
       fetchCampaigns();
     } catch {
-      toast.error('Loeschen fehlgeschlagen');
+      toast.error('Löschen fehlgeschlagen');
     }
   };
 
@@ -220,8 +220,8 @@ export default function MarketingPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Loeschen"
-                        aria-label="Loeschen"
+                        title="Löschen"
+                        aria-label="Löschen"
                         onClick={() => handleDelete(campaign.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />

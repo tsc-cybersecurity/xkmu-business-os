@@ -25,7 +25,7 @@ export async function POST(
       const validation = validateAndParse(generateActionSchema, body)
 
       if (!validation.success) {
-        return apiError('VALIDATION_ERROR', 'Ungueltige Eingabe', 400)
+        return apiError('VALIDATION_ERROR', 'Ungültige Eingabe', 400)
       }
 
       const { actionSlug } = validation.data

@@ -621,7 +621,7 @@ export function CompanyInfoCard({ company, analyzingDoc, onAnalyzeDocument }: Co
             </div>
           ) : (
             <p className="text-sm text-muted-foreground text-center py-6">
-              Laden Sie ein PDF (z.B. Geschaeftsbericht, Bilanz) hoch, um automatisch KPIs und eine Zusammenfassung zu extrahieren.
+              Laden Sie ein PDF (z.B. Geschäftsbericht, Bilanz) hoch, um automatisch KPIs und eine Zusammenfassung zu extrahieren.
             </p>
           )}
         </CardContent>

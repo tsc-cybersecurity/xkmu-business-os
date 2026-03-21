@@ -22,7 +22,7 @@ export async function PUT(
       }
 
       if (Object.keys(data).length === 0) {
-        return apiError('VALIDATION_ERROR', 'Keine gueltigen Felder zum Aktualisieren', 400)
+        return apiError('VALIDATION_ERROR', 'Keine gültigen Felder zum Aktualisieren', 400)
       }
 
       const result = await CmsBlockTypeService.update(id, data)

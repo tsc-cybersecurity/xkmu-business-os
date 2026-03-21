@@ -298,7 +298,7 @@ export default function ChancenPage() {
   }
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`"${name}" wirklich loeschen?`)) return
+    if (!confirm(`"${name}" wirklich löschen?`)) return
 
     try {
       const response = await fetch(`/api/v1/opportunities/${id}`, {
@@ -308,14 +308,14 @@ export default function ChancenPage() {
       const data = await response.json()
 
       if (data.success) {
-        toast.success(`"${name}" geloescht`)
+        toast.success(`"${name}" gelöscht`)
         fetchOpportunities()
       } else {
-        toast.error(data.error?.message || 'Loeschen fehlgeschlagen')
+        toast.error(data.error?.message || 'Löschen fehlgeschlagen')
       }
     } catch (error) {
       logger.error('Delete failed', error, { module: 'ChancenPage' })
-      toast.error('Loeschen fehlgeschlagen')
+      toast.error('Löschen fehlgeschlagen')
     }
   }
 
@@ -583,7 +583,7 @@ export default function ChancenPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-destructive hover:text-destructive"
-                            title="Loeschen"
+                            title="Löschen"
                             onClick={() => handleDelete(opp.id, opp.name)}
                           >
                             <Trash2 className="h-4 w-4" />

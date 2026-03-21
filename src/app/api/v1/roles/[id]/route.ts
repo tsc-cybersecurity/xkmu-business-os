@@ -68,7 +68,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     if (role.isSystem) {
       return apiError(
         'SYSTEM_ROLE',
-        'System-Rollen koennen nicht geloescht werden',
+        'System-Rollen können nicht gelöscht werden',
         400
       )
     }
@@ -76,7 +76,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const deleted = await RoleService.delete(auth.tenantId, id)
 
     if (!deleted) {
-      return apiError('DELETE_FAILED', 'Rolle konnte nicht geloescht werden', 500)
+      return apiError('DELETE_FAILED', 'Rolle konnte nicht gelöscht werden', 500)
     }
 
     return apiSuccess({ deleted: true })

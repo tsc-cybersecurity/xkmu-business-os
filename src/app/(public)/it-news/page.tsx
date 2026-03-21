@@ -45,7 +45,7 @@ export default async function ITNewsPage({
         <div className="text-center py-12">
           <div className="rounded-lg border bg-card p-8 max-w-lg mx-auto">
             <p className="text-muted-foreground">
-              Noch keine Beitraege veroeffentlicht. Schauen Sie bald wieder vorbei.
+              Noch keine Beitraege veröffentlicht. Schauen Sie bald wieder vorbei.
             </p>
           </div>
         </div>

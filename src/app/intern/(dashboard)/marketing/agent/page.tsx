@@ -131,7 +131,7 @@ export default function MarketingAgentPage() {
       return
     }
     if (selectedPlatforms.length === 0) {
-      toast.error('Bitte waehlen Sie mindestens eine Plattform')
+      toast.error('Bitte wählen Sie mindestens eine Plattform')
       return
     }
 
@@ -229,7 +229,7 @@ export default function MarketingAgentPage() {
           </CardTitle>
           <CardDescription>
             Der AI Marketing Agent scraped die Website, analysiert Positionierung,
-            SEO und erstellt Social-Media-Entwuerfe.
+            SEO und erstellt Social-Media-Entwürfe.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -288,7 +288,7 @@ export default function MarketingAgentPage() {
 
           {/* Additional Context */}
           <div className="space-y-2">
-            <Label htmlFor="context">Zusaetzlicher Kontext (optional)</Label>
+            <Label htmlFor="context">Zusätzlicher Kontext (optional)</Label>
             <Textarea
               id="context"
               value={additionalContext}
@@ -309,7 +309,7 @@ export default function MarketingAgentPage() {
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Analyse laeuft... (ca. 30-60 Sek.)
+                Analyse läuft... (ca. 30-60 Sek.)
               </>
             ) : (
               <>
@@ -501,7 +501,7 @@ export default function MarketingAgentPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Hash className="h-4 w-4" />
-                      Primaere Keywords
+                      Primäre Keywords
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -514,7 +514,7 @@ export default function MarketingAgentPage() {
                     </div>
                     {result.seoAnalysis.secondaryKeywords.length > 0 && (
                       <div className="mt-3">
-                        <p className="text-xs text-muted-foreground mb-1">Sekundaer</p>
+                        <p className="text-xs text-muted-foreground mb-1">Sekundär</p>
                         <div className="flex flex-wrap gap-1">
                           {result.seoAnalysis.secondaryKeywords.map((kw, i) => (
                             <Badge key={i} variant="outline" className="text-xs">
@@ -532,7 +532,7 @@ export default function MarketingAgentPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <AlertCircle className="h-4 w-4" />
-                      Content-Luecken
+                      Content-Lücken
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

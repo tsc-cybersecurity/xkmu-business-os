@@ -1044,7 +1044,7 @@ export const wibaAnswersRelations = relations(wibaAnswers, ({ one }) => ({
 }))
 
 // ============================================
-// DIN SPEC 27076 - Grants (Foerdermittel, statisch per Seed)
+// DIN SPEC 27076 - Grants (Fördermittel, statisch per Seed)
 // ============================================
 export const dinGrants = pgTable('din_grants', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -1342,7 +1342,7 @@ export const firecrawlResearchesRelations = relations(firecrawlResearches, ({ on
 }))
 
 // ============================================
-// Business Documents (BI - Hochgeladene Geschaeftsdokumente)
+// Business Documents (BI - Hochgeladene Geschäftsdokumente)
 // ============================================
 export const businessDocuments = pgTable('business_documents', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -1372,7 +1372,7 @@ export const businessDocumentsRelations = relations(businessDocuments, ({ one })
 }))
 
 // ============================================
-// Business Profiles (BI - KI-generiertes Geschaeftsprofil)
+// Business Profiles (BI - KI-generiertes Geschäftsprofil)
 // ============================================
 export const businessProfiles = pgTable('business_profiles', {
   id: uuid('id').primaryKey().defaultRandom(),

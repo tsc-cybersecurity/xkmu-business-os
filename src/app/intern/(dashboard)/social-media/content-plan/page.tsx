@@ -156,7 +156,7 @@ export default function ContentPlanPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/intern/social-media">
-          <Button variant="ghost" size="icon" aria-label="Zurueck">
+          <Button variant="ghost" size="icon" aria-label="Zurück">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
@@ -201,7 +201,7 @@ export default function ContentPlanPage() {
                   onValueChange={(v) => setForm((f) => ({ ...f, topicId: v === 'none' ? '' : v }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Thema waehlen" />
+                    <SelectValue placeholder="Thema wählen" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Kein Thema</SelectItem>
@@ -233,7 +233,7 @@ export default function ContentPlanPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Tonalitaet</Label>
+                <Label>Tonalität</Label>
                 <Select
                   value={form.tone}
                   onValueChange={(v) => setForm((f) => ({ ...f, tone: v }))}
@@ -272,7 +272,7 @@ export default function ContentPlanPage() {
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              Alle als Entwuerfe speichern
+              Alle als Entwürfe speichern
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -238,7 +238,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc
                 method="POST"
                 path="/api/v1/auth/logout"
-                description="Session beenden und Cookie loeschen."
+                description="Session beenden und Cookie löschen."
                 responseExample={{ message: 'Logout erfolgreich' }}
               />
             </SectionBlock>
@@ -256,7 +256,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
           <CardContent className="space-y-6">
             <SectionBlock title="Seite">
               <PageTable pages={[
-                { url: '/intern/dashboard', name: 'Haupt-Dashboard', desc: 'Zeigt Geschaeftskennzahlen, Umsatztrends, letzte Kontakte, offene Angebote/Rechnungen, Lead-Status und Aktivitaeten.' },
+                { url: '/intern/dashboard', name: 'Haupt-Dashboard', desc: 'Zeigt Geschäftskennzahlen, Umsatztrends, letzte Kontakte, offene Angebote/Rechnungen, Lead-Status und Aktivitäten.' },
               ]} />
             </SectionBlock>
 
@@ -268,7 +268,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { name: 'Offene Angebote', desc: 'Angebote im Status "gesendet" mit Wert' },
                 { name: 'Faellige Rechnungen', desc: 'Ueberfaellige Rechnungen mit Betrag' },
                 { name: 'Lead-Pipeline', desc: 'Verteilung der Leads nach Status' },
-                { name: 'Aktivitaeten', desc: 'Letzte Aktivitaeten (Anrufe, E-Mails, Meetings)' },
+                { name: 'Aktivitäten', desc: 'Letzte Aktivitäten (Anrufe, E-Mails, Meetings)' },
               ]} />
             </SectionBlock>
 
@@ -306,7 +306,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <PageTable pages={[
                 { url: '/intern/contacts/companies', name: 'Firmenliste', desc: 'Tabellarische Uebersicht aller Firmen mit Suche, Filter (Status, Branche), Sortierung und Paginierung.' },
                 { url: '/intern/contacts/companies/new', name: 'Neue Firma', desc: 'Formular zum Anlegen einer neuen Firma mit allen Stammdaten.' },
-                { url: '/intern/contacts/companies/[id]', name: 'Firmendetail', desc: 'Detailansicht mit Stammdaten, zugeordneten Personen, Aktivitaeten und Research-Ergebnissen.' },
+                { url: '/intern/contacts/companies/[id]', name: 'Firmendetail', desc: 'Detailansicht mit Stammdaten, zugeordneten Personen, Aktivitäten und Research-Ergebnissen.' },
                 { url: '/intern/contacts/companies/[id]/edit', name: 'Firma bearbeiten', desc: 'Bearbeitungsformular fuer alle Firmendaten.' },
               ]} />
             </SectionBlock>
@@ -333,8 +333,8 @@ withPermission(request, 'companies', 'read', async (req, session) => {
             <SectionBlock title="KI-Funktionen">
               <FeatureList features={[
                 { name: 'Website-Crawling', desc: 'Automatisches Auslesen von Firmendaten (Branche, Beschreibung, Kontaktdaten) von der Firmen-Website.' },
-                { name: 'KI-Research', desc: 'Umfassende KI-Recherche zur Firma mit automatischer Datenextraktion (Mitarbeiterzahl, Umsatz, etc.). Ergebnisse koennen angenommen oder abgelehnt werden.' },
-                { name: 'Dokumentenanalyse', desc: 'PDF-Upload und KI-Analyse zur Extraktion von Finanz-KPIs und Geschaeftsdaten.' },
+                { name: 'KI-Research', desc: 'Umfassende KI-Recherche zur Firma mit automatischer Datenextraktion (Mitarbeiterzahl, Umsatz, etc.). Ergebnisse können angenommen oder abgelehnt werden.' },
+                { name: 'Dokumentenanalyse', desc: 'PDF-Upload und KI-Analyse zur Extraktion von Finanz-KPIs und Geschäftsdaten.' },
               ]} />
             </SectionBlock>
 
@@ -368,7 +368,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               />
               <EndpointDoc method="GET" path="/api/v1/companies/:id" description="Einzelne Firma abrufen." responseExample={{ id: 'uuid', name: 'Musterfirma GmbH', status: 'customer', city: 'Berlin' }} />
               <EndpointDoc method="PUT" path="/api/v1/companies/:id" description="Firma aktualisieren." requestBody={{ status: 'customer', notes: 'Wichtiger Kunde' }} responseExample={{ id: 'uuid', status: 'customer' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/companies/:id" description="Firma loeschen." responseExample={{ message: 'Firma geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/companies/:id" description="Firma löschen." responseExample={{ message: 'Firma gelöscht' }} />
               <EndpointDoc method="POST" path="/api/v1/companies/:id/crawl" description="Website der Firma crawlen und Daten extrahieren." responseExample={{ data: { industry: 'IT-Dienstleistungen', description: '...' } }} />
               <EndpointDoc method="POST" path="/api/v1/companies/:id/research" description="KI-Recherche fuer Firma starten." responseExample={{ message: 'Recherche gestartet' }} />
               <EndpointDoc method="POST" path="/api/v1/companies/:id/research/:researchId/apply" description="Research-Ergebnisse auf Firmendaten anwenden." responseExample={{ message: 'Daten uebernommen' }} />
@@ -389,7 +389,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <PageTable pages={[
                 { url: '/intern/contacts/persons', name: 'Personenliste', desc: 'Uebersicht aller Personen mit Suche, Filter nach Firma und Paginierung.' },
                 { url: '/intern/contacts/persons/new', name: 'Neue Person', desc: 'Formular zum Anlegen einer Person mit Firmenzuordnung.' },
-                { url: '/intern/contacts/persons/[id]', name: 'Personendetail', desc: 'Detailansicht mit Kontaktdaten, zugehoeriger Firma und Aktivitaeten.' },
+                { url: '/intern/contacts/persons/[id]', name: 'Personendetail', desc: 'Detailansicht mit Kontaktdaten, zugehoeriger Firma und Aktivitäten.' },
                 { url: '/intern/contacts/persons/[id]/edit', name: 'Person bearbeiten', desc: 'Bearbeitungsformular fuer Personendaten.' },
               ]} />
             </SectionBlock>
@@ -415,7 +415,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/persons" description="Neue Person erstellen." requestBody={{ companyId: 'uuid', salutation: 'Herr', firstName: 'Max', lastName: 'Mustermann', email: 'max@example.com', jobTitle: 'CEO' }} responseExample={{ id: 'uuid', firstName: 'Max', lastName: 'Mustermann' }} />
               <EndpointDoc method="GET" path="/api/v1/persons/:id" description="Person abrufen." responseExample={{ id: 'uuid', firstName: 'Max', lastName: 'Mustermann', email: 'max@example.com', company: { name: 'Musterfirma GmbH' } }} />
               <EndpointDoc method="PUT" path="/api/v1/persons/:id" description="Person aktualisieren." requestBody={{ jobTitle: 'CTO', mobile: '+49 170 9876543' }} responseExample={{ id: 'uuid', jobTitle: 'CTO' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/persons/:id" description="Person loeschen." responseExample={{ message: 'Person geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/persons/:id" description="Person löschen." responseExample={{ message: 'Person gelöscht' }} />
               <EndpointDoc method="POST" path="/api/v1/persons/:id/research" description="KI-Recherche zur Person starten." responseExample={{ message: 'Recherche gestartet' }} />
             </SectionBlock>
           </CardContent>
@@ -423,23 +423,23 @@ withPermission(request, 'companies', 'read', async (req, session) => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Aktivitaeten</CardTitle>
+            <CardTitle>Aktivitäten</CardTitle>
             <CardDescription>Protokollierung von Anrufen, E-Mails, Meetings und Notizen zu Kontakten und Leads</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <SectionBlock title="Funktionen">
               <FeatureList features={[
                 { name: 'Aktivitaetstypen', desc: 'Anruf, E-Mail, Meeting, Notiz - jeweils mit Betreff und Beschreibung.' },
-                { name: 'Zuordnung', desc: 'Aktivitaeten koennen Firmen, Personen und Leads zugeordnet werden.' },
-                { name: 'Chronologie', desc: 'Aktivitaeten werden in der Detailansicht von Kontakten chronologisch angezeigt.' },
+                { name: 'Zuordnung', desc: 'Aktivitäten können Firmen, Personen und Leads zugeordnet werden.' },
+                { name: 'Chronologie', desc: 'Aktivitäten werden in der Detailansicht von Kontakten chronologisch angezeigt.' },
               ]} />
             </SectionBlock>
 
             <SectionBlock title="API-Endpunkte">
-              <EndpointDoc method="GET" path="/api/v1/activities" description="Aktivitaeten auflisten." queryParams={['page=1', 'limit=20', 'companyId=uuid', 'personId=uuid', 'leadId=uuid', 'type=call|email|meeting|note']} responseExample={{ data: [{ id: 'uuid', type: 'call', subject: 'Erstgespraech', notes: '...', createdAt: '2026-02-24' }], pagination: { page: 1, limit: 20, total: 50 } }} />
-              <EndpointDoc method="POST" path="/api/v1/activities" description="Aktivitaet anlegen." requestBody={{ type: 'call', subject: 'Nachfass-Anruf', notes: 'Angebot besprochen', companyId: 'uuid' }} responseExample={{ id: 'uuid', type: 'call' }} />
-              <EndpointDoc method="GET" path="/api/v1/activities/:id" description="Aktivitaet abrufen." responseExample={{ id: 'uuid', type: 'call', subject: 'Erstgespraech' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/activities/:id" description="Aktivitaet loeschen." responseExample={{ message: 'Aktivitaet geloescht' }} />
+              <EndpointDoc method="GET" path="/api/v1/activities" description="Aktivitäten auflisten." queryParams={['page=1', 'limit=20', 'companyId=uuid', 'personId=uuid', 'leadId=uuid', 'type=call|email|meeting|note']} responseExample={{ data: [{ id: 'uuid', type: 'call', subject: 'Erstgespräch', notes: '...', createdAt: '2026-02-24' }], pagination: { page: 1, limit: 20, total: 50 } }} />
+              <EndpointDoc method="POST" path="/api/v1/activities" description="Aktivität anlegen." requestBody={{ type: 'call', subject: 'Nachfass-Anruf', notes: 'Angebot besprochen', companyId: 'uuid' }} responseExample={{ id: 'uuid', type: 'call' }} />
+              <EndpointDoc method="GET" path="/api/v1/activities/:id" description="Aktivität abrufen." responseExample={{ id: 'uuid', type: 'call', subject: 'Erstgespräch' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/activities/:id" description="Aktivität löschen." responseExample={{ message: 'Aktivitaet gelöscht' }} />
             </SectionBlock>
           </CardContent>
         </Card>
@@ -460,7 +460,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
             <SectionBlock title="API-Endpunkte">
               <EndpointDoc method="GET" path="/api/v1/media" description="Medien auflisten." responseExample={{ data: [{ id: 'uuid', filename: 'logo.png', url: '/uploads/logo.png', mimeType: 'image/png' }] }} />
               <EndpointDoc method="POST" path="/api/v1/media/upload" description="Datei hochladen (multipart/form-data)." responseExample={{ id: 'uuid', filename: 'foto.jpg', url: '/uploads/foto.jpg' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/media/:id" description="Datei loeschen." responseExample={{ message: 'Datei geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/media/:id" description="Datei löschen." responseExample={{ message: 'Datei gelöscht' }} />
             </SectionBlock>
           </CardContent>
         </Card>
@@ -515,7 +515,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/products" description="Produkt/Dienstleistung erstellen." requestBody={{ name: 'IT-Beratung', price: 150, unit: 'Stunde', type: 'service', taxRate: 19 }} responseExample={{ id: 'uuid', name: 'IT-Beratung' }} />
               <EndpointDoc method="GET" path="/api/v1/products/:id" description="Einzelnes Produkt abrufen." responseExample={{ id: 'uuid', name: 'IT-Beratung', price: 150, unit: 'Stunde' }} />
               <EndpointDoc method="PUT" path="/api/v1/products/:id" description="Produkt aktualisieren." requestBody={{ price: 160 }} responseExample={{ id: 'uuid', price: 160 }} />
-              <EndpointDoc method="DELETE" path="/api/v1/products/:id" description="Produkt loeschen." responseExample={{ message: 'Produkt geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/products/:id" description="Produkt löschen." responseExample={{ message: 'Produkt gelöscht' }} />
               <EndpointDoc method="GET" path="/api/v1/product-categories" description="Kategorien auflisten." responseExample={{ data: [{ id: 'uuid', name: 'IT-Services' }] }} />
               <EndpointDoc method="POST" path="/api/v1/product-categories" description="Kategorie anlegen." requestBody={{ name: 'Cloud-Services' }} responseExample={{ id: 'uuid', name: 'Cloud-Services' }} />
             </SectionBlock>
@@ -592,9 +592,9 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/documents" description="Neues Dokument anlegen." requestBody={{ type: 'invoice', companyId: 'uuid', date: '2026-02-24', dueDate: '2026-03-24' }} responseExample={{ id: 'uuid', number: 'RE-2026-0042', type: 'invoice', status: 'draft' }} />
               <EndpointDoc method="GET" path="/api/v1/documents/:id" description="Dokument mit allen Positionen abrufen." responseExample={{ id: 'uuid', number: 'RE-2026-0042', total: 15000, items: [{ description: 'IT-Beratung', quantity: 10, unitPrice: 150 }] }} />
               <EndpointDoc method="PUT" path="/api/v1/documents/:id" description="Dokument aktualisieren." requestBody={{ notes: 'Zahlungsziel 14 Tage' }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/documents/:id" description="Dokument loeschen." responseExample={{ message: 'Dokument geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/documents/:id" description="Dokument löschen." responseExample={{ message: 'Dokument gelöscht' }} />
               <EndpointDoc method="GET" path="/api/v1/documents/next-number" description="Naechste Dokumentnummer generieren." queryParams={['type=invoice']} responseExample={{ number: 'RE-2026-0043' }} />
-              <EndpointDoc method="PUT" path="/api/v1/documents/:id/status" description="Dokumentstatus aendern." requestBody={{ status: 'sent' }} responseExample={{ id: 'uuid', status: 'sent' }} />
+              <EndpointDoc method="PUT" path="/api/v1/documents/:id/status" description="Dokumentstatus ändern." requestBody={{ status: 'sent' }} responseExample={{ id: 'uuid', status: 'sent' }} />
               <EndpointDoc method="POST" path="/api/v1/documents/:id/convert" description="Angebot in Rechnung konvertieren." responseExample={{ id: 'new-uuid', type: 'invoice', number: 'RE-2026-0043' }} />
               <EndpointDoc method="POST" path="/api/v1/documents/:id/items" description="Position hinzufuegen." requestBody={{ productId: 'uuid', description: 'IT-Beratung', quantity: 10, unitPrice: 150, taxRate: 19 }} responseExample={{ id: 'uuid', total: 1500 }} />
               <EndpointDoc method="PUT" path="/api/v1/documents/:id/items/:itemId" description="Position aktualisieren." requestBody={{ quantity: 20 }} responseExample={{ id: 'uuid', total: 3000 }} />
@@ -616,7 +616,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <PageTable pages={[
                 { url: '/intern/leads', name: 'Lead-Uebersicht', desc: 'Lead-Pipeline als Liste mit Statusfilter. Zeigt Quelle, Wert, Wahrscheinlichkeit und zugeordneten Kontakt.' },
                 { url: '/intern/leads/new', name: 'Neuer Lead', desc: 'Formular zum Erfassen eines neuen Leads mit Firmenzuordnung.' },
-                { url: '/intern/leads/[id]', name: 'Lead-Detail', desc: 'Detailansicht mit Aktivitaeten, Research-Ergebnissen und Outreach-Optionen.' },
+                { url: '/intern/leads/[id]', name: 'Lead-Detail', desc: 'Detailansicht mit Aktivitäten, Research-Ergebnissen und Outreach-Optionen.' },
               ]} />
             </SectionBlock>
 
@@ -650,7 +650,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/leads" description="Neuen Lead erstellen." requestBody={{ title: 'Anfrage IT-Beratung', companyId: 'uuid', value: 10000, source: 'website', status: 'new' }} responseExample={{ id: 'uuid', title: 'Anfrage IT-Beratung' }} />
               <EndpointDoc method="GET" path="/api/v1/leads/:id" description="Lead abrufen." responseExample={{ id: 'uuid', title: 'Anfrage IT-Beratung', status: 'new', value: 10000, company: { name: 'Musterfirma GmbH' } }} />
               <EndpointDoc method="PUT" path="/api/v1/leads/:id" description="Lead aktualisieren." requestBody={{ status: 'contacted', probability: 40 }} responseExample={{ id: 'uuid', status: 'contacted' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/leads/:id" description="Lead loeschen." responseExample={{ message: 'Lead geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/leads/:id" description="Lead löschen." responseExample={{ message: 'Lead gelöscht' }} />
               <EndpointDoc method="POST" path="/api/v1/leads/:id/research" description="KI-Research zum Lead starten." responseExample={{ message: 'Recherche gestartet' }} />
               <EndpointDoc method="POST" path="/api/v1/leads/:id/outreach" description="KI-Outreach-Text generieren." requestBody={{ channel: 'email', tone: 'professional' }} responseExample={{ text: 'Sehr geehrte/r ..., bezugnehmend auf...' }} />
             </SectionBlock>
@@ -663,7 +663,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
         <Card>
           <CardHeader>
             <CardTitle><Lightbulb className="inline h-5 w-5 mr-2" />Ideen</CardTitle>
-            <CardDescription>Geschaeftsideen erfassen und in Leads oder Projekte konvertieren</CardDescription>
+            <CardDescription>Geschäftsideen erfassen und in Leads oder Projekte konvertieren</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <SectionBlock title="Seiten">
@@ -675,7 +675,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
 
             <SectionBlock title="Funktionen">
               <FeatureList features={[
-                { name: 'Idee erfassen', desc: 'Schnelles Erfassen von Geschaeftsideen mit Titel und Beschreibung.' },
+                { name: 'Idee erfassen', desc: 'Schnelles Erfassen von Geschäftsideen mit Titel und Beschreibung.' },
                 { name: 'Konvertierung', desc: 'Idee kann in einen Lead konvertiert werden, wobei die Daten uebernommen werden.' },
               ]} />
             </SectionBlock>
@@ -685,7 +685,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/ideas" description="Neue Idee anlegen." requestBody={{ title: 'Cloud-Migration Service', description: 'Managed Cloud Migration fuer KMU anbieten' }} responseExample={{ id: 'uuid', title: 'Cloud-Migration Service' }} />
               <EndpointDoc method="GET" path="/api/v1/ideas/:id" description="Idee abrufen." responseExample={{ id: 'uuid', title: 'Cloud-Migration Service', description: '...' }} />
               <EndpointDoc method="PUT" path="/api/v1/ideas/:id" description="Idee aktualisieren." requestBody={{ title: 'Cloud-Migration Premium' }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/ideas/:id" description="Idee loeschen." responseExample={{ message: 'Idee geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/ideas/:id" description="Idee löschen." responseExample={{ message: 'Idee gelöscht' }} />
               <EndpointDoc method="POST" path="/api/v1/ideas/:id/convert" description="Idee in Lead konvertieren." requestBody={{ targetType: 'lead' }} responseExample={{ leadId: 'uuid', message: 'Idee konvertiert' }} />
             </SectionBlock>
           </CardContent>
@@ -702,8 +702,8 @@ withPermission(request, 'companies', 'read', async (req, session) => {
           <CardContent className="space-y-6">
             <SectionBlock title="Seiten">
               <PageTable pages={[
-                { url: '/intern/cms', name: 'CMS-Seitenuebersicht', desc: 'Liste aller CMS-Seiten mit Status (Entwurf/Veroeffentlicht), Slug und letzter Aenderung.' },
-                { url: '/intern/cms/[id]', name: 'Seiteneditor', desc: 'Block-basierter Editor. Bloecke koennen hinzugefuegt, bearbeitet, sortiert und geloescht werden.' },
+                { url: '/intern/cms', name: 'CMS-Seitenuebersicht', desc: 'Liste aller CMS-Seiten mit Status (Entwurf/Veröffentlicht), Slug und letzter Aenderung.' },
+                { url: '/intern/cms/[id]', name: 'Seiteneditor', desc: 'Block-basierter Editor. Bloecke können hinzugefuegt, bearbeitet, sortiert und gelöscht werden.' },
                 { url: '/intern/cms/[id]/blocks/[blockId]', name: 'Block-Editor', desc: 'Detaileditor fuer einzelne Content-Bloecke mit typenspezifischem Formular.' },
                 { url: '/intern/cms/navigation', name: 'Navigation', desc: 'Verwaltung der Website-Navigation. Hierarchische Struktur mit Drag & Drop Sortierung.' },
                 { url: '/intern/cms/templates', name: 'Block-Vorlagen', desc: 'Verwaltung der Block-Templates. Vordefinierte Inhaltsvorlagen fuer schnelles Erstellen neuer Bloecke.' },
@@ -729,11 +729,11 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <FeatureList features={[
                 { name: 'Block-basierter Editor', desc: 'Seiten werden aus verschiebbaren Content-Bloecken zusammengesetzt.' },
                 { name: 'Block-Typen', desc: 'Vordefinierte Typen (Hero, Text, Bild, Features, CTA, etc.) mit JSON-Schema.' },
-                { name: 'Block duplizieren', desc: 'Bestehende Bloecke koennen kopiert werden.' },
-                { name: 'Drag & Drop Sortierung', desc: 'Bloecke koennen per Drag & Drop umsortiert werden.' },
+                { name: 'Block duplizieren', desc: 'Bestehende Bloecke können kopiert werden.' },
+                { name: 'Drag & Drop Sortierung', desc: 'Bloecke können per Drag & Drop umsortiert werden.' },
                 { name: 'Vorlagen (Templates)', desc: 'Seitenlayouts als Vorlage speichern und wiederverwenden.' },
                 { name: 'SEO-Generierung', desc: 'KI generiert automatisch SEO-Titel, -Beschreibung und -Keywords.' },
-                { name: 'Veroeffentlichung', desc: 'Seiten koennen als Entwurf oder veroeffentlicht gespeichert werden.' },
+                { name: 'Veröffentlichung', desc: 'Seiten können als Entwurf oder veröffentlicht gespeichert werden.' },
                 { name: 'Navigation', desc: 'Hierarchische Navigationsstruktur mit internen/externen Links.' },
               ]} />
             </SectionBlock>
@@ -743,18 +743,18 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/cms/pages" description="Neue Seite anlegen." requestBody={{ title: 'Ueber uns', slug: '/ueber-uns', status: 'draft' }} responseExample={{ id: 'uuid', slug: '/ueber-uns' }} />
               <EndpointDoc method="GET" path="/api/v1/cms/pages/:id" description="Seite mit Bloecken abrufen." responseExample={{ id: 'uuid', title: 'Startseite', blocks: [{ id: 'uuid', type: 'hero', content: {} }] }} />
               <EndpointDoc method="PUT" path="/api/v1/cms/pages/:id" description="Seite aktualisieren." requestBody={{ title: 'Ueber uns - Neu' }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/cms/pages/:id" description="Seite loeschen." responseExample={{ message: 'Seite geloescht' }} />
-              <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/publish" description="Seite veroeffentlichen." responseExample={{ status: 'published' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/cms/pages/:id" description="Seite löschen." responseExample={{ message: 'Seite gelöscht' }} />
+              <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/publish" description="Seite veröffentlichen." responseExample={{ status: 'published' }} />
               <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/seo/generate" description="SEO-Metadaten per KI generieren." responseExample={{ seoTitle: 'Ueber uns | xKMU', seoDescription: '...', seoKeywords: 'firma, team, ...' }} />
             </SectionBlock>
 
             <SectionBlock title="API-Endpunkte - Bloecke">
               <EndpointDoc method="GET" path="/api/v1/cms/pages/:id/blocks" description="Bloecke einer Seite auflisten." responseExample={{ data: [{ id: 'uuid', type: 'hero', sortOrder: 0, content: {} }] }} />
               <EndpointDoc method="POST" path="/api/v1/cms/pages/:id/blocks" description="Block zu Seite hinzufuegen." requestBody={{ blockTypeId: 'uuid', content: { title: 'Willkommen' }, sortOrder: 0 }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="PUT" path="/api/v1/cms/pages/:id/blocks/reorder" description="Block-Reihenfolge aendern." requestBody={{ blockIds: ['uuid-1', 'uuid-2', 'uuid-3'] }} responseExample={{ message: 'Reihenfolge aktualisiert' }} />
+              <EndpointDoc method="PUT" path="/api/v1/cms/pages/:id/blocks/reorder" description="Block-Reihenfolge ändern." requestBody={{ blockIds: ['uuid-1', 'uuid-2', 'uuid-3'] }} responseExample={{ message: 'Reihenfolge aktualisiert' }} />
               <EndpointDoc method="GET" path="/api/v1/cms/blocks/:id" description="Block abrufen." responseExample={{ id: 'uuid', type: 'hero', content: { title: 'Willkommen' } }} />
               <EndpointDoc method="PUT" path="/api/v1/cms/blocks/:id" description="Block aktualisieren." requestBody={{ content: { title: 'Neuer Titel' } }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/cms/blocks/:id" description="Block loeschen." responseExample={{ message: 'Block geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/cms/blocks/:id" description="Block löschen." responseExample={{ message: 'Block gelöscht' }} />
               <EndpointDoc method="POST" path="/api/v1/cms/blocks/:id/duplicate" description="Block duplizieren." responseExample={{ id: 'new-uuid' }} />
             </SectionBlock>
 
@@ -772,21 +772,21 @@ withPermission(request, 'companies', 'read', async (req, session) => {
         <Card>
           <CardHeader>
             <CardTitle><FileText className="inline h-5 w-5 mr-2" />Blog</CardTitle>
-            <CardDescription>Blog-Beitraege erstellen, veroeffentlichen und per KI generieren</CardDescription>
+            <CardDescription>Blog-Beitraege erstellen, veröffentlichen und per KI generieren</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <SectionBlock title="Seiten">
               <PageTable pages={[
-                { url: '/intern/blog', name: 'Blog-Uebersicht', desc: 'Liste aller Blog-Beitraege mit Status, Titel, Erstelldatum und Veroeffentlichungsdatum.' },
+                { url: '/intern/blog', name: 'Blog-Uebersicht', desc: 'Liste aller Blog-Beitraege mit Status, Titel, Erstelldatum und Veröffentlichungsdatum.' },
                 { url: '/intern/blog/new', name: 'Neuer Beitrag', desc: 'Editor zum Erstellen eines Blog-Beitrags mit Rich-Text-Editor.' },
-                { url: '/intern/blog/[id]', name: 'Beitrag bearbeiten', desc: 'Beitrag bearbeiten, SEO konfigurieren und veroeffentlichen.' },
+                { url: '/intern/blog/[id]', name: 'Beitrag bearbeiten', desc: 'Beitrag bearbeiten, SEO konfigurieren und veröffentlichen.' },
               ]} />
             </SectionBlock>
 
             <SectionBlock title="Oeffentliche Seiten">
               <PageTable pages={[
-                { url: '/it-news', name: 'IT-News (oeffentlich)', desc: 'Oeffentliche Auflistung aller veroeffentlichten Blog-Beitraege.' },
-                { url: '/it-news/[slug]', name: 'Beitrag (oeffentlich)', desc: 'Oeffentliche Einzelansicht eines Blog-Beitrags.' },
+                { url: '/it-news', name: 'IT-News (öffentlich)', desc: 'Oeffentliche Auflistung aller veröffentlichten Blog-Beitraege.' },
+                { url: '/it-news/[slug]', name: 'Beitrag (öffentlich)', desc: 'Oeffentliche Einzelansicht eines Blog-Beitrags.' },
               ]} />
             </SectionBlock>
 
@@ -798,7 +798,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { name: 'excerpt', type: 'text', required: false, desc: 'Kurzauszug fuer Vorschau' },
                 { name: 'coverImage', type: 'string', required: false, desc: 'Titelbild-URL' },
                 { name: 'status', type: 'enum', required: false, desc: 'draft | published' },
-                { name: 'publishedAt', type: 'datetime', required: false, desc: 'Veroeffentlichungsdatum' },
+                { name: 'publishedAt', type: 'datetime', required: false, desc: 'Veröffentlichungsdatum' },
                 { name: 'seoTitle', type: 'string', required: false, desc: 'SEO-Titel' },
                 { name: 'seoDescription', type: 'string', required: false, desc: 'SEO-Meta-Description' },
                 { name: 'seoKeywords', type: 'string', required: false, desc: 'SEO-Keywords' },
@@ -807,7 +807,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
 
             <SectionBlock title="KI-Funktionen">
               <FeatureList features={[
-                { name: 'Beitrag generieren', desc: 'Kompletten Blog-Beitrag per KI aus Thema, Keywords und Tonalitaet erstellen.' },
+                { name: 'Beitrag generieren', desc: 'Kompletten Blog-Beitrag per KI aus Thema, Keywords und Tonalität erstellen.' },
                 { name: 'SEO generieren', desc: 'SEO-Titel, -Beschreibung und -Keywords automatisch aus dem Beitragsinhalt ableiten.' },
               ]} />
             </SectionBlock>
@@ -817,8 +817,8 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/blog/posts" description="Blog-Beitrag anlegen." requestBody={{ title: 'Neuer Beitrag', content: '<p>Inhalt...</p>', status: 'draft' }} responseExample={{ id: 'uuid', slug: 'neuer-beitrag' }} />
               <EndpointDoc method="GET" path="/api/v1/blog/posts/:id" description="Beitrag abrufen." responseExample={{ id: 'uuid', title: 'IT-Trends 2026', content: '<p>...</p>', status: 'published' }} />
               <EndpointDoc method="PUT" path="/api/v1/blog/posts/:id" description="Beitrag aktualisieren." requestBody={{ title: 'IT-Trends 2026 - Update' }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/blog/posts/:id" description="Beitrag loeschen." responseExample={{ message: 'Beitrag geloescht' }} />
-              <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/publish" description="Beitrag veroeffentlichen." responseExample={{ status: 'published', publishedAt: '2026-02-24T10:00:00Z' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/blog/posts/:id" description="Beitrag löschen." responseExample={{ message: 'Beitrag gelöscht' }} />
+              <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/publish" description="Beitrag veröffentlichen." responseExample={{ status: 'published', publishedAt: '2026-02-24T10:00:00Z' }} />
               <EndpointDoc method="POST" path="/api/v1/blog/posts/:id/seo/generate" description="SEO-Metadaten per KI generieren." responseExample={{ seoTitle: 'IT-Trends 2026 | xKMU Blog', seoDescription: '...', seoKeywords: 'IT, Trends, 2026' }} />
               <EndpointDoc method="POST" path="/api/v1/blog/posts/generate" description="Kompletten Blog-Beitrag per KI generieren." requestBody={{ topic: 'Cybersecurity fuer KMU', keywords: ['IT-Sicherheit', 'KMU'], tone: 'professionell', length: 'mittel' }} responseExample={{ id: 'uuid', title: 'Cybersecurity fuer KMU...', content: '<p>...</p>' }} />
             </SectionBlock>
@@ -867,16 +867,16 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="POST" path="/api/v1/marketing/campaigns" description="Kampagne erstellen." requestBody={{ name: 'Newsletter Q1', type: 'email', budget: 1000 }} responseExample={{ id: 'uuid' }} />
               <EndpointDoc method="GET" path="/api/v1/marketing/campaigns/:id" description="Kampagne abrufen." responseExample={{ id: 'uuid', name: 'Newsletter Q1', status: 'active' }} />
               <EndpointDoc method="PUT" path="/api/v1/marketing/campaigns/:id" description="Kampagne aktualisieren." requestBody={{ status: 'completed' }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/marketing/campaigns/:id" description="Kampagne loeschen." responseExample={{ message: 'Kampagne geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/marketing/campaigns/:id" description="Kampagne löschen." responseExample={{ message: 'Kampagne gelöscht' }} />
               <EndpointDoc method="GET" path="/api/v1/marketing/campaigns/:id/tasks" description="Aufgaben einer Kampagne." responseExample={{ data: [{ id: 'uuid', title: 'Landing Page erstellen', status: 'pending' }] }} />
               <EndpointDoc method="GET" path="/api/v1/marketing/tasks" description="Alle Aufgaben auflisten." queryParams={['campaignId=uuid', 'status=pending|done']} responseExample={{ data: [{ id: 'uuid', title: 'Zielgruppen-Analyse', status: 'pending' }] }} />
               <EndpointDoc method="POST" path="/api/v1/marketing/tasks" description="Aufgabe erstellen." requestBody={{ title: 'Social Media Posts', campaignId: 'uuid' }} responseExample={{ id: 'uuid' }} />
               <EndpointDoc method="PUT" path="/api/v1/marketing/tasks/:id" description="Aufgabe aktualisieren." requestBody={{ status: 'done' }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/marketing/tasks/:id" description="Aufgabe loeschen." responseExample={{ message: 'Aufgabe geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/marketing/tasks/:id" description="Aufgabe löschen." responseExample={{ message: 'Aufgabe gelöscht' }} />
               <EndpointDoc method="GET" path="/api/v1/marketing/templates" description="Marketing-Vorlagen auflisten." responseExample={{ data: [{ id: 'uuid', name: 'Email-Kampagne Standard' }] }} />
               <EndpointDoc method="POST" path="/api/v1/marketing/templates" description="Vorlage erstellen." requestBody={{ name: 'Messe-Kampagne', type: 'event' }} responseExample={{ id: 'uuid' }} />
               <EndpointDoc method="PUT" path="/api/v1/marketing/templates/:id" description="Vorlage aktualisieren." requestBody={{ name: 'Messe-Kampagne v2' }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/marketing/templates/:id" description="Vorlage loeschen." responseExample={{ message: 'Vorlage geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/marketing/templates/:id" description="Vorlage löschen." responseExample={{ message: 'Vorlage gelöscht' }} />
             </SectionBlock>
           </CardContent>
         </Card>
@@ -905,7 +905,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { name: 'content', type: 'text', required: true, desc: 'Beitragstext' },
                 { name: 'platform', type: 'enum', required: true, desc: 'linkedin | facebook | instagram | twitter | xing' },
                 { name: 'status', type: 'enum', required: false, desc: 'draft | scheduled | published' },
-                { name: 'scheduledAt', type: 'datetime', required: false, desc: 'Geplanter Veroeffentlichungszeitpunkt' },
+                { name: 'scheduledAt', type: 'datetime', required: false, desc: 'Geplanter Veröffentlichungszeitpunkt' },
                 { name: 'topicId', type: 'uuid', required: false, desc: 'Zugehoeriges Thema' },
                 { name: 'hashtags', type: 'string[]', required: false, desc: 'Hashtags' },
                 { name: 'mediaUrl', type: 'string', required: false, desc: 'Bild/Video-URL' },
@@ -915,8 +915,8 @@ withPermission(request, 'companies', 'read', async (req, session) => {
             <SectionBlock title="KI-Funktionen">
               <FeatureList features={[
                 { name: 'Post generieren', desc: 'KI erstellt plattformspezifischen Post basierend auf Thema und Zielgruppe.' },
-                { name: 'Post verbessern', desc: 'Bestehenden Post per KI optimieren (Tonalitaet, Hashtags, Struktur).' },
-                { name: 'Content-Plan generieren', desc: 'KI erstellt automatisch einen Redaktionsplan fuer einen Zeitraum.' },
+                { name: 'Post verbessern', desc: 'Bestehenden Post per KI optimieren (Tonalität, Hashtags, Struktur).' },
+                { name: 'Content-Plan generieren', desc: 'KI erstellt automatisch einen Redaktionsplan für einen Zeitraum.' },
               ]} />
             </SectionBlock>
 
@@ -948,7 +948,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { url: '/intern/din-audit/[id]', name: 'Audit-Detail', desc: 'Uebersicht des Audits mit aktuellem Stand und Score.' },
                 { url: '/intern/din-audit/[id]/interview', name: 'Interview', desc: 'Strukturierter Fragebogen nach DIN SPEC 27076. Fragen in 6 Themenfeldern.' },
                 { url: '/intern/din-audit/[id]/report', name: 'Report', desc: 'Auswertungsbericht mit Scoring, Radar-Chart und Handlungsempfehlungen.' },
-                { url: '/intern/din-audit/grants', name: 'Foerdermittel', desc: 'Uebersicht der verfuegbaren Foerderprogramme fuer Digitalisierung.' },
+                { url: '/intern/din-audit/grants', name: 'Fördermittel', desc: 'Uebersicht der verfügbaren Foerderprogramme fuer Digitalisierung.' },
               ]} />
             </SectionBlock>
 
@@ -960,16 +960,16 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 'Scoring automatisch berechnen',
                 'Report mit Handlungsempfehlungen generieren',
                 'DIN-konformen PDF-Bericht herunterladen',
-                'Passende Foerdermittel vorschlagen',
+                'Passende Fördermittel vorschlagen',
               ]} />
             </SectionBlock>
 
             <SectionBlock title="Themenfelder DIN SPEC 27076">
               <FeatureList features={[
                 { name: '1. IT-Sicherheit', desc: 'Firewall, Backup, Passwoerter, Zugriffsrechte' },
-                { name: '2. Digitale Geschaeftsprozesse', desc: 'ERP, CRM, Dokumentenmanagement' },
+                { name: '2. Digitale Geschäftsprozesse', desc: 'ERP, CRM, Dokumentenmanagement' },
                 { name: '3. Digitale Markterschliessung', desc: 'Website, Online-Marketing, E-Commerce' },
-                { name: '4. Digitale Geschaeftsmodelle', desc: 'Digitale Produkte, Plattformen' },
+                { name: '4. Digitale Geschäftsmodelle', desc: 'Digitale Produkte, Plattformen' },
                 { name: '5. Digitale Kompetenz', desc: 'Schulungen, IT-Know-how der Mitarbeiter' },
                 { name: '6. IT-Infrastruktur', desc: 'Hardware, Software, Cloud, Netzwerk' },
               ]} />
@@ -1057,19 +1057,19 @@ withPermission(request, 'companies', 'read', async (req, session) => {
         <Card>
           <CardHeader>
             <CardTitle><Brain className="inline h-5 w-5 mr-2" />Business Intelligence</CardTitle>
-            <CardDescription>Geschaeftsanalysen, KPIs und Datenvisualisierung</CardDescription>
+            <CardDescription>Geschäftsanalysen, KPIs und Datenvisualisierung</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <SectionBlock title="Seiten">
               <PageTable pages={[
-                { url: '/intern/business-intelligence', name: 'BI-Dashboard', desc: 'Zentrale Geschaeftsanalyse mit Umsatzentwicklung, Kundenanalyse, Leistungskennzahlen und Prognosen.' },
+                { url: '/intern/business-intelligence', name: 'BI-Dashboard', desc: 'Zentrale Geschäftsanalyse mit Umsatzentwicklung, Kundenanalyse, Leistungskennzahlen und Prognosen.' },
               ]} />
             </SectionBlock>
 
             <SectionBlock title="Funktionen">
               <FeatureList features={[
-                { name: 'Unternehmensprofil', desc: 'Aggregierte Daten ueber Kunden, Umsatz und Geschaeftsentwicklung.' },
-                { name: 'Dokumentenanalyse', desc: 'KI-gestuetzte Analyse einzelner Geschaeftsdokumente.' },
+                { name: 'Unternehmensprofil', desc: 'Aggregierte Daten ueber Kunden, Umsatz und Geschäftsentwicklung.' },
+                { name: 'Dokumentenanalyse', desc: 'KI-gestuetzte Analyse einzelner Geschäftsdokumente.' },
                 { name: 'Trend-Visualisierung', desc: 'Charts und Diagramme fuer Umsatz- und Lead-Trends.' },
               ]} />
             </SectionBlock>
@@ -1090,7 +1090,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
             <CardDescription>Kuenstliche Intelligenz - Provider, Prompts und Logging</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <SectionBlock title="Unterstuetzte KI-Anbieter">
+            <SectionBlock title="Unterstützte KI-Anbieter">
               <InfoTable rows={[
                 ['Gemini', 'Google Gemini 2.5 Flash/Pro - Thinking-Parts-Handling fuer korrekte Antwort-Extraktion'],
                 ['OpenAI', 'GPT-4o, GPT-4, GPT-3.5 - Vielseitig einsetzbar'],
@@ -1106,7 +1106,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { name: 'Firmen-Research', desc: 'KI recherchiert Firmendaten aus dem Web (Branche, Groesse, Umsatz).' },
                 { name: 'Personen-Research', desc: 'KI recherchiert Informationen zu Kontaktpersonen.' },
                 { name: 'Website-Crawling', desc: 'Automatisches Auslesen von Firmendaten von Websites.' },
-                { name: 'Dokumentenanalyse', desc: 'PDF-Analyse zur Extraktion von Geschaeftsdaten.' },
+                { name: 'Dokumentenanalyse', desc: 'PDF-Analyse zur Extraktion von Geschäftsdaten.' },
                 { name: 'Lead-Outreach', desc: 'KI generiert personalisierte Kontaktaufnahme-Texte.' },
                 { name: 'Blog-Generierung', desc: 'Komplette Blog-Beitraege per KI erstellen.' },
                 { name: 'SEO-Generierung', desc: 'Automatische SEO-Metadaten fuer Seiten und Blog-Posts.' },
@@ -1154,7 +1154,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>n8n-Verbindung:</strong> Verbinden Sie Ihre n8n Cloud- oder Self-Hosted-Instanz unter Einstellungen &gt; n8n-Verbindung</span></li>
                 <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Workflow-Uebersicht:</strong> Alle Workflows Ihrer n8n-Instanz auflisten, Status sehen, aktivieren/deaktivieren</span></li>
                 <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>KI-Workflow-Generator:</strong> Beschreiben Sie einen Workflow in natuerlicher Sprache und lassen Sie die KI ein n8n-Workflow-JSON generieren</span></li>
-                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Auto-Deploy:</strong> Generierte Workflows koennen direkt auf Ihre n8n-Instanz deployt werden</span></li>
+                <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Auto-Deploy:</strong> Generierte Workflows können direkt auf Ihre n8n-Instanz deployt werden</span></li>
                 <li className="flex items-start gap-2"><ChevronRight className="h-4 w-4 mt-0.5 shrink-0" /><span><strong>Workflow ausfuehren:</strong> Workflows direkt aus dem BusinessOS heraus starten</span></li>
               </ul>
             </div>
@@ -1212,7 +1212,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="GET" path="/api/v1/users" description="Benutzer auflisten." responseExample={{ data: [{ id: 'uuid', email: 'admin@example.com', firstName: 'Admin', role: { name: 'Administrator' } }] }} />
               <EndpointDoc method="POST" path="/api/v1/users" description="Benutzer anlegen." requestBody={{ email: 'neu@example.com', firstName: 'Max', lastName: 'Mustermann', password: 'sicher123', roleId: 'uuid' }} responseExample={{ id: 'uuid' }} />
               <EndpointDoc method="PUT" path="/api/v1/users/:id" description="Benutzer aktualisieren." requestBody={{ roleId: 'uuid', isActive: true }} responseExample={{ id: 'uuid' }} />
-              <EndpointDoc method="DELETE" path="/api/v1/users/:id" description="Benutzer loeschen." responseExample={{ message: 'Benutzer geloescht' }} />
+              <EndpointDoc method="DELETE" path="/api/v1/users/:id" description="Benutzer löschen." responseExample={{ message: 'Benutzer gelöscht' }} />
             </SectionBlock>
 
             <SectionBlock title="API-Endpunkte - Rollen">
@@ -1245,7 +1245,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <InfoTable rows={[
                 ['company.created', 'Firma angelegt'],
                 ['company.updated', 'Firma aktualisiert'],
-                ['company.deleted', 'Firma geloescht'],
+                ['company.deleted', 'Firma gelöscht'],
                 ['person.created', 'Person angelegt'],
                 ['person.updated', 'Person aktualisiert'],
                 ['lead.created', 'Lead angelegt'],
@@ -1253,8 +1253,8 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 ['document.created', 'Dokument angelegt'],
                 ['document.status_changed', 'Dokumentstatus geaendert'],
                 ['invoice.paid', 'Rechnung bezahlt'],
-                ['blog.published', 'Blog-Beitrag veroeffentlicht'],
-                ['cms.page.published', 'CMS-Seite veroeffentlicht'],
+                ['blog.published', 'Blog-Beitrag veröffentlicht'],
+                ['cms.page.published', 'CMS-Seite veröffentlicht'],
               ]} />
             </SectionBlock>
           </CardContent>
@@ -1278,13 +1278,13 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 { url: '/kontakt', name: 'Kontakt', desc: 'Kontaktformular mit serverseitiger Validierung und E-Mail-Versand.' },
                 { url: '/impressum', name: 'Impressum', desc: 'Rechtliche Pflichtangaben.' },
                 { url: '/datenschutz', name: 'Datenschutz', desc: 'Datenschutzerklaerung.' },
-                { url: '/agb', name: 'AGB', desc: 'Allgemeine Geschaeftsbedingungen.' },
+                { url: '/agb', name: 'AGB', desc: 'Allgemeine Geschäftsbedingungen.' },
               ]} />
             </SectionBlock>
 
             <SectionBlock title="Dynamische Seiten">
               <PageTable pages={[
-                { url: '/it-news', name: 'IT-News', desc: 'Listing aller veroeffentlichten Blog-Beitraege mit Vorschaubild und Auszug.' },
+                { url: '/it-news', name: 'IT-News', desc: 'Listing aller veröffentlichten Blog-Beitraege mit Vorschaubild und Auszug.' },
                 { url: '/it-news/[slug]', name: 'Blog-Beitrag', desc: 'Einzelansicht eines Blog-Beitrags mit vollem Inhalt und SEO-Metadaten.' },
                 { url: '/[...slug]', name: 'CMS-Seite', desc: 'Catch-all Route fuer CMS-verwaltete Seiten. Slug wird dynamisch aufgeloest.' },
               ]} />
@@ -1292,10 +1292,10 @@ withPermission(request, 'companies', 'read', async (req, session) => {
 
             <SectionBlock title="Oeffentliche API-Endpunkte">
               <EndpointDoc method="POST" path="/api/v1/contact" description="Kontaktformular absenden (keine Authentifizierung noetig)." requestBody={{ name: 'Max Mustermann', email: 'max@example.com', subject: 'Anfrage', message: 'Ich interessiere mich fuer...' }} responseExample={{ message: 'Nachricht gesendet' }} />
-              <EndpointDoc method="GET" path="/api/v1/public/blog/posts" description="Veroeffentlichte Blog-Beitraege (oeffentlich)." queryParams={['page=1', 'limit=10']} responseExample={{ data: [{ title: 'IT-Trends', slug: 'it-trends', excerpt: '...' }] }} />
-              <EndpointDoc method="GET" path="/api/v1/public/blog/posts/:slug" description="Blog-Beitrag nach Slug (oeffentlich)." responseExample={{ title: 'IT-Trends', content: '<p>...</p>', publishedAt: '2026-02-20' }} />
-              <EndpointDoc method="GET" path="/api/v1/public/pages/:slug" description="CMS-Seite nach Slug (oeffentlich)." responseExample={{ title: 'Ueber uns', blocks: [{ type: 'hero', content: {} }] }} />
-              <EndpointDoc method="GET" path="/api/v1/public/navigation" description="Website-Navigation (oeffentlich)." responseExample={{ data: [{ label: 'Startseite', url: '/', children: [] }] }} />
+              <EndpointDoc method="GET" path="/api/v1/public/blog/posts" description="Veröffentlichte Blog-Beitraege (öffentlich)." queryParams={['page=1', 'limit=10']} responseExample={{ data: [{ title: 'IT-Trends', slug: 'it-trends', excerpt: '...' }] }} />
+              <EndpointDoc method="GET" path="/api/v1/public/blog/posts/:slug" description="Blog-Beitrag nach Slug (öffentlich)." responseExample={{ title: 'IT-Trends', content: '<p>...</p>', publishedAt: '2026-02-20' }} />
+              <EndpointDoc method="GET" path="/api/v1/public/pages/:slug" description="CMS-Seite nach Slug (öffentlich)." responseExample={{ title: 'Ueber uns', blocks: [{ type: 'hero', content: {} }] }} />
+              <EndpointDoc method="GET" path="/api/v1/public/navigation" description="Website-Navigation (öffentlich)." responseExample={{ data: [{ label: 'Startseite', url: '/', children: [] }] }} />
             </SectionBlock>
           </CardContent>
         </Card>

@@ -196,7 +196,7 @@ export const RoleService = {
     const role = await this.getById(tenantId, roleId)
     if (!role) return false
 
-    // System-Rollen koennen nicht geloescht werden
+    // System-Rollen können nicht gelöscht werden
     if (role.isSystem) return false
 
     const result = await db

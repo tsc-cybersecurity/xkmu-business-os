@@ -95,7 +95,7 @@ export default function CmsPagesPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Seite wirklich loeschen?')) return
+    if (!confirm('Seite wirklich löschen?')) return
     try {
       await fetch(`/api/v1/cms/pages/${id}`, { method: 'DELETE' })
       fetchPages()
@@ -120,7 +120,7 @@ export default function CmsPagesPage() {
             <Globe className="h-8 w-8" />
             CMS Seiten
           </h1>
-          <p className="text-muted-foreground mt-1">Verwalten Sie die Inhalte Ihrer oeffentlichen Webseiten</p>
+          <p className="text-muted-foreground mt-1">Verwalten Sie die Inhalte Ihrer öffentlichen Webseiten</p>
         </div>
         <Button onClick={() => setShowNewDialog(true)} className="self-start sm:self-auto">
           <Plus className="h-4 w-4 mr-2" />
@@ -153,7 +153,7 @@ export default function CmsPagesPage() {
                   <TableCell className="font-medium">{page.title}</TableCell>
                   <TableCell>
                     <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
-                      {page.status === 'published' ? 'Veroeffentlicht' : 'Entwurf'}
+                      {page.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
@@ -177,8 +177,8 @@ export default function CmsPagesPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title={page.status === 'published' ? 'Zurueckziehen' : 'Veroeffentlichen'}
-                        aria-label={page.status === 'published' ? 'Zurueckziehen' : 'Veroeffentlichen'}
+                        title={page.status === 'published' ? 'Zurueckziehen' : 'Veröffentlichen'}
+                        aria-label={page.status === 'published' ? 'Zurueckziehen' : 'Veröffentlichen'}
                         onClick={() => handlePublish(page.id, page.status === 'published')}
                       >
                         {page.status === 'published' ? (
@@ -190,8 +190,8 @@ export default function CmsPagesPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title="Loeschen"
-                        aria-label="Loeschen"
+                        title="Löschen"
+                        aria-label="Löschen"
                         onClick={() => handleDelete(page.id)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />

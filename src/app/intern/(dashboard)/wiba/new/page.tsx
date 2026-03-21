@@ -70,7 +70,7 @@ export default function NewWibaAuditPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/intern/wiba">
-          <Button variant="ghost" size="icon" aria-label="Zurueck">
+          <Button variant="ghost" size="icon" aria-label="Zurück">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
@@ -86,7 +86,7 @@ export default function NewWibaAuditPage() {
         <CardHeader>
           <CardTitle>Unternehmen auswaehlen</CardTitle>
           <CardDescription>
-            Waehlen Sie das Unternehmen aus, fuer das der WiBA-Check durchgefuehrt werden soll.
+            Waehlen Sie das Unternehmen aus, für das der WiBA-Check durchgefuehrt werden soll.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -104,7 +104,7 @@ export default function NewWibaAuditPage() {
                 <label className="text-sm font-medium mb-2 block">Firma</label>
                 <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Firma auswaehlen..." />
+                    <SelectValue placeholder="Firma auswählen..." />
                   </SelectTrigger>
                   <SelectContent>
                     {companies.map((company) => (

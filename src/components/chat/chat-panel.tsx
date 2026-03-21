@@ -233,7 +233,7 @@ export function ChatPanel() {
               value={selectedProviderId}
               onChange={(e) => setSelectedProviderId(e.target.value)}
               className="h-8 rounded-md border bg-background px-2 text-xs max-w-[140px] truncate focus:outline-none focus:ring-2 focus:ring-ring"
-              aria-label="KI-Provider waehlen"
+              aria-label="KI-Provider wählen"
             >
               {providers.map((p) => (
                 <option key={p.id ?? p.providerType} value={p.id ?? p.providerType}>

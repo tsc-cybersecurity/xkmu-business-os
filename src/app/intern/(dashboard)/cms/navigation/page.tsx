@@ -181,7 +181,7 @@ export default function CmsNavigationPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Navigations-Item wirklich loeschen?')) return
+    if (!confirm('Navigations-Item wirklich löschen?')) return
     try {
       await fetch(`/api/v1/cms/navigation/${id}`, { method: 'DELETE' })
       fetchItems()
@@ -317,7 +317,7 @@ export default function CmsNavigationPage() {
                 <Label>CMS-Seite</Label>
                 <Select value={formPageId} onValueChange={setFormPageId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Seite auswaehlen..." />
+                    <SelectValue placeholder="Seite auswählen..." />
                   </SelectTrigger>
                   <SelectContent>
                     {pages.map((page) => (
@@ -327,7 +327,7 @@ export default function CmsNavigationPage() {
                     ))}
                     {pages.length === 0 && (
                       <div className="px-2 py-4 text-sm text-muted-foreground text-center">
-                        Keine veroeffentlichten Seiten vorhanden
+                        Keine veröffentlichten Seiten vorhanden
                       </div>
                     )}
                   </SelectContent>
@@ -446,7 +446,7 @@ function NavigationList({
             <Button variant="ghost" size="icon" title="Bearbeiten" aria-label="Bearbeiten" onClick={() => onEdit(item)}>
               <Pencil className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" title="Loeschen" aria-label="Loeschen" onClick={() => onDelete(item.id)}>
+            <Button variant="ghost" size="icon" title="Löschen" aria-label="Löschen" onClick={() => onDelete(item.id)}>
               <Trash2 className="h-4 w-4 text-destructive" />
             </Button>
           </div>

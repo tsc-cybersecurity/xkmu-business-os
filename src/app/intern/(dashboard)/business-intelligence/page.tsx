@@ -148,13 +148,13 @@ export default function BusinessIntelligencePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Dokument wirklich loeschen?')) return;
+    if (!confirm('Dokument wirklich löschen?')) return;
     try {
       await fetch(`/api/v1/business-intelligence/documents/${id}`, { method: 'DELETE' });
-      toast.success('Dokument geloescht');
+      toast.success('Dokument gelöscht');
       fetchData();
     } catch {
-      toast.error('Loeschen fehlgeschlagen');
+      toast.error('Löschen fehlgeschlagen');
     }
   };
 
@@ -198,7 +198,7 @@ export default function BusinessIntelligencePage() {
             Business Intelligence
           </h1>
           <p className="text-muted-foreground mt-1">
-            Laden Sie Geschaeftsdokumente hoch und lassen Sie ein KI-Profil erstellen
+            Laden Sie Geschäftsdokumente hoch und lassen Sie ein KI-Profil erstellen
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -298,8 +298,8 @@ export default function BusinessIntelligencePage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          title="Loeschen"
-                          aria-label="Loeschen"
+                          title="Löschen"
+                          aria-label="Löschen"
                           onClick={() => handleDelete(doc.id)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />

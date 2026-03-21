@@ -173,7 +173,7 @@ export default function UserDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
+          <Button variant="ghost" size="icon" aria-label="Zurück" asChild>
             <Link href="/intern/settings/users">
               <ArrowLeft className="h-4 w-4" />
             </Link>

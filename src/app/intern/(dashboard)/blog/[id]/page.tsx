@@ -192,14 +192,14 @@ export default function BlogPostEditorPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/intern/blog">
-            <Button variant="ghost" size="icon" aria-label="Zurueck"><ArrowLeft className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" aria-label="Zurück"><ArrowLeft className="h-4 w-4" /></Button>
           </Link>
           <div>
             <h1 className="text-2xl font-bold">Beitrag bearbeiten</h1>
             <p className="text-sm text-muted-foreground font-mono">{post.slug}</p>
           </div>
           <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
-            {post.status === 'published' ? 'Veroeffentlicht' : 'Entwurf'}
+            {post.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}
           </Badge>
         </div>
         <div className="flex items-center gap-2">
@@ -207,7 +207,7 @@ export default function BlogPostEditorPage() {
             {post.status === 'published' ? (
               <><EyeOff className="h-4 w-4 mr-2" />Zurueckziehen</>
             ) : (
-              <><Globe className="h-4 w-4 mr-2" />Veroeffentlichen</>
+              <><Globe className="h-4 w-4 mr-2" />Veröffentlichen</>
             )}
           </Button>
           <Button onClick={handleSave} disabled={saving}>

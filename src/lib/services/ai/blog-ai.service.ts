@@ -84,7 +84,7 @@ export const BlogAIService = {
     } catch (error) {
       if (error instanceof SyntaxError) {
         logger.error('JSON parse error', error, { module: 'BlogAIService' })
-        throw new Error('KI-Antwort war kein gueltiges JSON. Bitte erneut versuchen.')
+        throw new Error('KI-Antwort war kein gültiges JSON. Bitte erneut versuchen.')
       }
       throw error
     }
@@ -103,7 +103,7 @@ export const BlogAIService = {
 
 Thema: ${topic}
 Sprache: ${lang}
-Tonalitaet: ${tone}
+Tonalität: ${tone}
 Laenge: ${length}
 
 Erstelle einen vollstaendigen Blogbeitrag im Markdown-Format mit:
@@ -123,7 +123,7 @@ Antworte NUR als JSON:
   "seoKeywords": "keyword1, keyword2, keyword3",
   "tags": ["tag1", "tag2", "tag3"],
   "featuredImage": "2-4 englische Keywords fuer Unsplash-Bildsuche, z.B. 'technology server network'",
-  "featuredImageAlt": "Beschreibender Alt-Text fuer das Bild auf Deutsch"
+  "featuredImageAlt": "Beschreibender Alt-Text für das Bild auf Deutsch"
 }`
 
     const response = await AIService.completeWithContext(prompt, context, {

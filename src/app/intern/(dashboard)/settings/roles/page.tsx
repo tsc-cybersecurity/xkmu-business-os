@@ -52,7 +52,7 @@ export default function RolesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Rolle wirklich loeschen?')) return
+    if (!confirm('Rolle wirklich löschen?')) return
 
     try {
       const response = await fetch(`/api/v1/roles/${id}`, {
@@ -150,7 +150,7 @@ export default function RolesPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              aria-label="Loeschen"
+                              aria-label="Löschen"
                               onClick={() => handleDelete(role.id)}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />

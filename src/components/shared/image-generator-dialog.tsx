@@ -52,6 +52,7 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
   const [model, setModel] = useState('market/fal/nano-banana')
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const currentModels = PROVIDERS.find(p => p.value === provider)?.models || []
 
@@ -63,6 +64,7 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
 
     setGenerating(true)
     setPreviewUrl(null)
+    setError(null)
 
     try {
       const response = await fetch('/api/v1/images/generate', {
@@ -80,12 +82,17 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
       const data = await response.json()
       if (data.success) {
         setPreviewUrl(data.data.imageUrl)
+        setError(null)
         toast.success('Bild generiert!')
       } else {
-        toast.error(data.error?.message || 'Generierung fehlgeschlagen')
+        const msg = data.error?.message || 'Generierung fehlgeschlagen'
+        setError(msg)
+        toast.error(msg)
       }
     } catch {
-      toast.error('Fehler bei der Bildgenerierung')
+      const msg = 'Fehler bei der Bildgenerierung. Bitte prüfen Sie die Provider-Konfiguration unter Einstellungen → KI-Provider.'
+      setError(msg)
+      toast.error(msg)
     } finally {
       setGenerating(false)
     }
@@ -114,7 +121,7 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
         <DialogHeader>
           <DialogTitle>KI-Bild generieren</DialogTitle>
           <DialogDescription>
-            Beschreiben Sie das Bild und waehlen Sie einen Provider.
+            Beschreiben Sie das Bild und wählen Sie einen Provider.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
@@ -123,7 +130,7 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
             <Textarea
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
-              placeholder="z.B. Professionelles Team-Meeting in modernem Buero, hell und freundlich"
+              placeholder="z.B. Professionelles Team-Meeting in modernem Büro, hell und freundlich"
               rows={3}
               disabled={generating}
             />
@@ -177,6 +184,12 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
             </div>
           </div>
 
+          {error && (
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
           {previewUrl && (
             <div className="rounded-lg overflow-hidden border bg-muted">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -198,7 +211,7 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
             </Button>
             {previewUrl && (
               <Button onClick={handleUse} variant="secondary">
-                Uebernehmen
+                Übernehmen
               </Button>
             )}
           </div>

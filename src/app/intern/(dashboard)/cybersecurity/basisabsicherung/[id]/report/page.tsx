@@ -145,7 +145,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
   }
 
   if (!assessment || !progress) {
-    return <p className="text-muted-foreground">Bericht nicht verfuegbar.</p>
+    return <p className="text-muted-foreground">Bericht nicht verfügbar.</p>
   }
 
   // Build answer map
@@ -196,7 +196,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link href={`/intern/cybersecurity/basisabsicherung/${id}`}>
-          <Button variant="ghost" size="icon" aria-label="Zurueck">
+          <Button variant="ghost" size="icon" aria-label="Zurück">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>

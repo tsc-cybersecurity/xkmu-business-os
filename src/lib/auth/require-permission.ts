@@ -32,7 +32,7 @@ export async function withPermission(
     if (allowed) {
       return handler(auth)
     }
-    // Fallthrough zum Legacy-Fallback wenn kein Permission-Eintrag fuer das Modul existiert
+    // Fallthrough zum Legacy-Fallback wenn kein Permission-Eintrag für das Modul existiert
   }
 
   // Legacy-Fallback: Benutzer ohne roleId (alte Benutzer vor Migration)
@@ -46,7 +46,7 @@ export async function withPermission(
     if (action === 'read' || action === 'create' || action === 'update') {
       return handler(auth)
     }
-    return apiForbidden('Keine Berechtigung fuer diese Aktion')
+    return apiForbidden('Keine Berechtigung für diese Aktion')
   }
 
   // viewer: Nur Lesen erlaubt
@@ -54,8 +54,8 @@ export async function withPermission(
     if (action === 'read') {
       return handler(auth)
     }
-    return apiForbidden('Keine Berechtigung fuer diese Aktion')
+    return apiForbidden('Keine Berechtigung für diese Aktion')
   }
 
-  return apiForbidden('Keine Berechtigung fuer diese Aktion')
+  return apiForbidden('Keine Berechtigung für diese Aktion')
 }

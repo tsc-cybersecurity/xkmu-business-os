@@ -226,7 +226,7 @@ export default function CmsPageEditorPage() {
   }
 
   const handleDeleteBlock = async (blockId: string) => {
-    if (!confirm('Block wirklich loeschen?')) return
+    if (!confirm('Block wirklich löschen?')) return
     try {
       await fetch(`/api/v1/cms/blocks/${blockId}`, { method: 'DELETE' })
       fetchPage()
@@ -334,7 +334,7 @@ export default function CmsPageEditorPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/intern/cms">
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -343,11 +343,11 @@ export default function CmsPageEditorPage() {
             <p className="text-sm text-muted-foreground font-mono">{page.slug}</p>
           </div>
           <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
-            {page.status === 'published' ? 'Veroeffentlicht' : 'Entwurf'}
+            {page.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}
           </Badge>
           {page.hasDraftChanges && (
             <Badge variant="outline" className="border-orange-400 text-orange-600">
-              Unveroeffentlichte Aenderungen
+              Unveröffentlichte Aenderungen
             </Badge>
           )}
         </div>
@@ -361,12 +361,12 @@ export default function CmsPageEditorPage() {
             ) : page.hasDraftChanges ? (
               <>
                 <Globe className="h-4 w-4 mr-2" />
-                Aenderungen veroeffentlichen
+                Aenderungen veröffentlichen
               </>
             ) : (
               <>
                 <Globe className="h-4 w-4 mr-2" />
-                Veroeffentlichen
+                Veröffentlichen
               </>
             )}
           </Button>
@@ -505,8 +505,8 @@ export default function CmsPageEditorPage() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        title="Loeschen"
-                        aria-label="Loeschen"
+                        title="Löschen"
+                        aria-label="Löschen"
                         onClick={() => handleDeleteBlock(block.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />

@@ -99,13 +99,13 @@ export default function MarketingTemplatesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Vorlage wirklich loeschen?')) return;
+    if (!confirm('Vorlage wirklich löschen?')) return;
     try {
       await fetch(`/api/v1/marketing/templates/${id}`, { method: 'DELETE' });
-      toast.success('Vorlage geloescht');
+      toast.success('Vorlage gelöscht');
       fetchTemplates();
     } catch {
-      toast.error('Loeschen fehlgeschlagen');
+      toast.error('Löschen fehlgeschlagen');
     }
   };
 
@@ -122,7 +122,7 @@ export default function MarketingTemplatesPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/marketing">
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -212,7 +212,7 @@ export default function MarketingTemplatesPage() {
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">{typeLabels[template.type] || template.type}</Badge>
                     {!template.isDefault && (
-                      <Button variant="ghost" size="icon" aria-label="Loeschen" onClick={() => handleDelete(template.id)}>
+                      <Button variant="ghost" size="icon" aria-label="Löschen" onClick={() => handleDelete(template.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     )}

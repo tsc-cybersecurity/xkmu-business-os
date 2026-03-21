@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     if (!EmailService.isConfigured()) {
       return apiError(
         'EMAIL_NOT_CONFIGURED',
-        'E-Mail-Versand ist nicht konfiguriert. Bitte verwenden Sie "In Gmail oeffnen" oder "Im E-Mail-Client oeffnen".',
+        'E-Mail-Versand ist nicht konfiguriert. Bitte verwenden Sie "In Gmail öffnen" oder "Im E-Mail-Client öffnen".',
         400
       )
     }

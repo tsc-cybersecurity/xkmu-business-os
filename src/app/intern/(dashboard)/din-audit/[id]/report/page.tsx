@@ -129,7 +129,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
   }
 
   if (!scoring || !audit) {
-    return <p className="text-muted-foreground">Bericht nicht verfuegbar.</p>
+    return <p className="text-muted-foreground">Bericht nicht verfügbar.</p>
   }
 
   const handleDownloadPdf = () => {
@@ -162,7 +162,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href={`/intern/din-audit/${id}`}>
-            <Button variant="ghost" size="icon" aria-label="Zurueck">
+            <Button variant="ghost" size="icon" aria-label="Zurück">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
@@ -301,7 +301,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
       {grants.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Passende Foerdermittel</CardTitle>
+            <CardTitle>Passende Fördermittel</CardTitle>
             <CardDescription>
               Foerderprogramme fuer {audit.clientCompany?.name}
               {audit.clientCompany?.employeeCount && ` (${audit.clientCompany.employeeCount} Mitarbeiter)`}
@@ -321,7 +321,7 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
                   </div>
                   {grant.url && (
                     <a href={grant.url} target="_blank" rel="noopener noreferrer">
-                      <Button variant="ghost" size="icon" aria-label="Extern oeffnen">
+                      <Button variant="ghost" size="icon" aria-label="Extern öffnen">
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </a>

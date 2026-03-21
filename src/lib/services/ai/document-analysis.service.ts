@@ -32,7 +32,7 @@ export const DocumentAnalysisService = {
     const extractedText = (textResult.text || '').substring(0, 15000) // Limit auf 15k chars
 
     if (!extractedText.trim()) {
-      throw new Error('Kein Text im PDF gefunden. Bitte ueberpruefen Sie, ob das PDF durchsuchbar ist.')
+      throw new Error('Kein Text im PDF gefunden. Bitte überprüfen Sie, ob das PDF durchsuchbar ist.')
     }
 
     // 2. Template laden
@@ -65,7 +65,7 @@ export const DocumentAnalysisService = {
         return {
           extractedText: extractedText.substring(0, 2000) + (extractedText.length > 2000 ? '...' : ''),
           financialKPIs: parsed.financialKPIs || parsed.kpis || {},
-          summary: parsed.summary || parsed.zusammenfassung || 'Keine Zusammenfassung verfuegbar',
+          summary: parsed.summary || parsed.zusammenfassung || 'Keine Zusammenfassung verfügbar',
           documentType: parsed.documentType || parsed.dokumenttyp || 'unbekannt',
           analyzedAt: new Date().toISOString(),
         }

@@ -200,7 +200,7 @@ export function generateDinPdf(input: DinPdfInput): jsPDF {
   let explanationText = ''
   if (maxReached) {
     // Punkt 11
-    explanationText = 'Herzlichen Glueckwunsch! Ihr Unternehmen erfuellt alle Anforderungen nach DIN SPEC 27076, Anhang A. Ein guter Start fuer die Informationssicherheit in Ihrem Betrieb! Nehmen Sie nun die naechsten Ziele in den Blick und befragen Sie Ihren durchfuehrenden Dienstleister nach weiterfuehrenden Zertifizierungen und Massnahmen.'
+    explanationText = 'Herzlichen Glueckwunsch! Ihr Unternehmen erfuellt alle Anforderungen nach DIN SPEC 27076, Anhang A. Ein guter Start für die Informationssicherheit in Ihrem Betrieb! Nehmen Sie nun die nächsten Ziele in den Blick und befragen Sie Ihren durchfuehrenden Dienstleister nach weiterfuehrenden Zertifizierungen und Massnahmen.'
   } else if (allTopFulfilled) {
     // Punkt 12
     explanationText = 'Setzen Sie umgehend die offenen Handlungsempfehlungen um (siehe Seite 2).'
@@ -432,8 +432,8 @@ export function generateDinPdf(input: DinPdfInput): jsPDF {
   }
 
   // ============================================
-  // ANHANG B: Foerdermittel (gem. DIN SPEC 27076, 6.4.2.4)
-  // Querformat, Tabelle mit Foerdermittelgeber, Name, Gegenstand, URL
+  // ANHANG B: Fördermittel (gem. DIN SPEC 27076, 6.4.2.4)
+  // Querformat, Tabelle mit Fördermittelgeber, Name, Gegenstand, URL
   // ============================================
   if (grants.length > 0) {
     doc.addPage('landscape')
@@ -446,7 +446,7 @@ export function generateDinPdf(input: DinPdfInput): jsPDF {
 
     autoTable(doc, {
       startY: y,
-      head: [['Foerdermittelgeber', 'Name der Foerdermoeglichkeit', 'Gegenstand der Foerderung', 'Weiterfuehrende Informationen']],
+      head: [['Fördermittelgeber', 'Name der Foerdermoeglichkeit', 'Gegenstand der Foerderung', 'Weiterfuehrende Informationen']],
       body: grants.map(g => [
         g.provider,
         g.name,

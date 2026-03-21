@@ -51,7 +51,7 @@ export const grantsSeedData: Omit<NewDinGrant, 'id'>[] = [
   {
     name: 'Digitalbonus Bayern',
     provider: 'Bayerisches Staatsministerium fuer Wirtschaft',
-    purpose: 'Investitionen in IT-Sicherheit, E-Commerce und digitale Geschaeftsprozesse. Bis zu 10.000 EUR',
+    purpose: 'Investitionen in IT-Sicherheit, E-Commerce und digitale Geschäftsprozesse. Bis zu 10.000 EUR',
     region: 'Bayern',
     url: 'https://www.digitalbonus.bayern/',
     minEmployees: null,
@@ -60,7 +60,7 @@ export const grantsSeedData: Omit<NewDinGrant, 'id'>[] = [
   {
     name: 'Berlin Digital Programm',
     provider: 'Investitionsbank Berlin (IBB)',
-    purpose: 'Foerderung digitaler Geschaeftsmodelle und IT-Infrastruktur. Bis zu 20.000 EUR (50% Foerderquote)',
+    purpose: 'Foerderung digitaler Geschäftsmodelle und IT-Infrastruktur. Bis zu 20.000 EUR (50% Foerderquote)',
     region: 'Berlin',
     url: 'https://www.ibb.de/de/foerderprogramme/berlin-digital-programm.html',
     minEmployees: null,
@@ -105,7 +105,7 @@ export const grantsSeedData: Omit<NewDinGrant, 'id'>[] = [
   {
     name: 'MV Digital',
     provider: 'Ministerium fuer Wirtschaft Mecklenburg-Vorpommern',
-    purpose: 'Unterstuetzung digitaler Geschaeftsprozesse. Bis zu 20.000 EUR (50% Foerderquote)',
+    purpose: 'Unterstuetzung digitaler Geschäftsprozesse. Bis zu 20.000 EUR (50% Foerderquote)',
     region: 'Mecklenburg-Vorpommern',
     url: 'https://www.lfi-mv.de/foerderungen/digitalisierung/',
     minEmployees: null,

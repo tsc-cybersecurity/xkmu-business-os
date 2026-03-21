@@ -120,7 +120,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       // Filter to only valid columns
       const validUpdates = Object.entries(updates).filter(([key]) => allowedColumns.has(key))
       if (validUpdates.length === 0) {
-        return apiError('NO_VALID_COLUMNS', 'Keine gueltigen Spalten zum Aktualisieren', 400)
+        return apiError('NO_VALID_COLUMNS', 'Keine gültigen Spalten zum Aktualisieren', 400)
       }
 
       // Verify tenant ownership if applicable

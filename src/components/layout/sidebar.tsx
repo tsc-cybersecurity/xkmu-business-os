@@ -131,7 +131,7 @@ const navigation: NavItem[] = [
     children: [
       { name: 'DIN SPEC Audits', href: '/intern/din-audit', requiredModule: 'din_audits' },
       { name: 'WiBA-Checks', href: '/intern/wiba', requiredModule: 'wiba_audits' },
-      { name: 'Foerdermittel', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
+      { name: 'Fördermittel', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
     ],
   },
   {
@@ -195,7 +195,7 @@ export function Sidebar() {
     setManualToggles((prev) => ({ ...prev, [name]: !isExpanded(name, navigation.find(n => n.name === name)!) }))
   }
 
-  // Berechtigungscheck: Mindestens Lesen fuer das Modul
+  // Berechtigungscheck: Mindestens Lesen für das Modul
   const canAccessModule = (mod?: Module): boolean => {
     if (!mod) return true
     if (permissionsLoading) return true // Waehrend Laden alles anzeigen

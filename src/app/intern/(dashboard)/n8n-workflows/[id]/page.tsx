@@ -165,7 +165,7 @@ export default function N8nWorkflowDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/intern/n8n-workflows">
-          <Button variant="ghost" size="icon" aria-label="Zurueck">
+          <Button variant="ghost" size="icon" aria-label="Zurück">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>

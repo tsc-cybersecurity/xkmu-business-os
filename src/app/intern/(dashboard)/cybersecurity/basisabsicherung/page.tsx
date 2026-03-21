@@ -63,13 +63,13 @@ export default function BasisabsicherungPage() {
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!confirm('Assessment wirklich loeschen?')) return
+    if (!confirm('Assessment wirklich löschen?')) return
 
     try {
       const response = await fetch(`/api/v1/wiba/assessments/${id}`, { method: 'DELETE' })
       const data = await response.json()
       if (data.success) {
-        toast.success('Assessment geloescht')
+        toast.success('Assessment gelöscht')
         setAssessments((prev) => prev.filter((a) => a.id !== id))
       }
     } catch (error) {
@@ -151,7 +151,7 @@ export default function BasisabsicherungPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="Loeschen"
+                          aria-label="Löschen"
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
                           onClick={(e) => handleDelete(e, assessment.id)}
                         >

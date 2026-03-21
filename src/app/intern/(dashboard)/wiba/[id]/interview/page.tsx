@@ -244,7 +244,7 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
   }
 
   if (!currentReq) {
-    return <p className="text-muted-foreground">Keine Fragen verfuegbar.</p>
+    return <p className="text-muted-foreground">Keine Fragen verfügbar.</p>
   }
 
   const categoryGroups = getCategoryGroups()
@@ -344,7 +344,7 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
         <div className="border-b bg-muted/30 px-6 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             {!showSidebar && (
-              <Button variant="ghost" size="icon" aria-label="Seitenleiste oeffnen" onClick={() => setShowSidebar(true)}>
+              <Button variant="ghost" size="icon" aria-label="Seitenleiste öffnen" onClick={() => setShowSidebar(true)}>
                 <PanelLeft className="h-4 w-4" />
               </Button>
             )}

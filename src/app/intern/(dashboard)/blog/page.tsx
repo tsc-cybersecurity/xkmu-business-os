@@ -64,7 +64,7 @@ export default function BlogPostsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Beitrag wirklich loeschen?')) return
+    if (!confirm('Beitrag wirklich löschen?')) return
     try {
       await fetch(`/api/v1/blog/posts/${id}`, { method: 'DELETE' })
       fetchPosts()
@@ -124,7 +124,7 @@ export default function BlogPostsPage() {
                   <TableCell className="font-medium">{post.title}</TableCell>
                   <TableCell>
                     <Badge variant={post.status === 'published' ? 'default' : post.status === 'archived' ? 'outline' : 'secondary'}>
-                      {post.status === 'published' ? 'Veroeffentlicht' : post.status === 'archived' ? 'Archiviert' : 'Entwurf'}
+                      {post.status === 'published' ? 'Veröffentlicht' : post.status === 'archived' ? 'Archiviert' : 'Entwurf'}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -150,13 +150,13 @@ export default function BlogPostsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        title={post.status === 'published' ? 'Zurueckziehen' : 'Veroeffentlichen'}
-                        aria-label={post.status === 'published' ? 'Zurueckziehen' : 'Veroeffentlichen'}
+                        title={post.status === 'published' ? 'Zurueckziehen' : 'Veröffentlichen'}
+                        aria-label={post.status === 'published' ? 'Zurueckziehen' : 'Veröffentlichen'}
                         onClick={() => handlePublish(post.id, post.status === 'published')}
                       >
                         {post.status === 'published' ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
-                      <Button variant="ghost" size="icon" title="Loeschen" aria-label="Loeschen" onClick={() => handleDelete(post.id)}>
+                      <Button variant="ghost" size="icon" title="Löschen" aria-label="Löschen" onClick={() => handleDelete(post.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>

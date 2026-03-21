@@ -82,7 +82,7 @@ export default function NewAssessmentPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link href="/intern/cybersecurity/basisabsicherung">
-          <Button variant="ghost" size="icon" aria-label="Zurueck">
+          <Button variant="ghost" size="icon" aria-label="Zurück">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
@@ -98,7 +98,7 @@ export default function NewAssessmentPage() {
         <CardHeader>
           <CardTitle>Assessment-Details</CardTitle>
           <CardDescription>
-            Waehlen Sie die Firma und geben Sie einen Namen fuer das Assessment ein.
+            Waehlen Sie die Firma und geben Sie einen Namen für das Assessment ein.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -116,7 +116,7 @@ export default function NewAssessmentPage() {
                 <label className="text-sm font-medium mb-2 block">Firma *</label>
                 <Select value={selectedCompanyId} onValueChange={setSelectedCompanyId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Firma auswaehlen..." />
+                    <SelectValue placeholder="Firma auswählen..." />
                   </SelectTrigger>
                   <SelectContent>
                     {companies.map((company) => (

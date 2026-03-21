@@ -257,7 +257,7 @@ export function ActivityTimeline({
         method: 'DELETE',
       })
       if (response.ok) {
-        toast.success('Aktivitaet geloescht')
+        toast.success('Aktivitaet gelöscht')
         setShowActivityDialog(false)
         setSelectedActivity(null)
         await fetchActivities()
@@ -360,7 +360,7 @@ export function ActivityTimeline({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <MessageSquare className="h-5 w-5" />
-            Aktivitaeten
+            Aktivitäten
           </CardTitle>
           <div className="flex items-center gap-2">
             {showOutreachButton && leadId && (
@@ -421,7 +421,7 @@ export function ActivityTimeline({
         ) : activities.length === 0 ? (
           <EmptyState
             icon={Clock}
-            title="Noch keine Aktivitaeten vorhanden"
+            title="Noch keine Aktivitäten vorhanden"
           />
         ) : (
           <div className="divide-y">
@@ -466,7 +466,7 @@ export function ActivityTimeline({
                           <Send className="h-3.5 w-3.5" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" aria-label="Loeschen" onClick={() => { setSelectedActivity(activity); handleDeleteActivity() }}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" aria-label="Löschen" onClick={() => { setSelectedActivity(activity); handleDeleteActivity() }}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>

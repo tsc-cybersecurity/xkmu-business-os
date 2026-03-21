@@ -486,7 +486,7 @@ export default function ChatPage() {
                   size="icon"
                   className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={(e) => handleDeleteConversation(conv.id, e)}
-                  aria-label="Unterhaltung loeschen"
+                  aria-label="Unterhaltung löschen"
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
@@ -510,7 +510,7 @@ export default function ChatPage() {
             <span className="text-sm text-muted-foreground shrink-0 hidden sm:inline">Provider:</span>
             <Select value={selectedProvider} onValueChange={setSelectedProvider}>
               <SelectTrigger className="w-full sm:w-[220px]">
-                <SelectValue placeholder="Provider waehlen..." />
+                <SelectValue placeholder="Provider wählen..." />
               </SelectTrigger>
               <SelectContent>
                 {providers.map((p) => (
@@ -520,7 +520,7 @@ export default function ChatPage() {
                 ))}
                 {providers.length === 0 && (
                   <SelectItem value="none" disabled>
-                    Keine Provider verfuegbar
+                    Keine Provider verfügbar
                   </SelectItem>
                 )}
               </SelectContent>

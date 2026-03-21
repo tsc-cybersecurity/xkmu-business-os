@@ -146,7 +146,7 @@ export default function NewBlogPostPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link href="/intern/blog">
-          <Button variant="ghost" size="icon" aria-label="Zurueck"><ArrowLeft className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" aria-label="Zurück"><ArrowLeft className="h-4 w-4" /></Button>
         </Link>
         <h1 className="text-2xl font-bold">Neuer Beitrag</h1>
       </div>
@@ -241,7 +241,7 @@ export default function NewBlogPostPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Tonalitaet</Label>
+                  <Label>Tonalität</Label>
                   <Select value={aiTone} onValueChange={setAiTone}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>

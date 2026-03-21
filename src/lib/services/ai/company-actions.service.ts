@@ -30,8 +30,8 @@ export const COMPANY_ACTIONS = [
   { slug: 'company_event_invite', name: 'Event-Einladung', category: 'marketing', color: 'amber', activityType: 'email', icon: 'Ticket' },
   // Intern (gray)
   { slug: 'company_meeting_summary', name: 'Meeting-Protokoll', category: 'internal', color: 'gray', activityType: 'meeting', icon: 'ClipboardList' },
-  { slug: 'company_call_guide', name: 'Gespraechsleitfaden', category: 'internal', color: 'gray', activityType: 'call', icon: 'PhoneOutgoing' },
-  { slug: 'company_next_steps', name: 'Naechste Schritte', category: 'internal', color: 'gray', activityType: 'note', icon: 'ListChecks' },
+  { slug: 'company_call_guide', name: 'Gesprächsleitfaden', category: 'internal', color: 'gray', activityType: 'call', icon: 'PhoneOutgoing' },
+  { slug: 'company_next_steps', name: 'Nächste Schritte', category: 'internal', color: 'gray', activityType: 'note', icon: 'ListChecks' },
   { slug: 'company_risk_assessment', name: 'Risikobewertung', category: 'internal', color: 'gray', activityType: 'note', icon: 'ShieldAlert' },
 ] as const
 
@@ -151,7 +151,7 @@ export const CompanyActionsService = {
     const recentActivitiesResult = await ActivityService.listByCompany(tenantId, companyId, { limit: 5 })
     const recentActivities = (recentActivitiesResult.items || [])
       .map(a => `${a.createdAt}: [${a.type}] ${a.subject || ''} - ${(a.content || '').substring(0, 100)}`)
-      .join('\n') || 'Keine bisherigen Aktivitaeten'
+      .join('\n') || 'Keine bisherigen Aktivitäten'
 
     // 4. Load and apply prompt template
     const template = await AiPromptTemplateService.getOrDefault(tenantId, actionSlug)

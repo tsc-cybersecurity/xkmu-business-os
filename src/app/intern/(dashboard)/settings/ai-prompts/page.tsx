@@ -250,7 +250,7 @@ export default function AiPromptsPage() {
         throw new Error(data.error?.message || 'Fehler')
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Fehler beim Zuruecksetzen')
+      toast.error(error instanceof Error ? error.message : 'Fehler beim Zurücksetzen')
     } finally {
       setResettingId(null)
     }
@@ -262,7 +262,7 @@ export default function AiPromptsPage() {
     try {
       const response = await fetch(`/api/v1/ai-prompt-templates/${selectedTemplate.id}`, { method: 'DELETE' })
       if (response.ok) {
-        toast.success('Vorlage geloescht')
+        toast.success('Vorlage gelöscht')
         setDeleteDialogOpen(false)
         setSelectedId(null)
         setEditMode(false)
@@ -299,7 +299,7 @@ export default function AiPromptsPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b shrink-0">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" aria-label="Zurueck" asChild>
+          <Button variant="ghost" size="icon" aria-label="Zurück" asChild>
             <Link href="/intern/settings">
               <ArrowLeft className="h-4 w-4" />
             </Link>
@@ -424,7 +424,7 @@ export default function AiPromptsPage() {
                       disabled={resettingId === selectedTemplate.id}
                     >
                       {resettingId === selectedTemplate.id ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="mr-1.5 h-3.5 w-3.5" />}
-                      Zuruecksetzen
+                      Zurücksetzen
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setEditMode(false)}>
                       <X className="mr-1.5 h-3.5 w-3.5" />
@@ -476,7 +476,7 @@ export default function AiPromptsPage() {
                     {!selectedTemplate.isActive && <Badge variant="secondary">Deaktiviert</Badge>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleReset(selectedTemplate.id)} disabled={resettingId === selectedTemplate.id} aria-label="Zuruecksetzen">
+                    <Button variant="ghost" size="sm" onClick={() => handleReset(selectedTemplate.id)} disabled={resettingId === selectedTemplate.id} aria-label="Zurücksetzen">
                       {resettingId === selectedTemplate.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                     </Button>
                     <Button variant="outline" size="sm" onClick={openEdit}>
@@ -539,8 +539,8 @@ export default function AiPromptsPage() {
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Vorlage loeschen"
-        description="Moechten Sie diese Prompt-Vorlage wirklich loeschen? Bei der naechsten Recherche wird die Standard-Vorlage verwendet."
+        title="Vorlage löschen"
+        description="Möchten Sie diese Prompt-Vorlage wirklich löschen? Bei der nächsten Recherche wird die Standard-Vorlage verwendet."
         confirmLabel="Loeschen"
         variant="destructive"
         onConfirm={handleDelete}
