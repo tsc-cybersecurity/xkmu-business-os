@@ -4,8 +4,8 @@
 // ============================================
 
 import { db } from '@/lib/db'
-import { generatedImages } from '@/lib/db/schema'
-import { eq, and, desc, count, ilike, inArray } from 'drizzle-orm'
+import { generatedImages, aiProviders } from '@/lib/db/schema'
+import { eq, and, desc, count, ilike } from 'drizzle-orm'
 import { AiProviderService } from '../ai-provider.service'
 import { KieProvider } from './kie.provider'
 import { logger } from '@/lib/utils/logger'
@@ -241,10 +241,18 @@ export const ImageGenerationService = {
         throw new Error('OpenAI returned no image data')
       }
     } else {
-      // kie.ai (Nano Banana, FLUX, etc.)
-      const kieConfig = providers.find(p => p.providerType === 'kie')
+      // kie.ai — getActiveProviders excludes kie/firecrawl/serpapi, so query directly
+      const [kieConfig] = await db
+        .select()
+        .from(aiProviders)
+        .where(and(
+          eq(aiProviders.tenantId, tenantId),
+          eq(aiProviders.providerType, 'kie'),
+          eq(aiProviders.isActive, true),
+        ))
+        .limit(1)
       const apiKey = kieConfig?.apiKey
-      if (!apiKey) throw new Error('Kein kie.ai API-Key konfiguriert.')
+      if (!apiKey) throw new Error('Kein kie.ai API-Key konfiguriert. Bitte unter Einstellungen → KI-Provider anlegen.')
 
       const result = await generateWithKie(params, apiKey)
       actualModel = result.model
