@@ -192,21 +192,41 @@ export class KieProvider implements AIProvider {
 
     const record = (data.data as Record<string, unknown>) || data
 
-    // Extract URL from various possible fields
-    const resultUrl = (record?.resultUrl as string)
-      || (record?.result_url as string)
-      || (record?.imageUrl as string)
-      || (record?.image_url as string)
-      || (record?.url as string)
-      || ((record?.output as Record<string, unknown>)?.url as string)
-      || ((record?.images as Array<Record<string, unknown>>)?.[0]?.url as string)
-      || undefined
+    // kie.ai uses "state" not "status": success, failed, processing, pending
+    const state = (record?.state as string) || (record?.status as string) || 'unknown'
+
+    // Map kie.ai state to our status
+    let status: string
+    if (state === 'success') status = 'completed'
+    else if (state === 'failed') status = 'failed'
+    else if (state === 'processing' || state === 'pending') status = 'processing'
+    else status = state
+
+    // Extract URL: kie.ai puts it in resultJson as a JSON string
+    let resultUrl: string | undefined
+    if (record?.resultJson) {
+      try {
+        const resultData = typeof record.resultJson === 'string'
+          ? JSON.parse(record.resultJson)
+          : record.resultJson
+        resultUrl = resultData?.resultUrls?.[0]
+          || resultData?.resultUrl
+          || resultData?.url
+      } catch { /* ignore parse errors */ }
+    }
+    // Fallback to direct fields
+    if (!resultUrl) {
+      resultUrl = (record?.resultUrl as string)
+        || (record?.result_url as string)
+        || (record?.imageUrl as string)
+        || undefined
+    }
 
     return {
-      status: (record?.status as string) || 'unknown',
+      status,
       progress: record?.progress as number | undefined,
       resultUrl,
-      error: (record?.error as string) || (record?.message as string) || undefined,
+      error: (record?.failMsg as string) || (record?.error as string) || undefined,
     }
   }
 }
