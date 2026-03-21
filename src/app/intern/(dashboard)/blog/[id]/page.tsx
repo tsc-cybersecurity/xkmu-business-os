@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowLeft, Loader2, Save, Globe, EyeOff, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
+import { ImageField } from '@/components/shared'
 import { logger } from '@/lib/utils/logger'
 
 interface BlogPost {
@@ -246,17 +247,15 @@ export default function BlogPostEditorPage() {
           <Card>
             <CardHeader><CardTitle>Bild & Medien</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Beitragsbild URL</Label>
-                <Input value={featuredImage} onChange={(e) => setFeaturedImage(e.target.value)} placeholder="https:// oder /uploads/..." />
-              </div>
+              <ImageField
+                imageUrl={featuredImage}
+                onImageChange={setFeaturedImage}
+                label="Beitragsbild"
+                category="blog"
+              />
               <div className="space-y-2">
                 <Label>Alt-Text</Label>
                 <Input value={featuredImageAlt} onChange={(e) => setFeaturedImageAlt(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Bild hochladen</Label>
-                <Input type="file" accept="image/*" onChange={handleUploadImage} />
               </div>
             </CardContent>
           </Card>

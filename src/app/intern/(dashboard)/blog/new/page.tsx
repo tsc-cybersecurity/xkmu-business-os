@@ -22,6 +22,7 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs'
 import { ArrowLeft, Loader2, PenLine, Sparkles } from 'lucide-react'
+import { ImageField } from '@/components/shared'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 
@@ -182,13 +183,12 @@ export default function NewBlogPostPage() {
                 <Label>Inhalt (Markdown)</Label>
                 <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={15} className="font-mono text-sm" placeholder="# Ueberschrift\n\nIhr Text hier..." />
               </div>
-              <div className="space-y-2">
-                <Label>Beitragsbild</Label>
-                <Input type="file" accept="image/*" onChange={handleUploadImage} />
-                {featuredImage && (
-                  <p className="text-xs text-muted-foreground truncate">{featuredImage}</p>
-                )}
-              </div>
+              <ImageField
+                imageUrl={featuredImage}
+                onImageChange={setFeaturedImage}
+                label="Beitragsbild"
+                category="blog"
+              />
               {featuredImage && (
                 <div className="space-y-2">
                   <Label>Alt-Text</Label>

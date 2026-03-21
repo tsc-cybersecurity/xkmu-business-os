@@ -16,69 +16,14 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, Brain, ImageIcon, X } from 'lucide-react';
+import { ArrowLeft, Loader2, Brain } from 'lucide-react';
 import { toast } from 'sonner';
-import { ImageGeneratorDialog } from '@/components/shared'
+import { ImageField } from '@/components/shared'
 import { logger } from '@/lib/utils/logger'
 
 interface Topic {
   id: string;
   name: string;
-}
-
-function ImageField({ imageUrl, onImageChange }: { imageUrl: string; onImageChange: (url: string) => void }) {
-  const [showGallery, setShowGallery] = useState(false)
-  const [galleryImages, setGalleryImages] = useState<Array<{ id: string; imageUrl: string; prompt: string }>>([])
-
-  const loadGallery = async () => {
-    try {
-      const res = await fetch('/api/v1/images?limit=20&category=social_media')
-      const data = await res.json()
-      if (data.success) setGalleryImages(data.data)
-      // Also load general images
-      const res2 = await fetch('/api/v1/images?limit=20')
-      const data2 = await res2.json()
-      if (data2.success) {
-        const ids = new Set(data.data?.map((i: { id: string }) => i.id) || [])
-        const extra = (data2.data || []).filter((i: { id: string }) => !ids.has(i.id))
-        setGalleryImages(prev => [...prev, ...extra].slice(0, 30))
-      }
-    } catch { /* ignore */ }
-  }
-
-  return (
-    <div className="space-y-2">
-      <Label>Bild (optional)</Label>
-      {imageUrl ? (
-        <div className="relative inline-block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt="Post-Bild" className="h-32 w-auto rounded-lg border" />
-          <Button type="button" variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6" onClick={() => onImageChange('')}>
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          <ImageGeneratorDialog defaultCategory="social_media" onImageGenerated={onImageChange} />
-          <Button type="button" variant="outline" size="sm" onClick={() => { setShowGallery(!showGallery); if (!showGallery) loadGallery() }}>
-            <ImageIcon className="mr-2 h-4 w-4" />
-            Aus Galerie wählen
-          </Button>
-        </div>
-      )}
-      {showGallery && !imageUrl && (
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 mt-2 max-h-48 overflow-y-auto border rounded-lg p-2">
-          {galleryImages.length === 0 && <p className="col-span-full text-sm text-muted-foreground text-center py-4">Keine Bilder in der Galerie</p>}
-          {galleryImages.map(img => (
-            <button key={img.id} type="button" className="aspect-square rounded border overflow-hidden hover:ring-2 hover:ring-primary" onClick={() => { onImageChange(img.imageUrl); setShowGallery(false) }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.imageUrl} alt={img.prompt} className="h-full w-full object-cover" />
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
 }
 
 export default function NewSocialMediaPostPage() {
@@ -315,7 +260,7 @@ export default function NewSocialMediaPostPage() {
                     placeholder="#hashtag1, #hashtag2"
                   />
                 </div>
-                <ImageField imageUrl={imageUrl} onImageChange={setImageUrl} />
+                <ImageField imageUrl={imageUrl} onImageChange={setImageUrl} category="social_media" />
                 <div className="flex justify-end gap-2">
                   <Link href="/intern/social-media">
                     <Button variant="outline" type="button">
@@ -396,7 +341,7 @@ export default function NewSocialMediaPostPage() {
                 {generating ? 'Generiere...' : 'Beitrag generieren'}
               </Button>
 
-              <ImageField imageUrl={imageUrl} onImageChange={setImageUrl} />
+              <ImageField imageUrl={imageUrl} onImageChange={setImageUrl} category="social_media" />
 
               {generatedContent && (
                 <div className="mt-6 p-4 border rounded-lg space-y-3">
