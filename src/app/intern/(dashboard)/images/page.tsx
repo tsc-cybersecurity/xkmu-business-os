@@ -69,9 +69,11 @@ const CATEGORIES = [
 ]
 
 const PROVIDERS = [
-  { value: 'kie', label: 'Nano Banana (kie.ai)', models: [
-    { value: 'market/fal/nano-banana', label: 'Nano Banana (schnell)' },
-    { value: 'market/fal/flux-schnell', label: 'FLUX Schnell' },
+  { value: 'kie', label: 'kie.ai', models: [
+    { value: 'flux', label: 'Flux AI (schnell)' },
+    { value: 'flux-kontext-pro', label: 'Flux Kontext Pro' },
+    { value: '4o-image', label: 'GPT-4o Image' },
+    { value: 'midjourney', label: 'Midjourney' },
   ]},
   { value: 'openai', label: 'DALL-E 3 (OpenAI)', models: [
     { value: 'dall-e-3', label: 'DALL-E 3' },
@@ -92,8 +94,10 @@ const providerLabels: Record<string, string> = {
 
 const modelLabels: Record<string, string> = {
   'dall-e-3': 'DALL-E 3',
-  'market/fal/nano-banana': 'Nano Banana',
-  'market/fal/flux-schnell': 'FLUX Schnell',
+  'flux': 'Flux AI',
+  'flux-kontext-pro': 'Flux Kontext Pro',
+  '4o-image': 'GPT-4o Image',
+  'midjourney': 'Midjourney',
 }
 
 // ============================================
@@ -112,7 +116,7 @@ export default function ImagesPage() {
   const [generating, setGenerating] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [provider, setProvider] = useState('kie')
-  const [model, setModel] = useState('market/fal/nano-banana')
+  const [model, setModel] = useState('flux')
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [category, setCategory] = useState('general')
   const [style, setStyle] = useState('vivid')

@@ -158,36 +158,22 @@ async function generateWithKie(
   apiKey: string
 ): Promise<{ imageUrl: string; model: string; size: string }> {
   const provider = new KieProvider({ apiKey })
-  const model = params.model || 'market/fal/nano-banana'
-
-  // Parse size into dimensions
-  let width = 1024
-  let height = 1024
-  if (params.aspectRatio === '16:9') { width = 1344; height = 768 }
-  else if (params.aspectRatio === '9:16') { width = 768; height = 1344 }
-  else if (params.aspectRatio === '4:3') { width = 1152; height = 896 }
-  else if (params.aspectRatio === '3:4') { width = 896; height = 1152 }
-  else if (params.size) {
-    const parts = params.size.split('x')
-    if (parts.length === 2) { width = parseInt(parts[0]); height = parseInt(parts[1]) }
-  }
+  const model = params.model || 'flux'
 
   const task = await provider.generateImage(params.prompt, {
     model,
     aspectRatio: params.aspectRatio,
-    width,
-    height,
   })
 
-  logger.info(`kie.ai image task created: ${task.taskId}`, { module: 'ImageGeneration' })
+  logger.info(`kie.ai image task created: ${task.taskId} (query: ${task.queryEndpoint})`, { module: 'ImageGeneration' })
 
-  // Poll for result
+  // Poll for result using model-specific query endpoint
   const startTime = Date.now()
   let delay = 2000
   const maxWaitMs = 120_000
 
   while (Date.now() - startTime < maxWaitMs) {
-    const status = await provider.getTaskStatus(task.taskId)
+    const status = await provider.queryImageStatus(task.taskId, task.queryEndpoint)
     logger.info(`kie.ai poll: status=${status.status}, progress=${status.progress}, hasUrl=${!!status.resultUrl}`, { module: 'ImageGeneration' })
 
     if (status.status === 'completed' || status.status === 'success' || status.status === 'done') {
@@ -195,7 +181,7 @@ async function generateWithKie(
         logger.error(`kie.ai task ${task.taskId} completed but no resultUrl`, undefined, { module: 'ImageGeneration' })
         throw new Error('kie.ai Aufgabe abgeschlossen, aber keine Bild-URL erhalten.')
       }
-      return { imageUrl: status.resultUrl, model, size: `${width}x${height}` }
+      return { imageUrl: status.resultUrl, model, size: params.aspectRatio || '1:1' }
     }
 
     if (status.status === 'failed' || status.status === 'error') {
