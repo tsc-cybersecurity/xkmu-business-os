@@ -16,8 +16,9 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Loader2, Brain } from 'lucide-react';
+import { ArrowLeft, Loader2, Brain, ImageIcon, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImageGeneratorDialog } from '@/components/shared'
 import { logger } from '@/lib/utils/logger'
 
 interface Topic {
@@ -38,6 +39,7 @@ export default function NewSocialMediaPostPage() {
     title: '',
     content: '',
     hashtags: '',
+    imageUrl: '',
   });
 
   // AI generation form
@@ -82,6 +84,7 @@ export default function NewSocialMediaPostPage() {
         body: JSON.stringify({
           ...form,
           topicId: form.topicId || undefined,
+          imageUrl: form.imageUrl || undefined,
           hashtags: form.hashtags
             ? form.hashtags
                 .split(',')
@@ -253,6 +256,35 @@ export default function NewSocialMediaPostPage() {
                     onChange={(e) => setForm((f) => ({ ...f, hashtags: e.target.value }))}
                     placeholder="#hashtag1, #hashtag2"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bild (optional)</Label>
+                  {form.imageUrl ? (
+                    <div className="relative inline-block">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={form.imageUrl}
+                        alt="Post-Bild"
+                        className="h-32 w-auto rounded-lg border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => setForm(f => ({ ...f, imageUrl: '' }))}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <ImageGeneratorDialog
+                        defaultCategory="social_media"
+                        onImageGenerated={(url) => setForm(f => ({ ...f, imageUrl: url }))}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end gap-2">
                   <Link href="/intern/social-media">

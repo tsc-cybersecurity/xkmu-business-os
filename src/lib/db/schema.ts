@@ -1920,3 +1920,44 @@ export type CockpitSystem = typeof cockpitSystems.$inferSelect
 export type NewCockpitSystem = typeof cockpitSystems.$inferInsert
 export type CockpitCredential = typeof cockpitCredentials.$inferSelect
 export type NewCockpitCredential = typeof cockpitCredentials.$inferInsert
+
+// ============================================
+// Generated Images (Bildgenerierung & Galerie)
+// ============================================
+export const generatedImages = pgTable('generated_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  prompt: text('prompt').notNull(),
+  revisedPrompt: text('revised_prompt'),
+  provider: varchar('provider', { length: 50 }).notNull(), // openai, fal
+  model: varchar('model', { length: 100 }).notNull(), // dall-e-3, fal-ai/nano-banana
+  size: varchar('size', { length: 30 }), // 1024x1024, 512x512, etc.
+  style: varchar('style', { length: 30 }), // vivid, natural, etc.
+  imageUrl: text('image_url').notNull(), // local path or external URL
+  thumbnailUrl: text('thumbnail_url'),
+  mimeType: varchar('mime_type', { length: 50 }).default('image/png'),
+  sizeBytes: integer('size_bytes'),
+  category: varchar('category', { length: 100 }), // social_media, website, blog, marketing, general
+  tags: text('tags').array().default([]),
+  metadata: jsonb('metadata').default({}),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_generated_images_tenant').on(table.tenantId),
+  index('idx_generated_images_category').on(table.tenantId, table.category),
+  index('idx_generated_images_created_at').on(table.tenantId, table.createdAt),
+])
+
+export const generatedImagesRelations = relations(generatedImages, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [generatedImages.tenantId],
+    references: [tenants.id],
+  }),
+  createdByUser: one(users, {
+    fields: [generatedImages.createdBy],
+    references: [users.id],
+  }),
+}))
+
+export type GeneratedImage = typeof generatedImages.$inferSelect
+export type NewGeneratedImage = typeof generatedImages.$inferInsert

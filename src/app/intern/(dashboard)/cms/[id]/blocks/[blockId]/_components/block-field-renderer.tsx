@@ -11,7 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Trash2, Check } from 'lucide-react'
+import { Plus, Trash2, Check, Wand2 } from 'lucide-react'
+import { ImageGeneratorDialog } from '@/components/shared'
 
 interface BlockFieldRendererProps {
   blockType: string
@@ -26,7 +27,18 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
         <>
           <div className="space-y-2">
             <Label>Hintergrundbild URL</Label>
-            <Input value={(content.backgroundImage as string) || ''} onChange={(e) => updateContent('backgroundImage', e.target.value)} />
+            <div className="flex gap-2">
+              <Input value={(content.backgroundImage as string) || ''} onChange={(e) => updateContent('backgroundImage', e.target.value)} className="flex-1" />
+              <ImageGeneratorDialog
+                defaultCategory="website"
+                onImageGenerated={(url) => updateContent('backgroundImage', url)}
+                trigger={
+                  <Button variant="outline" size="icon" title="Bild generieren">
+                    <Wand2 className="h-4 w-4" />
+                  </Button>
+                }
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Badge Icon (z.B. Building2)</Label>
@@ -141,7 +153,18 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
         <>
           <div className="space-y-2">
             <Label>Bild URL</Label>
-            <Input value={(content.src as string) || ''} onChange={(e) => updateContent('src', e.target.value)} />
+            <div className="flex gap-2">
+              <Input value={(content.src as string) || ''} onChange={(e) => updateContent('src', e.target.value)} className="flex-1" />
+              <ImageGeneratorDialog
+                defaultCategory="website"
+                onImageGenerated={(url) => updateContent('src', url)}
+                trigger={
+                  <Button variant="outline" size="icon" title="Bild generieren">
+                    <Wand2 className="h-4 w-4" />
+                  </Button>
+                }
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label>Alt-Text</Label>

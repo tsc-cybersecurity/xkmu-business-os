@@ -22,8 +22,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Save, Brain } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Brain, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { ImageGeneratorDialog } from '@/components/shared'
 import { logger } from '@/lib/utils/logger'
 
 interface Post {
@@ -32,6 +33,7 @@ interface Post {
   title: string | null;
   content: string;
   hashtags: string[] | null;
+  imageUrl: string | null;
   status: string | null;
   scheduledAt: string | null;
   topicId: string | null;
@@ -74,6 +76,7 @@ export default function EditSocialMediaPostPage() {
           title: post.title,
           content: post.content,
           hashtags: post.hashtags,
+          imageUrl: post.imageUrl || undefined,
           status: post.status,
           platform: post.platform,
         }),
@@ -282,6 +285,34 @@ export default function EditSocialMediaPostPage() {
               }
               placeholder="#hashtag1, #hashtag2"
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Bild</Label>
+            {post.imageUrl ? (
+              <div className="relative inline-block">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={post.imageUrl}
+                  alt="Post-Bild"
+                  className="h-32 w-auto rounded-lg border"
+                />
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2 h-6 w-6"
+                  onClick={() => setPost(p => p ? { ...p, imageUrl: null } : p)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <ImageGeneratorDialog
+                  defaultCategory="social_media"
+                  onImageGenerated={(url) => setPost(p => p ? { ...p, imageUrl: url } : p)}
+                />
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

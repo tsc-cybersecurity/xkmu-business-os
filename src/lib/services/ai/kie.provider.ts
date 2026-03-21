@@ -3,8 +3,13 @@ import type { AIProvider, AIOptions, AIResponse } from './ai.service'
 const KIE_API_URL = 'https://api.kie.ai/api/v1'
 
 export const KIE_MODELS = [
-  { id: 'market/kling/kling-3.0', name: 'Kling 3.0', description: 'Text-to-Video (Empfohlen)' },
-  { id: 'market/kling/image-to-video', name: 'Kling Image-to-Video', description: 'Bild zu Video' },
+  { id: 'market/kling/kling-3.0', name: 'Kling 3.0', description: 'Text-to-Video (Empfohlen)', type: 'video' },
+  { id: 'market/kling/image-to-video', name: 'Kling Image-to-Video', description: 'Bild zu Video', type: 'video' },
+] as const
+
+export const KIE_IMAGE_MODELS = [
+  { id: 'market/fal/nano-banana', name: 'Nano Banana', description: 'Schnelle Bildgenerierung (fal.ai)', type: 'image' },
+  { id: 'market/fal/flux-schnell', name: 'FLUX Schnell', description: 'Hochwertige Bildgenerierung', type: 'image' },
 ] as const
 
 export class KieProvider implements AIProvider {
@@ -72,6 +77,57 @@ export class KieProvider implements AIProvider {
     if (!response.ok) {
       const error = await response.text()
       throw new Error(`kie.ai API error (${response.status}): ${error}`)
+    }
+
+    const data = await response.json()
+
+    if (!data.data?.taskId) {
+      throw new Error('kie.ai API returned no taskId')
+    }
+
+    return { taskId: data.data.taskId }
+  }
+
+  async generateImage(prompt: string, options?: {
+    model?: string
+    aspectRatio?: '1:1' | '16:9' | '9:16' | '4:3' | '3:4'
+    width?: number
+    height?: number
+  }): Promise<{ taskId: string }> {
+    if (!this.apiKey) {
+      throw new Error('kie.ai API key not configured')
+    }
+
+    const model = options?.model || 'market/fal/nano-banana'
+
+    const body: Record<string, unknown> = {
+      model,
+      prompt,
+    }
+
+    if (options?.aspectRatio) {
+      body.aspect_ratio = options.aspectRatio
+    }
+    if (options?.width) {
+      body.width = options.width
+    }
+    if (options?.height) {
+      body.height = options.height
+    }
+
+    const response = await fetch(`${KIE_API_URL}/jobs/createTask`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      signal: AbortSignal.timeout(this.timeoutMs),
+      body: JSON.stringify(body),
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`kie.ai Image API error (${response.status}): ${error}`)
     }
 
     const data = await response.json()

@@ -20,6 +20,7 @@ import {
   Database,
   Workflow,
   Monitor,
+  ImageIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
@@ -118,6 +119,7 @@ const navigation: NavItem[] = [
       { name: 'Business Intelligence', href: '/intern/business-intelligence', requiredModule: 'business_intelligence' },
       { name: 'Marketing', href: '/intern/marketing', requiredModule: 'marketing' },
       { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
+      { name: 'Bildgenerierung', href: '/intern/images', requiredModule: 'media' },
       { name: 'n8n Workflows', href: '/intern/n8n-workflows', requiredModule: 'n8n_workflows' },
       { name: 'KI-Chat', href: '/intern/chat', requiredModule: 'chat' },
     ],
