@@ -327,9 +327,11 @@ export const ImageGenerationService = {
     imageUrl?: string
     id?: string
     error?: string
+    debug?: unknown
   }> {
     const apiKey = await getKieApiKey(tenantId)
     const status = await pollKieTask(taskId, apiKey)
+    logger.info(`checkTaskStatus raw: ${JSON.stringify(status)}`, { module: 'ImageGeneration' })
 
     if (status.status === 'completed' || status.status === 'success' || status.status === 'done') {
       if (!status.resultUrl) {
@@ -362,7 +364,7 @@ export const ImageGenerationService = {
       return { status: 'error', error: status.error || 'Bildgenerierung fehlgeschlagen' }
     }
 
-    return { status: status.status || 'processing', progress: status.progress }
+    return { status: status.status || 'processing', progress: status.progress, debug: status }
   },
 
   /**
