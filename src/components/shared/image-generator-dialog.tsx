@@ -30,12 +30,12 @@ interface ImageGeneratorDialogProps {
 
 const PROVIDERS = [
   { value: 'kie', label: 'kie.ai', models: [
-    { value: 'flux', label: 'Flux AI (schnell)' },
-    { value: 'flux-kontext-pro', label: 'Flux Kontext Pro' },
-    { value: '4o-image', label: 'GPT-4o Image' },
-    { value: 'midjourney', label: 'Midjourney' },
+    { value: 'flux', label: 'Flux AI' },
+    { value: 'mj', label: 'Midjourney' },
+    { value: '4o', label: 'GPT-4o Image' },
+    { value: 'ghibli', label: 'Ghibli AI' },
   ]},
-  { value: 'openai', label: 'DALL-E 3 (OpenAI)', models: [
+  { value: 'openai', label: 'DALL-E 3 (OpenAI direkt)', models: [
     { value: 'dall-e-3', label: 'DALL-E 3' },
   ]},
 ]

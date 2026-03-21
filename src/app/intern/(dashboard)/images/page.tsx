@@ -70,12 +70,12 @@ const CATEGORIES = [
 
 const PROVIDERS = [
   { value: 'kie', label: 'kie.ai', models: [
-    { value: 'flux', label: 'Flux AI (schnell)' },
-    { value: 'flux-kontext-pro', label: 'Flux Kontext Pro' },
-    { value: '4o-image', label: 'GPT-4o Image' },
-    { value: 'midjourney', label: 'Midjourney' },
+    { value: 'flux', label: 'Flux AI' },
+    { value: 'mj', label: 'Midjourney' },
+    { value: '4o', label: 'GPT-4o Image' },
+    { value: 'ghibli', label: 'Ghibli AI' },
   ]},
-  { value: 'openai', label: 'DALL-E 3 (OpenAI)', models: [
+  { value: 'openai', label: 'DALL-E 3 (OpenAI direkt)', models: [
     { value: 'dall-e-3', label: 'DALL-E 3' },
   ]},
 ]
@@ -95,9 +95,9 @@ const providerLabels: Record<string, string> = {
 const modelLabels: Record<string, string> = {
   'dall-e-3': 'DALL-E 3',
   'flux': 'Flux AI',
-  'flux-kontext-pro': 'Flux Kontext Pro',
-  '4o-image': 'GPT-4o Image',
-  'midjourney': 'Midjourney',
+  'mj': 'Midjourney',
+  '4o': 'GPT-4o Image',
+  'ghibli': 'Ghibli AI',
 }
 
 // ============================================

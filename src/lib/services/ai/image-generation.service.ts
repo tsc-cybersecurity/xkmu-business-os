@@ -165,15 +165,15 @@ async function generateWithKie(
     aspectRatio: params.aspectRatio,
   })
 
-  logger.info(`kie.ai image task created: ${task.taskId} (query: ${task.queryEndpoint})`, { module: 'ImageGeneration' })
+  logger.info(`kie.ai image task created: ${task.taskId}`, { module: 'ImageGeneration' })
 
-  // Poll for result using model-specific query endpoint
+  // Poll for result
   const startTime = Date.now()
   let delay = 2000
   const maxWaitMs = 120_000
 
   while (Date.now() - startTime < maxWaitMs) {
-    const status = await provider.queryImageStatus(task.taskId, task.queryEndpoint)
+    const status = await provider.getTaskStatus(task.taskId)
     logger.info(`kie.ai poll: status=${status.status}, progress=${status.progress}, hasUrl=${!!status.resultUrl}`, { module: 'ImageGeneration' })
 
     if (status.status === 'completed' || status.status === 'success' || status.status === 'done') {
