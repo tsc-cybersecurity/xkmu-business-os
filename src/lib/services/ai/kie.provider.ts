@@ -107,6 +107,7 @@ export class KieProvider implements AIProvider {
     const body: Record<string, unknown> = {
       model,
       prompt,
+      input: prompt, // some kie.ai models expect "input" instead of "prompt"
     }
 
     if (options?.aspectRatio) {
