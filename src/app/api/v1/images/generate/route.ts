@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         return apiError('GENERATION_FAILED', message, 502)
       }
 
-      return apiServerError()
+      return apiError('GENERATION_ERROR', message, 500)
     }
   })
 }

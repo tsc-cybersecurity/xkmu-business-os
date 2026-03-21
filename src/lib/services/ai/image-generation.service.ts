@@ -188,9 +188,13 @@ async function generateWithKie(
 
   while (Date.now() - startTime < maxWaitMs) {
     const status = await provider.getTaskStatus(task.taskId)
+    logger.info(`kie.ai poll: status=${status.status}, progress=${status.progress}, hasUrl=${!!status.resultUrl}`, { module: 'ImageGeneration' })
 
-    if (status.status === 'completed' || status.status === 'success') {
-      if (!status.resultUrl) throw new Error('kie.ai returned no image URL')
+    if (status.status === 'completed' || status.status === 'success' || status.status === 'done') {
+      if (!status.resultUrl) {
+        logger.error(`kie.ai task ${task.taskId} completed but no resultUrl`, undefined, { module: 'ImageGeneration' })
+        throw new Error('kie.ai Aufgabe abgeschlossen, aber keine Bild-URL erhalten.')
+      }
       return { imageUrl: status.resultUrl, model, size: `${width}x${height}` }
     }
 

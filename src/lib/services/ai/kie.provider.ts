@@ -105,15 +105,18 @@ export class KieProvider implements AIProvider {
       prompt,
     }
 
+    // kie.ai image models may use different parameter names
     if (options?.aspectRatio) {
       body.aspect_ratio = options.aspectRatio
     }
-    if (options?.width) {
+    if (options?.width && options?.height) {
+      body.image_size = { width: options.width, height: options.height }
+      // Also send as top-level for compatibility
       body.width = options.width
-    }
-    if (options?.height) {
       body.height = options.height
     }
+
+    console.log('[kie.ai] generateImage request:', JSON.stringify(body, null, 2))
 
     const response = await fetch(`${KIE_API_URL}/jobs/createTask`, {
       method: 'POST',
@@ -125,18 +128,30 @@ export class KieProvider implements AIProvider {
       body: JSON.stringify(body),
     })
 
+    const responseText = await response.text()
+    console.log('[kie.ai] generateImage response:', response.status, responseText)
+
     if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`kie.ai Image API error (${response.status}): ${error}`)
+      throw new Error(`kie.ai Image API error (${response.status}): ${responseText}`)
     }
 
-    const data = await response.json()
-
-    if (!data.data?.taskId) {
-      throw new Error('kie.ai API returned no taskId')
+    let data: Record<string, unknown>
+    try {
+      data = JSON.parse(responseText)
+    } catch {
+      throw new Error(`kie.ai returned invalid JSON: ${responseText.substring(0, 200)}`)
     }
 
-    return { taskId: data.data.taskId }
+    // kie.ai may return taskId at different levels
+    const taskId = (data.data as Record<string, unknown>)?.taskId
+      || data.taskId
+      || (data.data as Record<string, unknown>)?.task_id
+      || data.task_id
+    if (!taskId) {
+      throw new Error(`kie.ai API returned no taskId. Response: ${responseText.substring(0, 300)}`)
+    }
+
+    return { taskId: String(taskId) }
   }
 
   async getTaskStatus(taskId: string): Promise<{
@@ -163,13 +178,22 @@ export class KieProvider implements AIProvider {
     }
 
     const data = await response.json()
-    const record = data.data
+    const record = data.data || data
+
+    // Try multiple possible URL fields for the result
+    const resultUrl = record?.resultUrl
+      || record?.result_url
+      || record?.output?.url
+      || record?.image_url
+      || record?.imageUrl
+      || (Array.isArray(record?.images) ? record.images[0]?.url : undefined)
+      || (Array.isArray(record?.output?.images) ? record.output.images[0]?.url : undefined)
 
     return {
       status: record?.status || 'unknown',
       progress: record?.progress,
-      resultUrl: record?.resultUrl || record?.result_url,
-      error: record?.error,
+      resultUrl,
+      error: record?.error || record?.message,
     }
   }
 }
