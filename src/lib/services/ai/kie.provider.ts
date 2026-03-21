@@ -7,9 +7,11 @@ export const KIE_MODELS = [
   { id: 'market/kling/image-to-video', name: 'Kling Image-to-Video', description: 'Bild zu Video', type: 'video' },
 ] as const
 
-// All kie.ai models use /jobs/createTask with model slug + /jobs/recordInfo for polling
+// All kie.ai models use /jobs/createTask with { model, input: { prompt, ... } }
+// Model IDs use format "provider/model-name" or short slugs
 export const KIE_IMAGE_MODELS = [
-  { id: 'flux', name: 'Flux AI', description: 'Schnelle Bildgenerierung' },
+  { id: 'nano-banana-2', name: 'Nano Banana 2', description: 'Schnelle Bildgenerierung' },
+  { id: 'flux-2/flex-text-to-image', name: 'Flux 2 Text-to-Image', description: 'Flux 2 Bildgenerierung' },
   { id: 'ghibli', name: 'Ghibli AI', description: 'Studio Ghibli Stil' },
   { id: '4o', name: 'GPT-4o Image', description: 'OpenAI Bildgenerierung via kie.ai' },
   { id: 'mj', name: 'Midjourney', description: 'Midjourney Text-to-Image' },
@@ -102,16 +104,20 @@ export class KieProvider implements AIProvider {
       throw new Error('kie.ai API key not configured')
     }
 
-    const model = options?.model || 'flux'
+    const model = options?.model || 'nano-banana-2'
+
+    // kie.ai image models expect { model, input: { prompt, aspect_ratio, resolution, output_format } }
+    const input: Record<string, unknown> = {
+      prompt,
+      image_input: [],
+      aspect_ratio: options?.aspectRatio || 'auto',
+      resolution: '1K',
+      output_format: 'png',
+    }
 
     const body: Record<string, unknown> = {
       model,
-      prompt,
-      input: prompt, // some kie.ai models expect "input" instead of "prompt"
-    }
-
-    if (options?.aspectRatio) {
-      body.aspect_ratio = options.aspectRatio
+      input,
     }
 
     console.log('[kie.ai] generateImage: POST /jobs/createTask', JSON.stringify(body))

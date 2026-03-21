@@ -70,7 +70,8 @@ const CATEGORIES = [
 
 const PROVIDERS = [
   { value: 'kie', label: 'kie.ai', models: [
-    { value: 'flux', label: 'Flux AI' },
+    { value: 'nano-banana-2', label: 'Nano Banana 2 (schnell)' },
+    { value: 'flux-2/flex-text-to-image', label: 'Flux 2' },
     { value: 'mj', label: 'Midjourney' },
     { value: '4o', label: 'GPT-4o Image' },
     { value: 'ghibli', label: 'Ghibli AI' },
@@ -94,7 +95,8 @@ const providerLabels: Record<string, string> = {
 
 const modelLabels: Record<string, string> = {
   'dall-e-3': 'DALL-E 3',
-  'flux': 'Flux AI',
+  'nano-banana-2': 'Nano Banana 2',
+  'flux-2/flex-text-to-image': 'Flux 2',
   'mj': 'Midjourney',
   '4o': 'GPT-4o Image',
   'ghibli': 'Ghibli AI',
@@ -116,7 +118,7 @@ export default function ImagesPage() {
   const [generating, setGenerating] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [provider, setProvider] = useState('kie')
-  const [model, setModel] = useState('flux')
+  const [model, setModel] = useState('nano-banana-2')
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [category, setCategory] = useState('general')
   const [style, setStyle] = useState('vivid')

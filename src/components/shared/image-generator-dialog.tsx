@@ -30,7 +30,8 @@ interface ImageGeneratorDialogProps {
 
 const PROVIDERS = [
   { value: 'kie', label: 'kie.ai', models: [
-    { value: 'flux', label: 'Flux AI' },
+    { value: 'nano-banana-2', label: 'Nano Banana 2 (schnell)' },
+    { value: 'flux-2/flex-text-to-image', label: 'Flux 2' },
     { value: 'mj', label: 'Midjourney' },
     { value: '4o', label: 'GPT-4o Image' },
     { value: 'ghibli', label: 'Ghibli AI' },
@@ -51,7 +52,7 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
   const [generating, setGenerating] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [provider, setProvider] = useState('kie')
-  const [model, setModel] = useState('flux')
+  const [model, setModel] = useState('nano-banana-2')
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)

@@ -158,7 +158,7 @@ async function generateWithKie(
   apiKey: string
 ): Promise<{ imageUrl: string; model: string; size: string }> {
   const provider = new KieProvider({ apiKey })
-  const model = params.model || 'flux'
+  const model = params.model || 'nano-banana-2'
 
   const task = await provider.generateImage(params.prompt, {
     model,
