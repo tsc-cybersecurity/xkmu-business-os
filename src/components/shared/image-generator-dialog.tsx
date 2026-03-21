@@ -79,6 +79,11 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
         }),
       })
 
+      const contentType = response.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server-Fehler (${response.status}). API-Route nicht erreichbar.`)
+      }
+
       const data = await response.json()
       if (data.success) {
         setPreviewUrl(data.data.imageUrl)

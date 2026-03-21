@@ -162,6 +162,11 @@ export default function ImagesPage() {
         body: JSON.stringify(body),
       })
 
+      const contentType = response.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        throw new Error(`Server-Fehler (${response.status})`)
+      }
+
       const data = await response.json()
       if (data.success) {
         toast.success('Bild erfolgreich generiert!')
@@ -171,8 +176,8 @@ export default function ImagesPage() {
       } else {
         toast.error(data.error?.message || 'Generierung fehlgeschlagen')
       }
-    } catch {
-      toast.error('Fehler bei der Bildgenerierung')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Fehler bei der Bildgenerierung. Bitte Provider-Konfiguration prüfen.')
     } finally {
       setGenerating(false)
     }
