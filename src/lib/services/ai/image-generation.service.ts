@@ -153,10 +153,24 @@ async function generateWithOpenAI(
 // Provider: kie.ai (Nano Banana, FLUX, etc.)
 // ============================================
 
-async function generateWithKie(
+async function getKieApiKey(tenantId: string): Promise<string> {
+  const [kieConfig] = await db
+    .select()
+    .from(aiProviders)
+    .where(and(
+      eq(aiProviders.tenantId, tenantId),
+      eq(aiProviders.providerType, 'kie'),
+      eq(aiProviders.isActive, true),
+    ))
+    .limit(1)
+  if (!kieConfig?.apiKey) throw new Error('Kein kie.ai API-Key konfiguriert. Bitte unter Einstellungen → KI-Provider anlegen.')
+  return kieConfig.apiKey
+}
+
+async function startKieTask(
   params: ImageGenerationParams,
   apiKey: string
-): Promise<{ imageUrl: string; model: string; size: string }> {
+): Promise<{ taskId: string; model: string }> {
   const provider = new KieProvider({ apiKey })
   const model = params.model || 'nano-banana-2'
 
@@ -166,33 +180,17 @@ async function generateWithKie(
   })
 
   logger.info(`kie.ai image task created: ${task.taskId}`, { module: 'ImageGeneration' })
+  return { taskId: task.taskId, model }
+}
 
-  // Poll for result
-  const startTime = Date.now()
-  let delay = 2000
-  const maxWaitMs = 120_000
-
-  while (Date.now() - startTime < maxWaitMs) {
-    const status = await provider.getTaskStatus(task.taskId)
-    logger.info(`kie.ai poll: status=${status.status}, progress=${status.progress}, hasUrl=${!!status.resultUrl}`, { module: 'ImageGeneration' })
-
-    if (status.status === 'completed' || status.status === 'success' || status.status === 'done') {
-      if (!status.resultUrl) {
-        logger.error(`kie.ai task ${task.taskId} completed but no resultUrl`, undefined, { module: 'ImageGeneration' })
-        throw new Error('kie.ai Aufgabe abgeschlossen, aber keine Bild-URL erhalten.')
-      }
-      return { imageUrl: status.resultUrl, model, size: params.aspectRatio || '1:1' }
-    }
-
-    if (status.status === 'failed' || status.status === 'error') {
-      throw new Error(`Bildgenerierung fehlgeschlagen: ${status.error || 'Unbekannter Fehler'}`)
-    }
-
-    await new Promise(resolve => setTimeout(resolve, delay))
-    delay = Math.min(delay * 1.5, 10000)
-  }
-
-  throw new Error('Bildgenerierung Timeout nach 120s')
+async function pollKieTask(
+  taskId: string,
+  apiKey: string
+): Promise<{ status: string; resultUrl?: string; error?: string; progress?: number }> {
+  const provider = new KieProvider({ apiKey })
+  const status = await provider.getTaskStatus(taskId)
+  logger.info(`kie.ai poll: status=${status.status}, progress=${status.progress}, hasUrl=${!!status.resultUrl}`, { module: 'ImageGeneration' })
+  return status
 }
 
 // ============================================
@@ -241,26 +239,21 @@ export const ImageGenerationService = {
         throw new Error('OpenAI returned no image data')
       }
     } else {
-      // kie.ai — getActiveProviders excludes kie/firecrawl/serpapi, so query directly
-      const [kieConfig] = await db
-        .select()
-        .from(aiProviders)
-        .where(and(
-          eq(aiProviders.tenantId, tenantId),
-          eq(aiProviders.providerType, 'kie'),
-          eq(aiProviders.isActive, true),
-        ))
-        .limit(1)
-      const apiKey = kieConfig?.apiKey
-      if (!apiKey) throw new Error('Kein kie.ai API-Key konfiguriert. Bitte unter Einstellungen → KI-Provider anlegen.')
+      // kie.ai — async: start task, return taskId, frontend polls
+      const apiKey = await getKieApiKey(tenantId)
+      const task = await startKieTask(params, apiKey)
 
-      const result = await generateWithKie(params, apiKey)
-      actualModel = result.model
-      actualSize = result.size
-
-      const saved = await downloadAndSave(result.imageUrl, tenantId)
-      servePath = saved.servePath
-      sizeBytes = saved.sizeBytes
+      // Return immediately with taskId — frontend will poll /api/v1/images/status
+      return {
+        id: '',
+        imageUrl: '',
+        prompt: params.prompt,
+        provider: 'kie',
+        model: task.model,
+        size: params.aspectRatio || '1:1',
+        taskId: task.taskId,
+        status: 'processing',
+      } as GeneratedImageResult & { taskId: string; status: string }
     }
 
     // Save to gallery DB
@@ -319,6 +312,57 @@ export const ImageGenerationService = {
       model: image.model,
       size: image.size || undefined,
     }
+  },
+
+  /**
+   * Check kie.ai task status and finalize if complete
+   */
+  async checkTaskStatus(
+    tenantId: string,
+    taskId: string,
+    meta?: { prompt?: string; model?: string; category?: string }
+  ): Promise<{
+    status: string
+    progress?: number
+    imageUrl?: string
+    id?: string
+    error?: string
+  }> {
+    const apiKey = await getKieApiKey(tenantId)
+    const status = await pollKieTask(taskId, apiKey)
+
+    if (status.status === 'completed' || status.status === 'success' || status.status === 'done') {
+      if (!status.resultUrl) {
+        return { status: 'error', error: 'Keine Bild-URL erhalten' }
+      }
+
+      // Download and save
+      const saved = await downloadAndSave(status.resultUrl, tenantId)
+
+      const [image] = await db
+        .insert(generatedImages)
+        .values({
+          tenantId,
+          prompt: meta?.prompt || taskId,
+          provider: 'kie',
+          model: meta?.model || 'nano-banana-2',
+          imageUrl: saved.servePath,
+          mimeType: 'image/png',
+          sizeBytes: saved.sizeBytes,
+          category: meta?.category || 'general',
+          tags: [],
+          metadata: { taskId },
+        })
+        .returning()
+
+      return { status: 'completed', imageUrl: saved.servePath, id: image.id }
+    }
+
+    if (status.status === 'failed' || status.status === 'error') {
+      return { status: 'error', error: status.error || 'Bildgenerierung fehlgeschlagen' }
+    }
+
+    return { status: status.status || 'processing', progress: status.progress }
   },
 
   /**

@@ -174,16 +174,42 @@ export default function ImagesPage() {
       }
 
       const data = await response.json()
-      if (data.success) {
+      if (!data.success) {
+        throw new Error(data.error?.message || 'Generierung fehlgeschlagen')
+      }
+
+      // If kie.ai: async polling
+      if (data.data.taskId && data.data.status === 'processing') {
+        toast.info('Bildgenerierung gestartet, bitte warten...')
+        const maxPolls = 60
+        for (let i = 0; i < maxPolls; i++) {
+          await new Promise(r => setTimeout(r, 2000))
+          const res = await fetch('/api/v1/images/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ taskId: data.data.taskId, prompt: prompt.trim(), model, category }),
+          })
+          const statusData = await res.json()
+          if (statusData.data?.status === 'completed') {
+            toast.success('Bild erfolgreich generiert!')
+            setGenerateOpen(false)
+            setPrompt('')
+            fetchImages()
+            return
+          }
+          if (statusData.data?.status === 'error') {
+            throw new Error(statusData.data.error || 'Bildgenerierung fehlgeschlagen')
+          }
+        }
+        throw new Error('Bildgenerierung Timeout')
+      } else {
         toast.success('Bild erfolgreich generiert!')
         setGenerateOpen(false)
         setPrompt('')
         fetchImages()
-      } else {
-        toast.error(data.error?.message || 'Generierung fehlgeschlagen')
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Fehler bei der Bildgenerierung. Bitte Provider-Konfiguration prüfen.')
+      toast.error(err instanceof Error ? err.message : 'Fehler bei der Bildgenerierung.')
     } finally {
       setGenerating(false)
     }

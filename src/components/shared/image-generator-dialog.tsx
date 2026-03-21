@@ -59,6 +59,28 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
 
   const currentModels = PROVIDERS.find(p => p.value === provider)?.models || []
 
+  const pollTaskStatus = async (taskId: string, taskPrompt: string, taskModel: string, taskCategory: string): Promise<string> => {
+    const maxPolls = 60 // ~2 minutes with 2s interval
+    for (let i = 0; i < maxPolls; i++) {
+      await new Promise(r => setTimeout(r, 2000))
+      const res = await fetch('/api/v1/images/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ taskId, prompt: taskPrompt, model: taskModel, category: taskCategory }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error?.message || 'Status-Abfrage fehlgeschlagen')
+
+      if (data.data.status === 'completed' && data.data.imageUrl) {
+        return data.data.imageUrl
+      }
+      if (data.data.status === 'error') {
+        throw new Error(data.data.error || 'Bildgenerierung fehlgeschlagen')
+      }
+    }
+    throw new Error('Bildgenerierung Timeout — bitte erneut versuchen')
+  }
+
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast.error('Bitte geben Sie einen Prompt ein')
@@ -88,17 +110,25 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
       }
 
       const data = await response.json()
-      if (data.success) {
+      if (!data.success) {
+        throw new Error(data.error?.message || 'Generierung fehlgeschlagen')
+      }
+
+      // If kie.ai: async polling via taskId
+      if (data.data.taskId && data.data.status === 'processing') {
+        setError(null)
+        toast.info('Bildgenerierung gestartet, bitte warten...')
+        const imageUrl = await pollTaskStatus(data.data.taskId, prompt.trim(), model, defaultCategory)
+        setPreviewUrl(imageUrl)
+        toast.success('Bild generiert!')
+      } else {
+        // OpenAI: direct result
         setPreviewUrl(data.data.imageUrl)
         setError(null)
         toast.success('Bild generiert!')
-      } else {
-        const msg = data.error?.message || 'Generierung fehlgeschlagen'
-        setError(msg)
-        toast.error(msg)
       }
-    } catch {
-      const msg = 'Fehler bei der Bildgenerierung. Bitte prüfen Sie die Provider-Konfiguration unter Einstellungen → KI-Provider.'
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Fehler bei der Bildgenerierung.'
       setError(msg)
       toast.error(msg)
     } finally {
