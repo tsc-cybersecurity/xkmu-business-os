@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Megaphone, Plus, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { Megaphone, Plus, Loader2, Pencil, Trash2, Brain } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/utils/logger'
 
@@ -113,6 +113,12 @@ export default function MarketingPage() {
           <p className="text-muted-foreground mt-1">Verwalten Sie Ihre Marketing-Kampagnen</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/intern/marketing/agent">
+            <Button variant="outline">
+              <Brain className="h-4 w-4 mr-2" />
+              AI Agent
+            </Button>
+          </Link>
           <Link href="/intern/marketing/templates">
             <Button variant="outline">Vorlagen</Button>
           </Link>
