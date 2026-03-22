@@ -110,7 +110,31 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'industry', label: 'Branche', description: 'Branche des Unternehmens' },
     { key: 'businessModel', label: 'Geschäftsmodell', description: 'Beschreibung des Geschäftsmodells' },
     { key: 'targetGroup', label: 'Zielgruppe', description: 'Informationen zur Zielgruppe' },
-    { key: 'strengths', label: 'Staerken', description: 'Unternehmensstaerken aus SWOT' },
+    { key: 'strengths', label: 'Stärken', description: 'Unternehmensstärken aus SWOT' },
+  ],
+  // Marketing Agent
+  marketing_agent_research: [
+    { key: 'websiteContent', label: 'Website-Inhalte', description: 'Gescrapte Website-Texte' },
+    { key: 'language', label: 'Sprache', description: 'Ausgabesprache (de/en)' },
+  ],
+  marketing_agent_seo: [
+    { key: 'websiteContent', label: 'Website-Inhalte', description: 'Website-Text (Auszug)' },
+    { key: 'companyName', label: 'Firmenname', description: 'Name des analysierten Unternehmens' },
+    { key: 'industry', label: 'Branche', description: 'Branche des Unternehmens' },
+    { key: 'targetAudience', label: 'Zielgruppe', description: 'Primäre Zielgruppe' },
+    { key: 'language', label: 'Sprache', description: 'Ausgabesprache (de/en)' },
+  ],
+  marketing_agent_content: [
+    { key: 'companyName', label: 'Firmenname', description: 'Name des Unternehmens' },
+    { key: 'industry', label: 'Branche', description: 'Branche' },
+    { key: 'targetAudience', label: 'Zielgruppe', description: 'Primäre Zielgruppe' },
+    { key: 'uniqueSellingPoints', label: 'USPs', description: 'Alleinstellungsmerkmale' },
+    { key: 'keyProducts', label: 'Produkte/Services', description: 'Kernprodukte' },
+    { key: 'brandTone', label: 'Marken-Ton', description: 'Markenkommunikationsstil' },
+    { key: 'primaryKeywords', label: 'Keywords', description: 'Primäre SEO-Keywords' },
+    { key: 'platforms', label: 'Plattformen', description: 'Ziel-Plattformen' },
+    { key: 'tone', label: 'Tonalität', description: 'Gewünschte Tonalität' },
+    { key: 'language', label: 'Sprache', description: 'Ausgabesprache (de/en)' },
   ],
 }
 
@@ -835,5 +859,90 @@ Wenn der Workflow Video-Generierung mit kie.ai/Kling enthält:
   },
   "settings": { "executionOrder": "v1" }
 }`,
+  },
+
+  // ============================================
+  // Marketing Agent Templates
+  // ============================================
+  marketing_agent_research: {
+    name: 'Marketing Agent - Research',
+    description: 'Analysiert Website-Inhalte und extrahiert Marketing-Informationen',
+    systemPrompt: 'Du bist ein erfahrener Marketing-Analyst. Analysiere Website-Inhalte und extrahiere strukturierte Marketing-Informationen. Antworte ausschließlich in JSON.',
+    userPrompt: `Analysiere die folgenden Website-Inhalte und erstelle einen Marketing-Research-Bericht.
+
+Website-Inhalte:
+{{websiteContent}}
+
+Sprache der Ausgabe: {{language}}`,
+    outputFormat: `Antworte als JSON:
+{
+  "companyName": "Name des Unternehmens",
+  "industry": "Branche",
+  "targetAudience": "Primäre Zielgruppe",
+  "uniqueSellingPoints": ["USP 1", "USP 2", "USP 3"],
+  "competitors": ["Wettbewerber 1", "Wettbewerber 2"],
+  "keyProducts": ["Produkt/Service 1", "Produkt/Service 2"],
+  "brandTone": "Beschreibung des Marken-Tons",
+  "summary": "Kurze Zusammenfassung (2-3 Sätze)"
+}`,
+  },
+  marketing_agent_seo: {
+    name: 'Marketing Agent - SEO-Analyse',
+    description: 'Analysiert Websites auf SEO und AI-Search-Visibility',
+    systemPrompt: 'Du bist ein SEO-Experte und analysierst Websites auf Suchmaschinenoptimierung, AI-Search-Visibility (GEO) und Content-Lücken. Antworte ausschließlich in JSON.',
+    userPrompt: `Analysiere die folgenden Website-Inhalte für SEO und AI-Search-Visibility:
+
+Firma: {{companyName}}
+Branche: {{industry}}
+Zielgruppe: {{targetAudience}}
+
+Website-Inhalte (Auszug):
+{{websiteContent}}
+
+Sprache: {{language}}`,
+    outputFormat: `Antworte als JSON:
+{
+  "primaryKeywords": ["keyword1", "keyword2", "keyword3"],
+  "secondaryKeywords": ["keyword4", "keyword5"],
+  "contentGaps": ["Fehlender Content-Bereich 1", "Fehlender Content-Bereich 2"],
+  "metaDescriptionSuggestion": "Optimierte Meta-Description (max 160 Zeichen)",
+  "searchVisibilityScore": 65,
+  "recommendations": ["Empfehlung 1", "Empfehlung 2", "Empfehlung 3"]
+}`,
+  },
+  marketing_agent_content: {
+    name: 'Marketing Agent - Content-Generierung',
+    description: 'Erstellt plattformspezifische Social-Media-Posts',
+    systemPrompt: 'Du bist ein erfahrener Social-Media-Content-Creator. Erstelle plattformspezifische Posts die zur Marke passen, SEO-Keywords einbinden und engagement-optimiert sind. Antworte ausschließlich in JSON.',
+    userPrompt: `Erstelle Social-Media-Posts für folgendes Unternehmen:
+
+Firma: {{companyName}}
+Branche: {{industry}}
+Zielgruppe: {{targetAudience}}
+USPs: {{uniqueSellingPoints}}
+Produkte/Services: {{keyProducts}}
+Marken-Ton: {{brandTone}}
+SEO-Keywords: {{primaryKeywords}}
+
+Plattformen: {{platforms}}
+Ton: {{tone}}
+Sprache: {{language}}
+
+Erstelle für JEDE Plattform einen Post. Beachte plattformspezifische Längen und Formate:
+- LinkedIn: 1300 Zeichen, professionell, Absätze
+- Twitter/X: 280 Zeichen, prägnant
+- Instagram: 2200 Zeichen, visuell beschreibend, viele Hashtags
+- Facebook: 500 Zeichen, community-orientiert
+- XING: 1000 Zeichen, DACH-Business-Fokus`,
+    outputFormat: `Antworte als JSON-Array:
+[
+  {
+    "platform": "linkedin",
+    "title": "Post-Titel",
+    "content": "Der vollständige Post-Text",
+    "hashtags": ["#hashtag1", "#hashtag2"],
+    "callToAction": "Konkreter Call-to-Action"
+  }
+]`,
   },
 }

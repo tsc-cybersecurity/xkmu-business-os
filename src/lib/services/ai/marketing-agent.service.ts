@@ -132,7 +132,7 @@ async function stepResearch(
   const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'marketing_agent_research')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
-    template.userPrompt || DEFAULT_RESEARCH_USER_PROMPT,
+    template.userPrompt,
     { websiteContent, language }
   )
 
@@ -142,7 +142,7 @@ async function stepResearch(
   }, {
     maxTokens: 3000,
     temperature: 0.3,
-    systemPrompt: template.systemPrompt || DEFAULT_RESEARCH_SYSTEM_PROMPT,
+    systemPrompt: template.systemPrompt,
   })
 
   return parseJsonSafe<MarketingResearch>(response.text, {
@@ -166,7 +166,7 @@ async function stepSeoAnalysis(
   const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'marketing_agent_seo')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
-    template.userPrompt || DEFAULT_SEO_USER_PROMPT,
+    template.userPrompt,
     {
       websiteContent: websiteContent.substring(0, 10000),
       companyName: research.companyName,
@@ -182,7 +182,7 @@ async function stepSeoAnalysis(
   }, {
     maxTokens: 2000,
     temperature: 0.3,
-    systemPrompt: template.systemPrompt || DEFAULT_SEO_SYSTEM_PROMPT,
+    systemPrompt: template.systemPrompt,
   })
 
   const parsed = parseJsonSafe<SeoAnalysis>(response.text, {
@@ -211,7 +211,7 @@ async function stepContentGeneration(
   const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'marketing_agent_content')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
-    template.userPrompt || DEFAULT_CONTENT_USER_PROMPT,
+    template.userPrompt,
     {
       companyName: research.companyName,
       industry: research.industry,
@@ -232,7 +232,7 @@ async function stepContentGeneration(
   }, {
     maxTokens: 4000,
     temperature: 0.8,
-    systemPrompt: template.systemPrompt || DEFAULT_CONTENT_SYSTEM_PROMPT,
+    systemPrompt: template.systemPrompt,
   })
 
   const parsed = parseJsonSafe<unknown>(response.text, [])
@@ -307,85 +307,3 @@ export const MarketingAgentService = {
     }
   },
 }
-
-// ============================================
-// Default Prompts (Fallback wenn kein Template in DB)
-// ============================================
-
-const DEFAULT_RESEARCH_SYSTEM_PROMPT = `Du bist ein erfahrener Marketing-Analyst. Analysiere Website-Inhalte und extrahiere strukturierte Marketing-Informationen. Antworte ausschliesslich in JSON.`
-
-const DEFAULT_RESEARCH_USER_PROMPT = `Analysiere die folgenden Website-Inhalte und erstelle einen Marketing-Research-Bericht.
-
-Website-Inhalte:
-{{websiteContent}}
-
-Sprache der Ausgabe: {{language}}
-
-Antworte als JSON:
-{
-  "companyName": "Name des Unternehmens",
-  "industry": "Branche",
-  "targetAudience": "Primaere Zielgruppe",
-  "uniqueSellingPoints": ["USP 1", "USP 2", "USP 3"],
-  "competitors": ["Wettbewerber 1", "Wettbewerber 2"],
-  "keyProducts": ["Produkt/Service 1", "Produkt/Service 2"],
-  "brandTone": "Beschreibung des Marken-Tons (z.B. professionell, innovativ, nahbar)",
-  "summary": "Kurze Zusammenfassung (2-3 Saetze) der Marketing-Positionierung"
-}`
-
-const DEFAULT_SEO_SYSTEM_PROMPT = `Du bist ein SEO-Experte und analysierst Websites auf Suchmaschinenoptimierung, AI-Search-Visibility (GEO) und Content-Luecken. Antworte ausschliesslich in JSON.`
-
-const DEFAULT_SEO_USER_PROMPT = `Analysiere die folgenden Website-Inhalte fuer SEO und AI-Search-Visibility:
-
-Firma: {{companyName}}
-Branche: {{industry}}
-Zielgruppe: {{targetAudience}}
-
-Website-Inhalte (Auszug):
-{{websiteContent}}
-
-Sprache: {{language}}
-
-Antworte als JSON:
-{
-  "primaryKeywords": ["keyword1", "keyword2", "keyword3"],
-  "secondaryKeywords": ["keyword4", "keyword5"],
-  "contentGaps": ["Fehlender Content-Bereich 1", "Fehlender Content-Bereich 2"],
-  "metaDescriptionSuggestion": "Optimierte Meta-Description (max 160 Zeichen)",
-  "searchVisibilityScore": 65,
-  "recommendations": ["Empfehlung 1", "Empfehlung 2", "Empfehlung 3"]
-}`
-
-const DEFAULT_CONTENT_SYSTEM_PROMPT = `Du bist ein erfahrener Social-Media-Content-Creator. Erstelle plattformspezifische Posts die zur Marke passen, SEO-Keywords einbinden und engagement-optimiert sind. Antworte ausschliesslich in JSON.`
-
-const DEFAULT_CONTENT_USER_PROMPT = `Erstelle Social-Media-Posts fuer folgendes Unternehmen:
-
-Firma: {{companyName}}
-Branche: {{industry}}
-Zielgruppe: {{targetAudience}}
-USPs: {{uniqueSellingPoints}}
-Produkte/Services: {{keyProducts}}
-Marken-Ton: {{brandTone}}
-SEO-Keywords: {{primaryKeywords}}
-
-Plattformen: {{platforms}}
-Ton: {{tone}}
-Sprache: {{language}}
-
-Erstelle fuer JEDE Plattform einen Post. Beachte plattformspezifische Laengen und Formate:
-- LinkedIn: 1300 Zeichen, professionell, Absaetze
-- Twitter/X: 280 Zeichen, praegnant
-- Instagram: 2200 Zeichen, visuell beschreibend, viele Hashtags
-- Facebook: 500 Zeichen, community-orientiert
-- XING: 1000 Zeichen, DACH-Business-Fokus
-
-Antworte als JSON-Array:
-[
-  {
-    "platform": "linkedin",
-    "title": "Post-Titel",
-    "content": "Der vollstaendige Post-Text",
-    "hashtags": ["#hashtag1", "#hashtag2"],
-    "callToAction": "Konkreter Call-to-Action"
-  }
-]`
