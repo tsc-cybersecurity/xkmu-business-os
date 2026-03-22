@@ -8,6 +8,7 @@ import {
 import { CompanyService } from '@/lib/services/company.service'
 import { FirecrawlResearchService } from '@/lib/services/firecrawl-research.service'
 import { FirecrawlService } from '@/lib/services/firecrawl.service'
+import { WebsiteScraperService } from '@/lib/services/ai/website-scraper.service'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
 import { db } from '@/lib/db'
@@ -91,8 +92,14 @@ export async function POST(
       status: 'crawling',
     })
 
+    // Smart filter: AI selects relevant paths from homepage links
+    const includePaths = await WebsiteScraperService.getSmartIncludePaths(company.website, auth.tenantId)
+    if (includePaths) {
+      logger.info(`Smart filter: ${includePaths.length} include patterns selected`, { module: 'CompaniesCrawlAPI' })
+    }
+
     // Start the actual crawl
-    const result = await FirecrawlService.crawl(company.website, provider.apiKey)
+    const result = await FirecrawlService.crawl(company.website, provider.apiKey, includePaths)
 
     if (result.success) {
       // Update record with results

@@ -8,6 +8,31 @@ import { AiProviderService } from '@/lib/services/ai-provider.service'
 const FIRECRAWL_API_BASE = 'https://api.firecrawl.dev/v1'
 const FIRECRAWL_API_URL = `${FIRECRAWL_API_BASE}/scrape`
 
+// Static exclude patterns to filter noise from crawl results
+const CRAWL_EXCLUDE_PATHS = [
+  // Blog / News / Magazin
+  '/blog/*', '/news/*', '/aktuelles/*', '/magazin/*', '/presse/*', '/pressemitteilungen/*',
+  '/artikel/*', '/beitraege/*', '/journal/*',
+  // Rechtliches
+  '/datenschutz*', '/privacy*', '/data-protection*',
+  '/agb*', '/terms*', '/nutzungsbedingungen*', '/conditions*',
+  '/cookie*', '/widerruf*', '/disclaimer*', '/haftungsausschluss*',
+  // CMS / Tech Noise
+  '/wp-admin/*', '/wp-login*', '/wp-content/*', '/wp-json/*',
+  '/cdn-cgi/*', '/api/*', '/feed*', '/rss*', '/sitemap*',
+  '/xmlrpc*', '/.well-known/*',
+  // Taxonomien / Pagination
+  '/tag/*', '/tags/*', '/category/*', '/kategorie/*',
+  '/page/*', '/seite/*', '/author/*', '/autor/*',
+  '/archive/*', '/archiv/*',
+  // Suche / Auth / Shop-Prozesse
+  '/search*', '/suche*', '/login*', '/register*', '/anmelden*',
+  '/warenkorb*', '/cart*', '/checkout*', '/kasse*', '/mein-konto*',
+  '/wishlist*', '/merkzettel*',
+  // Medien / Downloads
+  '/media/*', '/uploads/*', '/download/*', '/downloads/*',
+]
+
 export interface FirecrawlResult {
   markdown: string
   title: string
@@ -121,9 +146,21 @@ export const FirecrawlService = {
    * Crawl an entire website using the Firecrawl /v1/crawl API
    * Polls for completion with 3s interval, max 120s timeout, max 20 pages
    */
-  async crawl(url: string, apiKey: string): Promise<FirecrawlCrawlResult> {
+  async crawl(url: string, apiKey: string, includePaths?: string[]): Promise<FirecrawlCrawlResult> {
     try {
       // Start crawl job
+      const crawlBody: Record<string, unknown> = {
+        url,
+        limit: 20,
+        excludePaths: CRAWL_EXCLUDE_PATHS,
+        scrapeOptions: {
+          formats: ['markdown'],
+        },
+      }
+      if (includePaths?.length) {
+        crawlBody.includePaths = includePaths
+      }
+
       const startResponse = await fetch(`${FIRECRAWL_API_BASE}/crawl`, {
         method: 'POST',
         headers: {
@@ -131,13 +168,7 @@ export const FirecrawlService = {
           Authorization: `Bearer ${apiKey}`,
         },
         signal: AbortSignal.timeout(30_000),
-        body: JSON.stringify({
-          url,
-          limit: 20,
-          scrapeOptions: {
-            formats: ['markdown'],
-          },
-        }),
+        body: JSON.stringify(crawlBody),
       })
 
       if (!startResponse.ok) {

@@ -112,6 +112,10 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'targetGroup', label: 'Zielgruppe', description: 'Informationen zur Zielgruppe' },
     { key: 'strengths', label: 'Stärken', description: 'Unternehmensstärken aus SWOT' },
   ],
+  // Firecrawl Smart Filter
+  firecrawl_smart_filter: [
+    { key: 'links', label: 'Link-Liste', description: 'Alle internen Links der Homepage' },
+  ],
   // Marketing Agent
   marketing_agent_research: [
     { key: 'websiteContent', label: 'Website-Inhalte', description: 'Gescrapte Website-Texte' },
@@ -858,6 +862,40 @@ Wenn der Workflow Video-Generierung mit kie.ai/Kling enthält:
     }
   },
   "settings": { "executionOrder": "v1" }
+}`,
+  },
+
+  // ============================================
+  // Firecrawl Smart Filter
+  // ============================================
+  firecrawl_smart_filter: {
+    name: 'Firecrawl Smart Filter',
+    description: 'Wählt die relevantesten Website-Pfade für den Crawl aus',
+    systemPrompt: 'Du bist ein Website-Analyst. Du bekommst eine Liste interner Links einer Unternehmens-Website und wählst die business-relevantesten Pfade als Glob-Patterns aus. Antworte ausschließlich in JSON.',
+    userPrompt: `Hier sind alle internen Links einer Unternehmens-Website:
+
+{{links}}
+
+Wähle die relevantesten Pfade für eine Marketing- und Business-Analyse aus. Priorisiere:
+- Startseite / Homepage
+- Über uns / Unternehmen / Firma / Team / Geschichte
+- Leistungen / Services / Dienstleistungen / Angebot
+- Produkte / Lösungen / Portfolio
+- Referenzen / Kunden / Projekte / Case Studies
+- Kontakt / Standorte / Impressum
+- Karriere / Jobs (sekundär)
+- Branchen / Zielgruppen (sekundär)
+
+Regeln:
+- Gib bis zu 20 Glob-Patterns zurück (z.B. "/leistungen/*", "/team*", "/")
+- NUR Patterns die aus den tatsächlichen Links ableitbar sind — NICHTS erfinden
+- Falls weniger als 20 relevant sind, gib nur die tatsächlich relevanten zurück
+- Verwende /* am Ende wenn ein Pfad Unterseiten hat die auch relevant sind
+- Die Homepage "/" immer inkludieren`,
+    outputFormat: `Antworte als JSON:
+{
+  "patterns": ["/", "/ueber-uns*", "/leistungen/*", "/produkte/*", "/referenzen/*", "/kontakt*", "/impressum*"],
+  "reasoning": "Kurze Begründung der Auswahl (1 Satz)"
 }`,
   },
 

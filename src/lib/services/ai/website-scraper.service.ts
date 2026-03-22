@@ -3,6 +3,8 @@
 // Fetches and extracts text content from websites
 // ============================================
 
+import { AIService, type AIRequestContext } from './ai.service'
+import { AiPromptTemplateService } from '../ai-prompt-template.service'
 import { logger } from '@/lib/utils/logger'
 
 export interface ScrapedWebsite {
@@ -196,9 +198,131 @@ async function scrapeSubpages(baseUrl: string): Promise<ScrapedWebsite[]> {
 }
 
 // ============================================
+// Smart Crawl: Link Extraction + AI Filter
+// ============================================
+
+/**
+ * Extract all internal links from HTML
+ */
+function extractInternalLinks(html: string, baseUrl: string): string[] {
+  const base = normalizeUrl(baseUrl).replace(/\/+$/, '')
+  const hostname = new URL(base).hostname
+
+  const linkRegex = /<a\s+[^>]*href=["']([^"'#]+)["'][^>]*>/gi
+  const links = new Set<string>()
+  let match: RegExpExecArray | null
+
+  while ((match = linkRegex.exec(html)) !== null) {
+    let href = match[1].trim()
+    if (!href || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('javascript:')) continue
+
+    // Convert relative to absolute
+    if (href.startsWith('/')) {
+      href = base + href
+    } else if (!href.startsWith('http')) {
+      href = base + '/' + href
+    }
+
+    // Only keep same-domain links
+    try {
+      const url = new URL(href)
+      if (url.hostname === hostname) {
+        // Store as path only, deduplicated
+        const path = url.pathname.replace(/\/+$/, '') || '/'
+        links.add(path)
+      }
+    } catch {
+      // Invalid URL, skip
+    }
+  }
+
+  return Array.from(links).sort()
+}
+
+/**
+ * Use AI to select the most relevant paths for business crawling
+ */
+async function getSmartIncludePaths(
+  url: string,
+  tenantId: string
+): Promise<string[] | undefined> {
+  try {
+    // 1. Fetch homepage HTML natively (free)
+    const homepage = await scrapePage(url)
+    if (!homepage.success) {
+      logger.warn('Smart filter: Could not fetch homepage, skipping', { module: 'WebsiteScraperService' })
+      return undefined
+    }
+
+    // Get raw HTML for link extraction (re-fetch since scrapePage returns text only)
+    const normalizedUrl = normalizeUrl(url)
+    const response = await fetch(normalizedUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; xKMU-BusinessOS/1.0; +https://xkmu.de)',
+        'Accept': 'text/html,application/xhtml+xml',
+      },
+      signal: AbortSignal.timeout(15_000),
+      redirect: 'follow',
+    })
+
+    if (!response.ok) return undefined
+    const html = await response.text()
+
+    // 2. Extract internal links
+    const links = extractInternalLinks(html, url)
+    if (links.length < 3) {
+      logger.info(`Smart filter: Only ${links.length} links found, skipping AI filter`, { module: 'WebsiteScraperService' })
+      return undefined
+    }
+
+    logger.info(`Smart filter: Found ${links.length} internal links, running AI selection`, { module: 'WebsiteScraperService' })
+
+    // 3. AI call to select relevant paths
+    const template = await AiPromptTemplateService.getOrDefault(tenantId, 'firecrawl_smart_filter')
+    const userPrompt = AiPromptTemplateService.applyPlaceholders(
+      template.userPrompt,
+      { links: links.join('\n') }
+    )
+
+    const aiResponse = await AIService.completeWithContext(userPrompt, {
+      tenantId,
+      feature: 'firecrawl_smart_filter',
+    }, {
+      maxTokens: 1000,
+      temperature: 0.1,
+      systemPrompt: template.systemPrompt,
+    })
+
+    // 4. Parse response
+    const jsonMatch = aiResponse.text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) return undefined
+
+    const parsed = JSON.parse(jsonMatch[0]) as { patterns?: string[] }
+    if (!Array.isArray(parsed.patterns) || parsed.patterns.length === 0) return undefined
+
+    // Limit to max 20, ensure strings
+    const patterns = parsed.patterns
+      .filter((p): p is string => typeof p === 'string' && p.length > 0)
+      .slice(0, 20)
+
+    logger.info(`Smart filter: AI selected ${patterns.length} include patterns: ${patterns.join(', ')}`, { module: 'WebsiteScraperService' })
+    return patterns
+  } catch (error) {
+    logger.warn(`Smart filter failed, crawl will proceed without includePaths: ${error instanceof Error ? error.message : 'Unknown error'}`, { module: 'WebsiteScraperService' })
+    return undefined
+  }
+}
+
+// ============================================
 // Exported Service
 // ============================================
 export const WebsiteScraperService = {
+  /**
+   * Get smart include paths for Firecrawl crawl via AI analysis of homepage links.
+   * Returns undefined if analysis fails (crawl proceeds without filtering).
+   */
+  getSmartIncludePaths,
+
   /**
    * Scrape a website using Firecrawl API if available, otherwise fallback to HTML scraper.
    * Returns combined text content for AI analysis.
