@@ -17,9 +17,15 @@ export interface SendEmailInput {
   subject: string
   body: string
   html?: string
+  cc?: string
   leadId?: string
   companyId?: string
   personId?: string
+  attachments?: Array<{
+    filename: string
+    content: Buffer | string
+    contentType?: string
+  }>
 }
 
 export interface SendEmailResult {
@@ -106,9 +112,15 @@ export const EmailService = {
       const info = await transporter.sendMail({
         from: config.user,
         to: input.to,
+        cc: input.cc || undefined,
         subject: input.subject,
         text: input.body,
         html: input.html || input.body.replace(/\n/g, '<br>'),
+        attachments: input.attachments?.map(a => ({
+          filename: a.filename,
+          content: a.content,
+          contentType: a.contentType,
+        })),
       })
 
       // Log activity
@@ -146,6 +158,46 @@ export const EmailService = {
    */
   isConfigured(): boolean {
     return this.getConfig() !== null
+  },
+
+  /**
+   * Send email using a template
+   */
+  async sendWithTemplate(
+    tenantId: string,
+    templateSlug: string,
+    to: string,
+    placeholders: Record<string, string>,
+    options?: {
+      cc?: string
+      attachments?: SendEmailInput['attachments']
+      leadId?: string
+      companyId?: string
+      personId?: string
+    },
+    userId?: string | null
+  ): Promise<SendEmailResult> {
+    const { EmailTemplateService } = await import('./email-template.service')
+    const template = await EmailTemplateService.getBySlug(tenantId, templateSlug)
+    if (!template) {
+      return { success: false, error: `E-Mail-Template '${templateSlug}' nicht gefunden` }
+    }
+
+    const subject = EmailTemplateService.applyPlaceholders(template.subject, placeholders)
+    const html = EmailTemplateService.applyPlaceholders(template.bodyHtml, placeholders)
+    const body = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+
+    return this.send(tenantId, {
+      to,
+      subject,
+      body,
+      html,
+      cc: options?.cc,
+      attachments: options?.attachments,
+      leadId: options?.leadId,
+      companyId: options?.companyId,
+      personId: options?.personId,
+    }, userId)
   },
 
   /**

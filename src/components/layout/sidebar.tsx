@@ -152,6 +152,7 @@ const navigation: NavItem[] = [
       { name: 'KI-Provider', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
       { name: 'KI-Prompts', href: '/intern/settings/ai-prompts', requiredModule: 'ai_prompts' },
       { name: 'KI-Logging', href: '/intern/settings/ai-logs', requiredModule: 'ai_logs' },
+      { name: 'E-Mail-Vorlagen', href: '/intern/settings/email-templates', requiredModule: 'settings' },
       { name: 'Webhooks', href: '/intern/settings/webhooks', requiredModule: 'webhooks' },
       { name: 'API-Schluessel', href: '/intern/settings/api-keys', requiredModule: 'api_keys' },
       { name: 'n8n-Verbindung', href: '/intern/settings/n8n', requiredModule: 'n8n_workflows' },

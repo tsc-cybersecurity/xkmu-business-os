@@ -190,12 +190,32 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
   switch (item.type) {
     case 'email': {
       const { EmailService } = await import('@/lib/services/email.service')
-      await EmailService.send({
+      // Template-basierter Versand wenn templateSlug vorhanden
+      if (payload.templateSlug) {
+        const result = await EmailService.sendWithTemplate(
+          item.tenantId,
+          String(payload.templateSlug),
+          String(payload.to || ''),
+          (payload.placeholders || {}) as Record<string, string>,
+          {
+            cc: payload.cc ? String(payload.cc) : undefined,
+            leadId: payload.leadId ? String(payload.leadId) : undefined,
+            companyId: payload.companyId ? String(payload.companyId) : undefined,
+            personId: payload.personId ? String(payload.personId) : undefined,
+          }
+        )
+        if (!result.success) throw new Error(result.error || 'E-Mail-Versand fehlgeschlagen')
+        return { sent: true, to: payload.to, template: payload.templateSlug, messageId: result.messageId }
+      }
+      // Direkter Versand
+      const result = await EmailService.send(item.tenantId, {
         to: String(payload.to || ''),
         subject: String(payload.subject || ''),
-        html: String(payload.html || payload.body || ''),
+        body: String(payload.body || ''),
+        html: payload.html ? String(payload.html) : undefined,
       })
-      return { sent: true, to: payload.to }
+      if (!result.success) throw new Error(result.error || 'E-Mail-Versand fehlgeschlagen')
+      return { sent: true, to: payload.to, messageId: result.messageId }
     }
 
     case 'follow_up':

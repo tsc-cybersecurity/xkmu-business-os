@@ -2041,6 +2041,35 @@ export type ProcessTask = typeof processTasks.$inferSelect
 export type NewProcessTask = typeof processTasks.$inferInsert
 
 // ============================================
+// E-Mail Templates
+// ============================================
+export const emailTemplates = pgTable('email_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  slug: varchar('slug', { length: 100 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  subject: varchar('subject', { length: 500 }).notNull(), // Mit {{platzhalter}}
+  bodyHtml: text('body_html').notNull(), // HTML mit {{platzhalter}}
+  placeholders: jsonb('placeholders').default([]), // [{key, label, description}]
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_email_templates_tenant').on(table.tenantId),
+  index('idx_email_templates_tenant_slug').on(table.tenantId, table.slug),
+])
+
+export const emailTemplatesRelations = relations(emailTemplates, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [emailTemplates.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+export type EmailTemplate = typeof emailTemplates.$inferSelect
+export type NewEmailTemplate = typeof emailTemplates.$inferInsert
+
+// ============================================
 // Task Queue (Ersetzt Cron-Jobs)
 // ============================================
 export const taskQueue = pgTable('task_queue', {
