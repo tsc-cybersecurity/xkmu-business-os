@@ -361,20 +361,27 @@ export default function DevTasksPage() {
   // Editing state
   const [editingReq, setEditingReq] = useState<string | null>(null) // "taskId-reqIndex"
   const [editData, setEditData] = useState<DevRequirement | null>(null)
+  const [editTaskData, setEditTaskData] = useState<{ appStatus: string; appNotes: string; appModule: string } | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const startEdit = (taskId: string, reqIndex: number, req: DevRequirement) => {
-    setEditingReq(`${taskId}-${reqIndex}`)
+  const startEdit = (task: DevTask, reqIndex: number, req: DevRequirement) => {
+    setEditingReq(`${task.id}-${reqIndex}`)
     setEditData({ ...req })
+    setEditTaskData({
+      appStatus: task.appStatus || 'none',
+      appNotes: task.appNotes || '',
+      appModule: task.appModule || '',
+    })
   }
 
   const cancelEdit = () => {
     setEditingReq(null)
     setEditData(null)
+    setEditTaskData(null)
   }
 
   const saveEdit = async (task: DevTask, reqIndex: number) => {
-    if (!editData) return
+    if (!editData || !editTaskData) return
     setSaving(true)
     try {
       const updatedReqs = [...task.devRequirements]
@@ -383,17 +390,28 @@ export default function DevTasksPage() {
       const response = await fetch(`/api/v1/processes/tasks/${task.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ devRequirements: updatedReqs }),
+        body: JSON.stringify({
+          devRequirements: updatedReqs,
+          appStatus: editTaskData.appStatus,
+          appNotes: editTaskData.appNotes || '',
+          appModule: editTaskData.appModule || null,
+        }),
       })
       const data = await response.json()
       if (data.success) {
-        // Update local state
         setTasks(prev => prev.map(t =>
-          t.id === task.id ? { ...t, devRequirements: updatedReqs } : t
+          t.id === task.id ? {
+            ...t,
+            devRequirements: updatedReqs,
+            appStatus: editTaskData.appStatus,
+            appNotes: editTaskData.appNotes,
+            appModule: editTaskData.appModule,
+          } : t
         ))
         setEditingReq(null)
         setEditData(null)
-        toast.success('Anforderung gespeichert')
+        setEditTaskData(null)
+        toast.success('Gespeichert')
       } else {
         toast.error('Speichern fehlgeschlagen')
       }
@@ -663,7 +681,7 @@ export default function DevTasksPage() {
                         </>
                       ) : (
                         <>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(task.id, i, req)} title="Bearbeiten">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(task, i, req)} title="Bearbeiten">
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => handleDownloadSingle(task, req)}>
@@ -677,8 +695,17 @@ export default function DevTasksPage() {
 
                 <CardContent className="space-y-4 pt-0">
                   {/* Anforderung */}
-                  {isEditing ? (
+                  {isEditing && editTaskData ? (
                     <div className="space-y-3">
+                      {/* Tool name */}
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Tool</label>
+                        <Input
+                          value={editData!.tool}
+                          onChange={e => setEditData({ ...editData!, tool: e.target.value })}
+                          className="text-sm"
+                        />
+                      </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground mb-1 block">Benoetigte Funktion</label>
                         <Textarea
@@ -695,6 +722,41 @@ export default function DevTasksPage() {
                           rows={5} className="text-sm"
                         />
                       </div>
+                      {/* Task-level fields */}
+                      <div className="border-t pt-3 mt-3">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">App-Abdeckung (gilt fuer alle Anforderungen dieser Aufgabe)</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground mb-1 block">App-Status</label>
+                            <Select value={editTaskData.appStatus} onValueChange={v => setEditTaskData({ ...editTaskData, appStatus: v })}>
+                              <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Fehlt</SelectItem>
+                                <SelectItem value="partial">Teilweise</SelectItem>
+                                <SelectItem value="full">Vorhanden</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="md:col-span-2">
+                            <label className="text-xs font-medium text-muted-foreground mb-1 block">App-Modul</label>
+                            <Input
+                              value={editTaskData.appModule}
+                              onChange={e => setEditTaskData({ ...editTaskData, appModule: e.target.value })}
+                              placeholder="z.B. blog, finance, leads"
+                              className="text-sm"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">App-Notizen (aktueller Stand)</label>
+                          <Textarea
+                            value={editTaskData.appNotes}
+                            onChange={e => setEditTaskData({ ...editTaskData, appNotes: e.target.value })}
+                            rows={3} className="text-sm"
+                            placeholder="Was existiert bereits, was fehlt noch?"
+                          />
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -706,6 +768,17 @@ export default function DevTasksPage() {
                         <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Umsetzungsansatz</h4>
                         <p className="text-sm">{current.approach}</p>
                       </div>
+                      {task.appNotes && (
+                        <div className={cn('rounded-lg p-3 text-sm',
+                          task.appStatus === 'none' ? 'bg-red-50 dark:bg-red-950/30' :
+                          task.appStatus === 'partial' ? 'bg-yellow-50 dark:bg-yellow-950/30' :
+                          'bg-green-50 dark:bg-green-950/30'
+                        )}>
+                          <span className="font-semibold">App-Stand:</span>{' '}
+                          {task.appModule && <Badge variant="outline" className="text-xs mr-1">{task.appModule}</Badge>}
+                          {task.appNotes}
+                        </div>
+                      )}
                     </div>
                   )}
 
