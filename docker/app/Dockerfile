@@ -62,6 +62,7 @@ COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/db ./src/lib/db
 COPY --from=builder --chown=nextjs:nodejs /app/src/lib/types ./src/lib/types
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib/services/ai-prompt-template.defaults.ts ./src/lib/services/ai-prompt-template.defaults.ts
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 # Writable upload directories (BI documents + media uploads)
