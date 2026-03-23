@@ -57,7 +57,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
           : 'Keine offenen Leads',
         '',
         openOpps.length > 0
-          ? `Offene Chancen:\n${openOpps.map(o => `- ${o.title}: ${o.value ? o.value + ' EUR' : ''}, Phase ${o.stage}`).join('\n')}`
+          ? `Offene Chancen:\n${openOpps.map(o => `- ${o.name}: Status ${o.status}${o.rating ? ', Bewertung ' + o.rating : ''}`).join('\n')}`
           : 'Keine offenen Chancen',
       ].filter(Boolean).join('\n')
 
