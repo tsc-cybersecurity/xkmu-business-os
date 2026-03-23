@@ -716,6 +716,16 @@ export const createProcessTaskSchema = z.object({
   errorEscalation: z.string().optional().or(z.literal('')),
   solution: z.string().optional().or(z.literal('')),
   sortOrder: z.number().int().optional(),
+  appStatus: z.enum(['none', 'partial', 'full']).optional(),
+  appNotes: z.string().optional().or(z.literal('')),
+  appModule: z.string().max(100).optional().nullable(),
+  devRequirements: z.array(z.object({
+    tool: z.string(),
+    neededFunction: z.string(),
+    approach: z.string(),
+    effort: z.string(),
+    priority: z.string(),
+  })).optional(),
 })
 
 export const updateProcessTaskSchema = createProcessTaskSchema.partial()

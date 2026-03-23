@@ -105,6 +105,29 @@ export const ProcessService = {
     return result.length > 0
   },
 
+  // --- Dev Tasks (all tasks with devRequirements across processes) ---
+
+  async listDevTasks(tenantId: string): Promise<(ProcessTask & { processKey: string; processName: string })[]> {
+    const rows = await db
+      .select({
+        task: processTasks,
+        processKey: processes.key,
+        processName: processes.name,
+      })
+      .from(processTasks)
+      .innerJoin(processes, eq(processTasks.processId, processes.id))
+      .where(eq(processTasks.tenantId, tenantId))
+      .orderBy(asc(processes.sortOrder), asc(processTasks.sortOrder), asc(processTasks.taskKey))
+
+    return rows
+      .filter(r => r.task.devRequirements && Array.isArray(r.task.devRequirements) && (r.task.devRequirements as unknown[]).length > 0)
+      .map(r => ({
+        ...r.task,
+        processKey: r.processKey,
+        processName: r.processName,
+      }))
+  },
+
   // --- Process Tasks ---
 
   async listTasks(tenantId: string, processId: string): Promise<ProcessTask[]> {

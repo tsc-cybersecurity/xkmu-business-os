@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
@@ -29,6 +30,7 @@ import {
   ClipboardList,
   Monitor,
   CircleDot,
+  Code2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -544,6 +546,12 @@ export default function ProzessePage() {
             {processDetail && (
               <span>{processDetail.tasks.length} Aufgaben</span>
             )}
+            <Link href="/intern/prozesse/dev">
+              <Button variant="outline" size="sm">
+                <Code2 className="h-4 w-4 mr-1" />
+                Programmierauftraege
+              </Button>
+            </Link>
           </div>
         </div>
 
