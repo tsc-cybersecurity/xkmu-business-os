@@ -185,6 +185,9 @@ export const ProcessService = {
     errorEscalation: string
     solution: string
     sortOrder: number
+    appStatus: string
+    appNotes: string
+    appModule: string | null
   }>): Promise<ProcessTask | null> {
     const updateData: Partial<NewProcessTask> = { updatedAt: new Date() }
     if (data.taskKey !== undefined) updateData.taskKey = data.taskKey
