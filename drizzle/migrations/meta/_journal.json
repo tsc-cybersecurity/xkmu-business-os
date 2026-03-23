@@ -127,6 +127,13 @@
       "when": 1774286371364,
       "tag": "0017_nosy_darwin",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1774286675670,
+      "tag": "0018_zippy_proudstar",
+      "breakpoints": true
     }
   ]
 }

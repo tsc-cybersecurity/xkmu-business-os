@@ -2075,6 +2075,50 @@ export type Receipt = typeof receipts.$inferSelect
 export type NewReceipt = typeof receipts.$inferInsert
 
 // ============================================
+// Newsletter
+// ============================================
+export const newsletterSubscribers = pgTable('newsletter_subscribers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  email: varchar('email', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }),
+  tags: text('tags').array().default([]),
+  status: varchar('status', { length: 20 }).default('active'), // active, unsubscribed, bounced
+  subscribedAt: timestamp('subscribed_at', { withTimezone: true }).defaultNow(),
+  unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+}, (table) => [
+  index('idx_newsletter_subs_tenant').on(table.tenantId),
+  index('idx_newsletter_subs_tenant_email').on(table.tenantId, table.email),
+])
+
+export const newsletterCampaigns = pgTable('newsletter_campaigns', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  subject: varchar('subject', { length: 500 }),
+  bodyHtml: text('body_html'),
+  status: varchar('status', { length: 20 }).default('draft'), // draft, sending, sent, failed
+  sentAt: timestamp('sent_at', { withTimezone: true }),
+  stats: jsonb('stats').default({}), // {sent, opened, clicked, bounced, unsubscribed}
+  segmentTags: text('segment_tags').array().default([]),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_newsletter_campaigns_tenant').on(table.tenantId),
+])
+
+export const newsletterSubscribersRelations = relations(newsletterSubscribers, ({ one }) => ({
+  tenant: one(tenants, { fields: [newsletterSubscribers.tenantId], references: [tenants.id] }),
+}))
+
+export const newsletterCampaignsRelations = relations(newsletterCampaigns, ({ one }) => ({
+  tenant: one(tenants, { fields: [newsletterCampaigns.tenantId], references: [tenants.id] }),
+}))
+
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect
+export type NewsletterCampaign = typeof newsletterCampaigns.$inferSelect
+
+// ============================================
 // Time Entries (Zeiterfassung)
 // ============================================
 export const timeEntries = pgTable('time_entries', {
