@@ -200,17 +200,17 @@ export async function POST(request: NextRequest) {
             continue
           }
 
-          // Validate and normalize
+          // Validate and normalize (tool field is optional)
           const normalized = devReqs.map((r: unknown) => {
             const obj = r as Record<string, unknown>
             return {
-              tool: String(obj.tool || ''),
+              tool: String(obj.tool || 'App-Feature'),
               neededFunction: String(obj.neededFunction || ''),
               approach: String(obj.approach || ''),
               effort: ['S', 'M', 'L', 'XL'].includes(String(obj.effort)) ? String(obj.effort) : 'M',
               priority: ['hoch', 'mittel', 'niedrig'].includes(String(obj.priority)) ? String(obj.priority) : 'mittel',
             }
-          }).filter(r => r.tool && r.neededFunction && r.approach)
+          }).filter(r => r.neededFunction && r.approach)
 
           if (normalized.length > 0) {
             await ProcessService.updateTaskByKey(auth.tenantId, task.taskKey, {

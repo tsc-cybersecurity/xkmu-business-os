@@ -469,6 +469,11 @@ export default function DevTasksPage() {
   const [aiRunning, setAiRunning] = useState(false)
 
   const openAiDialog = (task: DevTask) => {
+    // Build context WITHOUT mentioning external tools
+    const stepsWithoutTools = Array.isArray(task.steps) && task.steps.length > 0
+      ? task.steps.map(s => `  ${s.nr}. ${s.action}`).join('\n')
+      : ''
+
     const taskContext = [
       `Prozess: ${task.processKey} ${task.processName}`,
       task.subprocess ? `Teilprozess: ${task.subprocess}` : '',
@@ -476,34 +481,32 @@ export default function DevTasksPage() {
       task.purpose ? `Zweck: ${task.purpose}` : '',
       task.trigger ? `Ausloeser: ${task.trigger}` : '',
       task.timeEstimate ? `Zeitaufwand: ${task.timeEstimate}` : '',
-      Array.isArray(task.tools) && task.tools.length > 0 ? `Externe Tools: ${task.tools.join(', ')}` : '',
-      Array.isArray(task.steps) && task.steps.length > 0
-        ? `Schritte:\n${task.steps.map(s => `  ${s.nr}. ${s.action}${s.tool ? ` [${s.tool}]` : ''}`).join('\n')}`
-        : '',
+      stepsWithoutTools ? `Schritte:\n${stepsWithoutTools}` : '',
       Array.isArray(task.checklist) && task.checklist.length > 0
-        ? `Checkliste: ${task.checklist.join('; ')}`
+        ? `Erfolgskontrolle: ${task.checklist.join('; ')}`
         : '',
       task.expectedOutput ? `Erwartetes Ergebnis: ${task.expectedOutput}` : '',
-      task.solution ? `KI-Ansatz: ${task.solution}` : '',
       '',
-      task.appStatus ? `Aktueller App-Status: ${task.appStatus}` : '',
+      task.appStatus ? `Aktueller App-Status: ${task.appStatus === 'full' ? 'Vorhanden' : task.appStatus === 'partial' ? 'Teilweise' : 'Fehlt'}` : '',
       task.appModule ? `Vorhandenes App-Modul: ${task.appModule}` : '',
       task.appNotes ? `App-Notizen: ${task.appNotes}` : '',
     ].filter(Boolean).join('\n')
 
     setAiPrompt(
-`Analysiere diese Prozessaufgabe und erstelle detaillierte Programmieranforderungen fuer die xKMU BusinessOS App.
+`Erstelle eine Programmieranforderung zur Erweiterung der App xKMU BusinessOS.
 
-PRAEMISSE: Alle Funktionen sollen IN DER APP gebaut werden. Externe Tools ersetzen, nicht nutzen (ausser APIs als Datenquelle wo noetig, z.B. Brevo fuer E-Mail-Versand).
+PRAEMISSE: Die beschriebene Funktionalitaet soll vollstaendig IN DER APP bereitgestellt werden. Keine externen Tools empfehlen — alles wird als App-Feature gebaut.
 
-Die App hat bereits: CRM (Firmen, Personen, Leads, Aktivitaeten), Finance (Rechnungen, Angebote), Blog (KI-Generierung), Social Media (Posts, Content-Plan), Marketing (Kampagnen, KI-Agent), Bildgenerierung (Gemini, DALL-E), Business Intelligence (SWOT), Chat (Multi-Provider KI), Cybersecurity (DIN-Audit, WiBA), CMS, n8n-Workflows, Cockpit, Prozesshandbuch, Einstellungen (KI-Provider, Prompts, Webhooks, API-Keys).
+Die App hat bereits: CRM (Firmen, Personen, Leads, Aktivitaeten), Finance (Rechnungen, Angebote, PDF-Export), Blog (KI-Generierung, SEO), Social Media (Posts, Content-Plan), Marketing (Kampagnen, KI Marketing Agent), Bildgenerierung (Multi-Provider), Business Intelligence (SWOT-Analyse), Chat (Multi-Provider KI), Cybersecurity (DIN-Audit, WiBA-Check), CMS (Seiten, Blocks), n8n-Workflows, Cockpit (Monitoring), Prozesshandbuch, Einstellungen (KI-Provider, Prompt-Templates, Webhooks, API-Keys, Rollen).
+
+Techstack: Next.js 16, React 19, PostgreSQL, Drizzle ORM, Tailwind CSS, shadcn/ui, sonner (Toasts).
 
 === AUFGABE ===
 ${taskContext}
 
 === AUFTRAG ===
-Erstelle fuer JEDES externe Tool eine Programmieranforderung:
-1. Welche konkrete Funktion des Tools wird benoetigt?
+Erstelle eine detaillierte Programmieranforderung:
+1. Wie kann die Funktionalitaet in der App bereitgestellt werden?
 2. Welches bestehende App-Modul kann erweitert werden?
 3. Welche neuen DB-Tabellen/Felder sind noetig?
 4. Welche API-Endpoints muessen erstellt werden?
@@ -511,7 +514,7 @@ Erstelle fuer JEDES externe Tool eine Programmieranforderung:
 6. Geschaetzter Aufwand: S(1-2h), M(3-8h), L(1-3 Tage), XL(3+ Tage)
 
 Antworte als JSON-Array:
-[{"tool":"...", "neededFunction":"...", "approach":"Detaillierter Umsetzungsansatz mit DB-Tabellen, Endpoints, UI-Komponenten...", "effort":"S|M|L|XL", "priority":"hoch|mittel|niedrig"}]`
+[{"neededFunction":"Praezise Beschreibung der Funktion", "approach":"Detaillierter Umsetzungsansatz: Modul, DB-Tabellen, API-Endpoints, UI-Komponenten, Ablauf", "effort":"S|M|L|XL", "priority":"hoch|mittel|niedrig"}]`
     )
     setAiDialogTask(task)
   }
@@ -769,11 +772,9 @@ Antworte als JSON-Array:
                         </>
                       ) : (
                         <>
-                          {i === 0 && (
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAiDialog(task)} title="KI-Analyse">
-                              <Zap className="h-3.5 w-3.5" />
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAiDialog(task)} title="KI-Analyse">
+                            <Zap className="h-3.5 w-3.5" />
+                          </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(task, i, req)} title="Bearbeiten">
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
