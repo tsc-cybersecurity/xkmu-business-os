@@ -33,7 +33,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       if (!doc) return apiNotFound('Dokument nicht gefunden')
 
       const docType = doc.type === 'offer' ? 'Angebot' : 'Rechnung'
-      const emailSubject = subject || `${docType} ${doc.number || ''} von ${doc.companyName || ''}`
+      const emailSubject = subject || `${docType} ${doc.number || ''} von ${doc.customerName || ''}`
 
       const result = await EmailService.sendWithTemplate(
         auth.tenantId,
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
           betrag: doc.total ? `${Number(doc.total).toFixed(2)} EUR` : '',
           gueltigBis: doc.validUntil ? new Date(doc.validUntil).toLocaleDateString('de-DE') : '',
           faelligAm: doc.dueDate ? new Date(doc.dueDate).toLocaleDateString('de-DE') : '',
-          firma: doc.companyName || '',
+          firma: doc.customerName || '',
           absender: '',
         },
         {
