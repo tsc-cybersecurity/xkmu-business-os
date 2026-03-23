@@ -34,11 +34,11 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
         .orderBy(desc(leads.createdAt))
         .limit(5)
 
-      // Offene Chancen
+      // Offene Chancen (opportunities hat kein companyId — nur tenantId-Filter)
       const openOpps = await db
         .select()
         .from(opportunities)
-        .where(and(eq(opportunities.tenantId, auth.tenantId), eq(opportunities.companyId, id)))
+        .where(eq(opportunities.tenantId, auth.tenantId))
         .orderBy(desc(opportunities.createdAt))
         .limit(5)
 
