@@ -220,7 +220,7 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
 
     case 'dunning': {
       const { handleDunning } = await import('@/lib/services/task-queue-handlers/dunning.handler')
-      return handleDunning(item.tenantId, payload as Parameters<typeof handleDunning>[1])
+      return handleDunning(item.tenantId, payload as unknown as Parameters<typeof handleDunning>[1])
     }
 
     case 'follow_up':
