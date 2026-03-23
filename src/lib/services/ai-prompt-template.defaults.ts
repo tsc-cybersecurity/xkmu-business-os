@@ -122,6 +122,29 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'content', label: 'Blog-Text', description: 'Der zu pruefende Artikel-Text' },
     { key: 'keywords', label: 'Keywords', description: 'SEO-Keywords (kommagetrennt)' },
   ],
+  // SEO Keywords
+  seo_keywords: [
+    { key: 'keyword', label: 'Keyword', description: 'Zu analysierendes Keyword' },
+    { key: 'language', label: 'Sprache', description: 'Zielsprache (de/en)' },
+    { key: 'serpData', label: 'SerpAPI-Daten', description: 'Optionale Suchergebnisse' },
+  ],
+  // Meeting Preparation
+  meeting_prep: [
+    { key: 'context', label: 'Firmenkontext', description: 'Firma, Aktivitaeten, Leads, Chancen' },
+  ],
+  // Security Roadmap
+  security_roadmap: [
+    { key: 'requirements', label: 'Anforderungen', description: 'Nicht-erfuellte Audit-Anforderungen' },
+  ],
+  // Receipt OCR
+  receipt_ocr: [
+    { key: 'imageDescription', label: 'Bild', description: 'Beschreibung oder Base64 des Belegs' },
+  ],
+  // Document Template Fill
+  document_template_fill: [
+    { key: 'template', label: 'Template', description: 'HTML-Template mit Platzhaltern' },
+    { key: 'context', label: 'Kontext', description: 'Kontext zum Ausfuellen' },
+  ],
   // Process Dev Analysis
   process_dev_analysis: [
     { key: 'taskContext', label: 'Aufgaben-Kontext', description: 'Vollstaendiger Prozess-Task mit allen Feldern' },
@@ -991,6 +1014,83 @@ Text:
   ],
   "gesamtbewertung": "Kurzes Fazit"
 }`,
+  },
+
+  // ============================================
+  // SEO Keywords
+  // ============================================
+  seo_keywords: {
+    name: 'SEO-Keyword-Analyse',
+    description: 'KI-basierte Keyword-Recherche und Empfehlungen',
+    systemPrompt: 'Du bist ein SEO-Experte fuer den deutschen Markt. Antworte in JSON.',
+    userPrompt: `Keyword-Analyse fuer "{{keyword}}" (Sprache: {{language}}, Markt: Deutschland).
+
+{{serpData}}
+
+Erstelle eine SEO-Keyword-Analyse.`,
+    outputFormat: `{"primaryKeyword":"...","searchIntent":"informational|transactional|navigational","difficulty":"leicht|mittel|schwer","relatedKeywords":["..."],"longTailKeywords":["..."],"contentSuggestions":["..."],"estimatedMonthlySearches":"100-500"}`,
+  },
+
+  // ============================================
+  // Meeting Preparation
+  // ============================================
+  meeting_prep: {
+    name: 'Gespraechsvorbereitung',
+    description: 'KI-Gespraechsvorbereitung aus Firmen-Kontext',
+    systemPrompt: 'Du bist ein Business-Berater. Erstelle eine praegnante Gespraechsvorbereitung auf Deutsch.',
+    userPrompt: `Erstelle eine Gespraechsvorbereitung fuer ein Meeting mit dieser Firma:
+
+{{context}}
+
+Strukturiere als: 1) Firmenprofil (2-3 Saetze), 2) Aktuelle Situation, 3) Gespraechspunkte, 4) Offene Themen`,
+    outputFormat: '',
+  },
+
+  // ============================================
+  // Security Roadmap
+  // ============================================
+  security_roadmap: {
+    name: 'Security-Roadmap',
+    description: 'Priorisierte Massnahmen-Roadmap aus Audit-Ergebnissen',
+    systemPrompt: 'Du bist ein IT-Sicherheitsberater. Erstelle konkrete, umsetzbare Massnahmen-Roadmaps auf Deutsch.',
+    userPrompt: `Erstelle eine priorisierte Security-Roadmap basierend auf diesen nicht-erfuellten DIN SPEC 27076 Anforderungen:
+
+{{requirements}}
+
+Struktur: 1. Kurzfristig (0-3 Monate), 2. Mittelfristig (3-6 Monate), 3. Langfristig (6-12 Monate), 4. Budget-Schaetzung`,
+    outputFormat: '',
+  },
+
+  // ============================================
+  // Receipt OCR
+  // ============================================
+  receipt_ocr: {
+    name: 'Beleg-OCR',
+    description: 'Extrahiert strukturierte Daten aus Belegen',
+    systemPrompt: 'Du bist ein OCR-Assistent. Extrahiere strukturierte Daten aus Belegen. Antworte nur in JSON.',
+    userPrompt: `Extrahiere aus diesem Beleg/Rechnung: Betrag (als Zahl), Datum (YYYY-MM-DD), Lieferant/Firma, Kategorie (office/travel/software/other).
+
+{{imageDescription}}`,
+    outputFormat: `{"amount":"12.50","date":"2026-01-15","vendor":"Firma XY","category":"office"}`,
+  },
+
+  // ============================================
+  // Document Template Fill
+  // ============================================
+  document_template_fill: {
+    name: 'Dokument-Template ausfuellen',
+    description: 'Fuellt Dokument-Templates mit KI-generierten Inhalten',
+    systemPrompt: 'Du bist ein Dokumenten-Assistent. Fuelle Templates professionell aus. Antworte nur mit HTML.',
+    userPrompt: `Fuelle dieses Dokument-Template mit Inhalten basierend auf folgendem Kontext:
+
+Kontext:
+{{context}}
+
+Template:
+{{template}}
+
+Ersetze alle {{Platzhalter}} mit passenden Inhalten. Behalte die HTML-Struktur bei.`,
+    outputFormat: '',
   },
 
   // ============================================

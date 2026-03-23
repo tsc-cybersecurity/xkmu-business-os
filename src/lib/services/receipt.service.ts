@@ -7,6 +7,7 @@ import { receipts } from '@/lib/db/schema'
 import type { Receipt } from '@/lib/db/schema'
 import { eq, and, desc, count } from 'drizzle-orm'
 import { AIService } from '@/lib/services/ai/ai.service'
+import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { logger } from '@/lib/utils/logger'
 
 export const ReceiptService = {
@@ -82,10 +83,12 @@ export const ReceiptService = {
     category?: string
   }> {
     try {
-      const response = await AIService.completeWithContext(
-        `Extrahiere aus diesem Beleg/Rechnung: Betrag (als Zahl), Datum (YYYY-MM-DD), Lieferant/Firma, Kategorie (office/travel/software/other). Antworte als JSON: {"amount":"12.50","date":"2026-01-15","vendor":"Firma XY","category":"office"}`,
+      const template = await AiPromptTemplateService.getOrDefault(tenantId, 'receipt_ocr')
+      const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { imageDescription: imageBase64.substring(0, 500) })
+
+      const response = await AIService.completeWithContext(userPrompt,
         { tenantId, feature: 'receipt_ocr' },
-        { maxTokens: 500, temperature: 0.1, systemPrompt: 'Du bist ein OCR-Assistent. Extrahiere strukturierte Daten aus Belegen. Antworte nur in JSON.' },
+        { maxTokens: 500, temperature: 0.1, systemPrompt: template.systemPrompt },
       )
 
       const jsonMatch = response.text.match(/\{[\s\S]*\}/)

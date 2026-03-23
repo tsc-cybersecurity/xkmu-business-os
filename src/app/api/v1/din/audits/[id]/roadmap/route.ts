@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
 import { AIService } from '@/lib/services/ai/ai.service'
+import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { dinAuditSessions, dinAnswers, dinRequirements } from '@/lib/db/schema'
@@ -38,20 +39,12 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         `- ${a.reqNumber}: ${a.reqText} (${a.reqPoints} Punkte)${a.justification ? ` — ${a.justification}` : ''}`
       ).join('\n')
 
-      const response = await AIService.completeWithContext(
-        `Erstelle eine priorisierte Security-Roadmap basierend auf diesen nicht-erfuellten DIN SPEC 27076 Anforderungen:
+      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'security_roadmap')
+      const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { requirements: context })
 
-${context}
-
-Struktur:
-1. Kurzfristig (0-3 Monate): Kritische Massnahmen
-2. Mittelfristig (3-6 Monate): Wichtige Massnahmen
-3. Langfristig (6-12 Monate): Ergaenzende Massnahmen
-4. Budget-Schaetzung pro Phase
-
-Fuer jede Massnahme: Konkreter Handlungsschritt, Verantwortlicher, geschaetzter Aufwand.`,
+      const response = await AIService.completeWithContext(userPrompt,
         { tenantId: auth.tenantId, feature: 'security_roadmap' },
-        { maxTokens: 3000, temperature: 0.3, systemPrompt: 'Du bist ein IT-Sicherheitsberater. Erstelle konkrete, umsetzbare Massnahmen-Roadmaps auf Deutsch.' },
+        { maxTokens: 3000, temperature: 0.3, systemPrompt: template.systemPrompt },
       )
 
       return apiSuccess({

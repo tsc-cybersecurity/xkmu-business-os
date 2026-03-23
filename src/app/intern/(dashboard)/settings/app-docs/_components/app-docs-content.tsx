@@ -51,6 +51,11 @@ export function AppDocsContent() {
         <TabsTrigger value="n8n" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">n8n Workflows</TabsTrigger>
         <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Einstellungen</TabsTrigger>
         <TabsTrigger value="public" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Öffentlich</TabsTrigger>
+        <TabsTrigger value="prozesse" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Prozesse</TabsTrigger>
+        <TabsTrigger value="projekte" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Projekte</TabsTrigger>
+        <TabsTrigger value="zeiterfassung" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Zeiterfassung</TabsTrigger>
+        <TabsTrigger value="newsletter" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Newsletter</TabsTrigger>
+        <TabsTrigger value="taskqueue" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Task-Queue</TabsTrigger>
       </TabsList>
 
       {/* ===== ÜBERSICHT ===== */}
@@ -1414,6 +1419,158 @@ withPermission(request, 'companies', 'read', async (req, session) => {
               <EndpointDoc method="GET" path="/api/v1/public/blog/posts/:slug" description="Blog-Beitrag nach Slug (öffentlich)." responseExample={{ title: 'IT-Trends', content: '<p>...</p>', publishedAt: '2026-02-20' }} />
               <EndpointDoc method="GET" path="/api/v1/public/pages/:slug" description="CMS-Seite nach Slug (öffentlich)." responseExample={{ title: 'Ueber uns', blocks: [{ type: 'hero', content: {} }] }} />
               <EndpointDoc method="GET" path="/api/v1/public/navigation" description="Website-Navigation (öffentlich)." responseExample={{ data: [{ label: 'Startseite', url: '/', children: [] }] }} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== PROZESSE ===== */}
+      <TabsContent value="prozesse" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Prozesshandbuch</CardTitle>
+            <CardDescription>Digitales SOP-Handbuch mit 93 Aufgaben in 9 Prozessbereichen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Seiten">
+              <InfoTable rows={[
+                ['Uebersicht', '/intern/prozesse — Collapsible Sidebar mit Prozess-Tree, Accordion-Ansicht'],
+                ['Programmierauftraege', '/intern/prozesse/dev — Filterbar, editierbar, MD-Export, KI-Analyse'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpoints">
+              <EndpointDoc method="GET" path="/api/v1/processes" description="Alle Prozessbereiche mit Task-Zaehler" />
+              <EndpointDoc method="GET" path="/api/v1/processes/:id" description="Prozess mit allen Tasks" />
+              <EndpointDoc method="POST" path="/api/v1/processes/seed" description="JSON-Import der SOP-Daten" />
+              <EndpointDoc method="POST" path="/api/v1/processes/mapping" description="Bulk-Update App-Status und devRequirements" />
+              <EndpointDoc method="GET" path="/api/v1/processes/dev-tasks" description="Alle Tasks mit Programmieranforderungen" />
+              <EndpointDoc method="POST" path="/api/v1/processes/dev-tasks/generate" description="KI-Batch-Analyse fuer devRequirements" />
+            </SectionBlock>
+            <SectionBlock title="Datenbank">
+              <InfoTable rows={[
+                ['processes', 'Prozessbereiche: key, name, description, sortOrder'],
+                ['process_tasks', 'Aufgaben: steps/checklist/tools (JSONB), appStatus, appNotes, devRequirements'],
+              ]} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== PROJEKTE ===== */}
+      <TabsContent value="projekte" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Projekt-Modul (Kanban)</CardTitle>
+            <CardDescription>Kanban-Board mit Drag&amp;Drop fuer Projektmanagement</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Features">
+              <InfoTable rows={[
+                ['Kanban-Board', 'Spalten (Backlog, ToDo, In Arbeit, Fertig) mit Drag&Drop via @dnd-kit'],
+                ['Projekttypen', 'kanban, okr, content — konfigurierbare Spalten'],
+                ['Task-Cards', 'Titel, Beschreibung, Zuweisung, Faelligkeitsdatum, Checkliste, Labels'],
+                ['Firmenzuordnung', 'Projekte mit Firmen verknuepfbar'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpoints">
+              <EndpointDoc method="GET" path="/api/v1/projects" description="Projektliste" />
+              <EndpointDoc method="POST" path="/api/v1/projects" description="Neues Projekt" />
+              <EndpointDoc method="GET" path="/api/v1/projects/:id" description="Projekt mit Tasks" />
+              <EndpointDoc method="POST" path="/api/v1/projects/:id/tasks" description="Neue Aufgabe" />
+              <EndpointDoc method="PUT" path="/api/v1/projects/:id/tasks/:taskId" description="Aufgabe verschieben/aktualisieren" />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== ZEITERFASSUNG ===== */}
+      <TabsContent value="zeiterfassung" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Zeiterfassung</CardTitle>
+            <CardDescription>Start/Stop-Timer und manuelle Eintraege mit Firmenzuordnung</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Features">
+              <InfoTable rows={[
+                ['Timer', 'Start/Stop pro Aufgabe, laufende Zeit-Anzeige'],
+                ['Manuelle Eingabe', 'Minuten direkt eintragen'],
+                ['Firmenzuordnung', 'Jeder Eintrag einer Firma zuweisbar'],
+                ['Abrechenbar-Flag', 'Billable/Non-billable Markierung'],
+                ['Rechnung erstellen', 'Aus Zeiteintraegen automatisch Rechnung generieren'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpoints">
+              <EndpointDoc method="GET" path="/api/v1/time-entries" description="Eintraege mit ?companyId=&from=&to=" />
+              <EndpointDoc method="POST" path="/api/v1/time-entries/timer" description="Timer starten/stoppen" />
+              <EndpointDoc method="POST" path="/api/v1/time-entries/invoice" description="Rechnung aus Zeiteintraegen" />
+            </SectionBlock>
+            <SectionBlock title="Zahlungs-Tracking (documents)">
+              <InfoTable rows={[
+                ['paymentStatus', 'unpaid, paid, overdue, partially_paid'],
+                ['dunningLevel', '0-3 (Keine, Erinnerung, Mahnung, Letzte Mahnung)'],
+                ['3-Stufen-Mahnwesen', 'Automatisch via Task-Queue: 7d, 14d, 21d'],
+              ]} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== NEWSLETTER ===== */}
+      <TabsContent value="newsletter" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Newsletter</CardTitle>
+            <CardDescription>Subscriber-Verwaltung, Kampagnen und Versand</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Features">
+              <InfoTable rows={[
+                ['Subscribers', 'Import/Export, Tags, Status (active/unsubscribed/bounced)'],
+                ['Kampagnen', 'Erstellen, Bearbeiten, nach Tags segmentieren, versenden'],
+                ['KI-Content', 'Newsletter-Text per KI generieren'],
+                ['Statistik', 'sent, failed, total pro Kampagne'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpoints">
+              <EndpointDoc method="GET" path="/api/v1/newsletter/subscribers" description="Subscriber-Liste" />
+              <EndpointDoc method="POST" path="/api/v1/newsletter/subscribers" description="Einzeln oder Bulk-Import" />
+              <EndpointDoc method="GET" path="/api/v1/newsletter/campaigns" description="Kampagnen" />
+              <EndpointDoc method="POST" path="/api/v1/newsletter/campaigns/:id/send" description="Kampagne versenden" />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== TASK-QUEUE ===== */}
+      <TabsContent value="taskqueue" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Task-Queue</CardTitle>
+            <CardDescription>Automatisierte Aufgaben — ersetzt Cron-Jobs</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Konzept">
+              <InfoTable rows={[
+                ['Prinzip', 'Tasks werden in DB gequeued und per Button einzeln oder batch ausgefuehrt'],
+                ['Status', 'pending → running → completed/failed/cancelled'],
+                ['Typen', 'email, dunning, follow_up, reminder, social_publish'],
+                ['Scheduling', 'scheduledFor-Feld bestimmt fruehesten Ausfuehrungszeitpunkt'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="Weitere neue Features">
+              <InfoTable rows={[
+                ['E-Mail-Templates', '12 Default-Templates mit {{Platzhalter}}-System (Settings > E-Mail-Vorlagen)'],
+                ['Dokument-Generator', '7 KI-Templates: Massnahmenplan, Roadmap, Runbook, Richtlinien, Playbook'],
+                ['Feedback-Modul', 'Formulare mit oeffentlichem Antwort-Link, NPS-Score'],
+                ['KPI-Dashboard', 'Leads, Conversion, Umsatz, offene Rechnungen per API'],
+                ['SEO-Keywords', 'KI-Keyword-Analyse mit optionaler SerpAPI'],
+                ['Social Publishing', 'Direktes Posten auf LinkedIn + Twitter/X'],
+                ['WordPress-Export', 'Blog-Posts auf externe WordPress-Seite publizieren'],
+                ['Blog KI-Review', 'Lesbarkeit, SEO, Tonalitaet automatisch pruefen'],
+                ['Beleg-Upload', 'Foto/PDF hochladen, KI-OCR extrahiert Betrag/Datum/Lieferant'],
+                ['Geburtstage', 'Birthday-Feld bei Personen, API fuer anstehende Geburtstage'],
+              ]} />
             </SectionBlock>
           </CardContent>
         </Card>

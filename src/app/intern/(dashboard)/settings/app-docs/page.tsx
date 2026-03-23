@@ -24,7 +24,7 @@ export default async function AppDocsPage() {
         <Card>
           <CardHeader className="pb-2">
             <Monitor className="h-6 w-6 text-blue-500" />
-            <CardTitle className="mt-2 text-sm">15 Module</CardTitle>
+            <CardTitle className="mt-2 text-sm">22 Module</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">CRM, Finanzen, Marketing u.v.m.</p>
@@ -34,7 +34,7 @@ export default async function AppDocsPage() {
         <Card>
           <CardHeader className="pb-2">
             <Layers className="h-6 w-6 text-green-500" />
-            <CardTitle className="mt-2 text-sm">70+ Seiten</CardTitle>
+            <CardTitle className="mt-2 text-sm">80+ Seiten</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">Dashboard, Listen, Formulare</p>
@@ -44,7 +44,7 @@ export default async function AppDocsPage() {
         <Card>
           <CardHeader className="pb-2">
             <BookOpen className="h-6 w-6 text-orange-500" />
-            <CardTitle className="mt-2 text-sm">140+ APIs</CardTitle>
+            <CardTitle className="mt-2 text-sm">170+ APIs</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">RESTful Endpunkte</p>

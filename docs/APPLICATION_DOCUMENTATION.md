@@ -1,7 +1,7 @@
 # xKMU BusinessOS - Vollständige Anwendungsdokumentation
 
-> **Version:** 1.1.132
-> **Stand:** 2026-03-14
+> **Version:** 1.2.211
+> **Stand:** 2026-03-23
 > **Stack:** Next.js 16 App Router, React 19, Drizzle ORM, PostgreSQL
 > **Sprache:** Deutsch (UI), Englisch (API/Code)
 
@@ -21,6 +21,17 @@
 10. [n8n Workflow-Integration](#10-n8n-workflow-integration)
 11. [kie.ai Video-Generierung](#11-kieai-video-generierung)
 12. [Datenbank-Administration](#12-datenbank-administration)
+13. [Prozesshandbuch](#13-prozesshandbuch)
+14. [Task-Queue](#14-task-queue)
+15. [E-Mail-Templates](#15-e-mail-templates)
+16. [Zeiterfassung](#16-zeiterfassung)
+17. [Projekt-Modul (Kanban)](#17-projekt-modul-kanban)
+18. [Newsletter](#18-newsletter)
+19. [Dokument-Generator](#19-dokument-generator)
+20. [Feedback-Modul](#20-feedback-modul)
+21. [KPI-Dashboard](#21-kpi-dashboard)
+22. [Social Media Publishing](#22-social-media-publishing)
+23. [SEO-Keyword-Recherche](#23-seo-keyword-recherche)
 
 ---
 
@@ -1694,4 +1705,271 @@ In Einstellungen > Integrations als Provider-Typ `kie` mit API Key anlegen.
 
 ---
 
-*Diese Dokumentation wurde am 2026-03-14 aktualisiert. Version 1.1.132.*
+---
+
+## 13. Prozesshandbuch
+
+Digitales SOP-Handbuch mit 93 Aufgaben in 9 Prozessbereichen (KP1-KP7, MP, UP).
+
+### Seiten
+| Seite | Beschreibung |
+|-------|-------------|
+| `/intern/prozesse` | Uebersicht mit collapsible Sidebar-Navigation (Prozess > Teilprozess > Aufgabe), Accordion-Ansicht |
+| `/intern/prozesse/dev` | Programmierauftraege: filterbar nach Prioritaet/Aufwand/Tool, inline-editierbar, MD-Export, KI-Analyse pro Aufgabe |
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/processes` | Alle Prozessbereiche mit Task-Zaehler |
+| POST | `/api/v1/processes` | Neuer Prozessbereich |
+| GET | `/api/v1/processes/[id]` | Prozess mit allen Tasks |
+| PUT | `/api/v1/processes/[id]` | Prozess aktualisieren |
+| DELETE | `/api/v1/processes/[id]` | Prozess loeschen |
+| GET | `/api/v1/processes/[id]/tasks` | Tasks eines Prozesses |
+| POST | `/api/v1/processes/[id]/tasks` | Neue Aufgabe |
+| PUT | `/api/v1/processes/tasks/[taskId]` | Aufgabe aktualisieren |
+| DELETE | `/api/v1/processes/tasks/[taskId]` | Aufgabe loeschen |
+| POST | `/api/v1/processes/seed` | JSON-Import (Body oder Server-Dateien) |
+| POST | `/api/v1/processes/mapping` | Bulk-Update App-Status/devRequirements |
+| GET | `/api/v1/processes/dev-tasks` | Alle Tasks mit Programmieranforderungen |
+| POST | `/api/v1/processes/dev-tasks/generate` | KI-Batch-Analyse fuer devRequirements |
+
+### DB-Tabellen
+- `processes` — Prozessbereiche (key, name, description, sortOrder)
+- `process_tasks` — Aufgaben mit steps/checklist/tools (JSONB), appStatus, appNotes, appModule, devRequirements
+
+---
+
+## 14. Task-Queue
+
+Ersetzt Cron-Jobs. Tasks werden in DB gequeued und per Button ausgefuehrt.
+
+### Seite
+| Seite | Beschreibung |
+|-------|-------------|
+| `/intern/settings/task-queue` | Tabelle mit Filter (Status, Typ), Checkboxen, "Ausgewaehlte ausfuehren" / "Alle ausfuehren" |
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/task-queue` | Tasks mit ?status=&type= Filter |
+| POST | `/api/v1/task-queue` | Neuen Task erstellen |
+| GET | `/api/v1/task-queue/[id]` | Task-Detail |
+| PUT | `/api/v1/task-queue/[id]` | Task stornieren (action=cancel) |
+| DELETE | `/api/v1/task-queue/[id]` | Task loeschen |
+| POST | `/api/v1/task-queue/execute` | Ausfuehren: {ids:[]}, {id:""} oder {all:true} |
+
+### Task-Typen
+| Typ | Handler | Beschreibung |
+|-----|---------|-------------|
+| `email` | EmailService.send/sendWithTemplate | E-Mail versenden (direkt oder via Template) |
+| `dunning` | DunningHandler | 3-Stufen-Mahnwesen (7/14/21 Tage) |
+| `follow_up` | EmailService.sendWithTemplate | Follow-up E-Mail |
+| `reminder` | EmailService.sendWithTemplate | Erinnerung |
+
+### DB-Tabelle
+- `task_queue` — type, status, priority, payload (JSONB), scheduledFor, referenceType/Id
+
+---
+
+## 15. E-Mail-Templates
+
+Template-System fuer automatisierte E-Mails mit {{Platzhalter}}-Syntax.
+
+### Seite
+| Seite | Beschreibung |
+|-------|-------------|
+| `/intern/settings/email-templates` | CRUD, Vorschau, Seed-Import (12 Defaults) |
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/email-templates` | Alle Templates |
+| POST | `/api/v1/email-templates` | Neues Template |
+| GET | `/api/v1/email-templates/[id]` | Template-Detail |
+| PUT | `/api/v1/email-templates/[id]` | Template aktualisieren |
+| DELETE | `/api/v1/email-templates/[id]` | Template loeschen |
+| POST | `/api/v1/email-templates/seed` | 12 Default-Templates importieren |
+
+### Default-Templates
+lead_first_response, offer_send, follow_up_offer, welcome, reminder_7d, dunning_14d, dunning_21d, testimonial_request, birthday, christmas, after_sales_6w, meeting_invite
+
+### DB-Tabelle
+- `email_templates` — slug, name, subject, bodyHtml, placeholders (JSONB)
+
+---
+
+## 16. Zeiterfassung
+
+Start/Stop-Timer und manuelle Zeiteintraege mit Firmenzuordnung.
+
+### Seite
+| Seite | Beschreibung |
+|-------|-------------|
+| `/intern/zeiterfassung` | Timer, manuelle Eingabe, Tagesuebersicht, Tabelle |
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/time-entries` | Eintraege mit ?companyId=&from=&to= |
+| POST | `/api/v1/time-entries` | Neuer Eintrag |
+| GET | `/api/v1/time-entries/[id]` | Detail |
+| PUT | `/api/v1/time-entries/[id]` | Aktualisieren |
+| DELETE | `/api/v1/time-entries/[id]` | Loeschen |
+| GET | `/api/v1/time-entries/timer` | Laufender Timer |
+| POST | `/api/v1/time-entries/timer` | Timer starten/stoppen ({action: "start"/"stop"}) |
+| POST | `/api/v1/time-entries/invoice` | Rechnung aus Zeiteintraegen erstellen |
+
+### DB-Tabelle
+- `time_entries` — userId, companyId, date, startTime, endTime, durationMinutes, billable, hourlyRate
+
+### Erweiterung documents-Tabelle
+- `paymentStatus` (unpaid/paid/overdue), `paidAt`, `paidAmount`, `dunningLevel`
+
+---
+
+## 17. Projekt-Modul (Kanban)
+
+Kanban-Board mit Drag&Drop (@dnd-kit) fuer Projektmanagement.
+
+### Seiten
+| Seite | Beschreibung |
+|-------|-------------|
+| `/intern/projekte` | Projektuebersicht als Cards |
+| `/intern/projekte/[id]` | Kanban-Board mit Spalten, Drag&Drop |
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/projects` | Projektliste mit ?status= |
+| POST | `/api/v1/projects` | Neues Projekt |
+| GET | `/api/v1/projects/[id]` | Projekt mit Tasks |
+| PUT | `/api/v1/projects/[id]` | Projekt aktualisieren |
+| DELETE | `/api/v1/projects/[id]` | Projekt loeschen |
+| GET | `/api/v1/projects/[id]/tasks` | Tasks eines Projekts |
+| POST | `/api/v1/projects/[id]/tasks` | Neue Aufgabe |
+| PUT | `/api/v1/projects/[id]/tasks/[taskId]` | Aufgabe verschieben/aktualisieren |
+| DELETE | `/api/v1/projects/[id]/tasks/[taskId]` | Aufgabe loeschen |
+
+### DB-Tabellen
+- `projects` — name, companyId, status, projectType (kanban/okr/content), columns (JSONB)
+- `project_tasks` — title, columnId, position, assignedTo, dueDate, checklist (JSONB), labels
+
+---
+
+## 18. Newsletter
+
+Subscriber-Verwaltung, Kampagnen-Erstellung und Versand.
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/newsletter/subscribers` | Subscriber-Liste mit ?status=&search= |
+| POST | `/api/v1/newsletter/subscribers` | Einzeln oder Bulk-Import ({subscribers:[]}) |
+| GET | `/api/v1/newsletter/campaigns` | Kampagnen-Liste |
+| POST | `/api/v1/newsletter/campaigns` | Neue Kampagne |
+| POST | `/api/v1/newsletter/campaigns/[id]/send` | Kampagne versenden |
+
+### DB-Tabellen
+- `newsletter_subscribers` — email, name, tags, status (active/unsubscribed/bounced)
+- `newsletter_campaigns` — name, subject, bodyHtml, status, stats (JSONB), segmentTags
+
+---
+
+## 19. Dokument-Generator
+
+KI-gestuetztes Template-System fuer Berichte, Richtlinien und Playbooks.
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/document-templates` | Templates mit ?category= |
+| POST | `/api/v1/document-templates` | Neues Template |
+| POST | `/api/v1/document-templates/[id]/generate` | KI fuellt Template ({context: "..."}) |
+| POST | `/api/v1/document-templates/seed` | 7 Default-Templates importieren |
+| POST | `/api/v1/din/audits/[id]/roadmap` | Security-Roadmap aus Audit-Ergebnissen |
+
+### Default-Templates
+Massnahmenplan, Security-Roadmap, Betriebshandbuch, Backup-Strategie, Security-Richtlinie, Notfall-Playbook, Awareness-Schulung
+
+### DB-Tabelle
+- `document_templates` — name, category, bodyHtml, placeholders (JSONB), headerHtml, footerHtml
+
+---
+
+## 20. Feedback-Modul
+
+Feedback-Formulare mit oeffentlichem Antwort-Endpoint und NPS-Berechnung.
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/feedback` | Formulare mit Response-Zaehler |
+| POST | `/api/v1/feedback` | Neues Formular |
+| POST | `/api/v1/feedback/[token]/respond` | Oeffentlicher Antwort-Endpoint (kein Auth) |
+
+### DB-Tabellen
+- `feedback_forms` — name, questions (JSONB), token (unique), companyId
+- `feedback_responses` — formId, answers (JSONB), npsScore
+
+---
+
+## 21. KPI-Dashboard
+
+Aggregierte Business-Metriken mit Zeitraum-Filter.
+
+### API-Endpoint
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/kpi?from=&to=` | Leads, Conversion, Umsatz, offene/ueberfaellige Rechnungen |
+
+### Metriken
+newLeads, wonLeads, conversionRate, revenue, openInvoices, overdueInvoices
+
+---
+
+## 22. Social Media Publishing
+
+Direktes Posten auf LinkedIn und Twitter/X.
+
+### API-Endpoints
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| POST | `/api/v1/social-media/posts/[id]/publish` | Post auf Plattform(en) veroeffentlichen |
+
+### Konfiguration
+LinkedIn: AI-Provider type=`linkedin`, apiKey=`accessToken|authorUrn`
+Twitter: AI-Provider type=`twitter`, apiKey=`bearerToken`
+
+---
+
+## 23. SEO-Keyword-Recherche
+
+KI-basierte Keyword-Analyse mit optionaler SerpAPI-Integration.
+
+### API-Endpoint
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| POST | `/api/v1/seo/keywords` | Keyword-Analyse ({keyword, language}) |
+
+### Response
+primaryKeyword, searchIntent, difficulty, relatedKeywords, longTailKeywords, contentSuggestions, estimatedMonthlySearches
+
+---
+
+## Weitere neue Endpoints
+
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/companies/[id]/prep` | KI-Gespraechsvorbereitung |
+| POST | `/api/v1/documents/[id]/send` | Dokument per E-Mail versenden |
+| POST | `/api/v1/leads/inbound` | Inbound-Lead von Formular/Webhook |
+| POST | `/api/v1/blog/posts/[id]/review` | KI-Review (Lesbarkeit, SEO, Tonalitaet) |
+| POST | `/api/v1/blog/posts/[id]/publish-wp` | Blog-Post auf WordPress veroeffentlichen |
+| GET | `/api/v1/persons/birthdays?days=7` | Anstehende Geburtstage |
+| GET | `/api/v1/receipts` | Belege (Belegverwaltung) |
+| POST | `/api/v1/receipts` | Neuer Beleg |
+
+---
+
+*Diese Dokumentation wurde am 2026-03-23 aktualisiert. Version 1.2.211.*

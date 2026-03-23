@@ -7,6 +7,7 @@ import { documentTemplates } from '@/lib/db/schema'
 import type { DocumentTemplate } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { AIService } from '@/lib/services/ai/ai.service'
+import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 
 export const DocumentTemplateService = {
   async list(tenantId: string, category?: string): Promise<DocumentTemplate[]> {
@@ -59,18 +60,14 @@ export const DocumentTemplateService = {
     const tpl = await this.getById(tenantId, templateId)
     if (!tpl) throw new Error('Template nicht gefunden')
 
-    const response = await AIService.completeWithContext(
-      `Fuelle dieses Dokument-Template mit Inhalten basierend auf folgendem Kontext:
+    const promptTemplate = await AiPromptTemplateService.getOrDefault(tenantId, 'document_template_fill')
+    const userPrompt = AiPromptTemplateService.applyPlaceholders(promptTemplate.userPrompt, {
+      context, template: tpl.bodyHtml || '',
+    })
 
-Kontext:
-${context}
-
-Template:
-${tpl.bodyHtml}
-
-Ersetze alle {{Platzhalter}} mit passenden Inhalten. Behalte die HTML-Struktur bei. Antworte NUR mit dem ausgefuellten HTML.`,
+    const response = await AIService.completeWithContext(userPrompt,
       { tenantId, feature: 'document_template_generate' },
-      { maxTokens: 4000, temperature: 0.3, systemPrompt: 'Du bist ein Dokumenten-Assistent. Fuelle Templates professionell aus. Antworte nur mit HTML.' },
+      { maxTokens: 4000, temperature: 0.3, systemPrompt: promptTemplate.systemPrompt },
     )
 
     return response.text

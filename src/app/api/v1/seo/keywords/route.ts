@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { AIService } from '@/lib/services/ai/ai.service'
+import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
@@ -32,29 +33,16 @@ export async function POST(request: NextRequest) {
         }
       } catch { /* SerpAPI optional */ }
 
-      // KI-Analyse fuer Keyword-Empfehlungen
-      const context = serpResults
-        ? `SerpAPI-Daten: ${JSON.stringify(serpResults)}`
-        : 'Keine SerpAPI-Daten verfuegbar.'
+      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'seo_keywords')
+      const serpContext = serpResults ? `SerpAPI-Daten: ${JSON.stringify(serpResults)}` : 'Keine SerpAPI-Daten verfuegbar.'
 
-      const response = await AIService.completeWithContext(
-        `Keyword-Analyse fuer "${keyword}" (Sprache: ${language || 'de'}, Markt: Deutschland).
+      const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
+        keyword, language: language || 'de', serpData: serpContext,
+      })
 
-${context}
-
-Erstelle eine SEO-Keyword-Analyse als JSON:
-{
-  "primaryKeyword": "${keyword}",
-  "searchIntent": "informational|transactional|navigational",
-  "difficulty": "leicht|mittel|schwer",
-  "relatedKeywords": ["keyword1", "keyword2", ...],
-  "longTailKeywords": ["long tail 1", "long tail 2", ...],
-  "contentSuggestions": ["Themenvorschlag 1", "Themenvorschlag 2"],
-  "estimatedMonthlySearches": "100-500",
-  "competitorTopics": ["Thema das Wettbewerber abdecken"]
-}`,
+      const response = await AIService.completeWithContext(userPrompt,
         { tenantId: auth.tenantId, feature: 'seo_keywords' },
-        { maxTokens: 1500, temperature: 0.3, systemPrompt: 'Du bist ein SEO-Experte fuer den deutschen Markt. Antworte in JSON.' },
+        { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt },
       )
 
       const jsonMatch = response.text.match(/\{[\s\S]*\}/)

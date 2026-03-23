@@ -61,12 +61,12 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
           : 'Keine offenen Chancen',
       ].filter(Boolean).join('\n')
 
-      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'meeting_summary')
+      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'meeting_prep')
+      const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { context })
 
-      const response = await AIService.completeWithContext(
-        `Erstelle eine Gespraechsvorbereitung fuer ein Meeting mit dieser Firma:\n\n${context}\n\nStrukturiere als: 1) Firmenprofil (2-3 Saetze), 2) Aktuelle Situation, 3) Gespraechspunkte, 4) Offene Themen`,
+      const response = await AIService.completeWithContext(userPrompt,
         { tenantId: auth.tenantId, feature: 'meeting_prep' },
-        { maxTokens: 1500, temperature: 0.3, systemPrompt: 'Du bist ein Business-Berater. Erstelle eine praegnante Gespraechsvorbereitung auf Deutsch.' },
+        { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt },
       )
 
       return apiSuccess({
