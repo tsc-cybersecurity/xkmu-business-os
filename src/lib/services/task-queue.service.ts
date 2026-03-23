@@ -218,12 +218,28 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
       return { sent: true, to: payload.to, messageId: result.messageId }
     }
 
+    case 'dunning': {
+      const { handleDunning } = await import('@/lib/services/task-queue-handlers/dunning.handler')
+      return handleDunning(item.tenantId, payload as Parameters<typeof handleDunning>[1])
+    }
+
     case 'follow_up':
-    case 'reminder':
-    case 'dunning_check': {
-      // Placeholder — wird in Phase 1/2 implementiert
-      logger.info(`Handler '${item.type}' not yet implemented, skipping`, { module: 'TaskQueue' })
-      return { skipped: true, reason: 'Handler not yet implemented' }
+    case 'reminder': {
+      // Follow-up: Sendet E-Mail wenn Template und Empfaenger vorhanden
+      if (payload.templateSlug && payload.to) {
+        const { EmailService } = await import('@/lib/services/email.service')
+        const result = await EmailService.sendWithTemplate(
+          item.tenantId,
+          String(payload.templateSlug),
+          String(payload.to),
+          (payload.placeholders || {}) as Record<string, string>,
+          { leadId: payload.leadId ? String(payload.leadId) : undefined }
+        )
+        if (!result.success) throw new Error(result.error || 'E-Mail-Versand fehlgeschlagen')
+        return { sent: true, to: payload.to, template: payload.templateSlug }
+      }
+      logger.info(`Handler '${item.type}': no template/to, skipping`, { module: 'TaskQueue' })
+      return { skipped: true, reason: 'Missing templateSlug or to' }
     }
 
     default:

@@ -2047,6 +2047,34 @@ export type ProcessTask = typeof processTasks.$inferSelect
 export type NewProcessTask = typeof processTasks.$inferInsert
 
 // ============================================
+// Receipts (Belege)
+// ============================================
+export const receipts = pgTable('receipts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  fileName: varchar('file_name', { length: 255 }),
+  fileUrl: varchar('file_url', { length: 500 }),
+  amount: numeric('amount', { precision: 10, scale: 2 }),
+  date: timestamp('date', { withTimezone: true }),
+  vendor: varchar('vendor', { length: 255 }),
+  category: varchar('category', { length: 100 }), // office, travel, software, other
+  status: varchar('status', { length: 20 }).default('pending'), // pending, processed, archived
+  ocrData: jsonb('ocr_data'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_receipts_tenant').on(table.tenantId),
+  index('idx_receipts_tenant_date').on(table.tenantId, table.date),
+])
+
+export const receiptsRelations = relations(receipts, ({ one }) => ({
+  tenant: one(tenants, { fields: [receipts.tenantId], references: [tenants.id] }),
+}))
+
+export type Receipt = typeof receipts.$inferSelect
+export type NewReceipt = typeof receipts.$inferInsert
+
+// ============================================
 // Time Entries (Zeiterfassung)
 // ============================================
 export const timeEntries = pgTable('time_entries', {
