@@ -296,8 +296,24 @@ export const ProcessService = {
     // 3. Import tasks from new_sops.json
     for (const sop of newSopsJson) {
       const processKey = sop.id.split('-')[0] // e.g. "KP3-10" -> "KP3"
-      const processId = processMap.get(processKey)
-      if (!processId) continue
+      let processId = processMap.get(processKey)
+
+      // Auto-create process area if not yet known (e.g. KP6, KP7 from new_sops)
+      if (!processId) {
+        const existing = await this.getByKey(tenantId, processKey)
+        if (existing) {
+          processId = existing.id
+        } else {
+          const newProcess = await this.create(tenantId, {
+            key: processKey,
+            name: sop.process || processKey,
+            description: `Automatisch erstellt aus ${sop.process || processKey}`,
+            sortOrder: sortOrderMap[processKey] ?? (10 + processMap.size),
+          })
+          processId = newProcess.id
+        }
+        processMap.set(processKey, processId)
+      }
 
       // Check if task already exists
       const existingTasks = await db
