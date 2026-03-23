@@ -58,12 +58,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Full node_modules for drizzle-kit push + tsx (schema migration & seeding at startup)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Drizzle config + schema for migrations and seeding
+# Drizzle config + schema, services, types for migrations and seeding
 COPY --from=builder --chown=nextjs:nodejs /app/drizzle.config.ts ./drizzle.config.ts
-COPY --from=builder --chown=nextjs:nodejs /app/src/lib/db ./src/lib/db
-COPY --from=builder --chown=nextjs:nodejs /app/src/lib/types ./src/lib/types
-COPY --from=builder --chown=nextjs:nodejs /app/src/lib/services/ai-prompt-template.defaults.ts ./src/lib/services/ai-prompt-template.defaults.ts
+COPY --from=builder --chown=nextjs:nodejs /app/src/lib ./src/lib
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/tsconfig.json ./tsconfig.json
 
 # Writable upload directories (BI documents + media uploads)
 RUN mkdir -p /app/data/uploads/bi /app/data/uploads/media && chown -R nextjs:nodejs /app/data
