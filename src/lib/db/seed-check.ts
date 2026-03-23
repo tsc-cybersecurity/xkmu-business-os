@@ -7,7 +7,7 @@ import { requirementsSeedData } from './seeds/din-requirements.seed'
 import { grantsSeedData } from './seeds/din-grants.seed'
 import { wibaRequirementsSeedData } from './seeds/wiba-requirements.seed'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
-import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.service'
+import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.defaults'
 import { logger } from '@/lib/utils/logger'
 
 const SEED_DATA = {
