@@ -38,7 +38,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
           .update(socialMediaPosts)
           .set({
             status: 'posted',
-            publishedAt: new Date(),
+            postedAt: new Date(),
             updatedAt: new Date(),
           })
           .where(eq(socialMediaPosts.id, id))
