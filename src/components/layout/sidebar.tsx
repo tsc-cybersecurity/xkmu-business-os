@@ -158,6 +158,7 @@ const navigation: NavItem[] = [
       { name: 'Datenbank', href: '/intern/settings/database', requiredModule: 'database' },
       { name: 'Export / Import', href: '/intern/settings/export', requiredModule: 'settings' },
       { name: 'App-Dokumentation', href: '/intern/settings/app-docs', requiredModule: 'settings' },
+      { name: 'Task-Queue', href: '/intern/settings/task-queue', requiredModule: 'settings' },
     ],
   },
 ]

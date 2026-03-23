@@ -2039,3 +2039,37 @@ export const processTasksRelations = relations(processTasks, ({ one }) => ({
 
 export type ProcessTask = typeof processTasks.$inferSelect
 export type NewProcessTask = typeof processTasks.$inferInsert
+
+// ============================================
+// Task Queue (Ersetzt Cron-Jobs)
+// ============================================
+export const taskQueue = pgTable('task_queue', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 50 }).notNull(), // email, reminder, follow_up, dunning, report, social_publish
+  status: varchar('status', { length: 20 }).default('pending').notNull(), // pending, running, completed, failed, cancelled
+  priority: integer('priority').default(2), // 1=hoch, 2=mittel, 3=niedrig
+  payload: jsonb('payload').default({}), // Aufgabenspezifische Daten
+  result: jsonb('result'), // Ergebnis nach Ausfuehrung
+  error: text('error'),
+  scheduledFor: timestamp('scheduled_for', { withTimezone: true }).defaultNow(),
+  executedAt: timestamp('executed_at', { withTimezone: true }),
+  referenceType: varchar('reference_type', { length: 50 }), // lead, invoice, person, company, document
+  referenceId: uuid('reference_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_task_queue_tenant_status').on(table.tenantId, table.status),
+  index('idx_task_queue_tenant_scheduled').on(table.tenantId, table.scheduledFor),
+  index('idx_task_queue_tenant_type').on(table.tenantId, table.type),
+])
+
+export const taskQueueRelations = relations(taskQueue, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [taskQueue.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+export type TaskQueueItem = typeof taskQueue.$inferSelect
+export type NewTaskQueueItem = typeof taskQueue.$inferInsert
