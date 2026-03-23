@@ -1,39 +1,38 @@
 import type { Metadata } from "next";
-import { Ubuntu, Ubuntu_Mono, Geist, Inter, Roboto, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { DesignProvider } from "./_components/design-provider";
 
-const ubuntu = Ubuntu({
-  weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
+const ubuntu = localFont({
+  src: "./fonts/ubuntu-regular.woff2",
   variable: "--font-ubuntu",
+  weight: "400",
+  display: "swap",
 });
 
-const ubuntuMono = Ubuntu_Mono({
-  weight: ["400", "700"],
-  subsets: ["latin"],
+const ubuntuMono = localFont({
+  src: "./fonts/ubuntu-mono-regular.woff2",
   variable: "--font-ubuntu-mono",
+  weight: "400",
+  display: "swap",
 });
 
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: "./fonts/inter-variable.woff2",
   variable: "--font-inter",
+  display: "swap",
 });
 
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
+const roboto = localFont({
+  src: "./fonts/roboto-variable.woff2",
   variable: "--font-roboto",
+  display: "swap",
 });
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
+const montserrat = localFont({
+  src: "./fonts/montserrat-variable.woff2",
   variable: "--font-montserrat",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -49,7 +48,7 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body
-        className={`${ubuntu.variable} ${ubuntuMono.variable} ${geist.variable} ${inter.variable} ${roboto.variable} ${montserrat.variable} antialiased`}
+        className={`${ubuntu.variable} ${ubuntuMono.variable} ${inter.variable} ${roboto.variable} ${montserrat.variable} antialiased`}
       >
         <DesignProvider>{children}</DesignProvider>
       </body>
