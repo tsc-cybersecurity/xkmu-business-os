@@ -49,15 +49,32 @@ interface DevRequirement {
   priority: string // hoch, mittel, niedrig
 }
 
+interface Step {
+  nr: number | string
+  action: string
+  tool?: string
+  hint?: string
+}
+
 interface DevTask {
   id: string
   taskKey: string
   title: string
   subprocess: string | null
+  purpose: string | null
+  trigger: string | null
+  timeEstimate: string | null
+  automationPotential: string | null
+  tools: string[]
+  prerequisites: string[]
+  steps: Step[]
+  checklist: string[]
+  expectedOutput: string | null
+  errorEscalation: string | null
+  solution: string | null
   appStatus: string | null
   appModule: string | null
   appNotes: string | null
-  tools: string[]
   devRequirements: DevRequirement[]
   processKey: string
   processName: string
@@ -170,14 +187,59 @@ function generateSingleTaskMd(task: DevTask, req: DevRequirement): string {
   lines.push(`**Prozess:** ${task.processKey} ${task.processName}`)
   lines.push(`**Aufgabe:** ${task.taskKey} - ${task.title}`)
   if (task.subprocess) lines.push(`**Teilprozess:** ${task.subprocess}`)
+  if (task.timeEstimate) lines.push(`**Zeitaufwand Prozessschritt:** ${task.timeEstimate}`)
   lines.push(``)
-  lines.push(`## Aktueller Stand`)
+
+  lines.push(`## Prozesskontext`)
   lines.push(``)
-  lines.push(`- **App-Status:** ${task.appStatus === 'full' ? 'Voll abgedeckt' : task.appStatus === 'partial' ? 'Teilweise abgedeckt' : 'Fehlt'}`)
+  if (task.purpose) lines.push(`**Zweck der Aufgabe:** ${task.purpose}`)
+  if (task.trigger) lines.push(`**Ausloeser:** ${task.trigger}`)
+  lines.push(`**Externe Tools:** ${(task.tools || []).join(', ') || 'keine'}`)
+  lines.push(``)
+
+  if (Array.isArray(task.prerequisites) && task.prerequisites.length > 0) {
+    lines.push(`**Vorbedingungen:**`)
+    task.prerequisites.forEach(p => lines.push(`- ${p}`))
+    lines.push(``)
+  }
+
+  if (Array.isArray(task.steps) && task.steps.length > 0) {
+    lines.push(`**Prozessschritte:**`)
+    task.steps.forEach(s => {
+      lines.push(`${s.nr}. ${s.action}${s.tool ? ` [${s.tool}]` : ''}${s.hint ? ` *(${s.hint})*` : ''}`)
+    })
+    lines.push(``)
+  }
+
+  if (Array.isArray(task.checklist) && task.checklist.length > 0) {
+    lines.push(`**Erfolgskontrolle:**`)
+    task.checklist.forEach(c => lines.push(`- [ ] ${c}`))
+    lines.push(``)
+  }
+
+  if (task.expectedOutput) {
+    lines.push(`**Erwartetes Ergebnis:** ${task.expectedOutput}`)
+    lines.push(``)
+  }
+
+  if (task.errorEscalation) {
+    lines.push(`**Fehlerfall/Eskalation:** ${task.errorEscalation}`)
+    lines.push(``)
+  }
+
+  if (task.solution) {
+    lines.push(`**Bisheriger KI-Ansatz:** ${task.solution}`)
+    lines.push(``)
+  }
+
+  lines.push(`## Aktueller App-Stand`)
+  lines.push(``)
+  lines.push(`- **Status:** ${task.appStatus === 'full' ? 'Voll abgedeckt' : task.appStatus === 'partial' ? 'Teilweise abgedeckt' : 'Fehlt'}`)
   if (task.appModule) lines.push(`- **Vorhandenes Modul:** ${task.appModule}`)
   if (task.appNotes) lines.push(`- **Details:** ${task.appNotes}`)
   lines.push(``)
-  lines.push(`## Anforderung`)
+
+  lines.push(`## Programmieranforderung`)
   lines.push(``)
   lines.push(`**Tool das ersetzt/integriert wird:** ${req.tool}`)
   lines.push(``)
@@ -186,11 +248,6 @@ function generateSingleTaskMd(task: DevTask, req: DevRequirement): string {
   lines.push(`## Umsetzungsansatz`)
   lines.push(``)
   lines.push(req.approach)
-  lines.push(``)
-  lines.push(`## Kontext aus Prozesshandbuch`)
-  lines.push(``)
-  lines.push(`Diese Funktion wird im Prozess "${task.processKey} ${task.processName}" (${task.subprocess || 'Allgemein'}) benoetigt.`)
-  lines.push(`Bisherige Tools im Prozess: ${(task.tools || []).join(', ') || 'keine'}`)
   lines.push(``)
 
   return lines.join('\n')
@@ -565,12 +622,109 @@ export default function DevTasksPage() {
               </AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-4 pb-2">
-                  {/* Context */}
-                  <div className="text-sm text-muted-foreground">
-                    <span className="font-medium">{task.processName}</span>
-                    {task.subprocess && <span> &rsaquo; {task.subprocess}</span>}
-                    {task.appNotes && <p className="mt-1">{task.appNotes}</p>}
-                  </div>
+                  {/* Full Task Context */}
+                  <Card className="bg-muted/20 border-dashed">
+                    <CardContent className="pt-4 pb-4 space-y-3 text-sm">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                        <div>
+                          <span className="font-semibold">Prozess:</span>{' '}
+                          <span className="text-muted-foreground">{task.processName}</span>
+                        </div>
+                        {task.subprocess && (
+                          <div>
+                            <span className="font-semibold">Teilprozess:</span>{' '}
+                            <span className="text-muted-foreground">{task.subprocess}</span>
+                          </div>
+                        )}
+                        {task.timeEstimate && (
+                          <div>
+                            <span className="font-semibold">Zeitaufwand:</span>{' '}
+                            <span className="text-muted-foreground">{task.timeEstimate}</span>
+                          </div>
+                        )}
+                        {task.automationPotential && (
+                          <div>
+                            <span className="font-semibold">Automatisierung:</span>{' '}
+                            <span className="text-muted-foreground">{task.automationPotential}</span>
+                          </div>
+                        )}
+                        {task.trigger && (
+                          <div className="md:col-span-2">
+                            <span className="font-semibold">Ausloeser:</span>{' '}
+                            <span className="text-muted-foreground">{task.trigger}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {task.purpose && (
+                        <div>
+                          <span className="font-semibold">Zweck:</span>{' '}
+                          <span className="text-muted-foreground">{task.purpose}</span>
+                        </div>
+                      )}
+
+                      {Array.isArray(task.tools) && task.tools.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold">Externe Tools:</span>
+                          {task.tools.map((tool, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">{tool}</Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      {Array.isArray(task.steps) && task.steps.length > 0 && (
+                        <div>
+                          <span className="font-semibold">Schritte:</span>
+                          <ol className="mt-1 space-y-1 text-muted-foreground ml-4 list-decimal">
+                            {task.steps.map((step, i) => (
+                              <li key={i}>
+                                {step.action}
+                                {step.tool && <span className="text-xs ml-1">[{step.tool}]</span>}
+                              </li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+
+                      {Array.isArray(task.checklist) && task.checklist.length > 0 && (
+                        <div>
+                          <span className="font-semibold">Erfolgskontrolle:</span>
+                          <ul className="mt-1 space-y-0.5 text-muted-foreground ml-4 list-disc">
+                            {task.checklist.map((item, i) => (
+                              <li key={i}>{item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {task.expectedOutput && (
+                        <div>
+                          <span className="font-semibold">Erwartetes Ergebnis:</span>{' '}
+                          <span className="text-muted-foreground">{task.expectedOutput}</span>
+                        </div>
+                      )}
+
+                      {task.solution && (
+                        <div>
+                          <span className="font-semibold">KI-Ansatz:</span>{' '}
+                          <span className="text-muted-foreground">{task.solution}</span>
+                        </div>
+                      )}
+
+                      {task.appNotes && (
+                        <div className={cn(
+                          'rounded p-2 mt-1',
+                          task.appStatus === 'none' ? 'bg-red-50 dark:bg-red-950/30' :
+                          task.appStatus === 'partial' ? 'bg-yellow-50 dark:bg-yellow-950/30' :
+                          'bg-green-50 dark:bg-green-950/30'
+                        )}>
+                          <span className="font-semibold">App-Stand:</span>{' '}
+                          {task.appModule && <Badge variant="outline" className="text-xs mr-1">{task.appModule}</Badge>}
+                          <span className="text-muted-foreground">{task.appNotes}</span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
 
                   {/* Requirements */}
                   {reqs.map((req, i) => {
