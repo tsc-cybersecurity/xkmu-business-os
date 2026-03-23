@@ -112,7 +112,7 @@ export const LeadService = {
   async autoScore(tenantId: string, leadId: string): Promise<void> {
     try {
       const lead = await this.getById(tenantId, leadId)
-      if (!lead || lead.score > 0) return // Nur fuer neue Leads ohne Score
+      if (!lead || (lead.score ?? 0) > 0) return // Nur fuer neue Leads ohne Score
 
       let score = 20 // Basis-Score fuer jeden neuen Lead
 
