@@ -202,6 +202,9 @@ export const ProcessService = {
     if (data.errorEscalation !== undefined) updateData.errorEscalation = data.errorEscalation
     if (data.solution !== undefined) updateData.solution = data.solution
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder
+    if (data.appStatus !== undefined) updateData.appStatus = data.appStatus
+    if (data.appNotes !== undefined) updateData.appNotes = data.appNotes
+    if (data.appModule !== undefined) updateData.appModule = data.appModule
 
     const [task] = await db
       .update(processTasks)
@@ -209,6 +212,24 @@ export const ProcessService = {
       .where(and(eq(processTasks.tenantId, tenantId), eq(processTasks.id, taskId)))
       .returning()
     return task ?? null
+  },
+
+  async updateTaskByKey(tenantId: string, taskKey: string, data: {
+    appStatus?: string
+    appNotes?: string
+    appModule?: string | null
+  }): Promise<boolean> {
+    const updateData: Partial<NewProcessTask> = { updatedAt: new Date() }
+    if (data.appStatus !== undefined) updateData.appStatus = data.appStatus
+    if (data.appNotes !== undefined) updateData.appNotes = data.appNotes
+    if (data.appModule !== undefined) updateData.appModule = data.appModule
+
+    const result = await db
+      .update(processTasks)
+      .set(updateData)
+      .where(and(eq(processTasks.tenantId, tenantId), eq(processTasks.taskKey, taskKey)))
+      .returning({ id: processTasks.id })
+    return result.length > 0
   },
 
   async deleteTask(tenantId: string, taskId: string): Promise<boolean> {

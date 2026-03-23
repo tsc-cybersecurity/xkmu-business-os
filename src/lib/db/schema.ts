@@ -2011,6 +2011,10 @@ export const processTasks = pgTable('process_tasks', {
   expectedOutput: text('expected_output'),
   errorEscalation: text('error_escalation'),
   solution: text('solution'),
+  // App-Abdeckung: wie gut deckt die App diese Aufgabe ab?
+  appStatus: varchar('app_status', { length: 20 }).default('none'), // none, partial, full
+  appNotes: text('app_notes'), // Beschreibung was die App kann / was fehlt
+  appModule: varchar('app_module', { length: 100 }), // Zugeordnetes Modul in der App
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -2018,6 +2022,7 @@ export const processTasks = pgTable('process_tasks', {
   index('idx_process_tasks_tenant').on(table.tenantId),
   index('idx_process_tasks_process').on(table.processId),
   index('idx_process_tasks_tenant_key').on(table.tenantId, table.taskKey),
+  index('idx_process_tasks_app_status').on(table.tenantId, table.appStatus),
 ])
 
 export const processTasksRelations = relations(processTasks, ({ one }) => ({
