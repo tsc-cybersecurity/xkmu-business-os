@@ -2137,6 +2137,31 @@ export type ProjectTask = typeof projectTasks.$inferSelect
 export type NewProjectTask = typeof projectTasks.$inferInsert
 
 // ============================================
+// Document Templates (KI-Dokument-Generator)
+// ============================================
+export const documentTemplates = pgTable('document_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  category: varchar('category', { length: 100 }), // report, proposal, protocol, security, runbook
+  bodyHtml: text('body_html'), // HTML mit {{platzhalter}}
+  placeholders: jsonb('placeholders').default([]), // [{key, label, description, aiFillable}]
+  headerHtml: text('header_html'),
+  footerHtml: text('footer_html'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_document_templates_tenant').on(table.tenantId),
+  index('idx_document_templates_category').on(table.tenantId, table.category),
+])
+
+export const documentTemplatesRelations = relations(documentTemplates, ({ one }) => ({
+  tenant: one(tenants, { fields: [documentTemplates.tenantId], references: [tenants.id] }),
+}))
+
+export type DocumentTemplate = typeof documentTemplates.$inferSelect
+
+// ============================================
 // Newsletter
 // ============================================
 export const newsletterSubscribers = pgTable('newsletter_subscribers', {
