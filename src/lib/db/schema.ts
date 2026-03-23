@@ -297,6 +297,7 @@ export const persons = pgTable('persons', {
   status: varchar('status', { length: 30 }).default('active'),
   isPrimaryContact: boolean('is_primary_contact').default(false),
   tags: text('tags').array().default([]),
+  birthday: timestamp('birthday', { withTimezone: true }),
   // Metadata
   notes: text('notes'),
   customFields: jsonb('custom_fields').default({}),
@@ -2072,6 +2073,47 @@ export const receiptsRelations = relations(receipts, ({ one }) => ({
 }))
 
 export type Receipt = typeof receipts.$inferSelect
+export type NewReceipt = typeof receipts.$inferInsert
+
+// ============================================
+// Feedback Forms
+// ============================================
+export const feedbackForms = pgTable('feedback_forms', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  questions: jsonb('questions').default([]), // [{type: 'stars'|'text'|'scale', label, required}]
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+  token: varchar('token', { length: 100 }).notNull(),
+  status: varchar('status', { length: 20 }).default('active'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_feedback_forms_tenant').on(table.tenantId),
+  index('idx_feedback_forms_token').on(table.token),
+])
+
+export const feedbackResponses = pgTable('feedback_responses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  formId: uuid('form_id').notNull().references(() => feedbackForms.id, { onDelete: 'cascade' }),
+  answers: jsonb('answers').default([]), // [{questionIndex, value}]
+  npsScore: integer('nps_score'),
+  submittedAt: timestamp('submitted_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_feedback_responses_form').on(table.formId),
+])
+
+export const feedbackFormsRelations = relations(feedbackForms, ({ one, many }) => ({
+  tenant: one(tenants, { fields: [feedbackForms.tenantId], references: [tenants.id] }),
+  company: one(companies, { fields: [feedbackForms.companyId], references: [companies.id] }),
+  responses: many(feedbackResponses),
+}))
+
+export const feedbackResponsesRelations = relations(feedbackResponses, ({ one }) => ({
+  form: one(feedbackForms, { fields: [feedbackResponses.formId], references: [feedbackForms.id] }),
+}))
+
+export type FeedbackForm = typeof feedbackForms.$inferSelect
+export type FeedbackResponse = typeof feedbackResponses.$inferSelect
 export type NewReceipt = typeof receipts.$inferInsert
 
 // ============================================

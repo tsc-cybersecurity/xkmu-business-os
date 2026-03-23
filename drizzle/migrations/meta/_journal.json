@@ -148,6 +148,13 @@
       "when": 1774287306443,
       "tag": "0020_fine_shaman",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1774287467725,
+      "tag": "0021_flawless_jean_grey",
+      "breakpoints": true
     }
   ]
 }
