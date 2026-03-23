@@ -2114,7 +2114,6 @@ export const feedbackResponsesRelations = relations(feedbackResponses, ({ one })
 
 export type FeedbackForm = typeof feedbackForms.$inferSelect
 export type FeedbackResponse = typeof feedbackResponses.$inferSelect
-export type NewReceipt = typeof receipts.$inferInsert
 
 // ============================================
 // Projects (Kanban)
