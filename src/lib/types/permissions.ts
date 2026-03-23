@@ -34,6 +34,7 @@ export const MODULES = [
   'cockpit',
   'media',
   'processes',
+  'time_entries',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -85,6 +86,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   cockpit: 'Cockpit',
   media: 'Medien / Bildgenerierung',
   processes: 'Prozesshandbuch',
+  time_entries: 'Zeiterfassung',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {

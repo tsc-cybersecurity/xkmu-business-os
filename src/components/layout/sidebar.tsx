@@ -22,6 +22,7 @@ import {
   Monitor,
   ImageIcon,
   BookOpen,
+  Clock,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
@@ -81,6 +82,7 @@ const navigation: NavItem[] = [
     children: [
       { name: 'Rechnungen', href: '/intern/finance/invoices', requiredModule: 'documents' },
       { name: 'Angebote', href: '/intern/finance/offers', requiredModule: 'documents' },
+      { name: 'Zeiterfassung', href: '/intern/zeiterfassung', requiredModule: 'time_entries' },
     ],
   },
   {

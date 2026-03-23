@@ -8,6 +8,7 @@ import {
   boolean,
   integer,
   decimal,
+  numeric,
   real,
   inet,
   index,
@@ -777,6 +778,11 @@ export const documents = pgTable('documents', {
   // Content
   notes: text('notes'),
   paymentTerms: varchar('payment_terms', { length: 255 }),
+  // Payment tracking
+  paymentStatus: varchar('payment_status', { length: 20 }).default('unpaid'), // unpaid, paid, overdue, partially_paid
+  paidAt: timestamp('paid_at', { withTimezone: true }),
+  paidAmount: numeric('paid_amount', { precision: 10, scale: 2 }).default('0'),
+  dunningLevel: integer('dunning_level').default(0), // 0=keine, 1=Erinnerung, 2=Mahnung, 3=Letzte Mahnung
   // Customer Address Snapshot
   customerName: varchar('customer_name', { length: 255 }),
   customerStreet: varchar('customer_street', { length: 255 }),
@@ -2039,6 +2045,39 @@ export const processTasksRelations = relations(processTasks, ({ one }) => ({
 
 export type ProcessTask = typeof processTasks.$inferSelect
 export type NewProcessTask = typeof processTasks.$inferInsert
+
+// ============================================
+// Time Entries (Zeiterfassung)
+// ============================================
+export const timeEntries = pgTable('time_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+  description: varchar('description', { length: 500 }),
+  date: timestamp('date', { withTimezone: true }).notNull(),
+  startTime: timestamp('start_time', { withTimezone: true }),
+  endTime: timestamp('end_time', { withTimezone: true }),
+  durationMinutes: integer('duration_minutes').default(0),
+  billable: boolean('billable').default(true),
+  hourlyRate: numeric('hourly_rate', { precision: 10, scale: 2 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_time_entries_tenant').on(table.tenantId),
+  index('idx_time_entries_tenant_date').on(table.tenantId, table.date),
+  index('idx_time_entries_tenant_company').on(table.tenantId, table.companyId),
+  index('idx_time_entries_user_date').on(table.userId, table.date),
+])
+
+export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
+  tenant: one(tenants, { fields: [timeEntries.tenantId], references: [tenants.id] }),
+  user: one(users, { fields: [timeEntries.userId], references: [users.id] }),
+  company: one(companies, { fields: [timeEntries.companyId], references: [companies.id] }),
+}))
+
+export type TimeEntry = typeof timeEntries.$inferSelect
+export type NewTimeEntry = typeof timeEntries.$inferInsert
 
 // ============================================
 // E-Mail Templates
