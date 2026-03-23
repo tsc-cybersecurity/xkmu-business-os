@@ -188,6 +188,7 @@ export const ProcessService = {
     appStatus: string
     appNotes: string
     appModule: string | null
+    devRequirements: unknown
   }>): Promise<ProcessTask | null> {
     const updateData: Partial<NewProcessTask> = { updatedAt: new Date() }
     if (data.taskKey !== undefined) updateData.taskKey = data.taskKey
@@ -208,6 +209,7 @@ export const ProcessService = {
     if (data.appStatus !== undefined) updateData.appStatus = data.appStatus
     if (data.appNotes !== undefined) updateData.appNotes = data.appNotes
     if (data.appModule !== undefined) updateData.appModule = data.appModule
+    if (data.devRequirements !== undefined) updateData.devRequirements = data.devRequirements
 
     const [task] = await db
       .update(processTasks)
@@ -221,11 +223,13 @@ export const ProcessService = {
     appStatus?: string
     appNotes?: string
     appModule?: string | null
+    devRequirements?: unknown
   }): Promise<boolean> {
     const updateData: Partial<NewProcessTask> = { updatedAt: new Date() }
     if (data.appStatus !== undefined) updateData.appStatus = data.appStatus
     if (data.appNotes !== undefined) updateData.appNotes = data.appNotes
     if (data.appModule !== undefined) updateData.appModule = data.appModule
+    if (data.devRequirements !== undefined) updateData.devRequirements = data.devRequirements
 
     const result = await db
       .update(processTasks)

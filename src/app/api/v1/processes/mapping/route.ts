@@ -9,17 +9,16 @@ export async function POST(request: NextRequest) {
   return withPermission(request, 'processes', 'update', async (auth) => {
     try {
       const body = await request.json() as Record<string, {
-        appStatus: string
-        appModule: string | null
-        appNotes: string
+        appStatus?: string
+        appModule?: string | null
+        appNotes?: string
+        devRequirements?: unknown
       }>
 
       let updated = 0
       for (const [taskKey, mapping] of Object.entries(body)) {
         const success = await ProcessService.updateTaskByKey(auth.tenantId, taskKey, {
-          appStatus: mapping.appStatus,
-          appModule: mapping.appModule,
-          appNotes: mapping.appNotes,
+          ...mapping,
         })
         if (success) updated++
       }

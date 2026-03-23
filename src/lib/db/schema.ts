@@ -2015,6 +2015,7 @@ export const processTasks = pgTable('process_tasks', {
   appStatus: varchar('app_status', { length: 20 }).default('none'), // none, partial, full
   appNotes: text('app_notes'), // Beschreibung was die App kann / was fehlt
   appModule: varchar('app_module', { length: 100 }), // Zugeordnetes Modul in der App
+  devRequirements: jsonb('dev_requirements'), // [{tool, neededFunction, approach, effort, priority}]
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

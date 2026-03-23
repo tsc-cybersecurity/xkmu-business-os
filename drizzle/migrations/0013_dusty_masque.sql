@@ -1,0 +1,1 @@
+ALTER TABLE "process_tasks" ADD COLUMN "dev_requirements" jsonb;
