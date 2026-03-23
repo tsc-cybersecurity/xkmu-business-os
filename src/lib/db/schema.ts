@@ -1961,3 +1961,75 @@ export const generatedImagesRelations = relations(generatedImages, ({ one }) => 
 
 export type GeneratedImage = typeof generatedImages.$inferSelect
 export type NewGeneratedImage = typeof generatedImages.$inferInsert
+
+// ============================================
+// Processes (Prozesshandbuch)
+// ============================================
+export const processes = pgTable('processes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  key: varchar('key', { length: 20 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_processes_tenant').on(table.tenantId),
+  index('idx_processes_tenant_key').on(table.tenantId, table.key),
+])
+
+export const processesRelations = relations(processes, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [processes.tenantId],
+    references: [tenants.id],
+  }),
+  tasks: many(processTasks),
+}))
+
+export type Process = typeof processes.$inferSelect
+export type NewProcess = typeof processes.$inferInsert
+
+// ============================================
+// Process Tasks (Aufgaben im Prozesshandbuch)
+// ============================================
+export const processTasks = pgTable('process_tasks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  processId: uuid('process_id').notNull().references(() => processes.id, { onDelete: 'cascade' }),
+  taskKey: varchar('task_key', { length: 20 }).notNull(),
+  subprocess: varchar('subprocess', { length: 255 }),
+  title: varchar('title', { length: 255 }).notNull(),
+  purpose: text('purpose'),
+  trigger: text('trigger'),
+  timeEstimate: varchar('time_estimate', { length: 50 }),
+  automationPotential: varchar('automation_potential', { length: 20 }),
+  tools: jsonb('tools').default([]),
+  prerequisites: jsonb('prerequisites').default([]),
+  steps: jsonb('steps').default([]),
+  checklist: jsonb('checklist').default([]),
+  expectedOutput: text('expected_output'),
+  errorEscalation: text('error_escalation'),
+  solution: text('solution'),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_process_tasks_tenant').on(table.tenantId),
+  index('idx_process_tasks_process').on(table.processId),
+  index('idx_process_tasks_tenant_key').on(table.tenantId, table.taskKey),
+])
+
+export const processTasksRelations = relations(processTasks, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [processTasks.tenantId],
+    references: [tenants.id],
+  }),
+  process: one(processes, {
+    fields: [processTasks.processId],
+    references: [processes.id],
+  }),
+}))
+
+export type ProcessTask = typeof processTasks.$inferSelect
+export type NewProcessTask = typeof processTasks.$inferInsert

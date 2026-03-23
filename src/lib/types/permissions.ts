@@ -33,6 +33,7 @@ export const MODULES = [
   'chat',
   'cockpit',
   'media',
+  'processes',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -83,6 +84,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   chat: 'KI-Chatbot',
   cockpit: 'Cockpit',
   media: 'Medien / Bildgenerierung',
+  processes: 'Prozesshandbuch',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {

@@ -683,6 +683,43 @@ export function validateAndParse<T>(
   return { success: false, errors: result.error }
 }
 
+// ============================================
+// Processes (Prozesshandbuch)
+// ============================================
+export const createProcessSchema = z.object({
+  key: z.string().min(1).max(20),
+  name: z.string().min(1).max(255),
+  description: z.string().optional().or(z.literal('')),
+  sortOrder: z.number().int().optional(),
+})
+
+export const updateProcessSchema = createProcessSchema.partial()
+
+export const createProcessTaskSchema = z.object({
+  taskKey: z.string().min(1).max(20),
+  subprocess: z.string().max(255).optional().or(z.literal('')),
+  title: z.string().min(1).max(255),
+  purpose: z.string().optional().or(z.literal('')),
+  trigger: z.string().optional().or(z.literal('')),
+  timeEstimate: z.string().max(50).optional().or(z.literal('')),
+  automationPotential: z.enum(['Hoch', 'Mittel', 'Niedrig']).optional(),
+  tools: z.array(z.string()).default([]),
+  prerequisites: z.array(z.string()).default([]),
+  steps: z.array(z.object({
+    nr: z.union([z.number(), z.string()]),
+    action: z.string(),
+    tool: z.string().optional(),
+    hint: z.string().optional(),
+  })).default([]),
+  checklist: z.array(z.string()).default([]),
+  expectedOutput: z.string().optional().or(z.literal('')),
+  errorEscalation: z.string().optional().or(z.literal('')),
+  solution: z.string().optional().or(z.literal('')),
+  sortOrder: z.number().int().optional(),
+})
+
+export const updateProcessTaskSchema = createProcessTaskSchema.partial()
+
 export function formatZodErrors(error: z.ZodError): Array<{ field: string; message: string }> {
   return error.issues.map((e) => ({
     field: e.path.join('.'),

@@ -21,6 +21,7 @@ import {
   Workflow,
   Monitor,
   ImageIcon,
+  BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
@@ -133,6 +134,12 @@ const navigation: NavItem[] = [
       { name: 'WiBA-Checks', href: '/intern/wiba', requiredModule: 'wiba_audits' },
       { name: 'Fördermittel', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
     ],
+  },
+  {
+    name: 'Prozesse',
+    href: '/intern/prozesse',
+    icon: BookOpen,
+    requiredModule: 'processes',
   },
   {
     name: 'Einstellungen',
