@@ -21,6 +21,13 @@ import {
 } from '@/components/ui/accordion'
 import { Textarea } from '@/components/ui/textarea'
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
   ArrowLeft,
   Loader2,
   Download,
@@ -456,6 +463,87 @@ export default function DevTasksPage() {
     }
   }
 
+  // Per-task AI analysis dialog
+  const [aiDialogTask, setAiDialogTask] = useState<DevTask | null>(null)
+  const [aiPrompt, setAiPrompt] = useState('')
+  const [aiRunning, setAiRunning] = useState(false)
+
+  const openAiDialog = (task: DevTask) => {
+    const taskContext = [
+      `Prozess: ${task.processKey} ${task.processName}`,
+      task.subprocess ? `Teilprozess: ${task.subprocess}` : '',
+      `Aufgabe: ${task.taskKey} - ${task.title}`,
+      task.purpose ? `Zweck: ${task.purpose}` : '',
+      task.trigger ? `Ausloeser: ${task.trigger}` : '',
+      task.timeEstimate ? `Zeitaufwand: ${task.timeEstimate}` : '',
+      Array.isArray(task.tools) && task.tools.length > 0 ? `Externe Tools: ${task.tools.join(', ')}` : '',
+      Array.isArray(task.steps) && task.steps.length > 0
+        ? `Schritte:\n${task.steps.map(s => `  ${s.nr}. ${s.action}${s.tool ? ` [${s.tool}]` : ''}`).join('\n')}`
+        : '',
+      Array.isArray(task.checklist) && task.checklist.length > 0
+        ? `Checkliste: ${task.checklist.join('; ')}`
+        : '',
+      task.expectedOutput ? `Erwartetes Ergebnis: ${task.expectedOutput}` : '',
+      task.solution ? `KI-Ansatz: ${task.solution}` : '',
+      '',
+      task.appStatus ? `Aktueller App-Status: ${task.appStatus}` : '',
+      task.appModule ? `Vorhandenes App-Modul: ${task.appModule}` : '',
+      task.appNotes ? `App-Notizen: ${task.appNotes}` : '',
+    ].filter(Boolean).join('\n')
+
+    setAiPrompt(
+`Analysiere diese Prozessaufgabe und erstelle detaillierte Programmieranforderungen fuer die xKMU BusinessOS App.
+
+PRAEMISSE: Alle Funktionen sollen IN DER APP gebaut werden. Externe Tools ersetzen, nicht nutzen (ausser APIs als Datenquelle wo noetig, z.B. Brevo fuer E-Mail-Versand).
+
+Die App hat bereits: CRM (Firmen, Personen, Leads, Aktivitaeten), Finance (Rechnungen, Angebote), Blog (KI-Generierung), Social Media (Posts, Content-Plan), Marketing (Kampagnen, KI-Agent), Bildgenerierung (Gemini, DALL-E), Business Intelligence (SWOT), Chat (Multi-Provider KI), Cybersecurity (DIN-Audit, WiBA), CMS, n8n-Workflows, Cockpit, Prozesshandbuch, Einstellungen (KI-Provider, Prompts, Webhooks, API-Keys).
+
+=== AUFGABE ===
+${taskContext}
+
+=== AUFTRAG ===
+Erstelle fuer JEDES externe Tool eine Programmieranforderung:
+1. Welche konkrete Funktion des Tools wird benoetigt?
+2. Welches bestehende App-Modul kann erweitert werden?
+3. Welche neuen DB-Tabellen/Felder sind noetig?
+4. Welche API-Endpoints muessen erstellt werden?
+5. Welche UI-Komponenten werden gebraucht?
+6. Geschaetzter Aufwand: S(1-2h), M(3-8h), L(1-3 Tage), XL(3+ Tage)
+
+Antworte als JSON-Array:
+[{"tool":"...", "neededFunction":"...", "approach":"Detaillierter Umsetzungsansatz mit DB-Tabellen, Endpoints, UI-Komponenten...", "effort":"S|M|L|XL", "priority":"hoch|mittel|niedrig"}]`
+    )
+    setAiDialogTask(task)
+  }
+
+  const runAiAnalysis = async () => {
+    if (!aiDialogTask) return
+    setAiRunning(true)
+    try {
+      const response = await fetch('/api/v1/processes/dev-tasks/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          taskKeys: [aiDialogTask.taskKey],
+          overwrite: true,
+          customPrompt: aiPrompt,
+        }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast.success(`Analyse fuer ${aiDialogTask.taskKey} abgeschlossen`)
+        setAiDialogTask(null)
+        fetchTasks()
+      } else {
+        toast.error(data.error?.message || 'Analyse fehlgeschlagen')
+      }
+    } catch {
+      toast.error('Analyse fehlgeschlagen')
+    } finally {
+      setAiRunning(false)
+    }
+  }
+
   const handleDownloadAll = () => {
     const md = generateMarkdown(filteredTasks, {
       effort: effortFilter, priority: priorityFilter,
@@ -681,6 +769,11 @@ export default function DevTasksPage() {
                         </>
                       ) : (
                         <>
+                          {i === 0 && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openAiDialog(task)} title="KI-Analyse">
+                              <Zap className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(task, i, req)} title="Bearbeiten">
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
@@ -849,6 +942,41 @@ export default function DevTasksPage() {
           Keine Programmierauftraege mit den gewaehlten Filtern gefunden.
         </div>
       )}
+
+      {/* AI Analysis Dialog */}
+      <Dialog open={!!aiDialogTask} onOpenChange={open => { if (!open) setAiDialogTask(null) }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              KI-Analyse: {aiDialogTask?.taskKey} — {aiDialogTask?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                Prompt (anpassbar vor dem Absenden)
+              </label>
+              <Textarea
+                value={aiPrompt}
+                onChange={e => setAiPrompt(e.target.value)}
+                rows={20}
+                className="text-sm font-mono"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Der Prompt wird an die KI gesendet. Das Ergebnis ersetzt die bestehenden Programmieranforderungen fuer diese Aufgabe.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAiDialogTask(null)}>Abbrechen</Button>
+            <Button onClick={runAiAnalysis} disabled={aiRunning}>
+              {aiRunning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+              {aiRunning ? 'Analysiert...' : 'KI-Analyse starten'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

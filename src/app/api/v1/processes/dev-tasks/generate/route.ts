@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
       const body = await request.json().catch(() => ({})) as {
         taskKeys?: string[]  // Optional: only specific tasks
         overwrite?: boolean  // Overwrite existing devRequirements
+        customPrompt?: string // Optional: custom prompt instead of template
       }
 
       // Get all processes with tasks
@@ -149,10 +150,13 @@ export async function POST(request: NextRequest) {
             `Aktuelle App-Notizen: ${task.appNotes || '-'}`,
           ].join('\n')
 
-          const userPrompt = AiPromptTemplateService.applyPlaceholders(
-            template.userPrompt,
-            { taskContext, appCapabilities: APP_CAPABILITIES }
-          )
+          // Use custom prompt if provided, otherwise use template
+          const userPrompt = body.customPrompt
+            ? body.customPrompt
+            : AiPromptTemplateService.applyPlaceholders(
+                template.userPrompt,
+                { taskContext, appCapabilities: APP_CAPABILITIES }
+              )
 
           const response = await AIService.completeWithContext(userPrompt, {
             tenantId: auth.tenantId,
