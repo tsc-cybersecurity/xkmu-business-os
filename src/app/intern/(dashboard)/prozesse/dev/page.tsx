@@ -603,234 +603,173 @@ export default function DevTasksPage() {
         {filteredTasks.length} Aufgaben mit {stats.total} Programmieranforderungen
       </div>
 
-      <Accordion type="multiple" className="w-full space-y-2">
+      <div className="space-y-6">
         {filteredTasks.map((task) => {
           const reqs = task.devRequirements || []
-          return (
-            <AccordionItem key={task.id} value={task.id} className="border rounded-lg px-4">
-              <AccordionTrigger className="hover:no-underline py-3">
-                <div className="flex items-center gap-3 text-left flex-wrap">
-                  <Badge variant="outline" className="font-mono text-xs shrink-0">{task.taskKey}</Badge>
-                  {task.appStatus === 'none' && <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs">Fehlt</Badge>}
-                  {task.appStatus === 'partial' && <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs"><CircleDot className="h-3 w-3 mr-1" />Teilweise</Badge>}
-                  {task.appStatus === 'full' && <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs"><Monitor className="h-3 w-3 mr-1" />In App</Badge>}
-                  <span className="font-medium">{task.title}</span>
-                  <span className="text-xs text-muted-foreground ml-auto mr-4 shrink-0">
-                    {task.processKey} | {reqs.length} Anforderung{reqs.length !== 1 ? 'en' : ''}
-                  </span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="space-y-4 pb-2">
-                  {/* Full Task Context */}
-                  <Card className="bg-muted/20 border-dashed">
-                    <CardContent className="pt-4 pb-4 space-y-3 text-sm">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-                        <div>
-                          <span className="font-semibold">Prozess:</span>{' '}
-                          <span className="text-muted-foreground">{task.processName}</span>
-                        </div>
-                        {task.subprocess && (
-                          <div>
-                            <span className="font-semibold">Teilprozess:</span>{' '}
-                            <span className="text-muted-foreground">{task.subprocess}</span>
-                          </div>
+          return reqs.map((req, i) => {
+            const isEditing = editingReq === `${task.id}-${i}`
+            const current = isEditing && editData ? editData : req
+            return (
+              <Card key={`${task.id}-${i}`} className={cn(isEditing && 'ring-2 ring-primary')}>
+                {/* Header */}
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Badge variant="outline" className="font-mono text-xs">{task.taskKey}</Badge>
+                        <Badge variant="secondary" className="text-xs"><Wrench className="h-3 w-3 mr-1" />{current.tool}</Badge>
+                        {isEditing ? (
+                          <>
+                            <Select value={editData!.effort} onValueChange={v => setEditData({ ...editData!, effort: v })}>
+                              <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="S">S</SelectItem>
+                                <SelectItem value="M">M</SelectItem>
+                                <SelectItem value="L">L</SelectItem>
+                                <SelectItem value="XL">XL</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Select value={editData!.priority} onValueChange={v => setEditData({ ...editData!, priority: v })}>
+                              <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="hoch">hoch</SelectItem>
+                                <SelectItem value="mittel">mittel</SelectItem>
+                                <SelectItem value="niedrig">niedrig</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </>
+                        ) : (
+                          <>
+                            <Badge className={cn('text-xs', EFFORT_LABELS[current.effort]?.color || '')}>{current.effort}</Badge>
+                            <Badge className={cn('text-xs', PRIORITY_COLORS[current.priority] || '')}>{current.priority}</Badge>
+                          </>
                         )}
-                        {task.timeEstimate && (
-                          <div>
-                            <span className="font-semibold">Zeitaufwand:</span>{' '}
-                            <span className="text-muted-foreground">{task.timeEstimate}</span>
-                          </div>
-                        )}
-                        {task.automationPotential && (
-                          <div>
-                            <span className="font-semibold">Automatisierung:</span>{' '}
-                            <span className="text-muted-foreground">{task.automationPotential}</span>
-                          </div>
-                        )}
-                        {task.trigger && (
-                          <div className="md:col-span-2">
-                            <span className="font-semibold">Ausloeser:</span>{' '}
-                            <span className="text-muted-foreground">{task.trigger}</span>
-                          </div>
-                        )}
+                        {task.appStatus === 'none' && <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs">Fehlt</Badge>}
+                        {task.appStatus === 'partial' && <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs"><CircleDot className="h-3 w-3 mr-1" />Teilweise</Badge>}
                       </div>
-
-                      {task.purpose && (
-                        <div>
-                          <span className="font-semibold">Zweck:</span>{' '}
-                          <span className="text-muted-foreground">{task.purpose}</span>
-                        </div>
+                      <CardTitle className="text-base">{task.title}</CardTitle>
+                      <p className="text-xs text-muted-foreground">
+                        {task.processName} {task.subprocess && <>&#8250; {task.subprocess}</>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {isEditing ? (
+                        <>
+                          <Button variant="outline" size="sm" onClick={cancelEdit}>Abbrechen</Button>
+                          <Button size="sm" onClick={() => saveEdit(task, i)} disabled={saving}>
+                            {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1" />}
+                            Speichern
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(task.id, i, req)} title="Bearbeiten">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleDownloadSingle(task, req)}>
+                            <FileCode className="h-3.5 w-3.5 mr-1" />.md
+                          </Button>
+                        </>
                       )}
+                    </div>
+                  </div>
+                </CardHeader>
 
-                      {Array.isArray(task.tools) && task.tools.length > 0 && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold">Externe Tools:</span>
-                          {task.tools.map((tool, i) => (
-                            <Badge key={i} variant="secondary" className="text-xs">{tool}</Badge>
-                          ))}
-                        </div>
-                      )}
+                <CardContent className="space-y-4 pt-0">
+                  {/* Anforderung */}
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Benoetigte Funktion</label>
+                        <Textarea
+                          value={editData!.neededFunction}
+                          onChange={e => setEditData({ ...editData!, neededFunction: e.target.value })}
+                          rows={2} className="text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground mb-1 block">Umsetzungsansatz</label>
+                        <Textarea
+                          value={editData!.approach}
+                          onChange={e => setEditData({ ...editData!, approach: e.target.value })}
+                          rows={5} className="text-sm"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Benoetigte Funktion</h4>
+                        <p className="text-sm">{current.neededFunction}</p>
+                      </div>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Umsetzungsansatz</h4>
+                        <p className="text-sm">{current.approach}</p>
+                      </div>
+                    </div>
+                  )}
 
-                      {Array.isArray(task.steps) && task.steps.length > 0 && (
-                        <div>
-                          <span className="font-semibold">Schritte:</span>
-                          <ol className="mt-1 space-y-1 text-muted-foreground ml-4 list-decimal">
-                            {task.steps.map((step, i) => (
-                              <li key={i}>
-                                {step.action}
-                                {step.tool && <span className="text-xs ml-1">[{step.tool}]</span>}
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-                      )}
-
-                      {Array.isArray(task.checklist) && task.checklist.length > 0 && (
-                        <div>
-                          <span className="font-semibold">Erfolgskontrolle:</span>
-                          <ul className="mt-1 space-y-0.5 text-muted-foreground ml-4 list-disc">
-                            {task.checklist.map((item, i) => (
-                              <li key={i}>{item}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {task.expectedOutput && (
-                        <div>
-                          <span className="font-semibold">Erwartetes Ergebnis:</span>{' '}
-                          <span className="text-muted-foreground">{task.expectedOutput}</span>
-                        </div>
-                      )}
-
-                      {task.solution && (
-                        <div>
-                          <span className="font-semibold">KI-Ansatz:</span>{' '}
-                          <span className="text-muted-foreground">{task.solution}</span>
-                        </div>
-                      )}
-
-                      {task.appNotes && (
-                        <div className={cn(
-                          'rounded p-2 mt-1',
-                          task.appStatus === 'none' ? 'bg-red-50 dark:bg-red-950/30' :
-                          task.appStatus === 'partial' ? 'bg-yellow-50 dark:bg-yellow-950/30' :
-                          'bg-green-50 dark:bg-green-950/30'
-                        )}>
-                          <span className="font-semibold">App-Stand:</span>{' '}
-                          {task.appModule && <Badge variant="outline" className="text-xs mr-1">{task.appModule}</Badge>}
-                          <span className="text-muted-foreground">{task.appNotes}</span>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  {/* Requirements */}
-                  {reqs.map((req, i) => {
-                    const isEditing = editingReq === `${task.id}-${i}`
-                    const current = isEditing && editData ? editData : req
-                    return (
-                      <Card key={i} className={cn('bg-muted/30', isEditing && 'ring-2 ring-primary')}>
-                        <CardContent className="pt-4 pb-4 space-y-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="secondary" className="text-xs">
-                                <Wrench className="h-3 w-3 mr-1" />{current.tool}
-                              </Badge>
-                              {isEditing ? (
-                                <>
-                                  <Select value={editData!.effort} onValueChange={v => setEditData({ ...editData!, effort: v })}>
-                                    <SelectTrigger className="h-7 w-20 text-xs"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="S">S</SelectItem>
-                                      <SelectItem value="M">M</SelectItem>
-                                      <SelectItem value="L">L</SelectItem>
-                                      <SelectItem value="XL">XL</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <Select value={editData!.priority} onValueChange={v => setEditData({ ...editData!, priority: v })}>
-                                    <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="hoch">hoch</SelectItem>
-                                      <SelectItem value="mittel">mittel</SelectItem>
-                                      <SelectItem value="niedrig">niedrig</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </>
-                              ) : (
-                                <>
-                                  <Badge className={cn('text-xs', EFFORT_LABELS[current.effort]?.color || '')}>
-                                    {current.effort}
-                                  </Badge>
-                                  <Badge className={cn('text-xs', PRIORITY_COLORS[current.priority] || '')}>
-                                    {current.priority}
-                                  </Badge>
-                                </>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              {isEditing ? (
-                                <>
-                                  <Button variant="outline" size="sm" onClick={cancelEdit}>Abbrechen</Button>
-                                  <Button size="sm" onClick={() => saveEdit(task, i)} disabled={saving}>
-                                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1" />}
-                                    Speichern
-                                  </Button>
-                                </>
-                              ) : (
-                                <>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(task.id, i, req)} title="Bearbeiten">
-                                    <Pencil className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button variant="outline" size="sm" onClick={() => handleDownloadSingle(task, req)}>
-                                    <FileCode className="h-3.5 w-3.5 mr-1" />.md
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-
-                          {isEditing ? (
-                            <>
-                              <div>
-                                <label className="text-xs font-medium text-muted-foreground mb-1 block">Benoetigte Funktion</label>
-                                <Textarea
-                                  value={editData!.neededFunction}
-                                  onChange={e => setEditData({ ...editData!, neededFunction: e.target.value })}
-                                  rows={2}
-                                  className="text-sm"
-                                />
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-muted-foreground mb-1 block">Umsetzungsansatz</label>
-                                <Textarea
-                                  value={editData!.approach}
-                                  onChange={e => setEditData({ ...editData!, approach: e.target.value })}
-                                  rows={4}
-                                  className="text-sm"
-                                />
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm font-medium">{current.neededFunction}</p>
-                              <div className="text-sm text-muted-foreground bg-background rounded p-3">
-                                <span className="font-semibold text-foreground">Umsetzung: </span>
-                                {current.approach}
-                              </div>
-                            </>
+                  {/* Prozesskontext (collapsible) */}
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="context" className="border-0">
+                      <AccordionTrigger className="hover:no-underline py-2 text-xs text-muted-foreground">
+                        Prozesskontext anzeigen
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-2 text-sm">
+                          {task.purpose && (
+                            <div><span className="font-semibold">Zweck:</span> <span className="text-muted-foreground">{task.purpose}</span></div>
                           )}
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          )
+                          {task.trigger && (
+                            <div><span className="font-semibold">Ausloeser:</span> <span className="text-muted-foreground">{task.trigger}</span></div>
+                          )}
+                          {Array.isArray(task.tools) && task.tools.length > 0 && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold">Tools:</span>
+                              {task.tools.map((tool, ti) => <Badge key={ti} variant="secondary" className="text-xs">{tool}</Badge>)}
+                            </div>
+                          )}
+                          {Array.isArray(task.steps) && task.steps.length > 0 && (
+                            <div>
+                              <span className="font-semibold">Schritte:</span>
+                              <ol className="mt-1 space-y-0.5 text-muted-foreground ml-4 list-decimal text-xs">
+                                {task.steps.map((step, si) => (
+                                  <li key={si}>{step.action}{step.tool && <span className="ml-1">[{step.tool}]</span>}</li>
+                                ))}
+                              </ol>
+                            </div>
+                          )}
+                          {Array.isArray(task.checklist) && task.checklist.length > 0 && (
+                            <div>
+                              <span className="font-semibold">Checkliste:</span>
+                              <ul className="mt-1 space-y-0.5 text-muted-foreground ml-4 list-disc text-xs">
+                                {task.checklist.map((item, ci) => <li key={ci}>{item}</li>)}
+                              </ul>
+                            </div>
+                          )}
+                          {task.expectedOutput && (
+                            <div><span className="font-semibold">Ergebnis:</span> <span className="text-muted-foreground">{task.expectedOutput}</span></div>
+                          )}
+                          {task.solution && (
+                            <div><span className="font-semibold">KI-Ansatz:</span> <span className="text-muted-foreground">{task.solution}</span></div>
+                          )}
+                          {task.appNotes && (
+                            <div className={cn('rounded p-2', task.appStatus === 'none' ? 'bg-red-50 dark:bg-red-950/30' : task.appStatus === 'partial' ? 'bg-yellow-50 dark:bg-yellow-950/30' : 'bg-green-50 dark:bg-green-950/30')}>
+                              <span className="font-semibold">App-Stand:</span>{' '}
+                              {task.appModule && <Badge variant="outline" className="text-xs mr-1">{task.appModule}</Badge>}
+                              <span className="text-muted-foreground">{task.appNotes}</span>
+                            </div>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </CardContent>
+              </Card>
+            )
+          })
         })}
-      </Accordion>
+      </div>
 
       {filteredTasks.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
