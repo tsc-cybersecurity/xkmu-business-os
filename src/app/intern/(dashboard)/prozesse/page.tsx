@@ -27,6 +27,8 @@ import {
   ListChecks,
   FileOutput,
   ClipboardList,
+  Monitor,
+  CircleDot,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -58,6 +60,9 @@ interface ProcessTask {
   expectedOutput: string | null
   errorEscalation: string | null
   solution: string | null
+  appStatus: string | null
+  appNotes: string | null
+  appModule: string | null
 }
 
 interface ProcessArea {
@@ -101,9 +106,38 @@ function potentialColor(p: string | null) {
 // Task Detail Component
 // ============================================
 
+function AppStatusBadge({ status }: { status: string | null }) {
+  switch (status) {
+    case 'full': return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs"><Monitor className="h-3 w-3 mr-1" />In App</Badge>
+    case 'partial': return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 text-xs"><CircleDot className="h-3 w-3 mr-1" />Teilweise</Badge>
+    case 'none': return <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 text-xs">Fehlt</Badge>
+    default: return null
+  }
+}
+
 function TaskDetail({ task }: { task: ProcessTask }) {
   return (
     <div className="space-y-4 pt-2 pl-2">
+      {/* App-Abdeckung */}
+      {task.appStatus && task.appStatus !== 'none' && task.appNotes && (
+        <div className="bg-green-50 dark:bg-green-950/30 rounded-md p-3">
+          <h4 className="text-sm font-semibold flex items-center gap-2 mb-1 text-green-700 dark:text-green-400">
+            <Monitor className="h-4 w-4" />
+            In der App verfuegbar {task.appModule && <span className="font-normal">({task.appModule})</span>}
+          </h4>
+          <p className="text-sm text-green-700 dark:text-green-300">{task.appNotes}</p>
+        </div>
+      )}
+      {task.appStatus === 'none' && task.appNotes && (
+        <div className="bg-red-50 dark:bg-red-950/30 rounded-md p-3">
+          <h4 className="text-sm font-semibold flex items-center gap-2 mb-1 text-red-700 dark:text-red-400">
+            <CircleDot className="h-4 w-4" />
+            Noch nicht in der App
+          </h4>
+          <p className="text-sm text-red-700 dark:text-red-300">{task.appNotes}</p>
+        </div>
+      )}
+
       {task.purpose && (
         <div>
           <h4 className="text-sm font-semibold flex items-center gap-2 mb-1">
@@ -466,9 +500,11 @@ export default function ProzessePage() {
                             >
                               <span className="font-mono text-muted-foreground shrink-0">{task.taskKey}</span>
                               <span className="truncate">{task.title}</span>
-                              {task.automationPotential === 'Hoch' && (
-                                <Zap className="h-3 w-3 text-green-500 shrink-0 ml-auto" />
-                              )}
+                              <span className="shrink-0 ml-auto flex items-center gap-1">
+                                {task.appStatus === 'full' && <span className="w-2 h-2 rounded-full bg-green-500" title="In App" />}
+                                {task.appStatus === 'partial' && <span className="w-2 h-2 rounded-full bg-yellow-500" title="Teilweise" />}
+                                {task.appStatus === 'none' && <span className="w-2 h-2 rounded-full bg-red-400" title="Fehlt" />}
+                              </span>
                             </button>
                           ))}
                         </div>
@@ -524,7 +560,8 @@ export default function ProzessePage() {
                 <Badge variant="outline" className="font-mono">{selectedTask.taskKey}</Badge>
                 <h2 className="text-2xl font-bold">{selectedTask.title}</h2>
               </div>
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-6 flex-wrap">
+                <AppStatusBadge status={selectedTask.appStatus} />
                 {selectedTask.timeEstimate && (
                   <Badge variant="secondary" className="text-xs">
                     <Clock className="h-3 w-3 mr-1" />
@@ -561,6 +598,7 @@ export default function ProzessePage() {
                             <Badge variant="outline" className="font-mono text-xs shrink-0">
                               {task.taskKey}
                             </Badge>
+                            <AppStatusBadge status={task.appStatus} />
                             <span className="font-medium">{task.title}</span>
                             <div className="flex items-center gap-2 ml-auto mr-4">
                               {task.timeEstimate && (
