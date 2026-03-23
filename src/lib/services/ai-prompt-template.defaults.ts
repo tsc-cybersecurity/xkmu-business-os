@@ -112,6 +112,16 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'targetGroup', label: 'Zielgruppe', description: 'Informationen zur Zielgruppe' },
     { key: 'strengths', label: 'Stärken', description: 'Unternehmensstärken aus SWOT' },
   ],
+  // Meeting Summary
+  meeting_summary: [
+    { key: 'notes', label: 'Stichpunkte', description: 'Gespraechsnotizen als Stichpunkte' },
+    { key: 'context', label: 'Kontext', description: 'Firmen-/Lead-Kontext' },
+  ],
+  // Blog Review
+  blog_review: [
+    { key: 'content', label: 'Blog-Text', description: 'Der zu pruefende Artikel-Text' },
+    { key: 'keywords', label: 'Keywords', description: 'SEO-Keywords (kommagetrennt)' },
+  ],
   // Process Dev Analysis
   process_dev_analysis: [
     { key: 'taskContext', label: 'Aufgaben-Kontext', description: 'Vollstaendiger Prozess-Task mit allen Feldern' },
@@ -932,6 +942,55 @@ Regeln:
 - Tools wie "Manuell", "Telefon", "Zoom" (reine Meeting-Tools) ueberspringe - nur wenn eine sinnvolle In-App-Funktion ableitbar ist (z.B. Meeting-Notiz-Generator)
 - Gruppiere zusammengehoerige kleine Features in einer Anforderung
 - Sei konkret: Nenne Tabellennamen, API-Endpoints, Komponentennamen`,
+  },
+
+  // ============================================
+  // Meeting Summary
+  // ============================================
+  meeting_summary: {
+    name: 'Gespraechszusammenfassung',
+    description: 'Erstellt strukturierte Zusammenfassung aus Gespraechsnotizen',
+    systemPrompt: 'Du bist ein professioneller Business-Assistent. Erstelle aus Stichpunkten eine strukturierte Gespraechszusammenfassung auf Deutsch.',
+    userPrompt: `Erstelle eine strukturierte Zusammenfassung aus folgenden Gespraechsnotizen:
+
+Kontext: {{context}}
+
+Stichpunkte:
+{{notes}}`,
+    outputFormat: `Antworte als JSON:
+{
+  "zusammenfassung": "2-3 Saetze Zusammenfassung",
+  "ergebnisse": ["Ergebnis 1", "Ergebnis 2"],
+  "naechsteSchritte": ["Schritt 1", "Schritt 2"],
+  "followUpDatum": "Vorgeschlagenes Follow-up-Datum (YYYY-MM-DD oder null)",
+  "notiz": "Vollstaendige Gespraechsnotiz als Fliesstext"
+}`,
+  },
+
+  // ============================================
+  // Blog Review
+  // ============================================
+  blog_review: {
+    name: 'Blog KI-Review',
+    description: 'Prueft Blog-Texte auf Lesbarkeit, SEO und Tonalitaet',
+    systemPrompt: 'Du bist ein erfahrener Content-Redakteur und SEO-Experte. Pruefe Texte auf Qualitaet und gib konkrete Verbesserungsvorschlaege. Antworte auf Deutsch in JSON.',
+    userPrompt: `Pruefe folgenden Blog-Text:
+
+SEO-Keywords: {{keywords}}
+
+Text:
+{{content}}`,
+    outputFormat: `Antworte als JSON:
+{
+  "score": 75,
+  "lesbarkeit": {"score": 80, "hinweise": ["Hinweis 1"]},
+  "seo": {"score": 70, "keywordDichte": "1.2%", "hinweise": ["Keyword in H1 fehlt"]},
+  "tonalitaet": {"passend": true, "hinweise": []},
+  "verbesserungen": [
+    {"stelle": "Absatz 2", "original": "...", "vorschlag": "...", "grund": "..."}
+  ],
+  "gesamtbewertung": "Kurzes Fazit"
+}`,
   },
 
   // ============================================

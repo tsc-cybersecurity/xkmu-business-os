@@ -3,6 +3,7 @@ import { leads, companies, persons, users } from '@/lib/db/schema'
 import { eq, and, ilike, count, desc, or, getTableColumns, inArray } from 'drizzle-orm'
 import type { Lead, NewLead } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
+import { logger } from '@/lib/utils/logger'
 
 // Type for lead with related data
 export interface LeadWithRelations extends Lead {
@@ -78,7 +79,68 @@ export const LeadService = {
       })
       .returning()
 
+    // Auto-Score: KI-basierte Qualifizierung im Hintergrund (non-blocking)
+    this.autoScore(tenantId, lead.id).catch(() => {})
+
+    // Erstantwort-E-Mail in Task-Queue wenn E-Mail vorhanden
+    if (lead.contactEmail) {
+      import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
+        TaskQueueService.create(tenantId, {
+          type: 'email',
+          priority: 1,
+          payload: {
+            templateSlug: 'lead_first_response',
+            to: lead.contactEmail,
+            placeholders: {
+              name: [lead.contactFirstName, lead.contactLastName].filter(Boolean).join(' ') || 'Interessent',
+              firma: lead.contactCompany || '',
+            },
+            leadId: lead.id,
+          },
+          referenceType: 'lead',
+          referenceId: lead.id,
+        }).catch(() => {})
+      }).catch(() => {})
+    }
+
     return lead
+  },
+
+  /**
+   * Automatische KI-Qualifizierung: Bewertet Lead basierend auf verfuegbaren Daten
+   */
+  async autoScore(tenantId: string, leadId: string): Promise<void> {
+    try {
+      const lead = await this.getById(tenantId, leadId)
+      if (!lead || lead.score > 0) return // Nur fuer neue Leads ohne Score
+
+      let score = 20 // Basis-Score fuer jeden neuen Lead
+
+      // +20 wenn E-Mail vorhanden
+      if (lead.contactEmail) score += 20
+      // +10 wenn Telefon vorhanden
+      if (lead.contactPhone) score += 10
+      // +10 wenn Firma vorhanden
+      if (lead.contactCompany || lead.company) score += 10
+      // +10 wenn ueber Formular/API (statt manuell)
+      if (lead.source === 'form' || lead.source === 'api' || lead.source === 'website') score += 10
+      // +15 wenn Firma eine Website hat
+      if (lead.company?.name) score += 15
+
+      // Auf 0-100 begrenzen
+      score = Math.min(100, Math.max(0, score))
+
+      if (score > 0) {
+        await db
+          .update(leads)
+          .set({ score, updatedAt: new Date() })
+          .where(eq(leads.id, leadId))
+      }
+
+      logger.info(`Auto-scored lead ${leadId}: ${score}`, { module: 'LeadService' })
+    } catch (error) {
+      logger.warn(`Auto-score failed for lead ${leadId}`, { module: 'LeadService' })
+    }
   },
 
   async getById(tenantId: string, leadId: string): Promise<LeadWithRelations | null> {
@@ -287,6 +349,25 @@ export const LeadService = {
 
         if (status === 'won') {
           WebhookService.fire(tenantId, 'lead.won', { leadId }).catch(() => {})
+          // Willkommens-E-Mail in Queue
+          if (lead!.contactEmail) {
+            import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
+              TaskQueueService.create(tenantId, {
+                type: 'email',
+                priority: 1,
+                payload: {
+                  templateSlug: 'welcome',
+                  to: lead!.contactEmail,
+                  placeholders: {
+                    name: [lead!.contactFirstName, lead!.contactLastName].filter(Boolean).join(' ') || 'Kunde',
+                  },
+                  leadId,
+                },
+                referenceType: 'lead',
+                referenceId: leadId,
+              }).catch(() => {})
+            }).catch(() => {})
+          }
         }
         if (status === 'lost') {
           WebhookService.fire(tenantId, 'lead.lost', { leadId }).catch(() => {})
