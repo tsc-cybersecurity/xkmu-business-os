@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         .from(timeEntries)
         .where(and(...conditions))
 
-      const billableEntries = entries.filter(e => e.billable && e.durationMinutes > 0)
+      const billableEntries = entries.filter(e => e.billable && (e.durationMinutes ?? 0) > 0)
       if (billableEntries.length === 0) {
         return apiError('NO_ENTRIES', 'Keine abrechenbaren Zeiteintraege gefunden', 400)
       }
