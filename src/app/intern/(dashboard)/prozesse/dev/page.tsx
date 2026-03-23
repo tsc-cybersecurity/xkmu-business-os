@@ -32,6 +32,7 @@ import {
   FileCode,
   Save,
   Pencil,
+  Zap,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -346,6 +347,40 @@ export default function DevTasksPage() {
     }
   }
 
+  // AI Generation
+  const [generating, setGenerating] = useState(false)
+  const [genProgress, setGenProgress] = useState('')
+
+  const handleGenerate = async (overwrite: boolean) => {
+    if (!confirm(overwrite
+      ? 'Alle Programmieranforderungen neu generieren? Bestehende werden ueberschrieben.'
+      : 'Fehlende Programmieranforderungen per KI generieren? Bestehende bleiben erhalten.'
+    )) return
+
+    setGenerating(true)
+    setGenProgress('KI-Analyse laeuft...')
+    try {
+      const response = await fetch('/api/v1/processes/dev-tasks/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ overwrite }),
+      })
+      const data = await response.json()
+      if (data.success) {
+        setGenProgress('')
+        toast.success(`${data.data.generated} Aufgaben analysiert, ${data.data.errors} Fehler`)
+        fetchTasks()
+      } else {
+        toast.error(data.error?.message || 'Generierung fehlgeschlagen')
+      }
+    } catch {
+      toast.error('Generierung fehlgeschlagen')
+    } finally {
+      setGenerating(false)
+      setGenProgress('')
+    }
+  }
+
   const handleDownloadAll = () => {
     const md = generateMarkdown(filteredTasks, {
       effort: effortFilter, priority: priorityFilter,
@@ -389,10 +424,28 @@ export default function DevTasksPage() {
             Aus Prozessanalyse generierte Entwicklungsaufgaben
           </p>
         </div>
-        <Button onClick={handleDownloadAll} disabled={filteredTasks.length === 0}>
-          <Download className="h-4 w-4 mr-2" />
-          Alle exportieren (.md)
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => handleGenerate(false)}
+            disabled={generating}
+          >
+            {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+            {generating ? genProgress || 'Generiert...' : 'KI-Analyse (fehlende)'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => handleGenerate(true)}
+            disabled={generating}
+          >
+            <Zap className="h-4 w-4 mr-2" />
+            Alle neu generieren
+          </Button>
+          <Button onClick={handleDownloadAll} disabled={filteredTasks.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Export (.md)
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

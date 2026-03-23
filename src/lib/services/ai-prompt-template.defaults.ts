@@ -112,6 +112,11 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'targetGroup', label: 'Zielgruppe', description: 'Informationen zur Zielgruppe' },
     { key: 'strengths', label: 'Stärken', description: 'Unternehmensstärken aus SWOT' },
   ],
+  // Process Dev Analysis
+  process_dev_analysis: [
+    { key: 'taskContext', label: 'Aufgaben-Kontext', description: 'Vollstaendiger Prozess-Task mit allen Feldern' },
+    { key: 'appCapabilities', label: 'App-Faehigkeiten', description: 'Bestehende App-Module und Funktionen' },
+  ],
   // Firecrawl Smart Filter
   firecrawl_smart_filter: [
     { key: 'links', label: 'Link-Liste', description: 'Alle internen Links der Homepage' },
@@ -863,6 +868,70 @@ Wenn der Workflow Video-Generierung mit kie.ai/Kling enthält:
   },
   "settings": { "executionOrder": "v1" }
 }`,
+  },
+
+  // ============================================
+  // Process Dev Analysis
+  // ============================================
+  process_dev_analysis: {
+    name: 'Prozess-Entwicklungsanalyse',
+    description: 'Analysiert Prozessaufgaben und generiert detaillierte Programmieranforderungen',
+    systemPrompt: `Du bist ein erfahrener Software-Architekt fuer eine Business-Management-App (Next.js, React, PostgreSQL, Drizzle ORM, Tailwind CSS, shadcn/ui).
+
+PRAEMISSE: Jede Funktion soll IN DER APP gebaut werden, anstatt externe Tools zu nutzen. Externe APIs duerfen als Datenquelle angebunden werden (z.B. Brevo fuer E-Mail-Versand, Google Calendar API), aber die Steuerung, UI und Logik muss in der App liegen.
+
+Die App hat bereits folgende Module:
+- CRM (Firmen, Personen, Aktivitaeten)
+- Leads (Pipeline, Scoring, KI-Research)
+- Finance (Rechnungen, Angebote, Positionen, PDF-Export)
+- Blog (KI-Generierung, SEO, Publish)
+- Social Media (Posts, Content-Plan, Topics, Multi-Plattform)
+- Marketing (Kampagnen, KI Marketing Agent)
+- Bildgenerierung (Gemini, DALL-E, kie.ai)
+- Business Intelligence (SWOT-Analyse, KI-Auswertung)
+- Ideas (Kanban, KI-Strukturierung)
+- Chat (Multi-Provider KI-Chat)
+- Cybersecurity (DIN SPEC 27076 Audit, WiBA-Check, Scoring, PDF-Reports)
+- CMS (Seiten, Blocks, Navigation)
+- n8n Workflows (Automatisierung)
+- Cockpit (System-Monitoring, KPIs)
+- Prozesshandbuch (SOPs, Aufgaben, Checklisten)
+- Einstellungen (KI-Provider, Prompt-Templates, Webhooks, API-Keys, Rollen)
+
+Antworte ausschliesslich in JSON.`,
+    userPrompt: `Analysiere diese Prozessaufgabe und erstelle detaillierte Programmieranforderungen.
+
+=== AUFGABE ===
+{{taskContext}}
+
+=== BESTEHENDE APP-FAEHIGKEITEN ===
+{{appCapabilities}}
+
+Erstelle fuer JEDES externe Tool das in der Aufgabe genutzt wird eine Programmieranforderung.
+Beruecksichtige dabei:
+1. Was genau macht das Tool in diesem Prozessschritt?
+2. Welche bestehenden App-Module koennen erweitert werden?
+3. Was muss komplett neu gebaut werden?
+4. Welche APIs/Integrationen werden benoetigt?
+5. Welche DB-Tabellen/Felder muessen ergaenzt werden?
+6. Welche UI-Komponenten werden gebraucht?`,
+    outputFormat: `Antworte als JSON-Array:
+[
+  {
+    "tool": "Name des zu ersetzenden Tools",
+    "neededFunction": "Praezise Beschreibung der benoetigten Funktion (1-2 Saetze)",
+    "approach": "Detaillierter Umsetzungsansatz: Welches Modul erweitern oder neu bauen, welche API anbinden, welche DB-Tabellen/Felder noetig, welche UI-Komponenten (konkrete Komponentennamen), welche Endpoints. Mindestens 3-5 Saetze.",
+    "effort": "S|M|L|XL (S=1-2h, M=3-8h, L=1-3 Tage, XL=3+ Tage)",
+    "priority": "hoch|mittel|niedrig (hoch=Kernfunktion fehlt, mittel=nice-to-have, niedrig=Komfort)"
+  }
+]
+
+Regeln:
+- NUR Anforderungen fuer Funktionen die NICHT oder nur TEILWEISE in der App vorhanden sind
+- Wenn die App eine Funktion VOLL abdeckt, erstelle KEINE Anforderung dafuer
+- Tools wie "Manuell", "Telefon", "Zoom" (reine Meeting-Tools) ueberspringe - nur wenn eine sinnvolle In-App-Funktion ableitbar ist (z.B. Meeting-Notiz-Generator)
+- Gruppiere zusammengehoerige kleine Features in einer Anforderung
+- Sei konkret: Nenne Tabellennamen, API-Endpoints, Komponentennamen`,
   },
 
   // ============================================
