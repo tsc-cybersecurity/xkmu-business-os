@@ -1589,7 +1589,7 @@ interface EndpointDocProps {
   description: string
   requestBody?: Record<string, unknown>
   queryParams?: string[]
-  responseExample: unknown
+  responseExample?: unknown
 }
 
 function EndpointDoc({ method, path, description, requestBody, queryParams, responseExample }: EndpointDocProps) {
