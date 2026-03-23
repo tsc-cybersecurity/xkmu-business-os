@@ -134,6 +134,13 @@
       "when": 1774286675670,
       "tag": "0018_zippy_proudstar",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1774286999779,
+      "tag": "0019_smart_roland_deschain",
+      "breakpoints": true
     }
   ]
 }

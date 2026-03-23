@@ -23,6 +23,7 @@ import {
   ImageIcon,
   BookOpen,
   Clock,
+  Kanban,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
@@ -137,6 +138,12 @@ const navigation: NavItem[] = [
       { name: 'WiBA-Checks', href: '/intern/wiba', requiredModule: 'wiba_audits' },
       { name: 'Fördermittel', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
     ],
+  },
+  {
+    name: 'Projekte',
+    href: '/intern/projekte',
+    icon: Kanban,
+    requiredModule: 'processes',
   },
   {
     name: 'Prozesse',

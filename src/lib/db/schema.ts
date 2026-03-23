@@ -2075,6 +2075,68 @@ export type Receipt = typeof receipts.$inferSelect
 export type NewReceipt = typeof receipts.$inferInsert
 
 // ============================================
+// Projects (Kanban)
+// ============================================
+export const projects = pgTable('projects', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 20 }).default('active'), // active, completed, archived
+  projectType: varchar('project_type', { length: 20 }).default('kanban'), // kanban, okr, content
+  columns: jsonb('columns').default([
+    { id: 'backlog', name: 'Backlog', color: '#94a3b8' },
+    { id: 'todo', name: 'To Do', color: '#3b82f6' },
+    { id: 'in_progress', name: 'In Arbeit', color: '#f59e0b' },
+    { id: 'done', name: 'Fertig', color: '#22c55e' },
+  ]),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_projects_tenant').on(table.tenantId),
+  index('idx_projects_tenant_status').on(table.tenantId, table.status),
+])
+
+export const projectTasks = pgTable('project_tasks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  columnId: varchar('column_id', { length: 50 }).default('backlog'),
+  position: integer('position').default(0),
+  assignedTo: uuid('assigned_to').references(() => users.id, { onDelete: 'set null' }),
+  dueDate: timestamp('due_date', { withTimezone: true }),
+  checklist: jsonb('checklist').default([]), // [{text, checked}]
+  labels: text('labels').array().default([]),
+  referenceType: varchar('reference_type', { length: 50 }), // blog_post, social_post, lead, etc.
+  referenceId: uuid('reference_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_project_tasks_project').on(table.projectId),
+  index('idx_project_tasks_column').on(table.projectId, table.columnId),
+])
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  tenant: one(tenants, { fields: [projects.tenantId], references: [tenants.id] }),
+  company: one(companies, { fields: [projects.companyId], references: [companies.id] }),
+  tasks: many(projectTasks),
+}))
+
+export const projectTasksRelations = relations(projectTasks, ({ one }) => ({
+  tenant: one(tenants, { fields: [projectTasks.tenantId], references: [tenants.id] }),
+  project: one(projects, { fields: [projectTasks.projectId], references: [projects.id] }),
+  assignedToUser: one(users, { fields: [projectTasks.assignedTo], references: [users.id] }),
+}))
+
+export type Project = typeof projects.$inferSelect
+export type NewProject = typeof projects.$inferInsert
+export type ProjectTask = typeof projectTasks.$inferSelect
+export type NewProjectTask = typeof projectTasks.$inferInsert
+
+// ============================================
 // Newsletter
 // ============================================
 export const newsletterSubscribers = pgTable('newsletter_subscribers', {
