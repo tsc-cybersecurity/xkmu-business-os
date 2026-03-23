@@ -53,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
           cc,
           companyId: doc.companyId || undefined,
         },
-        auth.userId
+        auth.userId ?? undefined
       )
 
       if (!result.success) {

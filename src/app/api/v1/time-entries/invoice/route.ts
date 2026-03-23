@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
         issueDate: new Date().toISOString().split('T')[0],
         dueDate: dueDate.toISOString().split('T')[0],
         paymentTerms: 'Zahlbar innerhalb von 14 Tagen',
-      }, auth.userId)
+      }, auth.userId ?? undefined)
 
       // Add line items from time entries
       let totalMinutes = 0

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
+import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { TimeEntryService } from '@/lib/services/time-entry.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { parsePaginationParams } from '@/lib/utils/api-response'
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const result = await TimeEntryService.list(auth.tenantId, {
       ...pagination,
-      userId: auth.userId,
+      userId: auth.userId || undefined,
       companyId,
       from,
       to,
@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'time_entries', 'create', async (auth) => {
+    if (!auth.userId) return apiError('NO_USER', 'Zeiterfassung erfordert einen angemeldeten Benutzer', 403)
     try {
       const body = await request.json()
       const entry = await TimeEntryService.create(auth.tenantId, auth.userId, {

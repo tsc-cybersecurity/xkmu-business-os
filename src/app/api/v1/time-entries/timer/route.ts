@@ -6,6 +6,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 // POST /api/v1/time-entries/timer - Start or stop timer
 export async function POST(request: NextRequest) {
   return withPermission(request, 'time_entries', 'create', async (auth) => {
+    if (!auth.userId) return apiError('NO_USER', 'Timer erfordert einen angemeldeten Benutzer', 403)
     try {
       const body = await request.json()
       const { action } = body as { action: 'start' | 'stop' }
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
 // GET /api/v1/time-entries/timer - Get running timer
 export async function GET(request: NextRequest) {
   return withPermission(request, 'time_entries', 'read', async (auth) => {
+    if (!auth.userId) return apiSuccess(null)
     const running = await TimeEntryService.getRunningTimer(auth.tenantId, auth.userId)
     return apiSuccess(running)
   })
