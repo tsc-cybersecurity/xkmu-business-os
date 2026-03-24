@@ -65,7 +65,7 @@ export const CmsBlockTemplateService = {
   async delete(templateId: string): Promise<boolean> {
     const result = await db
       .delete(cmsBlockTemplates)
-      .where(and(eq(cmsBlockTemplates.id, templateId), eq(cmsBlockTemplates.isSystem, false)))
+      .where(eq(cmsBlockTemplates.id, templateId))
       .returning({ id: cmsBlockTemplates.id })
     return result.length > 0
   },
