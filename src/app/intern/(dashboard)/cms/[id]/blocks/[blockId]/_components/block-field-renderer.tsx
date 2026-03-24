@@ -72,7 +72,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               </SelectContent>
             </Select>
           </div>
-          <ArrayField label="Features" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['icon', 'title', 'description']} />
+          <ArrayField label="Features" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['icon', 'title', 'description', 'link']} />
         </>
       )
     case 'cta':

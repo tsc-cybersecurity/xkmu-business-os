@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { getIcon } from '@/lib/utils/icon-map'
 
@@ -9,6 +10,7 @@ interface FeaturesBlockContent {
     icon?: string
     title: string
     description: string
+    link?: string
   }>
 }
 
@@ -48,7 +50,7 @@ export function FeaturesBlock({ content, settings }: FeaturesBlockProps) {
       <div className={`grid ${gridClass} gap-6`}>
         {content.items?.map((item, i) => {
           const Icon = item.icon ? getIcon(item.icon) : null
-          return (
+          const card = (
             <Card key={i} className="border-2 hover:border-primary/50 transition-colors">
               <CardHeader>
                 {Icon && (
@@ -61,6 +63,10 @@ export function FeaturesBlock({ content, settings }: FeaturesBlockProps) {
               </CardHeader>
             </Card>
           )
+          if (item.link) {
+            return <Link key={i} href={item.link} className="block">{card}</Link>
+          }
+          return card
         })}
       </div>
     </section>
