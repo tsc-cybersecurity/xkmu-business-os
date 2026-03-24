@@ -158,7 +158,7 @@ function TimelineView({ tasks, columns }: { tasks: TaskItem[]; columns: Column[]
   return (
     <div className="flex">
       {/* Task names */}
-      <div className="w-48 shrink-0 pt-[44px]">
+      <div className="w-48 shrink-0 pt-[52px]">
         {tasksWithDates.map(task => (
           <div key={task.id} className="h-9 flex items-center gap-1.5 pr-3 truncate">
             <PriorityDot priority={task.priority} />
@@ -169,11 +169,18 @@ function TimelineView({ tasks, columns }: { tasks: TaskItem[]; columns: Column[]
       {/* Timeline grid */}
       <div className="flex-1 overflow-x-auto">
         <div style={{ width: gridWidth, minWidth: '100%' }}>
-          {/* Day headers */}
+          {/* Month row */}
+          <div className="flex">
+            {days.map((d, i) => (
+              <div key={i} style={{ width: dayWidth }} className="shrink-0 text-center h-4">
+                {d.monthLabel && <span className="text-[9px] text-muted-foreground font-medium">{d.monthLabel}</span>}
+              </div>
+            ))}
+          </div>
+          {/* Day + weekday rows */}
           <div className="flex border-b">
             {days.map((d, i) => (
-              <div key={i} style={{ width: dayWidth }} className={cn('shrink-0 text-center border-r border-border/40', d.isWeekend && 'bg-muted/40')}>
-                {d.monthLabel && <div className="text-[9px] text-muted-foreground font-medium -mb-0.5">{d.monthLabel}</div>}
+              <div key={i} style={{ width: dayWidth }} className={cn('shrink-0 text-center border-r border-border/40 py-0.5', d.isWeekend && 'bg-muted/40')}>
                 <div className="text-[10px] font-medium leading-tight">{d.day}</div>
                 <div className={cn('text-[9px] leading-tight', d.isWeekend ? 'text-muted-foreground/60' : 'text-muted-foreground')}>{d.weekday}</div>
               </div>
