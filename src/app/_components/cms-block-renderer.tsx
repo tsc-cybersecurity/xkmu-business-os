@@ -20,6 +20,7 @@ import { GalleryBlock } from './blocks/gallery-block'
 import { BannerBlock } from './blocks/banner-block'
 import { DividerBlock } from './blocks/divider-block'
 import { ComparisonBlock } from './blocks/comparison-block'
+import { ServiceCardsBlock } from './blocks/service-cards-block'
 
 interface CmsBlockRendererProps {
   blockType: string
@@ -69,6 +70,8 @@ export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRende
       return <DividerBlock content={content as any} settings={settings} />
     case 'comparison':
       return <ComparisonBlock content={content as any} settings={settings} />
+    case 'service-cards':
+      return <ServiceCardsBlock content={content as any} settings={settings} />
     default:
       return (
         <div className="container mx-auto px-4 py-8">

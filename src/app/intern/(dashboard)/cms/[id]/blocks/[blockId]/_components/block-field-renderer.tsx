@@ -500,6 +500,34 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
           </div>
         </>
       )
+    case 'service-cards':
+      return (
+        <>
+          <div className="space-y-2">
+            <Label>Abschnittstitel</Label>
+            <Input value={(content.sectionTitle as string) || ''} onChange={(e) => updateContent('sectionTitle', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Untertitel</Label>
+            <Input value={(content.sectionSubtitle as string) || ''} onChange={(e) => updateContent('sectionSubtitle', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Spalten</Label>
+            <Select value={String(content.columns || 2)} onValueChange={(v) => updateContent('columns', parseInt(v))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">1 Spalte</SelectItem>
+                <SelectItem value="2">2 Spalten</SelectItem>
+                <SelectItem value="3">3 Spalten</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <ServiceCardsField
+            items={(content.items as Array<Record<string, any>>) || []}
+            onChange={(items) => updateContent('items', items)}
+          />
+        </>
+      )
     default:
       return (
         <div className="space-y-2">
@@ -642,6 +670,69 @@ function PricingPlansField({
               rows={4}
               className="text-sm"
               placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ServiceCardsField({
+  items,
+  onChange,
+}: {
+  items: Array<Record<string, any>>
+  onChange: (items: Array<Record<string, any>>) => void
+}) {
+  const addItem = () => {
+    onChange([...items, { badge: '', title: '', description: '', checklistItems: [], deliverables: [] }])
+  }
+  const removeItem = (index: number) => onChange(items.filter((_, i) => i !== index))
+  const updateItem = (index: number, field: string, value: any) => {
+    const updated = [...items]
+    updated[index] = { ...updated[index], [field]: value }
+    onChange(updated)
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Label>Service-Karten</Label>
+        <Button variant="outline" size="sm" onClick={addItem}>
+          <Plus className="h-3 w-3 mr-1" /> Karte hinzufuegen
+        </Button>
+      </div>
+      {items.map((item, i) => (
+        <div key={i} className="rounded-lg border p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Karte {i + 1}</span>
+            <Button variant="ghost" size="icon" aria-label="Loeschen" className="h-7 w-7" onClick={() => removeItem(i)}>
+              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+            </Button>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            <Input placeholder="Badge (z.B. B1)" value={item.badge || ''} onChange={(e) => updateItem(i, 'badge', e.target.value)} className="text-sm" />
+            <Input placeholder="Titel" value={item.title || ''} onChange={(e) => updateItem(i, 'title', e.target.value)} className="text-sm col-span-3" />
+          </div>
+          <Input placeholder="Beschreibung" value={item.description || ''} onChange={(e) => updateItem(i, 'description', e.target.value)} className="text-sm" />
+          <div className="space-y-1">
+            <Label className="text-xs">Checkliste (eins pro Zeile)</Label>
+            <Textarea
+              value={(item.checklistItems || []).join('\n')}
+              onChange={(e) => updateItem(i, 'checklistItems', e.target.value.split('\n').filter((l: string) => l.trim()))}
+              rows={4}
+              className="text-sm"
+              placeholder="Leistungspunkt 1&#10;Leistungspunkt 2"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Deliverables (kommagetrennt)</Label>
+            <Input
+              value={(item.deliverables || []).join(', ')}
+              onChange={(e) => updateItem(i, 'deliverables', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
+              className="text-sm"
+              placeholder="Ergebnis 1, Ergebnis 2, Ergebnis 3"
             />
           </div>
         </div>
