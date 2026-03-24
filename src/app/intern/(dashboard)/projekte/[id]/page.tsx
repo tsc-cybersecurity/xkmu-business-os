@@ -129,65 +129,78 @@ function TimelineView({ tasks, columns }: { tasks: TaskItem[]; columns: Column[]
   const maxDate = new Date(Math.max(...allDates))
   const totalDays = Math.max(1, Math.ceil((maxDate.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)) + 1)
 
-  // Generate month headers
-  const months: Array<{ label: string; startPct: number; widthPct: number }> = []
-  const cursor = new Date(minDate.getFullYear(), minDate.getMonth(), 1)
-  while (cursor <= maxDate) {
-    const monthStart = Math.max(0, (cursor.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24))
-    const nextMonth = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)
-    const monthEnd = Math.min(totalDays, (nextMonth.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24))
-    months.push({
-      label: cursor.toLocaleDateString('de-DE', { month: 'short', year: 'numeric' }),
-      startPct: (monthStart / totalDays) * 100,
-      widthPct: ((monthEnd - monthStart) / totalDays) * 100,
+  // Generate day columns
+  const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+  const days: Array<{ day: string; weekday: string; isWeekend: boolean; monthLabel?: string }> = []
+  for (let i = 0; i < totalDays; i++) {
+    const d = new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate() + i)
+    days.push({
+      day: String(d.getDate()).padStart(2, '0'),
+      weekday: WEEKDAYS[d.getDay()],
+      isWeekend: d.getDay() === 0 || d.getDay() === 6,
+      monthLabel: d.getDate() === 1 || i === 0 ? d.toLocaleDateString('de-DE', { month: 'short' }) : undefined,
     })
-    cursor.setMonth(cursor.getMonth() + 1)
   }
+  const dayWidth = Math.max(24, Math.min(36, 800 / totalDays))
 
-  const getBarStyle = (task: TaskItem) => {
+  const colMap = new Map((columns || []).map(c => [c.id, c]))
+
+  const gridWidth = days.length * dayWidth
+
+  const getBarPx = (task: TaskItem) => {
     const start = task.startDate ? new Date(task.startDate) : task.dueDate ? new Date(task.dueDate) : minDate
     const end = task.dueDate ? new Date(task.dueDate) : task.startDate ? new Date(task.startDate) : maxDate
     const leftDays = (start.getTime() - minDate.getTime()) / (1000 * 60 * 60 * 24)
     const widthDays = Math.max(1, (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-    return {
-      left: `${(leftDays / totalDays) * 100}%`,
-      width: `${(widthDays / totalDays) * 100}%`,
-    }
+    return { left: leftDays * dayWidth, width: widthDays * dayWidth }
   }
 
-  const colMap = new Map((columns || []).map(c => [c.id, c]))
-
   return (
-    <div className="space-y-1">
-      {/* Month headers */}
-      <div className="relative h-8 bg-muted/30 rounded">
-        {months.map((m, i) => (
-          <div key={i} className="absolute top-0 h-full flex items-center px-2 text-xs text-muted-foreground border-l" style={{ left: `${m.startPct}%`, width: `${m.widthPct}%` }}>
-            {m.label}
+    <div className="flex">
+      {/* Task names */}
+      <div className="w-48 shrink-0 pt-[44px]">
+        {tasksWithDates.map(task => (
+          <div key={task.id} className="h-9 flex items-center gap-1.5 pr-3 truncate">
+            <PriorityDot priority={task.priority} />
+            <span className="text-xs truncate">{task.title}</span>
           </div>
         ))}
       </div>
-      {/* Task bars */}
-      {tasksWithDates.map(task => {
-        const col = colMap.get(task.columnId)
-        return (
-          <div key={task.id} className="relative h-10 flex items-center">
-            <div className="w-48 shrink-0 pr-3 flex items-center gap-1.5 truncate">
-              <PriorityDot priority={task.priority} />
-              <span className="text-xs truncate">{task.title}</span>
-            </div>
-            <div className="flex-1 relative h-7">
-              <div
-                className="absolute h-full rounded-md flex items-center px-2 text-[10px] text-white font-medium truncate"
-                style={{ ...getBarStyle(task), backgroundColor: col?.color || '#3b82f6' }}
-                title={`${task.startDate ? new Date(task.startDate).toLocaleDateString('de-DE') : '?'} — ${task.dueDate ? new Date(task.dueDate).toLocaleDateString('de-DE') : '?'}`}
-              >
-                {task.assigneeName || ''}
+      {/* Timeline grid */}
+      <div className="flex-1 overflow-x-auto">
+        <div style={{ width: gridWidth, minWidth: '100%' }}>
+          {/* Day headers */}
+          <div className="flex border-b">
+            {days.map((d, i) => (
+              <div key={i} style={{ width: dayWidth }} className={cn('shrink-0 text-center border-r border-border/40', d.isWeekend && 'bg-muted/40')}>
+                {d.monthLabel && <div className="text-[9px] text-muted-foreground font-medium -mb-0.5">{d.monthLabel}</div>}
+                <div className="text-[10px] font-medium leading-tight">{d.day}</div>
+                <div className={cn('text-[9px] leading-tight', d.isWeekend ? 'text-muted-foreground/60' : 'text-muted-foreground')}>{d.weekday}</div>
               </div>
-            </div>
+            ))}
           </div>
-        )
-      })}
+          {/* Task bars */}
+          {tasksWithDates.map(task => {
+            const col = colMap.get(task.columnId)
+            const bar = getBarPx(task)
+            return (
+              <div key={task.id} className="relative h-9 flex items-center">
+                {/* Weekend stripes */}
+                {days.map((d, i) => d.isWeekend && (
+                  <div key={i} className="absolute top-0 h-full bg-muted/20" style={{ left: i * dayWidth, width: dayWidth }} />
+                ))}
+                <div
+                  className="absolute h-6 rounded flex items-center px-1.5 text-[10px] text-white font-medium truncate shadow-sm"
+                  style={{ left: bar.left, width: bar.width, backgroundColor: col?.color || '#3b82f6' }}
+                  title={`${task.startDate ? new Date(task.startDate).toLocaleDateString('de-DE') : '?'} — ${task.dueDate ? new Date(task.dueDate).toLocaleDateString('de-DE') : '?'}`}
+                >
+                  {task.assigneeName || ''}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
