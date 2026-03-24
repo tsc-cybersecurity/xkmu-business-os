@@ -192,7 +192,7 @@ export const createLeadSchema = z.object({
   source: leadSourceSchema,
   sourceDetail: z.string().max(255).optional().or(z.literal('')),
   status: leadStatusSchema.default('new'),
-  score: z.number().int().min(0).max(100).default(0),
+  score: z.number().int().min(0).max(100).optional(),
   assignedTo: uuidSchema.nullable().optional(),
   tags: z.array(z.string()).default([]),
   notes: z.string().optional().or(z.literal('')),

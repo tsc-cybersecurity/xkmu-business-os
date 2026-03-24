@@ -208,8 +208,8 @@ export const LeadService = {
     if ('status' in data && data.status) {
       updateData.status = data.status
     }
-    if ('score' in data) {
-      updateData.score = data.score ?? 0
+    if ('score' in data && data.score !== undefined) {
+      updateData.score = data.score
     }
     if ('assignedTo' in data) {
       updateData.assignedTo = emptyToNull(data.assignedTo)
