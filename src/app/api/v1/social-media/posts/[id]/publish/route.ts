@@ -8,13 +8,17 @@ import { eq, and } from 'drizzle-orm'
 
 type Params = Promise<{ id: string }>
 
-// POST /api/v1/social-media/posts/[id]/publish - Post auf Plattform veroeffentlichen
+// POST /api/v1/social-media/posts/[id]/publish - Post auf Plattform(en) veroeffentlichen
 export async function POST(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'social_media', 'update', async (auth) => {
     try {
       const { id } = await params
       const body = await request.json()
-      const { platforms } = body as { platforms?: string[] }
+      const { platforms, imageUrl, link } = body as {
+        platforms?: string[]
+        imageUrl?: string
+        link?: string
+      }
 
       const [post] = await db
         .select()
@@ -28,11 +32,12 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       const results = await SocialPublishingService.publish(
         auth.tenantId,
         targetPlatforms,
-        post.content || ''
+        post.content || '',
+        { imageUrl: imageUrl || (post.imageUrl ?? undefined), link }
       )
 
       // Update post status if any platform succeeded
-      const anySuccess = Object.values(results).some(r => r.success)
+      const anySuccess = Object.values(results).some((r) => r.success)
       if (anySuccess) {
         await db
           .update(socialMediaPosts)
