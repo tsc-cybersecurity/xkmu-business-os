@@ -1,6 +1,7 @@
 /**
- * Simple Markdown to HTML converter without external dependencies.
- * Supports: bold, italic, headings, links, images, lists, code, paragraphs, line breaks.
+ * Markdown to HTML converter without external dependencies.
+ * Supports: bold, italic, headings, links, images, ordered/unordered lists,
+ * code blocks, inline code, horizontal rules, paragraphs, line breaks.
  */
 export function renderMarkdown(md: string): string {
   if (!md) return ''
@@ -19,19 +20,20 @@ export function renderMarkdown(md: string): string {
   // Inline code
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
 
-  // Images (only allow http/https URLs to prevent XSS via data:/javascript: URIs)
+  // Images (only allow http/https URLs)
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
     const safeSrc = /^https?:\/\//.test(src) ? src : ''
     return safeSrc ? `<img src="${safeSrc}" alt="${alt}" class="rounded-lg" loading="lazy" />` : ''
   })
 
-  // Links (block javascript:/data:/vbscript: protocols, add safe target)
+  // Links (block dangerous protocols)
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, href) => {
     const safeHref = /^(https?:\/\/|\/|#|mailto:)/.test(href) ? href : ''
     return safeHref ? `<a href="${safeHref}" class="text-primary hover:underline" target="_blank" rel="noopener noreferrer">${text}</a>` : text
   })
 
   // Headings
+  html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>')
   html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')
   html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>')
   html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>')
@@ -43,34 +45,48 @@ export function renderMarkdown(md: string): string {
   html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
+  html = html.replace(/_(.+?)_/g, '<em>$1</em>')
 
-  // Unordered lists
-  html = html.replace(/^(\s*)[-*] (.+)$/gm, '$1<li>$2</li>')
-  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul class="list-disc list-inside ml-4">$1</ul>')
-
-  // Ordered lists
-  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-
-  // Line breaks within paragraphs
-  html = html.replace(/<br\s*\/?>/g, '<br />')
-
-  // Paragraphs (text between blank lines that isn't already a block element)
-  const lines = html.split('\n\n')
-  html = lines
+  // Process lists block by block
+  const blocks = html.split('\n\n')
+  html = blocks
     .map((block) => {
       block = block.trim()
       if (!block) return ''
+
+      // Skip already-processed block elements
       if (
         block.startsWith('<h') ||
-        block.startsWith('<ul') ||
-        block.startsWith('<ol') ||
         block.startsWith('<pre') ||
         block.startsWith('<hr') ||
-        block.startsWith('<img') ||
-        block.startsWith('<li')
+        block.startsWith('<img')
       ) {
         return block
       }
+
+      // Unordered list block
+      if (/^[-*] /m.test(block)) {
+        const items = block
+          .split('\n')
+          .filter((line) => /^[-*] /.test(line))
+          .map((line) => `<li>${line.replace(/^[-*] /, '')}</li>`)
+        if (items.length > 0) {
+          return `<ul class="list-disc list-inside ml-4 space-y-1">${items.join('\n')}</ul>`
+        }
+      }
+
+      // Ordered list block
+      if (/^\d+\. /m.test(block)) {
+        const items = block
+          .split('\n')
+          .filter((line) => /^\d+\. /.test(line))
+          .map((line) => `<li>${line.replace(/^\d+\. /, '')}</li>`)
+        if (items.length > 0) {
+          return `<ol class="list-decimal list-inside ml-4 space-y-1">${items.join('\n')}</ol>`
+        }
+      }
+
+      // Paragraph
       return `<p>${block.replace(/\n/g, '<br />')}</p>`
     })
     .join('\n')

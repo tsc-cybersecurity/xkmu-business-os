@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Loader2, Save } from 'lucide-react'
 import { BlockFieldRenderer } from './block-field-renderer'
 
@@ -127,14 +128,45 @@ export function BlockEditor({
             </div>
             <div className="space-y-2">
               <Label>Hintergrundbild</Label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  value={(settings.backgroundImage as string) || ''}
-                  onChange={(e) => onUpdateSettings('backgroundImage', e.target.value || undefined)}
-                  placeholder="URL oder leer"
-                  className="flex-1"
-                />
+              <Input
+                value={(settings.backgroundImage as string) || ''}
+                onChange={(e) => onUpdateSettings('backgroundImage', e.target.value || undefined)}
+                placeholder="URL oder leer"
+              />
+            </div>
+            <hr className="my-2" />
+            <div className="space-y-2">
+              <Label>Schriftfarbe</Label>
+              <div className="flex gap-1.5 items-center">
+                <input type="color" value={(settings.textColor as string) || '#000000'} onChange={(e) => onUpdateSettings('textColor', e.target.value)} className="h-9 w-9 rounded border cursor-pointer p-0.5" />
+                <Input value={(settings.textColor as string) || ''} onChange={(e) => onUpdateSettings('textColor', e.target.value || undefined)} placeholder="Standard" className="flex-1" />
+                {!!settings.textColor && (
+                  <Button variant="ghost" size="sm" className="h-9 px-2 text-xs" onClick={() => onUpdateSettings('textColor', undefined)}>X</Button>
+                )}
               </div>
+              <div className="flex gap-1 flex-wrap">
+                {['#000000', '#1e293b', '#475569', '#64748b', '#ffffff', '#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6'].map((c) => (
+                  <button key={c} type="button" title={c}
+                    className={`h-5 w-5 rounded border transition-all ${(settings.textColor || '') === c ? 'ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
+                    style={{ backgroundColor: c }}
+                    onClick={() => onUpdateSettings('textColor', c)}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Schriftgroesse</Label>
+              <Select value={(settings.fontSize as string) || 'base'} onValueChange={(v) => onUpdateSettings('fontSize', v === 'base' ? undefined : v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="xs">XS (12px)</SelectItem>
+                  <SelectItem value="sm">Klein (14px)</SelectItem>
+                  <SelectItem value="base">Normal (16px)</SelectItem>
+                  <SelectItem value="lg">Gross (18px)</SelectItem>
+                  <SelectItem value="xl">XL (20px)</SelectItem>
+                  <SelectItem value="2xl">2XL (24px)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>

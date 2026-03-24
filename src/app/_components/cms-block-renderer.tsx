@@ -31,16 +31,24 @@ interface CmsBlockRendererProps {
 export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRendererProps) {
   const bgColor = settings?.backgroundColor as string | undefined
   const bgImage = settings?.backgroundImage as string | undefined
-  const hasBackground = bgColor || bgImage
+  const textColor = settings?.textColor as string | undefined
+  const fontSize = settings?.fontSize as string | undefined
+  const hasWrapper = bgColor || bgImage || textColor || fontSize
+
+  const fontSizeMap: Record<string, string> = {
+    xs: '12px', sm: '14px', base: '16px', lg: '18px', xl: '20px', '2xl': '24px',
+  }
 
   const wrapWithBackground = (child: React.ReactNode) => {
-    if (!hasBackground) return child
+    if (!hasWrapper) return child
     return (
       <div style={{
         backgroundColor: bgColor || undefined,
         backgroundImage: bgImage ? `url(${bgImage})` : undefined,
         backgroundSize: bgImage ? 'cover' : undefined,
         backgroundPosition: bgImage ? 'center' : undefined,
+        color: textColor || undefined,
+        fontSize: fontSize ? fontSizeMap[fontSize] : undefined,
       }}>
         {child}
       </div>
