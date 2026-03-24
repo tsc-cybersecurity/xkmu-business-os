@@ -4,24 +4,6 @@ import { logger } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
-// Fallback nur wenn DB leer ist
-const FALLBACK_HEADER = [
-  { label: 'Startseite', href: '/', sortOrder: 0, openInNewTab: false },
-  { label: 'Cyber Security', href: '/cyber-security', sortOrder: 1, openInNewTab: false },
-  { label: 'KI & Automation', href: '/ki-automation', sortOrder: 2, openInNewTab: false },
-  { label: 'IT Consulting', href: '/it-consulting', sortOrder: 3, openInNewTab: false },
-  { label: 'IT-News', href: '/it-news', sortOrder: 4, openInNewTab: false },
-]
-
-const FALLBACK_FOOTER = [
-  { label: 'Kostenlos starten', href: '/intern/register', sortOrder: 0, openInNewTab: false },
-  { label: 'API-Dokumentation', href: '/api-docs', sortOrder: 1, openInNewTab: false },
-  { label: 'Impressum', href: '/impressum', sortOrder: 2, openInNewTab: false },
-  { label: 'Kontakt', href: '/kontakt', sortOrder: 3, openInNewTab: false },
-  { label: 'AGB', href: '/agb', sortOrder: 4, openInNewTab: false },
-  { label: 'Datenschutz', href: '/datenschutz', sortOrder: 5, openInNewTab: false },
-]
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -34,26 +16,16 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // DB ist die Wahrheit — CMS-Navigation-Verwaltung bestimmt alles
-    try {
-      const dbItems = await CmsNavigationService.listPublic(location)
+    const dbItems = await CmsNavigationService.listPublic(location)
 
-      if (dbItems.length > 0) {
-        const items = dbItems.map((item) => ({
-          label: item.label,
-          href: item.href,
-          sortOrder: item.sortOrder ?? 0,
-          openInNewTab: item.openInNewTab ?? false,
-        }))
-        return NextResponse.json({ success: true, data: items })
-      }
-    } catch {
-      // DB nicht erreichbar — Fallback verwenden
-    }
+    const items = dbItems.map((item) => ({
+      label: item.label,
+      href: item.href,
+      sortOrder: item.sortOrder ?? 0,
+      openInNewTab: item.openInNewTab ?? false,
+    }))
 
-    // Fallback wenn DB leer oder nicht erreichbar
-    const fallback = location === 'header' ? FALLBACK_HEADER : FALLBACK_FOOTER
-    return NextResponse.json({ success: true, data: fallback })
+    return NextResponse.json({ success: true, data: items })
   } catch (error) {
     logger.error('Error fetching public navigation', error, { module: 'PublicNavigationAPI' })
     return NextResponse.json(
