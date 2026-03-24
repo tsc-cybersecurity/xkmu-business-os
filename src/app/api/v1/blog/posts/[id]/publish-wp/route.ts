@@ -12,7 +12,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
   return withPermission(request, 'blog', 'update', async (auth) => {
     try {
       const { id } = await params
-      const post = await BlogPostService.getById(auth.tenantId, id)
+      const post = await BlogPostService.getById(id)
       if (!post) return apiNotFound('Beitrag nicht gefunden')
 
       // Get WordPress credentials from AI providers

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
         const dbMessage = dbError instanceof Error ? dbError.message : String(dbError)
         if (dbMessage.includes('unique') || dbMessage.includes('duplicate') || dbMessage.includes('23505')) {
           logger.warn('Slug conflict for', { module: 'BlogPostsGenerateAPI' })
-          const uniqueSlug = await BlogPostService.generateSlug(generated.title, auth.tenantId)
+          const uniqueSlug = await BlogPostService.generateSlug(generated.title)
           const post = await BlogPostService.create(auth.tenantId, {
             title: generated.title,
             slug: uniqueSlug,

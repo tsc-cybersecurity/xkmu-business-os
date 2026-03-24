@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined
     const search = searchParams.get('search') || undefined
 
-    const result = await BlogPostService.list(auth.tenantId, {
+    const result = await BlogPostService.list({
       ...pagination,
       status,
       category,

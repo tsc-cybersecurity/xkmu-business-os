@@ -12,7 +12,7 @@ export async function POST(
   return withPermission(request, 'blog', 'update', async (auth) => {
     try {
       const { id } = await params
-      const post = await BlogPostService.getById(auth.tenantId, id)
+      const post = await BlogPostService.getById(id)
       if (!post) return apiNotFound('Beitrag nicht gefunden')
 
       const seo = await BlogAIService.generateSEO(post.title, post.content || '', {

@@ -103,7 +103,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_POST_ID)
+      const result = await service.getById(TEST_POST_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -112,7 +112,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -126,7 +126,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getBySlug(TEST_TENANT_ID, 'test-post')
+      const result = await service.getBySlug('test-post')
 
       expect(result).toEqual(fixture)
     })
@@ -135,7 +135,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getBySlug(TEST_TENANT_ID, 'nonexistent-slug')
+      const result = await service.getBySlug('nonexistent-slug')
 
       expect(result).toBeNull()
     })
@@ -172,7 +172,7 @@ describe('BlogPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_POST_ID, { title: 'Updated Title' })
+      const result = await service.update(TEST_POST_ID, { title: 'Updated Title' })
 
       expect(result).toEqual(fixture)
       expect(result!.title).toBe('Updated Title')
@@ -182,7 +182,7 @@ describe('BlogPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { title: 'X' })
+      const result = await service.update('nonexistent', { title: 'X' })
 
       expect(result).toBeNull()
     })
@@ -195,7 +195,7 @@ describe('BlogPostService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_POST_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_POST_ID)
+      const result = await service.delete(TEST_POST_ID)
 
       expect(result).toBe(true)
     })
@@ -204,7 +204,7 @@ describe('BlogPostService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -218,7 +218,7 @@ describe('BlogPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.publish(TEST_TENANT_ID, TEST_POST_ID)
+      const result = await service.publish(TEST_POST_ID)
 
       expect(result).not.toBeNull()
       expect(result!.status).toBe('published')
@@ -229,7 +229,7 @@ describe('BlogPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.publish(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.publish('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -243,7 +243,7 @@ describe('BlogPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.unpublish(TEST_TENANT_ID, TEST_POST_ID)
+      const result = await service.unpublish(TEST_POST_ID)
 
       expect(result).not.toBeNull()
       expect(result!.status).toBe('draft')
@@ -253,7 +253,7 @@ describe('BlogPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.unpublish(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.unpublish('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -269,7 +269,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -282,7 +282,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(20)
@@ -293,7 +293,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'published' })
+      await service.list({ status: 'published' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -303,7 +303,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { category: 'news' })
+      await service.list({ category: 'news' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -313,7 +313,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 100 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 2, limit: 10 })
+      const result = await service.list({ page: 2, limit: 10 })
 
       expect(result.meta.page).toBe(2)
       expect(result.meta.limit).toBe(10)
@@ -367,7 +367,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.generateSlug('Hello World', TEST_TENANT_ID)
+      const result = await service.generateSlug('Hello World')
 
       expect(result).toBe('hello-world')
     })
@@ -376,7 +376,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.generateSlug('Über die Größe', TEST_TENANT_ID)
+      const result = await service.generateSlug('Über die Größe')
 
       expect(result).toBe('ueber-die-groesse')
     })
@@ -385,7 +385,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.generateSlug('Straße', TEST_TENANT_ID)
+      const result = await service.generateSlug('Straße')
 
       expect(result).toBe('strasse')
     })
@@ -395,7 +395,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([{ slug: 'test-post' }, { slug: 'test-post-2' }])
 
       const service = await getService()
-      const result = await service.generateSlug('Test Post', TEST_TENANT_ID)
+      const result = await service.generateSlug('Test Post')
 
       expect(result).toBe('test-post-3')
     })
@@ -404,7 +404,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.generateSlug('Unique Title', TEST_TENANT_ID)
+      const result = await service.generateSlug('Unique Title')
 
       expect(result).toBe('unique-title')
     })
@@ -413,7 +413,7 @@ describe('BlogPostService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.generateSlug('Hello! @World #2026', TEST_TENANT_ID)
+      const result = await service.generateSlug('Hello! @World #2026')
 
       expect(result).toBe('hello-world-2026')
     })

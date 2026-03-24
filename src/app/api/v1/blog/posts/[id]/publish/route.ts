@@ -13,8 +13,8 @@ export async function POST(
     const unpublish = searchParams.get('unpublish') === 'true'
 
     const post = unpublish
-      ? await BlogPostService.unpublish(auth.tenantId, id)
-      : await BlogPostService.publish(auth.tenantId, id)
+      ? await BlogPostService.unpublish(id)
+      : await BlogPostService.publish(id)
 
     if (!post) return apiNotFound('Beitrag nicht gefunden')
     return apiSuccess(post)

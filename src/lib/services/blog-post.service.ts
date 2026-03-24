@@ -30,9 +30,12 @@ export interface CreateBlogPostInput {
 
 export type UpdateBlogPostInput = Partial<CreateBlogPostInput>
 
+// Blog ist global (nicht mandantenspezifisch) — wie CMS.
+// tenantId wird nur bei INSERT verwendet (DB-Spalte NOT NULL).
+
 export const BlogPostService = {
   async create(tenantId: string, data: CreateBlogPostInput, authorId?: string): Promise<BlogPost> {
-    const slug = data.slug || await this.generateSlug(data.title, tenantId)
+    const slug = data.slug || await this.generateSlug(data.title)
     const [post] = await db
       .insert(blogPosts)
       .values({
@@ -57,20 +60,20 @@ export const BlogPostService = {
     return post
   },
 
-  async getById(tenantId: string, postId: string): Promise<BlogPost | null> {
+  async getById(postId: string): Promise<BlogPost | null> {
     const [post] = await db
       .select()
       .from(blogPosts)
-      .where(and(eq(blogPosts.tenantId, tenantId), eq(blogPosts.id, postId)))
+      .where(eq(blogPosts.id, postId))
       .limit(1)
     return post ?? null
   },
 
-  async getBySlug(tenantId: string, slug: string): Promise<BlogPost | null> {
+  async getBySlug(slug: string): Promise<BlogPost | null> {
     const [post] = await db
       .select()
       .from(blogPosts)
-      .where(and(eq(blogPosts.tenantId, tenantId), eq(blogPosts.slug, slug)))
+      .where(eq(blogPosts.slug, slug))
       .limit(1)
     return post ?? null
   },
@@ -84,7 +87,7 @@ export const BlogPostService = {
     return post ?? null
   },
 
-  async update(tenantId: string, postId: string, data: UpdateBlogPostInput): Promise<BlogPost | null> {
+  async update(postId: string, data: UpdateBlogPostInput): Promise<BlogPost | null> {
     const updateData: Partial<NewBlogPost> = { updatedAt: new Date() }
     if (data.title !== undefined) updateData.title = data.title
     if (data.slug !== undefined) updateData.slug = data.slug
@@ -104,51 +107,51 @@ export const BlogPostService = {
     const [post] = await db
       .update(blogPosts)
       .set(updateData)
-      .where(and(eq(blogPosts.tenantId, tenantId), eq(blogPosts.id, postId)))
+      .where(eq(blogPosts.id, postId))
       .returning()
     return post ?? null
   },
 
-  async delete(tenantId: string, postId: string): Promise<boolean> {
+  async delete(postId: string): Promise<boolean> {
     const result = await db
       .delete(blogPosts)
-      .where(and(eq(blogPosts.tenantId, tenantId), eq(blogPosts.id, postId)))
+      .where(eq(blogPosts.id, postId))
       .returning({ id: blogPosts.id })
     return result.length > 0
   },
 
-  async publish(tenantId: string, postId: string): Promise<BlogPost | null> {
+  async publish(postId: string): Promise<BlogPost | null> {
     const [post] = await db
       .update(blogPosts)
       .set({ status: 'published', publishedAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(blogPosts.tenantId, tenantId), eq(blogPosts.id, postId)))
+      .where(eq(blogPosts.id, postId))
       .returning()
     return post ?? null
   },
 
-  async unpublish(tenantId: string, postId: string): Promise<BlogPost | null> {
+  async unpublish(postId: string): Promise<BlogPost | null> {
     const [post] = await db
       .update(blogPosts)
       .set({ status: 'draft', publishedAt: null, updatedAt: new Date() })
-      .where(and(eq(blogPosts.tenantId, tenantId), eq(blogPosts.id, postId)))
+      .where(eq(blogPosts.id, postId))
       .returning()
     return post ?? null
   },
 
-  async list(tenantId: string, filters: BlogPostFilters = {}) {
+  async list(filters: BlogPostFilters = {}) {
     const { status, category, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(blogPosts.tenantId, tenantId)]
+    const conditions = []
     if (status) conditions.push(eq(blogPosts.status, status))
     if (category) conditions.push(eq(blogPosts.category, category))
     if (search) conditions.push(ilike(blogPosts.title, `%${search}%`))
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ total }]] = await Promise.all([
-      db.select().from(blogPosts).where(whereClause!).orderBy(desc(blogPosts.createdAt)).limit(limit).offset(offset),
-      db.select({ total: count() }).from(blogPosts).where(whereClause!),
+      db.select().from(blogPosts).where(whereClause).orderBy(desc(blogPosts.createdAt)).limit(limit).offset(offset),
+      db.select({ total: count() }).from(blogPosts).where(whereClause),
     ])
 
     return {
@@ -177,7 +180,7 @@ export const BlogPostService = {
     }
   },
 
-  async generateSlug(title: string, tenantId: string): Promise<string> {
+  async generateSlug(title: string): Promise<string> {
     let slug = title
       .toLowerCase()
       .replace(/[äÄ]/g, 'ae')
@@ -187,11 +190,10 @@ export const BlogPostService = {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
 
-    // Check for duplicates
     const existing = await db
       .select({ slug: blogPosts.slug })
       .from(blogPosts)
-      .where(and(eq(blogPosts.tenantId, tenantId), ilike(blogPosts.slug, `${slug}%`)))
+      .where(ilike(blogPosts.slug, `${slug}%`))
 
     if (existing.length === 0) return slug
 

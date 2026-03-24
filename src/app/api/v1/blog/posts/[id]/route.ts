@@ -20,7 +20,7 @@ export async function GET(
 ) {
   return withPermission(request, 'blog', 'read', async (auth) => {
     const { id } = await params
-    const post = await BlogPostService.getById(auth.tenantId, id)
+    const post = await BlogPostService.getById(id)
     if (!post) return apiNotFound('Beitrag nicht gefunden')
     return apiSuccess(post)
   })
@@ -39,7 +39,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const post = await BlogPostService.update(auth.tenantId, id, validation.data)
+      const post = await BlogPostService.update(id, validation.data)
       if (!post) return apiNotFound('Beitrag nicht gefunden')
       return apiSuccess(post)
     } catch (error) {
@@ -55,7 +55,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'blog', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await BlogPostService.delete(auth.tenantId, id)
+    const deleted = await BlogPostService.delete(id)
     if (!deleted) return apiNotFound('Beitrag nicht gefunden')
     return apiSuccess({ deleted: true })
   })
