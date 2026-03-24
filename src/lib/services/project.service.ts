@@ -43,25 +43,39 @@ export const ProjectService = {
   },
 
   async create(tenantId: string, data: {
-    name: string; description?: string; companyId?: string; projectType?: string; columns?: unknown
+    name: string; description?: string; companyId?: string; ownerId?: string
+    projectType?: string; priority?: string; startDate?: Date; endDate?: Date
+    budget?: string; color?: string; columns?: unknown; tags?: string[]
   }): Promise<Project> {
     const [project] = await db.insert(projects).values({
       tenantId, name: data.name, description: data.description || null,
-      companyId: data.companyId || null, projectType: data.projectType || 'kanban',
-      columns: data.columns || undefined,
+      companyId: data.companyId || null, ownerId: data.ownerId || null,
+      projectType: data.projectType || 'kanban', priority: data.priority || 'mittel',
+      startDate: data.startDate || null, endDate: data.endDate || null,
+      budget: data.budget || null, color: data.color || null,
+      columns: data.columns || undefined, tags: data.tags || [],
     }).returning()
     return project
   },
 
   async update(tenantId: string, id: string, data: Partial<{
-    name: string; description: string; companyId: string | null; status: string; columns: unknown
+    name: string; description: string; companyId: string | null; ownerId: string | null
+    status: string; priority: string; startDate: Date | null; endDate: Date | null
+    budget: string | null; color: string | null; columns: unknown; tags: string[]
   }>): Promise<Project | null> {
     const updateData: Partial<NewProject> = { updatedAt: new Date() }
     if (data.name !== undefined) updateData.name = data.name
     if (data.description !== undefined) updateData.description = data.description
     if (data.companyId !== undefined) updateData.companyId = data.companyId
+    if (data.ownerId !== undefined) updateData.ownerId = data.ownerId
     if (data.status !== undefined) updateData.status = data.status
+    if (data.priority !== undefined) updateData.priority = data.priority
+    if (data.startDate !== undefined) updateData.startDate = data.startDate
+    if (data.endDate !== undefined) updateData.endDate = data.endDate
+    if (data.budget !== undefined) updateData.budget = data.budget
+    if (data.color !== undefined) updateData.color = data.color
     if (data.columns !== undefined) updateData.columns = data.columns
+    if (data.tags !== undefined) updateData.tags = data.tags
 
     const [project] = await db.update(projects).set(updateData)
       .where(and(eq(projects.tenantId, tenantId), eq(projects.id, id))).returning()
@@ -91,8 +105,9 @@ export const ProjectService = {
   },
 
   async createTask(tenantId: string, projectId: string, data: {
-    title: string; description?: string; columnId?: string; assignedTo?: string;
-    dueDate?: Date; labels?: string[]; referenceType?: string; referenceId?: string
+    title: string; description?: string; columnId?: string; priority?: string
+    assignedTo?: string; startDate?: Date; dueDate?: Date; estimatedMinutes?: number
+    labels?: string[]; referenceType?: string; referenceId?: string
   }): Promise<ProjectTask> {
     // Get max position in column
     const existing = await db.select({ position: projectTasks.position }).from(projectTasks)
@@ -103,7 +118,9 @@ export const ProjectService = {
     const [task] = await db.insert(projectTasks).values({
       tenantId, projectId, title: data.title, description: data.description || null,
       columnId: data.columnId || 'backlog', position: nextPosition,
-      assignedTo: data.assignedTo || null, dueDate: data.dueDate || null,
+      priority: data.priority || 'mittel',
+      assignedTo: data.assignedTo || null, startDate: data.startDate || null,
+      dueDate: data.dueDate || null, estimatedMinutes: data.estimatedMinutes || null,
       labels: data.labels || [], referenceType: data.referenceType || null,
       referenceId: data.referenceId || null,
     }).returning()
@@ -111,18 +128,30 @@ export const ProjectService = {
   },
 
   async updateTask(tenantId: string, taskId: string, data: Partial<{
-    title: string; description: string; columnId: string; position: number;
-    assignedTo: string | null; dueDate: Date | null; checklist: unknown; labels: string[]
+    title: string; description: string; columnId: string; position: number; priority: string
+    assignedTo: string | null; startDate: Date | null; dueDate: Date | null
+    completedAt: Date | null; estimatedMinutes: number | null
+    checklist: unknown; labels: string[]; comments: unknown
   }>): Promise<ProjectTask | null> {
     const updateData: Partial<NewProjectTask> = { updatedAt: new Date() }
     if (data.title !== undefined) updateData.title = data.title
     if (data.description !== undefined) updateData.description = data.description
     if (data.columnId !== undefined) updateData.columnId = data.columnId
     if (data.position !== undefined) updateData.position = data.position
+    if (data.priority !== undefined) updateData.priority = data.priority
     if (data.assignedTo !== undefined) updateData.assignedTo = data.assignedTo
+    if (data.startDate !== undefined) updateData.startDate = data.startDate
     if (data.dueDate !== undefined) updateData.dueDate = data.dueDate
+    if (data.completedAt !== undefined) updateData.completedAt = data.completedAt
+    if (data.estimatedMinutes !== undefined) updateData.estimatedMinutes = data.estimatedMinutes
     if (data.checklist !== undefined) updateData.checklist = data.checklist
     if (data.labels !== undefined) updateData.labels = data.labels
+    if (data.comments !== undefined) updateData.comments = data.comments
+
+    // Auto-set completedAt when moved to done column
+    if (data.columnId === 'done' && !data.completedAt) {
+      updateData.completedAt = new Date()
+    }
 
     const [task] = await db.update(projectTasks).set(updateData)
       .where(and(eq(projectTasks.tenantId, tenantId), eq(projectTasks.id, taskId))).returning()

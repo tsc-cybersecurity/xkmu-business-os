@@ -2124,14 +2124,21 @@ export const projects = pgTable('projects', {
   name: varchar('name', { length: 255 }).notNull(),
   description: text('description'),
   companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
-  status: varchar('status', { length: 20 }).default('active'), // active, completed, archived
+  ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 20 }).default('active'), // active, completed, archived, on_hold
   projectType: varchar('project_type', { length: 20 }).default('kanban'), // kanban, okr, content
+  priority: varchar('priority', { length: 20 }).default('mittel'), // hoch, mittel, niedrig
+  startDate: timestamp('start_date', { withTimezone: true }),
+  endDate: timestamp('end_date', { withTimezone: true }),
+  budget: numeric('budget', { precision: 10, scale: 2 }),
+  color: varchar('color', { length: 7 }), // Hex color
   columns: jsonb('columns').default([
     { id: 'backlog', name: 'Backlog', color: '#94a3b8' },
     { id: 'todo', name: 'To Do', color: '#3b82f6' },
     { id: 'in_progress', name: 'In Arbeit', color: '#f59e0b' },
     { id: 'done', name: 'Fertig', color: '#22c55e' },
   ]),
+  tags: text('tags').array().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
@@ -2147,11 +2154,16 @@ export const projectTasks = pgTable('project_tasks', {
   description: text('description'),
   columnId: varchar('column_id', { length: 50 }).default('backlog'),
   position: integer('position').default(0),
+  priority: varchar('priority', { length: 20 }).default('mittel'), // hoch, mittel, niedrig, kritisch
   assignedTo: uuid('assigned_to').references(() => users.id, { onDelete: 'set null' }),
+  startDate: timestamp('start_date', { withTimezone: true }),
   dueDate: timestamp('due_date', { withTimezone: true }),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  estimatedMinutes: integer('estimated_minutes'),
   checklist: jsonb('checklist').default([]), // [{text, checked}]
   labels: text('labels').array().default([]),
-  referenceType: varchar('reference_type', { length: 50 }), // blog_post, social_post, lead, etc.
+  comments: jsonb('comments').default([]), // [{userId, text, createdAt}]
+  referenceType: varchar('reference_type', { length: 50 }),
   referenceId: uuid('reference_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -2163,6 +2175,7 @@ export const projectTasks = pgTable('project_tasks', {
 export const projectsRelations = relations(projects, ({ one, many }) => ({
   tenant: one(tenants, { fields: [projects.tenantId], references: [tenants.id] }),
   company: one(companies, { fields: [projects.companyId], references: [companies.id] }),
+  owner: one(users, { fields: [projects.ownerId], references: [users.id] }),
   tasks: many(projectTasks),
 }))
 

@@ -155,6 +155,13 @@
       "when": 1774287467725,
       "tag": "0021_flawless_jean_grey",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1774336910002,
+      "tag": "0022_broad_carlie_cooper",
+      "breakpoints": true
     }
   ]
 }
