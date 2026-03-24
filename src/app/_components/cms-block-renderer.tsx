@@ -29,7 +29,25 @@ interface CmsBlockRendererProps {
 }
 
 export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRendererProps) {
-  switch (blockType) {
+  const bgColor = settings?.backgroundColor as string | undefined
+  const bgImage = settings?.backgroundImage as string | undefined
+  const hasBackground = bgColor || bgImage
+
+  const wrapWithBackground = (child: React.ReactNode) => {
+    if (!hasBackground) return child
+    return (
+      <div style={{
+        backgroundColor: bgColor || undefined,
+        backgroundImage: bgImage ? `url(${bgImage})` : undefined,
+        backgroundSize: bgImage ? 'cover' : undefined,
+        backgroundPosition: bgImage ? 'center' : undefined,
+      }}>
+        {child}
+      </div>
+    )
+  }
+
+  const block = (() => { switch (blockType) {
     case 'hero':
       return <HeroBlock content={content as any} settings={settings} />
     case 'features':
@@ -80,5 +98,7 @@ export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRende
           </div>
         </div>
       )
-  }
+  } })()
+
+  return wrapWithBackground(block)
 }

@@ -93,11 +93,48 @@ export function BlockEditor({
             </div>
             <div className="space-y-2">
               <Label>Hintergrundfarbe</Label>
-              <Input
-                value={(settings.backgroundColor as string) || ''}
-                onChange={(e) => onUpdateSettings('backgroundColor', e.target.value || undefined)}
-                placeholder="transparent"
-              />
+              <div className="flex gap-2 items-center">
+                <input
+                  type="color"
+                  value={(settings.backgroundColor as string) || '#ffffff'}
+                  onChange={(e) => onUpdateSettings('backgroundColor', e.target.value)}
+                  className="h-9 w-9 rounded border cursor-pointer p-0.5"
+                />
+                <Input
+                  value={(settings.backgroundColor as string) || ''}
+                  onChange={(e) => onUpdateSettings('backgroundColor', e.target.value || undefined)}
+                  placeholder="transparent"
+                  className="flex-1"
+                />
+                {!!settings.backgroundColor && (
+                  <Button variant="ghost" size="sm" className="h-9 px-2 text-xs" onClick={() => onUpdateSettings('backgroundColor', undefined)}>
+                    Entfernen
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-1 flex-wrap">
+                {['transparent', '#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#0f172a', '#1e293b', '#eff6ff', '#ecfdf5', '#fef2f2', '#fffbeb', '#faf5ff'].map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    title={c}
+                    className={`h-6 w-6 rounded border transition-all ${(settings.backgroundColor || '') === c ? 'ring-2 ring-primary ring-offset-1' : 'hover:scale-110'}`}
+                    style={{ backgroundColor: c === 'transparent' ? 'white' : c, backgroundImage: c === 'transparent' ? 'linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%)' : undefined, backgroundSize: c === 'transparent' ? '8px 8px' : undefined, backgroundPosition: c === 'transparent' ? '0 0, 4px 4px' : undefined }}
+                    onClick={() => onUpdateSettings('backgroundColor', c === 'transparent' ? undefined : c)}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Hintergrundbild</Label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  value={(settings.backgroundImage as string) || ''}
+                  onChange={(e) => onUpdateSettings('backgroundImage', e.target.value || undefined)}
+                  placeholder="URL oder leer"
+                  className="flex-1"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
