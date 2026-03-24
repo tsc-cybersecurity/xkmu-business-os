@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Plus, Trash2, Check, Wand2 } from 'lucide-react'
-import { ImageGeneratorDialog } from '@/components/shared'
+import { ImageGeneratorDialog, IconPicker } from '@/components/shared'
 
 interface BlockFieldRendererProps {
   blockType: string
@@ -41,8 +41,8 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Badge Icon (z.B. Building2)</Label>
-            <Input value={((content.badge as any)?.icon as string) || ''} onChange={(e) => updateContent('badge', { ...(content.badge as any || {}), icon: e.target.value })} />
+            <Label>Badge Icon</Label>
+            <IconPicker value={((content.badge as any)?.icon as string) || ''} onChange={(v) => updateContent('badge', { ...(content.badge as any || {}), icon: v })} />
           </div>
           <div className="space-y-2">
             <Label>Badge Text</Label>
@@ -429,8 +429,8 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Icon (z.B. Megaphone, Info, AlertTriangle)</Label>
-            <Input value={(content.icon as string) || ''} onChange={(e) => updateContent('icon', e.target.value)} />
+            <Label>Icon</Label>
+            <IconPicker value={(content.icon as string) || ''} onChange={(v) => updateContent('icon', v)} />
           </div>
           <div className="space-y-2">
             <Label>Button Text</Label>
@@ -487,8 +487,8 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
       return (
         <>
           <div className="space-y-2">
-            <Label>Icon (z.B. Shield, Bot, Monitor)</Label>
-            <Input value={(content.icon as string) || ''} onChange={(e) => updateContent('icon', e.target.value)} />
+            <Label>Icon</Label>
+            <IconPicker value={(content.icon as string) || ''} onChange={(v) => updateContent('icon', v)} />
           </div>
           <div className="space-y-2">
             <Label>Titel</Label>
@@ -589,13 +589,22 @@ function ArrayField({
         <div key={i} className="flex gap-2 items-start rounded-lg border p-3">
           <div className="flex-1 grid grid-cols-1 gap-2">
             {fields.map((field) => (
-              <Input
-                key={field}
-                placeholder={field}
-                value={item[field] || ''}
-                onChange={(e) => updateItem(i, field, e.target.value)}
-                className="text-sm"
-              />
+              field.toLowerCase() === 'icon' ? (
+                <IconPicker
+                  key={field}
+                  value={item[field] || ''}
+                  onChange={(v) => updateItem(i, field, v)}
+                  label="Icon waehlen..."
+                />
+              ) : (
+                <Input
+                  key={field}
+                  placeholder={field}
+                  value={item[field] || ''}
+                  onChange={(e) => updateItem(i, field, e.target.value)}
+                  className="text-sm"
+                />
+              )
             ))}
           </div>
           <Button variant="ghost" size="icon" aria-label="Löschen" className="h-8 w-8 shrink-0" onClick={() => removeItem(i)}>
