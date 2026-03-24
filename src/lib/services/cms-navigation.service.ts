@@ -31,25 +31,25 @@ export interface CreateNavigationItemInput {
 
 export type UpdateNavigationItemInput = Partial<CreateNavigationItemInput>
 
+// CMS Navigation ist global — kein tenantId-Filter bei Queries.
+
 export const CmsNavigationService = {
-  async list(tenantId: string, location?: string): Promise<CmsNavigationItem[]> {
-    const conditions = [eq(cmsNavigationItems.tenantId, tenantId)]
-    if (location) conditions.push(eq(cmsNavigationItems.location, location))
+  async list(location?: string): Promise<CmsNavigationItem[]> {
+    const conditions = location ? [eq(cmsNavigationItems.location, location)] : []
 
     return db
       .select()
       .from(cmsNavigationItems)
-      .where(and(...conditions))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(asc(cmsNavigationItems.sortOrder))
   },
 
-  async listPublic(tenantId: string, location: string): Promise<CmsNavigationItem[]> {
+  async listPublic(location: string): Promise<CmsNavigationItem[]> {
     return db
       .select()
       .from(cmsNavigationItems)
       .where(
         and(
-          eq(cmsNavigationItems.tenantId, tenantId),
           eq(cmsNavigationItems.location, location),
           eq(cmsNavigationItems.isVisible, true),
         )
@@ -74,7 +74,7 @@ export const CmsNavigationService = {
     return item
   },
 
-  async update(tenantId: string, id: string, data: UpdateNavigationItemInput): Promise<CmsNavigationItem | null> {
+  async update(id: string, data: UpdateNavigationItemInput): Promise<CmsNavigationItem | null> {
     const updateData: Partial<NewCmsNavigationItem> = { updatedAt: new Date() }
     if (data.location !== undefined) updateData.location = data.location
     if (data.label !== undefined) updateData.label = data.label
@@ -87,26 +87,26 @@ export const CmsNavigationService = {
     const [item] = await db
       .update(cmsNavigationItems)
       .set(updateData)
-      .where(and(eq(cmsNavigationItems.tenantId, tenantId), eq(cmsNavigationItems.id, id)))
+      .where(eq(cmsNavigationItems.id, id))
       .returning()
     return item ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(cmsNavigationItems)
-      .where(and(eq(cmsNavigationItems.tenantId, tenantId), eq(cmsNavigationItems.id, id)))
+      .where(eq(cmsNavigationItems.id, id))
       .returning({ id: cmsNavigationItems.id })
     return result.length > 0
   },
 
-  async reorder(tenantId: string, itemIds: string[]): Promise<void> {
+  async reorder(itemIds: string[]): Promise<void> {
     await db.transaction(async (tx) => {
       for (let i = 0; i < itemIds.length; i++) {
         await tx
           .update(cmsNavigationItems)
           .set({ sortOrder: i, updatedAt: new Date() })
-          .where(and(eq(cmsNavigationItems.tenantId, tenantId), eq(cmsNavigationItems.id, itemIds[i])))
+          .where(eq(cmsNavigationItems.id, itemIds[i]))
       }
     })
   },
@@ -115,7 +115,6 @@ export const CmsNavigationService = {
     const [{ total }] = await db
       .select({ total: count() })
       .from(cmsNavigationItems)
-      .where(eq(cmsNavigationItems.tenantId, tenantId))
 
     if (Number(total) > 0) {
       return { seeded: false, count: 0 }

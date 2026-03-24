@@ -14,10 +14,10 @@ const createTemplateSchema = z.object({
 })
 
 export async function GET(request: NextRequest) {
-  return withPermission(request, 'cms', 'read', async (auth) => {
+  return withPermission(request, 'cms', 'read', async () => {
     const { searchParams } = new URL(request.url)
     const blockType = searchParams.get('blockType') || undefined
-    const templates = await CmsBlockTemplateService.list(auth.tenantId, blockType)
+    const templates = await CmsBlockTemplateService.list(blockType)
     return apiSuccess(templates)
   })
 }

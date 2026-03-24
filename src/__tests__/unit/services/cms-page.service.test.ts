@@ -114,7 +114,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([block])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_PAGE_ID)
+      const result = await service.getById(TEST_PAGE_ID)
 
       expect(result).not.toBeNull()
       expect(result!.id).toBe(TEST_PAGE_ID)
@@ -125,7 +125,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -136,7 +136,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_PAGE_ID)
+      const result = await service.getById(TEST_PAGE_ID)
 
       expect(result!.blocks).toEqual([])
     })
@@ -153,7 +153,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([block])
 
       const service = await getService()
-      const result = await service.getBySlug(TEST_TENANT_ID, 'test-page')
+      const result = await service.getBySlug('test-page')
 
       expect(result).not.toBeNull()
       expect(result!.slug).toBe('test-page')
@@ -164,7 +164,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.getBySlug(TEST_TENANT_ID, 'nonexistent-slug')
+      const result = await service.getBySlug('nonexistent-slug')
 
       expect(result).toBeNull()
     })
@@ -181,7 +181,7 @@ describe('CmsPageService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([updatedPage])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_PAGE_ID, {
+      const result = await service.update(TEST_PAGE_ID, {
         title: 'Updated Title',
       })
 
@@ -194,7 +194,7 @@ describe('CmsPageService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { title: 'X' })
+      const result = await service.update('nonexistent', { title: 'X' })
 
       expect(result).toBeNull()
     })
@@ -207,7 +207,7 @@ describe('CmsPageService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([updatedPage])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_PAGE_ID, {
+      const result = await service.update(TEST_PAGE_ID, {
         title: 'New Title',
       })
 
@@ -223,7 +223,7 @@ describe('CmsPageService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_PAGE_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_PAGE_ID)
+      const result = await service.delete(TEST_PAGE_ID)
 
       expect(result).toBe(true)
     })
@@ -232,7 +232,7 @@ describe('CmsPageService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -251,7 +251,7 @@ describe('CmsPageService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([publishedPage])
 
       const service = await getService()
-      const result = await service.publish(TEST_TENANT_ID, TEST_PAGE_ID)
+      const result = await service.publish(TEST_PAGE_ID)
 
       expect(result).not.toBeNull()
       expect(result!.status).toBe('published')
@@ -263,7 +263,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.publish(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.publish('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -279,7 +279,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -292,7 +292,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(50)
@@ -303,7 +303,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'published' })
+      await service.list({ status: 'published' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -313,7 +313,7 @@ describe('CmsPageService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 100 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 2, limit: 10 })
+      const result = await service.list({ page: 2, limit: 10 })
 
       expect(result.meta.page).toBe(2)
       expect(result.meta.limit).toBe(10)

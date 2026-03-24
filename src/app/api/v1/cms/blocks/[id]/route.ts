@@ -18,7 +18,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'update', async (auth) => {
+  return withPermission(request, 'cms', 'update', async () => {
     try {
       const { id } = await params
       const body = await request.json()
@@ -27,7 +27,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const block = await CmsBlockService.update(auth.tenantId, id, validation.data)
+      const block = await CmsBlockService.update(id, validation.data)
       if (!block) return apiNotFound('Block nicht gefunden')
       return apiSuccess(block)
     } catch (error) {
@@ -41,9 +41,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'delete', async (auth) => {
+  return withPermission(request, 'cms', 'delete', async () => {
     const { id } = await params
-    const deleted = await CmsBlockService.delete(auth.tenantId, id)
+    const deleted = await CmsBlockService.delete(id)
     if (!deleted) return apiNotFound('Block nicht gefunden')
     return apiSuccess({ deleted: true })
   })

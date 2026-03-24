@@ -15,12 +15,12 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
-  return withPermission(request, 'cms', 'read', async (auth) => {
+  return withPermission(request, 'cms', 'read', async () => {
     const { searchParams } = new URL(request.url)
     const pagination = parsePaginationParams(searchParams)
     const status = searchParams.get('status') || undefined
 
-    const result = await CmsPageService.list(auth.tenantId, { ...pagination, status })
+    const result = await CmsPageService.list({ ...pagination, status })
     return apiSuccess(result.items, result.meta)
   })
 }

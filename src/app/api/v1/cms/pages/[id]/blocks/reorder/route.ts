@@ -17,7 +17,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'update', async (auth) => {
+  return withPermission(request, 'cms', 'update', async () => {
     try {
       const { id } = await params
       const body = await request.json()
@@ -26,7 +26,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      await CmsBlockService.reorder(auth.tenantId, id, validation.data.blockIds)
+      await CmsBlockService.reorder(id, validation.data.blockIds)
       return apiSuccess({ reordered: true })
     } catch (error) {
       logger.error('Error reordering CMS blocks', error, { module: 'CmsPagesBlocksReorderAPI' })

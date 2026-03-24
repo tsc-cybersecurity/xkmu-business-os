@@ -12,7 +12,7 @@ export async function POST(
   return withPermission(request, 'cms', 'update', async (auth) => {
     try {
       const { id } = await params
-      const page = await CmsPageService.getById(auth.tenantId, id)
+      const page = await CmsPageService.getById(id)
       if (!page) return apiNotFound('Seite nicht gefunden')
 
       const blockContents = page.blocks.map((b) => {

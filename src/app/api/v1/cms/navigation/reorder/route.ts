@@ -14,7 +14,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
 export async function PUT(request: NextRequest) {
-  return withPermission(request, 'cms', 'update', async (auth) => {
+  return withPermission(request, 'cms', 'update', async () => {
     try {
       const body = await request.json()
       const validation = validateAndParse(reorderCmsNavigationItemsSchema, body)
@@ -22,7 +22,7 @@ export async function PUT(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      await CmsNavigationService.reorder(auth.tenantId, validation.data.itemIds)
+      await CmsNavigationService.reorder(validation.data.itemIds)
       return apiSuccess({ reordered: true })
     } catch (error) {
       logger.error('Error reordering navigation items', error, { module: 'CmsNavigationReorderAPI' })

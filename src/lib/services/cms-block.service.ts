@@ -19,33 +19,36 @@ export interface UpdateCmsBlockInput {
   isVisible?: boolean
 }
 
-async function markPageDraftChanges(tenantId: string, pageId: string) {
+// CMS ist global — kein tenantId-Filter bei Queries.
+// tenantId wird nur bei INSERT verwendet (DB-Spalte NOT NULL), von der Page übernommen.
+
+async function markPageDraftChanges(pageId: string) {
   await db
     .update(cmsPages)
     .set({ hasDraftChanges: true, updatedAt: new Date() })
-    .where(
-      and(
-        eq(cmsPages.tenantId, tenantId),
-        eq(cmsPages.id, pageId),
-        eq(cmsPages.status, 'published')
-      )
-    )
+    .where(and(eq(cmsPages.id, pageId), eq(cmsPages.status, 'published')))
+}
+
+async function getPageTenantId(pageId: string): Promise<string | null> {
+  const [page] = await db.select({ tenantId: cmsPages.tenantId }).from(cmsPages).where(eq(cmsPages.id, pageId)).limit(1)
+  return page?.tenantId ?? null
 }
 
 export const CmsBlockService = {
-  async listByPage(tenantId: string, pageId: string): Promise<CmsBlock[]> {
+  async listByPage(pageId: string): Promise<CmsBlock[]> {
     return db
       .select()
       .from(cmsBlocks)
-      .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.pageId, pageId)))
+      .where(eq(cmsBlocks.pageId, pageId))
       .orderBy(asc(cmsBlocks.sortOrder))
   },
 
-  async create(tenantId: string, pageId: string, data: CreateCmsBlockInput): Promise<CmsBlock> {
+  async create(pageId: string, data: CreateCmsBlockInput): Promise<CmsBlock> {
+    const tenantId = await getPageTenantId(pageId)
     const [block] = await db
       .insert(cmsBlocks)
       .values({
-        tenantId,
+        tenantId: tenantId!,
         pageId,
         blockType: data.blockType,
         sortOrder: data.sortOrder ?? 0,
@@ -55,11 +58,11 @@ export const CmsBlockService = {
       })
       .returning()
 
-    await markPageDraftChanges(tenantId, pageId)
+    await markPageDraftChanges(pageId)
     return block
   },
 
-  async update(tenantId: string, blockId: string, data: UpdateCmsBlockInput): Promise<CmsBlock | null> {
+  async update(blockId: string, data: UpdateCmsBlockInput): Promise<CmsBlock | null> {
     const updateData: Partial<NewCmsBlock> = { updatedAt: new Date() }
     if (data.blockType !== undefined) updateData.blockType = data.blockType
     if (data.sortOrder !== undefined) updateData.sortOrder = data.sortOrder
@@ -70,66 +73,59 @@ export const CmsBlockService = {
     const [block] = await db
       .update(cmsBlocks)
       .set(updateData)
-      .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.id, blockId)))
+      .where(eq(cmsBlocks.id, blockId))
       .returning()
 
     if (block) {
-      await markPageDraftChanges(tenantId, block.pageId)
+      await markPageDraftChanges(block.pageId)
     }
 
     return block ?? null
   },
 
-  async delete(tenantId: string, blockId: string): Promise<boolean> {
-    // Get block first to know the page
+  async delete(blockId: string): Promise<boolean> {
     const [existing] = await db
       .select({ pageId: cmsBlocks.pageId })
       .from(cmsBlocks)
-      .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.id, blockId)))
+      .where(eq(cmsBlocks.id, blockId))
       .limit(1)
 
     const result = await db
       .delete(cmsBlocks)
-      .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.id, blockId)))
+      .where(eq(cmsBlocks.id, blockId))
       .returning({ id: cmsBlocks.id })
 
     if (result.length > 0 && existing) {
-      await markPageDraftChanges(tenantId, existing.pageId)
+      await markPageDraftChanges(existing.pageId)
     }
 
     return result.length > 0
   },
 
-  async reorder(tenantId: string, pageId: string, blockIds: string[]): Promise<boolean> {
+  async reorder(pageId: string, blockIds: string[]): Promise<boolean> {
     for (let i = 0; i < blockIds.length; i++) {
       await db
         .update(cmsBlocks)
         .set({ sortOrder: i, updatedAt: new Date() })
-        .where(
-          and(
-            eq(cmsBlocks.tenantId, tenantId),
-            eq(cmsBlocks.pageId, pageId),
-            eq(cmsBlocks.id, blockIds[i])
-          )
-        )
+        .where(and(eq(cmsBlocks.pageId, pageId), eq(cmsBlocks.id, blockIds[i])))
     }
 
-    await markPageDraftChanges(tenantId, pageId)
+    await markPageDraftChanges(pageId)
     return true
   },
 
-  async duplicate(tenantId: string, blockId: string): Promise<CmsBlock | null> {
+  async duplicate(blockId: string): Promise<CmsBlock | null> {
     const [original] = await db
       .select()
       .from(cmsBlocks)
-      .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.id, blockId)))
+      .where(eq(cmsBlocks.id, blockId))
       .limit(1)
     if (!original) return null
 
     const [block] = await db
       .insert(cmsBlocks)
       .values({
-        tenantId,
+        tenantId: original.tenantId,
         pageId: original.pageId,
         blockType: original.blockType,
         sortOrder: (original.sortOrder ?? 0) + 1,
@@ -139,7 +135,7 @@ export const CmsBlockService = {
       })
       .returning()
 
-    await markPageDraftChanges(tenantId, original.pageId)
+    await markPageDraftChanges(original.pageId)
     return block
   },
 }

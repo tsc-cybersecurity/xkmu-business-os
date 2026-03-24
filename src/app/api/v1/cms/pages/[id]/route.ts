@@ -18,9 +18,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'read', async (auth) => {
+  return withPermission(request, 'cms', 'read', async () => {
     const { id } = await params
-    const page = await CmsPageService.getById(auth.tenantId, id)
+    const page = await CmsPageService.getById(id)
     if (!page) return apiNotFound('Seite nicht gefunden')
     return apiSuccess(page)
   })
@@ -30,7 +30,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'update', async (auth) => {
+  return withPermission(request, 'cms', 'update', async () => {
     try {
       const { id } = await params
       const body = await request.json()
@@ -39,7 +39,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const page = await CmsPageService.update(auth.tenantId, id, validation.data)
+      const page = await CmsPageService.update(id, validation.data)
       if (!page) return apiNotFound('Seite nicht gefunden')
       return apiSuccess(page)
     } catch (error) {
@@ -53,9 +53,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'delete', async (auth) => {
+  return withPermission(request, 'cms', 'delete', async () => {
     const { id } = await params
-    const deleted = await CmsPageService.delete(auth.tenantId, id)
+    const deleted = await CmsPageService.delete(id)
     if (!deleted) return apiNotFound('Seite nicht gefunden')
     return apiSuccess({ deleted: true })
   })

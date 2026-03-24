@@ -18,7 +18,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'update', async (auth) => {
+  return withPermission(request, 'cms', 'update', async () => {
     try {
       const { id } = await params
       const body = await request.json()
@@ -27,7 +27,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const item = await CmsNavigationService.update(auth.tenantId, id, validation.data)
+      const item = await CmsNavigationService.update(id, validation.data)
       if (!item) return apiNotFound('Navigations-Item nicht gefunden')
       return apiSuccess(item)
     } catch (error) {
@@ -41,9 +41,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'delete', async (auth) => {
+  return withPermission(request, 'cms', 'delete', async () => {
     const { id } = await params
-    const deleted = await CmsNavigationService.delete(auth.tenantId, id)
+    const deleted = await CmsNavigationService.delete(id)
     if (!deleted) return apiNotFound('Navigations-Item nicht gefunden')
     return apiSuccess({ deleted: true })
   })

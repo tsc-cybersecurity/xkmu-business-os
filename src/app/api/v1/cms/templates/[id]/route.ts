@@ -17,9 +17,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'read', async (auth) => {
+  return withPermission(request, 'cms', 'read', async () => {
     const { id } = await params
-    const template = await CmsBlockTemplateService.getById(auth.tenantId, id)
+    const template = await CmsBlockTemplateService.getById(id)
     if (!template) return apiNotFound('Vorlage nicht gefunden')
     return apiSuccess(template)
   })
@@ -29,7 +29,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'update', async (auth) => {
+  return withPermission(request, 'cms', 'update', async () => {
     try {
       const { id } = await params
       const body = await request.json()
@@ -38,7 +38,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const template = await CmsBlockTemplateService.update(auth.tenantId, id, validation.data)
+      const template = await CmsBlockTemplateService.update(id, validation.data)
       if (!template) return apiNotFound('Vorlage nicht gefunden')
       return apiSuccess(template)
     } catch (error) {
@@ -52,9 +52,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'delete', async (auth) => {
+  return withPermission(request, 'cms', 'delete', async () => {
     const { id } = await params
-    const deleted = await CmsBlockTemplateService.delete(auth.tenantId, id)
+    const deleted = await CmsBlockTemplateService.delete(id)
     if (!deleted) return apiNotFound('Vorlage nicht gefunden oder ist eine Systemvorlage')
     return apiSuccess({ deleted: true })
   })

@@ -17,9 +17,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'read', async (auth) => {
+  return withPermission(request, 'cms', 'read', async () => {
     const { id } = await params
-    const blocks = await CmsBlockService.listByPage(auth.tenantId, id)
+    const blocks = await CmsBlockService.listByPage(id)
     return apiSuccess(blocks)
   })
 }
@@ -28,7 +28,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'create', async (auth) => {
+  return withPermission(request, 'cms', 'create', async () => {
     try {
       const { id } = await params
       const body = await request.json()
@@ -37,7 +37,7 @@ export async function POST(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const block = await CmsBlockService.create(auth.tenantId, id, validation.data)
+      const block = await CmsBlockService.create(id, validation.data)
       return apiSuccess(block, undefined, 201)
     } catch (error) {
       logger.error('Error creating CMS block', error, { module: 'CmsPagesBlocksAPI' })

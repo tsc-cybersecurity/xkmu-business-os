@@ -48,7 +48,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockSelect.mockResolvedValue(items)
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result).toHaveLength(2)
       expect(dbMock.db.select).toHaveBeenCalled()
@@ -59,7 +59,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockSelect.mockResolvedValue(items)
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, 'header')
+      const result = await service.list('header')
 
       expect(result).toHaveLength(1)
     })
@@ -68,7 +68,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result).toEqual([])
     })
@@ -129,7 +129,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_NAV_ID, {
+      const result = await service.update(TEST_NAV_ID, {
         label: 'Updated Home',
       })
 
@@ -141,7 +141,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { label: 'X' })
+      const result = await service.update('nonexistent', { label: 'X' })
 
       expect(result).toBeNull()
     })
@@ -154,7 +154,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_NAV_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_NAV_ID)
+      const result = await service.delete(TEST_NAV_ID)
 
       expect(result).toBe(true)
     })
@@ -163,7 +163,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -176,7 +176,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      await service.reorder(TEST_TENANT_ID, [TEST_NAV_ID, TEST_NAV_ID_2])
+      await service.reorder([TEST_NAV_ID, TEST_NAV_ID_2])
 
       expect(dbMock.db.update).toHaveBeenCalled()
     })
@@ -185,7 +185,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      await expect(service.reorder(TEST_TENANT_ID, [])).resolves.not.toThrow()
+      await expect(service.reorder([])).resolves.not.toThrow()
     })
   })
 })

@@ -14,11 +14,11 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
-  return withPermission(request, 'cms', 'read', async (auth) => {
+  return withPermission(request, 'cms', 'read', async () => {
     const { searchParams } = new URL(request.url)
     const location = searchParams.get('location') || undefined
 
-    const items = await CmsNavigationService.list(auth.tenantId, location)
+    const items = await CmsNavigationService.list(location)
     return apiSuccess(items)
   })
 }

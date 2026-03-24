@@ -11,15 +11,16 @@ export interface CreateCmsBlockTemplateInput {
   isSystem?: boolean
 }
 
+// CMS Templates sind global — kein tenantId-Filter bei Queries.
+
 export const CmsBlockTemplateService = {
-  async list(tenantId: string, blockType?: string): Promise<CmsBlockTemplate[]> {
-    const conditions = [eq(cmsBlockTemplates.tenantId, tenantId)]
-    if (blockType) conditions.push(eq(cmsBlockTemplates.blockType, blockType))
+  async list(blockType?: string): Promise<CmsBlockTemplate[]> {
+    const conditions = blockType ? [eq(cmsBlockTemplates.blockType, blockType)] : []
 
     return db
       .select()
       .from(cmsBlockTemplates)
-      .where(and(...conditions))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
   },
 
   async create(tenantId: string, data: CreateCmsBlockTemplateInput): Promise<CmsBlockTemplate> {
@@ -37,21 +38,16 @@ export const CmsBlockTemplateService = {
     return template
   },
 
-  async getById(tenantId: string, templateId: string): Promise<CmsBlockTemplate | null> {
+  async getById(templateId: string): Promise<CmsBlockTemplate | null> {
     const [template] = await db
       .select()
       .from(cmsBlockTemplates)
-      .where(
-        and(
-          eq(cmsBlockTemplates.tenantId, tenantId),
-          eq(cmsBlockTemplates.id, templateId)
-        )
-      )
+      .where(eq(cmsBlockTemplates.id, templateId))
       .limit(1)
     return template ?? null
   },
 
-  async update(tenantId: string, templateId: string, data: Partial<CreateCmsBlockTemplateInput>): Promise<CmsBlockTemplate | null> {
+  async update(templateId: string, data: Partial<CreateCmsBlockTemplateInput>): Promise<CmsBlockTemplate | null> {
     const updateData: Record<string, unknown> = {}
     if (data.name !== undefined) updateData.name = data.name
     if (data.blockType !== undefined) updateData.blockType = data.blockType
@@ -61,42 +57,31 @@ export const CmsBlockTemplateService = {
     const [template] = await db
       .update(cmsBlockTemplates)
       .set(updateData)
-      .where(
-        and(
-          eq(cmsBlockTemplates.tenantId, tenantId),
-          eq(cmsBlockTemplates.id, templateId)
-        )
-      )
+      .where(eq(cmsBlockTemplates.id, templateId))
       .returning()
     return template ?? null
   },
 
-  async delete(tenantId: string, templateId: string): Promise<boolean> {
+  async delete(templateId: string): Promise<boolean> {
     const result = await db
       .delete(cmsBlockTemplates)
-      .where(
-        and(
-          eq(cmsBlockTemplates.tenantId, tenantId),
-          eq(cmsBlockTemplates.id, templateId),
-          eq(cmsBlockTemplates.isSystem, false)
-        )
-      )
+      .where(and(eq(cmsBlockTemplates.id, templateId), eq(cmsBlockTemplates.isSystem, false)))
       .returning({ id: cmsBlockTemplates.id })
     return result.length > 0
   },
 
-  async createFromBlock(tenantId: string, blockId: string, name: string): Promise<CmsBlockTemplate | null> {
+  async createFromBlock(blockId: string, name: string): Promise<CmsBlockTemplate | null> {
     const [block] = await db
       .select()
       .from(cmsBlocks)
-      .where(and(eq(cmsBlocks.tenantId, tenantId), eq(cmsBlocks.id, blockId)))
+      .where(eq(cmsBlocks.id, blockId))
       .limit(1)
     if (!block) return null
 
     const [template] = await db
       .insert(cmsBlockTemplates)
       .values({
-        tenantId,
+        tenantId: block.tenantId,
         name,
         blockType: block.blockType,
         content: block.content,

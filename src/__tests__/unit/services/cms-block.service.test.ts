@@ -43,7 +43,7 @@ describe('CmsBlockService', () => {
       dbMock.mockSelect.mockResolvedValue(blocks)
 
       const service = await getService()
-      const result = await service.listByPage(TEST_TENANT_ID, TEST_PAGE_ID)
+      const result = await service.listByPage(TEST_PAGE_ID)
 
       expect(result).toHaveLength(2)
       expect(dbMock.db.select).toHaveBeenCalled()
@@ -53,7 +53,7 @@ describe('CmsBlockService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.listByPage(TEST_TENANT_ID, TEST_PAGE_ID)
+      const result = await service.listByPage(TEST_PAGE_ID)
 
       expect(result).toEqual([])
     })
@@ -64,12 +64,14 @@ describe('CmsBlockService', () => {
   describe('create', () => {
     it('creates a block and returns it', async () => {
       const fixture = cmsBlockFixture()
+      // getPageTenantId calls db.select
+      dbMock.mockSelect.mockResolvedValueOnce([{ tenantId: TEST_TENANT_ID }])
       dbMock.mockInsert.mockResolvedValue([fixture])
       // markPageDraftChanges calls db.update
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, TEST_PAGE_ID, {
+      const result = await service.create(TEST_PAGE_ID, {
         blockType: 'hero',
       })
 
@@ -79,11 +81,12 @@ describe('CmsBlockService', () => {
 
     it('sets default sortOrder to 0', async () => {
       const fixture = cmsBlockFixture({ sortOrder: 0 })
+      dbMock.mockSelect.mockResolvedValueOnce([{ tenantId: TEST_TENANT_ID }])
       dbMock.mockInsert.mockResolvedValue([fixture])
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, TEST_PAGE_ID, {
+      const result = await service.create(TEST_PAGE_ID, {
         blockType: 'text',
       })
 
@@ -92,11 +95,12 @@ describe('CmsBlockService', () => {
 
     it('sets default isVisible to true', async () => {
       const fixture = cmsBlockFixture({ isVisible: true })
+      dbMock.mockSelect.mockResolvedValueOnce([{ tenantId: TEST_TENANT_ID }])
       dbMock.mockInsert.mockResolvedValue([fixture])
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, TEST_PAGE_ID, {
+      const result = await service.create(TEST_PAGE_ID, {
         blockType: 'text',
       })
 
@@ -114,7 +118,7 @@ describe('CmsBlockService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_BLOCK_ID, {
+      const result = await service.update(TEST_BLOCK_ID, {
         blockType: 'text',
       })
 
@@ -126,7 +130,7 @@ describe('CmsBlockService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', {
+      const result = await service.update('nonexistent', {
         blockType: 'text',
       })
 
@@ -143,7 +147,7 @@ describe('CmsBlockService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_BLOCK_ID)
+      const result = await service.delete(TEST_BLOCK_ID)
 
       expect(result).toBe(true)
     })
@@ -153,7 +157,7 @@ describe('CmsBlockService', () => {
       dbMock.mockDelete.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -166,7 +170,7 @@ describe('CmsBlockService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.reorder(TEST_TENANT_ID, TEST_PAGE_ID, [
+      const result = await service.reorder(TEST_PAGE_ID, [
         TEST_BLOCK_ID,
         TEST_BLOCK_ID_2,
       ])
@@ -179,7 +183,7 @@ describe('CmsBlockService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.reorder(TEST_TENANT_ID, TEST_PAGE_ID, [])
+      const result = await service.reorder(TEST_PAGE_ID, [])
 
       expect(result).toBe(true)
     })
@@ -197,7 +201,7 @@ describe('CmsBlockService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.duplicate(TEST_TENANT_ID, TEST_BLOCK_ID)
+      const result = await service.duplicate(TEST_BLOCK_ID)
 
       expect(result).not.toBeNull()
       expect(result!.id).toBe(TEST_BLOCK_ID_2)
@@ -207,7 +211,7 @@ describe('CmsBlockService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.duplicate(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.duplicate('nonexistent')
 
       expect(result).toBeNull()
     })

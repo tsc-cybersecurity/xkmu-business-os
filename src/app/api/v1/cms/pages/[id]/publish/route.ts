@@ -7,14 +7,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  return withPermission(request, 'cms', 'update', async (auth) => {
+  return withPermission(request, 'cms', 'update', async () => {
     const { id } = await params
     const { searchParams } = new URL(request.url)
     const unpublish = searchParams.get('unpublish') === 'true'
 
     const page = unpublish
-      ? await CmsPageService.unpublish(auth.tenantId, id)
-      : await CmsPageService.publish(auth.tenantId, id)
+      ? await CmsPageService.unpublish(id)
+      : await CmsPageService.publish(id)
 
     if (!page) return apiNotFound('Seite nicht gefunden')
     return apiSuccess(page)

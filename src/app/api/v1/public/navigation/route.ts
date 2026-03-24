@@ -1,7 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { tenants } from '@/lib/db/schema'
-import { asc } from 'drizzle-orm'
 import { CmsNavigationService } from '@/lib/services/cms-navigation.service'
 import { logger } from '@/lib/utils/logger'
 
@@ -45,32 +42,24 @@ export async function GET(request: NextRequest) {
     // Start with global items
     const globalItems = location === 'header' ? GLOBAL_HEADER_ITEMS : GLOBAL_FOOTER_ITEMS
 
-    // Try to load additional tenant-specific items from DB
-    let tenantItems: Array<{ label: string; href: string; sortOrder: number; openInNewTab: boolean }> = []
+    // Try to load additional CMS-managed items from DB
+    let cmsItems: Array<{ label: string; href: string; sortOrder: number; openInNewTab: boolean }> = []
     try {
-      const [tenant] = await db
-        .select({ id: tenants.id })
-        .from(tenants)
-        .orderBy(asc(tenants.createdAt))
-        .limit(1)
-
-      if (tenant) {
-        const dbItems = await CmsNavigationService.listPublic(tenant.id, location)
-        // Only include tenant items that are NOT already in global list (avoid duplicates)
-        tenantItems = dbItems
-          .filter((item) => !GLOBAL_HREFS.has(item.href))
-          .map((item) => ({
-            label: item.label,
-            href: item.href,
-            sortOrder: globalItems.length + (item.sortOrder ?? 0),
-            openInNewTab: item.openInNewTab ?? false,
-          }))
-      }
+      const dbItems = await CmsNavigationService.listPublic(location)
+      // Only include CMS items that are NOT already in global list (avoid duplicates)
+      cmsItems = dbItems
+        .filter((item) => !GLOBAL_HREFS.has(item.href))
+        .map((item) => ({
+          label: item.label,
+          href: item.href,
+          sortOrder: globalItems.length + (item.sortOrder ?? 0),
+          openInNewTab: item.openInNewTab ?? false,
+        }))
     } catch {
       // DB not available - return global items only
     }
 
-    const allItems = [...globalItems, ...tenantItems]
+    const allItems = [...globalItems, ...cmsItems]
     return NextResponse.json({ success: true, data: allItems })
   } catch (error) {
     logger.error('Error fetching public navigation', error, { module: 'PublicNavigationAPI' })
