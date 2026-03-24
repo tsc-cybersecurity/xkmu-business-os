@@ -22,6 +22,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       const body = await request.json()
       const task = await ProjectService.createTask(auth.tenantId, id, {
         ...body,
+        startDate: body.startDate ? new Date(body.startDate) : undefined,
         dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
       })
       return apiSuccess(task, undefined, 201)

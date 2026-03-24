@@ -291,7 +291,9 @@ export default function ProjectBoardPage() {
           checklist: editChecklist, comments,
         }),
       })
-      if ((await res.json()).success) { setDetailTask(null); fetchProject(); toast.success('Gespeichert') }
+      const data = await res.json()
+      if (data.success) { setDetailTask(null); fetchProject(); toast.success('Gespeichert') }
+      else { toast.error('Fehler beim Speichern') }
     } catch { toast.error('Fehler') }
     finally { setSaving(false) }
   }

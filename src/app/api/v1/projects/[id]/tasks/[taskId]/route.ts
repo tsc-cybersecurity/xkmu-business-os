@@ -12,6 +12,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
       const body = await request.json()
       const task = await ProjectService.updateTask(auth.tenantId, taskId, {
         ...body,
+        startDate: body.startDate ? new Date(body.startDate) : body.startDate,
         dueDate: body.dueDate ? new Date(body.dueDate) : body.dueDate,
       })
       if (!task) return apiNotFound('Aufgabe nicht gefunden')
