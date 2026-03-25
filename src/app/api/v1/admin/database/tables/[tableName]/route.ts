@@ -16,7 +16,7 @@ interface RouteContext {
   params: Promise<{ tableName: string }>
 }
 
-// GET /api/v1/admin/database/tables/[tableName] - Read table data
+// GET /api/v1/admin/database/tables/[tableName] - Read table data (global-aware)
 export async function GET(request: NextRequest, context: RouteContext) {
   return withPermission(request, 'database', 'read', async (auth) => {
     const { tableName } = await context.params
