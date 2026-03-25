@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSession } from '@/lib/auth/session'
-import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Upload, Book, UserPlus, Workflow, UserCog } from 'lucide-react'
+import { Users, Key, Building, Bot, FileText, Sparkles, Webhook, Shield, Database, Upload, Download, Book, UserPlus, Workflow, UserCog, Mail, ListTodo, HardDrive } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function SettingsPage() {
@@ -72,7 +72,7 @@ export default async function SettingsPage() {
           </Link>
         )}
 
-        {session?.user.role === 'owner' && (
+        {isAdmin && (
           <Link href="/intern/settings/tenant">
             <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardHeader>
@@ -129,6 +129,20 @@ export default async function SettingsPage() {
         )}
 
         {isAdmin && (
+          <Link href="/intern/settings/email-templates">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <Mail className="h-8 w-8 text-muted-foreground" />
+                <CardTitle className="mt-4">E-Mail-Vorlagen</CardTitle>
+                <CardDescription>
+                  E-Mail-Templates fuer automatische Benachrichtigungen
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
+
+        {isAdmin && (
           <Link href="/intern/settings/webhooks">
             <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardHeader>
@@ -157,11 +171,39 @@ export default async function SettingsPage() {
         )}
 
         {isAdmin && (
+          <Link href="/intern/settings/task-queue">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <ListTodo className="h-8 w-8 text-muted-foreground" />
+                <CardTitle className="mt-4">Task-Queue</CardTitle>
+                <CardDescription>
+                  Automatische Aufgaben und geplante Jobs verwalten
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
+
+        {isAdmin && (
+          <Link href="/intern/settings/database">
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <HardDrive className="h-8 w-8 text-muted-foreground" />
+                <CardTitle className="mt-4">Datenbank</CardTitle>
+                <CardDescription>
+                  Datenbank-Tabellen und Statistiken einsehen
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        )}
+
+        {isAdmin && (
           <Link href="/intern/settings/export">
             <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardHeader>
-                <Database className="h-8 w-8 text-muted-foreground" />
-                <CardTitle className="mt-4">Datenbank-Export</CardTitle>
+                <Download className="h-8 w-8 text-muted-foreground" />
+                <CardTitle className="mt-4">Export</CardTitle>
                 <CardDescription>
                   Kompletten SQL-Export der Datenbank herunterladen
                 </CardDescription>
@@ -175,7 +217,7 @@ export default async function SettingsPage() {
             <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardHeader>
                 <Upload className="h-8 w-8 text-muted-foreground" />
-                <CardTitle className="mt-4">Datenbank-Import</CardTitle>
+                <CardTitle className="mt-4">Import</CardTitle>
                 <CardDescription>
                   SQL-Datei importieren und Daten wiederherstellen
                 </CardDescription>
@@ -190,7 +232,19 @@ export default async function SettingsPage() {
               <Book className="h-8 w-8 text-muted-foreground" />
               <CardTitle className="mt-4">API-Dokumentation</CardTitle>
               <CardDescription>
-                Vollständige REST API-Referenz mit curl-Beispielen
+                Vollstaendige REST API-Referenz mit curl-Beispielen
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/intern/settings/app-docs">
+          <Card className="cursor-pointer transition-colors hover:bg-muted/50">
+            <CardHeader>
+              <FileText className="h-8 w-8 text-muted-foreground" />
+              <CardTitle className="mt-4">App-Dokumentation</CardTitle>
+              <CardDescription>
+                Technische Dokumentation und Architektur
               </CardDescription>
             </CardHeader>
           </Card>
