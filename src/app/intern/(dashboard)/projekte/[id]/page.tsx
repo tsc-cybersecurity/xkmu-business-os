@@ -35,7 +35,7 @@ interface Column { id: string; name: string; color: string }
 interface CheckItem { text: string; checked: boolean }
 interface TaskItem {
   id: string; title: string; description: string | null; columnId: string; position: number
-  priority: string | null; assigneeName?: string; startDate: string | null; dueDate: string | null
+  priority: string | null; assignedTo: string | null; assigneeName?: string; startDate: string | null; dueDate: string | null
   completedAt: string | null; estimatedMinutes: number | null
   labels: string[]; checklist: CheckItem[]; comments: Array<{ text: string; createdAt: string }>
 }
@@ -242,8 +242,11 @@ export default function ProjectBoardPage() {
   const [editComment, setEditComment] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const [editAssignedTo, setEditAssignedTo] = useState<string | null>(null)
+
   // Project details edit
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([])
+  const [users, setUsers] = useState<Array<{ id: string; name: string }>>([])
   const [projectSaving, setProjectSaving] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
@@ -262,6 +265,11 @@ export default function ProjectBoardPage() {
   useEffect(() => {
     fetch('/api/v1/companies?limit=200').then(r => r.json()).then(d => {
       if (d.success) setCompanies((d.data || []).map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })))
+    }).catch(() => {})
+    fetch('/api/v1/users').then(r => r.json()).then(d => {
+      if (d.success) setUsers((d.data || []).map((u: { id: string; firstName?: string; lastName?: string; email: string }) => ({
+        id: u.id, name: [u.firstName, u.lastName].filter(Boolean).join(' ') || u.email,
+      })))
     }).catch(() => {})
   }, [])
 
@@ -315,6 +323,7 @@ export default function ProjectBoardPage() {
     setEditTitle(task.title)
     setEditDesc(task.description || '')
     setEditPriority(task.priority || 'mittel')
+    setEditAssignedTo(task.assignedTo || null)
     setEditStartDate(task.startDate ? task.startDate.split('T')[0] : '')
     setEditDueDate(task.dueDate ? task.dueDate.split('T')[0] : '')
     setEditEstimate(task.estimatedMinutes ? String(task.estimatedMinutes) : '')
@@ -335,7 +344,8 @@ export default function ProjectBoardPage() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: editTitle, description: editDesc || null,
-          priority: editPriority, startDate: editStartDate || null, dueDate: editDueDate || null,
+          priority: editPriority, assignedTo: editAssignedTo || null,
+          startDate: editStartDate || null, dueDate: editDueDate || null,
           estimatedMinutes: editEstimate ? parseInt(editEstimate) : null,
           labels: editLabels ? editLabels.split(',').map(l => l.trim()).filter(Boolean) : [],
           checklist: editChecklist, comments,
@@ -536,7 +546,7 @@ export default function ProjectBoardPage() {
             <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="text-lg font-semibold" />
             <Textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={3} placeholder="Beschreibung..." />
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Prioritaet</label>
                 <Select value={editPriority} onValueChange={setEditPriority}>
@@ -546,6 +556,16 @@ export default function ProjectBoardPage() {
                     <SelectItem value="hoch"><span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500" />Hoch</span></SelectItem>
                     <SelectItem value="mittel"><span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500" />Mittel</span></SelectItem>
                     <SelectItem value="niedrig"><span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400" />Niedrig</span></SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Zugewiesen an</label>
+                <Select value={editAssignedTo || '__none__'} onValueChange={v => setEditAssignedTo(v === '__none__' ? null : v)}>
+                  <SelectTrigger><SelectValue placeholder="Niemand" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">— Niemand —</SelectItem>
+                    {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
