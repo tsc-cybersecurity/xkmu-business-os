@@ -5,26 +5,37 @@ import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
-// GET /api/v1/admin/database/tables - List all tables with row counts
+// GET /api/v1/admin/database/tables - List all tables with exact row counts
 export async function GET(request: NextRequest) {
   return withPermission(request, 'database', 'read', async () => {
     try {
-      const result = await db.execute(sql`
-        SELECT
-          t.table_name,
-          COALESCE(s.n_live_tup, 0) as estimated_rows
-        FROM information_schema.tables t
-        LEFT JOIN pg_stat_user_tables s ON s.relname = t.table_name
-        WHERE t.table_schema = 'public'
-          AND t.table_type = 'BASE TABLE'
-        ORDER BY t.table_name
+      // Tabellennamen holen
+      const tableResult = await db.execute(sql`
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND table_type = 'BASE TABLE'
+        ORDER BY table_name
       `)
 
-      const rows = result as unknown as Record<string, unknown>[]
-      const tables = rows.map((row) => ({
-        name: row.table_name as string,
-        estimatedRows: Number(row.estimated_rows || 0),
-      }))
+      const tableNames = (tableResult as unknown as Record<string, unknown>[]).map(
+        (r) => r.table_name as string
+      )
+
+      // Exakte Zählung pro Tabelle
+      const tables = await Promise.all(
+        tableNames.map(async (name) => {
+          try {
+            const countResult = await db.execute(
+              sql`SELECT COUNT(*) as cnt FROM ${sql.identifier(name)}`
+            )
+            const rows = countResult as unknown as Record<string, unknown>[]
+            return { name, estimatedRows: Number(rows[0]?.cnt || 0) }
+          } catch {
+            return { name, estimatedRows: 0 }
+          }
+        })
+      )
 
       return apiSuccess(tables)
     } catch (error) {
