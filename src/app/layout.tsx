@@ -36,12 +36,24 @@ const montserrat = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://bos.dev.xkmu.de'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')
+      ? process.env.NEXT_PUBLIC_APP_URL
+      : 'https://bos.dev.xkmu.de'
+  ),
   title: "xKMU Business OS",
   description: "Professionelles Business Operating System für KMU",
   openGraph: {
     type: 'website',
     siteName: 'xKMU Business OS',
+    images: [{ url: 'https://www.xkmu.de/xkmu_q_gross_slogan.png', width: 400, height: 128, alt: 'xKMU Business OS' }],
+  },
+  twitter: {
+    card: 'summary',
+    site: '@xkmu',
+  },
+  icons: {
+    icon: '/favicon.ico',
   },
 };
 

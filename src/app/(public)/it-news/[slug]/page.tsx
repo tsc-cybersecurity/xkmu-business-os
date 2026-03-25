@@ -1,4 +1,5 @@
 import { BlogPostService } from '@/lib/services/blog-post.service'
+import { toAbsoluteUrl } from '@/lib/utils/cms-metadata'
 import { MarkdownRenderer } from '../../../_components/markdown-renderer'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Calendar } from 'lucide-react'
@@ -25,13 +26,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           description: post.seoDescription || post.excerpt || undefined,
           type: 'article',
           url: `/it-news/${slug}`,
-          ...(post.featuredImage ? { images: [post.featuredImage] } : {}),
+          ...(post.featuredImage ? { images: [toAbsoluteUrl(post.featuredImage)] } : {}),
         },
         twitter: {
           card: 'summary_large_image',
           title: post.seoTitle || post.title,
           description: post.seoDescription || post.excerpt || undefined,
-          ...(post.featuredImage ? { images: [post.featuredImage] } : {}),
+          ...(post.featuredImage ? { images: [toAbsoluteUrl(post.featuredImage)] } : {}),
         },
       }
     }

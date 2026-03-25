@@ -1,6 +1,17 @@
 import type { Metadata } from 'next'
 import { CmsPageService } from '@/lib/services/cms-page.service'
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')
+  ? process.env.NEXT_PUBLIC_APP_URL
+  : 'https://bos.dev.xkmu.de'
+
+/** Make relative URLs absolute for OG tags */
+export function toAbsoluteUrl(url: string): string {
+  if (!url) return url
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
 /**
  * Generates full metadata (title, description, keywords, OG, Twitter) for CMS pages.
  */
@@ -10,7 +21,7 @@ export async function generateCmsMetadata(slug: string, fallbackTitle: string): 
     if (page) {
       const title = page.seoTitle || page.title || fallbackTitle
       const description = page.seoDescription || undefined
-      const image = page.ogImage || undefined
+      const image = page.ogImage ? toAbsoluteUrl(page.ogImage) : undefined
 
       return {
         title,
