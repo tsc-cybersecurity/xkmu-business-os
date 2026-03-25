@@ -267,8 +267,9 @@ export default function ChatPage() {
     try {
       const response = await fetch('/api/v1/ai/status')
       const data = await response.json()
-      if (data.success && Array.isArray(data.data)) {
-        const available = data.data.filter((p: ProviderInfo) => p.available && !['firecrawl', 'kie', 'serpapi'].includes(p.providerType))
+      const providerList = data.data?.providers || (Array.isArray(data.data) ? data.data : [])
+      if (data.success && providerList.length > 0) {
+        const available = providerList.filter((p: ProviderInfo) => p.available && !['firecrawl', 'kie', 'serpapi', 'linkedin', 'twitter', 'facebook', 'instagram', 'wordpress'].includes(p.providerType))
         setProviders(available)
         if (available.length > 0 && !selectedProvider) {
           setSelectedProvider(available[0].id)
@@ -390,6 +391,7 @@ export default function ChatPage() {
           systemPrompt,
           maxTokens: 4000,
           temperature: 0.7,
+          ...(selectedProvider ? { providerId: selectedProvider } : {}),
         }),
       })
 
