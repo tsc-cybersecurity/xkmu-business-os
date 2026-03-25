@@ -93,6 +93,7 @@ interface BlockTypeDefinition {
 
 import type { LucideIcon } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
+import { ImageField } from '@/components/shared'
 const iconMap: Record<string, LucideIcon> = {
   LayoutTemplate,
   Type,
@@ -410,10 +411,7 @@ export default function CmsPageEditorPage() {
               <Label>SEO Keywords</Label>
               <Input value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} placeholder="keyword1, keyword2, ..." />
             </div>
-            <div className="space-y-2">
-              <Label>OG Image URL</Label>
-              <Input value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="https://..." />
-            </div>
+            <ImageField imageUrl={ogImage} onImageChange={setOgImage} label="OG Image" category="website" />
             <Button variant="outline" className="w-full" onClick={handleGenerateSeo} disabled={generatingSeo}>
               {generatingSeo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
               {generatingSeo ? 'Generiere...' : 'SEO per KI generieren'}
