@@ -9,6 +9,7 @@ import { eq, and, desc, count, ilike } from 'drizzle-orm'
 import { AiProviderService } from '../ai-provider.service'
 import { KieProvider } from './kie.provider'
 import { logger } from '@/lib/utils/logger'
+import { ImageOptimizerService } from '../image-optimizer.service'
 import { randomUUID } from 'crypto'
 import path from 'path'
 
@@ -38,67 +39,20 @@ export interface GeneratedImageResult {
   size?: string
 }
 
-// Persistent dir for generated images
-const IMAGE_DIR = process.env.MEDIA_UPLOAD_DIR
-  ? path.join(process.env.MEDIA_UPLOAD_DIR, 'generated')
-  : path.join(process.cwd(), 'public', 'uploads', 'generated')
-const USE_DATA_DIR = !!process.env.MEDIA_UPLOAD_DIR
-
-// ============================================
-// File Helpers
-// ============================================
-
-async function ensureDir(dir: string) {
-  const { mkdir } = await import('fs/promises')
-  const { existsSync } = await import('fs')
-  if (!existsSync(dir)) {
-    await mkdir(dir, { recursive: true })
-  }
-}
-
 async function downloadAndSave(
   imageUrl: string,
   tenantId: string
 ): Promise<{ localPath: string; servePath: string; sizeBytes: number }> {
-  const { writeFile } = await import('fs/promises')
-
-  const tenantDir = path.join(IMAGE_DIR, tenantId)
-  await ensureDir(tenantDir)
-
-  const filename = `${randomUUID()}.png`
-  const localPath = path.join(tenantDir, filename)
-  const servePath = USE_DATA_DIR
-    ? `/api/v1/media/serve/generated/${tenantId}/${filename}`
-    : `/uploads/generated/${tenantId}/${filename}`
-
-  const response = await fetch(imageUrl, { signal: AbortSignal.timeout(60_000) })
-  if (!response.ok) throw new Error(`Failed to download image: ${response.status}`)
-
-  const buffer = Buffer.from(await response.arrayBuffer())
-  await writeFile(localPath, buffer)
-
-  return { localPath, servePath, sizeBytes: buffer.length }
+  const result = await ImageOptimizerService.optimizeFromUrl(imageUrl, `generated/${tenantId}`)
+  return { localPath: result.localPath, servePath: result.servePath, sizeBytes: result.sizeBytes }
 }
 
 async function saveBase64(
   b64: string,
   tenantId: string
 ): Promise<{ localPath: string; servePath: string; sizeBytes: number }> {
-  const { writeFile } = await import('fs/promises')
-
-  const tenantDir = path.join(IMAGE_DIR, tenantId)
-  await ensureDir(tenantDir)
-
-  const filename = `${randomUUID()}.png`
-  const localPath = path.join(tenantDir, filename)
-  const servePath = USE_DATA_DIR
-    ? `/api/v1/media/serve/generated/${tenantId}/${filename}`
-    : `/uploads/generated/${tenantId}/${filename}`
-
-  const buffer = Buffer.from(b64, 'base64')
-  await writeFile(localPath, buffer)
-
-  return { localPath, servePath, sizeBytes: buffer.length }
+  const result = await ImageOptimizerService.optimizeFromBase64(b64, `generated/${tenantId}`)
+  return { localPath: result.localPath, servePath: result.servePath, sizeBytes: result.sizeBytes }
 }
 
 // ============================================
