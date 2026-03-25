@@ -67,6 +67,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // All non-intern, non-api paths are public (CMS pages, blog, etc.)
+  if (!pathname.startsWith('/intern') && !pathname.startsWith('/api/')) {
+    return NextResponse.next()
+  }
+
   // Check for API key on API routes
   if (pathname.startsWith('/api/v1/')) {
     const apiKey = request.headers.get('x-api-key')
