@@ -117,7 +117,7 @@ function DraggableCard({ task, onClick, overlay }: { task: TaskItem; onClick?: (
 // ============================================
 // Timeline View
 // ============================================
-function TimelineView({ tasks, columns }: { tasks: TaskItem[]; columns: Column[] }) {
+function TimelineView({ tasks, columns, onClickTask }: { tasks: TaskItem[]; columns: Column[]; onClickTask: (task: TaskItem) => void }) {
   const tasksWithDates = tasks.filter(t => t.startDate || t.dueDate)
   if (tasksWithDates.length === 0) {
     return <div className="text-center py-12 text-muted-foreground">Keine Aufgaben mit Datumsbereichen. Setzen Sie Start- und Enddatum in den Aufgabendetails.</div>
@@ -160,7 +160,7 @@ function TimelineView({ tasks, columns }: { tasks: TaskItem[]; columns: Column[]
       {/* Task names */}
       <div className="w-48 shrink-0 pt-[52px]">
         {tasksWithDates.map(task => (
-          <div key={task.id} className="h-9 flex items-center gap-1.5 pr-3 truncate">
+          <div key={task.id} className="h-9 flex items-center gap-1.5 pr-3 truncate cursor-pointer hover:bg-accent/50 rounded px-1 -mx-1" onClick={() => onClickTask(task)}>
             <PriorityDot priority={task.priority} />
             <span className="text-xs truncate">{task.title}</span>
           </div>
@@ -197,9 +197,10 @@ function TimelineView({ tasks, columns }: { tasks: TaskItem[]; columns: Column[]
                   <div key={i} className="absolute top-0 h-full bg-muted/20" style={{ left: i * dayWidth, width: dayWidth }} />
                 ))}
                 <div
-                  className="absolute h-6 rounded flex items-center px-1.5 text-[10px] text-white font-medium truncate shadow-sm"
+                  className="absolute h-6 rounded flex items-center px-1.5 text-[10px] text-white font-medium truncate shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
                   style={{ left: bar.left, width: bar.width, backgroundColor: col?.color || '#3b82f6' }}
                   title={`${task.startDate ? new Date(task.startDate).toLocaleDateString('de-DE') : '?'} — ${task.dueDate ? new Date(task.dueDate).toLocaleDateString('de-DE') : '?'}`}
+                  onClick={() => onClickTask(task)}
                 >
                   {task.assigneeName || ''}
                 </div>
@@ -392,7 +393,7 @@ export default function ProjectBoardPage() {
 
         {/* Timeline */}
         <TabsContent value="timeline" className="flex-1 overflow-auto p-6 m-0">
-          <TimelineView tasks={project.tasks} columns={columns} />
+          <TimelineView tasks={project.tasks} columns={columns} onClickTask={openDetail} />
         </TabsContent>
       </Tabs>
 
