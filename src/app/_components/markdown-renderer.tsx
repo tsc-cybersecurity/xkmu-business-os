@@ -10,7 +10,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
 
   return (
     <div
-      className={`prose prose-neutral dark:prose-invert max-w-none ${className || ''}`}
+      className={`prose prose-neutral dark:prose-invert max-w-none prose-headings:mt-6 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-3 prose-hr:my-4 ${className || ''}`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   )
