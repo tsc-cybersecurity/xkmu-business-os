@@ -20,7 +20,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: post.seoTitle || post.title,
         description: post.seoDescription || post.excerpt || undefined,
         keywords: post.seoKeywords || undefined,
-        openGraph: post.featuredImage ? { images: [post.featuredImage] } : undefined,
+        openGraph: {
+          title: post.seoTitle || post.title,
+          description: post.seoDescription || post.excerpt || undefined,
+          type: 'article',
+          url: `/it-news/${slug}`,
+          ...(post.featuredImage ? { images: [post.featuredImage] } : {}),
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title: post.seoTitle || post.title,
+          description: post.seoDescription || post.excerpt || undefined,
+          ...(post.featuredImage ? { images: [post.featuredImage] } : {}),
+        },
       }
     }
   } catch {
