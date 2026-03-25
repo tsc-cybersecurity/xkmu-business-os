@@ -11,6 +11,7 @@ export const TENANT_TABLES = [
   'companies',
   'persons',
   'leads',
+  'opportunities',
   'product_categories',
   'products',
   'ai_providers',
@@ -22,6 +23,8 @@ export const TENANT_TABLES = [
   'audit_log',
   'documents',
   'document_items',
+  'document_templates',
+  'email_templates',
   'din_audit_sessions',
   'din_answers',
   'wiba_audit_sessions',
@@ -34,6 +37,7 @@ export const TENANT_TABLES = [
   'cms_navigation_items',
   'blog_posts',
   'media_uploads',
+  'generated_images',
   'company_researches',
   'firecrawl_researches',
   'business_documents',
@@ -43,6 +47,31 @@ export const TENANT_TABLES = [
   'marketing_templates',
   'social_media_topics',
   'social_media_posts',
+  'newsletter_subscribers',
+  'newsletter_campaigns',
+  'feedback_forms',
+  'processes',
+  'process_tasks',
+  'projects',
+  'project_tasks',
+  'time_entries',
+  'task_queue',
+  'receipts',
+  'chat_conversations',
+  'cockpit_systems',
+]
+
+// Tables without tenant_id that reference a tenant-scoped parent (exported via JOIN)
+export const JOIN_TABLES: Array<{
+  table: string
+  parentTable: string
+  foreignKey: string
+  parentForeignKey: string
+}> = [
+  { table: 'role_permissions', parentTable: 'roles', foreignKey: 'role_id', parentForeignKey: 'id' },
+  { table: 'chat_messages', parentTable: 'chat_conversations', foreignKey: 'conversation_id', parentForeignKey: 'id' },
+  { table: 'cockpit_credentials', parentTable: 'cockpit_systems', foreignKey: 'system_id', parentForeignKey: 'id' },
+  { table: 'feedback_responses', parentTable: 'feedback_forms', foreignKey: 'form_id', parentForeignKey: 'id' },
 ]
 
 // Global tables (no tenant_id, exported completely)
@@ -53,18 +82,18 @@ export const GLOBAL_TABLES = [
   'cms_block_type_definitions',
 ]
 
-// All allowed tables (union of tenant + global + special)
+// All allowed tables (union of tenant + global + join)
 export const ALLOWED_TABLES = new Set([
   'tenants',
   ...TENANT_TABLES,
-  'role_permissions',
+  ...JOIN_TABLES.map((j) => j.table),
   ...GLOBAL_TABLES,
 ])
 
 // Tables that only owners can modify (no tenant_id)
 export const OWNER_ONLY_TABLES = new Set([
   'tenants',
-  'role_permissions',
+  ...JOIN_TABLES.map((j) => j.table),
   ...GLOBAL_TABLES,
 ])
 

@@ -4,6 +4,7 @@ import { validateApiKey, getApiKeyFromRequest, hasPermission } from '@/lib/auth/
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
+import { ALLOWED_TABLES as WHITELIST } from '@/lib/db/table-whitelist'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,115 +28,42 @@ async function getAuthContext(request: NextRequest) {
   return { error: 'unauthorized' as const }
 }
 
-// Erlaubte Tabellen für den Import (Reihenfolge wichtig wegen Foreign Keys)
-const ALLOWED_TABLES = [
+// Import-Reihenfolge (Parents vor Children wegen Foreign Keys)
+const IMPORT_ORDER = [
   // Grundstruktur
-  'tenants',
-  'roles',
-  'role_permissions',
-  'users',
-  'api_keys',
+  'tenants', 'roles', 'role_permissions', 'users', 'api_keys',
   // Kontakte & Katalog
-  'companies',
-  'persons',
-  'leads',
-  'product_categories',
-  'products',
+  'companies', 'persons', 'leads', 'opportunities', 'product_categories', 'products',
   // KI & Integrationen
-  'ai_providers',
-  'ai_logs',
-  'ai_prompt_templates',
-  'n8n_connections',
-  'n8n_workflow_logs',
+  'ai_providers', 'ai_logs', 'ai_prompt_templates', 'n8n_connections', 'n8n_workflow_logs',
   // Allgemein
-  'ideas',
-  'activities',
-  'webhooks',
-  'audit_log',
-  'documents',
-  'document_items',
-  // DIN SPEC 27076
-  'din_requirements',
-  'din_grants',
-  'din_audit_sessions',
-  'din_answers',
-  // BSI WiBA
-  'wiba_requirements',
-  'wiba_audit_sessions',
-  'wiba_answers',
+  'ideas', 'activities', 'webhooks', 'audit_log',
+  'documents', 'document_items', 'document_templates', 'email_templates',
+  // Prozesse & Projekte
+  'processes', 'process_tasks', 'projects', 'project_tasks',
+  // Zeiterfassung & Finance
+  'time_entries', 'task_queue', 'receipts',
+  // DIN & WiBA
+  'din_requirements', 'din_grants', 'din_audit_sessions', 'din_answers',
+  'wiba_requirements', 'wiba_audit_sessions', 'wiba_answers',
   // CMS & Blog
-  'cms_block_type_definitions',
-  'cms_pages',
-  'cms_blocks',
-  'cms_block_templates',
-  'cms_navigation_items',
-  'blog_posts',
-  'media_uploads',
+  'cms_block_type_definitions', 'cms_pages', 'cms_blocks', 'cms_block_templates', 'cms_navigation_items',
+  'blog_posts', 'media_uploads', 'generated_images',
   // Business Intelligence
-  'company_researches',
-  'firecrawl_researches',
-  'business_documents',
-  'business_profiles',
+  'company_researches', 'firecrawl_researches', 'business_documents', 'business_profiles',
   // Marketing & Social Media
-  'marketing_campaigns',
-  'marketing_tasks',
-  'marketing_templates',
-  'social_media_topics',
-  'social_media_posts',
+  'marketing_campaigns', 'marketing_tasks', 'marketing_templates',
+  'social_media_topics', 'social_media_posts',
+  // Newsletter & Feedback
+  'newsletter_subscribers', 'newsletter_campaigns',
+  'feedback_forms', 'feedback_responses',
+  // Chat & Cockpit
+  'chat_conversations', 'chat_messages',
+  'cockpit_systems', 'cockpit_credentials',
 ]
 
-// Tabellen in umgekehrter Reihenfolge löschen (wegen Foreign Keys)
-const DELETE_ORDER = [
-  // Social Media & Marketing
-  'social_media_posts',
-  'social_media_topics',
-  'marketing_templates',
-  'marketing_tasks',
-  'marketing_campaigns',
-  // Business Intelligence
-  'business_profiles',
-  'business_documents',
-  'firecrawl_researches',
-  'company_researches',
-  // CMS & Blog
-  'media_uploads',
-  'blog_posts',
-  'cms_navigation_items',
-  'cms_block_templates',
-  'cms_blocks',
-  'cms_pages',
-  // BSI WiBA
-  'wiba_answers',
-  'wiba_audit_sessions',
-  // DIN SPEC 27076
-  'din_answers',
-  'din_audit_sessions',
-  // Allgemein
-  'document_items',
-  'documents',
-  'audit_log',
-  'webhooks',
-  'activities',
-  'ideas',
-  // KI & Integrationen
-  'n8n_workflow_logs',
-  'n8n_connections',
-  'ai_prompt_templates',
-  'ai_logs',
-  'ai_providers',
-  // Katalog & Kontakte
-  'products',
-  'product_categories',
-  'leads',
-  'persons',
-  'companies',
-  // Grundstruktur
-  'api_keys',
-  'role_permissions',
-  'users',
-  'roles',
-  'tenants',
-]
+// Löschreihenfolge = umgekehrt (Children vor Parents)
+const DELETE_ORDER = [...IMPORT_ORDER].reverse()
 
 interface ParsedInsert {
   table: string
@@ -168,7 +96,7 @@ function parseInsertStatements(sqlContent: string): ParsedInsert[] {
       if (insertMatch) {
         const table = insertMatch[1].toLowerCase()
 
-        if (ALLOWED_TABLES.includes(table)) {
+        if (WHITELIST.has(table)) {
           inserts.push({
             table,
             statement: currentStatement,
@@ -250,28 +178,26 @@ export async function POST(request: NextRequest) {
     await db.transaction(async (tx) => {
       if (mode === 'replace') {
         // Bei Replace-Modus: bestehende Daten löschen
+        // Tabellen ohne tenant_id (referenziert ueber Parent)
+        const noTenantTables = new Set(['tenants', 'role_permissions', 'chat_messages', 'cockpit_credentials', 'feedback_responses', 'din_requirements', 'din_grants', 'wiba_requirements', 'cms_block_type_definitions'])
         for (const table of DELETE_ORDER) {
           try {
-            if (table === 'tenants') {
-              // Tenant-Datensatz nicht löschen, nur aktualisieren
-              continue
-            }
+            if (table === 'tenants') continue
+            if (noTenantTables.has(table)) continue // Globale/Join-Tabellen nicht loeschen
             await tx.execute(
-              sql.raw(
-                `DELETE FROM ${table} WHERE tenant_id = '${tenantId}'`
-              )
+              sql.raw(`DELETE FROM ${table} WHERE tenant_id = '${tenantId}'`)
             )
           } catch {
-            // Tabelle existiert evtl. nicht oder hat keine tenant_id
+            // Tabelle existiert evtl. nicht
           }
         }
       }
 
       // INSERT-Statements nach Tabellenreihenfolge sortieren
       const sortedInserts = [...inserts].sort((a, b) => {
-        return (
-          ALLOWED_TABLES.indexOf(a.table) - ALLOWED_TABLES.indexOf(b.table)
-        )
+        const ai = IMPORT_ORDER.indexOf(a.table)
+        const bi = IMPORT_ORDER.indexOf(b.table)
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
       })
 
       for (const insert of sortedInserts) {

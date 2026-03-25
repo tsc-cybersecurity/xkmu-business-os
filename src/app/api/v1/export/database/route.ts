@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest, hasPermission } from '@/lib/auth/api-key'
 import { db } from '@/lib/db'
-import { TENANT_TABLES, GLOBAL_TABLES } from '@/lib/db/table-whitelist'
+import { TENANT_TABLES, GLOBAL_TABLES, JOIN_TABLES } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
 export const dynamic = 'force-dynamic'
 
-// role_permissions hat kein tenant_id, aber roleId -> export ueber JOIN
-const ROLE_PERMISSIONS_TABLE = 'role_permissions'
+// JOIN-Tabellen werden dynamisch aus table-whitelist geladen
 
 function formatSqlValue(value: unknown): string {
   if (value === null || value === undefined) {
@@ -113,14 +112,16 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // 3. role_permissions (ueber roles.tenant_id verknuepft)
-        try {
-          const rows = await db.execute<Record<string, unknown>>(
-            sql`SELECT rp.* FROM ${sql.identifier(ROLE_PERMISSIONS_TABLE)} rp INNER JOIN roles r ON rp.role_id = r.id WHERE r.tenant_id = ${tenantId}`
-          )
-          write(exportRows(rows as unknown as Record<string, unknown>[], ROLE_PERMISSIONS_TABLE))
-        } catch (error) {
-          logger.error('Fehler beim Export der Tabelle role_permissions', error, { module: 'ExportDatabaseAPI' })
+        // 3. JOIN-Tabellen (kein tenant_id, aber ueber Parent verknuepft)
+        for (const jt of JOIN_TABLES) {
+          try {
+            const rows = await db.execute<Record<string, unknown>>(
+              sql`SELECT t.* FROM ${sql.identifier(jt.table)} t INNER JOIN ${sql.identifier(jt.parentTable)} p ON t.${sql.identifier(jt.foreignKey)} = p.${sql.identifier(jt.parentForeignKey)} WHERE p.tenant_id = ${tenantId}`
+            )
+            write(exportRows(rows as unknown as Record<string, unknown>[], jt.table))
+          } catch (error) {
+            logger.error(`Fehler beim Export der Tabelle ${jt.table}`, error, { module: 'ExportDatabaseAPI' })
+          }
         }
 
         // 4. Globale Tabellen (komplett, ohne Filter)
