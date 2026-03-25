@@ -540,13 +540,13 @@ export default function ProjectBoardPage() {
 
       {/* Task Detail Dialog */}
       <Dialog open={!!detailTask} onOpenChange={open => { if (!open) setDetailTask(null) }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Aufgabe bearbeiten</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="text-lg font-semibold" />
             <Textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={3} placeholder="Beschreibung..." />
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Prioritaet</label>
                 <Select value={editPriority} onValueChange={setEditPriority}>
@@ -570,16 +570,16 @@ export default function ProjectBoardPage() {
                 </Select>
               </div>
               <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">Schaetzung (Min)</label>
+                <Input type="number" value={editEstimate} onChange={e => setEditEstimate(e.target.value)} placeholder="z.B. 120" />
+              </div>
+              <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Startdatum</label>
                 <Input type="date" value={editStartDate} onChange={e => setEditStartDate(e.target.value)} />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1 block">Enddatum</label>
                 <Input type="date" value={editDueDate} onChange={e => setEditDueDate(e.target.value)} />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1 block">Schaetzung (Min)</label>
-                <Input type="number" value={editEstimate} onChange={e => setEditEstimate(e.target.value)} placeholder="z.B. 120" />
               </div>
             </div>
 
