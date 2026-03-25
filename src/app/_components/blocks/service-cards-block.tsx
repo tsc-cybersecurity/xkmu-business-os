@@ -1,4 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
+import { InlineMarkdown } from '../markdown-renderer'
 
 interface Deliverable {
   label: string
@@ -64,7 +65,7 @@ export function ServiceCardsBlock({ content, settings }: ServiceCardsBlockProps)
               <div className="min-w-0">
                 <h3 className="text-lg font-bold leading-tight">{item.title}</h3>
                 {item.description && (
-                  <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                  <p className="text-sm text-muted-foreground mt-1"><InlineMarkdown text={item.description} /></p>
                 )}
               </div>
             </div>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { getIcon } from '@/lib/utils/icon-map'
+import { InlineMarkdown } from '../markdown-renderer'
 
 interface CardsBlockContent {
   columns?: 2 | 3 | 4
@@ -47,7 +48,7 @@ export function CardsBlock({ content, settings }: CardsBlockProps) {
                 )}
                 <CardTitle className="text-lg">{item.title}</CardTitle>
                 {item.description && (
-                  <CardDescription>{item.description}</CardDescription>
+                  <CardDescription><InlineMarkdown text={item.description} /></CardDescription>
                 )}
               </CardHeader>
             </Card>

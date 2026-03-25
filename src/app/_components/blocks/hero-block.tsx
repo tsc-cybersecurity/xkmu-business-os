@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { getIcon } from '@/lib/utils/icon-map'
+import { InlineMarkdown } from '../markdown-renderer'
 import { ArrowRight } from 'lucide-react'
 
 interface HeroBlockContent {
@@ -63,7 +64,7 @@ export function HeroBlock({ content, settings }: HeroBlockProps) {
 
           {content.subheadline && (
             <p className="text-xl md:text-2xl text-gray-100 max-w-2xl drop-shadow-md">
-              {content.subheadline}
+              <InlineMarkdown text={content.subheadline} />
             </p>
           )}
 

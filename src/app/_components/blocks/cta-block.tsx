@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { getIcon } from '@/lib/utils/icon-map'
 import { ArrowRight } from 'lucide-react'
+import { InlineMarkdown } from '../markdown-renderer'
 
 interface CtaBlockContent {
   headline?: string
@@ -31,7 +32,7 @@ export function CtaBlock({ content, settings }: CtaBlockProps) {
             <h2 className="text-3xl md:text-4xl font-bold">{content.headline}</h2>
           )}
           {content.description && (
-            <p className="text-lg text-[var(--brand-100)]">{content.description}</p>
+            <p className="text-lg text-[var(--brand-100)]"><InlineMarkdown text={content.description} /></p>
           )}
 
           {content.buttons && content.buttons.length > 0 && (

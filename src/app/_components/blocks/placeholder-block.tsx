@@ -1,5 +1,6 @@
 import { getIcon } from '@/lib/utils/icon-map'
 import { FileText } from 'lucide-react'
+import { InlineMarkdown } from '../markdown-renderer'
 
 interface PlaceholderBlockContent {
   icon?: string
@@ -34,7 +35,7 @@ export function PlaceholderBlock({ content, settings }: PlaceholderBlockProps) {
         <h1 className="text-4xl font-bold mb-4">{content.title}</h1>
       )}
       {content.description && (
-        <p className="text-xl text-muted-foreground mb-8">{content.description}</p>
+        <p className="text-xl text-muted-foreground mb-8"><InlineMarkdown text={content.description} /></p>
       )}
       <div className="rounded-lg border bg-card p-8">
         <p className="text-muted-foreground">

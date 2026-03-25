@@ -1,3 +1,5 @@
+import { InlineMarkdown } from '../markdown-renderer'
+
 interface HeadingBlockContent {
   text?: string
   level?: 1 | 2 | 3
@@ -34,7 +36,7 @@ export function HeadingBlock({ content, settings }: HeadingBlockProps) {
       {level === 2 && <h2 className={headingClasses[2]}>{content.text}</h2>}
       {level === 3 && <h3 className={headingClasses[3]}>{content.text}</h3>}
       {content.subtitle && (
-        <p className="text-lg text-muted-foreground">{content.subtitle}</p>
+        <p className="text-lg text-muted-foreground"><InlineMarkdown text={content.subtitle} /></p>
       )}
     </section>
   )

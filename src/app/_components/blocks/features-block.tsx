@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { getIcon } from '@/lib/utils/icon-map'
+import { InlineMarkdown } from '../markdown-renderer'
 
 interface FeaturesBlockContent {
   sectionTitle?: string
@@ -59,7 +60,7 @@ export function FeaturesBlock({ content, settings }: FeaturesBlockProps) {
                   </div>
                 )}
                 <CardTitle>{item.title}</CardTitle>
-                <CardDescription className="text-base">{item.description}</CardDescription>
+                <CardDescription className="text-base"><InlineMarkdown text={item.description} /></CardDescription>
               </CardHeader>
             </Card>
           )
