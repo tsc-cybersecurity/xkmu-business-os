@@ -56,6 +56,11 @@ export function AppDocsContent() {
         <TabsTrigger value="zeiterfassung" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Zeiterfassung</TabsTrigger>
         <TabsTrigger value="newsletter" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Newsletter</TabsTrigger>
         <TabsTrigger value="taskqueue" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Task-Queue</TabsTrigger>
+        <TabsTrigger value="opportunities" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Chancen</TabsTrigger>
+        <TabsTrigger value="feedback" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Feedback</TabsTrigger>
+        <TabsTrigger value="chat" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">KI-Chat</TabsTrigger>
+        <TabsTrigger value="receipts" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Belege</TabsTrigger>
+        <TabsTrigger value="doctemplates" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Dokument-Vorlagen</TabsTrigger>
       </TabsList>
 
       {/* ===== ÜBERSICHT ===== */}
@@ -1565,11 +1570,161 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 ['Feedback-Modul', 'Formulare mit oeffentlichem Antwort-Link, NPS-Score'],
                 ['KPI-Dashboard', 'Leads, Conversion, Umsatz, offene Rechnungen per API'],
                 ['SEO-Keywords', 'KI-Keyword-Analyse mit optionaler SerpAPI'],
-                ['Social Publishing', 'Direktes Posten auf LinkedIn + Twitter/X'],
+                ['Social Publishing', 'Direktes Posten auf LinkedIn, Twitter/X, Facebook, Instagram'],
                 ['WordPress-Export', 'Blog-Posts auf externe WordPress-Seite publizieren'],
                 ['Blog KI-Review', 'Lesbarkeit, SEO, Tonalitaet automatisch pruefen'],
                 ['Beleg-Upload', 'Foto/PDF hochladen, KI-OCR extrahiert Betrag/Datum/Lieferant'],
                 ['Geburtstage', 'Birthday-Feld bei Personen, API fuer anstehende Geburtstage'],
+              ]} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== CHANCEN / OPPORTUNITIES ===== */}
+      <TabsContent value="opportunities" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Chancen / Opportunities</CardTitle>
+            <CardDescription>Pipeline-Management fuer Verkaufschancen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Uebersicht">
+              <InfoTable rows={[
+                ['Seite', '/intern/chancen'],
+                ['Funktion', 'Verwaltung von Verkaufschancen mit Pipeline-Status'],
+                ['Status', 'new, qualification, proposal, negotiation, won, lost'],
+                ['Konvertierung', 'Lead kann in Opportunity umgewandelt werden'],
+                ['Felder', 'Titel, Wert, Wahrscheinlichkeit, Firma, Kontakt, erwartetes Abschlussdatum'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpunkte">
+              <InfoTable rows={[
+                ['GET /api/v1/opportunities', 'Liste mit Filter (status, search, companyId)'],
+                ['POST /api/v1/opportunities', 'Neue Opportunity erstellen'],
+                ['GET /api/v1/opportunities/:id', 'Einzelne Opportunity abrufen'],
+                ['PUT /api/v1/opportunities/:id', 'Aktualisieren'],
+                ['DELETE /api/v1/opportunities/:id', 'Loeschen'],
+                ['POST /api/v1/opportunities/:id/convert', 'In Projekt oder Dokument umwandeln'],
+              ]} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== FEEDBACK ===== */}
+      <TabsContent value="feedback" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Feedback-Modul</CardTitle>
+            <CardDescription>Kundenfeedback mit NPS-Score und oeffentlichem Formular</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Konzept">
+              <InfoTable rows={[
+                ['Seite', '/intern/feedback'],
+                ['Formulare', 'Erstellen mit Fragen-Typen: Sterne, Text, Skala'],
+                ['Oeffentlich', '/feedback/:token — kein Login noetig, mobiloptimiert'],
+                ['NPS-Score', 'Automatische Berechnung aus Antworten'],
+                ['Versand', 'Link per E-Mail aus CRM verschickbar'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpunkte">
+              <InfoTable rows={[
+                ['GET /api/v1/feedback', 'Formulare auflisten'],
+                ['POST /api/v1/feedback', 'Neues Formular erstellen'],
+                ['GET /api/v1/feedback/:id', 'Formular mit Antworten und Statistiken'],
+                ['POST /api/v1/feedback/:id/respond', 'Oeffentliche Antwort abgeben (kein Auth)'],
+              ]} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== KI-CHAT ===== */}
+      <TabsContent value="chat" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>KI-Chatbot</CardTitle>
+            <CardDescription>Interner KI-Assistent mit Konversationshistorie</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Funktionen">
+              <InfoTable rows={[
+                ['Seite', '/intern/chat'],
+                ['Provider', 'Nutzt konfigurierten Standard-KI-Provider (Gemini, OpenAI, etc.)'],
+                ['Konversationen', 'Mehrere Chat-Verlaeufe gleichzeitig, persistiert in DB'],
+                ['Kontext', 'System-Prompt kann pro Konversation angepasst werden'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpunkte">
+              <InfoTable rows={[
+                ['GET /api/v1/chat/conversations', 'Konversationen auflisten'],
+                ['POST /api/v1/chat/conversations', 'Neue Konversation starten'],
+                ['GET /api/v1/chat/conversations/:id', 'Konversation mit Nachrichten laden'],
+                ['POST /api/v1/chat', 'Nachricht senden und KI-Antwort erhalten'],
+              ]} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== BELEGE ===== */}
+      <TabsContent value="receipts" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Belege / Receipts</CardTitle>
+            <CardDescription>Beleg-Upload mit KI-gestuetzter OCR-Extraktion</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Funktionen">
+              <InfoTable rows={[
+                ['Seite', '/intern/finance/receipts'],
+                ['Upload', 'Foto oder PDF hochladen'],
+                ['KI-OCR', 'Automatische Extraktion: Betrag, Datum, Lieferant, Kategorie'],
+                ['Kategorien', 'office, travel, software, other'],
+                ['Status', 'pending, processed, archived'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpunkte">
+              <InfoTable rows={[
+                ['GET /api/v1/receipts', 'Belege auflisten mit Filter'],
+                ['POST /api/v1/receipts', 'Neuen Beleg hochladen (multipart)'],
+                ['GET /api/v1/receipts/:id', 'Einzelnen Beleg abrufen'],
+                ['PUT /api/v1/receipts/:id', 'Beleg aktualisieren'],
+                ['DELETE /api/v1/receipts/:id', 'Beleg loeschen'],
+              ]} />
+            </SectionBlock>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* ===== DOKUMENT-VORLAGEN ===== */}
+      <TabsContent value="doctemplates" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Dokument-Vorlagen</CardTitle>
+            <CardDescription>KI-gestuetzte Dokumentengenerierung mit Templates</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <SectionBlock title="Verfuegbare Templates">
+              <InfoTable rows={[
+                ['Massnahmenplan', 'Strukturierter Plan aus Workshop-Notizen'],
+                ['Security-Roadmap', 'Priorisierte Massnahmen aus Audit-Ergebnissen'],
+                ['Betriebshandbuch', 'Systeme, Zugaenge, Backup, Wartung, Kontakte'],
+                ['Backup-Strategie', '3-2-1-Regel, RPO/RTO, Verantwortlichkeiten'],
+                ['Awareness-Schulung', 'Phishing, Passwoerter, Social Engineering, DSGVO'],
+                ['Security-Richtlinie', 'Passwort-Policy, E-Mail, BYOD, Datenschutz'],
+                ['Notfall-Playbook', 'Ransomware, Datenverlust, Systemausfall-Szenarien'],
+              ]} />
+            </SectionBlock>
+            <SectionBlock title="API-Endpunkte">
+              <InfoTable rows={[
+                ['GET /api/v1/document-templates', 'Templates auflisten'],
+                ['POST /api/v1/document-templates', 'Neues Template erstellen'],
+                ['GET /api/v1/document-templates/:id', 'Template laden'],
+                ['PUT /api/v1/document-templates/:id', 'Template aktualisieren'],
+                ['POST /api/v1/document-templates/:id/generate', 'Mit KI fuellen und PDF generieren'],
               ]} />
             </SectionBlock>
           </CardContent>
