@@ -175,7 +175,7 @@ export default function CmsPageEditorPage() {
     fetchBlockTypes()
   }, [fetchPage, fetchBlockTypes])
 
-  const handleSave = async () => {
+  const handleSave = async (andPublish = false) => {
     setSaving(true)
     try {
       await fetch(`/api/v1/cms/pages/${pageId}`, {
@@ -190,6 +190,10 @@ export default function CmsPageEditorPage() {
           ogImage: ogImage || undefined,
         }),
       })
+      // Auto-publish wenn Seite bereits published war oder explizit gewuenscht
+      if (andPublish || page?.status === 'published') {
+        await fetch(`/api/v1/cms/pages/${pageId}/publish`, { method: 'POST' })
+      }
       fetchPage()
     } catch (error) {
       logger.error('Failed to save page', error, { module: 'CmsPage' })
@@ -353,27 +357,21 @@ export default function CmsPageEditorPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handlePublish}>
-            {page.status === 'published' && !page.hasDraftChanges ? (
-              <>
-                <EyeOff className="h-4 w-4 mr-2" />
-                Zurueckziehen
-              </>
-            ) : page.hasDraftChanges ? (
-              <>
-                <Globe className="h-4 w-4 mr-2" />
-                Aenderungen veröffentlichen
-              </>
-            ) : (
-              <>
-                <Globe className="h-4 w-4 mr-2" />
-                Veröffentlichen
-              </>
-            )}
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
+          {page.status === 'published' && (
+            <Button variant="outline" size="sm" onClick={handlePublish}>
+              <EyeOff className="h-4 w-4 mr-1" />
+              Zurueckziehen
+            </Button>
+          )}
+          {page.status !== 'published' && (
+            <Button variant="outline" onClick={() => handleSave(true)} disabled={saving}>
+              <Globe className="h-4 w-4 mr-2" />
+              Veroeffentlichen
+            </Button>
+          )}
+          <Button onClick={() => handleSave()} disabled={saving}>
             {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-            Speichern
+            {page.status === 'published' ? 'Speichern & Veroeffentlichen' : 'Speichern'}
           </Button>
         </div>
       </div>
