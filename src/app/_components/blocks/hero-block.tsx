@@ -13,6 +13,7 @@ interface HeroBlockContent {
   subheadline?: string
   buttons?: Array<{ label: string; href: string; variant?: string }>
   stats?: Array<{ value: string; label: string }>
+  size?: 'full' | 'medium' | 'small'
 }
 
 interface HeroBlockProps {
@@ -20,12 +21,19 @@ interface HeroBlockProps {
   settings?: Record<string, unknown>
 }
 
+const sizeConfig = {
+  full:   { minH: 'min-h-[66vh]', py: 'py-20 md:py-24', heading: 'text-4xl md:text-6xl lg:text-7xl', sub: 'text-xl md:text-2xl' },
+  medium: { minH: 'min-h-[40vh]', py: 'py-12 md:py-16', heading: 'text-3xl md:text-5xl', sub: 'text-lg md:text-xl' },
+  small:  { minH: 'min-h-[28vh]', py: 'py-8 md:py-12',  heading: 'text-2xl md:text-4xl', sub: 'text-base md:text-lg' },
+}
+
 export function HeroBlock({ content, settings }: HeroBlockProps) {
   const BadgeIcon = content.badge?.icon ? getIcon(content.badge.icon) : null
+  const s = sizeConfig[content.size || 'full']
 
   return (
     <section
-      className="relative min-h-[66vh] flex items-center"
+      className={`relative ${s.minH} flex items-center`}
       style={{
         paddingTop: settings?.paddingTop ? `${settings.paddingTop}px` : undefined,
         paddingBottom: settings?.paddingBottom ? `${settings.paddingBottom}px` : undefined,
@@ -45,7 +53,7 @@ export function HeroBlock({ content, settings }: HeroBlockProps) {
       />
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="flex flex-col items-center text-center space-y-8 py-20 md:py-24">
+        <div className={`flex flex-col items-center text-center space-y-6 ${s.py}`}>
           {content.badge && (
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--brand-400)]/30 px-4 py-2 text-sm bg-white/10 backdrop-blur-md text-white">
               {BadgeIcon && <BadgeIcon className="h-4 w-4 text-[var(--brand-400)]" />}
@@ -53,7 +61,7 @@ export function HeroBlock({ content, settings }: HeroBlockProps) {
             </div>
           )}
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-4xl text-white drop-shadow-lg">
+          <h1 className={`${s.heading} font-bold tracking-tight max-w-4xl text-white drop-shadow-lg`}>
             {content.headline}{' '}
             {content.headlineHighlight && (
               <span className="bg-gradient-to-r from-[var(--brand-400)] to-[var(--brand-gradient-to)] bg-clip-text text-transparent">
@@ -63,7 +71,7 @@ export function HeroBlock({ content, settings }: HeroBlockProps) {
           </h1>
 
           {content.subheadline && (
-            <p className="text-xl md:text-2xl text-gray-100 max-w-2xl drop-shadow-md">
+            <p className={`${s.sub} text-gray-100 max-w-2xl drop-shadow-md`}>
               <InlineMarkdown text={content.subheadline} />
             </p>
           )}

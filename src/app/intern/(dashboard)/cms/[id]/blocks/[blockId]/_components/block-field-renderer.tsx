@@ -25,6 +25,17 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
     case 'hero':
       return (
         <>
+          <div className="space-y-2">
+            <Label>Groesse</Label>
+            <Select value={(content.size as string) || 'full'} onValueChange={v => updateContent('size', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">Gross (Standard)</SelectItem>
+                <SelectItem value="medium">Mittel (halb)</SelectItem>
+                <SelectItem value="small">Klein (ein Drittel)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <ImageField imageUrl={(content.backgroundImage as string) || ''} onImageChange={(url) => updateContent('backgroundImage', url)} label="Hintergrundbild" category="website" />
           <div className="space-y-2">
             <Label>Badge Icon</Label>
