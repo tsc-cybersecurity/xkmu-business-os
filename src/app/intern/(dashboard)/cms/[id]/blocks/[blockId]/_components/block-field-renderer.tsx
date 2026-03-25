@@ -500,6 +500,47 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
           />
         </>
       )
+    case 'blog-listing':
+      return (
+        <>
+          <div className="space-y-2">
+            <Label>Titel</Label>
+            <Input value={(content.title as string) || ''} onChange={e => updateContent('title', e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Untertitel</Label>
+            <Input value={(content.subtitle as string) || ''} onChange={e => updateContent('subtitle', e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Spalten</Label>
+              <Select value={String(content.columns || 3)} onValueChange={v => updateContent('columns', parseInt(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 Spalte</SelectItem>
+                  <SelectItem value="2">2 Spalten</SelectItem>
+                  <SelectItem value="3">3 Spalten</SelectItem>
+                  <SelectItem value="4">4 Spalten</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Beitraege pro Seite</Label>
+              <Input type="number" value={(content.postsPerPage as number) || 6} onChange={e => updateContent('postsPerPage', parseInt(e.target.value) || 6)} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Link-Prefix</Label>
+            <Input value={(content.linkPrefix as string) || '/it-news'} onChange={e => updateContent('linkPrefix', e.target.value)} placeholder="/it-news" />
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={(content.showLoadMore as boolean) !== false} onChange={e => updateContent('showLoadMore', e.target.checked)} className="rounded" /><span className="text-sm">Mehr laden Button</span></label>
+            <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={(content.showCategory as boolean) !== false} onChange={e => updateContent('showCategory', e.target.checked)} className="rounded" /><span className="text-sm">Kategorie anzeigen</span></label>
+            <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={(content.showTags as boolean) !== false} onChange={e => updateContent('showTags', e.target.checked)} className="rounded" /><span className="text-sm">Tags anzeigen</span></label>
+            <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={(content.showDate as boolean) !== false} onChange={e => updateContent('showDate', e.target.checked)} className="rounded" /><span className="text-sm">Datum anzeigen</span></label>
+          </div>
+        </>
+      )
     default:
       return (
         <div className="space-y-2">
