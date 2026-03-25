@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       if (limited) return limited
 
       const body = await request.json()
-      const { prompt, maxTokens, temperature, model } = body
+      const { prompt, maxTokens, temperature, model, providerId, systemPrompt } = body
 
       if (!prompt || typeof prompt !== 'string') {
         return apiError('INVALID_PROMPT', 'Prompt is required and must be a string', 400)
@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
         maxTokens,
         temperature,
         model,
+        providerId,
+        systemPrompt,
       })
 
       return apiSuccess(response)

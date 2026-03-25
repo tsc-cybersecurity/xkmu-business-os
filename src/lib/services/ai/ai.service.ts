@@ -13,6 +13,7 @@ export interface AIOptions {
   temperature?: number
   model?: string
   systemPrompt?: string
+  providerId?: string
 }
 
 export interface AIResponse {
@@ -126,11 +127,20 @@ class AIServiceClass {
     const startTime = Date.now()
 
     // Provider aus DB laden
-    const dbProviders = await AiProviderService.getActiveProviders(context.tenantId)
+    const allProviders = await AiProviderService.getActiveProviders(context.tenantId)
 
-    if (dbProviders.length === 0) {
+    if (allProviders.length === 0) {
       // Fallback auf statische Provider
       return this.complete(prompt, options)
+    }
+
+    // Wenn providerId angegeben, nur diesen nutzen
+    const dbProviders = options?.providerId
+      ? allProviders.filter((p) => p.id === options.providerId)
+      : allProviders
+
+    if (dbProviders.length === 0) {
+      throw new Error('Angegebener Provider nicht gefunden oder inaktiv')
     }
 
     let lastError: Error | null = null
