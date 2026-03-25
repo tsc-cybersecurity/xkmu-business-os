@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiServerError, parsePaginationParams } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
-import { ALLOWED_TABLES, TENANT_TABLES_SET, OWNER_ONLY_TABLES } from '@/lib/db/table-whitelist'
+import { ALLOWED_TABLES, TENANT_TABLES_SET, OWNER_ONLY_TABLES, GLOBAL_WITH_TENANT_ID } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
         default: row.column_default as string | null,
       }))
 
-      // Build query with tenant filter if applicable
-      const hasTenantId = TENANT_TABLES_SET.has(tableName)
+      // Build query with tenant filter if applicable (skip for globally accessible tables)
+      const hasTenantId = TENANT_TABLES_SET.has(tableName) && !GLOBAL_WITH_TENANT_ID.has(tableName) && !GLOBAL_WITH_TENANT_ID.has(tableName)
       const tableIdent = sql.identifier(tableName)
 
       let countRows: Row[]
@@ -124,7 +124,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
       }
 
       // Verify tenant ownership if applicable
-      const hasTenantId = TENANT_TABLES_SET.has(tableName)
+      const hasTenantId = TENANT_TABLES_SET.has(tableName) && !GLOBAL_WITH_TENANT_ID.has(tableName)
       const tableIdent = sql.identifier(tableName)
 
       if (hasTenantId) {
@@ -186,7 +186,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         return apiError('MISSING_ID', 'ID ist erforderlich', 400)
       }
 
-      const hasTenantId = TENANT_TABLES_SET.has(tableName)
+      const hasTenantId = TENANT_TABLES_SET.has(tableName) && !GLOBAL_WITH_TENANT_ID.has(tableName)
       const tableIdent = sql.identifier(tableName)
 
       // Verify tenant ownership if applicable

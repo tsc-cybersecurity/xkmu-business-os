@@ -74,7 +74,17 @@ export const JOIN_TABLES: Array<{
   { table: 'feedback_responses', parentTable: 'feedback_forms', foreignKey: 'form_id', parentForeignKey: 'id' },
 ]
 
-// Global tables (no tenant_id, exported completely)
+// Tables with tenant_id column but globally accessible (no tenant filter in queries)
+// These were made global so all users (e.g. Designer role) can access them
+export const GLOBAL_WITH_TENANT_ID = new Set([
+  'cms_pages',
+  'cms_blocks',
+  'cms_block_templates',
+  'cms_navigation_items',
+  'blog_posts',
+])
+
+// Global tables (no tenant_id column at all, exported completely)
 export const GLOBAL_TABLES = [
   'din_requirements',
   'din_grants',
