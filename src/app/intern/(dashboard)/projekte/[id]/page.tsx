@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -25,7 +26,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
   ArrowLeft, Loader2, Plus, Calendar, User, GripVertical, Save, Trash2,
-  Clock, Flag, GanttChart, CheckCircle2,
+  Clock, GanttChart, CheckCircle2, Settings2, Building2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -40,7 +41,10 @@ interface TaskItem {
 }
 interface ProjectData {
   id: string; name: string; description: string | null; columns: Column[]; tasks: TaskItem[]
-  companyName?: string; priority: string | null; startDate: string | null; endDate: string | null
+  companyId: string | null; companyName?: string; ownerId: string | null
+  status: string | null; projectType: string | null; priority: string | null
+  startDate: string | null; endDate: string | null; budget: string | null
+  color: string | null; tags: string[]
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -238,6 +242,10 @@ export default function ProjectBoardPage() {
   const [editComment, setEditComment] = useState('')
   const [saving, setSaving] = useState(false)
 
+  // Project details edit
+  const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([])
+  const [projectSaving, setProjectSaving] = useState(false)
+
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   const fetchProject = useCallback(async () => {
@@ -250,6 +258,27 @@ export default function ProjectBoardPage() {
   }, [params.id])
 
   useEffect(() => { fetchProject() }, [fetchProject])
+
+  useEffect(() => {
+    fetch('/api/v1/companies?limit=200').then(r => r.json()).then(d => {
+      if (d.success) setCompanies((d.data || []).map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })))
+    }).catch(() => {})
+  }, [])
+
+  const saveProject = async (updates: Record<string, unknown>) => {
+    if (!project) return
+    setProjectSaving(true)
+    try {
+      const res = await fetch(`/api/v1/projects/${project.id}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      })
+      const data = await res.json()
+      if (data.success) { fetchProject(); toast.success('Projekt aktualisiert') }
+      else toast.error('Fehler beim Speichern')
+    } catch { toast.error('Fehler') }
+    finally { setProjectSaving(false) }
+  }
 
   const handleDragStart = (event: DragStartEvent) => {
     const task = project?.tasks.find(t => t.id === event.active.id)
@@ -375,6 +404,7 @@ export default function ProjectBoardPage() {
           <TabsList className="h-10 bg-transparent p-0 gap-4">
             <TabsTrigger value="kanban" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">Kanban</TabsTrigger>
             <TabsTrigger value="timeline" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"><GanttChart className="h-4 w-4 mr-1" />Timeline</TabsTrigger>
+            <TabsTrigger value="details" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"><Settings2 className="h-4 w-4 mr-1" />Details</TabsTrigger>
           </TabsList>
         </div>
 
@@ -394,6 +424,97 @@ export default function ProjectBoardPage() {
         {/* Timeline */}
         <TabsContent value="timeline" className="flex-1 overflow-auto p-6 m-0">
           <TimelineView tasks={project.tasks} columns={columns} onClickTask={openDetail} />
+        </TabsContent>
+
+        {/* Details */}
+        <TabsContent value="details" className="flex-1 overflow-auto p-6 m-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-4xl">
+            <Card>
+              <CardHeader><CardTitle>Projektinformationen</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Name</Label>
+                  <Input defaultValue={project.name} onBlur={e => { if (e.target.value !== project.name) saveProject({ name: e.target.value }) }} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Beschreibung</Label>
+                  <Textarea defaultValue={project.description || ''} rows={3} onBlur={e => { if (e.target.value !== (project.description || '')) saveProject({ description: e.target.value || null }) }} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select value={project.status || 'active'} onValueChange={v => saveProject({ status: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Aktiv</SelectItem>
+                        <SelectItem value="on_hold">Pausiert</SelectItem>
+                        <SelectItem value="completed">Abgeschlossen</SelectItem>
+                        <SelectItem value="archived">Archiviert</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Prioritaet</Label>
+                    <Select value={project.priority || 'mittel'} onValueChange={v => saveProject({ priority: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kritisch">Kritisch</SelectItem>
+                        <SelectItem value="hoch">Hoch</SelectItem>
+                        <SelectItem value="mittel">Mittel</SelectItem>
+                        <SelectItem value="niedrig">Niedrig</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Projekttyp</Label>
+                  <Select value={project.projectType || 'kanban'} onValueChange={v => saveProject({ projectType: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kanban">Kanban</SelectItem>
+                      <SelectItem value="okr">OKR / Ziele</SelectItem>
+                      <SelectItem value="content">Content-Planung</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Zuordnung &amp; Zeitraum</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" />Firma</Label>
+                  <Select value={project.companyId || '__none__'} onValueChange={v => saveProject({ companyId: v === '__none__' ? null : v })}>
+                    <SelectTrigger><SelectValue placeholder="Keine Firma zugeordnet" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Keine Firma —</SelectItem>
+                      {companies.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Startdatum</Label>
+                    <Input type="date" defaultValue={project.startDate ? project.startDate.split('T')[0] : ''} onBlur={e => saveProject({ startDate: e.target.value || null })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Enddatum</Label>
+                    <Input type="date" defaultValue={project.endDate ? project.endDate.split('T')[0] : ''} onBlur={e => saveProject({ endDate: e.target.value || null })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Budget (EUR)</Label>
+                  <Input type="number" defaultValue={project.budget || ''} placeholder="z.B. 5000" onBlur={e => saveProject({ budget: e.target.value || null })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Tags (kommagetrennt)</Label>
+                  <Input defaultValue={(project.tags || []).join(', ')} placeholder="z.B. Website, Redesign" onBlur={e => saveProject({ tags: e.target.value ? e.target.value.split(',').map(t => t.trim()).filter(Boolean) : [] })} />
+                </div>
+                {projectSaving && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Speichern...</div>}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
