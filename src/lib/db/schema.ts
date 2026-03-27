@@ -1079,8 +1079,14 @@ export const grundschutzGroups = pgTable('grundschutz_groups', {
 export const grundschutzControls = pgTable('grundschutz_controls', {
   id: varchar('id', { length: 30 }).primaryKey(), // z.B. GC.1.1, BER.3.5
   groupId: varchar('group_id', { length: 20 }).notNull(),
+  parentControlId: varchar('parent_control_id', { length: 30 }), // Sub-Control -> Parent
   title: varchar('title', { length: 500 }).notNull(),
   statement: text('statement'), // Anforderungstext (prose)
+  guidance: text('guidance'), // Umsetzungshinweise (prose aus part name=guidance)
+  modalVerb: varchar('modal_verb', { length: 10 }), // MUSS, SOLLTE, KANN
+  actionWord: varchar('action_word', { length: 50 }), // verankern, pruefen, etc.
+  result: text('result'), // Ergebnis der Anforderung
+  resultSpecification: text('result_specification'), // Spezifikation
   secLevel: varchar('sec_level', { length: 30 }), // normal-SdT, hoch
   effortLevel: varchar('effort_level', { length: 10 }), // 0-5
   tags: text('tags').array().default([]),
@@ -1090,6 +1096,17 @@ export const grundschutzControls = pgTable('grundschutz_controls', {
 }, (table) => [
   index('idx_grundschutz_controls_group').on(table.groupId),
   index('idx_grundschutz_controls_sec_level').on(table.secLevel),
+  index('idx_grundschutz_controls_modal').on(table.modalVerb),
+])
+
+export const grundschutzControlLinks = pgTable('grundschutz_control_links', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sourceControlId: varchar('source_control_id', { length: 30 }).notNull(),
+  targetControlId: varchar('target_control_id', { length: 30 }).notNull(),
+  rel: varchar('rel', { length: 20 }).notNull(), // 'related' | 'required'
+}, (table) => [
+  index('idx_grundschutz_links_source').on(table.sourceControlId),
+  index('idx_grundschutz_links_target').on(table.targetControlId),
 ])
 
 export const grundschutzCatalogMeta = pgTable('grundschutz_catalog_meta', {
@@ -1134,6 +1151,7 @@ export const grundschutzAnswers = pgTable('grundschutz_answers', {
 
 export type GrundschutzGroup = typeof grundschutzGroups.$inferSelect
 export type GrundschutzControl = typeof grundschutzControls.$inferSelect
+export type GrundschutzControlLink = typeof grundschutzControlLinks.$inferSelect
 export type GrundschutzCatalogMeta = typeof grundschutzCatalogMeta.$inferSelect
 export type GrundschutzAuditSession = typeof grundschutzAuditSessions.$inferSelect
 export type GrundschutzAnswer = typeof grundschutzAnswers.$inferSelect

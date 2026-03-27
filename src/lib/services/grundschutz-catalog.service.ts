@@ -4,8 +4,8 @@
  */
 
 import { db } from '@/lib/db'
-import { grundschutzGroups, grundschutzControls, grundschutzCatalogMeta } from '@/lib/db/schema'
-import { eq, asc, count, ilike, and } from 'drizzle-orm'
+import { grundschutzGroups, grundschutzControls, grundschutzCatalogMeta, grundschutzControlLinks } from '@/lib/db/schema'
+import { eq, asc, or, count, ilike, and } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
 const CATALOG_URL = 'https://raw.githubusercontent.com/BSI-Bund/Stand-der-Technik-Bibliothek/main/Anwenderkataloge/Grundschutz%2B%2B/Grundschutz%2B%2B-catalog.json'
@@ -16,7 +16,9 @@ interface OscalControl {
   title: string
   params?: Array<{ id: string; label?: string; values?: string[] }>
   props?: Array<{ name: string; value: string }>
-  parts?: Array<{ name: string; prose?: string }>
+  parts?: Array<{ name: string; prose?: string; props?: Array<{ name: string; value: string }> }>
+  links?: Array<{ href: string; rel?: string; text?: string }>
+  controls?: OscalControl[] // Sub-Controls / Enhancements
 }
 
 interface OscalGroup {
@@ -30,17 +32,29 @@ function extractProp(ctrl: OscalControl, name: string): string | undefined {
   return ctrl.props?.find(p => p.name === name)?.value
 }
 
+function extractPartProp(ctrl: OscalControl, partName: string, propName: string): string | undefined {
+  const part = ctrl.parts?.find(p => p.name === partName)
+  return part?.props?.find(p => p.name === propName)?.value
+}
+
+function resolveParams(text: string, params?: OscalControl['params']): string {
+  if (!params || !text) return text
+  let resolved = text
+  for (const param of params) {
+    const val = param.values?.[0] || param.label || param.id
+    resolved = resolved.replace(`{{ insert: param, ${param.id} }}`, val)
+  }
+  return resolved
+}
+
 function extractStatement(ctrl: OscalControl): string {
   const part = ctrl.parts?.find(p => p.name === 'statement')
-  let text = part?.prose || ''
-  // Parameter-Platzhalter ersetzen
-  if (ctrl.params) {
-    for (const param of ctrl.params) {
-      const val = param.values?.[0] || param.label || param.id
-      text = text.replace(`{{ insert: param, ${param.id} }}`, val)
-    }
-  }
-  return text
+  return resolveParams(part?.prose || '', ctrl.params)
+}
+
+function extractGuidance(ctrl: OscalControl): string {
+  const part = ctrl.parts?.find(p => p.name === 'guidance')
+  return resolveParams(part?.prose || '', ctrl.params)
 }
 
 export const GrundschutzCatalogService = {
@@ -48,7 +62,7 @@ export const GrundschutzCatalogService = {
    * Katalog von GitHub laden und in DB importieren.
    * Loescht vorherige Daten und importiert komplett neu.
    */
-  async importFromGitHub(): Promise<{ groups: number; controls: number; version: string }> {
+  async importFromGitHub(): Promise<{ groups: number; controls: number; links: number; version: string }> {
     logger.info('Importing Grundschutz++ catalog from GitHub...', { module: 'GrundschutzCatalog' })
 
     const response = await fetch(CATALOG_URL, { signal: AbortSignal.timeout(30_000) })
@@ -61,13 +75,17 @@ export const GrundschutzCatalogService = {
     const meta = catalog.metadata || {}
     const oscalGroups: OscalGroup[] = catalog.groups || []
 
-    // Alle Gruppen und Controls sammeln
+    // Alle Gruppen, Controls und Links sammeln
     const groupRows: Array<{ id: string; title: string; parentId: string | null; sortOrder: number }> = []
     const controlRows: Array<{
-      id: string; groupId: string; title: string; statement: string | null
+      id: string; groupId: string; parentControlId: string | null; title: string
+      statement: string | null; guidance: string | null
+      modalVerb: string | null; actionWord: string | null
+      result: string | null; resultSpecification: string | null
       secLevel: string | null; effortLevel: string | null; tags: string[]
       oscalClass: string | null; params: unknown; sortOrder: number
     }> = []
+    const linkRows: Array<{ sourceControlId: string; targetControlId: string; rel: string }> = []
 
     let groupOrder = 0
     let controlOrder = 0
@@ -76,13 +94,19 @@ export const GrundschutzCatalogService = {
       groupRows.push({ id: group.id, title: group.title, parentId, sortOrder: groupOrder++ })
 
       // Controls direkt in der Gruppe (inkl. Sub-Controls/Enhancements)
-      function processControl(ctrl: OscalControl, gid: string) {
+      function processControl(ctrl: OscalControl, gid: string, parentId: string | null) {
         const tagsRaw = extractProp(ctrl, 'tags')
         controlRows.push({
           id: ctrl.id,
           groupId: gid,
+          parentControlId: parentId,
           title: ctrl.title,
           statement: extractStatement(ctrl) || null,
+          guidance: extractGuidance(ctrl) || null,
+          modalVerb: extractPartProp(ctrl, 'statement', 'modal_verb') || null,
+          actionWord: extractPartProp(ctrl, 'statement', 'action_word') || null,
+          result: extractPartProp(ctrl, 'statement', 'result') || null,
+          resultSpecification: extractPartProp(ctrl, 'statement', 'result_specification') || null,
           secLevel: extractProp(ctrl, 'sec_level') || null,
           effortLevel: extractProp(ctrl, 'effort_level') || null,
           tags: tagsRaw ? tagsRaw.split(',').map(t => t.trim()) : [],
@@ -90,13 +114,20 @@ export const GrundschutzCatalogService = {
           params: ctrl.params || [],
           sortOrder: controlOrder++,
         })
+        // Links (related, required) extrahieren
+        for (const link of ctrl.links || []) {
+          const targetId = link.href?.replace(/^#/, '')
+          if (targetId && link.rel) {
+            linkRows.push({ sourceControlId: ctrl.id, targetControlId: targetId, rel: link.rel })
+          }
+        }
         // Sub-Controls (Enhancements) rekursiv
-        for (const sub of (ctrl as any).controls || []) {
-          processControl(sub, gid)
+        for (const sub of ctrl.controls || []) {
+          processControl(sub, gid, ctrl.id)
         }
       }
       for (const ctrl of group.controls || []) {
-        processControl(ctrl, group.id)
+        processControl(ctrl, group.id, null)
       }
 
       // Untergruppen
@@ -112,6 +143,7 @@ export const GrundschutzCatalogService = {
     // Alles in einer Transaktion ersetzen
     await db.transaction(async (tx) => {
       // Alte Daten loeschen
+      await tx.delete(grundschutzControlLinks)
       await tx.delete(grundschutzControls)
       await tx.delete(grundschutzGroups)
 
@@ -124,6 +156,14 @@ export const GrundschutzCatalogService = {
       for (let i = 0; i < controlRows.length; i += 100) {
         const batch = controlRows.slice(i, i + 100)
         await tx.insert(grundschutzControls).values(batch)
+      }
+
+      // Links in Batches einfuegen
+      if (linkRows.length > 0) {
+        for (let i = 0; i < linkRows.length; i += 100) {
+          const batch = linkRows.slice(i, i + 100)
+          await tx.insert(grundschutzControlLinks).values(batch)
+        }
       }
 
       // Meta aktualisieren
@@ -142,11 +182,12 @@ export const GrundschutzCatalogService = {
       })
     })
 
-    logger.info(`Grundschutz++ imported: ${groupRows.length} groups, ${controlRows.length} controls`, { module: 'GrundschutzCatalog' })
+    logger.info(`Grundschutz++ imported: ${groupRows.length} groups, ${controlRows.length} controls, ${linkRows.length} links`, { module: 'GrundschutzCatalog' })
 
     return {
       groups: groupRows.length,
       controls: controlRows.length,
+      links: linkRows.length,
       version: meta.version || meta['last-modified'] || 'unknown',
     }
   },
@@ -214,11 +255,54 @@ export const GrundschutzCatalogService = {
     return all
   },
 
-  /** Einzelnen Control abrufen */
+  /** Einzelnen Control mit Links abrufen */
   async getControl(controlId: string) {
     const [ctrl] = await db.select().from(grundschutzControls)
       .where(eq(grundschutzControls.id, controlId)).limit(1)
-    return ctrl || null
+    if (!ctrl) return null
+
+    // Links laden (bidirektional: source oder target)
+    const links = await db.select().from(grundschutzControlLinks)
+      .where(or(
+        eq(grundschutzControlLinks.sourceControlId, controlId),
+        eq(grundschutzControlLinks.targetControlId, controlId),
+      ))
+
+    // Alle referenzierten Control-IDs sammeln
+    const linkedIds = new Set<string>()
+    for (const l of links) {
+      if (l.sourceControlId !== controlId) linkedIds.add(l.sourceControlId)
+      if (l.targetControlId !== controlId) linkedIds.add(l.targetControlId)
+    }
+
+    // Titel der verknuepften Controls laden
+    let linkedControls: Array<{ id: string; title: string }> = []
+    if (linkedIds.size > 0) {
+      const allControls = await db.select({ id: grundschutzControls.id, title: grundschutzControls.title })
+        .from(grundschutzControls)
+      linkedControls = allControls.filter(c => linkedIds.has(c.id))
+    }
+    const titleMap = new Map(linkedControls.map(c => [c.id, c.title]))
+
+    // Links normalisieren: immer aus Sicht des aktuellen Controls
+    const relatedLinks = links.map(l => {
+      const otherId = l.sourceControlId === controlId ? l.targetControlId : l.sourceControlId
+      return { controlId: otherId, title: titleMap.get(otherId) || otherId, rel: l.rel }
+    })
+
+    // Deduplizieren (bidirektionale related-Links)
+    const seen = new Set<string>()
+    const uniqueLinks = relatedLinks.filter(l => {
+      const key = `${l.controlId}:${l.rel}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+
+    return {
+      ...ctrl,
+      links: uniqueLinks,
+    }
   },
 
   /** Prüfe ob Update verfügbar (vergleiche GitHub-Version mit DB) */

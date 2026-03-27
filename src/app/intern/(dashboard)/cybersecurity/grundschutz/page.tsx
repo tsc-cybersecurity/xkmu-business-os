@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Shield, Download, RefreshCw, Search, ChevronRight, Loader2, Info, Plus, Trash2, Play, CheckCircle2 } from 'lucide-react'
+import { Shield, Download, RefreshCw, Search, ChevronRight, Loader2, Info, Plus, Trash2, Play, CheckCircle2, Link2, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -26,6 +26,13 @@ interface Group {
 interface Control {
   id: string; groupId: string; title: string; statement: string | null
   secLevel: string | null; effortLevel: string | null; tags: string[]
+}
+
+interface ControlLink { controlId: string; title: string; rel: string }
+
+interface ControlDetail extends Control {
+  guidance: string | null; modalVerb: string | null; actionWord: string | null
+  result: string | null; links: ControlLink[]
 }
 
 interface AuditSession {
@@ -47,13 +54,14 @@ export default function GrundschutzPage() {
   const [groups, setGroups] = useState<Group[]>([])
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
   const [controls, setControls] = useState<Control[]>([])
-  const [selectedControl, setSelectedControl] = useState<Control | null>(null)
+  const [selectedControl, setSelectedControl] = useState<ControlDetail | null>(null)
   const [audits, setAudits] = useState<AuditSession[]>([])
   const [loading, setLoading] = useState(true)
   const [importing, setImporting] = useState(false)
   const [loadingControls, setLoadingControls] = useState(false)
   const [search, setSearch] = useState('')
   const [secFilter, setSecFilter] = useState('')
+  const [loadingDetail, setLoadingDetail] = useState(false)
 
   const fetchMeta = useCallback(async () => {
     try {
@@ -88,7 +96,7 @@ export default function GrundschutzPage() {
       const res = await fetch('/api/v1/grundschutz/catalog', { method: 'POST' })
       const data = await res.json()
       if (data.success) {
-        toast.success(`${data.data.controls} Controls importiert`)
+        toast.success(`${data.data.controls} Controls, ${data.data.links || 0} Links importiert`)
         fetchMeta(); fetchGroups(); setUpdateAvailable(false)
       } else toast.error('Import fehlgeschlagen')
     } catch { toast.error('Fehler') }
@@ -109,6 +117,19 @@ export default function GrundschutzPage() {
   }
 
   useEffect(() => { if (selectedGroup) loadControls(selectedGroup) }, [secFilter]) // eslint-disable-line
+
+  const selectControl = async (c: Control) => {
+    setLoadingDetail(true)
+    try {
+      const res = await fetch(`/api/v1/grundschutz/controls/${encodeURIComponent(c.id)}`)
+      const data = await res.json()
+      if (data.success) setSelectedControl(data.data)
+      else setSelectedControl({ ...c, guidance: null, modalVerb: null, actionWord: null, result: null, links: [] })
+    } catch {
+      setSelectedControl({ ...c, guidance: null, modalVerb: null, actionWord: null, result: null, links: [] })
+    }
+    finally { setLoadingDetail(false) }
+  }
 
   const createAudit = async () => {
     try {
@@ -200,7 +221,7 @@ export default function GrundschutzPage() {
                 </div>
                 <div className="flex-1 overflow-y-auto">
                   {loadingControls ? <div className="flex justify-center py-6"><Loader2 className="h-4 w-4 animate-spin" /></div> : controls.map(c => (
-                    <button key={c.id} onClick={() => setSelectedControl(c)} className={cn('w-full text-left px-3 py-2 border-b hover:bg-muted/50', selectedControl?.id === c.id && 'bg-muted')}>
+                    <button key={c.id} onClick={() => selectControl(c)} className={cn('w-full text-left px-3 py-2 border-b hover:bg-muted/50', selectedControl?.id === c.id && 'bg-muted')}>
                       <div className="flex items-center gap-1.5 mb-0.5"><code className="text-[9px] font-mono bg-muted px-1 rounded">{c.id}</code>{c.secLevel && <Badge variant="outline" className={cn('text-[8px] px-1 py-0', SEC_COLORS[c.secLevel])}>{SEC_LABELS[c.secLevel]}</Badge>}</div>
                       <p className="text-xs truncate">{c.title}</p>
                     </button>
@@ -212,15 +233,48 @@ export default function GrundschutzPage() {
 
           {/* Detail */}
           <div className="flex-1 overflow-y-auto p-6">
-            {selectedControl ? (
+            {loadingDetail ? <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div> : selectedControl ? (
               <div className="max-w-2xl space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <code className="text-sm font-mono bg-muted px-2 py-0.5 rounded">{selectedControl.id}</code>
                   {selectedControl.secLevel && <Badge variant="outline" className={SEC_COLORS[selectedControl.secLevel]}>{SEC_LABELS[selectedControl.secLevel]}</Badge>}
                   {selectedControl.effortLevel && <Badge variant="secondary" className="text-xs">Aufwand: {selectedControl.effortLevel}</Badge>}
+                  {selectedControl.modalVerb && <Badge className={cn('text-xs', selectedControl.modalVerb === 'MUSS' ? 'bg-red-100 text-red-700' : selectedControl.modalVerb === 'SOLLTE' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700')}>{selectedControl.modalVerb}</Badge>}
                 </div>
                 <h2 className="text-xl font-bold">{selectedControl.title}</h2>
                 {selectedControl.statement && <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Anforderung</CardTitle></CardHeader><CardContent><p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedControl.statement}</p></CardContent></Card>}
+                {selectedControl.guidance && <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Umsetzungshinweise</CardTitle></CardHeader><CardContent><p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">{selectedControl.guidance}</p></CardContent></Card>}
+                {selectedControl.links?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><Link2 className="h-4 w-4" />Verknuepfte Controls ({selectedControl.links.length})</CardTitle></CardHeader>
+                    <CardContent className="space-y-1.5">
+                      {selectedControl.links.filter(l => l.rel === 'required').length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-xs font-medium text-red-600 mb-1">Voraussetzungen (required)</p>
+                          {selectedControl.links.filter(l => l.rel === 'required').map(l => (
+                            <button key={l.controlId} onClick={() => selectControl({ id: l.controlId, groupId: '', title: l.title, statement: null, secLevel: null, effortLevel: null, tags: [] })} className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded hover:bg-muted/50 group">
+                              <ArrowRight className="h-3 w-3 text-red-400 shrink-0" />
+                              <code className="text-[10px] font-mono bg-red-50 text-red-700 px-1 rounded">{l.controlId}</code>
+                              <span className="text-xs truncate">{l.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {selectedControl.links.filter(l => l.rel === 'related').length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-blue-600 mb-1">Verwandt (related)</p>
+                          {selectedControl.links.filter(l => l.rel === 'related').map(l => (
+                            <button key={l.controlId} onClick={() => selectControl({ id: l.controlId, groupId: '', title: l.title, statement: null, secLevel: null, effortLevel: null, tags: [] })} className="flex items-center gap-2 w-full text-left px-2 py-1.5 rounded hover:bg-muted/50 group">
+                              <Link2 className="h-3 w-3 text-blue-400 shrink-0" />
+                              <code className="text-[10px] font-mono bg-blue-50 text-blue-700 px-1 rounded">{l.controlId}</code>
+                              <span className="text-xs truncate">{l.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
                 {selectedControl.tags?.length > 0 && <div className="flex flex-wrap gap-1">{selectedControl.tags.map((t, i) => <Badge key={i} variant="secondary" className="text-xs">{t}</Badge>)}</div>}
               </div>
             ) : <div className="flex flex-col items-center justify-center h-full text-muted-foreground"><Shield className="h-10 w-10 mb-3" /><p className="text-sm">Control auswaehlen</p></div>}

@@ -169,6 +169,20 @@
       "when": 1774620733912,
       "tag": "0023_wealthy_xavin",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1774622908058,
+      "tag": "0024_worried_absorbing_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1774623952200,
+      "tag": "0025_acoustic_talisman",
+      "breakpoints": true
     }
   ]
 }

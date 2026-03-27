@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, Loader2, Shield, CheckCircle2, XCircle, MinusCircle, HelpCircle, ChevronRight, Save, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Loader2, Shield, CheckCircle2, XCircle, MinusCircle, HelpCircle, ChevronRight, Save, BarChart3, Link2, ArrowRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -19,9 +19,13 @@ interface AuditSession {
 
 interface AnswerRow {
   answer: { id: string; controlId: string; status: string; notes: string | null; answeredAt: string | null }
-  controlTitle: string; controlStatement: string | null; controlSecLevel: string | null
+  controlTitle: string; controlStatement: string | null; controlGuidance: string | null
+  controlModalVerb: string | null; controlActionWord: string | null
+  controlResult: string | null; controlSecLevel: string | null
   controlEffortLevel: string | null; controlGroupId: string; controlSortOrder: number
 }
+
+interface ControlLink { controlId: string; title: string; rel: string }
 
 interface Group { id: string; title: string; controlCount: number }
 
@@ -56,6 +60,8 @@ export default function AuditPage() {
   const [saving, setSaving] = useState(false)
   const [editNotes, setEditNotes] = useState('')
   const [showScoring, setShowScoring] = useState(false)
+  const [controlLinks, setControlLinks] = useState<ControlLink[]>([])
+  const [loadingLinks, setLoadingLinks] = useState(false)
 
   const fetchSession = useCallback(async () => {
     try {
@@ -94,9 +100,17 @@ export default function AuditPage() {
     finally { setLoadingAnswers(false) }
   }
 
-  const selectAnswer = (a: AnswerRow) => {
+  const selectAnswer = async (a: AnswerRow) => {
     setSelectedAnswer(a)
     setEditNotes(a.answer.notes || '')
+    setLoadingLinks(true)
+    setControlLinks([])
+    try {
+      const res = await fetch(`/api/v1/grundschutz/controls/${encodeURIComponent(a.answer.controlId)}`)
+      const data = await res.json()
+      if (data.success && data.data.links) setControlLinks(data.data.links)
+    } catch { /* */ }
+    finally { setLoadingLinks(false) }
   }
 
   const saveAnswer = async (status: string) => {
@@ -279,9 +293,63 @@ export default function AuditPage() {
                 </div>
                 <h2 className="text-lg font-bold">{selectedAnswer.controlTitle}</h2>
 
+                {/* Meta-Badges */}
+                <div className="flex flex-wrap gap-2">
+                  {selectedAnswer.controlModalVerb && <Badge className={cn('text-xs', selectedAnswer.controlModalVerb === 'MUSS' ? 'bg-red-100 text-red-700' : selectedAnswer.controlModalVerb === 'SOLLTE' ? 'bg-yellow-100 text-yellow-700' : 'bg-blue-100 text-blue-700')}>{selectedAnswer.controlModalVerb}</Badge>}
+                  {selectedAnswer.controlActionWord && <Badge variant="outline" className="text-xs">{selectedAnswer.controlActionWord}</Badge>}
+                  {selectedAnswer.controlResult && <Badge variant="secondary" className="text-xs">{selectedAnswer.controlResult.substring(0, 60)}{selectedAnswer.controlResult.length > 60 ? '...' : ''}</Badge>}
+                </div>
+
                 {selectedAnswer.controlStatement && (
                   <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Anforderung</CardTitle></CardHeader>
                     <CardContent><p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedAnswer.controlStatement}</p></CardContent>
+                  </Card>
+                )}
+
+                {selectedAnswer.controlGuidance && (
+                  <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Umsetzungshinweise</CardTitle></CardHeader>
+                    <CardContent><p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">{selectedAnswer.controlGuidance}</p></CardContent>
+                  </Card>
+                )}
+
+                {/* Verknuepfte Controls */}
+                {loadingLinks ? <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Links laden...</div> : controlLinks.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-1.5"><Link2 className="h-4 w-4" />Verknuepfte Controls ({controlLinks.length})</CardTitle></CardHeader>
+                    <CardContent className="space-y-1">
+                      {controlLinks.filter(l => l.rel === 'required').length > 0 && (
+                        <div className="mb-2">
+                          <p className="text-xs font-medium text-red-600 mb-1">Voraussetzungen</p>
+                          {controlLinks.filter(l => l.rel === 'required').map(l => {
+                            const linkedAnswer = answers.find(a => a.answer.controlId === l.controlId)
+                            return (
+                              <button key={l.controlId} onClick={() => { const a = answers.find(x => x.answer.controlId === l.controlId); if (a) selectAnswer(a) }} className="flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-muted/50">
+                                <ArrowRight className="h-3 w-3 text-red-400 shrink-0" />
+                                <code className="text-[10px] font-mono bg-red-50 text-red-700 px-1 rounded">{l.controlId}</code>
+                                <span className="text-xs truncate flex-1">{l.title}</span>
+                                {linkedAnswer && statusIcon(linkedAnswer.answer.status)}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                      {controlLinks.filter(l => l.rel === 'related').length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-blue-600 mb-1">Verwandt</p>
+                          {controlLinks.filter(l => l.rel === 'related').map(l => {
+                            const linkedAnswer = answers.find(a => a.answer.controlId === l.controlId)
+                            return (
+                              <button key={l.controlId} onClick={() => { const a = answers.find(x => x.answer.controlId === l.controlId); if (a) selectAnswer(a) }} className="flex items-center gap-2 w-full text-left px-2 py-1 rounded hover:bg-muted/50">
+                                <Link2 className="h-3 w-3 text-blue-400 shrink-0" />
+                                <code className="text-[10px] font-mono bg-blue-50 text-blue-700 px-1 rounded">{l.controlId}</code>
+                                <span className="text-xs truncate flex-1">{l.title}</span>
+                                {linkedAnswer && statusIcon(linkedAnswer.answer.status)}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
                   </Card>
                 )}
 
