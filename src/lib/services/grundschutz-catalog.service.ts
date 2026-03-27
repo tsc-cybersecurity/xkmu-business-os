@@ -75,12 +75,12 @@ export const GrundschutzCatalogService = {
     function processGroup(group: OscalGroup, parentId: string | null) {
       groupRows.push({ id: group.id, title: group.title, parentId, sortOrder: groupOrder++ })
 
-      // Controls direkt in der Gruppe
-      for (const ctrl of group.controls || []) {
+      // Controls direkt in der Gruppe (inkl. Sub-Controls/Enhancements)
+      function processControl(ctrl: OscalControl, gid: string) {
         const tagsRaw = extractProp(ctrl, 'tags')
         controlRows.push({
           id: ctrl.id,
-          groupId: group.id,
+          groupId: gid,
           title: ctrl.title,
           statement: extractStatement(ctrl) || null,
           secLevel: extractProp(ctrl, 'sec_level') || null,
@@ -90,6 +90,13 @@ export const GrundschutzCatalogService = {
           params: ctrl.params || [],
           sortOrder: controlOrder++,
         })
+        // Sub-Controls (Enhancements) rekursiv
+        for (const sub of (ctrl as any).controls || []) {
+          processControl(sub, gid)
+        }
+      }
+      for (const ctrl of group.controls || []) {
+        processControl(ctrl, group.id)
       }
 
       // Untergruppen
