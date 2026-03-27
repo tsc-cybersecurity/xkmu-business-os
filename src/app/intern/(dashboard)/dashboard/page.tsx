@@ -418,7 +418,10 @@ export default function DashboardPage() {
 // Trend-Timeline Komponente (wie Projekte-Timeline)
 // ============================================================================
 
-const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+const BAR_COLORS: Record<string, { bar: string; hover: string }> = {
+  'bg-primary': { bar: 'hsl(var(--primary) / 0.8)', hover: 'hsl(var(--primary))' },
+  'bg-green-500': { bar: '#22c55e', hover: '#16a34a' },
+}
 
 function TrendTimeline({ title, data, color, label }: {
   title: string; data: { date: string; count: number }[]; color: string; label: string
@@ -427,6 +430,8 @@ function TrendTimeline({ title, data, color, label }: {
 
   const total = data.reduce((sum, d) => sum + d.count, 0)
   const maxCount = Math.max(...data.map((d) => d.count), 1)
+  const colors = BAR_COLORS[color] || { bar: '#3b82f6', hover: '#2563eb' }
+  const barW = Math.max(8, Math.min(14, 700 / data.length))
 
   return (
     <Card>
@@ -438,44 +443,50 @@ function TrendTimeline({ title, data, color, label }: {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <div style={{ minWidth: data.length * 14 }}>
-            {/* Monats-Header */}
-            <div className="flex">
+          <div style={{ minWidth: data.length * (barW + 1) }}>
+            {/* Monats-Labels */}
+            <div className="flex" style={{ height: 14 }}>
               {data.map((d, i) => {
                 const date = new Date(d.date + 'T00:00:00')
                 const showMonth = i === 0 || date.getDate() === 1
                 return (
-                  <div key={`m-${i}`} className="shrink-0 text-center" style={{ width: 14 }}>
-                    {showMonth && <span className="text-[8px] text-muted-foreground font-medium">{date.toLocaleDateString('de-DE', { month: 'short' })}</span>}
+                  <div key={`m-${i}`} className="shrink-0 text-center" style={{ width: barW + 1 }}>
+                    {showMonth && <span className="text-[9px] text-muted-foreground font-medium">{date.toLocaleDateString('de-DE', { month: 'short' })}</span>}
                   </div>
                 )
               })}
             </div>
-            {/* Balken */}
-            <div className="flex items-end gap-px h-28">
-              {data.map((d, i) => {
+            {/* Balkendiagramm */}
+            <div className="flex items-end border-b" style={{ height: 120 }}>
+              {data.map((d) => {
                 const date = new Date(d.date + 'T00:00:00')
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6
-                const heightPct = (d.count / maxCount) * 100
+                const heightPct = d.count > 0 ? Math.max((d.count / maxCount) * 100, 6) : 0
                 return (
-                  <div
-                    key={d.date}
-                    className={`shrink-0 rounded-t transition-colors cursor-default ${d.count > 0 ? `${color}/80 hover:${color}` : isWeekend ? 'bg-muted/60' : 'bg-muted/30'}`}
-                    style={{ width: 13, height: d.count > 0 ? `${Math.max(heightPct, 8)}%` : '4px' }}
-                    title={`${date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })}: ${d.count} ${label}`}
-                  />
+                  <div key={d.date} className="shrink-0 flex items-end justify-center" style={{ width: barW + 1, height: '100%' }}>
+                    <div
+                      className="rounded-t transition-all duration-150 hover:opacity-100"
+                      style={{
+                        width: barW - 1,
+                        height: d.count > 0 ? `${heightPct}%` : 0,
+                        backgroundColor: colors.bar,
+                        opacity: d.count > 0 ? 1 : 0,
+                      }}
+                      title={`${date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}: ${d.count} ${label}`}
+                    />
+                  </div>
                 )
               })}
             </div>
-            {/* Tag-Header */}
-            <div className="flex border-t mt-0.5 pt-0.5">
+            {/* Tage */}
+            <div className="flex pt-1">
               {data.map((d, i) => {
                 const date = new Date(d.date + 'T00:00:00')
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6
-                const showDay = i % 7 === 0 || i === data.length - 1
+                const day = date.getDay()
+                const isWeekend = day === 0 || day === 6
+                const showLabel = date.getDate() === 1 || i % 7 === 0
                 return (
-                  <div key={`d-${i}`} className="shrink-0 text-center" style={{ width: 14 }}>
-                    {showDay && <span className={`text-[8px] ${isWeekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{String(date.getDate()).padStart(2, '0')}</span>}
+                  <div key={`d-${i}`} className="shrink-0 text-center" style={{ width: barW + 1 }}>
+                    {showLabel && <span className={`text-[8px] leading-none ${isWeekend ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}>{String(date.getDate()).padStart(2, '0')}</span>}
                   </div>
                 )
               })}
