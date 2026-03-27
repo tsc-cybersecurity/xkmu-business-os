@@ -120,9 +120,9 @@ export async function GET() {
     const wonLeads = Number(wonLeadsCount?.count || 0)
     const conversionRate = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0
 
-    // 30-Tage-Trends: Leads pro Tag
+    // 60-Tage-Trends: Leads pro Tag
     const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 60)
 
     const leadTrends = await db
       .select({
@@ -154,6 +154,19 @@ export async function GET() {
       .groupBy(sql`date(${companies.createdAt})`)
       .orderBy(sql`date(${companies.createdAt})`)
 
+    // Alle 60 Tage fuellen (auch 0er)
+    const fillDays = (data: Array<{ date: string; count: number }>, days: number) => {
+      const map = new Map(data.map((d) => [d.date, Number(d.count)]))
+      const result: Array<{ date: string; count: number }> = []
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        const key = d.toISOString().split('T')[0]
+        result.push({ date: key, count: map.get(key) || 0 })
+      }
+      return result
+    }
+
     return apiSuccess({
       stats: {
         companies: Number(companiesCount?.count || 0),
@@ -163,8 +176,8 @@ export async function GET() {
       },
       conversionRate,
       trends: {
-        leads: leadTrends.map((t) => ({ date: t.date, count: Number(t.count) })),
-        companies: companyTrends.map((t) => ({ date: t.date, count: Number(t.count) })),
+        leads: fillDays(leadTrends.map((t) => ({ date: t.date, count: Number(t.count) })), 60),
+        companies: fillDays(companyTrends.map((t) => ({ date: t.date, count: Number(t.count) })), 60),
       },
       recentCompanies,
       recentPersons,

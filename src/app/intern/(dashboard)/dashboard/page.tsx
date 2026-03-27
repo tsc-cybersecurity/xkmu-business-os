@@ -203,66 +203,11 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* 30-Tage-Trends */}
-      {data?.trends && (data.trends.leads.length > 0 || data.trends.companies.length > 0) && (
+      {/* 60-Tage-Trends — Timeline-Style */}
+      {data?.trends && (
         <div className="grid gap-4 md:grid-cols-2">
-          {data.trends.leads.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Lead-Trend (30 Tage)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-end gap-1 h-24">
-                  {data.trends.leads.map((point) => {
-                    const maxCount = Math.max(...data.trends.leads.map((p) => p.count), 1)
-                    const heightPct = (point.count / maxCount) * 100
-                    return (
-                      <div
-                        key={point.date}
-                        className="flex-1 bg-primary/80 rounded-t hover:bg-primary transition-colors"
-                        style={{ height: `${Math.max(heightPct, 4)}%` }}
-                        title={`${new Date(point.date).toLocaleDateString('de-DE')}: ${point.count} Leads`}
-                      />
-                    )
-                  })}
-                </div>
-                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                  <span>{data.trends.leads.length > 0 && new Date(data.trends.leads[0].date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
-                  <span>Gesamt: {data.trends.leads.reduce((sum, p) => sum + p.count, 0)}</span>
-                  <span>{data.trends.leads.length > 0 && new Date(data.trends.leads[data.trends.leads.length - 1].date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {data.trends.companies.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Firmen-Trend (30 Tage)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-end gap-1 h-24">
-                  {data.trends.companies.map((point) => {
-                    const maxCount = Math.max(...data.trends.companies.map((p) => p.count), 1)
-                    const heightPct = (point.count / maxCount) * 100
-                    return (
-                      <div
-                        key={point.date}
-                        className="flex-1 bg-green-500/80 rounded-t hover:bg-green-500 transition-colors"
-                        style={{ height: `${Math.max(heightPct, 4)}%` }}
-                        title={`${new Date(point.date).toLocaleDateString('de-DE')}: ${point.count} Firmen`}
-                      />
-                    )
-                  })}
-                </div>
-                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                  <span>{data.trends.companies.length > 0 && new Date(data.trends.companies[0].date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
-                  <span>Gesamt: {data.trends.companies.reduce((sum, p) => sum + p.count, 0)}</span>
-                  <span>{data.trends.companies.length > 0 && new Date(data.trends.companies[data.trends.companies.length - 1].date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <TrendTimeline title="Lead-Trend (60 Tage)" data={data.trends.leads} color="bg-primary" label="Leads" />
+          <TrendTimeline title="Firmen-Trend (60 Tage)" data={data.trends.companies} color="bg-green-500" label="Firmen" />
         </div>
       )}
 
@@ -466,5 +411,78 @@ export default function DashboardPage() {
         </Card>
       )}
     </div>
+  )
+}
+
+// ============================================================================
+// Trend-Timeline Komponente (wie Projekte-Timeline)
+// ============================================================================
+
+const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+
+function TrendTimeline({ title, data, color, label }: {
+  title: string; data: { date: string; count: number }[]; color: string; label: string
+}) {
+  if (!data || data.length === 0) return null
+
+  const total = data.reduce((sum, d) => sum + d.count, 0)
+  const maxCount = Math.max(...data.map((d) => d.count), 1)
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center justify-between">
+          <span>{title}</span>
+          <Badge variant="secondary">{total} {label}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="overflow-x-auto">
+          <div style={{ minWidth: data.length * 14 }}>
+            {/* Monats-Header */}
+            <div className="flex">
+              {data.map((d, i) => {
+                const date = new Date(d.date + 'T00:00:00')
+                const showMonth = i === 0 || date.getDate() === 1
+                return (
+                  <div key={`m-${i}`} className="shrink-0 text-center" style={{ width: 14 }}>
+                    {showMonth && <span className="text-[8px] text-muted-foreground font-medium">{date.toLocaleDateString('de-DE', { month: 'short' })}</span>}
+                  </div>
+                )
+              })}
+            </div>
+            {/* Balken */}
+            <div className="flex items-end gap-px h-28">
+              {data.map((d, i) => {
+                const date = new Date(d.date + 'T00:00:00')
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6
+                const heightPct = (d.count / maxCount) * 100
+                return (
+                  <div
+                    key={d.date}
+                    className={`shrink-0 rounded-t transition-colors cursor-default ${d.count > 0 ? `${color}/80 hover:${color}` : isWeekend ? 'bg-muted/60' : 'bg-muted/30'}`}
+                    style={{ width: 13, height: d.count > 0 ? `${Math.max(heightPct, 8)}%` : '4px' }}
+                    title={`${date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' })}: ${d.count} ${label}`}
+                  />
+                )
+              })}
+            </div>
+            {/* Tag-Header */}
+            <div className="flex border-t mt-0.5 pt-0.5">
+              {data.map((d, i) => {
+                const date = new Date(d.date + 'T00:00:00')
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6
+                const showDay = i % 7 === 0 || i === data.length - 1
+                return (
+                  <div key={`d-${i}`} className="shrink-0 text-center" style={{ width: 14 }}>
+                    {showDay && <span className={`text-[8px] ${isWeekend ? 'text-muted-foreground/50' : 'text-muted-foreground'}`}>{String(date.getDate()).padStart(2, '0')}</span>}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
