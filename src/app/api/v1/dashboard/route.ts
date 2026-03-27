@@ -176,6 +176,9 @@ export async function GET() {
       return result
     }
 
+    // Debug: Raw-Daten loggen
+    logger.info('Dashboard lead trends raw', { leadTrends: JSON.stringify(leadTrends), companyTrends: JSON.stringify(companyTrends) })
+
     return apiSuccess({
       stats: {
         companies: Number(companiesCount?.count || 0),
