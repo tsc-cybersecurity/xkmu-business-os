@@ -477,16 +477,14 @@ function TrendTimeline({ title, data, color, label }: {
                 )
               })}
             </div>
-            {/* Tage */}
-            <div className="flex pt-1">
+            {/* Tag-Nummern */}
+            <div className="flex pt-0.5">
               {data.map((d, i) => {
                 const date = new Date(d.date + 'T00:00:00')
-                const day = date.getDay()
-                const isWeekend = day === 0 || day === 6
-                const showLabel = date.getDate() === 1 || i % 7 === 0
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6
                 return (
                   <div key={`d-${i}`} className="shrink-0 text-center" style={{ width: barW + 1 }}>
-                    {showLabel && <span className={`text-[8px] leading-none ${isWeekend ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}>{String(date.getDate()).padStart(2, '0')}</span>}
+                    <span className={`text-[7px] leading-none ${isWeekend ? 'text-muted-foreground/40' : 'text-muted-foreground'}`}>{String(date.getDate()).padStart(2, '0')}</span>
                   </div>
                 )
               })}
