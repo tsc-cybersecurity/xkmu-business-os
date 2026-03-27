@@ -19,7 +19,7 @@ interface CatalogMeta {
 }
 
 interface Group {
-  id: string; title: string; controlCount: number
+  id: string; title: string; description: string | null; controlCount: number
   subgroups: Array<{ id: string; title: string; controlCount: number }>
 }
 
@@ -198,11 +198,12 @@ export default function GrundschutzPage() {
             <div className="p-2 border-b text-[10px] text-muted-foreground px-3">OSCAL v{meta.oscalVersion}</div>
             <div className="flex-1 overflow-y-auto">
               {groups.map(g => (
-                <button key={g.id} onClick={() => loadControls(g.id)} className={cn('w-full text-left px-3 py-2.5 border-b hover:bg-muted/50 transition-colors', selectedGroup === g.id && 'bg-muted')}>
+                <button key={g.id} onClick={() => loadControls(g.id)} title={g.description || undefined} className={cn('w-full text-left px-3 py-2.5 border-b hover:bg-muted/50 transition-colors', selectedGroup === g.id && 'bg-muted')}>
                   <div className="flex items-center justify-between">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5"><Badge variant="outline" className="text-[9px] px-1 py-0 font-mono">{g.id}</Badge><span className="text-xs font-medium truncate">{g.title}</span></div>
                       <span className="text-[10px] text-muted-foreground">{g.controlCount} Controls</span>
+                      {g.description && selectedGroup === g.id && <p className="text-[10px] text-muted-foreground mt-1 line-clamp-3">{g.description}</p>}
                     </div>
                     <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                   </div>

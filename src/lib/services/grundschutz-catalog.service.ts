@@ -24,6 +24,7 @@ interface OscalControl {
 interface OscalGroup {
   id: string
   title: string
+  props?: Array<{ name: string; value: string; remarks?: string }>
   groups?: OscalGroup[]
   controls?: OscalControl[]
 }
@@ -76,10 +77,10 @@ export const GrundschutzCatalogService = {
     const oscalGroups: OscalGroup[] = catalog.groups || []
 
     // Alle Gruppen, Controls und Links sammeln
-    const groupRows: Array<{ id: string; title: string; parentId: string | null; sortOrder: number }> = []
+    const groupRows: Array<{ id: string; title: string; description: string | null; altIdentifier: string | null; parentId: string | null; sortOrder: number }> = []
     const controlRows: Array<{
-      id: string; groupId: string; parentControlId: string | null; title: string
-      statement: string | null; guidance: string | null
+      id: string; groupId: string; parentControlId: string | null; altIdentifier: string | null
+      title: string; statement: string | null; guidance: string | null; documentation: string | null
       modalVerb: string | null; actionWord: string | null
       result: string | null; resultSpecification: string | null
       secLevel: string | null; effortLevel: string | null; tags: string[]
@@ -91,7 +92,11 @@ export const GrundschutzCatalogService = {
     let controlOrder = 0
 
     function processGroup(group: OscalGroup, parentId: string | null) {
-      groupRows.push({ id: group.id, title: group.title, parentId, sortOrder: groupOrder++ })
+      // Praktik-Beschreibung aus remarks des label-Props extrahieren
+      const labelProp = group.props?.find(p => p.name === 'label')
+      const description = labelProp?.remarks || null
+      const altIdentifier = group.props?.find(p => p.name === 'alt-identifier')?.value || null
+      groupRows.push({ id: group.id, title: group.title, description, altIdentifier, parentId, sortOrder: groupOrder++ })
 
       // Controls direkt in der Gruppe (inkl. Sub-Controls/Enhancements)
       function processControl(ctrl: OscalControl, gid: string, parentId: string | null) {
@@ -100,9 +105,11 @@ export const GrundschutzCatalogService = {
           id: ctrl.id,
           groupId: gid,
           parentControlId: parentId,
+          altIdentifier: extractProp(ctrl, 'alt-identifier') || null,
           title: ctrl.title,
           statement: extractStatement(ctrl) || null,
           guidance: extractGuidance(ctrl) || null,
+          documentation: extractPartProp(ctrl, 'statement', 'documentation') || null,
           modalVerb: extractPartProp(ctrl, 'statement', 'modal_verb') || null,
           actionWord: extractPartProp(ctrl, 'statement', 'action_word') || null,
           result: extractPartProp(ctrl, 'statement', 'result') || null,

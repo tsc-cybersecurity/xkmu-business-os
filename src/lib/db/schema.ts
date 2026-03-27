@@ -1072,6 +1072,8 @@ export const dinGrants = pgTable('din_grants', {
 export const grundschutzGroups = pgTable('grundschutz_groups', {
   id: varchar('id', { length: 20 }).primaryKey(), // z.B. GC, BER, KONF
   title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'), // Praktik-Beschreibung (remarks aus label-prop)
+  altIdentifier: varchar('alt_identifier', { length: 100 }), // OSCAL alt-identifier UUID
   parentId: varchar('parent_id', { length: 20 }), // Untergruppen
   sortOrder: integer('sort_order').default(0),
 })
@@ -1080,14 +1082,16 @@ export const grundschutzControls = pgTable('grundschutz_controls', {
   id: varchar('id', { length: 30 }).primaryKey(), // z.B. GC.1.1, BER.3.5
   groupId: varchar('group_id', { length: 20 }).notNull(),
   parentControlId: varchar('parent_control_id', { length: 30 }), // Sub-Control -> Parent
+  altIdentifier: varchar('alt_identifier', { length: 100 }), // OSCAL alt-identifier UUID
   title: varchar('title', { length: 500 }).notNull(),
   statement: text('statement'), // Anforderungstext (prose)
   guidance: text('guidance'), // Umsetzungshinweise (prose aus part name=guidance)
+  documentation: varchar('documentation', { length: 255 }), // Dokumentationshinweis (z.B. IT-Betriebskonzept)
   modalVerb: varchar('modal_verb', { length: 10 }), // MUSS, SOLLTE, KANN
   actionWord: varchar('action_word', { length: 50 }), // verankern, pruefen, etc.
   result: text('result'), // Ergebnis der Anforderung
   resultSpecification: text('result_specification'), // Spezifikation
-  secLevel: varchar('sec_level', { length: 30 }), // normal-SdT, hoch
+  secLevel: varchar('sec_level', { length: 30 }), // normal-SdT, erhoeht
   effortLevel: varchar('effort_level', { length: 10 }), // 0-5
   tags: text('tags').array().default([]),
   oscalClass: varchar('oscal_class', { length: 100 }),
