@@ -126,7 +126,7 @@ export async function GET() {
 
     const leadTrends = await db
       .select({
-        date: sql<string>`date(${leads.createdAt})`,
+        date: sql<string>`to_char(${leads.createdAt}, 'YYYY-MM-DD')`,
         count: sql<number>`count(*)`,
       })
       .from(leads)
@@ -136,12 +136,12 @@ export async function GET() {
           gte(leads.createdAt, thirtyDaysAgo)
         )
       )
-      .groupBy(sql`date(${leads.createdAt})`)
-      .orderBy(sql`date(${leads.createdAt})`)
+      .groupBy(sql`to_char(${leads.createdAt}, 'YYYY-MM-DD')`)
+      .orderBy(sql`to_char(${leads.createdAt}, 'YYYY-MM-DD')`)
 
     const companyTrends = await db
       .select({
-        date: sql<string>`date(${companies.createdAt})`,
+        date: sql<string>`to_char(${companies.createdAt}, 'YYYY-MM-DD')`,
         count: sql<number>`count(*)`,
       })
       .from(companies)
@@ -151,17 +151,26 @@ export async function GET() {
           gte(companies.createdAt, thirtyDaysAgo)
         )
       )
-      .groupBy(sql`date(${companies.createdAt})`)
-      .orderBy(sql`date(${companies.createdAt})`)
+      .groupBy(sql`to_char(${companies.createdAt}, 'YYYY-MM-DD')`)
+      .orderBy(sql`to_char(${companies.createdAt}, 'YYYY-MM-DD')`)
 
     // Alle 60 Tage fuellen (auch 0er)
     const fillDays = (data: Array<{ date: string; count: number }>, days: number) => {
-      const map = new Map(data.map((d) => [d.date, Number(d.count)]))
+      // DB liefert date() als verschiedene Formate — normalisieren
+      const map = new Map<string, number>()
+      for (const d of data) {
+        // Kann Date-Objekt, ISO-String oder YYYY-MM-DD sein
+        const dateStr = typeof d.date === 'object' && d.date !== null
+          ? new Date(d.date as unknown as string).toISOString().split('T')[0]
+          : String(d.date).split('T')[0]
+        map.set(dateStr, Number(d.count))
+      }
+
       const result: Array<{ date: string; count: number }> = []
+      const now = new Date()
       for (let i = days - 1; i >= 0; i--) {
-        const d = new Date()
-        d.setDate(d.getDate() - i)
-        const key = d.toISOString().split('T')[0]
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
         result.push({ date: key, count: map.get(key) || 0 })
       }
       return result
