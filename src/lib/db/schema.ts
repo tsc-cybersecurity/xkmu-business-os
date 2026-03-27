@@ -1067,6 +1067,78 @@ export const dinGrants = pgTable('din_grants', {
 ])
 
 // ============================================
+// Grundschutz++ (BSI OSCAL Catalog)
+// ============================================
+export const grundschutzGroups = pgTable('grundschutz_groups', {
+  id: varchar('id', { length: 20 }).primaryKey(), // z.B. GC, BER, KONF
+  title: varchar('title', { length: 255 }).notNull(),
+  parentId: varchar('parent_id', { length: 20 }), // Untergruppen
+  sortOrder: integer('sort_order').default(0),
+})
+
+export const grundschutzControls = pgTable('grundschutz_controls', {
+  id: varchar('id', { length: 30 }).primaryKey(), // z.B. GC.1.1, BER.3.5
+  groupId: varchar('group_id', { length: 20 }).notNull(),
+  title: varchar('title', { length: 500 }).notNull(),
+  statement: text('statement'), // Anforderungstext (prose)
+  secLevel: varchar('sec_level', { length: 30 }), // normal-SdT, hoch
+  effortLevel: varchar('effort_level', { length: 10 }), // 0-5
+  tags: text('tags').array().default([]),
+  oscalClass: varchar('oscal_class', { length: 100 }),
+  params: jsonb('params').default([]), // OSCAL params
+  sortOrder: integer('sort_order').default(0),
+}, (table) => [
+  index('idx_grundschutz_controls_group').on(table.groupId),
+  index('idx_grundschutz_controls_sec_level').on(table.secLevel),
+])
+
+export const grundschutzCatalogMeta = pgTable('grundschutz_catalog_meta', {
+  id: varchar('id', { length: 50 }).primaryKey().default('current'),
+  catalogUuid: varchar('catalog_uuid', { length: 100 }),
+  title: varchar('title', { length: 255 }),
+  version: varchar('version', { length: 100 }),
+  lastModified: varchar('last_modified', { length: 100 }),
+  oscalVersion: varchar('oscal_version', { length: 20 }),
+  totalGroups: integer('total_groups').default(0),
+  totalControls: integer('total_controls').default(0),
+  importedAt: timestamp('imported_at', { withTimezone: true }).defaultNow(),
+  sourceUrl: text('source_url'),
+})
+
+export const grundschutzAuditSessions = pgTable('grundschutz_audit_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  clientCompanyId: uuid('client_company_id').references(() => companies.id, { onDelete: 'set null' }),
+  consultantId: uuid('consultant_id').references(() => users.id, { onDelete: 'set null' }),
+  title: varchar('title', { length: 255 }),
+  status: varchar('status', { length: 20 }).default('draft'), // draft, in_progress, completed
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_grundschutz_sessions_tenant').on(table.tenantId),
+])
+
+export const grundschutzAnswers = pgTable('grundschutz_answers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  sessionId: uuid('session_id').notNull().references(() => grundschutzAuditSessions.id, { onDelete: 'cascade' }),
+  controlId: varchar('control_id', { length: 30 }).notNull(),
+  status: varchar('status', { length: 20 }).default('offen'), // erfuellt, teilweise, nicht_erfuellt, nicht_relevant, offen
+  notes: text('notes'),
+  answeredAt: timestamp('answered_at', { withTimezone: true }),
+}, (table) => [
+  index('idx_grundschutz_answers_session').on(table.sessionId),
+])
+
+export type GrundschutzGroup = typeof grundschutzGroups.$inferSelect
+export type GrundschutzControl = typeof grundschutzControls.$inferSelect
+export type GrundschutzCatalogMeta = typeof grundschutzCatalogMeta.$inferSelect
+export type GrundschutzAuditSession = typeof grundschutzAuditSessions.$inferSelect
+export type GrundschutzAnswer = typeof grundschutzAnswers.$inferSelect
+
+// ============================================
 // CMS Pages (Editierbare Seiten)
 // ============================================
 export const cmsPages = pgTable('cms_pages', {

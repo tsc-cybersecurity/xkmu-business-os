@@ -59,6 +59,8 @@ export const TENANT_TABLES = [
   'receipts',
   'chat_conversations',
   'cockpit_systems',
+  'grundschutz_audit_sessions',
+  'grundschutz_answers',
 ]
 
 // Tables without tenant_id that reference a tenant-scoped parent (exported via JOIN)
@@ -90,6 +92,9 @@ export const GLOBAL_TABLES = [
   'din_grants',
   'wiba_requirements',
   'cms_block_type_definitions',
+  'grundschutz_groups',
+  'grundschutz_controls',
+  'grundschutz_catalog_meta',
 ]
 
 // All allowed tables (union of tenant + global + join)

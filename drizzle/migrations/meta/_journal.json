@@ -162,6 +162,13 @@
       "when": 1774336910002,
       "tag": "0022_broad_carlie_cooper",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1774620733912,
+      "tag": "0023_wealthy_xavin",
+      "breakpoints": true
     }
   ]
 }
