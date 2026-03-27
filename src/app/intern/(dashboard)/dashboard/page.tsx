@@ -419,7 +419,7 @@ export default function DashboardPage() {
 // ============================================================================
 
 const BAR_COLORS: Record<string, { bar: string; hover: string }> = {
-  'bg-primary': { bar: 'hsl(var(--primary) / 0.8)', hover: 'hsl(var(--primary))' },
+  'bg-primary': { bar: '#3b82f6', hover: '#2563eb' },
   'bg-green-500': { bar: '#22c55e', hover: '#16a34a' },
 }
 
