@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Shield, Download, RefreshCw, Search, ChevronRight, Loader2, Info, Plus, Trash2, Play, CheckCircle2, Link2, ArrowRight } from 'lucide-react'
+import { Shield, Download, RefreshCw, Search, ChevronRight, Loader2, Info, Plus, Trash2, Play, CheckCircle2, Link2, ArrowRight, Server } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
@@ -163,6 +163,7 @@ export default function GrundschutzPage() {
           <Button variant="outline" size="sm" onClick={handleImport} disabled={importing}>
             {importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}Import
           </Button>
+          <Link href="/intern/cybersecurity/grundschutz/assets"><Button variant="outline" size="sm"><Server className="h-4 w-4 mr-1" />Assets</Button></Link>
           <Link href="/intern/cybersecurity/grundschutz/new"><Button size="sm"><Plus className="h-4 w-4 mr-1" />Neues Audit</Button></Link>
         </div>
       </div>
