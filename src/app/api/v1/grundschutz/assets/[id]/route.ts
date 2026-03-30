@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { withPermission } from '@/lib/auth/with-permission'
+import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
 
@@ -39,7 +39,7 @@ export async function PUT(
         return apiError('NOT_FOUND', 'Asset nicht gefunden', 404)
       }
 
-      return apiSuccess(asset, 'Asset erfolgreich aktualisiert')
+      return apiSuccess(asset)
     } catch (error) {
       console.error('Error updating Grundschutz asset:', error)
       return apiServerError()
@@ -60,7 +60,7 @@ export async function DELETE(
         return apiError('NOT_FOUND', 'Asset nicht gefunden', 404)
       }
 
-      return apiSuccess(null, 'Asset erfolgreich gelöscht')
+      return apiSuccess(null)
     } catch (error) {
       console.error('Error deleting Grundschutz asset:', error)
       return apiServerError()

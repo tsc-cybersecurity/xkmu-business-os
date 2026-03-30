@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { withPermission } from '@/lib/auth/with-permission'
+import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
@@ -55,11 +55,11 @@ export async function POST(request: NextRequest) {
       const parsed = validateAndParse(createAssetSchema, body)
 
       if (!parsed.success) {
-        return apiError('VALIDATION_ERROR', parsed.errors.join(', '), 400)
+        return apiError('VALIDATION_ERROR', parsed.errors.issues.map(i => i.message).join(', '), 400)
       }
 
-      const asset = await GrundschutzAssetService.create(auth.tenantId, auth.userId, parsed.data)
-      return apiSuccess(asset, 'Asset erfolgreich erstellt', 201)
+      const asset = await GrundschutzAssetService.create(auth.tenantId, parsed.data)
+      return apiSuccess(asset, undefined, 201)
     } catch (error) {
       console.error('Error creating Grundschutz asset:', error)
       return apiServerError()

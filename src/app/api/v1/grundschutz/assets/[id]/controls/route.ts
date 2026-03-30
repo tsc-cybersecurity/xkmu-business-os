@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
-import { withPermission } from '@/lib/auth/with-permission'
+import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
@@ -24,11 +24,11 @@ export async function POST(
       const parsed = validateAndParse(upsertControlMappingSchema, body)
 
       if (!parsed.success) {
-        return apiError('VALIDATION_ERROR', parsed.errors.join(', '), 400)
+        return apiError('VALIDATION_ERROR', parsed.errors.issues.map(i => i.message).join(', '), 400)
       }
 
       const mapping = await GrundschutzAssetService.upsertControlMapping(auth.tenantId, id, parsed.data)
-      return apiSuccess(mapping, 'Control-Zuordnung erfolgreich gespeichert')
+      return apiSuccess(mapping)
     } catch (error) {
       console.error('Error upserting Grundschutz control mapping:', error)
       return apiServerError()

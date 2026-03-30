@@ -135,6 +135,7 @@ const navigation: NavItem[] = [
     icon: Shield,
     children: [
       { name: 'Grundschutz++', href: '/intern/cybersecurity/grundschutz', requiredModule: 'basisabsicherung' },
+      { name: 'GS++ Assets', href: '/intern/cybersecurity/grundschutz/assets', requiredModule: 'basisabsicherung' },
       { name: 'DIN SPEC Audits', href: '/intern/din-audit', requiredModule: 'din_audits' },
       { name: 'WiBA-Checks', href: '/intern/wiba', requiredModule: 'wiba_audits' },
       { name: 'Fördermittel', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
