@@ -1179,12 +1179,87 @@ export const grundschutzAnswersRelations = relations(grundschutzAnswers, ({ one 
   }),
 }))
 
+// ============================================
+// Grundschutz++ IT Asset Management
+// ============================================
+export const grundschutzAssets = pgTable('grundschutz_assets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  categoryType: varchar('category_type', { length: 50 }).notNull(), // Nutzende, IT-Systeme, Anwendungen, Netze, Standorte, Einkaeufe, Informationen
+  categoryName: varchar('category_name', { length: 100 }).notNull(), // z.B. "Hostsysteme", "Webanwendungen"
+  categoryUuid: varchar('category_uuid', { length: 40 }), // BSI UUID
+  vertraulichkeit: varchar('vertraulichkeit', { length: 20 }).default('normal'), // normal, hoch, sehr_hoch
+  integritaet: varchar('integritaet', { length: 20 }).default('normal'),
+  verfuegbarkeit: varchar('verfuegbarkeit', { length: 20 }).default('normal'),
+  schutzbedarfBegruendung: text('schutzbedarf_begruendung'),
+  ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 20 }).default('active'), // active, planned, decommissioned
+  location: varchar('location', { length: 255 }),
+  tags: jsonb('tags').default([]),
+  notes: text('notes'),
+  customFields: jsonb('custom_fields').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_gs_assets_tenant').on(table.tenantId),
+  index('idx_gs_assets_company').on(table.tenantId, table.companyId),
+  index('idx_gs_assets_category').on(table.tenantId, table.categoryType),
+  index('idx_gs_assets_status').on(table.tenantId, table.status),
+])
+
+export const grundschutzAssetRelationsTable = pgTable('grundschutz_asset_relations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  sourceAssetId: uuid('source_asset_id').notNull().references(() => grundschutzAssets.id, { onDelete: 'cascade' }),
+  targetAssetId: uuid('target_asset_id').notNull().references(() => grundschutzAssets.id, { onDelete: 'cascade' }),
+  relationType: varchar('relation_type', { length: 30 }).notNull(), // supports, runs_on, connected_to, housed_in, uses, managed_by
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_gs_asset_rel_source').on(table.sourceAssetId),
+  index('idx_gs_asset_rel_target').on(table.targetAssetId),
+])
+
+export const grundschutzAssetControls = pgTable('grundschutz_asset_controls', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  assetId: uuid('asset_id').notNull().references(() => grundschutzAssets.id, { onDelete: 'cascade' }),
+  controlId: varchar('control_id', { length: 30 }).notNull(),
+  applicability: varchar('applicability', { length: 20 }).default('applicable'), // applicable, not_applicable
+  justification: text('justification'),
+  implementationStatus: varchar('implementation_status', { length: 20 }).default('offen'), // offen, geplant, umgesetzt, teilweise, nicht_umgesetzt
+  implementationNotes: text('implementation_notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_gs_asset_ctrl_asset').on(table.assetId),
+  index('idx_gs_asset_ctrl_control').on(table.controlId),
+  index('idx_gs_asset_ctrl_tenant').on(table.tenantId),
+])
+
+export const grundschutzAssetsRelations = relations(grundschutzAssets, ({ one, many }) => ({
+  tenant: one(tenants, { fields: [grundschutzAssets.tenantId], references: [tenants.id] }),
+  company: one(companies, { fields: [grundschutzAssets.companyId], references: [companies.id] }),
+  owner: one(users, { fields: [grundschutzAssets.ownerId], references: [users.id] }),
+  controlMappings: many(grundschutzAssetControls),
+}))
+
+export const grundschutzAssetControlsRelations = relations(grundschutzAssetControls, ({ one }) => ({
+  asset: one(grundschutzAssets, { fields: [grundschutzAssetControls.assetId], references: [grundschutzAssets.id] }),
+}))
+
 export type GrundschutzGroup = typeof grundschutzGroups.$inferSelect
 export type GrundschutzControl = typeof grundschutzControls.$inferSelect
 export type GrundschutzControlLink = typeof grundschutzControlLinks.$inferSelect
 export type GrundschutzCatalogMeta = typeof grundschutzCatalogMeta.$inferSelect
 export type GrundschutzAuditSession = typeof grundschutzAuditSessions.$inferSelect
 export type GrundschutzAnswer = typeof grundschutzAnswers.$inferSelect
+export type GrundschutzAsset = typeof grundschutzAssets.$inferSelect
+export type GrundschutzAssetRelation = typeof grundschutzAssetRelationsTable.$inferSelect
+export type GrundschutzAssetControl = typeof grundschutzAssetControls.$inferSelect
 
 // ============================================
 // CMS Pages (Editierbare Seiten)
