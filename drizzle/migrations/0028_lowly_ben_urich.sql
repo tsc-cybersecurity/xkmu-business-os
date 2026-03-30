@@ -1,0 +1,2 @@
+CREATE INDEX "idx_grundschutz_sessions_status" ON "grundschutz_audit_sessions" USING btree ("tenant_id","status");--> statement-breakpoint
+CREATE INDEX "idx_grundschutz_sessions_client" ON "grundschutz_audit_sessions" USING btree ("tenant_id","client_company_id");

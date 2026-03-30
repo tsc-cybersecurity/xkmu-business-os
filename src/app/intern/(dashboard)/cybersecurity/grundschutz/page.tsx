@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -48,7 +47,6 @@ const STATUS_LABELS: Record<string, string> = { draft: 'Entwurf', in_progress: '
 const STATUS_COLORS: Record<string, string> = { draft: 'bg-gray-100 text-gray-700', in_progress: 'bg-blue-100 text-blue-700', completed: 'bg-green-100 text-green-700' }
 
 export default function GrundschutzPage() {
-  const router = useRouter()
   const [meta, setMeta] = useState<CatalogMeta | null>(null)
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const [groups, setGroups] = useState<Group[]>([])
@@ -131,20 +129,6 @@ export default function GrundschutzPage() {
     finally { setLoadingDetail(false) }
   }
 
-  const createAudit = async () => {
-    try {
-      const res = await fetch('/api/v1/grundschutz/audits', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: `Audit ${new Date().toLocaleDateString('de-DE')}` }),
-      })
-      const data = await res.json()
-      if (data.success) {
-        toast.success('Audit erstellt')
-        router.push(`/intern/cybersecurity/grundschutz/audit/${data.data.id}`)
-      }
-    } catch { toast.error('Fehler') }
-  }
-
   const deleteAudit = async (id: string) => {
     if (!confirm('Audit wirklich loeschen?')) return
     await fetch(`/api/v1/grundschutz/audits/${id}`, { method: 'DELETE' })
@@ -179,7 +163,7 @@ export default function GrundschutzPage() {
           <Button variant="outline" size="sm" onClick={handleImport} disabled={importing}>
             {importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}Import
           </Button>
-          <Button size="sm" onClick={createAudit}><Plus className="h-4 w-4 mr-1" />Neues Audit</Button>
+          <Link href="/intern/cybersecurity/grundschutz/new"><Button size="sm"><Plus className="h-4 w-4 mr-1" />Neues Audit</Button></Link>
         </div>
       </div>
 
@@ -289,7 +273,7 @@ export default function GrundschutzPage() {
               <CheckCircle2 className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">Noch keine Audits</h3>
               <p className="text-muted-foreground text-sm mb-6">Starten Sie ein neues Grundschutz++ Audit.</p>
-              <Button onClick={createAudit}><Plus className="h-4 w-4 mr-2" />Neues Audit</Button>
+              <Link href="/intern/cybersecurity/grundschutz/new"><Button><Plus className="h-4 w-4 mr-2" />Neues Audit</Button></Link>
             </div>
           ) : (
             <div className="max-w-4xl space-y-3">

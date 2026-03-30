@@ -1139,6 +1139,8 @@ export const grundschutzAuditSessions = pgTable('grundschutz_audit_sessions', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
   index('idx_grundschutz_sessions_tenant').on(table.tenantId),
+  index('idx_grundschutz_sessions_status').on(table.tenantId, table.status),
+  index('idx_grundschutz_sessions_client').on(table.tenantId, table.clientCompanyId),
 ])
 
 export const grundschutzAnswers = pgTable('grundschutz_answers', {
@@ -1152,6 +1154,30 @@ export const grundschutzAnswers = pgTable('grundschutz_answers', {
 }, (table) => [
   index('idx_grundschutz_answers_session').on(table.sessionId),
 ])
+
+export const grundschutzAuditSessionsRelations = relations(grundschutzAuditSessions, ({ one, many }) => ({
+  tenant: one(tenants, {
+    fields: [grundschutzAuditSessions.tenantId],
+    references: [tenants.id],
+  }),
+  clientCompany: one(companies, {
+    fields: [grundschutzAuditSessions.clientCompanyId],
+    references: [companies.id],
+  }),
+  consultant: one(users, {
+    fields: [grundschutzAuditSessions.consultantId],
+    references: [users.id],
+    relationName: 'grundschutzConsultantSessions',
+  }),
+  answers: many(grundschutzAnswers),
+}))
+
+export const grundschutzAnswersRelations = relations(grundschutzAnswers, ({ one }) => ({
+  session: one(grundschutzAuditSessions, {
+    fields: [grundschutzAnswers.sessionId],
+    references: [grundschutzAuditSessions.id],
+  }),
+}))
 
 export type GrundschutzGroup = typeof grundschutzGroups.$inferSelect
 export type GrundschutzControl = typeof grundschutzControls.$inferSelect

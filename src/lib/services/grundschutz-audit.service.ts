@@ -14,7 +14,7 @@ import { eq, and, asc, desc, count, sql } from 'drizzle-orm'
 
 export interface CreateAuditInput {
   title?: string
-  clientCompanyId?: string
+  clientCompanyId: string
   // Optional: Nur bestimmte Gruppen oder SecLevels pruefen
   filterGroups?: string[]
   filterSecLevel?: string
@@ -49,7 +49,7 @@ export const GrundschutzAuditService = {
     const [session] = await db.insert(grundschutzAuditSessions).values({
       tenantId,
       consultantId,
-      clientCompanyId: data.clientCompanyId || null,
+      clientCompanyId: data.clientCompanyId,
       title: data.title || 'Grundschutz++ Audit',
       status: 'draft',
     }).returning()
