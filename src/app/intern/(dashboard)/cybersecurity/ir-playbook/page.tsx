@@ -154,33 +154,28 @@ export default function IrPlaybookPage() {
       const text = await file.text()
       const parsed = JSON.parse(text)
 
-      // Support both { scenario: {...} } and { scenarios: [...] } and raw arrays
-      let items: Record<string, unknown>[]
+      // Normalize: ensure we send { scenarios: [...] } format to API
+      let payload: Record<string, unknown>
       if (Array.isArray(parsed)) {
-        items = parsed
+        payload = { scenarios: parsed }
       } else if (parsed.scenarios && Array.isArray(parsed.scenarios)) {
-        items = parsed.scenarios
-      } else if (parsed.scenario) {
-        items = [parsed.scenario]
+        payload = parsed
+      } else if (parsed.id) {
+        // Single scenario object with id
+        payload = { scenarios: [parsed] }
       } else {
-        items = [parsed]
+        payload = { scenarios: [parsed] }
       }
 
-      let imported = 0
-      let failed = 0
-      for (const item of items) {
-        try {
-          const res = await fetch('/api/v1/ir-playbook', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ scenario: item }),
-          })
-          if (res.ok) imported++
-          else failed++
-        } catch {
-          failed++
-        }
-      }
+      const res = await fetch('/api/v1/ir-playbook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = await res.json()
+
+      const imported = result.data?.imported || 0
+      const failed = (payload.scenarios as unknown[]).length - imported
 
       if (imported > 0) {
         toast.success(`${imported} Szenario(en) importiert${failed > 0 ? `, ${failed} fehlgeschlagen` : ''}`)
