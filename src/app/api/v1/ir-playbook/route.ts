@@ -18,8 +18,9 @@ export async function GET(request: NextRequest) {
       const scenarios = await IrPlaybookService.listScenarios(filters)
       return apiSuccess(scenarios)
     } catch (error) {
-      console.error('Error listing IR scenarios:', error)
-      return apiServerError()
+      const msg = error instanceof Error ? error.message : String(error)
+      console.error('Error listing IR scenarios:', msg)
+      return apiError('QUERY_ERROR', `Abfrage fehlgeschlagen: ${msg}`, 500)
     }
   })
 }
@@ -39,8 +40,9 @@ export async function POST(request: NextRequest) {
 
       return apiError('INVALID_FORMAT', 'Erwartet {"scenarios": [...]} oder einzelnes Szenario mit "id"', 400)
     } catch (error) {
-      console.error('Error importing IR scenario:', error)
-      return apiServerError()
+      const msg = error instanceof Error ? error.message : String(error)
+      console.error('Error importing IR scenario:', msg, error)
+      return apiError('IMPORT_ERROR', `Import fehlgeschlagen: ${msg}`, 500)
     }
   })
 }

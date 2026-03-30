@@ -174,6 +174,11 @@ export default function IrPlaybookPage() {
       })
       const result = await res.json()
 
+      if (!res.ok) {
+        toast.error(`Import-Fehler: ${result.error?.message || res.statusText || 'Unbekannter Fehler'}`)
+        return
+      }
+
       const imported = result.data?.imported || 0
       const failed = (payload.scenarios as unknown[]).length - imported
 
@@ -182,10 +187,10 @@ export default function IrPlaybookPage() {
         fetchScenarios()
         fetchStats()
       } else {
-        toast.error('Import fehlgeschlagen')
+        toast.error('Kein Szenario importiert — pruefen Sie das JSON-Format')
       }
-    } catch {
-      toast.error('Ungueltige JSON-Datei')
+    } catch (err) {
+      toast.error(`Import-Fehler: ${err instanceof Error ? err.message : 'Ungueltige JSON-Datei'}`)
     } finally {
       setImporting(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
