@@ -24,7 +24,7 @@ describe('rateLimit (Redis-backed)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Default: getRedisClient returns the mock redis instance
-    vi.mocked(getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(getRedisClient).mockReturnValue(mockRedis as unknown as ReturnType<typeof getRedisClient>)
     // Default: incr returns 1 (first call), expire resolves
     mockIncr.mockResolvedValue(1)
     mockExpire.mockResolvedValue(1)

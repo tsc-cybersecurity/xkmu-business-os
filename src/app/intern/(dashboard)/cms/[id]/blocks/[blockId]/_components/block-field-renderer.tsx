@@ -14,6 +14,27 @@ import {
 import { Plus, Trash2, Check } from 'lucide-react'
 import { ImageField, IconPicker } from '@/components/shared'
 
+interface BadgeContent { icon?: string; text?: string }
+
+interface PricingPlanItem {
+  name?: string
+  price?: string
+  period?: string
+  description?: string
+  features?: string[]
+  buttonLabel?: string
+  buttonHref?: string
+  highlighted?: boolean
+}
+
+interface ServiceCardItem {
+  badge?: string
+  title?: string
+  description?: string
+  checklistItems?: string[]
+  deliverables?: string[]
+}
+
 interface BlockFieldRendererProps {
   blockType: string
   content: Record<string, unknown>
@@ -39,11 +60,11 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
           <ImageField imageUrl={(content.backgroundImage as string) || ''} onImageChange={(url) => updateContent('backgroundImage', url)} label="Hintergrundbild" category="website" />
           <div className="space-y-2">
             <Label>Badge Icon</Label>
-            <IconPicker value={((content.badge as any)?.icon as string) || ''} onChange={(v) => updateContent('badge', { ...(content.badge as any || {}), icon: v })} />
+            <IconPicker value={((content.badge as BadgeContent | undefined)?.icon) || ''} onChange={(v) => updateContent('badge', { ...(content.badge as BadgeContent || {}), icon: v })} />
           </div>
           <div className="space-y-2">
             <Label>Badge Text</Label>
-            <Input value={((content.badge as any)?.text as string) || ''} onChange={(e) => updateContent('badge', { ...(content.badge as any || {}), text: e.target.value })} />
+            <Input value={((content.badge as BadgeContent | undefined)?.text) || ''} onChange={(e) => updateContent('badge', { ...(content.badge as BadgeContent || {}), text: e.target.value })} />
           </div>
           <div className="space-y-2">
             <Label>Ueberschrift</Label>
@@ -57,8 +78,8 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             <Label>Untertitel</Label>
             <Textarea value={(content.subheadline as string) || ''} onChange={(e) => updateContent('subheadline', e.target.value)} rows={3} />
           </div>
-          <ArrayField label="Buttons" items={(content.buttons as any[]) || []} onChange={(items) => updateContent('buttons', items)} fields={['label', 'href', 'variant']} />
-          <ArrayField label="Statistiken" items={(content.stats as any[]) || []} onChange={(items) => updateContent('stats', items)} fields={['value', 'label']} />
+          <ArrayField label="Buttons" items={(content.buttons as Record<string, string>[]) || []} onChange={(items) => updateContent('buttons', items)} fields={['label', 'href', 'variant']} />
+          <ArrayField label="Statistiken" items={(content.stats as Record<string, string>[]) || []} onChange={(items) => updateContent('stats', items)} fields={['value', 'label']} />
         </>
       )
     case 'features':
@@ -83,7 +104,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               </SelectContent>
             </Select>
           </div>
-          <ArrayField label="Features" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['icon', 'title', 'description', 'link']} />
+          <ArrayField label="Features" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['icon', 'title', 'description', 'link']} />
         </>
       )
     case 'cta':
@@ -97,8 +118,8 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             <Label>Beschreibung</Label>
             <Textarea value={(content.description as string) || ''} onChange={(e) => updateContent('description', e.target.value)} rows={3} />
           </div>
-          <ArrayField label="Buttons" items={(content.buttons as any[]) || []} onChange={(items) => updateContent('buttons', items)} fields={['label', 'href', 'variant']} />
-          <ArrayField label="Highlights" items={(content.highlights as any[]) || []} onChange={(items) => updateContent('highlights', items)} fields={['icon', 'title', 'subtitle']} />
+          <ArrayField label="Buttons" items={(content.buttons as Record<string, string>[]) || []} onChange={(items) => updateContent('buttons', items)} fields={['label', 'href', 'variant']} />
+          <ArrayField label="Highlights" items={(content.highlights as Record<string, string>[]) || []} onChange={(items) => updateContent('highlights', items)} fields={['icon', 'title', 'subtitle']} />
         </>
       )
     case 'text':
@@ -184,7 +205,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               </SelectContent>
             </Select>
           </div>
-          <ArrayField label="Karten" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['icon', 'title', 'description', 'link']} />
+          <ArrayField label="Karten" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['icon', 'title', 'description', 'link']} />
         </>
       )
     case 'testimonials':
@@ -208,7 +229,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               </SelectContent>
             </Select>
           </div>
-          <ArrayField label="Referenzen" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['name', 'role', 'company', 'avatar', 'quote', 'rating']} />
+          <ArrayField label="Referenzen" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['name', 'role', 'company', 'avatar', 'quote', 'rating']} />
         </>
       )
     case 'pricing':
@@ -222,7 +243,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             <Label>Abschnitts-Untertitel</Label>
             <Input value={(content.sectionSubtitle as string) || ''} onChange={(e) => updateContent('sectionSubtitle', e.target.value)} />
           </div>
-          <PricingPlansField plans={(content.plans as any[]) || []} onChange={(plans) => updateContent('plans', plans)} />
+          <PricingPlansField plans={(content.plans as PricingPlanItem[]) || []} onChange={(plans) => updateContent('plans', plans)} />
         </>
       )
     case 'faq':
@@ -236,7 +257,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             <Label>Abschnitts-Untertitel</Label>
             <Input value={(content.sectionSubtitle as string) || ''} onChange={(e) => updateContent('sectionSubtitle', e.target.value)} />
           </div>
-          <ArrayField label="Fragen" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['question', 'answer']} />
+          <ArrayField label="Fragen" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['question', 'answer']} />
         </>
       )
     case 'stats':
@@ -272,7 +293,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               </SelectContent>
             </Select>
           </div>
-          <ArrayField label="Kennzahlen" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['value', 'label', 'description']} />
+          <ArrayField label="Kennzahlen" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['value', 'label', 'description']} />
         </>
       )
     case 'team':
@@ -297,7 +318,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               </SelectContent>
             </Select>
           </div>
-          <ArrayField label="Teammitglieder" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['name', 'role', 'image', 'bio']} />
+          <ArrayField label="Teammitglieder" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['name', 'role', 'image', 'bio']} />
         </>
       )
     case 'timeline':
@@ -311,7 +332,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             <Label>Abschnitts-Untertitel</Label>
             <Input value={(content.sectionSubtitle as string) || ''} onChange={(e) => updateContent('sectionSubtitle', e.target.value)} />
           </div>
-          <ArrayField label="Schritte" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['icon', 'title', 'description']} />
+          <ArrayField label="Schritte" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['icon', 'title', 'description']} />
         </>
       )
     case 'logocloud':
@@ -325,7 +346,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             <Label>Abschnitts-Untertitel</Label>
             <Input value={(content.sectionSubtitle as string) || ''} onChange={(e) => updateContent('sectionSubtitle', e.target.value)} />
           </div>
-          <ArrayField label="Logos" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['name', 'image', 'href']} />
+          <ArrayField label="Logos" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['name', 'image', 'href']} />
         </>
       )
     case 'video':
@@ -389,7 +410,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               </SelectContent>
             </Select>
           </div>
-          <ArrayField label="Bilder" items={(content.items as any[]) || []} onChange={(items) => updateContent('items', items)} fields={['src', 'alt', 'caption']} />
+          <ArrayField label="Bilder" items={(content.items as Record<string, string>[]) || []} onChange={(items) => updateContent('items', items)} fields={['src', 'alt', 'caption']} />
         </>
       )
     case 'banner':
@@ -459,8 +480,8 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             <Input value={(content.sectionSubtitle as string) || ''} onChange={(e) => updateContent('sectionSubtitle', e.target.value)} />
           </div>
           <ComparisonField
-            columns={(content.columns as any[]) || []}
-            rows={(content.rows as any[]) || []}
+            columns={(content.columns as Array<{ name: string; highlighted?: boolean }>) || []}
+            rows={(content.rows as Array<{ feature: string; values: string[] }>) || []}
             onChangeColumns={(cols) => updateContent('columns', cols)}
             onChangeRows={(rows) => updateContent('rows', rows)}
           />
@@ -506,7 +527,7 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
             </Select>
           </div>
           <ServiceCardsField
-            items={(content.items as Array<Record<string, any>>) || []}
+            items={(content.items as ServiceCardItem[]) || []}
             onChange={(items) => updateContent('items', items)}
           />
         </>
@@ -644,8 +665,8 @@ function PricingPlansField({
   plans,
   onChange,
 }: {
-  plans: Array<Record<string, any>>
-  onChange: (plans: Array<Record<string, any>>) => void
+  plans: PricingPlanItem[]
+  onChange: (plans: PricingPlanItem[]) => void
 }) {
   const addPlan = () => {
     onChange([...plans, { name: '', price: '', period: 'Monat', description: '', features: [], buttonLabel: '', buttonHref: '', highlighted: false }])
@@ -655,7 +676,7 @@ function PricingPlansField({
     onChange(plans.filter((_, i) => i !== index))
   }
 
-  const updatePlan = (index: number, field: string, value: any) => {
+  const updatePlan = (index: number, field: string, value: unknown) => {
     const updated = [...plans]
     updated[index] = { ...updated[index], [field]: value }
     onChange(updated)
@@ -715,14 +736,14 @@ function ServiceCardsField({
   items,
   onChange,
 }: {
-  items: Array<Record<string, any>>
-  onChange: (items: Array<Record<string, any>>) => void
+  items: ServiceCardItem[]
+  onChange: (items: ServiceCardItem[]) => void
 }) {
   const addItem = () => {
     onChange([...items, { badge: '', title: '', description: '', checklistItems: [], deliverables: [] }])
   }
   const removeItem = (index: number) => onChange(items.filter((_, i) => i !== index))
-  const updateItem = (index: number, field: string, value: any) => {
+  const updateItem = (index: number, field: string, value: unknown) => {
     const updated = [...items]
     updated[index] = { ...updated[index], [field]: value }
     onChange(updated)

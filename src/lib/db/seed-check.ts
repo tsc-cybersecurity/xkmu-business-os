@@ -188,7 +188,7 @@ async function seedCmsPages(db: ReturnType<typeof drizzle>, tenantId: string) {
         blockType: blockData.blockType,
         sortOrder: blockData.sortOrder,
         content: blockData.content,
-        settings: (blockData as any).settings || {},
+        settings: (blockData as { settings?: Record<string, unknown> }).settings || {},
         isVisible: true,
       })
     }

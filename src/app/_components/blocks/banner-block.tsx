@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { iconMap } from '@/lib/utils/icon-map'
 
 export interface BannerBlockContent {
-  text: string
+  text?: string
   variant?: 'info' | 'success' | 'warning' | 'brand'
   icon?: string
   buttonLabel?: string
