@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { cmsNavigationItems } from '@/lib/db/schema'
-import { eq, and, asc, count } from 'drizzle-orm'
+import { eq, and, asc, count, sql, inArray } from 'drizzle-orm'
 import type { CmsNavigationItem, NewCmsNavigationItem } from '@/lib/db/schema'
 
 const DEFAULT_HEADER_ITEMS = [
@@ -101,14 +101,15 @@ export const CmsNavigationService = {
   },
 
   async reorder(itemIds: string[]): Promise<void> {
-    await db.transaction(async (tx) => {
-      for (let i = 0; i < itemIds.length; i++) {
-        await tx
-          .update(cmsNavigationItems)
-          .set({ sortOrder: i, updatedAt: new Date() })
-          .where(eq(cmsNavigationItems.id, itemIds[i]))
-      }
-    })
+    if (itemIds.length === 0) return
+    const caseExpr = sql`CASE id ${sql.join(
+      itemIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${i}`),
+      sql` `
+    )} ELSE sort_order END`
+    await db
+      .update(cmsNavigationItems)
+      .set({ sortOrder: caseExpr, updatedAt: new Date() })
+      .where(inArray(cmsNavigationItems.id, itemIds))
   },
 
   async seedDefaults(tenantId: string): Promise<{ seeded: boolean; count: number }> {

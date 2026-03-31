@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { cmsBlocks, cmsPages } from '@/lib/db/schema'
-import { eq, and, asc } from 'drizzle-orm'
+import { eq, and, asc, sql, inArray } from 'drizzle-orm'
 import type { CmsBlock, NewCmsBlock } from '@/lib/db/schema'
 
 export interface CreateCmsBlockInput {
@@ -103,12 +103,15 @@ export const CmsBlockService = {
   },
 
   async reorder(pageId: string, blockIds: string[]): Promise<boolean> {
-    for (let i = 0; i < blockIds.length; i++) {
-      await db
-        .update(cmsBlocks)
-        .set({ sortOrder: i, updatedAt: new Date() })
-        .where(and(eq(cmsBlocks.pageId, pageId), eq(cmsBlocks.id, blockIds[i])))
-    }
+    if (blockIds.length === 0) return true
+    const caseExpr = sql`CASE id ${sql.join(
+      blockIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${i}`),
+      sql` `
+    )} ELSE sort_order END`
+    await db
+      .update(cmsBlocks)
+      .set({ sortOrder: caseExpr, updatedAt: new Date() })
+      .where(and(eq(cmsBlocks.pageId, pageId), inArray(cmsBlocks.id, blockIds)))
 
     await markPageDraftChanges(pageId)
     return true

@@ -124,21 +124,26 @@ export const AiPromptTemplateService = {
   // ============================================
 
   async seedDefaults(tenantId: string) {
-    for (const [slug, defaults] of Object.entries(DEFAULT_TEMPLATES)) {
-      // Check if template already exists for this tenant+slug
-      const existing = await this.getBySlug(tenantId, slug)
-      if (!existing) {
-        await this.create(tenantId, {
+    const existing = await db
+      .select({ slug: aiPromptTemplates.slug })
+      .from(aiPromptTemplates)
+      .where(eq(aiPromptTemplates.tenantId, tenantId))
+    const existingSlugs = new Set(existing.map(r => r.slug))
+    const toCreate = Object.entries(DEFAULT_TEMPLATES).filter(([slug]) => !existingSlugs.has(slug))
+    if (toCreate.length > 0) {
+      await db.insert(aiPromptTemplates).values(
+        toCreate.map(([slug, d]) => ({
+          tenantId,
           slug,
-          name: defaults.name,
-          description: defaults.description,
-          systemPrompt: defaults.systemPrompt,
-          userPrompt: defaults.userPrompt,
-          outputFormat: defaults.outputFormat,
+          name: d.name,
+          description: d.description,
+          systemPrompt: d.systemPrompt,
+          userPrompt: d.userPrompt,
+          outputFormat: d.outputFormat,
           isActive: true,
           isDefault: true,
-        })
-      }
+        }))
+      )
     }
   },
 

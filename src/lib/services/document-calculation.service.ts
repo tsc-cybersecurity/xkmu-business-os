@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { documents, documentItems } from '@/lib/db/schema'
-import { eq, and, sql } from 'drizzle-orm'
+import { eq, and, sql, inArray } from 'drizzle-orm'
 import type { Document, DocumentItem, NewDocumentItem } from '@/lib/db/schema'
 import type { CreateDocumentItemInput, UpdateDocumentItemInput } from './document.types'
 
@@ -191,18 +191,21 @@ export const DocumentCalculationService = {
   },
 
   async reorderItems(tenantId: string, docId: string, itemIds: string[]): Promise<void> {
-    for (let i = 0; i < itemIds.length; i++) {
-      await db
-        .update(documentItems)
-        .set({ position: i })
-        .where(
-          and(
-            eq(documentItems.tenantId, tenantId),
-            eq(documentItems.documentId, docId),
-            eq(documentItems.id, itemIds[i])
-          )
+    if (itemIds.length === 0) return
+    const caseExpr = sql`CASE id ${sql.join(
+      itemIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${i}`),
+      sql` `
+    )} ELSE position END`
+    await db
+      .update(documentItems)
+      .set({ position: caseExpr })
+      .where(
+        and(
+          eq(documentItems.tenantId, tenantId),
+          eq(documentItems.documentId, docId),
+          inArray(documentItems.id, itemIds)
         )
-    }
+      )
   },
 
   async getItems(tenantId: string, docId: string): Promise<DocumentItem[]> {

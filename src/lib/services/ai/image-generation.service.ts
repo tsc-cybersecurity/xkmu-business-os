@@ -5,7 +5,7 @@
 
 import { db } from '@/lib/db'
 import { generatedImages, aiProviders } from '@/lib/db/schema'
-import { eq, and, desc, count, ilike } from 'drizzle-orm'
+import { eq, and, desc, count, ilike, inArray } from 'drizzle-orm'
 import { AiProviderService } from '../ai-provider.service'
 import { KieProvider } from './kie.provider'
 import { logger } from '@/lib/utils/logger'
@@ -473,11 +473,11 @@ export const ImageGenerationService = {
    * Bulk delete
    */
   async bulkDelete(tenantId: string, ids: string[]): Promise<number> {
-    let count = 0
-    for (const id of ids) {
-      const deleted = await this.delete(tenantId, id)
-      if (deleted) count++
-    }
-    return count
+    if (ids.length === 0) return 0
+    const result = await db
+      .delete(generatedImages)
+      .where(and(eq(generatedImages.tenantId, tenantId), inArray(generatedImages.id, ids)))
+      .returning({ id: generatedImages.id })
+    return result.length
   },
 }
