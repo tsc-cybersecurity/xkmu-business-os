@@ -10,6 +10,7 @@ function createChainMockManager() {
     const chainMethods = [
       'from', 'where', 'values', 'returning', 'limit',
       'offset', 'orderBy', 'set', 'leftJoin', 'innerJoin', 'groupBy',
+      '$dynamic',
     ]
 
     for (const method of chainMethods) {
