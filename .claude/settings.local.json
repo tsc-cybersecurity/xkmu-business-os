@@ -115,7 +115,10 @@
       "Read(//c/Daten/xkmu-business-os/**)",
       "Read(//c/Users/Administrator/AppData/Local/**)",
       "Read(//c/Users/Administrator/**)",
-      "Bash(ls -R \"/c/Daten/xkmu-business-os/src/app/intern/\\(dashboard\\)/wiba/\")"
+      "Bash(ls -R \"/c/Daten/xkmu-business-os/src/app/intern/\\(dashboard\\)/wiba/\")",
+      "Bash(sed 's/.*pgTable.//')",
+      "Bash(sed \"s/'''',.*//\")",
+      "Bash(ls -la /c/Daten/xkmu-business-os/src/app/\\\\\\(public\\\\\\)/)"
     ]
   }
 }

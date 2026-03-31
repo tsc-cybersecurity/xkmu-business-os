@@ -4,30 +4,84 @@ Multi-tenant Business Management Platform for SMEs (Small and Medium Enterprises
 
 ## Features
 
-- **CRM Module**: Companies, Persons, Leads management
-- **Finance**: Offers, Invoices with PDF generation
-- **AI Lab**: Idea processing with AI-powered analysis
-- **AI Integration**: Gemini, OpenAI, OpenRouter, Deepseek, Kimi, Ollama, Firecrawl, kie.ai
-- **DIN SPEC 27076**: Digitalisierungs-Check for SMEs with PDF report
-- **BSI WiBA**: IT security assessment (257 requirements, 19 categories)
-- **CMS & Blog**: Block-based CMS with SEO and navigation management
-- **Marketing**: Campaign management with AI-generated tasks
-- **Social Media**: Content planning, AI-generated posts
-- **n8n Integration**: Workflow automation with AI workflow generator
-- **Business Intelligence**: Company profiling and document analysis
-- **Activity Timeline**: Track all interactions and outreach
-- **Webhook Support**: API-first automation
-- **Database Admin**: Browser-based database viewer and editor
-- **Import/Export**: Full tenant data backup and restore
-- **Multi-Tenant**: Secure tenant isolation
+### CRM & Contact Management
+- **Companies** - Full company management with legal info, banking details, AI-powered research
+- **Persons** - Contact management with job titles, departments, addresses
+- **Leads** - Lead pipeline with scoring, source tracking, AI research & qualification
+- **Opportunities** - Sales opportunity pipeline management
+- **Activities** - Timeline tracking of all interactions and outreach
+
+### Finance & Invoicing
+- **Invoices** - Invoice generation with PDF export, status tracking (draft/sent/paid/overdue)
+- **Offers / Quotes** - Offer management with PDF generation and status workflow
+- **Time Entries** - Time tracking with invoicing capability
+- **Receipts** - Receipt management and tracking
+- **Document Templates** - Reusable templates for invoices and offers
+
+### Products & Services
+- **Product Catalog** - Comprehensive product and service management
+- **Product Categories** - Hierarchical category organization
+- **Public Catalog** - Customer-facing product/service display
+
+### Cybersecurity & Compliance
+- **DIN SPEC 27076** - Digitalisierungs-Check for SMEs with PDF report and grant tracking (Foerdermittel)
+- **BSI WiBA** - IT security assessment (257 requirements, 19 categories)
+- **BSI Grundschutz++** - BSI Grundschutz Plus implementation with asset management and security controls
+- **IR Playbook** - Incident response playbook management
+
+### AI-Powered Features
+- **AI Chat** - Integrated KI-Chatbot for internal use
+- **Business Intelligence** - Company profiling, document analysis, research automation
+- **Lead Research** - AI-powered lead enrichment and qualification scoring
+- **Company Research** - Automated company intelligence gathering
+- **AI Marketing Agent** - Autonomous agent for marketing task generation
+- **AI Workflow Generator** - Auto-generate n8n workflows using AI
+- **Image Generation** - AI-powered image generation with multiple providers
+- **AI Integration** - Gemini, OpenAI, OpenRouter, Deepseek, Kimi, Ollama, Firecrawl, kie.ai
+
+### Content & Marketing
+- **CMS** - Block-based page builder with drag-and-drop, templates, and navigation management
+- **Blog** - IT-News blog with SEO optimization and scheduled publishing
+- **Marketing Campaigns** - Campaign planning with AI-generated task automation
+- **Social Media** - Content calendar, post scheduling, AI content generation for multiple platforms
+- **Newsletter** - Email newsletter campaigns with subscriber management
+- **Marketing Templates** - Reusable campaign templates
+
+### Business Operations
+- **Cockpit** - Business dashboard and KPI monitoring with system integrations
+- **Projects** - Project management and tracking
+- **Processes** - Business process documentation and workflow management
+- **Ideas** - Idea management with backlog and conversion tracking
+
+### Automation & Integration
+- **n8n Workflows** - Workflow automation with AI-powered workflow builder
+- **Webhooks** - API-first automation with custom webhook support
+- **Task Queue** - Asynchronous task processing with Redis-backed handlers
+- **WordPress Integration** - Blog publishing to WordPress
+
+### Administration
+- **User Management** - Multi-user support with role-based access
+- **Roles & Permissions** - Fine-grained CRUD permissions per module (6 default roles: Owner, Admin, Member, Viewer, IT-Auditor, Designer)
+- **Settings & Configuration** - Tenant settings, email templates, API key management
+- **Database Admin** - Browser-based database viewer and editor
+- **Import / Export** - Full tenant data backup and restore
+- **Multi-Tenant** - Secure tenant isolation at database level
+- **Notifications** - In-app notification system
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router)
+- **Framework**: Next.js 16 (App Router, React 19)
 - **Language**: TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Auth**: JWT-based sessions
+- **Database**: PostgreSQL with Drizzle ORM (65 tables)
+- **Caching**: Redis (ioredis)
+- **Styling**: Tailwind CSS 4 + shadcn/ui + Radix UI
+- **Auth**: JWT-based sessions (jose + bcryptjs)
+- **PDF**: jsPDF + jsPDF-AutoTable
+- **Excel**: ExcelJS
+- **Charts**: Recharts
+- **Forms**: React Hook Form + Zod validation
+- **Email**: Nodemailer
+- **Testing**: Vitest
 - **Deployment**: Docker
 
 ## Deployment
@@ -75,6 +129,9 @@ docker exec xkmu-app npm run db:push
 | `OPENROUTER_API_KEY` | Optional | OpenRouter API key |
 | `DEEPSEEK_API_KEY` | Optional | Deepseek API key |
 | `OLLAMA_BASE_URL` | Optional | Ollama URL |
+| `FIRECRAWL_API_KEY` | Optional | Firecrawl web scraping API key |
+| `SERPAPI_API_KEY` | Optional | SerpAPI for web research |
+| `UNSPLASH_ACCESS_KEY` | Optional | Unsplash stock photos |
 | `SMTP_*` | Optional | Email configuration |
 
 See `.env.example` for full list.
@@ -91,6 +148,9 @@ npm run dev
 # Run linter
 npm run lint
 
+# Run tests
+npm run test
+
 # Database commands
 npm run db:generate  # Generate migrations
 npm run db:push      # Push schema to database
@@ -102,16 +162,24 @@ npm run db:studio    # Open Drizzle Studio
 120+ API endpoints under `/api/v1/`. See `docs/APPLICATION_DOCUMENTATION.md` for the full reference.
 
 Key endpoint groups:
-- `/api/v1/auth/*` - Authentication (login, logout, session)
+- `/api/v1/auth/*` - Authentication (login, logout, session, permissions)
 - `/api/v1/companies/*`, `/api/v1/persons/*`, `/api/v1/leads/*` - CRM
+- `/api/v1/opportunities/*` - Sales Pipeline
 - `/api/v1/documents/*` - Offers & Invoices
-- `/api/v1/din/*` - DIN SPEC 27076 Audits
+- `/api/v1/products/*`, `/api/v1/product-categories/*` - Product Catalog
+- `/api/v1/time-entries/*`, `/api/v1/receipts/*` - Finance
+- `/api/v1/din-audit/*` - DIN SPEC 27076 Audits
 - `/api/v1/wiba/*` - BSI WiBA Checks
+- `/api/v1/grundschutz/*` - BSI Grundschutz++
+- `/api/v1/ir-playbook/*` - Incident Response
 - `/api/v1/blog/*`, `/api/v1/cms/*` - Content Management
 - `/api/v1/marketing/*`, `/api/v1/social-media/*` - Marketing
+- `/api/v1/newsletter/*` - Newsletter Campaigns
 - `/api/v1/n8n/*` - Workflow Automation
 - `/api/v1/ai/*` - AI Completion & Research
+- `/api/v1/users/*`, `/api/v1/roles/*` - User & Role Management
 - `/api/v1/admin/database/*` - Database Administration
+- `/api/v1/webhooks/*`, `/api/v1/api-keys/*` - Integration & API Keys
 
 API authentication via:
 - Session cookie (`xkmu_session`)
