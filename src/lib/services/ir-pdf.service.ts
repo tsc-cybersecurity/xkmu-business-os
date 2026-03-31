@@ -308,7 +308,7 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
       const checklistData = sorted.map((item) => {
         const category = CATEGORY_LABELS[item.category] || item.category || ''
         const suffix = item.dsgvo_required ? ' [DSGVO]' : ''
-        return ['\u25A1', `${item.item || ''}${suffix}`, category]
+        return ['', `${item.item || ''}${suffix}`, category]
       })
 
       autoTable(doc, {
@@ -317,17 +317,26 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
         margin: { left: MARGIN, right: MARGIN },
         styles: { fontSize: 8.5, cellPadding: { top: 2.5, bottom: 2.5, left: 2, right: 2 }, overflow: 'linebreak', lineColor: [230, 230, 230] },
         columnStyles: {
-          0: { cellWidth: 7, halign: 'center', fontSize: 10, cellPadding: { top: 2, bottom: 2, left: 1, right: 1 } },
+          0: { cellWidth: 7, halign: 'center' },
           1: { cellWidth: contentWidth - 35 },
           2: { cellWidth: 28, halign: 'right', fontSize: 7, textColor: [...LIGHT_GRAY], fontStyle: 'italic' },
         },
         theme: 'plain',
         didDrawCell: (data) => {
-          // Draw light bottom border for each row
           if (data.section === 'body') {
+            // Draw light bottom border
             doc.setDrawColor(230, 230, 230)
             doc.setLineWidth(0.2)
             doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height)
+            // Draw checkbox in first column
+            if (data.column.index === 0) {
+              const boxSize = 3.2
+              const cx = data.cell.x + (data.cell.width - boxSize) / 2
+              const cy = data.cell.y + (data.cell.height - boxSize) / 2
+              doc.setDrawColor(140, 140, 140)
+              doc.setLineWidth(0.4)
+              doc.rect(cx, cy, boxSize, boxSize)
+            }
           }
         },
       })
