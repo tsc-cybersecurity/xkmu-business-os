@@ -6,7 +6,7 @@ import { rateLimit } from '@/lib/utils/rate-limit'
 import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
-  return withPermission(request, 'ai_providers', 'read', async (auth) => {
+  return withPermission(request, 'ai_providers', 'read', async (auth): Promise<Response> => {
     try {
       // Rate limit: max 30 AI completions per minute per IP
       const limited = await rateLimit(request, 'ai-completion', 30, 60_000)
