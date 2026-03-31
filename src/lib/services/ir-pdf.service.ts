@@ -293,74 +293,58 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
     y = checkPageBreak(doc, y, 30, pageWidth)
     y = addSectionTitle(doc, '4. Dokumentation & Nachbereitung', y)
 
-    // Pflichtdokumentation (Checklist box)
+    // Pflichtdokumentation as autoTable for clean alignment
     if (checklist.length > 0) {
-      y = checkPageBreak(doc, y, 15 + checklist.length * 7, pageWidth)
+      y = checkPageBreak(doc, y, 30, pageWidth)
 
-      // Box header
-      doc.setFillColor(240, 240, 245)
-      doc.setDrawColor(200, 200, 200)
-      const boxHeaderH = 8
-      doc.roundedRect(MARGIN, y, contentWidth, boxHeaderH, 2, 2, 'FD')
+      // Section label
       doc.setFontSize(10)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(...DARK)
-      doc.text('Pflichtdokumentation', MARGIN + 4, y + 5.5)
-      y += boxHeaderH + 2
+      doc.text('Pflichtdokumentation', MARGIN, y)
+      y += 3
 
-      // Checklist items
       const sorted = [...checklist].sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
-      for (const item of sorted) {
-        y = checkPageBreak(doc, y, 8, pageWidth)
-
-        // Checkbox
-        doc.setDrawColor(150, 150, 150)
-        doc.rect(MARGIN + 6, y - 3, 3.5, 3.5)
-
-        // Item text
-        doc.setFontSize(9)
-        doc.setFont('helvetica', 'normal')
-        doc.setTextColor(...DARK)
-        const itemText = item.item || ''
+      const checklistData = sorted.map((item) => {
         const category = CATEGORY_LABELS[item.category] || item.category || ''
         const suffix = item.dsgvo_required ? ' [DSGVO]' : ''
-        const fullText = `${itemText}${suffix}`
+        return ['\u25A1', `${item.item || ''}${suffix}`, category]
+      })
 
-        const itemLines = doc.splitTextToSize(fullText, contentWidth - 18)
-        doc.text(itemLines[0], MARGIN + 14, y)
-        if (itemLines.length > 1) {
-          for (let i = 1; i < itemLines.length; i++) {
-            y += 4
-            doc.text(itemLines[i], MARGIN + 14, y)
+      autoTable(doc, {
+        startY: y,
+        body: checklistData,
+        margin: { left: MARGIN, right: MARGIN },
+        styles: { fontSize: 8.5, cellPadding: { top: 2.5, bottom: 2.5, left: 2, right: 2 }, overflow: 'linebreak', lineColor: [230, 230, 230] },
+        columnStyles: {
+          0: { cellWidth: 7, halign: 'center', fontSize: 10, cellPadding: { top: 2, bottom: 2, left: 1, right: 1 } },
+          1: { cellWidth: contentWidth - 35 },
+          2: { cellWidth: 28, halign: 'right', fontSize: 7, textColor: [...LIGHT_GRAY], fontStyle: 'italic' },
+        },
+        theme: 'plain',
+        didDrawCell: (data) => {
+          // Draw light bottom border for each row
+          if (data.section === 'body') {
+            doc.setDrawColor(230, 230, 230)
+            doc.setLineWidth(0.2)
+            doc.line(data.cell.x, data.cell.y + data.cell.height, data.cell.x + data.cell.width, data.cell.y + data.cell.height)
           }
-        }
+        },
+      })
 
-        // Category badge (small, right-aligned)
-        if (category) {
-          doc.setFontSize(7)
-          doc.setTextColor(...LIGHT_GRAY)
-          doc.text(category, pageWidth - MARGIN - 2, y, { align: 'right' })
-        }
-
-        y += 6
-      }
-      y += 4
+      y = (doc as any).lastAutoTable.finalY + 8
     }
 
     // Lessons Learned box
     if (lessonsLearned.length > 0) {
-      y = checkPageBreak(doc, y, 15 + lessonsLearned.length * 7, pageWidth)
+      y = checkPageBreak(doc, y, 25, pageWidth)
 
-      // Box header
-      doc.setFillColor(240, 240, 245)
-      doc.setDrawColor(200, 200, 200)
-      const boxHeaderH = 8
-      doc.roundedRect(MARGIN, y, contentWidth, boxHeaderH, 2, 2, 'FD')
+      // Section label
       doc.setFontSize(10)
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(...DARK)
-      doc.text('Lessons Learned \u2014 Prueffragen nach dem Vorfall', MARGIN + 4, y + 5.5)
-      y += boxHeaderH + 3
+      doc.text('Lessons Learned \u2014 Prueffragen nach dem Vorfall', MARGIN, y)
+      y += 5
 
       const lessonsByCategory = groupBy(lessonsLearned, 'category')
       for (const [category, items] of Object.entries(lessonsByCategory) as [string, any[]][]) {
@@ -370,8 +354,8 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
           doc.setFontSize(8)
           doc.setFont('helvetica', 'bold')
           doc.setTextColor(...GRAY)
-          doc.text(catLabel, MARGIN + 6, y)
-          y += 4
+          doc.text(catLabel, MARGIN + 4, y)
+          y += 5
         }
 
         for (const item of items) {
