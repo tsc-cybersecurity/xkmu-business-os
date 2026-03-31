@@ -33,11 +33,12 @@ Bestehende Funktionalitaet aus der Codebase-Analyse:
 
 ### Active
 
-- [ ] Security-Haertung (SQL Injection, CORS, Security Headers, CSRF, HTML-Sanitizer)
+- [x] SQL Injection Fix — Validated in Phase 1: Foundation
+- [x] Auth-Konsolidierung (14 duplizierte getAuthContext auf shared Auth migriert) — Validated in Phase 1: Foundation
+- [x] Hardcoded Credentials entfernt — Validated in Phase 1: Foundation
+- [ ] Security-Haertung (CORS, Security Headers, CSRF, HTML-Sanitizer)
 - [ ] API-Key Permission-Scoping (granulare Berechtigungen statt Full-Access)
-- [ ] Auth-Konsolidierung (14 duplizierte getAuthContext auf shared Auth migrieren)
 - [ ] Next.js Middleware fuer zentralisierte Auth und Security
-- [ ] Hardcoded Credentials entfernen
 - [ ] Test-Abdeckung fuer kritische Services erhoehen (Auth, Tenant, Email, API-Key)
 - [ ] Integration-Tests fuer Kernflows
 - [ ] Code-Qualitaet verbessern (`as any` beseitigen, Error Handling, Silent Swallowing)
@@ -98,4 +99,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after initialization*
+*Last updated: 2026-03-31 after Phase 1 completion*
