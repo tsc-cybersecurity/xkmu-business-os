@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Shield, ClipboardCheck, Award } from 'lucide-react'
+import { Shield, ClipboardCheck, Award, ShieldCheck, Server, FileWarning } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function CybersecurityPage() {
@@ -13,6 +13,60 @@ export default function CybersecurityPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
+        <Link href="/intern/cybersecurity/grundschutz">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-orange-500/10 p-3">
+                  <ShieldCheck className="h-6 w-6 text-orange-500" />
+                </div>
+                <CardTitle className="text-lg">Grundschutz++</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Erweiterte Basisabsicherung nach BSI-Grundschutz mit massgeschneiderten Checklisten.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/intern/cybersecurity/grundschutz/assets">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-teal-500/10 p-3">
+                  <Server className="h-6 w-6 text-teal-500" />
+                </div>
+                <CardTitle className="text-lg">GS++ Assets</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                IT-Assets erfassen und verwalten fuer die Grundschutz-Analyse.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/intern/cybersecurity/ir-playbook">
+          <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-red-500/10 p-3">
+                  <FileWarning className="h-6 w-6 text-red-500" />
+                </div>
+                <CardTitle className="text-lg">IR Playbook</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Incident-Response-Playbooks fuer strukturierte Reaktion auf Sicherheitsvorfaelle.
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Link href="/intern/din-audit">
           <Card className="transition-shadow hover:shadow-md cursor-pointer h-full">
             <CardHeader>

@@ -105,7 +105,17 @@
       "WebFetch(domain:www.authgear.com)",
       "WebFetch(domain:projectdiscovery.io)",
       "WebFetch(domain:orm.drizzle.team)",
-      "Skill(gsd:plan-phase)"
+      "Skill(gsd:plan-phase)",
+      "Bash(cmd.exe /c \"where npx\" 2>/dev/null; cmd.exe /c \"where node\" 2>/dev/null; cmd.exe /c \"where npm\" 2>/dev/null)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\(x86\\)/**)",
+      "Read(//c/Daten/xkmu-business-os/$APPDATA/**)",
+      "Read(//c/Daten/xkmu-business-os/$HOME/AppData/Roaming/**)",
+      "Read(//c//**)",
+      "Read(//c/Daten/xkmu-business-os/**)",
+      "Read(//c/Users/Administrator/AppData/Local/**)",
+      "Read(//c/Users/Administrator/**)",
+      "Bash(ls -R \"/c/Daten/xkmu-business-os/src/app/intern/\\(dashboard\\)/wiba/\")"
     ]
   }
 }
