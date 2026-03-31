@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { IrPlaybookService } from '@/lib/services/ir-playbook.service'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -18,7 +19,7 @@ export async function GET(
 
       return apiSuccess(scenario)
     } catch (error) {
-      console.error('Error getting IR scenario:', error)
+      logger.error('Error getting IR scenario', error, { module: 'IrPlaybookScenarioAPI' })
       return apiServerError()
     }
   })
@@ -34,7 +35,7 @@ export async function DELETE(
       await IrPlaybookService.deleteScenario(id)
       return apiSuccess({ deleted: true })
     } catch (error) {
-      console.error('Error deleting IR scenario:', error)
+      logger.error('Error deleting IR scenario', error, { module: 'IrPlaybookScenarioAPI' })
       return apiServerError()
     }
   })

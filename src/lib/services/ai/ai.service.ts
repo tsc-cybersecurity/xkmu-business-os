@@ -269,8 +269,9 @@ class AIServiceClass {
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]) as CompanyResearchResult
       }
-    } catch {
-      // If JSON parsing fails, return the raw text as summary
+    } catch (parseError) {
+      logger.warn('Failed to parse JSON in research response, returning raw text', { module: 'AIService', feature: 'research' })
+      logger.debug('Parse error detail', { module: 'AIService', error: String(parseError) })
     }
 
     return {
@@ -332,8 +333,9 @@ class AIServiceClass {
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0])
       }
-    } catch {
-      // Parsing failed
+    } catch (parseError) {
+      logger.warn('Failed to parse JSON in extractEntities response, returning empty result', { module: 'AIService', feature: 'extractEntities' })
+      logger.debug('Parse error detail', { module: 'AIService', error: String(parseError) })
     }
 
     return {
@@ -379,7 +381,9 @@ class AIServiceClass {
           model: config.model,
           available,
         })
-      } catch {
+      } catch (providerError) {
+        logger.warn(`Provider ${config.name} (${config.providerType}) availability check failed, marking unavailable`, { module: 'AIService', providerId: config.id })
+        logger.debug('Provider check error detail', { module: 'AIService', error: String(providerError) })
         result.push({
           id: config.id,
           name: config.name,

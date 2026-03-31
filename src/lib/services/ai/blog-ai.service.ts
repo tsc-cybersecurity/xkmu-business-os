@@ -172,8 +172,9 @@ Antworte NUR als JSON:
       if (match) {
         return JSON.parse(match[0])
       }
-    } catch {
-      // Parsing failed
+    } catch (parseError) {
+      logger.warn('Failed to parse JSON in blog SEO generation, returning empty result', { module: 'BlogAIService', feature: 'seo_generation' })
+      logger.debug('Parse error detail', { module: 'BlogAIService', error: String(parseError) })
     }
 
     return { seoTitle: '', seoDescription: '', seoKeywords: '' }

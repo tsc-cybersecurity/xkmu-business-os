@@ -4,6 +4,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
+import { logger } from '@/lib/utils/logger'
 
 const upsertControlMappingSchema = z.object({
   controlId: z.string().min(1),
@@ -30,7 +31,7 @@ export async function POST(
       const mapping = await GrundschutzAssetService.upsertControlMapping(auth.tenantId, id, parsed.data)
       return apiSuccess(mapping)
     } catch (error) {
-      console.error('Error upserting Grundschutz control mapping:', error)
+      logger.error('Error upserting Grundschutz control mapping', error, { module: 'GrundschutzControlsAPI' })
       return apiServerError()
     }
   })

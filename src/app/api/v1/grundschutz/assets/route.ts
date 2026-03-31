@@ -4,6 +4,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
+import { logger } from '@/lib/utils/logger'
 
 const createAssetSchema = z.object({
   companyId: z.string().uuid(),
@@ -42,7 +43,7 @@ export async function GET(request: NextRequest) {
       const assets = await GrundschutzAssetService.list(auth.tenantId, companyId, filters)
       return apiSuccess(assets)
     } catch (error) {
-      console.error('Error listing Grundschutz assets:', error)
+      logger.error('Error listing Grundschutz assets', error, { module: 'GrundschutzAssetsAPI' })
       return apiServerError()
     }
   })
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       const asset = await GrundschutzAssetService.create(auth.tenantId, parsed.data)
       return apiSuccess(asset, undefined, 201)
     } catch (error) {
-      console.error('Error creating Grundschutz asset:', error)
+      logger.error('Error creating Grundschutz asset', error, { module: 'GrundschutzAssetsAPI' })
       return apiServerError()
     }
   })

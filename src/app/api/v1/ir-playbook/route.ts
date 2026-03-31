@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { IrPlaybookService } from '@/lib/services/ir-playbook.service'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'basisabsicherung', 'read', async () => {
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
       return apiSuccess(scenarios)
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error)
-      console.error('Error listing IR scenarios:', msg)
+      logger.error('Error listing IR scenarios', error, { module: 'IrPlaybookAPI' })
       return apiError('QUERY_ERROR', `Abfrage fehlgeschlagen: ${msg}`, 500)
     }
   })
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       return apiError('INVALID_FORMAT', 'Erwartet {"scenarios": [...]} oder einzelnes Szenario mit "id"', 400)
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error)
-      console.error('Error importing IR scenario:', msg, error)
+      logger.error('Error importing IR scenario', error, { module: 'IrPlaybookAPI' })
       return apiError('IMPORT_ERROR', `Import fehlgeschlagen: ${msg}`, 500)
     }
   })

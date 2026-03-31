@@ -1,6 +1,7 @@
 import { AIService, type AIRequestContext } from './ai.service'
 import { AiPromptTemplateService } from '../ai-prompt-template.service'
 import type { BusinessAnalysisResult } from '../business-profile.service'
+import { logger } from '@/lib/utils/logger'
 
 function extractJson(text: string): string | null {
   const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
@@ -52,8 +53,10 @@ export const BusinessIntelligenceAIService = {
         recommendations: parsed.recommendations || undefined,
         rawAnalysis: response.text,
       }
-    } catch {
+    } catch (parseError) {
       // JSON kaputt (z.B. abgeschnitten) - rawAnalysis trotzdem speichern
+      logger.warn('Failed to parse JSON in business analysis, returning raw text', { module: 'BusinessIntelligenceAIService', feature: 'analyzeDocuments' })
+      logger.debug('Parse error detail', { module: 'BusinessIntelligenceAIService', error: String(parseError) })
       return { rawAnalysis: response.text }
     }
   },

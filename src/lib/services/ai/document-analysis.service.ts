@@ -1,5 +1,6 @@
 import { AIService, type AIRequestContext } from './ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
+import { logger } from '@/lib/utils/logger'
 
 export interface DocumentAnalysisResult {
   extractedText: string
@@ -70,8 +71,9 @@ export const DocumentAnalysisService = {
           analyzedAt: new Date().toISOString(),
         }
       }
-    } catch {
-      // Fallback
+    } catch (parseError) {
+      logger.warn('Failed to parse JSON in document analysis, using raw text as summary', { module: 'DocumentAnalysisService', feature: 'analyzeDocument' })
+      logger.debug('Parse error detail', { module: 'DocumentAnalysisService', error: String(parseError) })
     }
 
     return {

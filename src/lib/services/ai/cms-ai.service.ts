@@ -1,5 +1,6 @@
 import { AIService, type AIRequestContext } from './ai.service'
 import { AiPromptTemplateService } from '../ai-prompt-template.service'
+import { logger } from '@/lib/utils/logger'
 
 export interface SEOResult {
   seoTitle: string
@@ -34,8 +35,9 @@ export const CmsAIService = {
       if (match) {
         return JSON.parse(match[0]) as SEOResult
       }
-    } catch {
-      // Parsing failed
+    } catch (parseError) {
+      logger.warn('Failed to parse JSON in CMS SEO generation, returning empty result', { module: 'CmsAIService', feature: 'generateSEO' })
+      logger.debug('Parse error detail', { module: 'CmsAIService', error: String(parseError) })
     }
 
     return {
@@ -71,8 +73,9 @@ Antworte NUR als JSON mit der gleichen Struktur wie der aktuelle Inhalt, aber mi
       if (match) {
         return JSON.parse(match[0])
       }
-    } catch {
-      // Parsing failed
+    } catch (parseError) {
+      logger.warn('Failed to parse JSON in CMS block content improvement, returning original content', { module: 'CmsAIService', feature: 'improveBlockContent' })
+      logger.debug('Parse error detail', { module: 'CmsAIService', error: String(parseError) })
     }
 
     return currentContent

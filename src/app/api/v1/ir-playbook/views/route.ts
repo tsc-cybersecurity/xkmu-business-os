@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { IrPlaybookService } from '@/lib/services/ir-playbook.service'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'basisabsicherung', 'read', async () => {
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
           )
       }
     } catch (error) {
-      console.error('Error fetching IR view:', error)
+      logger.error('Error fetching IR view', error, { module: 'IrPlaybookViewsAPI' })
       return apiServerError()
     }
   })

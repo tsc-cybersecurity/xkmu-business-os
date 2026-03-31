@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
+import { logger } from '@/lib/utils/logger'
 
 export async function GET(
   request: NextRequest,
@@ -18,7 +19,7 @@ export async function GET(
 
       return apiSuccess(asset)
     } catch (error) {
-      console.error('Error getting Grundschutz asset:', error)
+      logger.error('Error getting Grundschutz asset', error, { module: 'GrundschutzAssetAPI' })
       return apiServerError()
     }
   })
@@ -41,7 +42,7 @@ export async function PUT(
 
       return apiSuccess(asset)
     } catch (error) {
-      console.error('Error updating Grundschutz asset:', error)
+      logger.error('Error updating Grundschutz asset', error, { module: 'GrundschutzAssetAPI' })
       return apiServerError()
     }
   })
@@ -62,7 +63,7 @@ export async function DELETE(
 
       return apiSuccess(null)
     } catch (error) {
-      console.error('Error deleting Grundschutz asset:', error)
+      logger.error('Error deleting Grundschutz asset', error, { module: 'GrundschutzAssetAPI' })
       return apiServerError()
     }
   })
