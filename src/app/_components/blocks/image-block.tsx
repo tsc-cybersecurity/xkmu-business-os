@@ -1,6 +1,6 @@
 import Image from 'next/image'
 
-interface ImageBlockContent {
+export interface ImageBlockContent {
   src?: string
   alt?: string
   caption?: string

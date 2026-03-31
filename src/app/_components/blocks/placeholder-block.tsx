@@ -2,7 +2,7 @@ import { getIcon } from '@/lib/utils/icon-map'
 import { FileText } from 'lucide-react'
 import { InlineMarkdown } from '../markdown-renderer'
 
-interface PlaceholderBlockContent {
+export interface PlaceholderBlockContent {
   icon?: string
   title?: string
   description?: string

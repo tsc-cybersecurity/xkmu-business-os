@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { iconMap } from '@/lib/utils/icon-map'
 
-interface BannerBlockContent {
+export interface BannerBlockContent {
   text: string
   variant?: 'info' | 'success' | 'warning' | 'brand'
   icon?: string

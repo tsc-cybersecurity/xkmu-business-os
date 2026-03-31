@@ -14,7 +14,7 @@ interface ServiceCard {
   deliverables?: (string | Deliverable)[]
 }
 
-interface ServiceCardsBlockContent {
+export interface ServiceCardsBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   columns?: 1 | 2 | 3

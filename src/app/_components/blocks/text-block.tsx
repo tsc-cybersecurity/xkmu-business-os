@@ -1,6 +1,6 @@
 import { MarkdownRenderer } from '../markdown-renderer'
 
-interface TextBlockContent {
+export interface TextBlockContent {
   content?: string
   alignment?: 'left' | 'center' | 'right'
 }

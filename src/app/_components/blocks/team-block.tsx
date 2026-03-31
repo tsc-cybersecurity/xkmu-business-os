@@ -11,7 +11,7 @@ interface TeamMember {
   links?: Array<{ icon?: string; href: string }>
 }
 
-interface TeamBlockContent {
+export interface TeamBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   columns?: 2 | 3 | 4

@@ -1,6 +1,6 @@
 'use client'
 
-interface DividerBlockContent {
+export interface DividerBlockContent {
   style?: 'line' | 'dashed' | 'dots' | 'gradient' | 'space'
   label?: string
 }

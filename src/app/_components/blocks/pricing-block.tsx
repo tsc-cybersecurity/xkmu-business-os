@@ -14,7 +14,7 @@ interface PricingPlan {
   highlighted?: boolean
 }
 
-interface PricingBlockContent {
+export interface PricingBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   plans?: PricingPlan[]

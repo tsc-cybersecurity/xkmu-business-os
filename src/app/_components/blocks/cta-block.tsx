@@ -4,7 +4,7 @@ import { getIcon } from '@/lib/utils/icon-map'
 import { ArrowRight } from 'lucide-react'
 import { InlineMarkdown } from '../markdown-renderer'
 
-interface CtaBlockContent {
+export interface CtaBlockContent {
   headline?: string
   description?: string
   buttons?: Array<{ label: string; href: string; variant?: string }>

@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { getIcon } from '@/lib/utils/icon-map'
 import { InlineMarkdown } from '../markdown-renderer'
 
-interface CardsBlockContent {
+export interface CardsBlockContent {
   columns?: 2 | 3 | 4
   items?: Array<{
     icon?: string

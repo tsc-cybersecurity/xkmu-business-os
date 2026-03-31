@@ -10,7 +10,7 @@ interface GalleryImage {
   caption?: string
 }
 
-interface GalleryBlockContent {
+export interface GalleryBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   columns?: 2 | 3 | 4

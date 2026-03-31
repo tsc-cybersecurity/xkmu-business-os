@@ -6,7 +6,7 @@ interface StatItem {
   description?: string
 }
 
-interface StatsBlockContent {
+export interface StatsBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   columns?: 2 | 3 | 4

@@ -12,7 +12,7 @@ interface TestimonialItem {
   rating?: number
 }
 
-interface TestimonialsBlockContent {
+export interface TestimonialsBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   columns?: 2 | 3

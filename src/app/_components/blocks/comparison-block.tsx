@@ -12,7 +12,7 @@ interface ComparisonRow {
   values: string[]
 }
 
-interface ComparisonBlockContent {
+export interface ComparisonBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   columns?: ComparisonColumn[]

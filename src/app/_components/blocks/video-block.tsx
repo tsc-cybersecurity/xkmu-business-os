@@ -1,6 +1,6 @@
 'use client'
 
-interface VideoBlockContent {
+export interface VideoBlockContent {
   src?: string
   title?: string
   caption?: string

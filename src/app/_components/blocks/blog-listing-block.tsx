@@ -13,7 +13,7 @@ interface BlogPost {
   category: string | null; tags: string[]; publishedAt: string | null
 }
 
-interface BlogListingBlockContent {
+export interface BlogListingBlockContent {
   title?: string
   subtitle?: string
   columns?: 1 | 2 | 3 | 4

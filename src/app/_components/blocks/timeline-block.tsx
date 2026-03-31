@@ -8,7 +8,7 @@ interface TimelineStep {
   description?: string
 }
 
-interface TimelineBlockContent {
+export interface TimelineBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   items?: TimelineStep[]

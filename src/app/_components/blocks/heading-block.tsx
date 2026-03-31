@@ -1,6 +1,6 @@
 import { InlineMarkdown } from '../markdown-renderer'
 
-interface HeadingBlockContent {
+export interface HeadingBlockContent {
   text?: string
   level?: 1 | 2 | 3
   subtitle?: string

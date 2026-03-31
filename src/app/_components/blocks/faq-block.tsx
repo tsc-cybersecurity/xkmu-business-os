@@ -8,7 +8,7 @@ interface FaqItem {
   answer: string
 }
 
-interface FaqBlockContent {
+export interface FaqBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   items?: FaqItem[]

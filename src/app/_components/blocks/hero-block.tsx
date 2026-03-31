@@ -4,7 +4,7 @@ import { getIcon } from '@/lib/utils/icon-map'
 import { InlineMarkdown } from '../markdown-renderer'
 import { ArrowRight } from 'lucide-react'
 
-interface HeroBlockContent {
+export interface HeroBlockContent {
   backgroundImage?: string
   overlayGradient?: string
   badge?: { icon?: string; text?: string }

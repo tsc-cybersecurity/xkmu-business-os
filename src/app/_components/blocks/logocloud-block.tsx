@@ -8,7 +8,7 @@ interface LogoItem {
   href?: string
 }
 
-interface LogoCloudBlockContent {
+export interface LogoCloudBlockContent {
   sectionTitle?: string
   sectionSubtitle?: string
   items?: LogoItem[]
