@@ -21,8 +21,12 @@ export async function withPermission(
     return apiUnauthorized()
   }
 
-  // API-Key-Auth: bestehendes Berechtigungssystem beibehalten
+  // API-Key-Auth: Scope-basierte Berechtigungspruefung
   if (auth.role === 'api') {
+    const scopes: string[] = auth.apiKeyPermissions ?? ['*']
+    if (!scopes.includes('*') && !scopes.includes(`${module}:${action}`)) {
+      return apiForbidden(`API-Schlüssel hat keine Berechtigung für ${module}:${action}`)
+    }
     return handler(auth)
   }
 
