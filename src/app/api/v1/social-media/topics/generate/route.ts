@@ -11,8 +11,9 @@ import {
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { SocialMediaAIService } from '@/lib/services/ai/social-media-ai.service'
-import { SocialMediaTopicService } from '@/lib/services/social-media-topic.service'
 import { BusinessProfileService } from '@/lib/services/business-profile.service'
+import { db } from '@/lib/db'
+import { socialMediaTopics } from '@/lib/db/schema'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
@@ -54,17 +55,15 @@ export async function POST(request: NextRequest) {
         }
       )
 
-      // Generierte Themen direkt als Topics speichern
+      // Generierte Themen direkt als Topics speichern (batch INSERT)
       const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
-      const saved = []
-      for (let i = 0; i < generated.length; i++) {
-        const topic = await SocialMediaTopicService.create(auth.tenantId, {
-          name: generated[i].name,
-          description: generated[i].description,
-          color: colors[i % colors.length],
-        })
-        saved.push(topic)
-      }
+      const topicsToInsert = generated.map((t, i) => ({
+        tenantId: auth.tenantId,
+        name: t.name,
+        description: t.description || null,
+        color: colors[i % colors.length],
+      }))
+      const saved = await db.insert(socialMediaTopics).values(topicsToInsert).returning()
 
       return apiSuccess(saved, undefined, 201)
     } catch (error) {

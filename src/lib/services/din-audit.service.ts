@@ -200,12 +200,7 @@ export const DinAuditService = {
   },
 
   async saveBulkAnswers(tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<DinAnswer[]> {
-    const results: DinAnswer[] = []
-    for (const answer of answers) {
-      const saved = await this.saveAnswer(tenantId, sessionId, answer)
-      results.push(saved)
-    }
-    return results
+    return Promise.all(answers.map(a => this.saveAnswer(tenantId, sessionId, a)))
   },
 
   async getAnswers(tenantId: string, sessionId: string): Promise<DinAnswer[]> {

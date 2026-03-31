@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         customPrompt?: string // Optional: custom prompt instead of template
       }
 
-      // Get all processes with tasks
+      // Get all processes with tasks (parallel fetch)
       const allProcesses = await ProcessService.list(auth.tenantId)
       const allTasks: Array<{
         task: Awaited<ReturnType<typeof ProcessService.getTaskById>> & Record<string, unknown>
@@ -95,9 +95,12 @@ export async function POST(request: NextRequest) {
         processKey: string
       }> = []
 
-      for (const process of allProcesses) {
-        const tasks = await ProcessService.listTasks(auth.tenantId, process.id)
-        for (const task of tasks) {
+      const tasksByProcess = await Promise.all(
+        allProcesses.map(p => ProcessService.listTasks(auth.tenantId, p.id))
+      )
+      for (let pi = 0; pi < allProcesses.length; pi++) {
+        const process = allProcesses[pi]
+        for (const task of tasksByProcess[pi]) {
           // Filter by taskKeys if provided
           if (body.taskKeys?.length && !body.taskKeys.includes(task.taskKey)) continue
           // Skip if already has devRequirements and overwrite is false
