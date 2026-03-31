@@ -140,3 +140,12 @@ Each task was committed atomically:
 ---
 *Phase: 01-foundation*
 *Completed: 2026-03-31*
+
+## Self-Check: PASSED
+
+- FOUND: `.planning/phases/01-foundation/01-01-SUMMARY.md`
+- FOUND: `src/__tests__/integration/api/auth-migration.route.test.ts`
+- FOUND: commit `948aae3` (RED test scaffold)
+- FOUND: commit `da385cc` (14-route migration)
+- FOUND: commit `1ef43f0` (plan metadata)
+- PASS: zero `async function getAuthContext` in `src/app/api/`
