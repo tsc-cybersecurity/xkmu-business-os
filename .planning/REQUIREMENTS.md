@@ -203,5 +203,27 @@ R4.* (Code Quality) — nach R3.* (aendert viel Code, Tests als Sicherheitsnetz)
 - Neue Features/Module — Fokus auf Haertung
 - MFA — eigener Milestone
 
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| R2.1 Auth-Konsolidierung | Phase 1 | Pending |
+| R1.1 SQL Injection Fix | Phase 1 | Pending |
+| R1.5 Credentials Cleanup | Phase 1 | Pending |
+| R1.2 CORS Allowlist | Phase 2 | Pending |
+| R1.3 Security Headers | Phase 2 | Pending |
+| R2.2 Next.js Middleware | Phase 2 | Pending |
+| R1.4 HTML Sanitizer | Phase 3 | Pending |
+| R2.3 API-Key Scoping | Phase 3 | Pending |
+| R2.4 CSRF-Schutz | Phase 3 | Pending |
+| R3.1 Redis Rate Limiting | Phase 4 | Pending |
+| R3.2 Error Handling | Phase 4 | Pending |
+| R3.3 Test-Abdeckung Kritische Services | Phase 5 | Pending |
+| R3.4 Integration-Tests Kernflows | Phase 5 | Pending |
+| R4.1 TypeScript Strictness | Phase 6 | Pending |
+| R4.2 N+1 Query Fixes | Phase 6 | Pending |
+| R4.3 Komponenten-Splitting | Phase 6 | Pending |
+
 ---
 *Erstellt: 2026-03-31 aus Research + Codebase-Analyse*
+*Traceability hinzugefuegt: 2026-03-30 nach ROADMAP.md-Erstellung*
