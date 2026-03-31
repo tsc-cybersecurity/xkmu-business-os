@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
-import { createCsrfMiddleware } from '@edge-csrf/nextjs'
 
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://boss.xkmu.de')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://bos.dev.xkmu.de')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean)
@@ -29,17 +28,33 @@ const PUBLIC_PATHS = [
   '/api/health',
 ]
 
-const API_KEY_PATHS = [
-  '/api/v1/',
-]
+const CSRF_COOKIE = 'csrf_token'
+const CSRF_HEADER = 'x-csrf-token'
+const MUTATION_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH'])
 
-const csrfProtect = createCsrfMiddleware({
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    name: 'csrf_token',
-    sameSite: 'lax',
-  },
-})
+function generateCsrfToken(): string {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')
+}
+
+function csrfCheck(request: NextRequest): NextResponse | null {
+  // Only check mutation methods
+  if (!MUTATION_METHODS.has(request.method)) return null
+
+  const cookieToken = request.cookies.get(CSRF_COOKIE)?.value
+  const headerToken = request.headers.get(CSRF_HEADER)
+
+  // Both must be present and match (Double-Submit Cookie Pattern)
+  if (!cookieToken || !headerToken || cookieToken !== headerToken) {
+    return NextResponse.json(
+      { error: 'CSRF-Token fehlt oder ungueltig' },
+      { status: 403 }
+    )
+  }
+
+  return null // CSRF valid
+}
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET
@@ -121,8 +136,8 @@ export async function proxy(request: NextRequest) {
 
   // CSRF-Schutz fuer session-basierte Mutation-Routes
   // API-Key-Requests haben den Block oben bereits verlassen (return NextResponse.next())
-  const csrfResponse = await csrfProtect(request)
-  if (csrfResponse) return csrfResponse  // 403 bei fehlendem/ungueltigem CSRF-Token
+  const csrfResult = csrfCheck(request)
+  if (csrfResult) return csrfResult  // 403 bei fehlendem/ungueltigem CSRF-Token
 
   // Check session for protected routes
   const sessionToken = request.cookies.get('xkmu_session')?.value
@@ -151,6 +166,17 @@ export async function proxy(request: NextRequest) {
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   })
+
+  // Set CSRF cookie if not present (Double-Submit Cookie Pattern)
+  if (!request.cookies.get(CSRF_COOKIE)?.value) {
+    const token = generateCsrfToken()
+    response.cookies.set(CSRF_COOKIE, token, {
+      httpOnly: false, // Frontend must read this cookie
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    })
+  }
 
   // CORS: set response headers for allowed origins (non-preflight requests)
   if (isAllowedOrigin) {
