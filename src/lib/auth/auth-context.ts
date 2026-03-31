@@ -7,6 +7,7 @@ export interface AuthContext {
   userId: string | null
   role: string
   roleId: string | null
+  apiKeyPermissions: string[] | null
 }
 
 export async function getAuthContext(
@@ -20,6 +21,7 @@ export async function getAuthContext(
       userId: session.user.id,
       role: session.user.role,
       roleId: session.user.roleId ?? null,
+      apiKeyPermissions: null,
     }
   }
 
@@ -33,6 +35,7 @@ export async function getAuthContext(
         userId: null,
         role: 'api',
         roleId: null,
+        apiKeyPermissions: payload.permissions,
       }
     }
   }

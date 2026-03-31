@@ -10,6 +10,7 @@ export function authFixture(overrides: Partial<AuthContext> = {}): AuthContext {
     userId: TEST_USER_ID,
     role: 'admin',
     roleId: null,
+    apiKeyPermissions: null,
     ...overrides,
   }
 }

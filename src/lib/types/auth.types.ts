@@ -20,6 +20,7 @@ export interface AuthContext {
   tenantId: string
   userId: string
   role: UserRole
+  apiKeyPermissions?: string[] | null
 }
 
 export interface LoginCredentials {

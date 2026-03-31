@@ -32,6 +32,7 @@ const TEST_AUTH: AuthContext = {
   userId: TEST_USER_ID,
   role: 'admin',
   roleId: null,
+  apiKeyPermissions: null,
 }
 
 describe('POST /api/v1/import/database', () => {
