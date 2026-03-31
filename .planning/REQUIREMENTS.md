@@ -210,9 +210,9 @@ R4.* (Code Quality) — nach R3.* (aendert viel Code, Tests als Sicherheitsnetz)
 | R2.1 Auth-Konsolidierung | Phase 1 | Pending |
 | R1.1 SQL Injection Fix | Phase 1 | Complete (01-02) |
 | R1.5 Credentials Cleanup | Phase 1 | Pending |
-| R1.2 CORS Allowlist | Phase 2 | Pending |
-| R1.3 Security Headers | Phase 2 | Pending |
-| R2.2 Next.js Middleware | Phase 2 | Pending |
+| R1.2 CORS Allowlist | Phase 2 | Complete (02-01) |
+| R1.3 Security Headers | Phase 2 | Complete (02-01) |
+| R2.2 Next.js Middleware | Phase 2 | Complete (02-01) |
 | R1.4 HTML Sanitizer | Phase 3 | Pending |
 | R2.3 API-Key Scoping | Phase 3 | Pending |
 | R2.4 CSRF-Schutz | Phase 3 | Pending |

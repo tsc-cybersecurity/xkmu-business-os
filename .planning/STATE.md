@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 01-foundation/01-01 auth consolidation migration
-last_updated: "2026-03-31T05:10:00.248Z"
+status: executing
+stopped_at: Completed 02-security-layer/02-01 CORS hardening and security headers
+last_updated: "2026-03-31T05:46:43.106Z"
 last_activity: 2026-03-31
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 5
+  completed_plans: 4
   percent: 0
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-30)
 
 **Core value:** Die Anwendung muss sicher und zuverlaessig sein — Multi-Tenant-Isolation, korrekte Authentifizierung/Autorisierung und keine Sicherheitsluecken, die Kundendaten gefaehrden koennten.
-**Current focus:** Phase 01 — foundation
+**Current focus:** Phase 02 — security-layer
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 02 (security-layer) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-03-31
 
 Progress: [░░░░░░░░░░] 0%
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation P03 | 3 | 2 tasks | 3 files |
 | Phase 01-foundation P02 | 12 | 2 tasks | 2 files |
 | Phase 01-foundation P01 | 14 | 2 tasks | 16 files |
+| Phase 02-security-layer P01 | 6 | 4 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Recent decisions affecting current work:
 - [Phase 01-foundation]: tenant_id override is unconditional in import — auth.tenantId always wins over any value in uploaded SQL
 - [Phase 01-foundation]: All 14 routes migrated atomically to withPermission() in one PR — no partial migration state
 - [Phase 01-foundation]: Redundant manual admin check in ai-prompt-templates/seed removed — withPermission RBAC handles it via DEFAULT_ROLE_PERMISSIONS
+- [Phase 02-security-layer]: CORS handling moved from next.config.ts to proxy.ts: next.config.ts headers() cannot read request headers, dynamic origin allowlist only possible in proxy.ts
+- [Phase 02-security-layer]: CSP starts in Content-Security-Policy-Report-Only mode — switch to enforcement after Docker build verification shows zero violations
+- [Phase 02-security-layer]: ALLOWED_ORIGINS uses :- default (not :?) — optional config with sensible default, unlike required secrets that use :?
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T05:04:14.835Z
-Stopped at: Completed 01-foundation/01-01 auth consolidation migration
+Last session: 2026-03-31T05:46:43.097Z
+Stopped at: Completed 02-security-layer/02-01 CORS hardening and security headers
 Resume file: None

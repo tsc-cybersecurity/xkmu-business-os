@@ -54,7 +54,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Security Layer Implementation: CORS Wildcard entfernen + Security Headers (next.config.ts) + CVE-2025-29927 Defense + CORS Allowlist (src/proxy.ts) + Build-Verifikation
+- [x] 02-01-PLAN.md — Security Layer Implementation: CORS Wildcard entfernen + Security Headers (next.config.ts) + CVE-2025-29927 Defense + CORS Allowlist (src/proxy.ts) + Build-Verifikation
 - [ ] 02-02-PLAN.md — Production Verification: curl-Checks gegen boss.xkmu.de (5 CVE-bypass-Routes) + Browser CSP-Violations Checkpoint
 
 ### Phase 3: XSS & API Protection
