@@ -81,11 +81,11 @@ Plans:
   1. Nach einem Container-Neustart gilt der Rate-Limit-Counter weiter; ein zweiter Container sieht denselben Zaehler
   2. Wenn Redis nicht erreichbar ist, werden Requests trotzdem durchgelassen (Fail-Open) und ein Warning geloggt
   3. Kein `catch {}` oder leerer `catch`-Block mehr im Codebase; AI-Provider-Fehler erscheinen als Fehlermeldung im UI statt als Stille
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: Redis Rate Limiting — `rate-limit.ts` auf `ioredis` INCR/EXPIRE (Lua-Script) migrieren, Fail-Open implementieren
-- [ ] 04-02: Error Handling — alle silent catch-Blocks in AI-Services und anderen Stellen durch strukturiertes Logging und User-Fehlermeldungen ersetzen
+- [ ] 04-01-PLAN.md — Redis Rate Limiting: ioredis installieren + redis-client.ts Singleton + rate-limit.ts auf INCR/EXPIRE migrieren + 3 Caller auf await aktualisieren + Unit Tests
+- [ ] 04-02-PLAN.md — Error Handling: logger.warn in 11 AI-Service JSON-Parse-Catches + console.error auf logger.error in 6 grundschutz/ir-playbook Routes
 
 ### Phase 5: Test Coverage
 **Goal**: Auth-, Tenant-, Email- und API-Key-Services haben mindestens 80% Test-Abdeckung mit Integration Tests die echte DB-Queries ausfuehren; Tenant-Isolation ist durch Cross-Tenant-Tests verifiziert.
