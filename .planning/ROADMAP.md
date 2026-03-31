@@ -66,12 +66,12 @@ Plans:
   2. Ein POST-Request ohne gueltigen CSRF-Token wird mit 403 abgelehnt; ein API-Key-Request (Machine-to-Machine) ist davon ausgenommen
   3. Bestehende API-Keys (z.B. n8n-Workflows) funktionieren nach der Schema-Migration weiterhin mit `scope: '*'`
   4. Ein API-Key mit `scope: 'leads:read'` erhaelt 403 wenn er auf `/api/v1/companies` zugreift
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: HTML Sanitizer — `isomorphic-dompurify`-Wrapper erstellen und alle `dangerouslySetInnerHTML`-Stellen auditieren
-- [ ] 03-02: API-Key Scoping — Schema-Migration (permissions-Spalte), `scope: '*'` fuer bestehende Keys, Admin-UI, `withPermission()`-Enforcement
-- [ ] 03-03: CSRF-Schutz — `@edge-csrf/nextjs` in `proxy.ts` integrieren, API-Key-Requests ausnehmen, CSRF-Token im Frontend verfuegbar machen
+- [ ] 03-01-PLAN.md — HTML Sanitizer: isomorphic-dompurify-Wrapper + 3 dangerouslySetInnerHTML Call Sites sanitieren
+- [ ] 03-02-PLAN.md — API-Key Scoping: SQL-Migration + AuthContext + withPermission()-Enforcement + Admin-UI Scope-Selector
+- [ ] 03-03-PLAN.md — CSRF-Schutz: @edge-csrf/nextjs in proxy.ts nach API-Key-Early-Return + getCsrfToken() Utility
 
 ### Phase 4: Reliability
 **Goal**: Der Rate Limiter funktioniert ueber Container-Neustarts hinweg und alle Silent-Error-Swallowing-Stellen in AI-Services und anderen Bereichen geben strukturierte Fehler an den User weiter.
