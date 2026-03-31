@@ -141,7 +141,7 @@ describe('EmailService', () => {
       process.env.EMAIL_PROVIDER = 'gmail'
 
       const nodemailer = await getNodemailer()
-      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as ReturnType<typeof nodemailer.createTransport>)
+      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as unknown as ReturnType<typeof nodemailer.createTransport>)
       sendMailMock.mockResolvedValue({ messageId: 'msg-123' })
       dbMock.mockInsert.mockResolvedValue([{}])
 
@@ -168,7 +168,7 @@ describe('EmailService', () => {
       process.env.EMAIL_PROVIDER = 'gmail'
 
       const nodemailer = await getNodemailer()
-      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as ReturnType<typeof nodemailer.createTransport>)
+      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as unknown as ReturnType<typeof nodemailer.createTransport>)
       sendMailMock.mockResolvedValue({ messageId: 'msg-456' })
       dbMock.mockInsert.mockResolvedValue([{}])
 
@@ -188,7 +188,7 @@ describe('EmailService', () => {
       process.env.EMAIL_PROVIDER = 'gmail'
 
       const nodemailer = await getNodemailer()
-      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as ReturnType<typeof nodemailer.createTransport>)
+      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as unknown as ReturnType<typeof nodemailer.createTransport>)
       sendMailMock.mockRejectedValue(new Error('SMTP connection refused'))
 
       const service = await getService()
@@ -212,7 +212,7 @@ describe('EmailService', () => {
       process.env.EMAIL_PROVIDER = 'gmail'
 
       const nodemailer = await getNodemailer()
-      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as ReturnType<typeof nodemailer.createTransport>)
+      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as unknown as ReturnType<typeof nodemailer.createTransport>)
       verifyMock.mockResolvedValue(true)
 
       const service = await getService()
@@ -227,7 +227,7 @@ describe('EmailService', () => {
       process.env.EMAIL_PROVIDER = 'gmail'
 
       const nodemailer = await getNodemailer()
-      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as ReturnType<typeof nodemailer.createTransport>)
+      vi.mocked(nodemailer.createTransport).mockReturnValue(makeTransporter() as unknown as ReturnType<typeof nodemailer.createTransport>)
       verifyMock.mockRejectedValue(new Error('Connection failed'))
 
       const service = await getService()
