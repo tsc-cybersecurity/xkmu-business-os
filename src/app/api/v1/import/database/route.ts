@@ -1,32 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth/session'
-import { validateApiKey, getApiKeyFromRequest, hasPermission } from '@/lib/auth/api-key'
+import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 import { ALLOWED_TABLES as WHITELIST } from '@/lib/db/table-whitelist'
 
 export const dynamic = 'force-dynamic'
-
-async function getAuthContext(request: NextRequest) {
-  const session = await getSession()
-  if (session) {
-    const isAdmin = session.user.role === 'owner' || session.user.role === 'admin'
-    if (!isAdmin) return { error: 'forbidden' as const }
-    return { tenantId: session.user.tenantId }
-  }
-
-  const apiKey = getApiKeyFromRequest(request)
-  if (apiKey) {
-    const payload = await validateApiKey(apiKey)
-    if (payload) {
-      if (!hasPermission(payload, 'write')) return { error: 'forbidden' as const }
-      return { tenantId: payload.tenantId }
-    }
-  }
-
-  return { error: 'unauthorized' as const }
-}
 
 // Import-Reihenfolge (Parents vor Children wegen Foreign Keys)
 const IMPORT_ORDER = [
@@ -67,7 +46,84 @@ const DELETE_ORDER = [...IMPORT_ORDER].reverse()
 
 interface ParsedInsert {
   table: string
-  statement: string
+  columns: string[]
+  values: unknown[]
+}
+
+/**
+ * Parse a comma-separated VALUES string into an array of JS values.
+ * Handles: NULL, TRUE/FALSE, 'quoted strings' (with '' escaping),
+ * '...'::jsonb (JSON objects), ISO date strings, and bare numbers.
+ */
+function parseValuesList(valuesStr: string): unknown[] {
+  const results: unknown[] = []
+  let i = 0
+  const len = valuesStr.length
+
+  while (i < len) {
+    // Skip leading whitespace
+    while (i < len && /\s/.test(valuesStr[i])) i++
+    if (i >= len) break
+
+    if (valuesStr[i] === "'") {
+      // Quoted string — parse until closing unescaped single quote
+      i++ // skip opening quote
+      let str = ''
+      while (i < len) {
+        if (valuesStr[i] === "'" && valuesStr[i + 1] === "'") {
+          // Escaped single quote
+          str += "'"
+          i += 2
+        } else if (valuesStr[i] === "'") {
+          i++ // skip closing quote
+          break
+        } else {
+          str += valuesStr[i]
+          i++
+        }
+      }
+
+      // Check for ::jsonb cast
+      const castMatch = valuesStr.slice(i).match(/^\s*::jsonb/)
+      if (castMatch) {
+        i += castMatch[0].length
+        try {
+          results.push(JSON.parse(str))
+        } catch {
+          results.push(str)
+        }
+      } else if (/^\d{4}-\d{2}-\d{2}T/.test(str)) {
+        // ISO date string
+        results.push(new Date(str))
+      } else {
+        results.push(str)
+      }
+    } else {
+      // Bare token (NULL, TRUE, FALSE, or a number)
+      let token = ''
+      while (i < len && valuesStr[i] !== ',') {
+        token += valuesStr[i]
+        i++
+      }
+      token = token.trim()
+
+      if (token.toUpperCase() === 'NULL') {
+        results.push(null)
+      } else if (token.toUpperCase() === 'TRUE') {
+        results.push(true)
+      } else if (token.toUpperCase() === 'FALSE') {
+        results.push(false)
+      } else {
+        results.push(Number(token))
+      }
+    }
+
+    // Skip whitespace and comma separator
+    while (i < len && /\s/.test(valuesStr[i])) i++
+    if (i < len && valuesStr[i] === ',') i++
+  }
+
+  return results
 }
 
 function parseInsertStatements(sqlContent: string): ParsedInsert[] {
@@ -97,10 +153,59 @@ function parseInsertStatements(sqlContent: string): ParsedInsert[] {
         const table = insertMatch[1].toLowerCase()
 
         if (WHITELIST.has(table)) {
-          inserts.push({
-            table,
-            statement: currentStatement,
-          })
+          // Reject multi-row INSERT (multiple VALUES clauses)
+          if (/\)\s*,\s*\(/.test(currentStatement)) {
+            logger.warn(`Multi-row INSERT for table ${table} skipped — not supported`, { module: 'ImportDatabaseAPI' })
+            currentStatement = ''
+            continue
+          }
+
+          // Extract columns
+          const colMatch = currentStatement.match(/\(([^)]+)\)\s+VALUES\s+\(/i)
+          if (!colMatch) {
+            currentStatement = ''
+            continue
+          }
+          const columns = colMatch[1].split(',').map((c) => c.trim())
+
+          // Extract values string: content between VALUES ( and final )
+          // Find the start of the values portion
+          const valuesStartIdx = currentStatement.search(/VALUES\s+\(/i)
+          if (valuesStartIdx === -1) {
+            currentStatement = ''
+            continue
+          }
+          const afterValues = currentStatement.slice(valuesStartIdx)
+          const parenOpen = afterValues.indexOf('(')
+          if (parenOpen === -1) {
+            currentStatement = ''
+            continue
+          }
+
+          // Find the matching closing paren (accounting for nested parens in strings)
+          const valuesContent = afterValues.slice(parenOpen + 1)
+          let depth = 1
+          let j = 0
+          let inString = false
+          for (; j < valuesContent.length && depth > 0; j++) {
+            const ch = valuesContent[j]
+            if (inString) {
+              if (ch === "'" && valuesContent[j + 1] === "'") {
+                j++ // skip escaped quote
+              } else if (ch === "'") {
+                inString = false
+              }
+            } else {
+              if (ch === "'") inString = true
+              else if (ch === '(') depth++
+              else if (ch === ')') depth--
+            }
+          }
+          const valuesStr = valuesContent.slice(0, j - 1)
+
+          const values = parseValuesList(valuesStr)
+
+          inserts.push({ table, columns, values })
         }
       }
 
@@ -111,141 +216,136 @@ function parseInsertStatements(sqlContent: string): ParsedInsert[] {
   return inserts
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const auth = await getAuthContext(request)
+export async function POST(request: NextRequest): Promise<Response> {
+  return withPermission(request, 'database', 'create', async (auth) => {
+    try {
+      const tenantId = auth.tenantId
 
-    if ('error' in auth) {
-      if (auth.error === 'unauthorized') {
+      // FormData mit SQL-Datei lesen
+      const formData = await request.formData()
+      const file = formData.get('file') as File | null
+      const mode = (formData.get('mode') as string) || 'merge'
+
+      if (!file) {
         return NextResponse.json(
-          { error: 'Nicht authentifiziert' },
-          { status: 401 }
+          { error: 'Keine Datei hochgeladen' },
+          { status: 400 }
         )
       }
-      return NextResponse.json(
-        { error: 'Keine Berechtigung' },
-        { status: 403 }
-      )
-    }
 
-    const tenantId = auth.tenantId
-
-    // FormData mit SQL-Datei lesen
-    const formData = await request.formData()
-    const file = formData.get('file') as File | null
-    const mode = (formData.get('mode') as string) || 'merge'
-
-    if (!file) {
-      return NextResponse.json(
-        { error: 'Keine Datei hochgeladen' },
-        { status: 400 }
-      )
-    }
-
-    if (!file.name.endsWith('.sql')) {
-      return NextResponse.json(
-        { error: 'Nur .sql-Dateien werden akzeptiert' },
-        { status: 400 }
-      )
-    }
-
-    // Dateigröße prüfen (max 50MB)
-    if (file.size > 50 * 1024 * 1024) {
-      return NextResponse.json(
-        { error: 'Datei ist zu groß (max. 50MB)' },
-        { status: 400 }
-      )
-    }
-
-    const sqlContent = await file.text()
-
-    // SQL-Statements parsen
-    const inserts = parseInsertStatements(sqlContent)
-
-    if (inserts.length === 0) {
-      return NextResponse.json(
-        { error: 'Keine gültigen INSERT-Statements in der Datei gefunden' },
-        { status: 400 }
-      )
-    }
-
-    // Statistiken sammeln
-    const stats: Record<string, number> = {}
-    let totalInserted = 0
-    let errors: string[] = []
-
-    // Alles in einer Transaktion ausführen
-    await db.transaction(async (tx) => {
-      if (mode === 'replace') {
-        // Bei Replace-Modus: bestehende Daten löschen
-        // Tabellen ohne tenant_id (referenziert ueber Parent)
-        const noTenantTables = new Set(['tenants', 'role_permissions', 'chat_messages', 'cockpit_credentials', 'feedback_responses', 'din_requirements', 'din_grants', 'wiba_requirements', 'cms_block_type_definitions'])
-        for (const table of DELETE_ORDER) {
-          try {
-            if (table === 'tenants') continue
-            if (noTenantTables.has(table)) continue // Globale/Join-Tabellen nicht loeschen
-            await tx.execute(
-              sql.raw(`DELETE FROM ${table} WHERE tenant_id = '${tenantId}'`)
-            )
-          } catch {
-            // Tabelle existiert evtl. nicht
-          }
-        }
+      if (!file.name.endsWith('.sql')) {
+        return NextResponse.json(
+          { error: 'Nur .sql-Dateien werden akzeptiert' },
+          { status: 400 }
+        )
       }
 
-      // INSERT-Statements nach Tabellenreihenfolge sortieren
-      const sortedInserts = [...inserts].sort((a, b) => {
-        const ai = IMPORT_ORDER.indexOf(a.table)
-        const bi = IMPORT_ORDER.indexOf(b.table)
-        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+      // Dateigröße prüfen (max 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        return NextResponse.json(
+          { error: 'Datei ist zu groß (max. 50MB)' },
+          { status: 400 }
+        )
+      }
+
+      const sqlContent = await file.text()
+
+      // SQL-Statements parsen
+      const inserts = parseInsertStatements(sqlContent)
+
+      if (inserts.length === 0) {
+        return NextResponse.json(
+          { error: 'Keine gültigen INSERT-Statements in der Datei gefunden' },
+          { status: 400 }
+        )
+      }
+
+      // Statistiken sammeln
+      const stats: Record<string, number> = {}
+      let totalInserted = 0
+      const errors: string[] = []
+
+      // Alles in einer Transaktion ausführen
+      await db.transaction(async (tx) => {
+        if (mode === 'replace') {
+          // Bei Replace-Modus: bestehende Daten löschen
+          // Tabellen ohne tenant_id (referenziert ueber Parent)
+          const noTenantTables = new Set(['tenants', 'role_permissions', 'chat_messages', 'cockpit_credentials', 'feedback_responses', 'din_requirements', 'din_grants', 'wiba_requirements', 'cms_block_type_definitions'])
+          for (const table of DELETE_ORDER) {
+            try {
+              if (table === 'tenants') continue
+              if (noTenantTables.has(table)) continue // Globale/Join-Tabellen nicht loeschen
+              // Parameterized DELETE — safe against SQL injection
+              await tx.execute(
+                sql`DELETE FROM ${sql.identifier(table)} WHERE tenant_id = ${tenantId}`
+              )
+            } catch {
+              // Tabelle existiert evtl. nicht
+            }
+          }
+        }
+
+        // INSERT-Statements nach Tabellenreihenfolge sortieren
+        const sortedInserts = [...inserts].sort((a, b) => {
+          const ai = IMPORT_ORDER.indexOf(a.table)
+          const bi = IMPORT_ORDER.indexOf(b.table)
+          return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+        })
+
+        for (const insert of sortedInserts) {
+          try {
+            // Enforce tenant isolation: overwrite tenant_id with the authenticated tenant
+            const tenantIdIdx = insert.columns.indexOf('tenant_id')
+            if (tenantIdIdx !== -1) {
+              insert.values[tenantIdIdx] = tenantId
+            }
+
+            const columnsSql = sql.join(
+              insert.columns.map((c) => sql.identifier(c)),
+              sql`, `
+            )
+            const valuesSql = sql.join(
+              insert.values.map((v) => sql`${v}`),
+              sql`, `
+            )
+            const conflictClause = mode === 'merge' ? sql` ON CONFLICT DO NOTHING` : sql``
+
+            await tx.execute(
+              sql`INSERT INTO ${sql.identifier(insert.table)} (${columnsSql}) VALUES (${valuesSql})${conflictClause}`
+            )
+
+            stats[insert.table] = (stats[insert.table] || 0) + 1
+            totalInserted++
+          } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error)
+            errors.push(`${insert.table}: ${msg}`)
+            if (mode === 'replace') {
+              throw new Error(`Import abgebrochen bei Tabelle ${insert.table}: ${msg}`)
+            }
+          }
+        }
       })
 
-      for (const insert of sortedInserts) {
-        try {
-          let statement = insert.statement
-
-          if (mode === 'merge') {
-            // Bei Merge: ON CONFLICT DO NOTHING anfügen
-            statement = statement.replace(/;\s*$/, ' ON CONFLICT DO NOTHING;')
-          }
-
-          await tx.execute(sql.raw(statement))
-
-          stats[insert.table] = (stats[insert.table] || 0) + 1
-          totalInserted++
-        } catch (error) {
-          const msg = error instanceof Error ? error.message : String(error)
-          errors.push(`${insert.table}: ${msg}`)
-
-          // Bei Replace-Modus bei Fehler abbrechen
-          if (mode === 'replace') {
-            throw new Error(
-              `Import abgebrochen bei Tabelle ${insert.table}: ${msg}`
-            )
-          }
-        }
-      }
-    })
-
-    return NextResponse.json({
-      success: true,
-      message: 'Import erfolgreich abgeschlossen',
-      stats: {
-        totalStatements: inserts.length,
-        totalInserted,
-        tablesAffected: Object.keys(stats).length,
-        perTable: stats,
-        errors: errors.length > 0 ? errors.slice(0, 20) : undefined,
-      },
-    })
-  } catch (error) {
-    logger.error('Database import error', error, { module: 'ImportDatabaseAPI' })
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : 'Import fehlgeschlagen',
-      },
-      { status: 500 }
-    )
-  }
+      return NextResponse.json({
+        success: true,
+        message: 'Import erfolgreich abgeschlossen',
+        stats: {
+          totalStatements: inserts.length,
+          totalInserted,
+          tablesAffected: Object.keys(stats).length,
+          perTable: stats,
+          errors: errors.length > 0 ? errors.slice(0, 20) : undefined,
+        },
+      })
+    } catch (error) {
+      logger.error('Database import error', error, { module: 'ImportDatabaseAPI' })
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : 'Import fehlgeschlagen',
+        },
+        { status: 500 }
+      )
+    }
+  })
 }

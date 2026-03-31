@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createTestRequest } from '../../helpers/mock-request'
 import { TEST_TENANT_ID } from '../../helpers/fixtures'
+import type { AuthContext } from '@/lib/auth/auth-context'
 
 // ─── POST /api/v1/import/database ────────────────────────────────────────────
 
@@ -27,6 +27,13 @@ const VALID_SQL = `
 INSERT INTO companies (id, name, tenant_id) VALUES ('bbbbbbbb-0000-0000-0000-000000000001', 'Test GmbH', '${TEST_TENANT_ID}');
 `
 
+const TEST_AUTH: AuthContext = {
+  tenantId: TEST_TENANT_ID,
+  userId: TEST_USER_ID,
+  role: 'admin',
+  roleId: null,
+}
+
 describe('POST /api/v1/import/database', () => {
   beforeEach(() => {
     vi.resetModules()
@@ -44,27 +51,24 @@ describe('POST /api/v1/import/database', () => {
     }))
   })
 
-  function mockSessionAuth(role: string = 'admin') {
-    vi.doMock('@/lib/auth/session', () => ({
-      getSession: vi.fn().mockResolvedValue({
-        user: { tenantId: TEST_TENANT_ID, userId: TEST_USER_ID, role },
-      }),
-    }))
-    vi.doMock('@/lib/auth/api-key', () => ({
-      validateApiKey: vi.fn(),
-      getApiKeyFromRequest: vi.fn().mockReturnValue(null),
-      hasPermission: vi.fn(),
-    }))
-  }
-
-  function mockNoAuth() {
-    vi.doMock('@/lib/auth/session', () => ({
-      getSession: vi.fn().mockResolvedValue(null),
-    }))
-    vi.doMock('@/lib/auth/api-key', () => ({
-      validateApiKey: vi.fn(),
-      getApiKeyFromRequest: vi.fn().mockReturnValue(null),
-      hasPermission: vi.fn(),
+  function mockAuthContext(auth: AuthContext | null) {
+    vi.doMock('@/lib/auth/require-permission', () => ({
+      withPermission: vi.fn().mockImplementation(
+        async (
+          _request: unknown,
+          _module: string,
+          _action: string,
+          handler: (auth: AuthContext) => Promise<Response>,
+        ) => {
+          if (!auth) {
+            return Response.json(
+              { error: 'Nicht authentifiziert' },
+              { status: 401 },
+            )
+          }
+          return handler(auth)
+        },
+      ),
     }))
   }
 
@@ -93,7 +97,7 @@ describe('POST /api/v1/import/database', () => {
   // ─── Test 1: Cross-tenant isolation ─────────────────────────────────────────
   it('cross-tenant isolation: tenant_id in uploaded SQL is overwritten with auth tenant', async () => {
     const capturedSqlCalls: unknown[] = []
-    mockSessionAuth('admin')
+    mockAuthContext(TEST_AUTH)
     mockDbTransaction(capturedSqlCalls)
 
     const handler = await getHandler()
@@ -104,28 +108,24 @@ describe('POST /api/v1/import/database', () => {
     const body = await res.json()
     expect(body.success).toBe(true)
 
-    // Verify that the tenant_id value used in INSERT is TEST_TENANT_ID, not VICTIM_TENANT_ID
-    // The INSERT query should contain parameterized values where tenant_id = TEST_TENANT_ID
-    const insertCalls = capturedSqlCalls.filter((call) => {
-      const callStr = JSON.stringify(call)
-      // Check the call references the insert (not a DELETE)
-      return callStr.includes('sql') && !callStr.includes('DELETE')
-    })
-
     // The executed SQL should NOT contain the victim tenant ID as a value
     const allCallsStr = JSON.stringify(capturedSqlCalls)
     expect(allCallsStr).not.toContain(VICTIM_TENANT_ID)
     // The executed SQL should use the authenticated tenant ID
     expect(allCallsStr).toContain(TEST_TENANT_ID)
 
-    // Specifically: at least one INSERT call must have been made
+    // Specifically: at least one INSERT call must have been made (not a DELETE in merge mode)
+    const insertCalls = capturedSqlCalls.filter((call) => {
+      const callStr = JSON.stringify(call)
+      return callStr.includes('sql.join') || callStr.includes('sql.identifier')
+    })
     expect(insertCalls.length).toBeGreaterThan(0)
   })
 
   // ─── Test 2: Valid SQL returns 200 with success ───────────────────────────
   it('returns 200 with success:true and stats.totalInserted > 0 for valid SQL', async () => {
     const capturedSqlCalls: unknown[] = []
-    mockSessionAuth('admin')
+    mockAuthContext(TEST_AUTH)
     mockDbTransaction(capturedSqlCalls)
 
     const handler = await getHandler()
@@ -140,7 +140,7 @@ describe('POST /api/v1/import/database', () => {
 
   // ─── Test 3: No file returns 400 ─────────────────────────────────────────
   it('returns 400 when no file is uploaded', async () => {
-    mockSessionAuth('admin')
+    mockAuthContext(TEST_AUTH)
     vi.doMock('@/lib/db', () => ({
       db: { transaction: vi.fn() },
     }))
@@ -161,7 +161,7 @@ describe('POST /api/v1/import/database', () => {
 
   // ─── Test 4: Non-.sql file returns 400 ───────────────────────────────────
   it('returns 400 for non-.sql file extension', async () => {
-    mockSessionAuth('admin')
+    mockAuthContext(TEST_AUTH)
     vi.doMock('@/lib/db', () => ({
       db: { transaction: vi.fn() },
     }))
@@ -183,8 +183,8 @@ describe('POST /api/v1/import/database', () => {
   })
 
   // ─── Test 5: No auth returns 401 ─────────────────────────────────────────
-  it('returns 401 for unauthenticated request', async () => {
-    mockNoAuth()
+  it('returns 401 for unauthenticated request (tenant isolation proof)', async () => {
+    mockAuthContext(null)
     vi.doMock('@/lib/db', () => ({
       db: { transaction: vi.fn() },
     }))
