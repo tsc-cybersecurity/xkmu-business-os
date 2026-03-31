@@ -114,7 +114,7 @@ Plans:
 
 Plans:
 - [ ] 06-01-PLAN.md — TypeScript Strictness: 43 `as any`-Casts durch korrekte Typen ersetzen (22 in cms-block-renderer, 18 in block-field-renderer, 3 anderswo)
-- [ ] 06-02-PLAN.md — N+1 Query Fixes: 8 sequentielle DB-Loops durch inArray/CASE-WHEN/Promise.all ersetzen
+- [x] 06-02-PLAN.md — N+1 Query Fixes: 8 sequentielle DB-Loops durch inArray/CASE-WHEN/Promise.all ersetzen
 - [ ] 06-03-PLAN.md — Komponenten-Splitting: 7 grosse Page-Komponenten (760-1158 Zeilen) in Sub-Komponenten aufteilen
 
 ## Progress
@@ -129,4 +129,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. XSS & API Protection | 2/3 | In Progress|  |
 | 4. Reliability | 1/2 | In Progress|  |
 | 5. Test Coverage | 1/1 | Complete   | 2026-03-31 |
-| 6. Code Quality | 0/3 | Not started | - |
+| 6. Code Quality | 1/3 | In Progress|  |
