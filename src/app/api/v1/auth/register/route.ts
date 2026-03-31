@@ -24,7 +24,7 @@ function generateSlug(name: string): string {
 export async function POST(request: NextRequest) {
   try {
     // Rate limit: max 5 registrations per minute per IP
-    const limited = rateLimit(request, 'auth-register', 5, 60_000)
+    const limited = await rateLimit(request, 'auth-register', 5, 60_000)
     if (limited) return limited
 
     const body = await request.json()

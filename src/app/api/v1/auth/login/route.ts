@@ -9,7 +9,7 @@ import { rateLimit } from '@/lib/utils/rate-limit'
 export async function POST(request: NextRequest) {
   try {
     // Rate limit: max 10 login attempts per minute per IP
-    const limited = rateLimit(request, 'auth-login', 10, 60_000)
+    const limited = await rateLimit(request, 'auth-login', 10, 60_000)
     if (limited) return limited
 
     const body = await request.json()
