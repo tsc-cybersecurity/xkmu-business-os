@@ -51,12 +51,11 @@ Plans:
   3. Ein Request mit `Origin: https://evil.com` erhaelt den Origin nicht als `Access-Control-Allow-Origin` zurueck
   4. Der Production-Docker-Build zeigt null CSP-Violations in der Browser-Konsole (Report-Only Mode)
   5. Statische Assets (`/_next/static/*`) werden nicht durch Proxy verlangsamt (matcher konfiguriert)
-**Plans**: 3 plans
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — CORS Wildcard entfernen + Security Headers in next.config.ts (X-Frame-Options, CSP Report-Only, Referrer-Policy, Permissions-Policy)
-- [ ] 02-02-PLAN.md — CVE-2025-29927 Defense + CORS Allowlist in src/proxy.ts (x-middleware-subrequest strip, ALLOWED_ORIGINS, OPTIONS preflight)
-- [ ] 02-03-PLAN.md — Production Verification: curl-Checks gegen boss.xkmu.de + Browser CSP-Violations Checkpoint
+- [ ] 02-01-PLAN.md — Security Layer Implementation: CORS Wildcard entfernen + Security Headers (next.config.ts) + CVE-2025-29927 Defense + CORS Allowlist (src/proxy.ts) + Build-Verifikation
+- [ ] 02-02-PLAN.md — Production Verification: curl-Checks gegen boss.xkmu.de (5 CVE-bypass-Routes) + Browser CSP-Violations Checkpoint
 
 ### Phase 3: XSS & API Protection
 **Goal**: Alle User-HTML-Ausgaben sind durch `isomorphic-dompurify` gesaeubert, mutierenden REST-Requests sind per CSRF-Token geschuetzt und API-Keys haben granulare Modul-Berechtigungen statt Full-Access.
@@ -127,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/3 | In Progress|  |
-| 2. Security Layer | 0/3 | Not started | - |
+| 2. Security Layer | 0/2 | Not started | - |
 | 3. XSS & API Protection | 0/3 | Not started | - |
 | 4. Reliability | 0/2 | Not started | - |
 | 5. Test Coverage | 0/2 | Not started | - |
