@@ -1,0 +1,3521 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-01-01",
+  "schema": "https://xkmu.de/schemas/ir-playbook/v1",
+  "bands": [
+    "V",
+    "VI"
+  ],
+  "total": 8,
+  "scenarios": [
+    {
+      "id": "S-017",
+      "slug": "deepfake-video-cfo-fraud",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "V",
+      "meta": {
+        "title": "Deepfake-Video / CFO-Fraud",
+        "emoji": "🎭",
+        "color_hex": "6D28D9",
+        "subtitle": "KI-generierte Video- oder Audiofälschung täuscht Mitarbeitende zu betrügerischen Transaktionen",
+        "tags": [
+          "deepfake",
+          "ai",
+          "cfo-fraud",
+          "video-manipulation",
+          "voice-cloning",
+          "financial"
+        ],
+        "affected_systems": [
+          "video-conferencing",
+          "email",
+          "banking",
+          "erp",
+          "phone"
+        ]
+      },
+      "classification": {
+        "severity": "CRITICAL",
+        "severity_label": "KRITISCH",
+        "likelihood": "MEDIUM",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "VERY_HIGH",
+        "avg_damage_eur": {
+          "min": 50000,
+          "max": 5000000
+        }
+      },
+      "overview": "Deepfake-Angriffe kombinieren KI-generierte Video- und Audiofälschungen mit Social-Engineering-Taktiken. Bekanntester Fall: Ingenieurbüro Arup verlor 25,6 Mio. USD durch einen einzigen gefälschten Video-Call. In Deutschland stiegen Deepfake-Vorfälle seit 2022 um über 2.137% (Surfshark 2025). Angreifer klonen die Stimme und das Gesicht von Führungskräften (CEO, CFO) und schalten sich in Video-Calls ein oder versenden täuschend echte Videos mit Zahlungsaufforderungen. Nur 0,1% der Menschen erkennen Deepfakes zuverlässig.",
+      "detection_indicators": [
+        {
+          "type": "BEHAVIORAL",
+          "description": "Zahlungsaufforderung per Video-Call wirkt dringlich und weicht von normalen Prozessen ab"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Video zeigt Artefakte: Lippenbewegung nicht synchron, Hintergrund flackert, unnatürliches Blinzeln"
+        },
+        {
+          "type": "USER_REPORT",
+          "description": "Mitarbeiter unsicher ob Anruf echt war — meldet nachträglich"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Anruf fordert Geheimhaltung oder Umgehung interner Genehmigungsprozesse"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-017-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 0,
+          "time_label": "WÄHREND Anruf",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Anruf unterbrechen — Rückruf über bekannte, verifizierte Nummer ankündigen",
+          "detail": "Echte Führungskräfte haben kein Problem mit einem kurzen Rückruf zur Verifikation",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-017-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 0,
+          "time_label": "WÄHREND Anruf",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Code-Wort abfragen — nur intern bekanntes Wort bestätigt Echtheit",
+          "detail": "Deepfakes können Code-Wörter nicht kennen die nicht öffentlich sind",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-017-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT danach",
+          "priority": 3,
+          "category": "COMMUNICATION",
+          "responsible": "AFFECTED_USER",
+          "action": "Vorfall sofort melden — auch wenn Zahlung bereits angewiesen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-017-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 4,
+          "category": "CONTAINMENT",
+          "responsible": "FINANCE",
+          "action": "Überweisung stoppen — sofort Hausbank anrufen (Recall-Prozess wie S-005)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-017-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Video-/Audiomaterial sichern: Screenshot, Aufzeichnung, Metadaten",
+          "detail": "Beweismittel für Forensik und Strafverfolgung",
+          "do_not": false,
+          "tool_hint": "OBS, Telefon-Screenshot, E-Mail-Header"
+        },
+        {
+          "id": "ACT-017-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 6,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Deepfake-Analyse: Video auf KI-Artefakte prüfen (Blink-Rate, Schatten, Lippensync)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Microsoft Video Authenticator, Hive Moderation, Sensity AI"
+        },
+        {
+          "id": "ACT-017-007",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 7,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "Strafanzeige bei Polizei / LKA Cybercrime erstatten",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "BKA: www.bka.de/cyberanzeige"
+        },
+        {
+          "id": "ACT-017-008",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 8,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Alle Mitarbeiter mit Zahlungsbefugnis sofort warnen und Deepfake-Protokoll einführen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-017-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Video-Qualität oder bekanntes Gesicht sind KEIN Echtheitsbeweis",
+          "detail": "Deepfakes sind mit Konsumerhardware in Echtzeit möglich — technische Merkmale allein nicht verlässlich",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-017-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "4C1D95",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "FINANCE",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Überweisung stoppen",
+              "condition": "if_payment_initiated"
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Beweismittel sichern",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-017-002",
+          "level": 2,
+          "label": "Finanziell — 1 Std",
+          "color_hex": "6D28D9",
+          "deadline_hours": 1,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Hausbank",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "Recall-Antrag stellen",
+              "condition": "if_payment_initiated"
+            },
+            {
+              "role": "Empfängerbank",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_payment_initiated"
+            }
+          ]
+        },
+        {
+          "id": "ESC-017-003",
+          "level": 3,
+          "label": "Behörden — 24 Std",
+          "color_hex": "DC2626",
+          "deadline_hours": 24,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Polizei / LKA Cybercrime",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "Videomaterial als Beweismittel",
+              "condition": null
+            },
+            {
+              "role": "BKA Cybercrime",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_dsgvo_relevant"
+            }
+          ]
+        },
+        {
+          "id": "ESC-017-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": "Cyber-Police / Crime-Police prüfen",
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-017-001",
+          "phase_label": "Finanzen",
+          "sequence": 1,
+          "action": "Bank-Recall-Prozess verfolgen — Fristen beachten (24–48 Std.)",
+          "detail": null,
+          "responsible": "FINANCE",
+          "depends_on": null
+        },
+        {
+          "id": "REC-017-002",
+          "phase_label": "Forensik",
+          "sequence": 2,
+          "action": "Videomaterial durch forensischen Dienstleister auf Authentizität prüfen lassen",
+          "detail": null,
+          "responsible": "EXTERNAL_FORENSICS",
+          "depends_on": null
+        },
+        {
+          "id": "REC-017-003",
+          "phase_label": "Prozesse",
+          "sequence": 3,
+          "action": "Code-Wort-System für alle Führungskräfte-Anweisungen einführen",
+          "detail": "Intern bekanntes Wort das bei Video-Calls abgefragt wird",
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-017-004",
+          "phase_label": "Prozesse",
+          "sequence": 4,
+          "action": "Vier-Augen-Prinzip für Überweisungen ab 1.000 EUR — unabhängig vom Anweisungskanal",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-017-005",
+          "phase_label": "Technik",
+          "sequence": 5,
+          "action": "Deepfake-Erkennungstools in Video-Conferencing-Workflow integrieren",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-017-006",
+          "phase_label": "Schulung",
+          "sequence": 6,
+          "action": "Alle Mitarbeiter mit Zahlungsbefugnis für Deepfake-Erkennung schulen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-017-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Video-/Audiomaterial vollständig gesichert (inkl. Metadaten, Timestamps)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-017-002",
+          "sequence": 2,
+          "category": "FINANCIAL",
+          "item": "Überwiesener Betrag, Empfänger-IBAN, Transaktions-ID",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-017-003",
+          "sequence": 3,
+          "category": "FINANCIAL",
+          "item": "Bank-Recall-Antrag: Datum, Ansprechpartner, Status",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-017-004",
+          "sequence": 4,
+          "category": "LEGAL",
+          "item": "Strafanzeige: Datum, Aktenzeichen, Beweismittel-Übergabe",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-017-005",
+          "sequence": 5,
+          "category": "TECHNICAL",
+          "item": "Deepfake-Analyse-Ergebnis (Tool, Datum, Befund)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-017-006",
+          "sequence": 6,
+          "category": "COMMUNICATION",
+          "item": "Mitarbeiter-Warnung: Datum, Kanal, Inhalt",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-017-007",
+          "sequence": 7,
+          "category": "TECHNICAL",
+          "item": "Eingeleitete Präventivmaßnahmen (Code-Wort, Vier-Augen, Tool)",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-017-001",
+          "question": "Gibt es ein internes Code-Wort das bei Zahlungsanweisungen per Video/Telefon abgefragt wird?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-017-002",
+          "question": "Ist das Vier-Augen-Prinzip für Überweisungen unabhängig vom Anweisungskanal umgesetzt?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI ORP.1.A14"
+        },
+        {
+          "id": "LL-017-003",
+          "question": "Sind Mitarbeiter geschult, dass Video-Qualität kein Echtheitsbeweis ist?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-017-004",
+          "question": "Werden Deepfake-Erkennungstools aktiv eingesetzt?",
+          "category": "TECHNICAL",
+          "maps_to_control": null
+        },
+        {
+          "id": "LL-017-005",
+          "question": "Ist eine Cyber-Crime-Versicherung mit Deepfake-Deckung vorhanden?",
+          "category": "ORGANISATIONAL",
+          "maps_to_control": null
+        }
+      ],
+      "references": [
+        {
+          "type": "TOOL",
+          "name": "Microsoft Video Authenticator",
+          "url": "https://www.microsoft.com/en-us/research/project/video-authenticator"
+        },
+        {
+          "type": "TOOL",
+          "name": "Sensity AI — Deepfake-Erkennung",
+          "url": "https://sensity.ai"
+        },
+        {
+          "type": "AUTHORITY",
+          "name": "BKA Cybercrime-Anzeige",
+          "url": "https://www.bka.de/cyberanzeige"
+        },
+        {
+          "type": "GUIDE",
+          "name": "BSI Warnung Deepfake-Angriffe",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-018",
+      "slug": "prompt-injection-ki-systeme",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "V",
+      "meta": {
+        "title": "Prompt-Injection gegen KI-Systeme",
+        "emoji": "🤖",
+        "color_hex": "0F766E",
+        "subtitle": "Angreifer manipuliert KI-Assistenten oder LLM-basierte Anwendungen durch bösartige Eingaben",
+        "tags": [
+          "prompt-injection",
+          "llm",
+          "ai",
+          "chatbot",
+          "rag",
+          "automation",
+          "data-exfiltration"
+        ],
+        "affected_systems": [
+          "ai-assistant",
+          "chatbot",
+          "rag-system",
+          "automation",
+          "api",
+          "crm"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "MITTEL–HOCH",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 2000,
+          "max": 150000
+        }
+      },
+      "overview": "Prompt-Injection ist die kritischste Sicherheitsschwachstelle in LLM-basierten Anwendungen (OWASP LLM Top 10 #1). Angreifer schleusen bösartige Anweisungen in KI-Systeme ein — direkt über Nutzereingaben oder indirekt über externe Daten (Webseiten, Dokumente, E-Mails) die das KI-System verarbeitet. Ziele: Umgehung von Sicherheitsfiltern, Datenexfiltration aus dem KI-Kontext, Manipulation von KI-gesteuerten Automatisierungen oder Ausführung unerwünschter Aktionen im Namen des KI-Agenten.",
+      "detection_indicators": [
+        {
+          "type": "BEHAVIORAL",
+          "description": "KI-System gibt unerwartet vertrauliche Informationen aus oder verhält sich anomal"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Ungewöhnliche KI-Ausgaben enthalten System-Prompt-Fragmente oder interne Daten"
+        },
+        {
+          "type": "USER_REPORT",
+          "description": "Nutzer meldet dass KI-Chatbot unerwartete oder schädliche Aktionen ausgeführt hat"
+        },
+        {
+          "type": "ALERT",
+          "description": "KI-Monitoring meldet Ausgaben die Sicherheitsrichtlinien verletzen"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "KI-API-Aufrufe mit ungewöhnlich langen oder strukturierten Eingaben"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-018-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Betroffenes KI-System offline nehmen oder Eingabe-Verarbeitung deaktivieren",
+          "detail": "Kein weiterer Nutzerzugang bis Analyse abgeschlossen",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-018-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Konversations-Logs und Prompt-Historie vollständig sichern",
+          "detail": "Beweismittel für Forensik — Logs könnten rotieren",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-018-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 3,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Angriffstyp bestimmen: Direkte Injection (Nutzer) oder indirekte Injection (Datenquelle)?",
+          "detail": "Indirekt: Dokument/Website/E-Mail enthielt versteckte Anweisung",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-018-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Prüfen welche Daten aus dem KI-Kontext möglicherweise exfiltriert wurden",
+          "detail": "System-Prompt, RAG-Dokumente, Nutzerdaten, API-Keys im Kontext?",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-018-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "KI-Agenten-Aktionen prüfen: Wurden unerwünschte externe Aktionen ausgeführt?",
+          "detail": "E-Mails versendet, Dateien gelöscht, API-Calls abgesetzt?",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-018-006",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 6,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "API-Keys und Zugangsdaten die im KI-Kontext lagen rotieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-018-007",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 7,
+          "category": "RECOVERY",
+          "responsible": "IT_ADMIN",
+          "action": "Input-Validierung und Output-Filter für KI-System implementieren",
+          "detail": "Prompt-Injection-Guards, Output-Sanitization",
+          "do_not": false,
+          "tool_hint": "LangChain Guards, Rebuff, NeMo Guardrails"
+        },
+        {
+          "id": "ACT-018-008",
+          "phase": "MEDIUM",
+          "time_window_minutes": 1440,
+          "time_label": "Bis 24 Std",
+          "priority": 8,
+          "category": "LEGAL",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "DSGVO-Prüfung: Wurden personenbezogene Daten durch die Injection exfiltriert?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-018-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "KI-System NICHT ohne Sicherheitsmaßnahmen wieder in Betrieb nehmen",
+          "detail": "Gleicher Angriffsweg würde sofort erneut ausgenutzt",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-018-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "134E4A",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-018-002",
+          "level": 2,
+          "label": "KI-Anbieter — 4 Std",
+          "color_hex": "0F766E",
+          "deadline_hours": 4,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "KI-Plattform-Anbieter (OpenAI, Anthropic, etc.)",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "Sicherheitslücke melden, Logs bereitstellen",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-018-003",
+          "level": 3,
+          "label": "Behörden — 72h",
+          "color_hex": "DC2626",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_personal_data_exfiltrated"
+            },
+            {
+              "role": "BSI",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "KI-Sicherheitsvorfall melden",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-018-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Betroffene Nutzer",
+              "contact_type": "PARTNER",
+              "legal_basis": "DSGVO Art. 34",
+              "message": null,
+              "condition": "if_high_risk_to_individuals"
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-018-001",
+          "phase_label": "Analyse",
+          "sequence": 1,
+          "action": "Vollständige Auswertung aller Konversationen im Angriffszeitraum",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-018-002",
+          "phase_label": "Härtung",
+          "sequence": 2,
+          "action": "Prinzip der minimalen Rechte für KI-Agenten einführen — kein direkter Datenbankzugriff",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-018-003",
+          "phase_label": "Härtung",
+          "sequence": 3,
+          "action": "Input-Validierung: Nutzeringaben vor KI-Weiterleitung filtern und sanitieren",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-018-004",
+          "phase_label": "Härtung",
+          "sequence": 4,
+          "action": "Output-Filter: KI-Ausgaben auf verbotene Muster prüfen bevor Anzeige",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-018-005",
+          "phase_label": "Härtung",
+          "sequence": 5,
+          "action": "Menschliche Freigabe (Human-in-the-Loop) für alle KI-Aktionen mit externen Effekten",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-018-006",
+          "phase_label": "Monitoring",
+          "sequence": 6,
+          "action": "KI-Monitoring einrichten: Anomalie-Erkennung auf Inputs und Outputs",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-018-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Konversations-Logs mit Injection-Prompt vollständig gesichert",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-018-002",
+          "sequence": 2,
+          "category": "TECHNICAL",
+          "item": "Angriffstyp identifiziert: Direkte oder indirekte Injection, Quelle?",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-018-003",
+          "sequence": 3,
+          "category": "TECHNICAL",
+          "item": "Exfiltrierte Daten inventarisiert (System-Prompt, Nutzerdaten, API-Keys)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-018-004",
+          "sequence": 4,
+          "category": "TECHNICAL",
+          "item": "Unerwünschte KI-Agenten-Aktionen identifiziert und rückgängig gemacht",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-018-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "DSGVO-Prüfung: Personenbezogene Daten exfiltriert?",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-018-006",
+          "sequence": 6,
+          "category": "TECHNICAL",
+          "item": "Implementierte Sicherheitsmaßnahmen (Input-Filter, Output-Guard, HITL)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-018-007",
+          "sequence": 7,
+          "category": "COMMUNICATION",
+          "item": "KI-Anbieter informiert (Datum, Ticket-Nummer)",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-018-001",
+          "question": "Haben KI-Agenten minimale Rechte — kein direkter Zugriff auf kritische Daten ohne Freigabe?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A4"
+        },
+        {
+          "id": "LL-018-002",
+          "question": "Werden Nutzeringaben in KI-Systemen validiert und sanitiert bevor Weiterverarbeitung?",
+          "category": "TECHNICAL",
+          "maps_to_control": null
+        },
+        {
+          "id": "LL-018-003",
+          "question": "Gibt es Human-in-the-Loop für alle KI-Aktionen mit externen Effekten?",
+          "category": "PROCESS",
+          "maps_to_control": null
+        },
+        {
+          "id": "LL-018-004",
+          "question": "Werden KI-Konversationen auf Anomalien und Policy-Verstöße überwacht?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-018-005",
+          "question": "Sind API-Keys und Secrets aus dem KI-Kontext/System-Prompt entfernt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A12"
+        }
+      ],
+      "references": [
+        {
+          "type": "STANDARD",
+          "name": "OWASP LLM Top 10 — LLM01: Prompt Injection",
+          "url": "https://owasp.org/www-project-top-10-for-large-language-model-applications"
+        },
+        {
+          "type": "TOOL",
+          "name": "NeMo Guardrails — LLM-Sicherheit",
+          "url": "https://github.com/NVIDIA/NeMo-Guardrails"
+        },
+        {
+          "type": "GUIDE",
+          "name": "BSI KI-Sicherheitsempfehlungen",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-019",
+      "slug": "shadow-ai-missbrauch",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "V",
+      "meta": {
+        "title": "Shadow-AI / Unkontrollierte KI-Nutzung",
+        "emoji": "👤",
+        "color_hex": "B45309",
+        "subtitle": "Mitarbeitende nutzen nicht freigegebene KI-Tools und übertragen dabei sensible Unternehmensdaten",
+        "tags": [
+          "shadow-ai",
+          "shadow-it",
+          "data-leakage",
+          "ai-tools",
+          "chatgpt",
+          "compliance",
+          "dsgvo"
+        ],
+        "affected_systems": [
+          "email",
+          "documents",
+          "crm",
+          "cloud-ai",
+          "browser"
+        ]
+      },
+      "classification": {
+        "severity": "MEDIUM",
+        "severity_label": "MITTEL–HOCH",
+        "likelihood": "VERY_HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "MEDIUM",
+        "avg_damage_eur": {
+          "min": 1000,
+          "max": 100000
+        }
+      },
+      "overview": "Shadow-AI beschreibt die unkontrollierte Nutzung von KI-Tools (ChatGPT, Copilot, Gemini, etc.) durch Mitarbeitende ohne Genehmigung der IT oder Geschäftsführung. Häufig werden dabei vertrauliche Unternehmensdaten, Kundendaten, Verträge, Quellcode oder interne Strategien in externe KI-Systeme eingegeben — wo sie für Training genutzt oder von Angreifern abgegriffen werden können. Laut Gartner 2024 nutzen über 70% der Mitarbeitenden KI-Tools ohne Wissen ihrer IT-Abteilung.",
+      "detection_indicators": [
+        {
+          "type": "LOG_PATTERN",
+          "description": "Ausgehender Traffic zu KI-APIs (api.openai.com, generativelanguage.googleapis.com etc.)"
+        },
+        {
+          "type": "USER_REPORT",
+          "description": "Mitarbeiter berichtet von KI-Nutzung oder fragt nach Genehmigung im Nachhinein"
+        },
+        {
+          "type": "ALERT",
+          "description": "DLP-System meldet Upload sensibler Daten in Cloud-KI-Dienst"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "KI-generierte Inhalte mit internen Daten tauchen extern auf"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-019-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 10,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Umfang der Shadow-AI-Nutzung bestimmen: Welche Tools, welche Mitarbeiter, welche Daten?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Firewall-Logs, Proxy-Logs, DNS-Logs auf KI-API-Domains"
+        },
+        {
+          "id": "ACT-019-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 2,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Betroffene Mitarbeitende informieren — sachlich, ohne Schuldzuweisung",
+          "detail": "Ziel: Verständnis schaffen, nicht bestrafen",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-019-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 3,
+          "category": "ANALYSIS",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "Identifizieren welche Datenkategorien in KI-Tools eingegeben wurden",
+          "detail": "Kundendaten, Verträge, Finanzinfos, Quellcode, Personaldaten?",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-019-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 4,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Zugang zu nicht genehmigten KI-Tools auf Firmengeräten sperren (DNS/Proxy-Block)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Pi-hole, Cisco Umbrella, Zscaler, Fortigate Web-Filter"
+        },
+        {
+          "id": "ACT-019-005",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 5,
+          "category": "LEGAL",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "DSGVO-Risikobewertung: Wurden personenbezogene Daten an externe KI-Dienste übermittelt?",
+          "detail": "Auftragsverarbeitungsvertrag mit KI-Anbieter vorhanden?",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-019-006",
+          "phase": "MEDIUM",
+          "time_window_minutes": 1440,
+          "time_label": "Bis 24 Std",
+          "priority": 6,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Unternehmensweite KI-Nutzungsrichtlinie kommunizieren oder erstellen",
+          "detail": "Welche Tools sind erlaubt, welche Daten dürfen eingegeben werden?",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-019-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "KI-Sperren NICHT ohne Kommunikation und Alternativen einführen — Akzeptanz sinkt, Umgehung steigt",
+          "detail": "Blockieren ohne Alternativen treibt Nutzung in schwerer erkennbare Kanäle",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-019-001",
+          "level": 1,
+          "label": "Intern — 30 Min",
+          "color_hex": "92400E",
+          "deadline_hours": 0.5,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "DATA_PROTECTION_OFFICER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-019-002",
+          "level": 2,
+          "label": "HR — 4 Std",
+          "color_hex": "B45309",
+          "deadline_hours": 4,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "HR",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Mitarbeitende informieren, keine Schuldzuweisung",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-019-003",
+          "level": 3,
+          "label": "Behörden — 72h",
+          "color_hex": "DC2626",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_personal_data_transferred_unlawfully"
+            }
+          ]
+        },
+        {
+          "id": "ESC-019-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "KI-Anbieter",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "Datenlöschung aus Training anfordern",
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-019-001",
+          "phase_label": "Datenschutz",
+          "sequence": 1,
+          "action": "Bei DSGVO-Verstoß: Datenlöschung beim KI-Anbieter beantragen (soweit möglich)",
+          "detail": null,
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "depends_on": null
+        },
+        {
+          "id": "REC-019-002",
+          "phase_label": "Richtlinie",
+          "sequence": 2,
+          "action": "KI-Nutzungsrichtlinie (AI Policy) erstellen und verbindlich einführen",
+          "detail": "Erlaubte Tools, verbotene Datenkategorien, Genehmigungsprozess",
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-019-003",
+          "phase_label": "Alternativen",
+          "sequence": 3,
+          "action": "Genehmigte KI-Tools bereitstellen die DSGVO-konform betrieben werden",
+          "detail": "Microsoft Copilot for M365, eigene On-Premise-LLMs, EU-Anbieter",
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-019-002"
+        },
+        {
+          "id": "REC-019-004",
+          "phase_label": "Technik",
+          "sequence": 4,
+          "action": "DLP-Regeln für KI-API-Endpunkte konfigurieren — Datenverlust erkennen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-019-005",
+          "phase_label": "Schulung",
+          "sequence": 5,
+          "action": "KI-Awareness-Schulung für alle Mitarbeitenden — Chancen UND Risiken",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": "REC-019-002"
+        },
+        {
+          "id": "REC-019-006",
+          "phase_label": "Governance",
+          "sequence": 6,
+          "action": "KI-Governance-Prozess einführen: Freigabeverfahren für neue KI-Tools",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-019-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Genutzte KI-Tools (Name, URL, Anbieter, Land)",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-019-002",
+          "sequence": 2,
+          "category": "LEGAL",
+          "item": "Eingabetypen identifiziert: Kundendaten, Verträge, Personaldaten, Quellcode etc.",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-019-003",
+          "sequence": 3,
+          "category": "LEGAL",
+          "item": "Auftragsverarbeitungsvertrag mit KI-Anbieter geprüft / nicht vorhanden?",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-019-004",
+          "sequence": 4,
+          "category": "TECHNICAL",
+          "item": "Zugang zu nicht genehmigten Tools gesperrt (Datum, Methode)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-019-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "DSGVO-Risikobewertung durchgeführt (Ergebnis dokumentiert)",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-019-006",
+          "sequence": 6,
+          "category": "COMMUNICATION",
+          "item": "KI-Nutzungsrichtlinie erstellt und kommuniziert (Datum)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-019-007",
+          "sequence": 7,
+          "category": "LEGAL",
+          "item": "Datenlöschungsanfrage an KI-Anbieter gestellt (falls möglich)",
+          "mandatory": false,
+          "dsgvo_required": true
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-019-001",
+          "question": "Gibt es eine schriftliche KI-Nutzungsrichtlinie die allen Mitarbeitenden bekannt ist?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI CON.2.A1"
+        },
+        {
+          "id": "LL-019-002",
+          "question": "Sind genehmigte DSGVO-konforme KI-Alternativen für Mitarbeitende verfügbar?",
+          "category": "ORGANISATIONAL",
+          "maps_to_control": null
+        },
+        {
+          "id": "LL-019-003",
+          "question": "Gibt es DLP-Monitoring für Datenübertragungen an externe KI-APIs?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-019-004",
+          "question": "Sind Auftragsverarbeitungsverträge mit allen KI-Anbietern im Einsatz abgeschlossen?",
+          "category": "LEGAL",
+          "maps_to_control": "BSI CON.2.A1"
+        },
+        {
+          "id": "LL-019-005",
+          "question": "Wurden Mitarbeitende für Risiken von KI-Dateneingaben geschult?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        }
+      ],
+      "references": [
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 28 — Auftragsverarbeitung",
+          "url": "https://eur-lex.europa.eu"
+        },
+        {
+          "type": "GUIDE",
+          "name": "BSI KI-Sicherheitsempfehlungen für Unternehmen",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "STANDARD",
+          "name": "OWASP LLM Top 10",
+          "url": "https://owasp.org/www-project-top-10-for-large-language-model-applications"
+        }
+      ]
+    },
+    {
+      "id": "S-020",
+      "slug": "autonome-ki-angriffe",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "V",
+      "meta": {
+        "title": "Autonome KI-gestützte Angriffe",
+        "emoji": "🧠",
+        "color_hex": "DC2626",
+        "subtitle": "KI-Systeme führen Cyberangriffe mit minimaler menschlicher Steuerung automatisiert durch",
+        "tags": [
+          "ai-attack",
+          "autonomous",
+          "llm-agent",
+          "automated-exploit",
+          "polymorphic-malware",
+          "agentic"
+        ],
+        "affected_systems": [
+          "network",
+          "workstation",
+          "email",
+          "api",
+          "web-application",
+          "cloud"
+        ]
+      },
+      "classification": {
+        "severity": "CRITICAL",
+        "severity_label": "KRITISCH",
+        "likelihood": "MEDIUM",
+        "dsgvo_relevant": true,
+        "nis2_relevant": true,
+        "financial_risk": "VERY_HIGH",
+        "avg_damage_eur": {
+          "min": 20000,
+          "max": 500000
+        }
+      },
+      "overview": "Seit September 2025 wurde der erste vollständig autonome KI-orchestrierte Cyberangriff dokumentiert bei dem die KI 80-90% der Operation eigenständig durchführte (Anthropic Research). Automatisierte Scans erreichen 36.000 Scans pro Sekunde. 76% erkannter Malware zeigt bereits KI-getriebene polymorphe Eigenschaften (DeepStrike 2025). KI-Angriffe skalieren Social Engineering, finden Schwachstellen schneller, passen Phishing-Mails individuell an und umgehen signaturbasierte Erkennungssysteme durch ständige Mutation.",
+      "detection_indicators": [
+        {
+          "type": "LOG_PATTERN",
+          "description": "Ungewöhnlich schnelle Angriffssequenz — innerhalb von Minuten statt Stunden",
+          "threshold": "Exploit-Kette <5 Minuten von Erstkontakt bis Payload"
+        },
+        {
+          "type": "ALERT",
+          "description": "EDR meldet polymorphe Malware die sich bei jeder Ausführung verändert"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Hochpersonalisierte Phishing-Mails mit internen Daten die nur durch KI-Analyse erstellbar wären"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Massenhafte parallele Scans mit variierenden Signaturen von unterschiedlichen IPs"
+        },
+        {
+          "type": "ALERT",
+          "description": "SIEM meldet koordinierte Angriffsmuster die kein einzelner Mensch orchestrieren könnte"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-020-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Netzwerksegmentierung sofort aktivieren — laterale Bewegung einschränken",
+          "detail": "KI-Angriffe bewegen sich extrem schnell durch das Netz",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-020-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Externe Verbindungen auf Minimum reduzieren — nur kritische Dienste offen lassen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-020-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 10,
+          "time_label": "SOFORT",
+          "priority": 3,
+          "category": "COMMUNICATION",
+          "responsible": "IT_ADMIN",
+          "action": "xKMU Notfall-Hotline und ggf. externes SOC sofort einschalten",
+          "detail": "KI-Angriffe erfordern spezialisierte Gegenmittel",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-020-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Angriffscharakteristika dokumentieren: Geschwindigkeit, Muster, Ziele",
+          "detail": "Hilft bei Zuordnung zu KI-Angriff vs. manuellem Angriff",
+          "do_not": false,
+          "tool_hint": "SIEM, EDR, Firewall-Logs"
+        },
+        {
+          "id": "ACT-020-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Prüfen ob Angriff auf bekannte Schwachstelle abzielt — sofort patchen oder System isolieren",
+          "detail": "KI findet ungepatchte CVEs in Minuten",
+          "do_not": false,
+          "tool_hint": "Shodan, BSI Warnungen, NVD"
+        },
+        {
+          "id": "ACT-020-006",
+          "phase": "SHORT",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 6,
+          "category": "COMMUNICATION",
+          "responsible": "IT_ADMIN",
+          "action": "BSI und CERT-Bund informieren — KI-Angriffe haben oft weitreichende Auswirkungen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "certbund@bsi.bund.de"
+        },
+        {
+          "id": "ACT-020-007",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 7,
+          "category": "ANALYSIS",
+          "responsible": "EXTERNAL_FORENSICS",
+          "action": "Externen Forensik-Dienstleister mit KI-Angriff-Expertise hinzuziehen",
+          "detail": "Klassische Forensik reicht bei KI-Angriffen oft nicht aus",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-020-008",
+          "phase": "MEDIUM",
+          "time_window_minutes": 480,
+          "time_label": "Bis 8 Std",
+          "priority": 8,
+          "category": "RECOVERY",
+          "responsible": "IT_ADMIN",
+          "action": "Verhaltensbasierte Erkennung (AI-EDR) anstelle signaturbasierter Systeme aktivieren",
+          "detail": "Polymorphe Malware umgeht klassische Signaturen",
+          "do_not": false,
+          "tool_hint": "CrowdStrike Falcon, SentinelOne, Microsoft Defender XDR"
+        },
+        {
+          "id": "ACT-020-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Klassische signaturbasierte Antivirus-Tools allein reichen bei KI-Malware nicht aus",
+          "detail": "Polymorphe KI-Malware verändert sich ständig und umgeht Signaturen",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-020-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "991B1B",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Worst-Case vorbereiten",
+              "condition": null
+            },
+            {
+              "role": "XKMU_SUPPORT",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "Notfall-Eskalation — KI-Angriff",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-020-002",
+          "level": 2,
+          "label": "Behörden — 4 Std",
+          "color_hex": "DC2626",
+          "deadline_hours": 4,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "BSI Meldestelle",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "KI-Angriff melden — Frühwarnsystem",
+              "condition": null
+            },
+            {
+              "role": "CERT-Bund",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "LKA Cybercrime",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-020-003",
+          "level": 3,
+          "label": "Datenschutz — 72h",
+          "color_hex": "EA580C",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-020-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_FORENSICS",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "KI-Angriff-Expertise erforderlich",
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-020-001",
+          "phase_label": "Eindämmung",
+          "sequence": 1,
+          "action": "Netzwerksegmentierung aufrechterhalten bis vollständige Bereinigung",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-020-002",
+          "phase_label": "Forensik",
+          "sequence": 2,
+          "action": "KI-Angriffsvektor analysieren: Welche Schwachstellen wurden ausgenutzt?",
+          "detail": null,
+          "responsible": "EXTERNAL_FORENSICS",
+          "depends_on": null
+        },
+        {
+          "id": "REC-020-003",
+          "phase_label": "Systeme",
+          "sequence": 3,
+          "action": "Alle kompromittierten Systeme neu aufsetzen — kein Patchen bei polymorpher Malware",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-020-002"
+        },
+        {
+          "id": "REC-020-004",
+          "phase_label": "Härtung",
+          "sequence": 4,
+          "action": "Verhaltensbasiertes EDR einführen — klassischer Antivirus durch KI-Erkennung ersetzen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-020-005",
+          "phase_label": "Härtung",
+          "sequence": 5,
+          "action": "Attack-Surface-Management einführen: Alle exponierten Assets kontinuierlich inventarisieren",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-020-006",
+          "phase_label": "Strategie",
+          "sequence": 6,
+          "action": "Assume-Breach-Strategie implementieren: Nicht 'ob angegriffen wird' sondern 'wann'",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-020-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Angriffscharakteristika dokumentiert (Geschwindigkeit, Muster, Ziele, Zeitstempel)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-020-002",
+          "sequence": 2,
+          "category": "TECHNICAL",
+          "item": "Ausgenutzte Schwachstellen identifiziert (CVE-Nummern falls zutreffend)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-020-003",
+          "sequence": 3,
+          "category": "TECHNICAL",
+          "item": "Betroffene Systeme und Daten vollständig inventarisiert",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-020-004",
+          "sequence": 4,
+          "category": "LEGAL",
+          "item": "BSI / CERT-Bund informiert (Datum, Referenznummer)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-020-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "DSGVO Art. 33 Meldung (falls personenbezogene Daten betroffen)",
+          "mandatory": false,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-020-006",
+          "sequence": 6,
+          "category": "TECHNICAL",
+          "item": "Verhaltensbasiertes EDR implementiert",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-020-007",
+          "sequence": 7,
+          "category": "TECHNICAL",
+          "item": "Forensik-Bericht durch KI-Angriff-Experten erstellt",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-020-001",
+          "question": "Ist ein verhaltensbasiertes EDR statt klassischem Antivirus im Einsatz?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-020-002",
+          "question": "Werden alle exponierten Assets kontinuierlich auf Schwachstellen gescannt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI OPS.1.1.3.A14"
+        },
+        {
+          "id": "LL-020-003",
+          "question": "Ist die Netzwerksegmentierung so konfiguriert dass laterale Bewegung eingeschränkt wird?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI NET.1.1.A16"
+        },
+        {
+          "id": "LL-020-004",
+          "question": "Gibt es eine Assume-Breach-Strategie mit definierten Reaktionsplänen?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI DER.2.1.A3"
+        },
+        {
+          "id": "LL-020-005",
+          "question": "Werden Patch-Zyklen auf kritische CVEs innerhalb von 24 Stunden durchgeführt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI OPS.1.1.3.A14"
+        }
+      ],
+      "references": [
+        {
+          "type": "AUTHORITY",
+          "name": "BSI KI-Sicherheit und autonome Angriffe",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "TOOL",
+          "name": "CrowdStrike Falcon — KI-basiertes EDR",
+          "url": "https://www.crowdstrike.com"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz DER.1 — Detektion",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "GUIDE",
+          "name": "NIST Cybersecurity Framework 2.0",
+          "url": "https://www.nist.gov/cyberframework"
+        }
+      ]
+    },
+    {
+      "id": "S-021",
+      "slug": "usb-drop-angriff",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "VI",
+      "meta": {
+        "title": "USB-Drop-Angriff",
+        "emoji": "🔌",
+        "color_hex": "0369A1",
+        "subtitle": "Präparierter USB-Stick wird gefunden und eingesteckt — Schadsoftware installiert sich automatisch",
+        "tags": [
+          "usb",
+          "physical",
+          "rubber-ducky",
+          "badusb",
+          "hardware",
+          "malware",
+          "social-engineering"
+        ],
+        "affected_systems": [
+          "workstation",
+          "laptop",
+          "file-server",
+          "network",
+          "active-directory"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "MITTEL–HOCH",
+        "likelihood": "LOW",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 3000,
+          "max": 100000
+        }
+      },
+      "overview": "USB-Drop-Angriffe nutzen menschliche Neugier aus: präparierte USB-Sticks werden auf Firmenparkplätzen, in Lobbys oder bei Veranstaltungen platziert. Findet ein Mitarbeiter den Stick und steckt ihn ein, installiert sich automatisch Schadsoftware (BadUSB, Rubber Ducky) die sich als Tastatur tarnt und innerhalb von Sekunden Befehle ausführt. Studien zeigen: 48% der Menschen stecken gefundene USB-Sticks ein. Moderne BadUSB-Geräte sehen aus wie normale Sticks, Ladekabel oder Mäuse.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Mitarbeiter meldet gefundenen USB-Stick oder bemerkt nach Einstecken seltsames Verhalten"
+        },
+        {
+          "type": "ALERT",
+          "description": "EDR meldet neues USB-Gerät und gleichzeitige verdächtige Prozess-Ausführung"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Neue Tastatur-/HID-Gerät registriert gefolgt von schneller Befehlsausführung"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Unerwartetes Öffnen von CMD/PowerShell oder unbekannte Netzwerkverbindungen nach USB-Einste"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-021-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 1,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "USB-Gerät SOFORT entfernen — System NICHT herunterfahren",
+          "detail": "Schadsoftware könnte bereits im RAM aktiv sein — RAM-Forensik erhalten",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-021-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 1,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Gerät sofort vom Netzwerk trennen (LAN-Kabel und WLAN)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-021-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 3,
+          "category": "COMMUNICATION",
+          "responsible": "AFFECTED_USER",
+          "action": "IT-Verantwortlichen sofort informieren — USB-Gerät als Beweismittel aufbewahren",
+          "detail": "USB-Stick NICHT wegwerfen — Fingerabdrücke und Forensik möglich",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-021-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "USB-Gerät analysieren: Normaler Stick oder BadUSB/HID-Angriff?",
+          "detail": "An isoliertem Analyse-System prüfen, niemals am Produktivsystem",
+          "do_not": false,
+          "tool_hint": "USB Rubber Ducky Detector, HID-Gerät-Analyse"
+        },
+        {
+          "id": "ACT-021-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Systemlogs prüfen: Welche Prozesse wurden nach USB-Einstecken gestartet?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Windows Event Log ID 4688, Sysmon"
+        },
+        {
+          "id": "ACT-021-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 6,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Netzwerkverbindungen prüfen: Ausgehende Verbindungen nach USB-Einstecken?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "netstat, Firewall-Logs"
+        },
+        {
+          "id": "ACT-021-007",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 7,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Vollständiger Malware-Scan des isolierten Systems",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-021-008",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 8,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Alle Mitarbeiter warnen: Gefundene USB-Geräte niemals einstecken",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-021-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "USB-Stick NICHT an anderem Gerät ausprobieren um Inhalt zu prüfen",
+          "detail": "Schadsoftware überträgt sich sofort — kein 'sicheres' Testsystem ohne Isolierung",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-021-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "075985",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "AFFECTED_USER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-021-002",
+          "level": 2,
+          "label": "Alle MA — 4 Std",
+          "color_hex": "0369A1",
+          "deadline_hours": 4,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "ALL_STAFF",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Warnung: Gefundene USB-Geräte nicht einstecken",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-021-003",
+          "level": 3,
+          "label": "Behörden — 72h",
+          "color_hex": "DC2626",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_data_compromised"
+            },
+            {
+              "role": "Polizei",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "USB-Gerät als Beweismittel übergeben",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-021-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-021-001",
+          "phase_label": "Forensik",
+          "sequence": 1,
+          "action": "RAM-Dump des betroffenen Systems erstellen bevor weitere Schritte",
+          "detail": null,
+          "responsible": "EXTERNAL_FORENSICS",
+          "depends_on": null
+        },
+        {
+          "id": "REC-021-002",
+          "phase_label": "Bereinigung",
+          "sequence": 2,
+          "action": "System neu aufsetzen falls Schadsoftware installiert wurde",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-021-001"
+        },
+        {
+          "id": "REC-021-003",
+          "phase_label": "Härtung",
+          "sequence": 3,
+          "action": "USB-Ports auf allen Firmengeräten sperren (Whitelist-only) oder deaktivieren",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-021-004",
+          "phase_label": "Härtung",
+          "sequence": 4,
+          "action": "Autorun / AutoPlay für alle Wechselmedien deaktivieren",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-021-005",
+          "phase_label": "Härtung",
+          "sequence": 5,
+          "action": "HID-Angriffs-Schutz einrichten (nur genehmigte HID-Geräte zulassen)",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-021-006",
+          "phase_label": "Schulung",
+          "sequence": 6,
+          "action": "Awareness-Schulung: USB-Drops, physische Social-Engineering-Taktiken",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-021-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "USB-Gerät sichergestellt und als Beweismittel gekennzeichnet",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-021-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Fundort und -zeitpunkt des USB-Sticks dokumentiert",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-021-003",
+          "sequence": 3,
+          "category": "TECHNICAL",
+          "item": "Gerätetyp identifiziert: Normaler Stick / BadUSB / HID-Gerät",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-021-004",
+          "sequence": 4,
+          "category": "TECHNICAL",
+          "item": "Systemlogs analysiert: Welche Prozesse wurden ausgelöst?",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-021-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "DSGVO-Prüfung: Wurden Daten exfiltriert?",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-021-006",
+          "sequence": 6,
+          "category": "TECHNICAL",
+          "item": "USB-Port-Sperrung eingerichtet (Datum, Methode)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-021-007",
+          "sequence": 7,
+          "category": "COMMUNICATION",
+          "item": "Mitarbeiter-Warnung versendet (Datum, Kanal)",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-021-001",
+          "question": "Sind USB-Ports auf Firmengeräten gesperrt oder auf Whitelist-Geräte beschränkt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI SYS.2.1.A24"
+        },
+        {
+          "id": "LL-021-002",
+          "question": "Ist Autorun/AutoPlay für alle Wechselmedien deaktiviert?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI SYS.2.1.A24"
+        },
+        {
+          "id": "LL-021-003",
+          "question": "Wissen Mitarbeiter dass gefundene USB-Geräte niemals eingesteckt werden dürfen?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-021-004",
+          "question": "Gibt es ein definiertes Verfahren für gefundene unbekannte Hardware?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI INF.2.A14"
+        },
+        {
+          "id": "LL-021-005",
+          "question": "Schützt der eingesetzte Endpoint-Schutz vor HID-Angriffen?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI SYS.2.1.A6"
+        }
+      ],
+      "references": [
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz SYS.2.1 — Allgemeiner Client",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "GUIDE",
+          "name": "BSI Hinweise zu Wechseldatenträgern",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-022",
+      "slug": "tailgating-physischer-einbruch",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "VI",
+      "meta": {
+        "title": "Tailgating / Physischer Einbruch",
+        "emoji": "🚪",
+        "color_hex": "7C3AED",
+        "subtitle": "Unbefugte Personen verschaffen sich physischen Zugang zu gesicherten Bereichen",
+        "tags": [
+          "physical-security",
+          "tailgating",
+          "social-engineering",
+          "access-control",
+          "insider",
+          "espionage"
+        ],
+        "affected_systems": [
+          "physical-access",
+          "workstation",
+          "server-room",
+          "documents",
+          "network-ports"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "MITTEL–HOCH",
+        "likelihood": "MEDIUM",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 5000,
+          "max": 200000
+        }
+      },
+      "overview": "Tailgating bezeichnet das unbemerkte Eindringen in gesicherte Bereiche indem man einer autorisierten Person durch eine gesicherte Tür folgt. Angreifer nutzen Höflichkeit ('Können Sie mal aufhalten?'), Ablenkung oder gefälschte Ausweise. Ziele im Unternehmensbereich: physischer Zugriff auf Server, Workstations, Dokumente, Netzwerk-Ports oder das Platzieren von Abhörgeräten. Kombination mit anderen Angriffsvektoren (USB-Drop, Gerätediebstahl) ist häufig.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Mitarbeiter meldet unbekannte Person in gesichertem Bereich"
+        },
+        {
+          "type": "ALERT",
+          "description": "Zutrittskontrolle meldet Türöffnung ohne gültigen Ausweis-Scan (Tailgate-Sensor)"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Kamera zeigt Person ohne Ausweis in gesichertem Bereich"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Unbekannte Person fragt nach Serverraum, IT-Infrastruktur oder hinterlässt Fremdkörper"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-022-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 1,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Unbekannte Person sofort höflich ansprechen und nach Ausweis / Besucherzweck fragen",
+          "detail": "Sicherheitsbewusstsein ohne Konfrontation — Eskalation nur wenn nötig",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-022-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 2,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "COMMUNICATION",
+          "responsible": "AFFECTED_USER",
+          "action": "Sicherheitsdienst oder IT-Verantwortlichen sofort informieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-022-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 3,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Zutrittskontrolle prüfen: Wann, wo, wie oft wurde die Person gesehen?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Zutritts-Logs, Kameraaufzeichnungen"
+        },
+        {
+          "id": "ACT-022-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 10,
+          "time_label": "Bis 10 Min",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Bereich auf zurückgelassene Geräte prüfen: USB-Sticks, Mini-Computer, Abhörgeräte",
+          "detail": "Unter Schreibtischen, hinter Schränken, an Netzwerk-Ports",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-022-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Alle Workstations im betroffenen Bereich auf Zugriffe prüfen",
+          "detail": "Waren Bildschirme entsperrt? Wurden Geräte angeschlossen?",
+          "do_not": false,
+          "tool_hint": "Windows Event Log, USB-History"
+        },
+        {
+          "id": "ACT-022-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 6,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Polizei verständigen falls Angreifer noch vor Ort oder Geräte gestohlen wurden",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-022-007",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 7,
+          "category": "ANALYSIS",
+          "responsible": "MANAGEMENT",
+          "action": "Kameraaufzeichnungen sichern und Person identifizieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-022-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Unbekannte Personen NICHT alleine lassen — auch nicht kurz",
+          "detail": "30 Sekunden reichen für USB-Drop, Keylogger-Installation oder Foto-Aufnahmen",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-022-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "4C1D95",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Sicherheitsdienst",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_security_service_exists"
+            }
+          ]
+        },
+        {
+          "id": "ESC-022-002",
+          "level": 2,
+          "label": "Polizei — bei Bedarf",
+          "color_hex": "7C3AED",
+          "deadline_hours": null,
+          "condition": "if_intruder_present_or_theft",
+          "recipients": [
+            {
+              "role": "Polizei",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "Person noch vor Ort oder Diebstahl",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-022-003",
+          "level": 3,
+          "label": "Behörden — 72h",
+          "color_hex": "DC2626",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_data_accessed"
+            }
+          ]
+        },
+        {
+          "id": "ESC-022-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Verfassungsschutz",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_suspected_espionage"
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-022-001",
+          "phase_label": "Analyse",
+          "sequence": 1,
+          "action": "Vollständige Begehung des betroffenen Bereichs auf Fremdkörper",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-022-002",
+          "phase_label": "Forensik",
+          "sequence": 2,
+          "action": "Alle Systeme im betroffenen Bereich auf Manipulation prüfen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-022-003",
+          "phase_label": "Zugang",
+          "sequence": 3,
+          "action": "Zugangskarten und Codes im betroffenen Bereich erneuern",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-022-004",
+          "phase_label": "Härtung",
+          "sequence": 4,
+          "action": "Tailgate-Sensoren an allen Sicherheitstüren einrichten",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-022-005",
+          "phase_label": "Härtung",
+          "sequence": 5,
+          "action": "Besuchermanagement einführen: Besucher immer begleiten, Ausweise hinterlegen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-022-006",
+          "phase_label": "Schulung",
+          "sequence": 6,
+          "action": "Mitarbeitende schulen: Unbekannte ansprechen, Türen nicht aufhalten",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-022-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Beschreibung der unbekannten Person (Kleidung, Aussehen, Verhalten)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-022-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Zeitraum des Aufenthalts und besuchte Bereiche",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-022-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Kameraaufzeichnungen gesichert",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-022-004",
+          "sequence": 4,
+          "category": "TECHNICAL",
+          "item": "Bereich auf hinterlassene Geräte / Fremdkörper geprüft",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-022-005",
+          "sequence": 5,
+          "category": "TECHNICAL",
+          "item": "Systeme auf Zugriffe oder angeschlossene Geräte geprüft",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-022-006",
+          "sequence": 6,
+          "category": "LEGAL",
+          "item": "Polizei-Anzeige (Datum, Aktenzeichen) — falls Diebstahl oder Sachschaden",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-022-007",
+          "sequence": 7,
+          "category": "LEGAL",
+          "item": "DSGVO-Prüfung: Wurden Daten eingesehen oder kopiert?",
+          "mandatory": true,
+          "dsgvo_required": true
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-022-001",
+          "question": "Sind alle Mitarbeitenden angewiesen unbekannte Personen anzusprechen (keine Duldungskultur)?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-022-002",
+          "question": "Gibt es Tailgate-Sensoren oder Schleusen an kritischen Zutrittspunkten?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI INF.2.A7"
+        },
+        {
+          "id": "LL-022-003",
+          "question": "Werden Besucher immer begleitet und Zugangsdaten nicht geteilt?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI INF.2.A14"
+        },
+        {
+          "id": "LL-022-004",
+          "question": "Sind Kameraaufzeichnungen in sensiblen Bereichen vorhanden und werden ausgewertet?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI INF.2.A7"
+        },
+        {
+          "id": "LL-022-005",
+          "question": "Werden Bildschirme bei Verlassen des Arbeitsplatzes automatisch gesperrt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI SYS.2.1.A36"
+        }
+      ],
+      "references": [
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz INF.2 — Rechenzentrum und Serverraum",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz INF.1 — Allgemeines Gebäude",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-023",
+      "slug": "nis2-meldepflichtverletzung",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "VI",
+      "meta": {
+        "title": "NIS-2-Meldepflichtverletzung",
+        "emoji": "⚖️",
+        "color_hex": "0F766E",
+        "subtitle": "Sicherheitsvorfall wird nicht fristgerecht oder unvollständig an Behörden gemeldet",
+        "tags": [
+          "nis2",
+          "compliance",
+          "reporting",
+          "bsi",
+          "meldepflicht",
+          "legal",
+          "critical-infrastructure"
+        ],
+        "affected_systems": [
+          "reporting-process",
+          "documentation",
+          "legal",
+          "management"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "HOCH",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": true,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 50000,
+          "max": 10000000
+        }
+      },
+      "overview": "NIS-2 (Network and Information Security Directive 2) gilt ab Oktober 2024 für über 30.000 deutsche Unternehmen in 18 Sektoren. Bußgelder bei Verstößen: bis zu 10 Mio. EUR oder 2% des weltweiten Umsatzes. Meldepflichten: Erstmeldung innerhalb 24 Stunden, vollständige Meldung innerhalb 72 Stunden, Abschlussbericht innerhalb 1 Monat. Häufige Fehler: zu späte Erkennung ob NIS-2 gilt, Verwechslung von DSGVO- und NIS-2-Fristen, unvollständige Dokumentation.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Externer Berater oder Anwalt weist auf versäumte NIS-2-Meldepflicht hin"
+        },
+        {
+          "type": "EXTERNAL_REPORT",
+          "description": "BSI oder Behörde fragt nach Meldung zu bekanntem Vorfall"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Internes Review ergibt dass Meldepflicht nicht erkannt oder Frist versäumt wurde"
+        },
+        {
+          "type": "ALERT",
+          "description": "Compliance-System meldet überfällige NIS-2-Meldung"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-023-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "NIS-2-Betroffenheit prüfen: Ist das Unternehmen im Anwendungsbereich (Sektor, Größe)?",
+          "detail": "18 Sektoren: Energie, Transport, Finanzen, Gesundheit, Wasser, Digital, etc.",
+          "do_not": false,
+          "tool_hint": "BSI NIS-2-Betroffenheitsprüfung: www.bsi.bund.de/nis-2"
+        },
+        {
+          "id": "ACT-023-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 2,
+          "category": "LEGAL",
+          "responsible": "EXTERNAL_LAWYER",
+          "action": "Rechtsanwalt mit NIS-2-Expertise sofort einschalten",
+          "detail": "Meldepflicht-Beurteilung und Fristenberechnung rechtssicher dokumentieren",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-023-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 3,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "Fristen berechnen: Wann wurde der Vorfall bekannt? 24h / 72h / 1 Monat ab wann?",
+          "detail": "Fristbeginn: Zeitpunkt der Kenntnisnahme durch den Verantwortlichen",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-023-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 4,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "Erstmeldung an BSI vorbereiten und einreichen (24h-Frist)",
+          "detail": "Auch unvollständige Erstmeldung ist besser als keine — Nachlieferung möglich",
+          "do_not": false,
+          "tool_hint": "BSI ISMS-Portal: www.bsi.bund.de"
+        },
+        {
+          "id": "ACT-023-005",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 5,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "Vollständige Meldung vorbereiten für 72h-Frist — Sachverhalt, Auswirkungen, Maßnahmen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-023-006",
+          "phase": "MEDIUM",
+          "time_window_minutes": 43200,
+          "time_label": "Bis 1 Monat",
+          "priority": 6,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "Abschlussbericht erstellen: Vollständige Analyse, Maßnahmen, Prävention",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-023-007",
+          "phase": "LONG",
+          "time_window_minutes": null,
+          "time_label": "Laufend",
+          "priority": 7,
+          "category": "PREVENTION",
+          "responsible": "MANAGEMENT",
+          "action": "NIS-2-Compliance-Programm einführen: Registrierung, Prozesse, Schulungen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-023-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Frist NICHT verstreichen lassen in der Hoffnung der Vorfall bleibt unentdeckt",
+          "detail": "Behörden erfahren von Vorfällen oft aus anderen Quellen — versäumte Meldung ist eigenständiger Verstoß",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-023-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "134E4A",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "DATA_PROTECTION_OFFICER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "NIS-2 Expertise erforderlich",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-023-002",
+          "level": 2,
+          "label": "BSI — 24 Std",
+          "color_hex": "0F766E",
+          "deadline_hours": 24,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "BSI Meldestelle",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "NIS-2 / BSIG §8b",
+              "message": "Erstmeldung innerhalb 24 Stunden",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-023-003",
+          "level": 3,
+          "label": "BSI — 72 Std",
+          "color_hex": "D97706",
+          "deadline_hours": 72,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "BSI Meldestelle",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "NIS-2 / BSIG §8b",
+              "message": "Vollständige Meldung innerhalb 72 Stunden",
+              "condition": null
+            },
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": "Falls personenbezogene Daten betroffen",
+              "condition": "if_dsgvo_relevant"
+            }
+          ]
+        },
+        {
+          "id": "ESC-023-004",
+          "level": 4,
+          "label": "BSI — 1 Monat",
+          "color_hex": "64748B",
+          "deadline_hours": 720,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "BSI Meldestelle",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "NIS-2",
+              "message": "Abschlussbericht",
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-023-001",
+          "phase_label": "Sofortmeldung",
+          "sequence": 1,
+          "action": "Erstmeldung an BSI innerhalb 24 Stunden einreichen — auch wenn unvollständig",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-023-002",
+          "phase_label": "Vollmeldung",
+          "sequence": 2,
+          "action": "Vollständige Meldung innerhalb 72 Stunden mit Sachverhalt, Auswirkungen, Maßnahmen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": "REC-023-001"
+        },
+        {
+          "id": "REC-023-003",
+          "phase_label": "Abschlussbericht",
+          "sequence": 3,
+          "action": "Abschlussbericht innerhalb 1 Monat: Ursachenanalyse, Lessons Learned, Prävention",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": "REC-023-002"
+        },
+        {
+          "id": "REC-023-004",
+          "phase_label": "Compliance",
+          "sequence": 4,
+          "action": "NIS-2-Registrierung beim BSI durchführen falls noch nicht geschehen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-023-005",
+          "phase_label": "Prozesse",
+          "sequence": 5,
+          "action": "Incident-Response-Prozess um NIS-2-Meldepflichten erweitern",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-023-006",
+          "phase_label": "Dokumentation",
+          "sequence": 6,
+          "action": "NIS-2-Compliance-Dokumentation aufbauen: Risikoanalyse, Maßnahmen, Nachweise",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-023-001",
+          "sequence": 1,
+          "category": "LEGAL",
+          "item": "NIS-2-Betroffenheit geprüft und dokumentiert (Sektor, Unternehmensgröße)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-023-002",
+          "sequence": 2,
+          "category": "LEGAL",
+          "item": "Erstmeldung beim BSI: Datum, Uhrzeit, Bestätigung",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-023-003",
+          "sequence": 3,
+          "category": "LEGAL",
+          "item": "Vollständige Meldung (72h): Datum, Inhalt, BSI-Referenznummer",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-023-004",
+          "sequence": 4,
+          "category": "LEGAL",
+          "item": "Abschlussbericht (1 Monat): Datum, Inhalt dokumentiert",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-023-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "Parallele DSGVO-Meldung geprüft (falls personenbezogene Daten betroffen)",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-023-006",
+          "sequence": 6,
+          "category": "LEGAL",
+          "item": "Rechtlicher Beistand hinzugezogen (Datum, Kanzlei)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-023-007",
+          "sequence": 7,
+          "category": "TECHNICAL",
+          "item": "NIS-2-Registrierung beim BSI abgeschlossen",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-023-001",
+          "question": "Ist die NIS-2-Betroffenheit des Unternehmens rechtssicher geprüft und dokumentiert?",
+          "category": "LEGAL",
+          "maps_to_control": "BSI-NIS2"
+        },
+        {
+          "id": "LL-023-002",
+          "question": "Kennen alle relevanten Mitarbeitenden die 24h/72h/1-Monat-Fristen?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI-NIS2"
+        },
+        {
+          "id": "LL-023-003",
+          "question": "Gibt es einen definierten NIS-2-Meldeprozess mit klaren Verantwortlichkeiten?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI-NIS2"
+        },
+        {
+          "id": "LL-023-004",
+          "question": "Ist das Unternehmen beim BSI registriert (Pflicht für betroffene Unternehmen)?",
+          "category": "LEGAL",
+          "maps_to_control": "BSI-NIS2"
+        },
+        {
+          "id": "LL-023-005",
+          "question": "Werden DSGVO- und NIS-2-Meldepflichten koordiniert bearbeitet (oft parallel anwendbar)?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI-NIS2"
+        }
+      ],
+      "references": [
+        {
+          "type": "LEGAL",
+          "name": "NIS-2-Richtlinie (EU) 2022/2555",
+          "url": "https://eur-lex.europa.eu"
+        },
+        {
+          "type": "LEGAL",
+          "name": "BSIG §8b — Meldepflichten",
+          "url": "https://www.gesetze-im-internet.de"
+        },
+        {
+          "type": "AUTHORITY",
+          "name": "BSI NIS-2 Informationsportal",
+          "url": "https://www.bsi.bund.de/nis-2"
+        },
+        {
+          "type": "GUIDE",
+          "name": "BSI Leitfaden NIS-2-Umsetzung",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-024",
+      "slug": "betriebsspionage-ip-diebstahl",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "VI",
+      "meta": {
+        "title": "Betriebsspionage / Geistiges Eigentum Diebstahl",
+        "emoji": "🕵️",
+        "color_hex": "1E3A5F",
+        "subtitle": "Systematischer Diebstahl von Geschäftsgeheimnissen, Kundendaten oder Technologie durch Konkurrenz oder staatliche Akteure",
+        "tags": [
+          "espionage",
+          "ip-theft",
+          "trade-secrets",
+          "state-actor",
+          "insider",
+          "wirtschaftsspionage",
+          "know-how"
+        ],
+        "affected_systems": [
+          "file-server",
+          "email",
+          "crm",
+          "r-and-d",
+          "cloud-storage",
+          "laptop"
+        ]
+      },
+      "classification": {
+        "severity": "CRITICAL",
+        "severity_label": "KRITISCH",
+        "likelihood": "MEDIUM",
+        "dsgvo_relevant": true,
+        "nis2_relevant": true,
+        "financial_risk": "VERY_HIGH",
+        "avg_damage_eur": {
+          "min": 50000,
+          "max": 50000000
+        }
+      },
+      "overview": "Wirtschaftsspionage verursacht in Deutschland jährlich über 200 Mrd. EUR Schaden (Bitkom 2025). 46% der betroffenen Unternehmen können Angriffe Russland zuordnen, 46% China. 28% konnten einen ausländischen Nachrichtendienst als Urheber identifizieren. Häufige Ziele: F&E-Daten, Kundenlisten, Produktionsgeheimnisse, Angebote und Verhandlungsstrategien. Angriffe dauern oft Monate bis Jahre unentdeckt (lange Dwell Time). Täter: staatlich gestützte APT-Gruppen, Konkurrenz, oder bestochene/erpresste Insider.",
+      "detection_indicators": [
+        {
+          "type": "BEHAVIORAL",
+          "description": "Konkurrent kennt interne Informationen die nicht öffentlich sein sollten"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Ungewöhnliche Massenzugriffe auf F&E-Dateien oder strategische Dokumente"
+        },
+        {
+          "type": "EXTERNAL_REPORT",
+          "description": "Verfassungsschutz oder BSI warnt vor gezielten Angriffen auf die Branche"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Langfristige heimliche Datenabzüge in kleinen Portionen über VPN / Cloud",
+          "threshold": "Ungewöhnlicher Traffic zu Cloud-Diensten über Wochen"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Mitarbeiter verhält sich auffällig: Erbschaftsinteresse an sensiblen Projekten, Kontakt zu Konkurrenz"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-024-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Verfassungsschutz und BSI kontaktieren — staatliche Spionage ist Behördensache",
+          "detail": "Voreilige interne Ermittlungen können laufende Behördenoperationen stören",
+          "do_not": false,
+          "tool_hint": "Verfassungsschutz: www.verfassungsschutz.de, BSI: www.bsi.bund.de"
+        },
+        {
+          "id": "ACT-024-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "LEGAL",
+          "responsible": "EXTERNAL_LAWYER",
+          "action": "Anwalt mit Wirtschaftsspionage-Expertise sofort einschalten",
+          "detail": "Strafrecht, Geheimnisschutzgesetz (GeschGehG), Beweissicherung",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-024-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 3,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Verdächtige Datenabflüsse in Logs identifizieren und sichern — OHNE zu löschen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "SIEM, DLP-Logs, Cloud-Audit-Trails"
+        },
+        {
+          "id": "ACT-024-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 4,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Zugriff auf besonders sensible Bereiche (F&E, Strategie) auf Minimum einschränken",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-024-005",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "EXTERNAL_FORENSICS",
+          "action": "Externen Forensik-Dienstleister mit APT-Erfahrung beauftragen",
+          "detail": "APT-Angriffe hinterlassen spezifische Spuren — Expertise erforderlich",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-024-006",
+          "phase": "MEDIUM",
+          "time_window_minutes": 1440,
+          "time_label": "Bis 24 Std",
+          "priority": 6,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "Betroffene Geschäftsgeheimnisse nach GeschGehG inventarisieren",
+          "detail": "Nur als Geschäftsgeheimnis geschützte Informationen sind klagbar",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-024-007",
+          "phase": "MEDIUM",
+          "time_window_minutes": 4320,
+          "time_label": "Bis 3 Tage",
+          "priority": 7,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "NIS-2-Meldung prüfen (falls betroffener Sektor) und ggf. DSGVO-Meldung",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-024-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Verdächtige Person NICHT konfrontieren bevor Behörden und Anwalt eingebunden sind",
+          "detail": "Voreilige Konfrontation vernichtet Beweise und kann Strafverfolgung gefährden",
+          "do_not": true,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-024-WARNING-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 98,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Interne Ermittlungen NICHT ohne rechtliche Absicherung — Verwertbarkeit sichern",
+          "detail": "Illegal beschaffte Beweise sind vor Gericht nicht verwertbar",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-024-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "1E293B",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "GeschGehG, Strafrecht",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-024-002",
+          "level": 2,
+          "label": "Behörden — Sofort",
+          "color_hex": "1E3A5F",
+          "deadline_hours": 1,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Verfassungsschutz",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "Bei Verdacht auf staatliche Akteure",
+              "condition": "if_state_actor_suspected"
+            },
+            {
+              "role": "LKA / BKA",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "Strafanzeige Wirtschaftsspionage",
+              "condition": null
+            },
+            {
+              "role": "BSI",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "APT-Angriff melden",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-024-003",
+          "level": 3,
+          "label": "Regulatorisch — 72h",
+          "color_hex": "DC2626",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_personal_data_stolen"
+            },
+            {
+              "role": "BSI NIS-2",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "NIS-2",
+              "message": null,
+              "condition": "if_nis2_relevant"
+            }
+          ]
+        },
+        {
+          "id": "ESC-024-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": "Cyber- und Vertrauensschadenversicherung",
+              "condition": null
+            },
+            {
+              "role": "Patentanwalt",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "Bei gestohlenen Patenten oder Technologien",
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-024-001",
+          "phase_label": "Forensik",
+          "sequence": 1,
+          "action": "Vollständige APT-Forensik durch spezialisierten Dienstleister",
+          "detail": null,
+          "responsible": "EXTERNAL_FORENSICS",
+          "depends_on": null
+        },
+        {
+          "id": "REC-024-002",
+          "phase_label": "Schadensumfang",
+          "sequence": 2,
+          "action": "Inventar aller möglicherweise exfiltrierten Informationen erstellen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": "REC-024-001"
+        },
+        {
+          "id": "REC-024-003",
+          "phase_label": "Recht",
+          "sequence": 3,
+          "action": "GeschGehG-Klage vorbereiten falls Täter identifizierbar",
+          "detail": null,
+          "responsible": "EXTERNAL_LAWYER",
+          "depends_on": "REC-024-002"
+        },
+        {
+          "id": "REC-024-004",
+          "phase_label": "Härtung",
+          "sequence": 4,
+          "action": "Need-to-Know-Prinzip für alle sensiblen Informationen rigoros einführen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-024-005",
+          "phase_label": "Härtung",
+          "sequence": 5,
+          "action": "DLP-System für Dateiexporte und Cloud-Uploads einführen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-024-006",
+          "phase_label": "Härtung",
+          "sequence": 6,
+          "action": "Geheimschutzmaßnahmen für kritische F&E-Bereiche (physisch + digital) einführen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-024-007",
+          "phase_label": "Langfristig",
+          "sequence": 7,
+          "action": "Awareness-Programm: Mitarbeiter für staatliche Spionage und Social Engineering sensibilisieren",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-024-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Erste Hinweise auf Spionage dokumentiert (Datum, Art, Quelle)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-024-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Verdächtige Log-Aktivitäten gesichert (unveränderlich)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-024-003",
+          "sequence": 3,
+          "category": "LEGAL",
+          "item": "Anwalt mit GeschGehG-Expertise eingeschaltet (Datum)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-024-004",
+          "sequence": 4,
+          "category": "LEGAL",
+          "item": "Strafanzeige erstattet (Datum, Aktenzeichen, Dienststelle)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-024-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "Verfassungsschutz / BSI informiert (bei Verdacht staatlicher Akteure)",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-024-006",
+          "sequence": 6,
+          "category": "LEGAL",
+          "item": "Gestohlene Geschäftsgeheimnisse nach GeschGehG inventarisiert",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-024-007",
+          "sequence": 7,
+          "category": "LEGAL",
+          "item": "DSGVO / NIS-2 Meldepflichten geprüft und ggf. erfüllt",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-024-008",
+          "sequence": 8,
+          "category": "TECHNICAL",
+          "item": "Forensik-Bericht (APT-Experte): Angriffsdauer, Umfang, Akteur",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-024-001",
+          "question": "Sind sensible F&E- und Strategiedaten nach Need-to-Know-Prinzip geschützt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A4"
+        },
+        {
+          "id": "LL-024-002",
+          "question": "Gibt es ein DLP-System das großvolumige Datenexporte erkennt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-024-003",
+          "question": "Sind Geschäftsgeheimnisse nach GeschGehG formal als solche definiert und geschützt?",
+          "category": "LEGAL",
+          "maps_to_control": null
+        },
+        {
+          "id": "LL-024-004",
+          "question": "Werden Mitarbeitende regelmäßig über staatliche Spionagerisiken und Social Engineering informiert?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-024-005",
+          "question": "Gibt es eine Kooperation mit Verfassungsschutz oder BSI für Frühwarnungen?",
+          "category": "ORGANISATIONAL",
+          "maps_to_control": null
+        }
+      ],
+      "references": [
+        {
+          "type": "LEGAL",
+          "name": "Geschäftsgeheimnisgesetz (GeschGehG)",
+          "url": "https://www.gesetze-im-internet.de/geschgehg"
+        },
+        {
+          "type": "AUTHORITY",
+          "name": "Bundesamt für Verfassungsschutz — Wirtschaftsspionage",
+          "url": "https://www.verfassungsschutz.de"
+        },
+        {
+          "type": "AUTHORITY",
+          "name": "BSI — APT-Angriffe und Wirtschaftsspionage",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "GUIDE",
+          "name": "Bitkom Leitfaden Wirtschaftsspionage",
+          "url": "https://www.bitkom.org"
+        }
+      ]
+    }
+  ]
+}

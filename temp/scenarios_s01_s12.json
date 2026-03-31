@@ -1,0 +1,5155 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-01-01",
+  "schema": "https://xkmu.de/schemas/ir-playbook/v1",
+  "total": 12,
+  "scenarios": [
+    {
+      "id": "S-001",
+      "slug": "phishing-klick",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "I",
+      "meta": {
+        "title": "Phishing-Klick",
+        "emoji": "🎣",
+        "color_hex": "1E40AF",
+        "subtitle": "Mitarbeiter hat auf schädlichen Link geklickt oder Anhang geöffnet",
+        "tags": [
+          "email",
+          "phishing",
+          "social-engineering",
+          "credential"
+        ],
+        "affected_systems": [
+          "email",
+          "browser",
+          "workstation",
+          "cloud-account"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "MITTEL–HOCH",
+        "likelihood": "VERY_HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "MEDIUM",
+        "avg_damage_eur": {
+          "min": 3000,
+          "max": 50000
+        }
+      },
+      "overview": "Phishing-Angriffe sind der häufigste Angriffsvektor in KMU. Ein einzelner Klick kann Zugangsdaten kompromittieren, Schadsoftware installieren oder als Pivot-Punkt für weiterführende Angriffe dienen. Schnelles Handeln in den ersten 15 Minuten ist entscheidend.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Mitarbeiter meldet verdächtigen Link oder Anhang"
+        },
+        {
+          "type": "ALERT",
+          "description": "Antivirus-/EDR-Alert nach Dateiöffnung"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Ausgehende Verbindung zu unbekannter Domain nach Klick"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-001-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "0–5 Min",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Gerät vom Netzwerk trennen (LAN-Kabel ziehen, WLAN deaktivieren)",
+          "detail": "NICHT herunterfahren — Speicher-Forensik bleibt erhalten",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-001-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "0–5 Min",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Betroffenen Benutzer vom System abmelden, Gerät eingeschaltet lassen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-001-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "0–5 Min",
+          "priority": 3,
+          "category": "COMMUNICATION",
+          "responsible": "AFFECTED_USER",
+          "action": "IT-Verantwortlichen / xKMU-Notfallkontakt informieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-001-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 4,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Passwort des betroffenen Kontos von ANDEREM Gerät ändern",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-001-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 5,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Multi-Faktor-Authentifizierung sofort prüfen und ggf. erzwingen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-001-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 6,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "E-Mail-Header analysieren: Absenderadresse, Reply-To, SPF/DKIM prüfen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "MXToolbox, Google Admin Toolbox"
+        },
+        {
+          "id": "ACT-001-007",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 7,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Klick-URL in VirusTotal / URLScan.io analysieren",
+          "detail": "Ohne erneuten Aufruf der URL",
+          "do_not": false,
+          "tool_hint": "virustotal.com, urlscan.io"
+        },
+        {
+          "id": "ACT-001-008",
+          "phase": "SHORT",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 8,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Gleichartige E-Mails im Posteingang aller Mitarbeiter suchen und löschen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Microsoft 365 Compliance Center, Google Vault"
+        },
+        {
+          "id": "ACT-001-009",
+          "phase": "SHORT",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 9,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Browser-Verlauf und Download-Ordner des Geräts sichern",
+          "detail": "Screenshot oder Textexport als Beweismittel",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-001-010",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 10,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Antivirenscanner auf vollem System ausführen",
+          "detail": "Isoliert vom Netz",
+          "do_not": false,
+          "tool_hint": "Windows Defender, Malwarebytes"
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-001-001",
+          "level": 1,
+          "label": "Stufe 1 — Sofort",
+          "color_hex": "DC2626",
+          "deadline_hours": 0.25,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "AFFECTED_USER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-001-002",
+          "level": 2,
+          "label": "Stufe 2 — 1 Stunde",
+          "color_hex": "EA580C",
+          "deadline_hours": 1,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "xKMU Notfallkontakt",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "DATA_PROTECTION_OFFICER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_personal_data_at_risk"
+            }
+          ]
+        },
+        {
+          "id": "ESC-001-003",
+          "level": 3,
+          "label": "Stufe 3 — 72 Stunden",
+          "color_hex": "D97706",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_personal_data_breached"
+            },
+            {
+              "role": "Betroffene Personen",
+              "contact_type": "PARTNER",
+              "legal_basis": "DSGVO Art. 34",
+              "message": null,
+              "condition": "if_high_risk_to_individuals"
+            }
+          ]
+        },
+        {
+          "id": "ESC-001-004",
+          "level": 4,
+          "label": "Stufe 4 — Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Polizei",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_criminal_act"
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-001-001",
+          "phase_label": "Analyse",
+          "sequence": 1,
+          "action": "Forensische Kopie des betroffenen Geräts erstellen",
+          "detail": "Bevor Änderungen vorgenommen werden",
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-001-002",
+          "phase_label": "Bereinigung",
+          "sequence": 2,
+          "action": "Schadsoftware entfernen oder Gerät aus gesichertem Backup wiederherstellen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-001-001"
+        },
+        {
+          "id": "REC-001-003",
+          "phase_label": "Zugänge",
+          "sequence": 3,
+          "action": "Alle betroffenen Passwörter ändern — auch geteilte Zugänge",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-001-004",
+          "phase_label": "Zugänge",
+          "sequence": 4,
+          "action": "OAuth-Tokens und App-Berechtigungen widerrufen",
+          "detail": "Google, Microsoft 365 etc.",
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-001-003"
+        },
+        {
+          "id": "REC-001-005",
+          "phase_label": "Monitoring",
+          "sequence": 5,
+          "action": "Login-Protokolle der nächsten 72 Stunden engmaschig überwachen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-001-006",
+          "phase_label": "Freigabe",
+          "sequence": 6,
+          "action": "Gerät erst nach vollständiger Freigabe durch IT wieder ins Netz lassen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-001-002"
+        },
+        {
+          "id": "REC-001-007",
+          "phase_label": "Schulung",
+          "sequence": 7,
+          "action": "Betroffenen Mitarbeiter nachschulen (Phishing-Erkennung)",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-001-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Datum & Uhrzeit des Klick-Ereignisses",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-001-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Name des betroffenen Mitarbeiters und genutztes Gerät",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-001-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Vollständige URL / E-Mail-Header (Screenshot oder Textexport)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-001-004",
+          "sequence": 4,
+          "category": "TECHNICAL",
+          "item": "Durchgeführte Sofortmaßnahmen mit Zeitstempel",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-001-005",
+          "sequence": 5,
+          "category": "TECHNICAL",
+          "item": "Ergebnis der Antiviren-/Forensik-Analyse",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-001-006",
+          "sequence": 6,
+          "category": "TECHNICAL",
+          "item": "Geänderte Zugangsdaten (Liste der Systeme — ohne Passwörter)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-001-007",
+          "sequence": 7,
+          "category": "LEGAL",
+          "item": "Meldungen an Behörden (Datum, Aktenzeichen)",
+          "mandatory": false,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-001-008",
+          "sequence": 8,
+          "category": "TECHNICAL",
+          "item": "Abschlussbericht mit Ursache, Maßnahmen, Empfehlungen",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-001-001",
+          "question": "Hatte der Nutzer administrative Rechte, die nicht notwendig waren?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A4"
+        },
+        {
+          "id": "LL-001-002",
+          "question": "Wäre der Angriff durch SPF/DKIM/DMARC erkennbar gewesen?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI APP.5.3.A4"
+        },
+        {
+          "id": "LL-001-003",
+          "question": "Ist MFA bereits für alle kritischen Systeme aktiv?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A12"
+        },
+        {
+          "id": "LL-001-004",
+          "question": "Gibt es einen aktuellen, funktionsfähigen Backup-Stand?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI CON.3.A8"
+        },
+        {
+          "id": "LL-001-005",
+          "question": "Kennen alle Mitarbeiter den Meldeweg für verdächtige E-Mails?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        }
+      ],
+      "references": [
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 33 — Meldepflicht bei Datenschutzverletzungen",
+          "url": "https://eur-lex.europa.eu"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz APP.5.3 — Allgemeiner E-Mail-Client",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "TOOL",
+          "name": "VirusTotal — URL/Datei-Analyse",
+          "url": "https://www.virustotal.com"
+        },
+        {
+          "type": "TOOL",
+          "name": "URLScan.io — URL-Analyse",
+          "url": "https://urlscan.io"
+        }
+      ]
+    },
+    {
+      "id": "S-002",
+      "slug": "ransomware-befall",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "I",
+      "meta": {
+        "title": "Ransomware-Befall",
+        "emoji": "🔒",
+        "color_hex": "DC2626",
+        "subtitle": "Dateien werden verschlüsselt, Lösegeldforderung erscheint",
+        "tags": [
+          "ransomware",
+          "encryption",
+          "extortion",
+          "malware",
+          "critical"
+        ],
+        "affected_systems": [
+          "file-server",
+          "workstation",
+          "backup",
+          "network-shares",
+          "cloud-sync"
+        ]
+      },
+      "classification": {
+        "severity": "CRITICAL",
+        "severity_label": "KRITISCH",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": true,
+        "financial_risk": "VERY_HIGH",
+        "avg_damage_eur": {
+          "min": 20000,
+          "max": 500000
+        }
+      },
+      "overview": "Ransomware verschlüsselt Dateien und Systeme und fordert Lösegeld für die Entschlüsselung. Zahlung empfiehlt weder BSI noch xKMU — es gibt keine Garantie für die Datenfreigabe. 80% aller Ransomware-Angriffe 2024 richteten sich gegen KMU (BKA). 72% nutzten Double-Extortion: Daten werden zusätzlich gestohlen und Veröffentlichung angedroht.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Dateien nicht mehr öffenbar, fremde Dateiendungen"
+        },
+        {
+          "type": "ALERT",
+          "description": "EDR/Antivirus meldet Massen-Dateiverschlüsselung"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Ransom-Note (TXT/HTML) auf Desktop oder in Ordnern erscheint"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Massenhaftes Umbenennen von Dateien in kurzer Zeit"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-002-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 1,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "ALLE betroffenen Geräte sofort vom Netz trennen — physisch (LAN + WLAN)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-002-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 1,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Netzwerk-Switches, falls möglich, komplett deaktivieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-002-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 1,
+          "time_label": "SOFORT",
+          "priority": 3,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Backups sofort offline nehmen (NAS, externe Laufwerke, Cloud-Sync stoppen)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-002-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "AFFECTED_USER",
+          "action": "Ransom-Note fotografieren / Screenshot erstellen — nicht löschen",
+          "detail": "Beweismittel für Forensik und Behörden",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-002-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 5,
+          "category": "COMMUNICATION",
+          "responsible": "IT_ADMIN",
+          "action": "IT-Verantwortlichen und Geschäftsführung alarmieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-002-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 6,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Ransomware-Typ identifizieren über ID Ransomware",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "https://id-ransomware.malwarehunterteam.com, https://www.nomoreransom.org"
+        },
+        {
+          "id": "ACT-002-007",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 7,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Ausmaß der Infektion kartieren: Welche Systeme, welche Laufwerke?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-002-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Kein Lösegeld zahlen ohne Rechtsberatung",
+          "detail": "Zahlung garantiert keine Entschlüsselung und finanziert weitere Angriffe",
+          "do_not": true,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-002-WARNING-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 98,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Infizierte Systeme NICHT neu starten",
+          "detail": "Speicher-Forensik (RAM) geht unwiederbringlich verloren",
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-002-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "7F1D1D",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "ALL_STAFF",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Über Ausfall informieren, keine Details",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-002-002",
+          "level": 2,
+          "label": "Behörden — 24 Stunden",
+          "color_hex": "DC2626",
+          "deadline_hours": 24,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "BSI Meldestelle",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "LKA Cybercrime",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_personal_data_breached"
+            }
+          ]
+        },
+        {
+          "id": "ESC-002-003",
+          "level": 3,
+          "label": "Partner — 48 Stunden",
+          "color_hex": "EA580C",
+          "deadline_hours": 48,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": "Cyber-Police aktivieren",
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Kunden / Lieferanten",
+              "contact_type": "PARTNER",
+              "legal_basis": null,
+              "message": "Bei Betroffenheit informieren",
+              "condition": "if_partners_affected"
+            }
+          ]
+        },
+        {
+          "id": "ESC-002-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Pressestelle / PR",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "Stellungnahme vorbereiten",
+              "condition": null
+            },
+            {
+              "role": "Kreditinstitut",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-002-001",
+          "phase_label": "Eindämmung",
+          "sequence": 1,
+          "action": "Saubere Systeme identifizieren und produktiv halten",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-002-002",
+          "phase_label": "Forensik",
+          "sequence": 2,
+          "action": "Angriffsvektor ermitteln (Phishing, RDP, ungepatchte Software)",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-002-003",
+          "phase_label": "Bereinigung",
+          "sequence": 3,
+          "action": "Infizierte Systeme formatieren — nie einfach entschlüsseln und weiterbetreiben",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-002-002"
+        },
+        {
+          "id": "REC-002-004",
+          "phase_label": "Wiederherstellung",
+          "sequence": 4,
+          "action": "Aus validiertem Backup wiederherstellen — Backup selbst auf Infektion prüfen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-002-003"
+        },
+        {
+          "id": "REC-002-005",
+          "phase_label": "Härtung",
+          "sequence": 5,
+          "action": "Angriffsvektor schließen bevor Systeme wieder ans Netz gehen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-002-002"
+        },
+        {
+          "id": "REC-002-006",
+          "phase_label": "Monitoring",
+          "sequence": 6,
+          "action": "EDR / SIEM engmaschig überwachen — Reinfektionen häufig",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-002-005"
+        },
+        {
+          "id": "REC-002-007",
+          "phase_label": "Dokumentation",
+          "sequence": 7,
+          "action": "Vollständigen Incident-Report erstellen (intern + behördlich)",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-002-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Erste Erkennungszeit und betroffene Systeme (vollständige Liste)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-002-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Ransomware-Variante (Name, Hash, Ransom-Note Text)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-002-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Netzwerk-Topologie zum Zeitpunkt des Vorfalls (Screenshot)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-002-004",
+          "sequence": 4,
+          "category": "TECHNICAL",
+          "item": "Alle Eindämmungsmaßnahmen mit Zeitstempel",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-002-005",
+          "sequence": 5,
+          "category": "TECHNICAL",
+          "item": "Backup-Status: Welche Stände sauber, welche kompromittiert?",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-002-006",
+          "sequence": 6,
+          "category": "COMMUNICATION",
+          "item": "Kommunikationslog: Wer wurde wann informiert?",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-002-007",
+          "sequence": 7,
+          "category": "LEGAL",
+          "item": "BSI-Meldung (Datum, Referenznummer)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-002-008",
+          "sequence": 8,
+          "category": "LEGAL",
+          "item": "Datenschutz-Meldung Art. 33 DSGVO — falls personenbezogene Daten betroffen",
+          "mandatory": false,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-002-009",
+          "sequence": 9,
+          "category": "TECHNICAL",
+          "item": "Forensik-Bericht (intern oder extern erstellt)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-002-010",
+          "sequence": 10,
+          "category": "FINANCIAL",
+          "item": "Abschlussbericht: Schaden, Ursache, Maßnahmen, Kosten",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-002-001",
+          "question": "Waren Backups wirklich offline und vor Ransomware geschützt (3-2-1-Regel)?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI CON.3.A8"
+        },
+        {
+          "id": "LL-002-002",
+          "question": "Hatte die Ransomware Domänenadmin-Rechte? Wie wurden diese erlangt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A4"
+        },
+        {
+          "id": "LL-002-003",
+          "question": "Ist RDP extern erreichbar? War es durch schwache Passwörter geschützt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI NET.1.2.A6"
+        },
+        {
+          "id": "LL-002-004",
+          "question": "Wie lange war die Ransomware unentdeckt aktiv (Dwell Time)?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-002-005",
+          "question": "Ist ein getesteter Notfallplan vorhanden? Wurde er in letzter Zeit geprobt?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI DER.2.1.A3"
+        }
+      ],
+      "references": [
+        {
+          "type": "TOOL",
+          "name": "No More Ransom Project",
+          "url": "https://www.nomoreransom.org"
+        },
+        {
+          "type": "TOOL",
+          "name": "ID Ransomware",
+          "url": "https://id-ransomware.malwarehunterteam.com"
+        },
+        {
+          "type": "AUTHORITY",
+          "name": "BSI Meldestelle",
+          "url": "https://www.bsi.bund.de/meldungen"
+        },
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 33",
+          "url": "https://eur-lex.europa.eu"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz CON.3 — Datensicherungskonzept",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-003",
+      "slug": "kontoubernahme-account-takeover",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "I",
+      "meta": {
+        "title": "Kontoübernahme (Account Takeover)",
+        "emoji": "👤",
+        "color_hex": "D97706",
+        "subtitle": "Unbefugter Zugriff auf E-Mail, Cloud oder Unternehmensanwendungen",
+        "tags": [
+          "account-takeover",
+          "credential",
+          "cloud",
+          "email",
+          "identity"
+        ],
+        "affected_systems": [
+          "email",
+          "microsoft-365",
+          "google-workspace",
+          "crm",
+          "vpn"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "HOCH",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 5000,
+          "max": 100000
+        }
+      },
+      "overview": "Bei einer Kontoübernahme nutzen Angreifer gestohlene oder erschlichene Zugangsdaten, um sich als legitimer Nutzer auszugeben. Häufige Ziele: E-Mail-Konten (für Business Email Compromise), Cloud-Dienste (Microsoft 365, Google Workspace) und Verwaltungszugänge. Angreifer agiert als legitimer Nutzer — Erkennung schwierig.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Nutzer bemerkt unbekannte Aktivitäten oder gesperrtes Konto"
+        },
+        {
+          "type": "ALERT",
+          "description": "Login von unbekanntem Standort / Gerät (Conditional Access Alert)"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "E-Mail-Weiterleitungsregeln unbekannter Herkunft im Postfach"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "E-Mails werden im Namen des Nutzers verschickt ohne sein Wissen"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-003-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Betroffenes Konto sofort sperren / Passwort zurücksetzen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Microsoft 365 Admin Center, Google Admin Console"
+        },
+        {
+          "id": "ACT-003-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Alle aktiven Sessions des Kontos beenden (Logout aller Geräte)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Entra ID: Revoke Sign-in Sessions"
+        },
+        {
+          "id": "ACT-003-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 3,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "MFA für das Konto erzwingen — falls nicht vorhanden: sofort einrichten",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-003-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Login-Protokolle analysieren: Wann, von wo, auf was wurde zugegriffen?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Azure AD Sign-in Logs, Google Workspace Audit"
+        },
+        {
+          "id": "ACT-003-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "E-Mail-Weiterleitungsregeln prüfen — häufiger Angriffspfad",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-003-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 6,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Postausgang prüfen: Wurden E-Mails im Namen des Nutzers verschickt?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-003-007",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 7,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Dateifreigaben und externe Zugriffe in Cloud-Diensten prüfen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-003-008",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 8,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Passwörter für alle Systeme mit gleichen Zugangsdaten ändern",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-003-009",
+          "phase": "MEDIUM",
+          "time_window_minutes": 1440,
+          "time_label": "Bis 24 Std",
+          "priority": 9,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Vollständige Audit-Trail-Analyse der letzten 30 Tage",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-003-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "78350F",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "AFFECTED_USER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-003-002",
+          "level": 2,
+          "label": "Extern — 24 Stunden",
+          "color_hex": "D97706",
+          "deadline_hours": 24,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Betroffene Kunden",
+              "contact_type": "PARTNER",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_external_parties_affected"
+            },
+            {
+              "role": "Plattformanbieter Support",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-003-003",
+          "level": 3,
+          "label": "Behörden — 72 Stunden",
+          "color_hex": "EA580C",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Polizei / LKA",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_criminal_act"
+            }
+          ]
+        },
+        {
+          "id": "ESC-003-004",
+          "level": 4,
+          "label": "Finanziell",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "if_financial_damage",
+          "recipients": [
+            {
+              "role": "Bank",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "Bei finanziellem Betrug",
+              "condition": null
+            },
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-003-001",
+          "phase_label": "Sicherung",
+          "sequence": 1,
+          "action": "Kompromittierte Kontodaten sichern (Protokolle, E-Mails, Aktivitätslog)",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-003-002",
+          "phase_label": "Zugang",
+          "sequence": 2,
+          "action": "Sauberes Konto mit neuem Passwort und MFA wiederherstellen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-003-003",
+          "phase_label": "Prüfung",
+          "sequence": 3,
+          "action": "Alle Zugriffe im Angriffszeitraum vollständig dokumentieren",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-003-001"
+        },
+        {
+          "id": "REC-003-004",
+          "phase_label": "Schadensbegrenzung",
+          "sequence": 4,
+          "action": "Im Namen des Nutzers versendete E-Mails zurückverfolgen und Empfänger informieren",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": "REC-003-003"
+        },
+        {
+          "id": "REC-003-005",
+          "phase_label": "Daten",
+          "sequence": 5,
+          "action": "Exfiltrierte Dateien identifizieren — Datenschutz-Folgenabschätzung prüfen",
+          "detail": null,
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "depends_on": null
+        },
+        {
+          "id": "REC-003-006",
+          "phase_label": "Systeme",
+          "sequence": 6,
+          "action": "Alle verbundenen Konten und OAuth-Integrationen prüfen und bereinigen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-003-007",
+          "phase_label": "Prävention",
+          "sequence": 7,
+          "action": "Zero-Trust-Prinzip prüfen: Minimale Rechte, Geräte-Compliance, bedingte Zugriffe",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-003-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Betroffenes Konto und Zeitraum der Kompromittierung",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-003-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Erste Hinweise auf unbefugten Zugriff (Zeitstempel, IP-Adresse)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-003-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Vollständiger Login-Verlauf aus Audit-Logs (Export sichern)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-003-004",
+          "sequence": 4,
+          "category": "TECHNICAL",
+          "item": "Liste der im Angriffszeitraum zugegriffenen Dateien/Daten",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-003-005",
+          "sequence": 5,
+          "category": "TECHNICAL",
+          "item": "Weitergeleitete oder im fremden Namen versendete E-Mails",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-003-006",
+          "sequence": 6,
+          "category": "TECHNICAL",
+          "item": "Durchgeführte Sperrungen und Passwort-Rücksetzungen",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-003-007",
+          "sequence": 7,
+          "category": "COMMUNICATION",
+          "item": "Informierte Externe (Kunden, Partner, Plattformanbieter)",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-003-008",
+          "sequence": 8,
+          "category": "LEGAL",
+          "item": "DSGVO-Meldung falls personenbezogene Daten betroffen",
+          "mandatory": false,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-003-009",
+          "sequence": 9,
+          "category": "TECHNICAL",
+          "item": "Abschlussanalyse: Wie wurden Zugangsdaten kompromittiert?",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-003-001",
+          "question": "War MFA für das Konto aktiv? Falls nicht — warum?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A12"
+        },
+        {
+          "id": "LL-003-002",
+          "question": "Werden Passwort-Vorgaben (Länge, Komplexität, keine Wiederverwendung) durchgesetzt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A8"
+        },
+        {
+          "id": "LL-003-003",
+          "question": "Gibt es zentrale Audit-Logs die schnell ausgewertet werden können?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-003-004",
+          "question": "Existiert ein Prozess zum schnellen Sperren von Konten (auch außerhalb der Bürozeiten)?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI ORP.4.A7"
+        },
+        {
+          "id": "LL-003-005",
+          "question": "Sind Mitarbeiter für Business Email Compromise (BEC) sensibilisiert?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        }
+      ],
+      "references": [
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz ORP.4 — Identitäts- und Berechtigungsmanagement",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "TOOL",
+          "name": "Microsoft Secure Score",
+          "url": "https://security.microsoft.com"
+        },
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 33",
+          "url": "https://eur-lex.europa.eu"
+        }
+      ]
+    },
+    {
+      "id": "S-004",
+      "slug": "datenverlust-datenpanne",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "I",
+      "meta": {
+        "title": "Datenverlust / Datenpanne",
+        "emoji": "📋",
+        "color_hex": "16A34A",
+        "subtitle": "Unbeabsichtigte oder unbefugte Weitergabe / Verlust personenbezogener Daten",
+        "tags": [
+          "data-breach",
+          "dsgvo",
+          "gdpr",
+          "data-loss",
+          "compliance"
+        ],
+        "affected_systems": [
+          "database",
+          "email",
+          "cloud-storage",
+          "crm",
+          "file-server"
+        ]
+      },
+      "classification": {
+        "severity": "VARIABLE",
+        "severity_label": "VARIABEL",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 1000,
+          "max": 200000
+        }
+      },
+      "overview": "Datenverlust umfasst sowohl technische Vorfälle (Hack, Fehlkonfiguration) als auch menschliche Fehler (falsche E-Mail, verlorenes Gerät). Entscheidend ist die schnelle Einschätzung des Risikos für betroffene Personen und die Erfüllung der DSGVO-Meldepflichten. Die 72-Stunden-Frist läuft ab dem Zeitpunkt der Kenntnisnahme durch den Verantwortlichen.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Mitarbeiter meldet versehentlich gesendete E-Mail mit Anhang"
+        },
+        {
+          "type": "EXTERNAL_REPORT",
+          "description": "Externer Hinweis auf öffentlich zugängliche Daten"
+        },
+        {
+          "type": "ALERT",
+          "description": "DLP-System meldet unerlaubten Datenabfluss"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Massenhafter Download oder Export von Daten"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-004-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 1,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Art und Umfang des Verlusts feststellen: Welche Daten, wie viele Personen?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-004-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Datenleck stoppen — falsche Freigabe zurückziehen, offenen Zugang schließen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-004-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 3,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Datenschutzbeauftragten (DSB) oder GF informieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-004-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "Klassifizierung: Welche Datenkategorien? (Gesundheit, Finanzen, Stammdaten...)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-004-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "Risikobewertung starten: Wahrscheinlichkeit und Schwere möglicher Schäden",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-004-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 6,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Technische Beweise sichern: Logs, Zugriffsprotokolle, Metadaten",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-004-007",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 7,
+          "category": "LEGAL",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "DSGVO-Meldepflicht prüfen: Liegt ein Risiko für betroffene Personen vor?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-004-008",
+          "phase": "MEDIUM",
+          "time_window_minutes": 1440,
+          "time_label": "Bis 24 Std",
+          "priority": 8,
+          "category": "LEGAL",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "Interne Dokumentation starten — Uhr läuft ab Kenntnisnahme (72-Std.-Frist)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-004-009",
+          "phase": "MEDIUM",
+          "time_window_minutes": 2880,
+          "time_label": "Bis 48 Std",
+          "priority": 9,
+          "category": "LEGAL",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "Meldung an Datenschutzbehörde vorbereiten (Art. 33 DSGVO)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "LfDI BW: www.lfdi.bwl.de"
+        },
+        {
+          "id": "ACT-004-010",
+          "phase": "MEDIUM",
+          "time_window_minutes": 4320,
+          "time_label": "Bis 72 Std",
+          "priority": 10,
+          "category": "LEGAL",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "Meldung einreichen — Frist gilt ab Kenntnis des Verantwortlichen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-004-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "14532D",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "DATA_PROTECTION_OFFICER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-004-002",
+          "level": 2,
+          "label": "Behörden — 72 Stunden",
+          "color_hex": "16A34A",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "BSI",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_critical_infrastructure"
+            }
+          ]
+        },
+        {
+          "id": "ESC-004-003",
+          "level": 3,
+          "label": "Betroffene — ggf.",
+          "color_hex": "D97706",
+          "deadline_hours": null,
+          "condition": "if_high_risk_to_individuals",
+          "recipients": [
+            {
+              "role": "Betroffene Personen",
+              "contact_type": "PARTNER",
+              "legal_basis": "DSGVO Art. 34",
+              "message": "Zeitnah und verständlich",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-004-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-004-001",
+          "phase_label": "Eindämmung",
+          "sequence": 1,
+          "action": "Sicherstellen dass keine weiteren Daten verloren gehen / zugänglich sind",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-004-002",
+          "phase_label": "Bewertung",
+          "sequence": 2,
+          "action": "Vollständige Datenschutz-Folgenabschätzung (DSFA) durchführen wenn nötig",
+          "detail": null,
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "depends_on": null
+        },
+        {
+          "id": "REC-004-003",
+          "phase_label": "DSGVO",
+          "sequence": 3,
+          "action": "Meldung Art. 33 DSGVO fristgerecht bei der zuständigen Aufsichtsbehörde einreichen",
+          "detail": null,
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "depends_on": "REC-004-002"
+        },
+        {
+          "id": "REC-004-004",
+          "phase_label": "DSGVO",
+          "sequence": 4,
+          "action": "Benachrichtigung Betroffener Art. 34 DSGVO wenn hohes Risiko besteht",
+          "detail": null,
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "depends_on": "REC-004-002"
+        },
+        {
+          "id": "REC-004-005",
+          "phase_label": "Technik",
+          "sequence": 5,
+          "action": "Systemkonfiguration korrigieren die zum Vorfall geführt hat",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-004-006",
+          "phase_label": "Prozesse",
+          "sequence": 6,
+          "action": "Datenschutz-Richtlinien und Zugriffsrechte überprüfen und anpassen",
+          "detail": null,
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "depends_on": null
+        },
+        {
+          "id": "REC-004-007",
+          "phase_label": "Nachweis",
+          "sequence": 7,
+          "action": "Rechenschaftspflicht dokumentieren — Art. 5 Abs. 2 DSGVO",
+          "detail": null,
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-004-001",
+          "sequence": 1,
+          "category": "LEGAL",
+          "item": "Art der betroffenen Daten und Kategorien (personenbezogen, besonders schützenswert?)",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-002",
+          "sequence": 2,
+          "category": "LEGAL",
+          "item": "Anzahl der betroffenen Personen (genau oder geschätzt)",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Zeitpunkt und Entdeckungsumstand der Datenpanne",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-004",
+          "sequence": 4,
+          "category": "EVIDENCE",
+          "item": "Ursache des Vorfalls (technisch, menschliches Versagen, Angriff)",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-005",
+          "sequence": 5,
+          "category": "TECHNICAL",
+          "item": "Maßnahmen zur Schadensbegrenzung mit Zeitstempel",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-006",
+          "sequence": 6,
+          "category": "LEGAL",
+          "item": "Risikobewertung: Schwere und Wahrscheinlichkeit des Schadens",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-007",
+          "sequence": 7,
+          "category": "LEGAL",
+          "item": "DSGVO Art. 33 Meldung (Datum, Aktenzeichen der Aufsichtsbehörde)",
+          "mandatory": false,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-008",
+          "sequence": 8,
+          "category": "LEGAL",
+          "item": "DSGVO Art. 34 Betroffenenbenachrichtigung (falls erforderlich)",
+          "mandatory": false,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-009",
+          "sequence": 9,
+          "category": "LEGAL",
+          "item": "Internes Verarbeitungsverzeichnis aktualisiert?",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-004-010",
+          "sequence": 10,
+          "category": "TECHNICAL",
+          "item": "Präventivmaßnahmen für die Zukunft dokumentiert",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-004-001",
+          "question": "Gibt es eine aktuelle Datenschutz-Folgenabschätzung für kritische Verarbeitungen?",
+          "category": "LEGAL",
+          "maps_to_control": "BSI CON.2.A1"
+        },
+        {
+          "id": "LL-004-002",
+          "question": "Sind Datenzugriffsrechte nach Need-to-Know vergeben?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A4"
+        },
+        {
+          "id": "LL-004-003",
+          "question": "Ist ein Datenschutzbeauftragter benannt und erreichbar?",
+          "category": "LEGAL",
+          "maps_to_control": "BSI CON.2.A1"
+        },
+        {
+          "id": "LL-004-004",
+          "question": "Wird das Verarbeitungsverzeichnis regelmäßig gepflegt?",
+          "category": "LEGAL",
+          "maps_to_control": "BSI CON.2.A1"
+        },
+        {
+          "id": "LL-004-005",
+          "question": "Kennen Mitarbeiter die DSGVO-Meldepflicht und den internen Meldeweg?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        }
+      ],
+      "references": [
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 33 — Meldepflicht gegenüber der Aufsichtsbehörde",
+          "url": "https://eur-lex.europa.eu"
+        },
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 34 — Benachrichtigung der betroffenen Person",
+          "url": "https://eur-lex.europa.eu"
+        },
+        {
+          "type": "AUTHORITY",
+          "name": "LfDI Baden-Württemberg",
+          "url": "https://www.lfdi.bwl.de"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz CON.2 — Datenschutz",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-005",
+      "slug": "ceo-fraud-business-email-compromise",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "II",
+      "meta": {
+        "title": "CEO-Fraud / Business Email Compromise",
+        "emoji": "💸",
+        "color_hex": "BE185D",
+        "subtitle": "Angreifer gibt sich per E-Mail als Führungskraft aus und veranlasst betrügerische Überweisungen",
+        "tags": [
+          "bec",
+          "ceo-fraud",
+          "financial",
+          "social-engineering",
+          "deepfake",
+          "wire-fraud"
+        ],
+        "affected_systems": [
+          "email",
+          "banking",
+          "erp",
+          "accounting"
+        ]
+      },
+      "classification": {
+        "severity": "CRITICAL",
+        "severity_label": "HOCH–KRITISCH",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "VERY_HIGH",
+        "avg_damage_eur": {
+          "min": 10000,
+          "max": 500000
+        }
+      },
+      "overview": "Business Email Compromise (BEC) ist einer der finanziell schädlichsten Angriffe für KMU. Angreifer kompromittieren oder spoofen E-Mail-Konten von Geschäftsführern, Vorgesetzten oder Lieferanten. KI-generierte E-Mails und Deepfake-Anrufe erhöhen 2025 die Glaubwürdigkeit erheblich. Der durchschnittliche BEC-Schaden in deutschen KMU liegt zwischen 40.000 und 200.000 EUR.",
+      "detection_indicators": [
+        {
+          "type": "BEHAVIORAL",
+          "description": "Dringende Zahlung außerhalb normaler Prozesse angefordert"
+        },
+        {
+          "type": "USER_REPORT",
+          "description": "Mitarbeiter meldet ungewöhnliche Zahlungsaufforderung per E-Mail"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Abweichende Absenderadresse (Look-alike Domain)"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Bitte um Verschwiegenheit und Zeitdruck in der E-Mail"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-005-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "FINANCE",
+          "action": "Überweisung stoppen — sofort Hausbank anrufen (Recall-Prozess einleiten)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-005-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "ANALYSIS",
+          "responsible": "FINANCE",
+          "action": "Kontonummer des Empfängers notieren und für Strafanzeige sichern",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-005-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 3,
+          "category": "COMMUNICATION",
+          "responsible": "FINANCE",
+          "action": "Geschäftsführung und Finanzverantwortliche alarmieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-005-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Betrügerische E-Mail NICHT löschen — als Beweismittel sichern (Header, Volltext)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-005-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Absender-Adresse prüfen: Echte Domain oder Look-alike?",
+          "detail": "z.B. arnexa.de vs. arnexа.de (kyrillisches 'a')",
+          "do_not": false,
+          "tool_hint": "MXToolbox, E-Mail-Header-Analyse"
+        },
+        {
+          "id": "ACT-005-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 6,
+          "category": "LEGAL",
+          "responsible": "MANAGEMENT",
+          "action": "Strafanzeige bei Polizei / LKA Cybercrime erstatten",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "BKA Cybercrime-Anzeige: www.bka.de"
+        },
+        {
+          "id": "ACT-005-007",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 7,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Hausbank informieren: IBAN des Empfängers, Transaktions-ID, Zeitstempel",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-005-008",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 8,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Prüfen ob weitere Mitarbeiter ähnliche E-Mails erhalten haben",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-005-009",
+          "phase": "MEDIUM",
+          "time_window_minutes": 1440,
+          "time_label": "Bis 24 Std",
+          "priority": 9,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Alle betroffenen Lieferanten / Partner direkt kontaktieren (telefonisch)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-005-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "9D174D",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "FINANCE",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "E-Mail-Analyse starten",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-005-002",
+          "level": 2,
+          "label": "Finanziell — 1 Stunde",
+          "color_hex": "BE185D",
+          "deadline_hours": 1,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Hausbank Recall-Antrag",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Empfängerbank",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-005-003",
+          "level": 3,
+          "label": "Behörden — 24 Stunden",
+          "color_hex": "DC2626",
+          "deadline_hours": 24,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Polizei / LKA Cybercrime",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_personal_data_breached"
+            }
+          ]
+        },
+        {
+          "id": "ESC-005-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": "Cyber-Police prüfen",
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-005-001",
+          "phase_label": "Finanzen",
+          "sequence": 1,
+          "action": "Recall-Prozess über Bank verfolgen — Fristen beachten (oft 24–48 Std.)",
+          "detail": null,
+          "responsible": "FINANCE",
+          "depends_on": null
+        },
+        {
+          "id": "REC-005-002",
+          "phase_label": "Forensik",
+          "sequence": 2,
+          "action": "E-Mail-Header analysieren: Spoofing oder echte Kontoübernahme?",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-005-003",
+          "phase_label": "Prozesse",
+          "sequence": 3,
+          "action": "Vier-Augen-Prinzip für Überweisungen ab definiertem Schwellenwert einführen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-005-004",
+          "phase_label": "Prozesse",
+          "sequence": 4,
+          "action": "Rückruf-Verfahren etablieren: Jede Kontodaten-Änderung per Telefon bestätigen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-005-005",
+          "phase_label": "Schulung",
+          "sequence": 5,
+          "action": "Alle Mitarbeiter mit Zahlungsbefugnis sofort nachschulen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-005-006",
+          "phase_label": "Technik",
+          "sequence": 6,
+          "action": "SPF, DKIM, DMARC für eigene Domain prüfen und härten",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-005-007",
+          "phase_label": "Technik",
+          "sequence": 7,
+          "action": "E-Mail-Banner für externe Absender aktivieren",
+          "detail": "Microsoft 365 / Google Workspace",
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-005-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Vollständige betrügerische E-Mail (inkl. Header) gesichert",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-005-002",
+          "sequence": 2,
+          "category": "FINANCIAL",
+          "item": "Überwiesener Betrag, Datum, Uhrzeit, Transaktions-ID",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-005-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "IBAN / Kontonummer des Empfängers",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-005-004",
+          "sequence": 4,
+          "category": "FINANCIAL",
+          "item": "Recall-Antrag bei Hausbank: Datum, Ansprechpartner, Status",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-005-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "Strafanzeige: Datum, Aktenzeichen, Dienststelle",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-005-006",
+          "sequence": 6,
+          "category": "COMMUNICATION",
+          "item": "Gesprächsprotokoll: Wer hat wen wann kontaktiert?",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-005-007",
+          "sequence": 7,
+          "category": "FINANCIAL",
+          "item": "Finanzielle Auswirkungen: Rückgebuchter Betrag, endgültiger Schaden",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-005-008",
+          "sequence": 8,
+          "category": "TECHNICAL",
+          "item": "Eingeleitete Präventivmaßnahmen (Prozesse, Technik, Schulung)",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-005-001",
+          "question": "Gibt es ein Vier-Augen-Prinzip oder Freigabelimit für Überweisungen?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI ORP.1.A14"
+        },
+        {
+          "id": "LL-005-002",
+          "question": "Wurde DMARC für die eigene Domain konfiguriert (verhindert Spoofing)?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI APP.5.3.A4"
+        },
+        {
+          "id": "LL-005-003",
+          "question": "Kennen Mitarbeiter das interne Verfahren zur Kontodaten-Änderung von Lieferanten?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-005-004",
+          "question": "Sind Mitarbeiter für Deepfake-Anrufe sensibilisiert?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-005-005",
+          "question": "Ist eine Cyber-Versicherung mit BEC-Deckung vorhanden?",
+          "category": "ORGANISATIONAL",
+          "maps_to_control": null
+        }
+      ],
+      "references": [
+        {
+          "type": "AUTHORITY",
+          "name": "BKA Cybercrime-Anzeige",
+          "url": "https://www.bka.de/cyberanzeige"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz APP.5.3 — E-Mail",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "GUIDE",
+          "name": "BSI Warnung CEO-Fraud",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-006",
+      "slug": "ddos-angriff",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "II",
+      "meta": {
+        "title": "DDoS-Angriff",
+        "emoji": "🌊",
+        "color_hex": "0D9488",
+        "subtitle": "Website, Online-Shop oder IT-Infrastruktur wird durch Überlastung lahmgelegt",
+        "tags": [
+          "ddos",
+          "availability",
+          "network",
+          "ransom-ddos"
+        ],
+        "affected_systems": [
+          "website",
+          "dns",
+          "firewall",
+          "mail-server",
+          "vpn"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "MITTEL–HOCH",
+        "likelihood": "MEDIUM",
+        "dsgvo_relevant": false,
+        "nis2_relevant": true,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 1000,
+          "max": 50000
+        }
+      },
+      "overview": "Bei einem DDoS-Angriff wird ein System mit so vielen Anfragen überflutet, dass es legitime Nutzer nicht mehr bedienen kann. DDoS wird häufig als Erpressungsmittel (Ransom DDoS) oder als Ablenkungsmanöver für andere Angriffe genutzt. Laut Check Point 2025 verzeichnen deutsche Unternehmen über 1.200 Attacken pro Woche.",
+      "detection_indicators": [
+        {
+          "type": "ALERT",
+          "description": "Monitoring meldet extreme Anstieg der Anfragen / Bandbreite"
+        },
+        {
+          "type": "USER_REPORT",
+          "description": "Website nicht erreichbar oder extrem langsam"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Server-Logs voller fremder IPs aus unbekannten Ländern"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-006-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 1,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Status prüfen: Eigene Website oder ISP/Hosting-Anbieter betroffen?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "downdetector.de, isitdownrightnow.com"
+        },
+        {
+          "id": "ACT-006-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 2,
+          "category": "COMMUNICATION",
+          "responsible": "IT_ADMIN",
+          "action": "Hosting-/ISP-Provider kontaktieren — DDoS-Mitigation anfragen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-006-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 3,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Prüfen ob andere Systeme gleichzeitig angegriffen werden (Ablenkung!)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-006-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 4,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "CDN/DDoS-Schutzanbieter einschalten (Cloudflare, Hetzner DDoS-Guard etc.)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Cloudflare, Fastly, Hetzner"
+        },
+        {
+          "id": "ACT-006-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 5,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Raten-Limiting und IP-Blockierung auf Firewall/WAF aktivieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-006-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Kein Lösegeld zahlen bei RDDoS — Angriff stoppt nicht garantiert",
+          "detail": null,
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-006-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "0F766E",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-006-002",
+          "level": 2,
+          "label": "Provider — 15 Min",
+          "color_hex": "0D9488",
+          "deadline_hours": 0.25,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Hosting-Anbieter",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "CDN-Anbieter",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-006-003",
+          "level": 3,
+          "label": "Kunden — 1 Std",
+          "color_hex": "D97706",
+          "deadline_hours": 1,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "ALL_STAFF",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Status-Page aktualisieren",
+              "condition": null
+            },
+            {
+              "role": "Direktkunden B2B",
+              "contact_type": "PARTNER",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-006-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Polizei bei RDDoS-Erpressung",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_ransom_ddos"
+            },
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-006-001",
+          "phase_label": "Mitigation",
+          "sequence": 1,
+          "action": "DDoS-Mitigation über Provider oder CDN aktivieren lassen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-006-002",
+          "phase_label": "Analyse",
+          "sequence": 2,
+          "action": "Angriffstyp bestimmen: Volumetrisch / Protokoll / Applikation",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-006-003",
+          "phase_label": "Redundanz",
+          "sequence": 3,
+          "action": "Failover-Konfiguration prüfen: Zweiter Server / Geo-Loadbalancing",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-006-004",
+          "phase_label": "Monitoring",
+          "sequence": 4,
+          "action": "Echtzeit-Monitoring für Traffic-Anomalien einrichten",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-006-005",
+          "phase_label": "Kommunikation",
+          "sequence": 5,
+          "action": "Kunden transparent über Ursache und Maßnahmen informieren",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-006-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Beginn und Ende des Angriffs (soweit feststellbar)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-006-002",
+          "sequence": 2,
+          "category": "TECHNICAL",
+          "item": "Betroffene Systeme / Dienste und Ausfallzeit",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-006-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Angriffstyp und -volumen (aus Provider-Logs)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-006-004",
+          "sequence": 4,
+          "category": "FINANCIAL",
+          "item": "Wirtschaftlicher Schaden (Ausfallkosten, Umsatzverlust)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-006-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "Ggf. RDDoS-Erpresser-E-Mail gesichert und Strafanzeige erstattet",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-006-006",
+          "sequence": 6,
+          "category": "TECHNICAL",
+          "item": "Eingeleitete technische Schutzmaßnahmen (CDN, Rate-Limiting)",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-006-001",
+          "question": "Ist ein CDN mit DDoS-Schutz dauerhaft aktiviert?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI NET.1.2.A16"
+        },
+        {
+          "id": "LL-006-002",
+          "question": "Gibt es eine getestete Status-Page für Kunden-Kommunikation bei Ausfällen?",
+          "category": "PROCESS",
+          "maps_to_control": null
+        },
+        {
+          "id": "LL-006-003",
+          "question": "Ist der Eskalationsprozess mit dem Hosting-Provider schriftlich vereinbart?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI OPS.2.1.A3"
+        },
+        {
+          "id": "LL-006-004",
+          "question": "Wird DDoS als mögliche Ablenkung für andere Angriffe mitgedacht?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.2.1.A3"
+        },
+        {
+          "id": "LL-006-005",
+          "question": "Werden Logs automatisiert gesichert bevor ein Angriff sie überschreibt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        }
+      ],
+      "references": [
+        {
+          "type": "TOOL",
+          "name": "Cloudflare DDoS Protection",
+          "url": "https://www.cloudflare.com"
+        },
+        {
+          "type": "AUTHORITY",
+          "name": "BSI DDoS-Hinweise",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz NET.1.2 — Netzwerk-Management",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-007",
+      "slug": "insider-bedrohung",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "II",
+      "meta": {
+        "title": "Insider-Bedrohung",
+        "emoji": "👁️",
+        "color_hex": "7C3AED",
+        "subtitle": "Mitarbeiter, Ex-Mitarbeiter oder Dienstleister missbraucht legitimen Zugang",
+        "tags": [
+          "insider",
+          "data-exfiltration",
+          "sabotage",
+          "negligence",
+          "offboarding"
+        ],
+        "affected_systems": [
+          "file-server",
+          "cloud-storage",
+          "crm",
+          "database",
+          "email"
+        ]
+      },
+      "classification": {
+        "severity": "VARIABLE",
+        "severity_label": "VARIABEL–HOCH",
+        "likelihood": "MEDIUM",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 5000,
+          "max": 300000
+        }
+      },
+      "overview": "Insider-Bedrohungen umfassen böswillige Handlungen (Datendiebstahl, Sabotage) und fahrlässige Fehler. Laut Ponemon 2024 entstehen 56% der Insider-Vorfälle durch Fahrlässigkeit. In KMU fehlt oft die technische Überwachung. Besonders kritisch: ausscheidende Mitarbeiter mit noch aktiven Zugängen.",
+      "detection_indicators": [
+        {
+          "type": "LOG_PATTERN",
+          "description": "Massendownload oder -export von Daten außerhalb normaler Zeiten"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Mitarbeiter kündigt oder hat Konflikte — erhöhtes Risiko"
+        },
+        {
+          "type": "ALERT",
+          "description": "DLP-System meldet Upload auf externe Cloud / USB"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Zugriff auf Systeme außerhalb der Arbeitszeit oder von unbekanntem Gerät"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-007-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Betroffene Zugänge des Verdächtigen sofort sperren — alle Systeme, Cloud, VPN",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-007-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 2,
+          "category": "COMMUNICATION",
+          "responsible": "IT_ADMIN",
+          "action": "Vorgesetzte und HR informieren (nicht den Betroffenen!)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-007-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 3,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Alle aktiven Sessions beenden: E-Mail, Cloud-Storage, Unternehmensanwendungen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-007-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Letzte Zugriffsaktivitäten sichern: Was wurde wann abgerufen / kopiert / gelöscht?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-007-005",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 5,
+          "category": "LEGAL",
+          "responsible": "EXTERNAL_LAWYER",
+          "action": "Rechtliche Beratung einholen vor weiteren Maßnahmen (Betriebsrat, DSGVO)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-007-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Betroffene Person nicht vorab informieren — Beweismittel könnten vernichtet werden",
+          "detail": null,
+          "do_not": true,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-007-WARNING-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 98,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Keine eigenständige Forensik ohne rechtliche Absicherung — Verwertbarkeit sichern",
+          "detail": null,
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-007-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "5B21B6",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "HR",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-007-002",
+          "level": 2,
+          "label": "Intern — 24 Std",
+          "color_hex": "7C3AED",
+          "deadline_hours": 24,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "DATA_PROTECTION_OFFICER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Betriebsrat",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_works_council_exists"
+            }
+          ]
+        },
+        {
+          "id": "ESC-007-003",
+          "level": 3,
+          "label": "Behörden — 72 Std",
+          "color_hex": "DC2626",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Polizei",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_criminal_act"
+            }
+          ]
+        },
+        {
+          "id": "ESC-007-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-007-001",
+          "phase_label": "Forensik",
+          "sequence": 1,
+          "action": "Digitale Forensik durch qualifizierten Dienstleister durchführen lassen",
+          "detail": null,
+          "responsible": "EXTERNAL_FORENSICS",
+          "depends_on": null
+        },
+        {
+          "id": "REC-007-002",
+          "phase_label": "Recht",
+          "sequence": 2,
+          "action": "Arbeitsrechtliche Maßnahmen nur nach Rechtsberatung einleiten",
+          "detail": null,
+          "responsible": "EXTERNAL_LAWYER",
+          "depends_on": "REC-007-001"
+        },
+        {
+          "id": "REC-007-003",
+          "phase_label": "Technik",
+          "sequence": 3,
+          "action": "Alle Zugangsdaten des Betroffenen dauerhaft sperren — auch geteilte Accounts",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-007-004",
+          "phase_label": "Prävention",
+          "sequence": 4,
+          "action": "Zugriffsrechte überprüfen: Least-Privilege-Prinzip für alle Nutzer",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-007-005",
+          "phase_label": "Prozesse",
+          "sequence": 5,
+          "action": "Offboarding-Checkliste erstellen: Zugänge-Entzug am ersten Austrittstag",
+          "detail": null,
+          "responsible": "HR",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-007-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Betroffene Person, Rolle, Zutrittsdatum und -enddatum",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-007-002",
+          "sequence": 2,
+          "category": "TECHNICAL",
+          "item": "Gesperrte Zugänge und Zeitpunkt der Sperrung",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-007-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Gesicherte Audit-Logs und Zeitraum der Auswertung",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-007-004",
+          "sequence": 4,
+          "category": "EVIDENCE",
+          "item": "Identifizierte Datenzugriffe und mögliche Exfiltration",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-007-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "Forensik-Beauftragung: Dienstleister, Datum, Umfang",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-007-006",
+          "sequence": 6,
+          "category": "LEGAL",
+          "item": "DSGVO-Prüfung: Ist eine Meldepflicht gegeben?",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-007-007",
+          "sequence": 7,
+          "category": "LEGAL",
+          "item": "Arbeitsrechtliche Maßnahmen dokumentiert für mögliche Klage",
+          "mandatory": false,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-007-001",
+          "question": "Gibt es eine schriftliche Offboarding-Checkliste mit Sofort-Zugangssperrung?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI ORP.2.A4"
+        },
+        {
+          "id": "LL-007-002",
+          "question": "Werden Audit-Logs automatisch 90+ Tage gespeichert?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-007-003",
+          "question": "Sind Zugriffsrechte nach dem Least-Privilege-Prinzip vergeben?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A4"
+        },
+        {
+          "id": "LL-007-004",
+          "question": "Gibt es DLP-Werkzeuge oder Cloud-Upload-Monitoring?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-007-005",
+          "question": "Werden externe Dienstleister auf minimale Zugriffsrechte beschränkt?",
+          "category": "ORGANISATIONAL",
+          "maps_to_control": "BSI OPS.2.1.A3"
+        }
+      ],
+      "references": [
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz ORP.2 — Personal",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz ORP.4 — Identitätsmanagement",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 33",
+          "url": "https://eur-lex.europa.eu"
+        }
+      ]
+    },
+    {
+      "id": "S-008",
+      "slug": "supply-chain-kompromittierung",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "II",
+      "meta": {
+        "title": "Supply-Chain-Kompromittierung",
+        "emoji": "🔗",
+        "color_hex": "D97706",
+        "subtitle": "Angreifer dringen über kompromittierten Dienstleister oder Software ins Unternehmen ein",
+        "tags": [
+          "supply-chain",
+          "third-party",
+          "software",
+          "mssp",
+          "trusted-access"
+        ],
+        "affected_systems": [
+          "rmm-tools",
+          "software-updates",
+          "vendor-access",
+          "vpn",
+          "api"
+        ]
+      },
+      "classification": {
+        "severity": "CRITICAL",
+        "severity_label": "HOCH–KRITISCH",
+        "likelihood": "MEDIUM",
+        "dsgvo_relevant": true,
+        "nis2_relevant": true,
+        "financial_risk": "VERY_HIGH",
+        "avg_damage_eur": {
+          "min": 15000,
+          "max": 500000
+        }
+      },
+      "overview": "Supply-Chain-Angriffe kompromittieren nicht das Unternehmen direkt, sondern nutzen Vertrauensbeziehungen zu Dienstleistern oder Softwareanbietern. Laut BSI und Bitkom 2025 nehmen diese Angriffe stark zu. Da der Angreifer über legitime Kanäle eintritt, sind diese Angriffe besonders schwer zu erkennen.",
+      "detection_indicators": [
+        {
+          "type": "ALERT",
+          "description": "Ungewöhnliche Prozesse nach Software-Update oder Dienstleister-Zugang"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Verdächtige Aktivität von bekannter Dienstleister-IP zu ungewöhnlicher Zeit"
+        },
+        {
+          "type": "EXTERNAL_REPORT",
+          "description": "Dienstleister oder CERT meldet eigene Kompromittierung"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Massenhafte Datenabfragen durch Dienstleister-Account"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-008-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Alle aktiven Remote-Zugänge des Dienstleisters sofort sperren (VPN, RMM, RDP)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-008-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort",
+          "priority": 2,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Dienstleister sofort kontaktieren: Sind sie selbst kompromittiert?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-008-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 3,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Prüfen ob andere Unternehmen von gleichem Angriff betroffen (CERT-Bund, BSI)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "https://www.bsi.bund.de/cert-bund"
+        },
+        {
+          "id": "ACT-008-004",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Alle Passwörter und Credentials die der Dienstleister kannte rotieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-008-005",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 5,
+          "category": "COMMUNICATION",
+          "responsible": "IT_ADMIN",
+          "action": "CERT-Bund informieren: Supply-Chain-Vorfälle haben oft breite Auswirkungen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "certbund@bsi.bund.de"
+        },
+        {
+          "id": "ACT-008-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Dienstleister nicht neu verbinden bis Kompromittierung vollständig geklärt",
+          "detail": null,
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-008-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "92400E",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-008-002",
+          "level": 2,
+          "label": "Dienstleister — 1 Std",
+          "color_hex": "D97706",
+          "deadline_hours": 1,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "Betroffener Dienstleister",
+              "contact_type": "PARTNER",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Software-Anbieter (Vendor)",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-008-003",
+          "level": 3,
+          "label": "Behörden — 24 Std",
+          "color_hex": "DC2626",
+          "deadline_hours": 24,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "CERT-Bund (BSI)",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_dsgvo_relevant"
+            }
+          ]
+        },
+        {
+          "id": "ESC-008-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": "Haftungsansprüche gegen Dienstleister prüfen",
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-008-001",
+          "phase_label": "Eindämmung",
+          "sequence": 1,
+          "action": "Alle Zugänge des Dienstleisters sperren bis zur vollständigen Klärung",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-008-002",
+          "phase_label": "Forensik",
+          "sequence": 2,
+          "action": "Umfang der Kompromittierung ermitteln: Welche Daten / Systeme wurden berührt?",
+          "detail": null,
+          "responsible": "EXTERNAL_FORENSICS",
+          "depends_on": null
+        },
+        {
+          "id": "REC-008-003",
+          "phase_label": "Bereinigung",
+          "sequence": 3,
+          "action": "Betroffene Systeme neu aufsetzen — bei Software-Supply-Chain reicht Patchen nicht",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": "REC-008-002"
+        },
+        {
+          "id": "REC-008-004",
+          "phase_label": "Langfristig",
+          "sequence": 4,
+          "action": "Zero-Trust-Zugänge für Dienstleister: Minimale Rechte, zeitlich begrenzt, protokolliert",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-008-005",
+          "phase_label": "Prüfung",
+          "sequence": 5,
+          "action": "Alle weiteren Dienstleister auf ähnliche Risiken prüfen (Third-Party Risk Assessment)",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-008-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Betroffener Dienstleister / Software und Art der Kompromittierung",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-008-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Zeitraum der möglichen Kompromittierung (First Entry bis Entdeckung)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-008-003",
+          "sequence": 3,
+          "category": "TECHNICAL",
+          "item": "Gesperrte Zugänge und Remote-Verbindungen",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-008-004",
+          "sequence": 4,
+          "category": "LEGAL",
+          "item": "DSGVO-Prüfung: Personenbezogene Daten betroffen?",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-008-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "Rechtliche Prüfung: Haftungsansprüche gegen Dienstleister",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-008-006",
+          "sequence": 6,
+          "category": "TECHNICAL",
+          "item": "Third-Party Risk Assessment für weitere Dienstleister",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-008-001",
+          "question": "Gibt es ein aktuelles Inventar aller Dienstleister mit Systemzugang?",
+          "category": "ORGANISATIONAL",
+          "maps_to_control": "BSI OPS.2.1.A1"
+        },
+        {
+          "id": "LL-008-002",
+          "question": "Werden Remote-Zugänge von Dienstleistern nach Einsatz sofort gesperrt?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI OPS.2.1.A3"
+        },
+        {
+          "id": "LL-008-003",
+          "question": "Gibt es vertragliche Sicherheitsanforderungen an Dienstleister?",
+          "category": "LEGAL",
+          "maps_to_control": "BSI OPS.2.1.A5"
+        },
+        {
+          "id": "LL-008-004",
+          "question": "Ist Software-Herkunft und Integrität (Code-Signing) sichergestellt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI CON.8.A7"
+        },
+        {
+          "id": "LL-008-005",
+          "question": "Sind Backups vom Dienstleisterzugang getrennt und vor Manipulation geschützt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI CON.3.A8"
+        }
+      ],
+      "references": [
+        {
+          "type": "AUTHORITY",
+          "name": "CERT-Bund (BSI)",
+          "url": "https://www.bsi.bund.de/cert-bund"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz OPS.2.1 — Outsourcing für Kunden",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "GUIDE",
+          "name": "BSI Hinweise zu Supply-Chain-Angriffen",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-009",
+      "slug": "brute-force-credential-stuffing",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "III",
+      "meta": {
+        "title": "Brute-Force & Credential Stuffing",
+        "emoji": "🔑",
+        "color_hex": "0E7490",
+        "subtitle": "Angreifer testen massenhaft Passwörter oder gestohlene Zugangsdaten gegen Unternehmens-Systeme",
+        "tags": [
+          "brute-force",
+          "credential-stuffing",
+          "password-spray",
+          "authentication",
+          "mfa"
+        ],
+        "affected_systems": [
+          "vpn",
+          "email",
+          "microsoft-365",
+          "rdp",
+          "admin-console",
+          "online-banking"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "MITTEL–HOCH",
+        "likelihood": "VERY_HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "MEDIUM",
+        "avg_damage_eur": {
+          "min": 2000,
+          "max": 80000
+        }
+      },
+      "overview": "Beim Credential Stuffing verwenden Angreifer Milliarden gestohlener Zugangsdaten aus früheren Datenlecks und testen diese automatisiert gegen Unternehmenssysteme. Da viele Nutzer Passwörter wiederverwenden, haben diese Angriffe erschreckend hohe Erfolgsraten. Password Spray umgeht Account-Lockout-Mechanismen durch verteiltes Vorgehen.",
+      "detection_indicators": [
+        {
+          "type": "LOG_PATTERN",
+          "description": "Viele Fehllogins in kurzer Zeit von wenigen oder verteilten IPs",
+          "threshold": ">50 Fehlversuche / 5 Min"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Login von unbekanntem Land oder zu ungewöhnlicher Zeit"
+        },
+        {
+          "type": "ALERT",
+          "description": "Azure AD / Google Workspace Identity Protection Alert"
+        },
+        {
+          "type": "EXTERNAL_REPORT",
+          "description": "Haveibeenpwned-Alert für Unternehmens-E-Mail-Adressen"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-009-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "0–5 Min",
+          "priority": 1,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Laufenden Angriff in Logs bestätigen — Fehllogins, Quell-IPs, Ziel-Accounts",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "SIEM, Firewall-Dashboard, Microsoft Defender"
+        },
+        {
+          "id": "ACT-009-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "0–15 Min",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Angreifer-IPs auf Firewall / WAF / Geo-Blocking sofort sperren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-009-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "0–15 Min",
+          "priority": 3,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Verdächtige Konten proaktiv sperren bevor Angreifer Erfolg hat",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-009-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 4,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "MFA sofort für alle exponierten Dienste aktivieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-009-005",
+          "phase": "SHORT",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 5,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Alle Login-Logs der letzten 24 Std sichern — welche Logins waren erfolgreich?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-009-006",
+          "phase": "SHORT",
+          "time_window_minutes": 120,
+          "time_label": "Bis 2 Std",
+          "priority": 6,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Passwörter aller Konten zurücksetzen die aus externen Diensten stammen könnten",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-009-007",
+          "phase": "MEDIUM",
+          "time_window_minutes": 1440,
+          "time_label": "Bis 24 Std",
+          "priority": 7,
+          "category": "ANALYSIS",
+          "responsible": "XKMU_SUPPORT",
+          "action": "Prüfen ob Zugangsdaten auf Haveibeenpwned oder im Darknet auftauchen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "https://haveibeenpwned.com"
+        },
+        {
+          "id": "ACT-009-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Angriffs-IPs nicht als einzige Maßnahme blockieren — Angreifer wechseln IPs sofort",
+          "detail": null,
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-009-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "0C4A6E",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-009-002",
+          "level": 2,
+          "label": "Nutzer — 1 Std",
+          "color_hex": "0E7490",
+          "deadline_hours": 1,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "ALL_STAFF",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Pflicht-Passwort-Reset und MFA-Einrichtung",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-009-003",
+          "level": 3,
+          "label": "Behörden — ggf.",
+          "color_hex": "D97706",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-009-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-009-001",
+          "phase_label": "Analyse",
+          "sequence": 1,
+          "action": "Alle erfolgreichen Logins im Angriffszeitraum identifizieren und prüfen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-009-002",
+          "phase_label": "Zugänge",
+          "sequence": 2,
+          "action": "MFA für alle Systeme mit externem Zugang verpflichtend einführen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-009-003",
+          "phase_label": "Härtung",
+          "sequence": 3,
+          "action": "Starke Passwort-Policy: min. 12 Zeichen, keine Wiederverwendung",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-009-004",
+          "phase_label": "Technik",
+          "sequence": 4,
+          "action": "Account-Lockout nach 5–10 Fehlversuchen + CAPTCHA einrichten",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-009-005",
+          "phase_label": "Monitoring",
+          "sequence": 5,
+          "action": "Login-Anomalie-Alerts einrichten: unbekannte Länder, Zeiten, Geräte",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-009-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Beginn und Dauer des Brute-Force-Angriffs",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-009-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Anzahl der Fehllogins, Quell-IPs, Zeitstempel",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-009-003",
+          "sequence": 3,
+          "category": "TECHNICAL",
+          "item": "Liste der erfolgreichen / kompromittierten Logins",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-009-004",
+          "sequence": 4,
+          "category": "TECHNICAL",
+          "item": "Passwort-Resets: Welche Konten, wann, durch wen?",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-009-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "DSGVO-Prüfung: Wurden personenbezogene Daten eingesehen?",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-009-006",
+          "sequence": 6,
+          "category": "EVIDENCE",
+          "item": "Darknet-/Haveibeenpwned-Prüfung der E-Mail-Adressen",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-009-001",
+          "question": "Ist MFA für alle extern erreichbaren Dienste aktiv?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A12"
+        },
+        {
+          "id": "LL-009-002",
+          "question": "Gibt es einen Account-Lockout nach definierten Fehlversuchen?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A8"
+        },
+        {
+          "id": "LL-009-003",
+          "question": "Werden Login-Anomalien automatisch gemeldet?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-009-004",
+          "question": "Nutzen Mitarbeiter Passwörter wieder? (Awareness-Schulung nötig?)",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-009-005",
+          "question": "Sind alle extern exponierten Dienste inventarisiert?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORG.1.A1"
+        }
+      ],
+      "references": [
+        {
+          "type": "TOOL",
+          "name": "HaveIBeenPwned",
+          "url": "https://haveibeenpwned.com"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz ORP.4 — Identitätsmanagement",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    },
+    {
+      "id": "S-010",
+      "slug": "geraeteverlust-byod",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "III",
+      "meta": {
+        "title": "Geräteverlust & BYOD-Kompromittierung",
+        "emoji": "📱",
+        "color_hex": "334155",
+        "subtitle": "Firmengerät verloren/gestohlen oder privates Gerät mit Unternehmensdaten kompromittiert",
+        "tags": [
+          "mobile",
+          "byod",
+          "device-loss",
+          "mdm",
+          "encryption",
+          "dsgvo"
+        ],
+        "affected_systems": [
+          "mobile-device",
+          "laptop",
+          "email",
+          "vpn",
+          "cloud-apps"
+        ]
+      },
+      "classification": {
+        "severity": "HIGH",
+        "severity_label": "MITTEL–HOCH",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "MEDIUM",
+        "avg_damage_eur": {
+          "min": 500,
+          "max": 30000
+        }
+      },
+      "overview": "Geräteverlust und BYOD zählen zu den häufigsten, aber am meisten vernachlässigten Sicherheitsvorfällen. Ein verlorenes Smartphone mit ungesperrtem Microsoft-365-Zugang oder ein Laptop ohne Festplattenverschlüsselung kann ein meldepflichtiger Datenschutzvorfall sein. Remote-Wipe-Funktionen sind oft nicht eingerichtet, bevor der Verlust passiert.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Nutzer meldet Verlust oder Diebstahl des Geräts"
+        },
+        {
+          "type": "ALERT",
+          "description": "MDM-System meldet Gerät offline oder Standortabweichung"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Unbekannte Logins nach Gerät-Standort oder aus unbekanntem Netz"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-010-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "COMMUNICATION",
+          "responsible": "AFFECTED_USER",
+          "action": "Verlust / Diebstahl beim IT-Verantwortlichen oder xKMU Notfallkontakt melden",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-010-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Remote-Lock auslösen (MDM / Apple Find My / Google / Intune)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": "Microsoft Intune, Jamf, Apple Business Manager"
+        },
+        {
+          "id": "ACT-010-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 3,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Remote-Wipe einleiten wenn Gerät sensible Daten enthält oder nicht verschlüsselt ist",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-010-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 4,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Alle Tokens und Sessions des Geräts über Microsoft 365 / Google Workspace widerrufen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-010-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 5,
+          "category": "LEGAL",
+          "responsible": "AFFECTED_USER",
+          "action": "Polizei-Verlustanzeige erstatten (Versicherung, Beweissicherung)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-010-006",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 6,
+          "category": "LEGAL",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "DSGVO-Prüfung: Welche personenbezogenen Daten waren auf dem Gerät?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-010-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "1E293B",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "AFFECTED_USER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-010-002",
+          "level": 2,
+          "label": "Intern — 2 Std",
+          "color_hex": "334155",
+          "deadline_hours": 2,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "DATA_PROTECTION_OFFICER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-010-003",
+          "level": 3,
+          "label": "Behörden — 72h",
+          "color_hex": "DC2626",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Polizei",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": "Verlustanzeige",
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-010-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-010-001",
+          "phase_label": "Sofort",
+          "sequence": 1,
+          "action": "Remote-Wipe-Bestätigung abwarten und dokumentieren",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-010-002",
+          "phase_label": "Ersatz",
+          "sequence": 2,
+          "action": "Ersatzgerät bereitstellen — vollständig verschlüsselt und MDM-eingebunden",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-010-003",
+          "phase_label": "MDM",
+          "sequence": 3,
+          "action": "Mobile Device Management für alle Unternehmensgeräte einführen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-010-004",
+          "phase_label": "Policy",
+          "sequence": 4,
+          "action": "BYOD-Policy schriftlich formulieren: Welche Daten dürfen auf privaten Geräten liegen?",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-010-005",
+          "phase_label": "Verschlüsselung",
+          "sequence": 5,
+          "action": "BitLocker / FileVault / Full-Disk-Encryption für alle Geräte verpflichtend",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-010-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Gerätebeschreibung (Typ, Seriennummer, IMEI), Datum des Verlusts",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-010-002",
+          "sequence": 2,
+          "category": "TECHNICAL",
+          "item": "Bestätigung Remote-Lock / Remote-Wipe (Datum, Status)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-010-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Inventar der Geräteinhalte: Apps, Daten, Zugangsdaten",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-010-004",
+          "sequence": 4,
+          "category": "LEGAL",
+          "item": "Polizei-Verlustanzeige (Datum, Aktenzeichen)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-010-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "DSGVO Art. 33 Meldung (falls erforderlich)",
+          "mandatory": false,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-010-006",
+          "sequence": 6,
+          "category": "FINANCIAL",
+          "item": "Versicherungsmeldung (Datum, Schadennummer)",
+          "mandatory": false,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-010-001",
+          "question": "Ist MDM für alle Firmengeräte aktiv?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI SYS.3.2.1.A1"
+        },
+        {
+          "id": "LL-010-002",
+          "question": "Ist Full-Disk-Encryption auf allen Laptops und Mobilgeräten aktiviert?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI SYS.3.2.1.A11"
+        },
+        {
+          "id": "LL-010-003",
+          "question": "Gibt es eine schriftliche BYOD-Policy?",
+          "category": "ORGANISATIONAL",
+          "maps_to_control": "BSI SYS.3.2.2.A1"
+        },
+        {
+          "id": "LL-010-004",
+          "question": "Können Remote-Wipe und Remote-Lock sofort ausgelöst werden (auch nachts)?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI SYS.3.2.1.A16"
+        },
+        {
+          "id": "LL-010-005",
+          "question": "Ist bekannt welche personenbezogenen Daten auf Mobilgeräten gespeichert sein können?",
+          "category": "LEGAL",
+          "maps_to_control": "BSI CON.2.A1"
+        }
+      ],
+      "references": [
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz SYS.3.2.1 — Allgemeine Smartphones und Tablets",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "TOOL",
+          "name": "Microsoft Intune",
+          "url": "https://intune.microsoft.com"
+        },
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 33",
+          "url": "https://eur-lex.europa.eu"
+        }
+      ]
+    },
+    {
+      "id": "S-011",
+      "slug": "cloud-fehlkonfiguration",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "III",
+      "meta": {
+        "title": "Cloud-Fehlkonfiguration & offene Daten",
+        "emoji": "☁️",
+        "color_hex": "4D7C0F",
+        "subtitle": "Unbeabsichtigt öffentlich zugängliche Cloud-Speicher, Datenbanken oder APIs",
+        "tags": [
+          "cloud",
+          "misconfiguration",
+          "s3",
+          "open-database",
+          "api",
+          "dsgvo",
+          "cspm"
+        ],
+        "affected_systems": [
+          "aws-s3",
+          "azure-blob",
+          "google-cloud",
+          "database",
+          "api",
+          "sharepoint"
+        ]
+      },
+      "classification": {
+        "severity": "CRITICAL",
+        "severity_label": "MITTEL–KRITISCH",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "HIGH",
+        "avg_damage_eur": {
+          "min": 3000,
+          "max": 200000
+        }
+      },
+      "overview": "Cloud-Fehlkonfigurationen gehören laut BSI und Gartner zu den häufigsten Ursachen von Datenpannen. Ein falsch konfigurierter S3-Bucket oder eine öffentlich zugängliche Datenbank — diese Fehler entstehen oft bei der schnellen Einrichtung ohne Sicherheits-Review. Shodan indexiert solche Dienste automatisch. Angreifer finden offene Ressourcen oft schneller als interne Teams.",
+      "detection_indicators": [
+        {
+          "type": "EXTERNAL_REPORT",
+          "description": "Externer Sicherheitsforscher oder Hinweis auf öffentlichen Zugang"
+        },
+        {
+          "type": "ALERT",
+          "description": "CSPM-Tool meldet öffentlich erreichbare Ressource"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Massenhafter anonymer Zugriff auf Cloud-Storage"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Daten tauchen in unbekannten Kanälen oder im Darknet auf"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-011-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Betroffenen Cloud-Speicher / Dienst sofort auf 'privat' / 'gesperrt' setzen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-011-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "SOFORT",
+          "priority": 2,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Screenshot / Nachweis der Fehlkonfiguration sichern (Beweismittel)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-011-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 3,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "Zugriffs-Logs des Cloud-Dienstes sichern — wer hat wann zugegriffen?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-011-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 60,
+          "time_label": "Bis 1 Std",
+          "priority": 4,
+          "category": "ANALYSIS",
+          "responsible": "IT_ADMIN",
+          "action": "API-Keys und Zugangsdaten rotieren die in exponierten Dateien enthalten waren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-011-005",
+          "phase": "SHORT",
+          "time_window_minutes": 240,
+          "time_label": "Bis 4 Std",
+          "priority": 5,
+          "category": "LEGAL",
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "action": "DSGVO-Risikobewertung starten: Welche personenbezogenen Daten betroffen?",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-011-WARNING-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 99,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Fehlkonfiguration nicht heimlich beheben ohne vollständige Dokumentation",
+          "detail": null,
+          "do_not": true,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-011-WARNING-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": null,
+          "time_label": null,
+          "priority": 98,
+          "category": "WARNING",
+          "responsible": null,
+          "action": "Keine Daten löschen bevor Logs gesichert wurden — Beweismittel!",
+          "detail": null,
+          "do_not": true,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-011-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "365314",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "DATA_PROTECTION_OFFICER",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-011-002",
+          "level": 2,
+          "label": "Behörden — 72h",
+          "color_hex": "4D7C0F",
+          "deadline_hours": 72,
+          "condition": "if_dsgvo_relevant",
+          "recipients": [
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-011-003",
+          "level": 3,
+          "label": "Betroffene — ggf.",
+          "color_hex": "D97706",
+          "deadline_hours": null,
+          "condition": "if_high_risk_to_individuals",
+          "recipients": [
+            {
+              "role": "Betroffene Personen",
+              "contact_type": "PARTNER",
+              "legal_basis": "DSGVO Art. 34",
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-011-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-011-001",
+          "phase_label": "Sofort",
+          "sequence": 1,
+          "action": "Alle exponierten Ressourcen sperren und Zugriffsrechte überprüfen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-011-002",
+          "phase_label": "Forensik",
+          "sequence": 2,
+          "action": "Vollständige Auswertung: Was lag offen, wie lange, wer hat zugegriffen?",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-011-003",
+          "phase_label": "DSGVO",
+          "sequence": 3,
+          "action": "Datenschutz-Folgenabschätzung, Risikobewertung, ggf. Meldung Art. 33/34",
+          "detail": null,
+          "responsible": "DATA_PROTECTION_OFFICER",
+          "depends_on": "REC-011-002"
+        },
+        {
+          "id": "REC-011-004",
+          "phase_label": "Audit",
+          "sequence": 4,
+          "action": "Vollständiges Cloud-Inventory anlegen — alle Ressourcen, alle Zugriffsrechte",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-011-005",
+          "phase_label": "Langfristig",
+          "sequence": 5,
+          "action": "Cloud Security Posture Management (CSPM) einführen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-011-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Betroffener Cloud-Dienst, Ressourcenname, Provider",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-011-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Zeitraum der Exposition (aus Logs, Erstellungsdatum)",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-011-003",
+          "sequence": 3,
+          "category": "LEGAL",
+          "item": "Kategorien der betroffenen Daten (personenbezogen? besonders schützenswert?)",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-011-004",
+          "sequence": 4,
+          "category": "LEGAL",
+          "item": "Anzahl potenziell betroffener Personen",
+          "mandatory": true,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-011-005",
+          "sequence": 5,
+          "category": "LEGAL",
+          "item": "DSGVO Art. 33 Meldung (Datum, Aktenzeichen)",
+          "mandatory": false,
+          "dsgvo_required": true
+        },
+        {
+          "id": "CHK-011-006",
+          "sequence": 6,
+          "category": "TECHNICAL",
+          "item": "Eingeleitete Cloud-Security-Maßnahmen (CSPM, Config-Review)",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-011-001",
+          "question": "Gibt es ein vollständiges Inventar aller Cloud-Ressourcen und Zugriffsrechte?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI OPS.1.1.5.A3"
+        },
+        {
+          "id": "LL-011-002",
+          "question": "Werden neue Cloud-Deployments vor Inbetriebnahme auf Fehlkonfigurationen geprüft?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI OPS.1.1.5.A7"
+        },
+        {
+          "id": "LL-011-003",
+          "question": "Ist automatisiertes Monitoring für öffentlich erreichbare Cloud-Assets aktiv?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI DER.1.A3"
+        },
+        {
+          "id": "LL-011-004",
+          "question": "Sind Mitarbeiter geschult im sicheren Umgang mit Cloud-Sharing-Funktionen?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-011-005",
+          "question": "Werden API-Keys und Service-Account-Credentials regelmäßig rotiert?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI ORP.4.A12"
+        }
+      ],
+      "references": [
+        {
+          "type": "TOOL",
+          "name": "Shodan.io — Erkennung offener Dienste",
+          "url": "https://www.shodan.io"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz OPS.1.1.5 — Datensicherung",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "LEGAL",
+          "name": "DSGVO Art. 33",
+          "url": "https://eur-lex.europa.eu"
+        }
+      ]
+    },
+    {
+      "id": "S-012",
+      "slug": "vishing-social-engineering",
+      "version": "1.0.0",
+      "created_at": "2025-01-01",
+      "updated_at": "2025-01-01",
+      "series": "III",
+      "meta": {
+        "title": "Vishing & Social Engineering",
+        "emoji": "📞",
+        "color_hex": "92400E",
+        "subtitle": "Angreifer manipuliert Mitarbeitende per Telefon, gefälschtem IT-Support oder KI-generierter Stimme",
+        "tags": [
+          "vishing",
+          "social-engineering",
+          "deepfake",
+          "voice-cloning",
+          "tech-support-scam",
+          "awareness"
+        ],
+        "affected_systems": [
+          "phone",
+          "remote-access",
+          "banking",
+          "email",
+          "workstation"
+        ]
+      },
+      "classification": {
+        "severity": "CRITICAL",
+        "severity_label": "MITTEL–KRITISCH",
+        "likelihood": "HIGH",
+        "dsgvo_relevant": true,
+        "nis2_relevant": false,
+        "financial_risk": "VERY_HIGH",
+        "avg_damage_eur": {
+          "min": 5000,
+          "max": 300000
+        }
+      },
+      "overview": "Vishing ist 2025 durch KI-Stimmenkloning zu einer der gefährlichsten Angriffsvarianten geworden. Eine Stimme lässt sich mit nur 3 Sekunden Audiomaterial klonen (McAfee). 60% der Menschen erkennen KI-Stimmen nicht als solche. Social Engineering nutzt Zeitdruck, Autorität und Hilfsbereitschaft als psychologische Hebel.",
+      "detection_indicators": [
+        {
+          "type": "USER_REPORT",
+          "description": "Mitarbeiter meldet verdächtigen Anruf der Zugangsdaten oder Zahlung forderte"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Unbekannte Remote-Access-Software wurde auf Aufforderung installiert"
+        },
+        {
+          "type": "LOG_PATTERN",
+          "description": "Unerwartete Remote-Verbindung nach Telefonat"
+        },
+        {
+          "type": "BEHAVIORAL",
+          "description": "Ungewöhnliche Überweisung wurde nach Telefonanruf veranlasst"
+        }
+      ],
+      "actions": [
+        {
+          "id": "ACT-012-001",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 0,
+          "time_label": "WÄHREND Anruf",
+          "priority": 1,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Kein Passwort, MFA-Code oder Zugangsdaten am Telefon nennen — NIEMALS",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-012-002",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 0,
+          "time_label": "WÄHREND Anruf",
+          "priority": 2,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Kein Remote-Access-Tool (TeamViewer, AnyDesk) auf Aufforderung installieren",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-012-003",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 0,
+          "time_label": "WÄHREND Anruf",
+          "priority": 3,
+          "category": "CONTAINMENT",
+          "responsible": "AFFECTED_USER",
+          "action": "Auflegen und Rückruf über bekannte, verifizierte Nummer anbieten",
+          "detail": "Caller-ID ist fälschbar — keine Echtheit-Garantie",
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-012-004",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 5,
+          "time_label": "Sofort danach",
+          "priority": 4,
+          "category": "COMMUNICATION",
+          "responsible": "AFFECTED_USER",
+          "action": "Vorfall sofort dem IT-Verantwortlichen und Vorgesetzten melden",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-012-005",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 5,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Falls Passwort genannt: SOFORT ändern (wie Szenario 3 — Kontoübernahme)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-012-006",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 15,
+          "time_label": "Bis 15 Min",
+          "priority": 6,
+          "category": "CONTAINMENT",
+          "responsible": "IT_ADMIN",
+          "action": "Falls Remote-Tool installiert: Gerät SOFORT vom Netz trennen, Tool entfernen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-012-007",
+          "phase": "IMMEDIATE",
+          "time_window_minutes": 30,
+          "time_label": "Bis 30 Min",
+          "priority": 7,
+          "category": "CONTAINMENT",
+          "responsible": "FINANCE",
+          "action": "Falls Überweisung: SOFORT Bank kontaktieren — Recall-Prozess (wie Szenario 5 — BEC)",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        },
+        {
+          "id": "ACT-012-008",
+          "phase": "MEDIUM",
+          "time_window_minutes": 1440,
+          "time_label": "Bis 24 Std",
+          "priority": 8,
+          "category": "COMMUNICATION",
+          "responsible": "MANAGEMENT",
+          "action": "Alle Mitarbeiter über den Vorfall informieren und warnen",
+          "detail": null,
+          "do_not": false,
+          "tool_hint": null
+        }
+      ],
+      "escalation": [
+        {
+          "id": "ESC-012-001",
+          "level": 1,
+          "label": "Intern — Sofort",
+          "color_hex": "78350F",
+          "deadline_hours": 0,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "IT_ADMIN",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "MANAGEMENT",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        },
+        {
+          "id": "ESC-012-002",
+          "level": 2,
+          "label": "Intern — 2 Std",
+          "color_hex": "92400E",
+          "deadline_hours": 2,
+          "condition": null,
+          "recipients": [
+            {
+              "role": "HR",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": "Alle MA warnen",
+              "condition": null
+            },
+            {
+              "role": "FINANCE",
+              "contact_type": "INTERNAL",
+              "legal_basis": null,
+              "message": null,
+              "condition": "if_payment_involved"
+            }
+          ]
+        },
+        {
+          "id": "ESC-012-003",
+          "level": 3,
+          "label": "Behörden — ggf.",
+          "color_hex": "DC2626",
+          "deadline_hours": null,
+          "condition": "if_damage_occurred",
+          "recipients": [
+            {
+              "role": "Polizei / LKA Cybercrime",
+              "contact_type": "AUTHORITY",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "Datenschutzbehörde",
+              "contact_type": "AUTHORITY",
+              "legal_basis": "DSGVO Art. 33",
+              "message": null,
+              "condition": "if_dsgvo_relevant"
+            }
+          ]
+        },
+        {
+          "id": "ESC-012-004",
+          "level": 4,
+          "label": "Optional",
+          "color_hex": "64748B",
+          "deadline_hours": null,
+          "condition": "optional",
+          "recipients": [
+            {
+              "role": "Versicherung",
+              "contact_type": "INSURANCE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            },
+            {
+              "role": "EXTERNAL_LAWYER",
+              "contact_type": "EXTERNAL_SERVICE",
+              "legal_basis": null,
+              "message": null,
+              "condition": null
+            }
+          ]
+        }
+      ],
+      "recovery_steps": [
+        {
+          "id": "REC-012-001",
+          "phase_label": "Je nach Schaden",
+          "sequence": 1,
+          "action": "Falls Zugang gegeben: Vollständige Kontoübernahme-Reaktion (Szenario S-003)",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-012-002",
+          "phase_label": "Je nach Schaden",
+          "sequence": 2,
+          "action": "Falls Überweisung: Bank-Recall-Prozess (Szenario S-005 — BEC)",
+          "detail": null,
+          "responsible": "FINANCE",
+          "depends_on": null
+        },
+        {
+          "id": "REC-012-003",
+          "phase_label": "Je nach Schaden",
+          "sequence": 3,
+          "action": "Falls Remote-Tool installiert: Gerät isolieren, forensisch prüfen, neu aufsetzen",
+          "detail": null,
+          "responsible": "IT_ADMIN",
+          "depends_on": null
+        },
+        {
+          "id": "REC-012-004",
+          "phase_label": "Schulung",
+          "sequence": 4,
+          "action": "Sofortige Awareness-Schulung für ALLE Mitarbeiter zu Vishing-Taktiken",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-012-005",
+          "phase_label": "Prozesse",
+          "sequence": 5,
+          "action": "Verifikationsprotokoll einführen: Code-Wort, Rückruf-Pflicht, keine Zugaben am Telefon",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        },
+        {
+          "id": "REC-012-006",
+          "phase_label": "KI-Prävention",
+          "sequence": 6,
+          "action": "Internes Code-Wort für echte Notfall-Anweisungen der Führungsebene einführen",
+          "detail": null,
+          "responsible": "MANAGEMENT",
+          "depends_on": null
+        }
+      ],
+      "checklist": [
+        {
+          "id": "CHK-012-001",
+          "sequence": 1,
+          "category": "EVIDENCE",
+          "item": "Datum, Uhrzeit und Dauer des Anrufs",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-012-002",
+          "sequence": 2,
+          "category": "EVIDENCE",
+          "item": "Angezeigte Rufnummer (Caller-ID) und behauptete Identität des Anrufers",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-012-003",
+          "sequence": 3,
+          "category": "EVIDENCE",
+          "item": "Inhalte der Forderungen (möglichst wörtlich)",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-012-004",
+          "sequence": 4,
+          "category": "EVIDENCE",
+          "item": "Reaktion des Mitarbeiters: Was wurde getan / nicht getan?",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-012-005",
+          "sequence": 5,
+          "category": "FINANCIAL",
+          "item": "Falls Schaden: Art und Umfang (Zugang, Überweisung, Installation)",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-012-006",
+          "sequence": 6,
+          "category": "LEGAL",
+          "item": "Strafanzeige bei Polizei / LKA (Datum, Aktenzeichen)",
+          "mandatory": false,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-012-007",
+          "sequence": 7,
+          "category": "COMMUNICATION",
+          "item": "Mitarbeiter-Kommunikation: Wann wurden alle informiert?",
+          "mandatory": true,
+          "dsgvo_required": false
+        },
+        {
+          "id": "CHK-012-008",
+          "sequence": 8,
+          "category": "TECHNICAL",
+          "item": "Eingeleitete technische und prozessuale Schutzmaßnahmen",
+          "mandatory": true,
+          "dsgvo_required": false
+        }
+      ],
+      "lessons_learned": [
+        {
+          "id": "LL-012-001",
+          "question": "Kennen alle Mitarbeiter das Verifikationsprotokoll für verdächtige Anrufe?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-012-002",
+          "question": "Gibt es ein internes Code-Wort für echte Notfall-Anweisungen der Führungsebene?",
+          "category": "PROCESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-012-003",
+          "question": "Wissen Mitarbeiter dass Caller-ID fälschbar und KI-Stimmenkloning möglich ist?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A3"
+        },
+        {
+          "id": "LL-012-004",
+          "question": "Sind Remote-Access-Tools auf eine Whitelist beschränkt?",
+          "category": "TECHNICAL",
+          "maps_to_control": "BSI SYS.1.1.A14"
+        },
+        {
+          "id": "LL-012-005",
+          "question": "Werden Mitarbeiter regelmäßig mit simulierten Angriffen sensibilisiert?",
+          "category": "AWARENESS",
+          "maps_to_control": "BSI ORP.3.A4"
+        }
+      ],
+      "references": [
+        {
+          "type": "GUIDE",
+          "name": "BSI Warnung Vishing / Social Engineering",
+          "url": "https://www.bsi.bund.de"
+        },
+        {
+          "type": "STANDARD",
+          "name": "BSI IT-Grundschutz ORP.3 — Sensibilisierung und Schulung",
+          "url": "https://www.bsi.bund.de"
+        }
+      ]
+    }
+  ]
+}

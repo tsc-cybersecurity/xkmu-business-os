@@ -1,0 +1,335 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://xkmu.de/schemas/ir-playbook/v1",
+  "title": "xKMU Incident Response Playbook — Scenario Schema v1",
+  "description": "Validierungsschema für alle IR-Szenarien der xKMU Cybersecurity-Beratung",
+  "type": "object",
+  "required": ["scenario"],
+  "additionalProperties": false,
+
+  "definitions": {
+
+    "iso_date": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "ISO 8601 Datum (YYYY-MM-DD)"
+    },
+
+    "semver": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic Versioning (MAJOR.MINOR.PATCH)"
+    },
+
+    "hex_color": {
+      "type": "string",
+      "pattern": "^[0-9A-Fa-f]{6}$",
+      "description": "6-stelliger HEX-Farbcode ohne #"
+    },
+
+    "severity_enum": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL", "VARIABLE"],
+      "description": "Schadensklasse des Szenarios"
+    },
+
+    "likelihood_enum": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "VERY_HIGH"]
+    },
+
+    "financial_risk_enum": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "VERY_HIGH"]
+    },
+
+    "phase_enum": {
+      "type": "string",
+      "enum": ["IMMEDIATE", "SHORT", "MEDIUM", "LONG"],
+      "description": "IMMEDIATE=0-30min, SHORT=30min-4h, MEDIUM=4-24h, LONG=24h+"
+    },
+
+    "action_category_enum": {
+      "type": "string",
+      "enum": ["CONTAINMENT", "ANALYSIS", "COMMUNICATION", "RECOVERY", "PREVENTION", "WARNING", "LEGAL"],
+      "description": "Funktionale Kategorie der Maßnahme"
+    },
+
+    "responsible_enum": {
+      "type": "string",
+      "enum": [
+        "IT_ADMIN", "MANAGEMENT", "HR", "FINANCE", "LEGAL",
+        "DATA_PROTECTION_OFFICER", "XKMU_SUPPORT", "ALL_STAFF",
+        "AFFECTED_USER", "EXTERNAL_FORENSICS", "EXTERNAL_LAWYER"
+      ]
+    },
+
+    "contact_type_enum": {
+      "type": "string",
+      "enum": ["INTERNAL", "AUTHORITY", "EXTERNAL_SERVICE", "INSURANCE", "PARTNER"]
+    },
+
+    "checklist_category_enum": {
+      "type": "string",
+      "enum": ["EVIDENCE", "LEGAL", "TECHNICAL", "COMMUNICATION", "FINANCIAL"]
+    },
+
+    "lessons_category_enum": {
+      "type": "string",
+      "enum": ["TECHNICAL", "PROCESS", "AWARENESS", "LEGAL", "ORGANISATIONAL"]
+    },
+
+    "reference_type_enum": {
+      "type": "string",
+      "enum": ["LEGAL", "STANDARD", "TOOL", "AUTHORITY", "GUIDE"]
+    },
+
+    "indicator_type_enum": {
+      "type": "string",
+      "enum": ["LOG_PATTERN", "BEHAVIORAL", "ALERT", "EXTERNAL_REPORT", "USER_REPORT"]
+    },
+
+    "action": {
+      "type": "object",
+      "required": ["id", "phase", "priority", "category", "action", "do_not"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^ACT-\\d{3}-(\\d{3}(-WARNING-\\d{3})?|WARNING-\\d{3})$",
+          "description": "Format: ACT-{scenario_nr}-{sequence} oder ACT-{nr}-{seq}-WARNING-{n}"
+        },
+        "phase":              { "$ref": "#/definitions/phase_enum" },
+        "time_window_minutes":{ "type": ["integer", "null"], "minimum": 0 },
+        "time_label":         { "type": ["string", "null"] },
+        "priority":           { "type": "integer", "minimum": 1 },
+        "category":           { "$ref": "#/definitions/action_category_enum" },
+        "responsible":        { "oneOf": [{ "$ref": "#/definitions/responsible_enum" }, { "type": "null" }] },
+        "action":             { "type": "string", "minLength": 5 },
+        "detail":             { "type": ["string", "null"] },
+        "do_not":             { "type": "boolean", "description": "true = 'NICHT TUN'-Warnung" },
+        "tool_hint":          { "type": ["string", "null"] }
+      }
+    },
+
+    "escalation_recipient": {
+      "type": "object",
+      "required": ["role", "contact_type"],
+      "additionalProperties": false,
+      "properties": {
+        "role":         { "type": "string" },
+        "contact_type": { "$ref": "#/definitions/contact_type_enum" },
+        "legal_basis":  { "type": ["string", "null"] },
+        "message":      { "type": ["string", "null"] },
+        "condition":    { "type": ["string", "null"] }
+      }
+    },
+
+    "escalation_level": {
+      "type": "object",
+      "required": ["id", "level", "label", "color_hex", "deadline_hours", "recipients"],
+      "additionalProperties": false,
+      "properties": {
+        "id":             { "type": "string", "pattern": "^ESC-\\d{3}-\\d{3}$" },
+        "level":          { "type": "integer", "minimum": 1, "maximum": 4 },
+        "label":          { "type": "string" },
+        "color_hex":      { "$ref": "#/definitions/hex_color" },
+        "deadline_hours": { "type": ["number", "null"], "minimum": 0 },
+        "condition":      { "type": ["string", "null"] },
+        "recipients": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/escalation_recipient" }
+        }
+      }
+    },
+
+    "recovery_step": {
+      "type": "object",
+      "required": ["id", "phase_label", "sequence", "action", "responsible"],
+      "additionalProperties": false,
+      "properties": {
+        "id":          { "type": "string", "pattern": "^REC-\\d{3}-\\d{3}$" },
+        "phase_label": { "type": "string" },
+        "sequence":    { "type": "integer", "minimum": 1 },
+        "action":      { "type": "string", "minLength": 5 },
+        "detail":      { "type": ["string", "null"] },
+        "responsible": { "$ref": "#/definitions/responsible_enum" },
+        "depends_on":  { "type": ["string", "null"], "description": "REC-ID einer Vorstufe" }
+      }
+    },
+
+    "checklist_item": {
+      "type": "object",
+      "required": ["id", "sequence", "category", "item", "mandatory"],
+      "additionalProperties": false,
+      "properties": {
+        "id":            { "type": "string", "pattern": "^CHK-\\d{3}-\\d{3}$" },
+        "sequence":      { "type": "integer", "minimum": 1 },
+        "category":      { "$ref": "#/definitions/checklist_category_enum" },
+        "item":          { "type": "string", "minLength": 5 },
+        "mandatory":     { "type": "boolean" },
+        "dsgvo_required":{ "type": "boolean" }
+      }
+    },
+
+    "lesson_learned": {
+      "type": "object",
+      "required": ["id", "question", "category"],
+      "additionalProperties": false,
+      "properties": {
+        "id":               { "type": "string", "pattern": "^LL-\\d{3}-\\d{3}$" },
+        "question":         { "type": "string", "minLength": 10 },
+        "category":         { "$ref": "#/definitions/lessons_category_enum" },
+        "maps_to_control":  { "type": ["string", "null"], "description": "BSI IT-Grundschutz Baustein-ID" }
+      }
+    },
+
+    "reference": {
+      "type": "object",
+      "required": ["type", "name"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "$ref": "#/definitions/reference_type_enum" },
+        "name": { "type": "string" },
+        "url":  { "type": ["string", "null"], "format": "uri" }
+      }
+    },
+
+    "detection_indicator": {
+      "type": "object",
+      "required": ["type", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "type":        { "$ref": "#/definitions/indicator_type_enum" },
+        "description": { "type": "string" },
+        "threshold":   { "type": ["string", "null"] }
+      }
+    }
+  },
+
+  "properties": {
+    "scenario": {
+      "type": "object",
+      "required": [
+        "id", "slug", "version", "created_at", "updated_at", "series",
+        "meta", "classification", "overview",
+        "actions", "escalation", "recovery_steps",
+        "checklist", "lessons_learned", "references"
+      ],
+      "additionalProperties": false,
+      "properties": {
+
+        "id": {
+          "type": "string",
+          "pattern": "^S-\\d{3}$",
+          "description": "Eindeutige Szenario-ID, z.B. S-001"
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "URL-freundlicher Bezeichner, z.B. phishing-klick"
+        },
+        "version":    { "$ref": "#/definitions/semver" },
+        "created_at": { "$ref": "#/definitions/iso_date" },
+        "updated_at": { "$ref": "#/definitions/iso_date" },
+        "series": {
+          "type": "string",
+          "enum": ["I", "II", "III", "IV", "V", "VI"],
+          "description": "Playbook-Band"
+        },
+
+        "meta": {
+          "type": "object",
+          "required": ["title", "subtitle", "emoji", "color_hex", "tags"],
+          "additionalProperties": false,
+          "properties": {
+            "title":            { "type": "string" },
+            "subtitle":         { "type": "string" },
+            "emoji":            { "type": "string" },
+            "color_hex":        { "$ref": "#/definitions/hex_color" },
+            "tags": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+              "minItems": 1
+            },
+            "affected_systems": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+
+        "classification": {
+          "type": "object",
+          "required": [
+            "severity", "severity_label", "likelihood",
+            "dsgvo_relevant", "nis2_relevant", "financial_risk"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "severity":       { "$ref": "#/definitions/severity_enum" },
+            "severity_label": { "type": "string" },
+            "likelihood":     { "$ref": "#/definitions/likelihood_enum" },
+            "dsgvo_relevant": { "type": "boolean" },
+            "nis2_relevant":  { "type": "boolean" },
+            "financial_risk": { "$ref": "#/definitions/financial_risk_enum" },
+            "avg_damage_eur": {
+              "type": ["object", "null"],
+              "required": ["min", "max"],
+              "additionalProperties": false,
+              "properties": {
+                "min": { "type": "integer", "minimum": 0 },
+                "max": { "type": "integer", "minimum": 0 }
+              }
+            }
+          }
+        },
+
+        "overview": { "type": "string", "minLength": 50 },
+
+        "detection_indicators": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/detection_indicator" }
+        },
+
+        "actions": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/definitions/action" }
+        },
+
+        "escalation": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": { "$ref": "#/definitions/escalation_level" }
+        },
+
+        "recovery_steps": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/definitions/recovery_step" }
+        },
+
+        "checklist": {
+          "type": "array",
+          "minItems": 5,
+          "items": { "$ref": "#/definitions/checklist_item" }
+        },
+
+        "lessons_learned": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "$ref": "#/definitions/lesson_learned" }
+        },
+
+        "references": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/reference" }
+        }
+      }
+    }
+  }
+}

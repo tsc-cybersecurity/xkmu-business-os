@@ -1,0 +1,3345 @@
+{
+  "meta": {
+    "titel": "SOP-Dokumentation KI-Beratung für Kleinstunternehmen",
+    "beschreibung": "Standard Operating Procedures für alle 59 Aufgaben der Prozessdokumentation",
+    "version": "1.0",
+    "erstellt": "2026-03-22",
+    "quelle": "Vollständige Prozessdokumentation KI-Beratung für Kleinstunternehmen",
+    "gesamtaufgaben": 59,
+    "prozessbereiche": 7,
+    "statistik": {
+      "hoch": 37,
+      "mittel": 14,
+      "niedrig": 8
+    }
+  },
+  "prozessbereiche": {
+    "KP1": {
+      "name": "KP1 Marketing",
+      "beschreibung": "Kernprozess 1: Marketing & Lead-Generierung"
+    },
+    "KP2": {
+      "name": "KP2 Vertrieb",
+      "beschreibung": "Kernprozess 2: Vertrieb & Onboarding"
+    },
+    "KP3": {
+      "name": "KP3 Leistung",
+      "beschreibung": "Kernprozess 3: Leistungserbringung"
+    },
+    "KP4": {
+      "name": "KP4 Abrechnung",
+      "beschreibung": "Kernprozess 4: Abrechnung & Controlling"
+    },
+    "KP5": {
+      "name": "KP5 CRM/After-Sales",
+      "beschreibung": "Kernprozess 5: Kundenbeziehungsmanagement"
+    },
+    "MP": {
+      "name": "MP Strategie",
+      "beschreibung": "Managementprozess: Strategische Planung"
+    },
+    "UP": {
+      "name": "UP IT & Weiterbildung",
+      "beschreibung": "Unterstützungsprozesse: IT & Weiterbildung"
+    }
+  },
+  "aufgaben": [
+    {
+      "id": "KP1-01",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.1 Content-Erstellung",
+      "aufgabe": "Themenfindung",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Google",
+        "Trello"
+      ],
+      "loesung": "KI-Prompt: Analysiere meine letzten 5 Kundenfragen und schlage 10 Blogartikel-Themen mit Keywords vor. → ChatGPT. Keyword-Tools: Ubersuggest API.",
+      "zweck": "Systematische Identifikation suchmaschinenrelevanter Blogartikel-Themen, die exakt die Fragen und Probleme der Zielgruppe (Handwerker, Freiberufler, KMU) adressieren und organischen Traffic generieren.",
+      "trigger": "Wöchentlich, montags 9–9:30 Uhr",
+      "vorbedingungen": [
+        "Trello-Board \"Content-Ideen\" ist angelegt",
+        "Google Search Console freigeschaltet",
+        "ChatGPT-Account aktiv"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Google Search Console öffnen → Leistung → letzte 28 Tage → Queries mit Klickrate < 5% aber hohen Impressionen herausfiltern",
+          "tool": "Google Search Console",
+          "hinweis": "Top-20 exportieren"
+        },
+        {
+          "nr": 2,
+          "aktion": "Kundenfragen und Einwände aus den letzten Beratungsgesprächen im CRM durchsehen und als Themenideen notieren",
+          "tool": "HubSpot CRM",
+          "hinweis": "Notizen-Suche nutzen"
+        },
+        {
+          "nr": 3,
+          "aktion": "ChatGPT-Prompt ausführen: \"Analysiere diese 5 Kundenfragen und schlage 10 SEO-Blogartikel-Themen mit Target-Keyword für die Zielgruppe Handwerker/Freiberufler vor.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Prompt-Vorlage nutzen"
+        },
+        {
+          "nr": 4,
+          "aktion": "Die generierten Themen mit Suchvolumen prüfen: Ubersuggest oder Google Keyword Planner aufrufen, Keywords eintragen, Volumen und KD notieren",
+          "tool": "Ubersuggest",
+          "hinweis": "KD < 40 bevorzugen"
+        },
+        {
+          "nr": 5,
+          "aktion": "Top-3-Themen nach Relevanz + Suchvolumen priorisieren und als neue Karte in Trello anlegen (Label: KW XX, Priorität)",
+          "tool": "Trello",
+          "hinweis": "Immer nur 1 Thema pro Woche final planen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Mindestens 3 Themenideen recherchiert",
+        "Keywords mit Volumen > 100/Monat bestätigt",
+        "Top-Thema in Trello mit KW-Label angelegt",
+        "Priorität für diese Woche festgelegt"
+      ],
+      "erwarteter_output": "1 priorisiertes Blogartikel-Thema mit Target-Keyword in Trello",
+      "fehlerfall_eskalation": "Falls keine neuen Kundenanfragen vorhanden: Google Trends für Branchenbegriffe prüfen oder Wettbewerber-Blogs analysieren."
+    },
+    {
+      "id": "KP1-02",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.1 Content-Erstellung",
+      "aufgabe": "Gliederung erstellen",
+      "zeitaufwand": "15 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "ChatGPT"
+      ],
+      "loesung": "Prompt: Erstelle SEO-Gliederung für [Thema] für Zielgruppe Handwerker/Freiberufler, 800-1200 Wörter, H2/H3-Struktur. Direkt im Workflow integrieren.",
+      "zweck": "Erstellung einer klaren, SEO-optimierten Artikelstruktur, die sowohl Lesern als auch Suchmaschinen eine schnelle Orientierung ermöglicht und den Schreibprozess strukturiert.",
+      "trigger": "Direkt nach KP1-01 Themenfindung",
+      "vorbedingungen": [
+        "Thema und Target-Keyword aus KP1-01 vorhanden",
+        "ChatGPT-Account aktiv"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "ChatGPT öffnen → Prompt: \"Erstelle eine detaillierte SEO-Gliederung für einen Blogartikel zum Thema [THEMA] mit Keyword [KEYWORD]. Zielgruppe: Handwerker/Freiberufler. Länge: 800-1200 Wörter. Struktur: H1, H2, H3.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Keyword im Prompt exakt angeben"
+        },
+        {
+          "nr": 2,
+          "aktion": "Gliederung kritisch prüfen: Entspricht die Reihenfolge der Leserlogik? Sind alle wichtigen Aspekte abgedeckt?",
+          "tool": "Word/Notion",
+          "hinweis": "Mind. 4-6 H2-Sektionen anstreben"
+        },
+        {
+          "nr": 3,
+          "aktion": "Gliederung manuell anpassen: Eigene Praxisbeispiele als Stichpunkte ergänzen, unnötige Abschnitte streichen",
+          "tool": "Word/Notion",
+          "hinweis": "Persönliche Erfahrungen einplanen"
+        },
+        {
+          "nr": 4,
+          "aktion": "Finale Gliederung in Notion/Google Doc als Artikelvorlage speichern und in die Trello-Karte verlinken",
+          "tool": "Notion / Trello",
+          "hinweis": "Link in Trello-Karte einfügen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Gliederung enthält H1, mindestens 4 H2, relevante H3",
+        "Target-Keyword in mindestens 2 Überschriften geplant",
+        "Persönliche Beispiele als Stichpunkte vermerkt",
+        "Gliederung in Notion gespeichert und in Trello verlinkt"
+      ],
+      "erwarteter_output": "Fertige Gliederung im Notion-Dokument, verlinkt in Trello",
+      "fehlerfall_eskalation": "Falls KI-Gliederung zu generisch: Zielgruppe im Prompt verfeinern z.B. \"Dachdecker in Deutschland\" statt \"Handwerker\"."
+    },
+    {
+      "id": "KP1-03",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.1 Content-Erstellung",
+      "aufgabe": "Rohtext erstellen",
+      "zeitaufwand": "45 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "ChatGPT"
+      ],
+      "loesung": "KI-Workflow: Abschnittsweise mit Chain-of-Prompts generieren. Prompt-Template: Schreibe Abschnitt [X] aus Gliederung. Zielgruppe: Handwerker, 150-200 Wörter.",
+      "zweck": "Effiziente Erstellung eines hochwertigen Rohtextes auf Basis der Gliederung mittels KI-Unterstützung, der als solide Grundlage für die redaktionelle Überarbeitung dient.",
+      "trigger": "Direkt nach KP1-02 Gliederung erstellen",
+      "vorbedingungen": [
+        "Fertige Gliederung aus KP1-02 vorhanden",
+        "ChatGPT Plus aktiv"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Für jede H2-Sektion einzeln Prompt ausführen: \"Schreibe den Abschnitt [SEKTIONSNAME] für einen Blogartikel. Zielgruppe: [Berufsgruppe]. Tonalität: freundlich, praxisnah. Länge: 150-200 Wörter.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Sektionsweise vorgehen, nicht alles auf einmal"
+        },
+        {
+          "nr": 2,
+          "aktion": "Alle generierten Abschnitte in chronologischer Reihenfolge im Notion-Dokument zusammenfügen",
+          "tool": "Notion",
+          "hinweis": "Auf Übergänge zwischen Abschnitten achten"
+        },
+        {
+          "nr": 3,
+          "aktion": "Einleitung generieren: Prompt \"Schreibe eine 3-Satz-Einleitung, die das Hauptproblem benennt und neugierig auf die Lösung macht.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Einleitung zuletzt schreiben"
+        },
+        {
+          "nr": 4,
+          "aktion": "Call-to-Action am Ende einfügen: Verweis auf KI-Starter-Paket oder Kontaktformular formulieren",
+          "tool": "Manual",
+          "hinweis": "CTA immer personalisiert formulieren"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Alle Gliederungssektionen als Rohtext vorhanden",
+        "Einleitung und Schluss/CTA vorhanden",
+        "Gesamtlänge 800-1200 Wörter geprüft",
+        "Dokument in Notion gespeichert"
+      ],
+      "erwarteter_output": "Rohtext 800-1200 Wörter im Notion-Dokument",
+      "fehlerfall_eskalation": "Falls KI-Text zu generisch oder falsch: Abschnitt neu generieren mit mehr Kontext im Prompt. Niemals ungeprüften KI-Text veröffentlichen."
+    },
+    {
+      "id": "KP1-04",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.1 Content-Erstellung",
+      "aufgabe": "Überarbeitung & SEO",
+      "zeitaufwand": "60 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Textverarbeitung"
+      ],
+      "loesung": "KI-Review-Prompt: Prüfe Text auf: (1) Lesbarkeit, (2) SEO-Keyword-Dichte [Keyword], (3) Tonalität. Gib Überarbeitungsvorschläge. Manueller Abschluss nötig.",
+      "zweck": "Transformation des KI-generierten Rohtextes in einen authentischen, SEO-optimierten Blogartikel durch manuelle Qualitätssicherung, Personalisierung und redaktionelle Überarbeitung.",
+      "trigger": "Direkt nach KP1-03 Rohtext erstellen",
+      "vorbedingungen": [
+        "Fertig generierter Rohtext in Notion vorhanden",
+        "Target-Keyword bekannt",
+        "Grammatik-Tool verfügbar (LanguageTool)"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Kompletten Rohtext einmal durchlesen ohne zu bearbeiten – Gesamteindruck und Schwachstellen mental notieren",
+          "tool": "Notion",
+          "hinweis": "Roter Stift zuerst, dann bearbeiten"
+        },
+        {
+          "nr": 2,
+          "aktion": "ChatGPT-Review-Prompt: \"Prüfe folgenden Text auf: (1) Lesbarkeit, (2) natürliche Einbindung des Keywords [KEYWORD], (3) Tonalität passend für Handwerker.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Nicht alle KI-Vorschläge blind übernehmen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Persönliche Erfahrungen, konkrete Beispiele aus eigenen Kundenprojekten und eigene Meinung in den Text einarbeiten",
+          "tool": "Notion",
+          "hinweis": "Mind. 3 persönliche Einschübe pro Artikel"
+        },
+        {
+          "nr": 4,
+          "aktion": "SEO-Optimierung: Target-Keyword in H1, erster H2, Meta-Beschreibung und 2x im Fließtext sicherstellen",
+          "tool": "Notion",
+          "hinweis": "Keyword-Dichte: 1-1,5%"
+        },
+        {
+          "nr": 5,
+          "aktion": "Abschließende Grammatik- und Rechtschreibprüfung mit LanguageTool oder Duden-Korrektur",
+          "tool": "LanguageTool",
+          "hinweis": "Besonders Kommasetzung prüfen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Text vollständig gelesen und redigiert",
+        "Min. 3 persönliche Beispiele/Erfahrungen eingebaut",
+        "Keyword korrekt in H1, H2, Fließtext platziert",
+        "Grammatik- und Rechtschreibprüfung abgeschlossen",
+        "Artikel liest sich flüssig und nicht KI-typisch"
+      ],
+      "erwarteter_output": "Finaler, redigierter Blogartikel in Notion",
+      "fehlerfall_eskalation": "Falls der Text nach Überarbeitung zu kurz (< 700 Wörter): Eine weitere H2-Sektion mit FAQ oder Beispielen ergänzen."
+    },
+    {
+      "id": "KP1-05",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.1 Content-Erstellung",
+      "aufgabe": "Bilderstellung",
+      "zeitaufwand": "20 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Midjourney"
+      ],
+      "loesung": "Prompt-Vorlage: /imagine: [Berufsgruppe] working with modern digital interface, tablet, bright clean style --ar 16:9 --v 6 → Bild-Batch via Midjourney API oder n8n.",
+      "zweck": "Erstellung professioneller, ansprechender Blogbilder ohne externe Designkosten, die Aufmerksamkeit erzeugen und die Zielgruppe visuell ansprechen.",
+      "trigger": "Nach Fertigstellung des redigierten Textes (KP1-04)",
+      "vorbedingungen": [
+        "Midjourney-Account aktiv",
+        "Discord-App installiert"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Titelbild erstellen: Midjourney-Prompt eingeben: \"/imagine prompt: [Berufsgruppe] looking at tablet showing automated workflow, bright modern office, clean flat style, no text --ar 16:9 --v 6 --stylize 200\"",
+          "tool": "Midjourney / Discord",
+          "hinweis": "Immer --ar 16:9 für Blog-Header"
+        },
+        {
+          "nr": 2,
+          "aktion": "Aus den 4 generierten Varianten das passendste Bild auswählen (U1-U4 für Upscale), herunterladen",
+          "tool": "Midjourney",
+          "hinweis": "Auf Gesichtsausdruck und Natürlichkeit achten"
+        },
+        {
+          "nr": 3,
+          "aktion": "1-2 weitere Inhaltsbilder für den Artikeltext generieren",
+          "tool": "Midjourney",
+          "hinweis": "Selbe Stil-Parameter für Konsistenz"
+        },
+        {
+          "nr": 4,
+          "aktion": "Bilder auf max. 800 KB komprimieren: Squoosh.app aufrufen, WebP-Format wählen, Quality 80",
+          "tool": "Squoosh.app",
+          "hinweis": "WebP für schnellere Ladezeiten"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Titelbild 16:9 erstellt und heruntergeladen",
+        "Bild auf < 800 KB komprimiert",
+        "1-2 Inhaltsbilder erstellt",
+        "Bilder thematisch passend und professionell"
+      ],
+      "erwarteter_output": "2-3 komprimierte Blogbilder im WebP-Format lokal gespeichert",
+      "fehlerfall_eskalation": "Falls Midjourney unpassende Bilder generiert: Prompt präzisieren – unerwünschte Elemente mit \"--no [Element]\" ausschließen."
+    },
+    {
+      "id": "KP1-06",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.1 Content-Erstellung",
+      "aufgabe": "Social-Media-Snippets",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "ChatGPT",
+        "Canva"
+      ],
+      "loesung": "Prompt: Extrahiere 5 Kernaussagen aus folgendem Artikel. Erstelle je 1 LinkedIn-Post (150 Wörter) und 1 Kurzversion (60 Wörter). → Canva-Templates per API befüllen.",
+      "zweck": "Maximale Reichweite des erstellten Blogartikels durch zielgruppengerechte Social-Media-Aufbereitung auf LinkedIn und XING, die Traffic auf die Website treibt.",
+      "trigger": "Nach Fertigstellung aller Blogartikel-Komponenten",
+      "vorbedingungen": [
+        "Finaler Blogartikel (KP1-04) vorhanden",
+        "Bilder aus KP1-05 vorhanden",
+        "Canva-Account vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "ChatGPT-Prompt ausführen: \"Extrahiere 5 Kernaussagen aus diesem Artikel als LinkedIn-taugliche Sätze (max. 15 Wörter je Aussage). Artikel: [TEXT]\"",
+          "tool": "ChatGPT",
+          "hinweis": "Auf Zitierbarkeit prüfen"
+        },
+        {
+          "nr": 2,
+          "aktion": "LinkedIn-Hauptpost verfassen: 150-200 Wörter. Struktur: Hook → Kurze Geschichte/Beispiel → 3 Kernaussagen als Liste → CTA mit Link",
+          "tool": "ChatGPT / manuell",
+          "hinweis": "Hook in erster Zeile entscheidet über Klick"
+        },
+        {
+          "nr": 3,
+          "aktion": "XING-Post erstellen: Kürzere Variante des LinkedIn-Posts (80-100 Wörter), etwas formeller in Tonalität",
+          "tool": "ChatGPT / manuell",
+          "hinweis": "XING-Audience ist meist älter/formeller"
+        },
+        {
+          "nr": 4,
+          "aktion": "Canva öffnen → LinkedIn Post-Template (1080x1080 px) auswählen → Kernaussage + Bild als Bild-Post gestalten",
+          "tool": "Canva",
+          "hinweis": "Firmenfarben und Logo einhalten"
+        },
+        {
+          "nr": 5,
+          "aktion": "Alle Posts + Bilder in Notion-Planungsboard für den Wochenplan ablegen",
+          "tool": "Notion / Google Sheets",
+          "hinweis": "Veröffentlichungszeiten vorplanen: Mo, Do, Fr"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "5 Kernaussagen aus Artikel extrahiert",
+        "LinkedIn-Post (150-200 Wörter) geschrieben",
+        "XING-Post (80-100 Wörter) geschrieben",
+        "Canva-Bild-Post erstellt",
+        "Alle Posts in Wochenplan eingetragen"
+      ],
+      "erwarteter_output": "3-5 Social-Media-Posts + 1 Bild-Post für die Woche fertig",
+      "fehlerfall_eskalation": "Falls KI-Posts zu werblich klingen: Prompt anpassen \"Schreibe im Stil eines Praktikers, nicht eines Verkäufers.\""
+    },
+    {
+      "id": "KP1-07",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.2 Content-Verbreitung",
+      "aufgabe": "Blogartikel veröffentlichen",
+      "zeitaufwand": "20 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "WordPress"
+      ],
+      "loesung": "Automatisierung: WordPress REST API oder n8n-Workflow: Artikel aus Notion/Google Doc automatisch als Draft inkl. SEO-Felder anlegen.",
+      "zweck": "Professionelle Veröffentlichung des Blogartikels auf der WordPress-Website mit korrekter SEO-Konfiguration.",
+      "trigger": "Wenn Artikel + Bilder + SEO-Daten vollständig vorliegen",
+      "vorbedingungen": [
+        "WordPress-Backend-Zugang",
+        "Yoast SEO Plugin installiert",
+        "Alle Bilder komprimiert (KP1-05)"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "WordPress-Backend öffnen → Beiträge → Neu erstellen → Titel eingeben (H1 mit Keyword)",
+          "tool": "WordPress",
+          "hinweis": "Titel max. 60 Zeichen für SEO"
+        },
+        {
+          "nr": 2,
+          "aktion": "Artikeltext aus Notion kopieren und in WordPress-Editor (Gutenberg) einfügen. Formatierung prüfen: H2/H3 korrekt, Fettungen vorhanden, Absätze max. 3-4 Zeilen",
+          "tool": "WordPress Gutenberg",
+          "hinweis": "HTML-Ansicht für saubere Formatierung prüfen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Titelbild hochladen → Alt-Text setzen (Target-Keyword einbauen). Weitere Bilder mit beschreibenden Alt-Texten versehen.",
+          "tool": "WordPress Mediathek",
+          "hinweis": "Alt-Text = Keyword + Bildbeschreibung"
+        },
+        {
+          "nr": 4,
+          "aktion": "Yoast SEO ausfüllen: SEO-Titel (< 60 Zeichen), Meta-Beschreibung (< 160 Zeichen, enthält Keyword + CTA), Focus-Keyphrase eintragen.",
+          "tool": "Yoast SEO",
+          "hinweis": "Alle Yoast-Punkte grün anstreben"
+        },
+        {
+          "nr": 5,
+          "aktion": "Kategorien und Tags vergeben → Permalink prüfen → Vorschau prüfen → Artikel veröffentlichen",
+          "tool": "WordPress",
+          "hinweis": "Permalink nach Veröffentlichung nicht mehr ändern"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Artikel in WordPress eingefügt und formatiert",
+        "Alle Bilder hochgeladen mit Alt-Texten",
+        "Yoast: SEO-Titel und Meta-Beschreibung ausgefüllt",
+        "Yoast Focus-Keyphrase gesetzt, Ampel grün",
+        "Kategorien/Tags vergeben",
+        "Artikel live und über Browser überprüft"
+      ],
+      "erwarteter_output": "Veröffentlichter Blogartikel auf der Website, live erreichbar",
+      "fehlerfall_eskalation": "Falls Yoast-Ampel orange/rot bleibt: Keyword fehlt in Einleitung, Meta-Beschreibung zu lang, kein interner Link vorhanden."
+    },
+    {
+      "id": "KP1-08",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.2 Content-Verbreitung",
+      "aufgabe": "Social Media Posts planen",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Buffer",
+        "LinkedIn"
+      ],
+      "loesung": "Tool-Funktion: Buffer API / Make: Posts aus Tabelle/Notion automatisch in Buffer-Queue einstellen. Wochenplan per Template befüllen.",
+      "zweck": "Systematische Planung und Terminierung aller Social-Media-Posts für die Woche ohne täglichen manuellen Aufwand.",
+      "trigger": "Montags nach Fertigstellung der Posts aus KP1-06, einmal pro Woche",
+      "vorbedingungen": [
+        "Buffer-Account aktiv",
+        "LinkedIn und XING mit Buffer verbunden",
+        "Posts aus KP1-06 fertig"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Buffer öffnen → \"Create Post\" → LinkedIn auswählen → LinkedIn-Hauptpost einfügen + Bild hochladen → Zeitplan: Dienstag 07:30 Uhr",
+          "tool": "Buffer",
+          "hinweis": "Beste Zeiten LinkedIn: Di-Do 7-9 Uhr"
+        },
+        {
+          "nr": 2,
+          "aktion": "XING-Post in Buffer einfügen → Zeitplan: Mittwoch 08:00 Uhr",
+          "tool": "Buffer",
+          "hinweis": "XING: Di-Do 8-10 Uhr optimal"
+        },
+        {
+          "nr": 3,
+          "aktion": "Zweiten LinkedIn-Post (andere Kernaussage aus Artikel) planen → Donnerstag 07:30 Uhr",
+          "tool": "Buffer",
+          "hinweis": "Selber Artikel, andere Perspektive"
+        },
+        {
+          "nr": 4,
+          "aktion": "Bild-Post (Canva-Grafik) für Freitag 09:00 Uhr einplanen",
+          "tool": "Buffer",
+          "hinweis": "Freitag: leichtere Inhalte performen besser"
+        },
+        {
+          "nr": 5,
+          "aktion": "Buffer-Queue prüfen: Alle 4 Posts korrekt geplant, Bilder korrekt eingebunden, Links funktionieren",
+          "tool": "Buffer",
+          "hinweis": "Test-Vorschau nutzen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "4 Posts in Buffer eingeplant",
+        "Bilder an Posts angehängt",
+        "Zeiten für Di, Mi, Do, Fr gesetzt",
+        "Links in Posts geprüft",
+        "Buffer-Queue-Übersicht gecheckt"
+      ],
+      "erwarteter_output": "4 Social-Media-Posts für die Woche in Buffer vorterminiert",
+      "fehlerfall_eskalation": "Falls Buffer-Integration mit LinkedIn fehlschlägt: LinkedIn-Token erneuern unter Buffer → Channels → LinkedIn → Reconnect."
+    },
+    {
+      "id": "KP1-09",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.2 Content-Verbreitung",
+      "aufgabe": "Interaktion & Community",
+      "zeitaufwand": "15 Min/Tag",
+      "automatisierungs_potenzial": "Niedrig",
+      "empfohlene_tools": [
+        "LinkedIn",
+        "XING"
+      ],
+      "loesung": "Teilautomatisierung: Alerts für eigene Posts via IFTTT. Kommentar-Vorlagen in Textexpander. Kernaufgabe bleibt manuell - Authentizität ist kritisch.",
+      "zweck": "Aktiver Community-Aufbau und Reichweitensteigerung durch tägliche, authentische Interaktion auf LinkedIn und XING.",
+      "trigger": "Täglich, 15 Minuten – idealerweise morgens",
+      "vorbedingungen": [
+        "LinkedIn-Profil optimiert",
+        "XING-Profil optimiert",
+        "Kommentar-Vorlagen in Notion gespeichert"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "LinkedIn-Benachrichtigungen öffnen → alle Kommentare auf eigene Posts innerhalb von 2 Stunden individuell beantworten",
+          "tool": "LinkedIn",
+          "hinweis": "Mind. 2 Sätze pro Antwort"
+        },
+        {
+          "nr": 2,
+          "aktion": "LinkedIn-Feed: 2-3 Posts von Handwerkern, Selbstständigen oder KI-Themen mit genuinem, wertschöpfendem Kommentar (mind. 2 Sätze + eigene Meinung) versehen",
+          "tool": "LinkedIn",
+          "hinweis": "Kommentare > Likes für Reichweite"
+        },
+        {
+          "nr": 3,
+          "aktion": "XING: Gleiche Vorgehensweise – Kommentare beantworten, 1-2 fremde Posts kommentieren",
+          "tool": "XING",
+          "hinweis": "XING täglich 5 Min reichen"
+        },
+        {
+          "nr": 4,
+          "aktion": "Neue Kontaktanfragen prüfen: Relevante Personen annehmen + kurze persönliche Begrüßungsnachricht senden",
+          "tool": "LinkedIn",
+          "hinweis": "Keine automatisierten Massenmails!"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Alle Kommentare auf eigene Posts beantwortet",
+        "2-3 fremde Posts kommentiert",
+        "Kontaktanfragen bearbeitet",
+        "Zeitbudget 15 Min eingehalten"
+      ],
+      "erwarteter_output": "Tägliche Interaktion durchgeführt",
+      "fehlerfall_eskalation": "Falls keine Zeit für tägliche Interaktion: Minimalvariante – nur eigene Kommentare beantworten (5 Min)."
+    },
+    {
+      "id": "KP1-10",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.3 Newsletter",
+      "aufgabe": "Newsletter-Konzept",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Mailchimp/Brevo"
+      ],
+      "loesung": "KI-Prompt: Erstelle Gliederung für Monats-Newsletter: 2 Artikel-Zusammenfassungen, 1 exklusiver Tipp, 1 CTA. Zielgruppe: Selbstständige. Beziehe Artikel ein: [Links].",
+      "zweck": "Strukturierte Konzeption eines monatlichen Newsletters, der für Abonnenten echten Mehrwert liefert und Vertrauen aufbaut.",
+      "trigger": "Monatlich, am 25. eines Monats",
+      "vorbedingungen": [
+        "Mailchimp/Brevo-Account aktiv",
+        "Mindestens 2 Blogartikel des Monats veröffentlicht",
+        "E-Mail-Liste mit mind. 10 Abonnenten"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Die 2 meistgeklickten Blogartikel des Monats aus WordPress-Analytics heraussuchen",
+          "tool": "WordPress / Google Analytics",
+          "hinweis": "Klickrate als Relevanzindikator"
+        },
+        {
+          "nr": 2,
+          "aktion": "ChatGPT-Prompt: \"Erstelle Gliederung für Monats-Newsletter. Inhalte: Zusammenfassung Artikel 1, Zusammenfassung Artikel 2, 1 exklusiver KI-Tipp, 1 CTA. Tone: persönlich, locker.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Betreffzeile ist entscheidend für Öffnungsrate"
+        },
+        {
+          "nr": 3,
+          "aktion": "3 Betreffzeilen-Varianten formulieren: emotional, neugierig, nutzenorientiert. Die vielversprechendste auswählen.",
+          "tool": "Manual",
+          "hinweis": "Zahlen und Fragen in Betreff performen gut"
+        },
+        {
+          "nr": 4,
+          "aktion": "Gliederung und Betreffzeile in Notion-Dokument speichern",
+          "tool": "Notion",
+          "hinweis": "Vorlage für nächste Monate wiederverwenden"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "2 Top-Artikel des Monats identifiziert",
+        "Newsletter-Gliederung steht",
+        "3 Betreffzeilen-Varianten formuliert",
+        "Exklusiver Tipp definiert",
+        "Dokument in Notion gespeichert"
+      ],
+      "erwarteter_output": "Newsletter-Konzept und Betreffzeile in Notion",
+      "fehlerfall_eskalation": "Falls keine 2 Artikel vorhanden: Einen bereits erschienenen Evergreen-Artikel wiederverwendet aufbereiten."
+    },
+    {
+      "id": "KP1-11",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.3 Newsletter",
+      "aufgabe": "Newsletter-Erstellung",
+      "zeitaufwand": "60 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Mailchimp/Brevo"
+      ],
+      "loesung": "KI-Workflow: Artikel-URLs → ChatGPT fasst zusammen → Template in Brevo/Mailchimp via API befüllen. Prompt: Fasse diesen Artikel in 3 Sätzen zusammen, CTA: [Link].",
+      "zweck": "Erstellung eines professionellen, versandfertigen Newsletters, der Abonnenten begeistert und Klicks auf die Website/das Angebot generiert.",
+      "trigger": "Am 28. jedes Monats",
+      "vorbedingungen": [
+        "Newsletter-Konzept aus KP1-10 vorhanden",
+        "Mailchimp/Brevo-Template eingerichtet",
+        "Alle Links zu Blogartikeln live"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Mailchimp/Brevo öffnen → \"Create Campaign\" → Template auswählen → Betreffzeile aus KP1-10 eintragen",
+          "tool": "Mailchimp / Brevo",
+          "hinweis": "Absendername = echter Name, kein \"noreply\""
+        },
+        {
+          "nr": 2,
+          "aktion": "ChatGPT-Prompt für Artikel-Zusammenfassung: \"Fasse diesen Blogartikel in 3 prägnanten Sätzen zusammen. Schreibe aus Sicht des Autors, personal und direkt.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Für jeden Artikel separat ausführen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Exklusiven KI-Tipp aus Konzept ausformulieren (3-5 Sätze), der noch nicht auf dem Blog veröffentlicht wurde",
+          "tool": "Manual / ChatGPT",
+          "hinweis": "Exklusivität betonen: \"Nur für Newsletter-Leser\""
+        },
+        {
+          "nr": 4,
+          "aktion": "CTA-Block für KI-Starter-Paket einfügen: Button-Text \"Jetzt KI-Potenzial analysieren\", Link zu Calendly oder Angebotsseite",
+          "tool": "Mailchimp / Brevo",
+          "hinweis": "CTA-Button auffällig, aber nicht aggressiv"
+        },
+        {
+          "nr": 5,
+          "aktion": "Test-E-Mail an sich selbst senden → auf Desktop + Mobile prüfen, alle Links anklicken",
+          "tool": "Mailchimp / Brevo",
+          "hinweis": "Mobile zuerst prüfen (70% der Öffnungen)"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Betreffzeile eingetragen",
+        "2 Artikel-Zusammenfassungen eingefügt (je 3 Sätze)",
+        "Exklusiver Tipp geschrieben",
+        "CTA-Button mit korrektem Link vorhanden",
+        "Test-E-Mail auf Desktop + Mobile geprüft",
+        "Alle Links funktionieren"
+      ],
+      "erwarteter_output": "Versandfertige Newsletter-Kampagne in Mailchimp/Brevo",
+      "fehlerfall_eskalation": "Falls Links in Test-E-Mail nicht funktionieren: UTM-Parameter prüfen, URL-Encoding beachten."
+    },
+    {
+      "id": "KP1-12",
+      "prozess_key": "KP1",
+      "prozess": "KP1 Marketing",
+      "teilprozess": "1.3 Newsletter",
+      "aufgabe": "Versand & Analyse",
+      "zeitaufwand": "15 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Mailchimp/Brevo"
+      ],
+      "loesung": "Tool-Funktion: Automatisierter Versand zu festem Termin. KPI-Report (Öffnungsrate, Klicks) automatisch per E-Mail nach 48h. Dashboard-Auswertung.",
+      "zweck": "Pünktlicher Newsletter-Versand und systematische Auswertung der Performance-Daten zur kontinuierlichen Optimierung.",
+      "trigger": "Am 1. des Monats um 08:00 Uhr",
+      "vorbedingungen": [
+        "Kampagne aus KP1-11 fertiggestellt",
+        "Abonnentenliste aktuell und bereinigt"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Mailchimp/Brevo öffnen → Kampagne für Versand freigeben oder Zeitplan bestätigen → Versand starten",
+          "tool": "Mailchimp / Brevo",
+          "hinweis": "Versandzeit: Di oder Do 8-9 Uhr optimal"
+        },
+        {
+          "nr": 2,
+          "aktion": "48 Stunden nach Versand: Kampagnen-Report öffnen → Öffnungsrate, Klickrate, Abmeldungen, Bounces notieren",
+          "tool": "Mailchimp / Brevo",
+          "hinweis": "Branchendurchschnitt Newsletter: ~22% Öffnung"
+        },
+        {
+          "nr": 3,
+          "aktion": "Erkenntnisse in KPI-Tracking-Tabelle eintragen: Datum, Öffnungsrate, Klickrate, neue Abonnenten, Abmeldungen",
+          "tool": "Google Sheets",
+          "hinweis": "Monatlicher Vergleich zeigt Trends"
+        },
+        {
+          "nr": 4,
+          "aktion": "ChatGPT-Prompt: \"Analysiere diese Newsletter-KPIs: [DATEN]. Was lief gut, was schlecht? Gib 2 konkrete Optimierungsvorschläge.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Erkenntnisse direkt in Notion dokumentieren"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Newsletter erfolgreich versendet",
+        "Keine Fehlermeldungen im Versand",
+        "KPIs nach 48h abgelesen und notiert",
+        "Erkenntnisse für nächsten Monat dokumentiert"
+      ],
+      "erwarteter_output": "Newsletter versendet, KPIs in Tracking-Tabelle eingetragen",
+      "fehlerfall_eskalation": "Falls Öffnungsrate < 15%: Betreffzeile war zu generisch. A/B-Test für nächsten Monat planen."
+    },
+    {
+      "id": "KP2-01",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.1 Anfrage-Bearbeitung",
+      "aufgabe": "Anfrage-Eingang",
+      "zeitaufwand": "5 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "E-Mail"
+      ],
+      "loesung": "Zapier/Make: Neues Kontaktformular → CRM-Eintrag anlegen + Slack-Benachrichtigung + Aufgabe erstellen. Vollautomatisch ohne manuelle Prüfung.",
+      "zweck": "Lückenlose, sofortige Erfassung aller eingehenden Kundenanfragen, damit keine Anfrage verloren geht.",
+      "trigger": "Kontinuierlich – ausgelöst durch neues Kontaktformular oder E-Mail-Eingang",
+      "vorbedingungen": [
+        "Zapier-Account aktiv",
+        "HubSpot CRM angelegt",
+        "Kontaktformular mit Zapier verknüpft"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Zapier-Trigger: \"Neues Formular-Submission auf Website\" → automatisch HubSpot-Kontakt anlegen mit Name, E-Mail, Nachricht",
+          "tool": "Zapier → HubSpot",
+          "hinweis": "Mapping der Felder einmalig einrichten"
+        },
+        {
+          "nr": 2,
+          "aktion": "Slack/E-Mail-Benachrichtigung auslösen: \"Neue Anfrage von [NAME]: [ERSTE 100 ZEICHEN DER NACHRICHT]\"",
+          "tool": "Zapier → Slack",
+          "hinweis": "Sofortbenachrichtigung für schnelle Reaktion"
+        },
+        {
+          "nr": 3,
+          "aktion": "Aufgabe in HubSpot automatisch anlegen: \"Anfrage prüfen und antworten\" + Fälligkeitsdatum: heute",
+          "tool": "Zapier → HubSpot Tasks",
+          "hinweis": "Fälligkeitsdatum = heute setzt Priorität"
+        },
+        {
+          "nr": 4,
+          "aktion": "Tägliche manuelle Prüfung des Posteingangs morgens 8:30 Uhr und nachmittags 15:00 Uhr",
+          "tool": "E-Mail-Client",
+          "hinweis": "2x täglich reicht"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Zapier-Workflow läuft und testet korrekt",
+        "HubSpot empfängt neue Kontakte automatisch",
+        "Benachrichtigung an Slack/E-Mail funktioniert",
+        "Tägliche manuelle Prüfung im Kalender geblockt"
+      ],
+      "erwarteter_output": "Alle Anfragen innerhalb von max. 8 Stunden erfasst und in HubSpot eingetragen",
+      "fehlerfall_eskalation": "Falls Zapier-Integration bricht: Wöchentlicher Funktionstest (Test-Submission). E-Mail-Benachrichtigung ohne Zapier als Backup aktivieren."
+    },
+    {
+      "id": "KP2-02",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.1 Anfrage-Bearbeitung",
+      "aufgabe": "Schnelle Qualifizierung",
+      "zeitaufwand": "5 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "—"
+      ],
+      "loesung": "KI-Funktion: E-Mail-Text via ChatGPT API analysieren: Ist diese Anfrage für KI-Beratung von KMU/Freiberufler relevant? Antworte: Ja/Nein + Grund. Flagging in CRM.",
+      "zweck": "Schnelle Bewertung der Anfrage-Qualität, um Ressourcen auf vielversprechende Kontakte zu konzentrieren.",
+      "trigger": "Innerhalb von 30 Minuten nach Anfrage-Eingang",
+      "vorbedingungen": [
+        "Anfrage in HubSpot vorhanden",
+        "Qualifizierungskriterien bekannt (Zielgruppe: KMU/Freiberufler/Handwerker)"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Anfrage-Text in CRM öffnen und lesen: Passt die Person zur Zielgruppe (KMU, Freiberufler, Handwerker)?",
+          "tool": "HubSpot CRM",
+          "hinweis": "Im Zweifel: Erstgespräch kostet nichts"
+        },
+        {
+          "nr": 2,
+          "aktion": "KI-Qualifizierung (optional): ChatGPT-Prompt \"Ist folgende Anfrage relevant für eine KI-Beratung von KMU/Freiberuflern? Begründe kurz mit Ja/Nein: [ANFRAGE-TEXT]\"",
+          "tool": "ChatGPT API",
+          "hinweis": "Nur bei > 5 Anfragen/Woche sinnvoll"
+        },
+        {
+          "nr": 3,
+          "aktion": "Qualifizierungsergebnis in HubSpot-Feld \"Lead-Qualität\" eintragen: Hoch / Mittel / Niedrig / Kein Fit",
+          "tool": "HubSpot CRM",
+          "hinweis": "Auch \"Kein Fit\" klar dokumentieren"
+        },
+        {
+          "nr": 4,
+          "aktion": "Bei \"Kein Fit\": Kurze, freundliche Absage-E-Mail senden mit Verweis auf passendere Ressourcen",
+          "tool": "E-Mail-Vorlage",
+          "hinweis": "Immer freundlich – Empfehlungen kommen von überall"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Anfrage inhaltlich gelesen",
+        "Qualifizierungsentscheidung getroffen",
+        "Lead-Qualität in HubSpot eingetragen",
+        "Bei Kein-Fit: Absage versendet"
+      ],
+      "erwarteter_output": "Anfrage mit Lead-Qualitäts-Label in HubSpot",
+      "fehlerfall_eskalation": "Falls Zielgruppen-Einordnung unklar: Im Zweifel Erstgespräch führen."
+    },
+    {
+      "id": "KP2-03",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.1 Anfrage-Bearbeitung",
+      "aufgabe": "Standardisierte Erstantwort",
+      "zeitaufwand": "10 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "E-Mail",
+        "Calendly"
+      ],
+      "loesung": "Automatisierung: Zapier: Neues CRM-Lead → personalisierte E-Mail-Vorlage (Name, Firma einsetzen) automatisch versenden + Calendly-Link.",
+      "zweck": "Professioneller und schneller erster Kontakt, der Vertrauen aufbaut und den Interessenten zu einem Erstgespräch führt.",
+      "trigger": "Sofort nach Qualifizierung, max. 8 Stunden nach Anfrage",
+      "vorbedingungen": [
+        "Erstantwort-Vorlage in E-Mail-Client gespeichert",
+        "Calendly-Link für Erstgespräch eingerichtet",
+        "HubSpot-Kontakt angelegt"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Zapier-Workflow: CRM-Lead Status \"Kontaktiert\" → automatisch personalisierte Erstantwort-E-Mail versenden. Felder: [VORNAME], [FIRMA], [ANFRAGE-BEZUG]",
+          "tool": "Zapier → Gmail / HubSpot",
+          "hinweis": "Personalisierung an mindestens 2 Stellen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Falls manuell: E-Mail-Vorlage öffnen → Name und Firma personalisieren → konkreten Bezug zur Anfrage einbauen (1 Satz)",
+          "tool": "Gmail / Outlook + Vorlage",
+          "hinweis": "Vorlage nicht 1:1 kopieren – immer 1 persönlicher Satz"
+        },
+        {
+          "nr": 3,
+          "aktion": "Calendly-Link für kostenloses 30-Minuten-Kennenlerngespräch in E-Mail einfügen",
+          "tool": "Calendly",
+          "hinweis": "Link prominent, aber nicht aufdringlich"
+        },
+        {
+          "nr": 4,
+          "aktion": "E-Mail absenden → in HubSpot Aktivität \"Erstantwort gesendet\" loggen → Status auf \"Kontaktiert\" setzen",
+          "tool": "Gmail / HubSpot",
+          "hinweis": "HubSpot Gmail-Integration spart diesen Schritt automatisch"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Anfrage innerhalb 8 Stunden beantwortet",
+        "E-Mail mit Name + Firmenbezug personalisiert",
+        "Calendly-Link in E-Mail enthalten",
+        "Status in HubSpot auf \"Kontaktiert\" gesetzt"
+      ],
+      "erwarteter_output": "Professionelle Erstantwort-E-Mail versendet, Termin-Buchungslink übermittelt",
+      "fehlerfall_eskalation": "Kein Interessent darf länger als 24 Stunden ohne Antwort warten."
+    },
+    {
+      "id": "KP2-04",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.1 Anfrage-Bearbeitung",
+      "aufgabe": "CRM-Eintrag erstellen",
+      "zeitaufwand": "5 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "HubSpot CRM"
+      ],
+      "loesung": "Tool-Funktion: HubSpot-Formular-Integration: Kontaktformular-Daten landen direkt im CRM. Zapier: E-Mail-Anfrage → automatisch neuer Kontakt mit Status Kontaktiert.",
+      "zweck": "Vollständige und strukturierte Erfassung aller Kontaktdaten im CRM als zentrale Datenbasis für alle weiteren Prozesse.",
+      "trigger": "Gleichzeitig mit KP2-01 (automatisiert) oder manuell bei telefonischen Anfragen",
+      "vorbedingungen": [
+        "HubSpot CRM-Account aktiv",
+        "Kontaktformular-Felder mit HubSpot verbunden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Automatische Route: Zapier überträgt Formular-Daten → HubSpot-Kontakt mit: Vorname, Nachname, E-Mail, Firma, Anfrage-Text, Datum, Quelle",
+          "tool": "Zapier → HubSpot",
+          "hinweis": "Quelle immer tracken für Marketing-Analyse"
+        },
+        {
+          "nr": 2,
+          "aktion": "Manuelle Route (telefonisch): HubSpot öffnen → Kontakt → Neu → Alle verfügbaren Daten eintragen. Pflichtfelder: Name, E-Mail, Firma, Datum Erstkontakt",
+          "tool": "HubSpot CRM",
+          "hinweis": "Notizfeld für Gesprächsinhalt nutzen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Kontakt der richtigen Phase im Deal-Pipeline zuordnen: \"Neue Anfrage\"",
+          "tool": "HubSpot",
+          "hinweis": "Pipeline-Phasen einmalig konfigurieren"
+        },
+        {
+          "nr": 4,
+          "aktion": "Duplikat-Check: HubSpot auf bestehenden Kontakt mit gleicher E-Mail prüfen",
+          "tool": "HubSpot CRM",
+          "hinweis": "HubSpot zeigt Duplikate automatisch an"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Kontakt in HubSpot vorhanden",
+        "Alle Pflichtfelder ausgefüllt",
+        "Pipeline-Phase korrekt zugeordnet",
+        "Keine Duplikate"
+      ],
+      "erwarteter_output": "Vollständiger CRM-Kontakteintrag angelegt",
+      "fehlerfall_eskalation": "Falls Zapier-Transfer unvollständig: Fehlende Felder manuell ergänzen. HubSpot-API-Log unter Zapier → Task History prüfen."
+    },
+    {
+      "id": "KP2-05",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.2 Erstgespräch",
+      "aufgabe": "Gesprächsvorbereitung",
+      "zeitaufwand": "5 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "CRM"
+      ],
+      "loesung": "Automatisierung: Calendly-Buchung triggert Zapier → CRM-Eintrag abrufen + Website scrapen + KI-Zusammenfassung → 5-Min-Briefing automatisch generieren.",
+      "zweck": "Informierte, professionelle Gesprächsvorbereitung in nur 5 Minuten.",
+      "trigger": "Automatisch nach Calendly-Buchung; Review 5 Minuten vor dem Termin",
+      "vorbedingungen": [
+        "Calendly mit HubSpot verbunden",
+        "CRM-Kontakt vollständig",
+        "Gesprächsleitfaden als Vorlage vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Zapier-Automatisierung: Calendly-Buchung → HubSpot-Kontakt abrufen → ChatGPT-Prompt \"Erstelle 5-Punkte-Briefing für Erstgespräch mit [NAME] von [FIRMA]. Branche: [X].\" → Briefing per E-Mail 1 Std vor Termin",
+          "tool": "Zapier → ChatGPT → E-Mail",
+          "hinweis": "Briefing per E-Mail 1 Std vor Termin"
+        },
+        {
+          "nr": 2,
+          "aktion": "5 Minuten vor Termin: HubSpot-Kontakt öffnen und Anfrage-Text + Briefing lesen",
+          "tool": "HubSpot CRM",
+          "hinweis": "Website des Kunden kurz überfliegen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Website des Interessenten 2 Minuten überfliegen: Was bietet das Unternehmen an?",
+          "tool": "Browser",
+          "hinweis": "LinkedIn-Profil des Ansprechpartners checken"
+        },
+        {
+          "nr": 4,
+          "aktion": "Gesprächsleitfaden öffnen und auf zweitem Bildschirm bereitstellen",
+          "tool": "Notion / PDF",
+          "hinweis": "Leitfaden ist Orientierung, kein Skript"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Briefing-Dokument oder CRM-Eintrag gelesen",
+        "Website des Interessenten überflogen",
+        "Gesprächsleitfaden bereitgelegt",
+        "Zoom-Link getestet"
+      ],
+      "erwarteter_output": "5-Minuten-Briefing gelesen, Gesprächsleitfaden bereit",
+      "fehlerfall_eskalation": "Falls Briefing-Automatisierung nicht funktioniert: CRM-Notizen + Anfrage-Text vor dem Gespräch manuell lesen."
+    },
+    {
+      "id": "KP2-06",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.2 Erstgespräch",
+      "aufgabe": "Gesprächsdurchführung",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Niedrig",
+      "empfohlene_tools": [
+        "Zoom"
+      ],
+      "loesung": "Teilautomatisierung: KI-Transkription via Otter.ai/Fireflies. Post-Meeting: Prompt Fasse Hauptproblem, nächste Schritte und Budget-Indikation aus diesem Transkript zusammen.",
+      "zweck": "Vertrauensaufbau und tiefes Verstehen der Kundensituation, um die Grundlage für ein passgenaues Angebot zu schaffen.",
+      "trigger": "Gebuchter Termin aus Calendly",
+      "vorbedingungen": [
+        "Zoom-Meeting gestartet",
+        "Gesprächsleitfaden bereit",
+        "Notizblock oder Notion geöffnet"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Phase 1 – Begrüßung (5 Min): Kurze Vorstellung, Agenda klären, Eisbrecherfrage \"Wie sind Sie auf mich aufmerksam geworden?\"",
+          "tool": "Zoom",
+          "hinweis": "Kamera immer an – schafft Vertrauen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Phase 2 – Bedarfsanalyse (15 Min): Offene Fragen stellen. Kernfragen: \"Beschreiben Sie einen typischen Arbeitstag – was kostet Sie am meisten Zeit?\", \"Was würden Sie am liebsten automatisieren?\"",
+          "tool": "Zoom + Notizen",
+          "hinweis": "Mindestens 70% der Zeit zuhören"
+        },
+        {
+          "nr": 3,
+          "aktion": "Hauptproblem und Wunschlösung in eigenen Worten zusammenfassen und Bestätigung einholen",
+          "tool": "Zoom + Notizen",
+          "hinweis": "Zusammenfassung zeigt echtes Zuhören"
+        },
+        {
+          "nr": 4,
+          "aktion": "Phase 3 – Lösungsskizze (10 Min): 2-3 erste KI-Ansätze skizzieren. KI-Starter-Paket als logischen nächsten Schritt positionieren.",
+          "tool": "Zoom",
+          "hinweis": "\"Im Starter-Paket analysieren wir das genau.\""
+        },
+        {
+          "nr": 5,
+          "aktion": "Abschluss: Nächste Schritte klären \"Ich sende Ihnen ein Angebot bis [DATUM]\"",
+          "tool": "Zoom",
+          "hinweis": "Konkrete Deadline nennen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Hauptproblem des Kunden klar verstanden",
+        "Eigene Zusammenfassung vom Kunden bestätigt",
+        "Starter-Paket als nächsten Schritt erwähnt",
+        "Konkretes Folge-Datum vereinbart"
+      ],
+      "erwarteter_output": "Verstandene Kundensituation, vereinbarter nächster Schritt",
+      "fehlerfall_eskalation": "Falls Kund:in sehr unklar in seinen Zielen ist: Mehr Beispielfragen stellen."
+    },
+    {
+      "id": "KP2-07",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.2 Erstgespräch",
+      "aufgabe": "Nachbereitung & CRM",
+      "zeitaufwand": "10 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "HubSpot CRM"
+      ],
+      "loesung": "KI-Workflow: Transkript → ChatGPT → strukturierte JSON-Zusammenfassung → via HubSpot API automatisch in CRM-Notiz schreiben + Status + Folgeaufgabe anlegen.",
+      "zweck": "Lückenlose Dokumentation aller Gesprächserkenntnisse im CRM als Grundlage für die Angebotserstellung.",
+      "trigger": "Direkt nach dem Erstgespräch, max. 30 Minuten danach",
+      "vorbedingungen": [
+        "Gesprächsnotizen vorhanden",
+        "HubSpot CRM geöffnet",
+        "Otter.ai/Fireflies Transkript verfügbar (falls aktiviert)"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Gesprächsnotizen strukturiert in HubSpot-Notizfeld eintragen: Hauptproblem, Zeitfresser, bisherige Lösungsversuche, Technisches Know-how, Budget-Hinweise",
+          "tool": "HubSpot CRM",
+          "hinweis": "Vorlage: Problem | Bisheriges | Budget | Entscheidung"
+        },
+        {
+          "nr": 2,
+          "aktion": "Falls Otter.ai-Transkript vorhanden: ChatGPT-Prompt \"Fasse dieses Gesprächstranskript zusammen: (1) Hauptproblem, (2) Budget-Hinweis, (3) Nächste Schritte\"",
+          "tool": "ChatGPT + Otter.ai",
+          "hinweis": "Zusammenfassung ins CRM kopieren"
+        },
+        {
+          "nr": 3,
+          "aktion": "Status im HubSpot-Deal auf \"Erstgespräch geführt\" setzen",
+          "tool": "HubSpot CRM",
+          "hinweis": "Pipeline-Übersicht immer aktuell halten"
+        },
+        {
+          "nr": 4,
+          "aktion": "Aufgabe \"Angebot erstellen bis [DATUM]\" in HubSpot anlegen (Fälligkeitsdatum = in 2 Tagen)",
+          "tool": "HubSpot Tasks",
+          "hinweis": "Frist direkt nach Gespräch anlegen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Alle Gesprächserkenntnisse in HubSpot notiert",
+        "Status auf \"Erstgespräch geführt\" gesetzt",
+        "Folgeaufgabe \"Angebot erstellen\" angelegt",
+        "Budget-Hinweis und Entscheidungsträger notiert"
+      ],
+      "erwarteter_output": "Vollständige Gesprächsdokumentation in HubSpot, Angebots-Aufgabe angelegt",
+      "fehlerfall_eskalation": "Falls Notizen unvollständig: Sofort nach Gespräch aus dem Gedächtnis ergänzen. Transkription-App für nächstes Mal aktivieren."
+    },
+    {
+      "id": "KP2-08",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.3 Angebot & Abschluss",
+      "aufgabe": "Angebot erstellen",
+      "zeitaufwand": "20 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Angebotsvorlage"
+      ],
+      "loesung": "KI-Prompt: Erstelle Angebot für [Firma]. Problem: [X]. Lösung: KI-Potenzialanalyse, 490 Euro. Basiere auf diesem Gesprächsprotokoll: [Notizen]. Nutze Vorlage: [Template].",
+      "zweck": "Erstellung eines überzeugenden, individualisierten Angebots, das die Kaufentscheidung erleichtert.",
+      "trigger": "Max. 2 Werktage nach dem Erstgespräch",
+      "vorbedingungen": [
+        "Gesprächsnotizen aus KP2-07 vorhanden",
+        "Angebotsvorlage vorhanden",
+        "Lexoffice-Account aktiv"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "ChatGPT-Prompt: \"Erstelle eine Problemzusammenfassung für ein Angebot an [FIRMA]. Hauptproblem: [X]. Formuliere 3-4 Sätze, die zeigen, dass wir das Problem verstanden haben.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Problemzusammenfassung = wichtigster Teil"
+        },
+        {
+          "nr": 2,
+          "aktion": "Angebotsvorlage öffnen und befüllen: Firmenname, Problemzusammenfassung, Leistungsbeschreibung, Preis 490 Euro, Zeitrahmen (max. 2 Wochen), Gültigkeitsdatum",
+          "tool": "Lexoffice / Word",
+          "hinweis": "Gültigkeit: 14 Tage"
+        },
+        {
+          "nr": 3,
+          "aktion": "Angebot als PDF exportieren und auf Vollständigkeit prüfen",
+          "tool": "Lexoffice / Word",
+          "hinweis": "Jemand zweites lesen lassen (oder ChatGPT)"
+        },
+        {
+          "nr": 4,
+          "aktion": "Angebotsversion in HubSpot-Deal verlinken und Angebotsdatum notieren",
+          "tool": "HubSpot CRM",
+          "hinweis": "Für Follow-up-Timing relevant"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Problemzusammenfassung zeigt, dass Gesprächsinhalt verstanden wurde",
+        "Leistung klar und vollständig beschrieben",
+        "Preis, Zeitrahmen und Gültigkeitsdatum enthalten",
+        "PDF-Export fehlerfrei",
+        "Angebot in HubSpot verlinkt"
+      ],
+      "erwarteter_output": "Unterschriftsreifes Angebot als PDF",
+      "fehlerfall_eskalation": "Falls Angebots-Erstellung > 3 Werktage dauert: Kurze Zwischenmail an Interessenten senden."
+    },
+    {
+      "id": "KP2-09",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.3 Angebot & Abschluss",
+      "aufgabe": "Angebot versenden",
+      "zeitaufwand": "5 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "E-Mail"
+      ],
+      "loesung": "Tool-Funktion: Lexoffice/sevDesk: Angebot als PDF → automatischer E-Mail-Versand mit Standard-Begleittext. Personalisierung via KI-Textbaustein.",
+      "zweck": "Professioneller, zeitnaher Angebotsversand, der den Schwung aus dem Erstgespräch aufgreift.",
+      "trigger": "Direkt nach Fertigstellung des Angebots (KP2-08)",
+      "vorbedingungen": [
+        "Fertiges Angebot als PDF",
+        "Angebots-E-Mail-Vorlage bereit"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "E-Mail-Vorlage öffnen: Betreff \"Ihr individuelles Angebot: KI-Potenzialanalyse für [FIRMA]\" → Personalisieren: Bezug aufs Gespräch, 1-2 Sätze zum Hauptnutzen",
+          "tool": "Gmail / Outlook",
+          "hinweis": "Betreff sollte Firmenname enthalten"
+        },
+        {
+          "nr": 2,
+          "aktion": "PDF-Angebot als Anhang hinzufügen",
+          "tool": "Gmail",
+          "hinweis": "Dateigröße < 5 MB"
+        },
+        {
+          "nr": 3,
+          "aktion": "E-Mail senden und in HubSpot als Aktivität loggen",
+          "tool": "Gmail + HubSpot",
+          "hinweis": "HubSpot-Gmail-Integration aktivieren"
+        },
+        {
+          "nr": 4,
+          "aktion": "Folgeaufgabe \"Follow-up falls keine Antwort in 5 Tagen\" in HubSpot anlegen",
+          "tool": "HubSpot Tasks",
+          "hinweis": "Exaktes Datum eintragen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Betreff enthält Firmenname",
+        "E-Mail mit persönlichem Bezug aufs Gespräch",
+        "PDF-Anhang korrekt beigefügt",
+        "Folgeaufgabe in HubSpot angelegt"
+      ],
+      "erwarteter_output": "Angebot versendet, Folgeaufgabe geplant",
+      "fehlerfall_eskalation": "Falls E-Mail gebounced: LinkedIn-Nachricht als alternative Zustellung."
+    },
+    {
+      "id": "KP2-10",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.3 Angebot & Abschluss",
+      "aufgabe": "Follow-up nach 5 Tagen",
+      "zeitaufwand": "5 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "CRM",
+        "E-Mail"
+      ],
+      "loesung": "CRM-Sequenz: HubSpot: Angebot versendet → nach 5 Tagen ohne Rückmeldung: automatische Follow-up-E-Mail aus Vorlage. Kein manuelles Eingreifen nötig.",
+      "zweck": "Strukturiertes Nachfassen bei ausbleibenden Rückmeldungen, das professionell und nicht aufdringlich wirkt.",
+      "trigger": "5 Werktage nach Angebotsversand ohne Rückmeldung",
+      "vorbedingungen": [
+        "Follow-up-Aufgabe aus KP2-09 in HubSpot angelegt",
+        "Follow-up-E-Mail-Vorlage bereit"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "HubSpot-Task öffnen → prüfen ob Angebot geöffnet/geklickt wurde",
+          "tool": "HubSpot / Lexoffice",
+          "hinweis": "Öffnungs-Tracking hilft bei Timing"
+        },
+        {
+          "nr": 2,
+          "aktion": "Follow-up-E-Mail-Vorlage öffnen und anpassen: kurz und freundlich, kein Druck. Text: \"Ich wollte kurz nachfragen, ob Sie Gelegenheit hatten, mein Angebot zu prüfen.\"",
+          "tool": "Gmail / Outlook + Vorlage",
+          "hinweis": "Max. 3 Sätze – Kürze zeigt Respekt"
+        },
+        {
+          "nr": 3,
+          "aktion": "E-Mail senden und in HubSpot loggen",
+          "tool": "Gmail + HubSpot",
+          "hinweis": "Immer reply auf die Angebots-E-Mail"
+        },
+        {
+          "nr": 4,
+          "aktion": "Falls nach weiteren 5 Tagen keine Antwort: zweites (letztes) Follow-up mit sanfter Deadline",
+          "tool": "Gmail",
+          "hinweis": "Zweites Follow-up = letzte Kontaktaufnahme"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Follow-up nach exakt 5 Werktagen versendet",
+        "E-Mail kurz (max. 3 Sätze) und freundlich",
+        "In HubSpot als Aktivität geloggt",
+        "Zweite Follow-up-Aufgabe falls nötig angelegt"
+      ],
+      "erwarteter_output": "Follow-up-E-Mail versendet, nächste Aktion geplant",
+      "fehlerfall_eskalation": "Falls Interessent antwortet mit \"Kein Interesse\": Status in HubSpot auf \"Verloren\" setzen, Grund notieren."
+    },
+    {
+      "id": "KP2-11",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.3 Angebot & Abschluss",
+      "aufgabe": "Vertragsabschluss",
+      "zeitaufwand": "15 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Rechnungstool",
+        "CRM"
+      ],
+      "loesung": "Teilautomatisierung: Lexoffice: Auftragsbestätigung + Rechnung generieren. Zapier: Annahme-E-Mail → CRM-Status Gewonnen + Onboarding-Workflow starten.",
+      "zweck": "Formell verbindlicher und reibungsloser Vertragsabschluss, der das Projekt offiziell startet und erste Zahlung sichert.",
+      "trigger": "Nach mündlicher oder schriftlicher Zusage des Interessenten",
+      "vorbedingungen": [
+        "Angebot wurde angenommen",
+        "Lexoffice-Account aktiv",
+        "Auftragsbestätigungs-Vorlage vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Lexoffice öffnen → Auftrag/Rechnung erstellen → Rechnungsposition: \"KI-Potenzialanalyse\" 490 Euro brutto → Zahlungsziel: 14 Tage",
+          "tool": "Lexoffice",
+          "hinweis": "Vorauszahlung bei Starter-Paketen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Auftragsbestätigung separat per E-Mail versenden",
+          "tool": "Gmail + Lexoffice",
+          "hinweis": "Auftragsbestätigung und Rechnung getrennt ist professioneller"
+        },
+        {
+          "nr": 3,
+          "aktion": "Rechnung per E-Mail versenden (Lexoffice-Direkt-Versand)",
+          "tool": "Lexoffice → E-Mail",
+          "hinweis": "Rechnung = Voraussetzung für Projekt-Start"
+        },
+        {
+          "nr": 4,
+          "aktion": "HubSpot: Deal-Status auf \"Gewonnen\" setzen, Abschlussdatum notieren, Zapier-Trigger für Onboarding-Workflow aktivieren",
+          "tool": "HubSpot + Zapier",
+          "hinweis": "Zapier startet automatisch Onboarding"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Auftragsbestätigung versendet",
+        "Rechnung versendet (Vorkasse)",
+        "HubSpot-Status auf \"Gewonnen\" gesetzt",
+        "Onboarding-Workflow ausgelöst"
+      ],
+      "erwarteter_output": "Bestätigte Auftragsbestätigung, Rechnung versendet",
+      "fehlerfall_eskalation": "Falls Kunde Zahlungsziel nicht einhalten kann: Zahlungsplan anbieten (50% vor Workshop, 50% nach Maßnahmenplan)."
+    },
+    {
+      "id": "KP2-12",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.4 Onboarding",
+      "aufgabe": "Willkommens-E-Mail",
+      "zeitaufwand": "10 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "E-Mail",
+        "Calendly"
+      ],
+      "loesung": "Automatisierung: Zahlungseingang (Lexoffice-Webhook) → Zapier → personalisierte Willkommens-E-Mail + Calendly-Link automatisch versenden.",
+      "zweck": "Herzlicher, professioneller Projektstart, der beim neuen Kunden sofort Vertrauen und Vorfreude erzeugt.",
+      "trigger": "Nach Zahlungseingang (Lexoffice-Webhook → Zapier)",
+      "vorbedingungen": [
+        "Zahlungseingang in Lexoffice bestätigt",
+        "Willkommens-E-Mail-Vorlage fertig",
+        "Calendly-Link für Kick-off-Termin eingerichtet"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Zapier-Trigger: Lexoffice Zahlung eingegangen → automatisch Willkommens-E-Mail mit personalisiertem Namen und Projekttitel versenden",
+          "tool": "Zapier → Gmail",
+          "hinweis": "Verzögerung: 0 Minuten – sofort versenden"
+        },
+        {
+          "nr": 2,
+          "aktion": "E-Mail-Inhalt: Freude über die Zusammenarbeit, Calendly-Link für Workshop-Termin, kurze Vorbereitungshinweise",
+          "tool": "Gmail + Vorlage",
+          "hinweis": "Vorbereitungshinweise reduzieren Workshop-Zeit"
+        },
+        {
+          "nr": 3,
+          "aktion": "Sicherheitsnetz: Falls Zapier nicht ausgelöst hat, nach 24h manuell prüfen",
+          "tool": "Lexoffice + Gmail",
+          "hinweis": "Täglicher Check offener Zahlungen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Zahlungseingang in Lexoffice bestätigt",
+        "Willkommens-E-Mail versendet",
+        "Calendly-Link für Workshop-Termin enthalten",
+        "Vorbereitungshinweise für Kunden in E-Mail"
+      ],
+      "erwarteter_output": "Neuer Kunde erhält Willkommens-E-Mail mit allen Startinformationen",
+      "fehlerfall_eskalation": "Falls Zapier-Webhook nicht feuert: Manuell prüfen. Open-Banking-Synchronisation kann 24h verzögert sein."
+    },
+    {
+      "id": "KP2-13",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.4 Onboarding",
+      "aufgabe": "Projekt anlegen",
+      "zeitaufwand": "15 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Trello"
+      ],
+      "loesung": "Zapier-Workflow: Neuer Kunde im CRM → Trello-Board aus Template klonen → Kunden-E-Mail als Board-Mitglied hinzufügen → Meilenstein-Karten automatisch anlegen.",
+      "zweck": "Strukturierter Projektstart mit klarer Aufgabenübersicht, der Transparenz schafft.",
+      "trigger": "Nach Willkommens-E-Mail (KP2-12), direkt nach Zahlungseingang",
+      "vorbedingungen": [
+        "Trello-Board-Template \"Kundenprojekt\" vorhanden",
+        "Zapier mit Trello verbunden",
+        "Kundendaten im CRM"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Zapier-Workflow: Neuer \"Gewonnen\"-Deal in HubSpot → Trello-Template-Board klonen und umbenennen: \"Projekt [KUNDENNAME] – KI-Potenzialanalyse\"",
+          "tool": "Zapier → Trello",
+          "hinweis": "Template-Board einmalig sorgfältig aufbauen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Kunden-E-Mail-Adresse als Trello-Board-Mitglied hinzufügen (optional)",
+          "tool": "Trello",
+          "hinweis": "Kunden-Einladung ist optional"
+        },
+        {
+          "nr": 3,
+          "aktion": "Standard-Karten automatisch anlegen: \"Workshop vorbereiten\", \"Workshop durchführen\", \"Maßnahmenplan erstellen\", \"Übergabe & Abnahme\"",
+          "tool": "Trello + Template",
+          "hinweis": "Karten mit Checklisten versehen"
+        },
+        {
+          "nr": 4,
+          "aktion": "Kick-off-Termin aus Calendly in Trello-Karte als Fälligkeitsdatum eintragen",
+          "tool": "Trello",
+          "hinweis": "Kalender-Ansicht für Terminübersicht aktivieren"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Trello-Board angelegt und korrekt benannt",
+        "Alle Standard-Karten vorhanden",
+        "Fälligkeitsdaten eingetragen",
+        "Kunden-Einladung versendet (falls gewünscht)"
+      ],
+      "erwarteter_output": "Vollständiges Trello-Projektboard angelegt",
+      "fehlerfall_eskalation": "Falls Zapier-Board-Klonierung fehlschlägt: Manuell duplizieren (Trello → Board → Kopieren)."
+    },
+    {
+      "id": "KP2-14",
+      "prozess_key": "KP2",
+      "prozess": "KP2 Vertrieb",
+      "teilprozess": "2.4 Onboarding",
+      "aufgabe": "Kick-off-Termin",
+      "zeitaufwand": "45 Min",
+      "automatisierungs_potenzial": "Niedrig",
+      "empfohlene_tools": [
+        "Zoom"
+      ],
+      "loesung": "Teilautomatisierung: Agenda-Template via KI befüllen. Transkription (Otter.ai) + KI-Zusammenfassung. Kerntermin bleibt manuell.",
+      "zweck": "Offizieller gemeinsamer Projektstart, der Ziele klärt und alle Beteiligten auf den gleichen Informationsstand bringt.",
+      "trigger": "Aus Calendly gebuchter Termin, ca. 3-7 Tage nach Zahlungseingang",
+      "vorbedingungen": [
+        "Trello-Board angelegt (KP2-13)",
+        "Kick-off-Agenda vorbereitet",
+        "Zoom-Meeting-Link verschickt"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "KI-gestützte Agenda vorbereiten: ChatGPT-Prompt \"Erstelle eine 45-Min-Kick-off-Agenda für KI-Beratungsprojekt mit [FIRMA]. Projektziel: KI-Potenzialanalyse.\"",
+          "tool": "ChatGPT + Notion",
+          "hinweis": "Agenda 24h vorher per E-Mail teilen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Kick-off durchführen. Agenda: (1) Vorstellung (5 Min), (2) Projektziele bestätigen (10 Min), (3) Zeitplan bestätigen (10 Min), (4) Vorbereitungsaufgaben besprechen (10 Min), (5) Offene Fragen (10 Min)",
+          "tool": "Zoom",
+          "hinweis": "Otter.ai für automatische Transkription"
+        },
+        {
+          "nr": 3,
+          "aktion": "Kick-off-Zusammenfassung direkt nach Gespräch per E-Mail versenden",
+          "tool": "Gmail + ChatGPT",
+          "hinweis": "Zusammenfassung aus Transkript generieren"
+        },
+        {
+          "nr": 4,
+          "aktion": "Alle Kick-off-Erkenntnisse in Trello-Karte und in HubSpot als Notiz eintragen",
+          "tool": "Trello + HubSpot",
+          "hinweis": "Doppelte Dokumentation sichert nichts verloren"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Kick-off-Agenda vorab geteilt",
+        "Alle Tagesordnungspunkte besprochen",
+        "Zeitplan und nächster Termin (Workshop) bestätigt",
+        "Zusammenfassungs-E-Mail versendet",
+        "Erkenntnisse in Trello + HubSpot dokumentiert"
+      ],
+      "erwarteter_output": "Gemeinsames Projektverständnis, bestätigter Workshop-Termin",
+      "fehlerfall_eskalation": "Falls Kunde zum Kick-off nicht erscheint: Sofort per E-Mail nachfassen und neuen Termin vorschlagen."
+    },
+    {
+      "id": "KP3-01",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.1 KI-Potenzialanalyse",
+      "aufgabe": "Workshop-Vorbereitung",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "PowerPoint",
+        "Miro"
+      ],
+      "loesung": "KI-Workflow: CRM-Daten → Prompt Erstelle Workshop-Agenda und befülle Miro-Template für [Firma]. Bekannte Probleme: [X]. Schlage 5 relevante KI-Use-Cases vor.",
+      "zweck": "Professionelle, personalisierte Workshop-Vorbereitung, die Effizienz im Workshop maximiert.",
+      "trigger": "Spätestens 2 Tage vor dem Workshop-Termin",
+      "vorbedingungen": [
+        "Workshop-Termin bestätigt",
+        "Kundeninformationen aus KP2-07 im CRM",
+        "Miro-Board-Template vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "CRM-Notizen und Kick-off-Zusammenfassung öffnen → Hauptprobleme und Ziele des Kunden notieren",
+          "tool": "HubSpot CRM",
+          "hinweis": "Basis für personalisierte Agenda"
+        },
+        {
+          "nr": 2,
+          "aktion": "ChatGPT-Prompt: \"Erstelle eine 4-stündige Workshop-Agenda für KI-Potenzialanalyse mit [FIRMA]. Branche: [X]. Bekannte Probleme: [Y]. Schlage 5 relevante KI-Anwendungsfälle vor.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Anwendungsfälle branchenspezifisch anpassen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Miro-Board aus Template klonen und umbenennen: Spalten anlegen: \"Aktuelle Prozesse\", \"Zeitfresser/Probleme\", \"KI-Lösungsideen\", \"Priorisierung\"",
+          "tool": "Miro",
+          "hinweis": "Board-Link in Einladung für Kunden mitschicken"
+        },
+        {
+          "nr": 4,
+          "aktion": "PowerPoint-Präsentation individualisieren: Logo des Kunden einsetzen, Agenda einfügen, 3-5 branchenspezifische KI-Beispiele aufbereiten",
+          "tool": "PowerPoint / Google Slides",
+          "hinweis": "Kundendaten direkt auf Deckblatt"
+        },
+        {
+          "nr": 5,
+          "aktion": "Test-Zoom-Call (2 Min): Screen-Sharing, Miro-Link, Kamera und Mikrofon prüfen",
+          "tool": "Zoom",
+          "hinweis": "Technische Probleme vor Workshop beheben"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Agenda erstellt und an Kunden per E-Mail verschickt",
+        "Miro-Board kloniert und vorbereitet",
+        "Präsentation mit Kundendaten individualisiert",
+        "Technischer Test durchgeführt",
+        "Vorkenntnisse und Probleme des Kunden nochmals gelesen"
+      ],
+      "erwarteter_output": "Individualisiertes Miro-Board + Präsentation, Agenda versendet",
+      "fehlerfall_eskalation": "Falls Kund:in Miro nicht öffnen kann: Alternativ Google Jamboard oder einfaches Whiteboard-Sharing in Zoom nutzen."
+    },
+    {
+      "id": "KP3-02",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.1 KI-Potenzialanalyse",
+      "aufgabe": "Workshop Teil 1 - Prozessanalyse",
+      "zeitaufwand": "120 Min",
+      "automatisierungs_potenzial": "Niedrig",
+      "empfohlene_tools": [
+        "Zoom",
+        "Miro"
+      ],
+      "loesung": "Unterstützend: Miro-AI für Cluster-Analyse. Transkription live. Vollständig manuell - aktives Zuhören und Moderation sind Kernkompetenz.",
+      "zweck": "Vollständige Erfassung und Visualisierung aller relevanten Geschäftsprozesse des Kunden als Analysebase für die KI-Lösungsfindung.",
+      "trigger": "Workshop-Termin Teil 1 (Stunden 1-2)",
+      "vorbedingungen": [
+        "Workshop-Vorbereitung (KP3-01) abgeschlossen",
+        "Miro-Board live",
+        "Zoom aktiv",
+        "Otter.ai für Transkription aktiviert"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Einführung (15 Min): Workshop-Ziel vorstellen, Miro-Board erklären, Erwartungen des Kunden abfragen",
+          "tool": "Zoom + PowerPoint",
+          "hinweis": "Ruhig und strukturiert starten"
+        },
+        {
+          "nr": 2,
+          "aktion": "Prozess-Mapping (90 Min): Kunden durch typischen Arbeitstag führen. Gemeinsam auf Miro-Board visualisieren. Für jede Phase fragen: \"Was machen Sie genau? Wie lange dauert das?\"",
+          "tool": "Zoom + Miro",
+          "hinweis": "Visualisieren während Kunde spricht"
+        },
+        {
+          "nr": 3,
+          "aktion": "Zeitfresser markieren (15 Min): Alle Prozessschritte, die am meisten Zeit kosten, auf Miro rot markieren",
+          "tool": "Miro",
+          "hinweis": "Kunde entscheidet selbst, was ihn am meisten stört"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Hauptgeschäftsprozess vollständig auf Miro-Board visualisiert",
+        "Mindestens 3 Zeitfresser/Schmerzpunkte identifiziert",
+        "Zeitangaben zu Prozessschritten notiert",
+        "Transkription läuft"
+      ],
+      "erwarteter_output": "Vollständiges Prozess-Mapping auf Miro-Board",
+      "fehlerfall_eskalation": "Falls Kund:in Schwierigkeiten hat, Prozesse zu beschreiben: Konkrete Beispiele als Trigger nutzen \"Was passiert, wenn ein neuer Auftrag eingeht?\""
+    },
+    {
+      "id": "KP3-03",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.1 KI-Potenzialanalyse",
+      "aufgabe": "Workshop Teil 2 - Lösungsfindung",
+      "zeitaufwand": "120 Min",
+      "automatisierungs_potenzial": "Niedrig",
+      "empfohlene_tools": [
+        "Zoom",
+        "Miro"
+      ],
+      "loesung": "KI-Unterstützung: Miro-Board-Daten → ChatGPT: Priorisiere diese Ideen nach Aufwand/Nutzen-Matrix. Live-Demo von KI-Tools im Workshop einbauen.",
+      "zweck": "Entwicklung konkreter, umsetzbarer KI-Lösungsideen gemeinsam mit dem Kunden, die auf den identifizierten Schmerzpunkten aufbauen.",
+      "trigger": "Workshop-Termin Teil 2 (Stunden 3-4), direkt nach KP3-02",
+      "vorbedingungen": [
+        "Prozess-Mapping aus KP3-02 abgeschlossen",
+        "Miro-Board mit markierten Schmerzpunkten",
+        "KI-Präsentation bereit"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "KI-Impuls-Präsentation (30 Min): 3-5 branchenspezifische KI-Anwendungsfälle kurz vorstellen. Live-Demo von 1 Tool.",
+          "tool": "PowerPoint + Live-Demo",
+          "hinweis": "Demos begeistern mehr als Folien"
+        },
+        {
+          "nr": 2,
+          "aktion": "Brainstorming (60 Min): Für jeden markierten Schmerzpunkt fragen welche KI-Lösung helfen könnte. Ideen auf Miro-Board sammeln.",
+          "tool": "Miro + Zoom",
+          "hinweis": "Alle Ideen erstmal aufnehmen, nicht bewerten"
+        },
+        {
+          "nr": 3,
+          "aktion": "Priorisierung (30 Min): Ideen in Aufwand-Nutzen-Matrix einordnen. ChatGPT intern: \"Ordne diese KI-Ideen in eine 2x2-Matrix.\" Top-3 Quick-Wins gemeinsam definieren.",
+          "tool": "Miro + ChatGPT intern",
+          "hinweis": "Kund:in soll selbst priorisieren"
+        },
+        {
+          "nr": 4,
+          "aktion": "Nächste Schritte definieren: Was werden die Top-1-3 Maßnahmen? Wer macht was bis wann?",
+          "tool": "Miro",
+          "hinweis": "Konkret und realistisch bleiben"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "KI-Impuls-Präsentation gezeigt und mind. 1 Live-Demo durchgeführt",
+        "Alle Ideen auf Miro-Board gesammelt",
+        "Aufwand-Nutzen-Priorisierung durchgeführt",
+        "Top-3 Quick-Wins definiert",
+        "Nächste Schritte auf Miro festgehalten"
+      ],
+      "erwarteter_output": "Priorisierte Liste von 3 KI-Maßnahmen auf Miro-Board, gemeinsam verabschiedet",
+      "fehlerfall_eskalation": "Falls Kund:in keine Ideen generiert: Mehr Beispiele aus der Branche nennen."
+    },
+    {
+      "id": "KP3-04",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.1 KI-Potenzialanalyse",
+      "aufgabe": "Maßnahmenplan erstellen",
+      "zeitaufwand": "90 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Word",
+        "PDF"
+      ],
+      "loesung": "KI-Prompt: Erstelle Maßnahmenplan aus diesem Miro-Board-Export: [Daten]. Nutze Vorlage: [Template]. Priorisiere Top-3 Quick-Wins. Schätze Aufwand in Tagen.",
+      "zweck": "Erstellung eines professionellen, schriftlichen Maßnahmenplans, der dem Kunden als konkreter Handlungsleitfaden dient.",
+      "trigger": "Innerhalb von 3 Werktagen nach Workshop-Durchführung",
+      "vorbedingungen": [
+        "Miro-Board mit Workshop-Ergebnissen ausgefüllt",
+        "Workshop-Transkription vorhanden",
+        "Maßnahmenplan-Vorlage vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Miro-Board-Export als PDF oder Screenshot erstellen und in Arbeitsordner speichern",
+          "tool": "Miro",
+          "hinweis": "Screenshot alle Boards, auch Notizen"
+        },
+        {
+          "nr": 2,
+          "aktion": "ChatGPT-Prompt: \"Erstelle einen strukturierten Maßnahmenplan auf Basis dieser Workshop-Ergebnisse: [MIRO-EXPORT]. Struktur: Zusammenfassung, Top-3 KI-Potenziale, Zeitplan, Nächste Schritte.\"",
+          "tool": "ChatGPT + Miro-Export",
+          "hinweis": "Miro-Texte vorab in Prompt-Format aufbereiten"
+        },
+        {
+          "nr": 3,
+          "aktion": "KI-generierten Maßnahmenplan in Word/Notion-Vorlage übertragen und redaktionell überarbeiten",
+          "tool": "Word / Notion",
+          "hinweis": "Min. 20% manueller Anteil für Qualität"
+        },
+        {
+          "nr": 4,
+          "aktion": "Maßnahmenplan als PDF exportieren",
+          "tool": "Word / Notion",
+          "hinweis": "Versionierung durch Datum im Dateinamen"
+        },
+        {
+          "nr": 5,
+          "aktion": "PDF per E-Mail an Kunden senden",
+          "tool": "Gmail",
+          "hinweis": "Nicht zu viel Text – Maßnahmenplan ist die Leistung"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Miro-Board exportiert",
+        "Maßnahmenplan vollständig (Zusammenfassung, Top-3, Zeitplan, nächste Schritte)",
+        "Text redaktionell überarbeitet",
+        "Als PDF exportiert",
+        "An Kunden versendet und in HubSpot geloggt"
+      ],
+      "erwarteter_output": "Professioneller Maßnahmenplan als PDF beim Kunden",
+      "fehlerfall_eskalation": "Falls Kund:in Maßnahmenplan nicht bestätigt: Nach 3 Tagen nachfragen."
+    },
+    {
+      "id": "KP3-05",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.2 Implementierung",
+      "aufgabe": "Detailplanung",
+      "zeitaufwand": "60 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Trello/Asana"
+      ],
+      "loesung": "KI-Prompt: Erstelle detaillierten Projektplan für [Implementierung X] in Trello-Format: Aufgaben, Abhängigkeiten, Zeitrahmen. Basis: Maßnahmenplan [Dokument].",
+      "zweck": "Verbindliche Projektplanung für die Implementierungsphase mit klaren Verantwortlichkeiten und realistischen Zeitrahmen.",
+      "trigger": "Nach Beauftragung eines Implementierungsprojekts",
+      "vorbedingungen": [
+        "Maßnahmenplan aus KP3-04 akzeptiert",
+        "Implementierungsauftrag erteilt",
+        "Trello/Asana-Board angelegt"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "ChatGPT-Prompt: \"Erstelle einen detaillierten Projektplan für [IMPLEMENTIERUNG] im Trello-Karten-Format. Aufgaben, Abhängigkeiten, Zeitrahmen in Tagen.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Output als Stichpunkte für Trello-Karten"
+        },
+        {
+          "nr": 2,
+          "aktion": "Projektplan in Trello anlegen: Für jede Hauptaufgabe eine Karte mit Fälligkeitsdatum, Beschreibung und Checkliste",
+          "tool": "Trello",
+          "hinweis": "Max. 7-10 Karten für Übersichtlichkeit"
+        },
+        {
+          "nr": 3,
+          "aktion": "Zeitaufwand je Aufgabe schätzen und mit Kunden im kurzen Meeting abstimmen (30 Min)",
+          "tool": "Zoom + Trello",
+          "hinweis": "Puffer: +25% auf alle Zeitschätzungen"
+        },
+        {
+          "nr": 4,
+          "aktion": "Meilensteine definieren: M1: Lösung eingerichtet, M2: Intern getestet, M3: Kunden-Übergabe",
+          "tool": "Trello",
+          "hinweis": "Meilensteine = Abrechnung"
+        },
+        {
+          "nr": 5,
+          "aktion": "Projektplan vom Kunden per E-Mail freigeben lassen",
+          "tool": "E-Mail",
+          "hinweis": "Kurze E-Mail \"Bitte kurzes OK zum Projektplan\""
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Alle Aufgaben in Trello angelegt mit Fälligkeitsdaten",
+        "Zeitaufwand je Aufgabe geschätzt",
+        "Meilensteine definiert",
+        "Projektplan vom Kunden freigegeben"
+      ],
+      "erwarteter_output": "Freigegebener Projektplan in Trello",
+      "fehlerfall_eskalation": "Falls Zeitschätzungen zu eng: Lieber 20% Puffer einplanen."
+    },
+    {
+      "id": "KP3-06",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.2 Implementierung",
+      "aufgabe": "Umsetzung (z.B. E-Mail-Automation)",
+      "zeitaufwand": "4-8 Std",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Zapier",
+        "ChatGPT"
+      ],
+      "loesung": "Tool-Funktion: Zapier/Make-Workflows + ChatGPT-Prompts für Logik. Konfiguration ist manuell, aber repetitive Sub-Schritte per KI beschleunigen.",
+      "zweck": "Technische Umsetzung der vereinbarten KI-Lösung mit hoher Qualität und vollständiger Dokumentation.",
+      "trigger": "Nach freigegebenem Projektplan (KP3-05)",
+      "vorbedingungen": [
+        "Projektplan freigegeben",
+        "Zugangsdaten vom Kunden vorhanden",
+        "Zapier/Make-Account aktiv"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Alle benötigten Zugangsdaten vom Kunden anfordern und sicher in Passwortmanager speichern",
+          "tool": "1Password / Bitwarden",
+          "hinweis": "Zugangsdaten nie per E-Mail teilen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Zapier/Make: Workflow gemäß Projektplan anlegen. Trigger definieren, Aktionen konfigurieren, Verbindungen zu Kundentools testen",
+          "tool": "Zapier / Make",
+          "hinweis": "Step-by-Step vorgehen"
+        },
+        {
+          "nr": 3,
+          "aktion": "ChatGPT-Prompts für automatisierte Texte entwickeln und in Workflow integrieren",
+          "tool": "ChatGPT",
+          "hinweis": "Prompt testen mit 10 verschiedenen Inputs"
+        },
+        {
+          "nr": 4,
+          "aktion": "Jede implementierte Funktion sofort dokumentieren: Was macht sie, wie ist sie konfiguriert",
+          "tool": "Notion",
+          "hinweis": "Dokumentation verhindert spätere Verwirrung"
+        },
+        {
+          "nr": 5,
+          "aktion": "Zeit in Toggl erfassen: Start bei Implementierungsbeginn, Ende nach Abschluss jeder Einheit",
+          "tool": "Toggl",
+          "hinweis": "Stundengenaue Erfassung für Abrechnung"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Alle benötigten Zugangsdaten vorhanden",
+        "Workflow/Automatisierung läuft technisch",
+        "Alle Funktionen dokumentiert",
+        "Stunden in Toggl erfasst"
+      ],
+      "erwarteter_output": "Funktionierende KI-Lösung im Kundensystem implementiert",
+      "fehlerfall_eskalation": "Falls API-Verbindung fehlschlägt: Zapier-Logs prüfen, Alternative über Make versuchen. Kunden sofort informieren bei unvorhergesehenen Problemen."
+    },
+    {
+      "id": "KP3-07",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.2 Implementierung",
+      "aufgabe": "Interne Tests",
+      "zeitaufwand": "120 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "—"
+      ],
+      "loesung": "KI-Testprompts: Generiere 10 Testfälle für [Automatisierung X] inkl. Randfälle. Testprotokoll-Template per KI befüllen. Technisches Testing bleibt manuell.",
+      "zweck": "Sicherstellung der Qualität und Fehlerfreiheit der implementierten Lösung durch systematisches Testen aller Funktionen und Randfälle.",
+      "trigger": "Nach Abschluss der Implementierung (KP3-06)",
+      "vorbedingungen": [
+        "Implementierung abgeschlossen",
+        "Testprotokoll-Vorlage vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "ChatGPT-Prompt: \"Generiere 10 Testfälle für folgende Automatisierung: [BESCHREIBUNG]. Inkl. Normalfall, Randfälle und Fehlerfälle.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Randfälle sind oft der Knackpunkt"
+        },
+        {
+          "nr": 2,
+          "aktion": "Alle 10 Testfälle systematisch durchführen und Ergebnis in Testprotokoll eintragen (Erwartet vs. Tatsächlich)",
+          "tool": "Testprotokoll (Notion/Excel)",
+          "hinweis": "Jeden Testfall als bestanden/offen markieren"
+        },
+        {
+          "nr": 3,
+          "aktion": "Fehler und unerwartetes Verhalten protokollieren → beheben → erneut testen",
+          "tool": "Zapier / Make / ChatGPT",
+          "hinweis": "Fehler-Zirkel: Finden → Beheben → Nachtest"
+        },
+        {
+          "nr": 4,
+          "aktion": "Edge Cases testen: Was passiert bei leerer E-Mail, Sonderzeichen, sehr langem Text?",
+          "tool": "Manual",
+          "hinweis": "Edge Cases finden echte Bugs"
+        },
+        {
+          "nr": 5,
+          "aktion": "Finales Testergebnis: Alle Testfälle bestanden → Testprotokoll abheften",
+          "tool": "Notion",
+          "hinweis": "Testprotokoll = Qualitätsdokumentation"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "10 Testfälle generiert und dokumentiert",
+        "Alle Testfälle durchgeführt",
+        "Alle Fehler behoben und nachgetestet",
+        "Edge Cases getestet",
+        "Testprotokoll vollständig ausgefüllt"
+      ],
+      "erwarteter_output": "Unterzeichnetes Testprotokoll, alle Tests bestanden",
+      "fehlerfall_eskalation": "Falls kritische Fehler nicht behebbar: Kunden umgehend informieren, Alternativen vorschlagen. Niemals fehlerhafte Lösung übergeben."
+    },
+    {
+      "id": "KP3-08",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.2 Implementierung",
+      "aufgabe": "Kunden-Übergabe & Schulung",
+      "zeitaufwand": "90 Min",
+      "automatisierungs_potenzial": "Niedrig",
+      "empfohlene_tools": [
+        "Zoom",
+        "Word"
+      ],
+      "loesung": "KI-Unterstützung: Handout-Erstellung per Prompt: Schreibe 2-seitige Bedienungsanleitung für [Tool/Workflow]. Sprache: einfach, kein Fachjargon. Übergabe bleibt manuell.",
+      "zweck": "Kompetenzübertragung an den Kunden, sodass er die implementierte Lösung selbstständig nutzen und anpassen kann.",
+      "trigger": "Nach erfolgreichem Abschluss aller Tests (KP3-07)",
+      "vorbedingungen": [
+        "Alle Tests bestanden",
+        "Schulungs-Handout erstellt",
+        "Zoom-Termin mit Kunden vereinbart"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Handout erstellen: ChatGPT-Prompt \"Schreibe eine 2-seitige Bedienungsanleitung für [LÖSUNG/TOOL]. Zielgruppe: [Handwerker/Freiberufler], kein Technikjargon. Struktur: Was macht es, wie starte ich es, wie ändere ich es, was tun bei Fehler.\"",
+          "tool": "ChatGPT + Word",
+          "hinweis": "Bilder/Screenshots ergänzen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Schulung durchführen (60 Min): (1) Lösung live demonstrieren (15 Min), (2) Kund:in selbst ausprobieren lassen (30 Min), (3) Typische Fragen beantworten (15 Min)",
+          "tool": "Zoom + Screensharing",
+          "hinweis": "Kund:in selbst ausprobieren lassen ist essenziell"
+        },
+        {
+          "nr": 3,
+          "aktion": "Handout per E-Mail nach der Schulung versenden + Link zu relevanter Dokumentation",
+          "tool": "Gmail",
+          "hinweis": "Direkt nach Schulung senden"
+        },
+        {
+          "nr": 4,
+          "aktion": "Support-Kanal für Nachfragen klären: E-Mail-Adresse, Reaktionszeit",
+          "tool": "Verbal / E-Mail",
+          "hinweis": "Klare Erwartungen setzen reduziert Unsicherheit"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Handout erstellt (max. 2 Seiten)",
+        "Schulung 60 Min durchgeführt",
+        "Kund:in hat Lösung selbst ausprobiert",
+        "Handout per E-Mail versendet",
+        "Support-Kanal kommuniziert"
+      ],
+      "erwarteter_output": "Eingewiesener Kunde mit Handout und klarem Support-Kanal",
+      "fehlerfall_eskalation": "Falls Kund:in überfordert wirkt: Schulung auf 2 Termine aufteilen."
+    },
+    {
+      "id": "KP3-09",
+      "prozess_key": "KP3",
+      "prozess": "KP3 Leistung",
+      "teilprozess": "3.2 Implementierung",
+      "aufgabe": "Abnahme",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Abnahmeprotokoll"
+      ],
+      "loesung": "Tool-Funktion: Digitales Abnahmeprotokoll (DocuSign/PandaDoc): automatisch generieren, per Link versenden, Unterschrift digital einholen. Zapier: Unterschrift → CRM-Update.",
+      "zweck": "Formell korrekte Projektabnahme, die die Zufriedenheit bestätigt und die Basis für die Schlusszahlung schafft.",
+      "trigger": "Nach der Schulung (KP3-08), nach 1-wöchiger Test-Betriebsphase",
+      "vorbedingungen": [
+        "Schulung durchgeführt",
+        "Testprotokoll fertig",
+        "Abnahmeprotokoll-Vorlage vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "PandaDoc/DocuSign: Abnahmeprotokoll-Vorlage öffnen → Projektdetails eintragen: Projektname, Lieferumfang, Testphase, Schulungsdatum",
+          "tool": "PandaDoc / DocuSign",
+          "hinweis": "Vorlage einmalig einrichten"
+        },
+        {
+          "nr": 2,
+          "aktion": "Abnahmeprotokoll per E-Mail mit digitalem Unterschriften-Link an Kunden senden",
+          "tool": "PandaDoc / DocuSign",
+          "hinweis": "1 Woche Frist für Unterschrift setzen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Nach digitaler Unterschrift: Zapier-Trigger → HubSpot-Deal auf \"Implementierung abgeschlossen\" setzen → Aufgabe \"Feedback einholen\" anlegen",
+          "tool": "Zapier → HubSpot",
+          "hinweis": "Automatisch nächsten Prozessschritt starten"
+        },
+        {
+          "nr": 4,
+          "aktion": "Unterschriebenes Protokoll in Kunden-Ordner archivieren",
+          "tool": "Google Drive",
+          "hinweis": "Archivierung = Rechtssicherheit"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Abnahmeprotokoll vollständig ausgefüllt",
+        "An Kunden versendet",
+        "Digital unterzeichnet erhalten",
+        "In HubSpot-Status aktualisiert",
+        "Protokoll archiviert"
+      ],
+      "erwarteter_output": "Unterschriebenes Abnahmeprotokoll, Projekt formal abgeschlossen",
+      "fehlerfall_eskalation": "Falls Kund:in Abnahme verweigert: Sofort Gespräch suchen und Nachbesserungsbedarf klären."
+    },
+    {
+      "id": "KP4-01",
+      "prozess_key": "KP4",
+      "prozess": "KP4 Abrechnung",
+      "teilprozess": "4.1 Buchführung",
+      "aufgabe": "Stundenerfassung",
+      "zeitaufwand": "5 Min/Tag",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Toggl"
+      ],
+      "loesung": "Tool-Funktion: Toggl-Timer via Browser-Plugin oder Mobile-App. Automatische Projekt-Zuweisung per Tag/Keyword. Wochenbericht automatisch per E-Mail.",
+      "zweck": "Lückenlose, tagaktuelle Erfassung aller abrechenbaren Stunden als Grundlage für korrekte Rechnungsstellung.",
+      "trigger": "Täglich, bei Beginn und Ende jeder abrechenbaren Tätigkeit",
+      "vorbedingungen": [
+        "Toggl-Account aktiv",
+        "Browser-Plugin installiert",
+        "Alle Kundenprojekte in Toggl angelegt"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Toggl-Timer starten: Browser-Plugin klicken → Projekt auswählen → Beschreibung eingeben → Timer starten",
+          "tool": "Toggl Browser-Plugin",
+          "hinweis": "Beschreibung hilft bei Rechnungs-Erstellung"
+        },
+        {
+          "nr": 2,
+          "aktion": "Bei Unterbrechung: Timer stoppen → bei Wiederaufnahme neuen Timer starten",
+          "tool": "Toggl",
+          "hinweis": "Lieber stoppen und neu starten als schätzen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Am Tagesende: Toggl-Tagesbericht prüfen → Stimmt der Gesamtaufwand? Fehlende Einträge ergänzen",
+          "tool": "Toggl Webinterface",
+          "hinweis": "Rückwirkend > 1 Tag ist fehleranfällig"
+        },
+        {
+          "nr": 4,
+          "aktion": "Freitags: Wochenbericht in Toggl exportieren und auf Plausibilität prüfen",
+          "tool": "Toggl",
+          "hinweis": "Automatischer Wochenbericht per E-Mail aktivieren"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Timer für jede abrechenbare Tätigkeit gestartet",
+        "Alle Einträge mit Projekt und Beschreibung versehen",
+        "Tagesberichte plausibel",
+        "Wochenbericht exportiert und geprüft"
+      ],
+      "erwarteter_output": "Vollständige Stunden-Dokumentation aller Kundenprojekte in Toggl",
+      "fehlerfall_eskalation": "Falls Timer vergessen: Sofort nachträglich eintragen. Bei systematischem Vergessen: Kalender-Erinnerung \"Toggl-Check\" täglich 17 Uhr."
+    },
+    {
+      "id": "KP4-02",
+      "prozess_key": "KP4",
+      "prozess": "KP4 Abrechnung",
+      "teilprozess": "4.1 Buchführung",
+      "aufgabe": "Belege sammeln",
+      "zeitaufwand": "10 Min/Wo",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Lexoffice App"
+      ],
+      "loesung": "Tool-Funktion: Lexoffice-App: Foto → OCR → automatisch kategorisiert. Bank-Sync (Open Banking): Kontoauszüge automatisch importieren und matchen.",
+      "zweck": "Vollständige und sofortige Erfassung aller Geschäftsausgaben für eine fehlerfreie Buchhaltung.",
+      "trigger": "Sofort bei Erhalt jedes Belegs",
+      "vorbedingungen": [
+        "Lexoffice-App auf Smartphone",
+        "Open-Banking-Verbindung zu Geschäftskonto aktiviert"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Papierbelege: Lexoffice-App öffnen → \"Beleg hochladen\" → Foto aufnehmen → OCR erkennt Betrag, Datum, Lieferant automatisch → prüfen und bestätigen",
+          "tool": "Lexoffice App",
+          "hinweis": "Sofort fotografieren, nicht sammeln"
+        },
+        {
+          "nr": 2,
+          "aktion": "Digitale Belege (E-Mail-Rechnungen): Weiterleiten an Lexoffice-Belegs-E-Mail-Adresse oder PDF direkt hochladen",
+          "tool": "Lexoffice",
+          "hinweis": "Lexoffice-E-Mail-Adresse einrichten"
+        },
+        {
+          "nr": 3,
+          "aktion": "Wöchentlich freitags: Bank-Sync prüfen → alle Transaktionen der Woche automatisch importiert? Nicht zugeordnete Buchungen manuell verknüpfen",
+          "tool": "Lexoffice",
+          "hinweis": "Unzugeordnete Buchungen rot markiert"
+        },
+        {
+          "nr": 4,
+          "aktion": "Kategorisierung prüfen: Lexoffice ordnet automatisch zu. Korrektheit stichprobenartig prüfen.",
+          "tool": "Lexoffice",
+          "hinweis": "Falsche Kategorien können Steuern beeinflussen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Alle Papierbelege digitalisiert",
+        "Alle E-Mail-Rechnungen weitergeleitet oder hochgeladen",
+        "Bank-Sync der Woche vollständig",
+        "Alle Buchungen kategorisiert"
+      ],
+      "erwarteter_output": "Vollständige Belegerfassung in Lexoffice ohne offene Posten",
+      "fehlerfall_eskalation": "Falls OCR-Erkennung fehlerhaft: Felder manuell korrigieren."
+    },
+    {
+      "id": "KP4-03",
+      "prozess_key": "KP4",
+      "prozess": "KP4 Abrechnung",
+      "teilprozess": "4.1 Buchführung",
+      "aufgabe": "Rechnungen erstellen",
+      "zeitaufwand": "60 Min/Mo",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Toggl",
+        "Lexoffice"
+      ],
+      "loesung": "Automatisierung: Toggl → Lexoffice-Integration: Stunden-Export → Rechnungserstellung automatisch per API. Zapier: Monatsletzter → Rechnungen generieren.",
+      "zweck": "Pünktliche, korrekte Rechnungsstellung für alle erbrachten Leistungen am Monatsende.",
+      "trigger": "Letzter Arbeitstag jeden Monats, oder nach Meilenstein-Abschluss",
+      "vorbedingungen": [
+        "Toggl-Stunden für den Monat vollständig",
+        "Lexoffice-Account aktiv",
+        "Alle Kundenprojekte in Lexoffice angelegt"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Toggl: Monatsbericht exportieren → PDF + CSV → Alle abrechenbaren Stunden pro Kunde aufgelistet",
+          "tool": "Toggl",
+          "hinweis": "Detaillierter Bericht zeigt alle Einzelpositionen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Lexoffice öffnen → Rechnungen → Neue Rechnung → Kunden auswählen → Leistungspositionen anlegen: Datum, Leistungsbeschreibung, Stunden × Stundensatz 95 Euro",
+          "tool": "Lexoffice",
+          "hinweis": "Detaillierter Stundennachweis als Anhang spart Rückfragen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Toggl-Detailbericht als PDF-Anhang zur Rechnung beifügen",
+          "tool": "Lexoffice + Toggl PDF",
+          "hinweis": "Transparenz reduziert Zahlungsverzug"
+        },
+        {
+          "nr": 4,
+          "aktion": "Starter-Pakete (Festpreis 490 Euro): Vorauszahlungsrechnung am Projektstartag",
+          "tool": "Lexoffice",
+          "hinweis": "Vorkasse = kein Ausfallrisiko"
+        },
+        {
+          "nr": 5,
+          "aktion": "Alle Rechnungen per Lexoffice-E-Mail-Direktversand an Kunden senden → Zahlungsziel prüfen (14 Tage Standard)",
+          "tool": "Lexoffice",
+          "hinweis": "Zahlungsziel maximal 14 Tage setzen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Toggl-Monatsbericht exportiert",
+        "Alle Kunden-Rechnungen erstellt",
+        "Stundennachweis als Anhang beigefügt",
+        "Alle Rechnungen versendet",
+        "Zahlungsziele korrekt (14 Tage)"
+      ],
+      "erwarteter_output": "Alle Monatsrechnungen erstellt und versendet",
+      "fehlerfall_eskalation": "Falls Toggl-Stunden und CRM-Projektphasen nicht übereinstimmen: Differenz klären."
+    },
+    {
+      "id": "KP4-04",
+      "prozess_key": "KP4",
+      "prozess": "KP4 Abrechnung",
+      "teilprozess": "4.1 Buchführung",
+      "aufgabe": "Zahlungseingänge prüfen",
+      "zeitaufwand": "15 Min/Wo",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Lexoffice"
+      ],
+      "loesung": "Tool-Funktion: Lexoffice: Bank-Sync + automatischer Abgleich offener Posten. E-Mail-Alert bei Zahlungseingang. Dashboard zeigt offene Forderungen live.",
+      "zweck": "Kontinuierliche Überwachung der Zahlungseingänge zur Sicherung der Liquidität.",
+      "trigger": "Wöchentlich, jeden Freitag 15:00 Uhr",
+      "vorbedingungen": [
+        "Lexoffice mit Geschäftskonto verbunden (Open Banking)",
+        "Alle Rechnungen in Lexoffice angelegt"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Lexoffice öffnen → Dashboard → \"Offene Forderungen\" prüfen: Welche Rechnungen sind noch offen? Welche sind überfällig?",
+          "tool": "Lexoffice",
+          "hinweis": "Rot = überfällig, Orange = fällig diese Woche"
+        },
+        {
+          "nr": 2,
+          "aktion": "Online-Banking öffnen → Zahlungseingänge der Woche prüfen → mit offenen Posten in Lexoffice abgleichen",
+          "tool": "Online-Banking",
+          "hinweis": "Open-Banking-Sync meist 1 Tag verzögert"
+        },
+        {
+          "nr": 3,
+          "aktion": "Eingegangene Zahlungen in Lexoffice als \"bezahlt\" markieren",
+          "tool": "Lexoffice",
+          "hinweis": "Manuell bei fehlenden Synchronisierungen"
+        },
+        {
+          "nr": 4,
+          "aktion": "Überfällige Rechnungen notieren → Mahnprozess (KP4-05) starten falls > 7 Tage überfällig",
+          "tool": "Lexoffice",
+          "hinweis": "Sofort handeln, nicht abwarten"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Offene-Forderungen-Liste geprüft",
+        "Zahlungseingänge der Woche erfasst",
+        "Bezahlte Rechnungen als \"bezahlt\" markiert",
+        "Überfällige Rechnungen für Mahnprozess vorgemerkt"
+      ],
+      "erwarteter_output": "Aktuelle Übersicht aller offenen Forderungen",
+      "fehlerfall_eskalation": "Falls Bank-Sync fehlschlägt: Manuellen Kontoauszug in Lexoffice hochladen."
+    },
+    {
+      "id": "KP4-05",
+      "prozess_key": "KP4",
+      "prozess": "KP4 Abrechnung",
+      "teilprozess": "4.2 Mahnwesen",
+      "aufgabe": "Zahlungserinnerung (7 Tage)",
+      "zeitaufwand": "10 Min/Wo",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Lexoffice"
+      ],
+      "loesung": "Tool-Funktion: Lexoffice: automatisierte Zahlungserinnerung nach X Tagen Fälligkeit. Vorlage einmalig einrichten → läuft vollautomatisch.",
+      "zweck": "Freundliche, automatisierte Erinnerung an überfällige Rechnungen.",
+      "trigger": "Automatisch 7 Tage nach Rechnungs-Fälligkeitsdatum",
+      "vorbedingungen": [
+        "Lexoffice Mahnwesen konfiguriert",
+        "Zahlungserinnerungs-Vorlage eingerichtet"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Lexoffice: Mahnwesen → Überfällige Rechnungen → Zahlungserinnerung auswählen. Automatisiert Zahlungserinnerung nach X Tagen versenden (einmalig konfigurieren)",
+          "tool": "Lexoffice Mahnwesen",
+          "hinweis": "Einmalige Einrichtung: 7 Tage Verzug = Auto-Erinnerung"
+        },
+        {
+          "nr": 2,
+          "aktion": "Manuelle Variante: E-Mail-Vorlage \"Hallo [Name], vielleicht ist es untergegangen – Rechnung [Nr.] ist seit [X] Tagen fällig.\"",
+          "tool": "Gmail + Vorlage",
+          "hinweis": "Ton: freundlich, nicht vorwurfsvoll"
+        },
+        {
+          "nr": 3,
+          "aktion": "In Lexoffice Mahnstatus setzen: \"Zahlungserinnerung versendet\" + Datum",
+          "tool": "Lexoffice",
+          "hinweis": "Dokumentation für Mahnverlauf wichtig"
+        },
+        {
+          "nr": 4,
+          "aktion": "In HubSpot Notiz anlegen: \"Zahlungserinnerung an [Kunde] für Rechnung [Nr.] versendet am [Datum]\"",
+          "tool": "HubSpot CRM",
+          "hinweis": "CRM-Dokumentation sichert Übersicht"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Überfällige Rechnung(en) identifiziert",
+        "Zahlungserinnerung versendet",
+        "Mahnstatus in Lexoffice gesetzt",
+        "Notiz in HubSpot angelegt"
+      ],
+      "erwarteter_output": "Zahlungserinnerung versendet, Mahnverlauf dokumentiert",
+      "fehlerfall_eskalation": "Falls E-Mail gebounced: Anderen Kanal nutzen (Telefon, LinkedIn)."
+    },
+    {
+      "id": "KP4-06",
+      "prozess_key": "KP4",
+      "prozess": "KP4 Abrechnung",
+      "teilprozess": "4.2 Mahnwesen",
+      "aufgabe": "Erste Mahnung (14 Tage)",
+      "zeitaufwand": "5 Min/Fall",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Lexoffice"
+      ],
+      "loesung": "Tool-Funktion: Lexoffice: Mahnlauf automatisch. Mahngebühren-Berechnung automatisch. KI-Prompt für individuelle Formulierung bei Sonderfällen.",
+      "zweck": "Formelle erste Mahnung bei ausbleibender Reaktion auf Zahlungserinnerung.",
+      "trigger": "14 Tage nach Fälligkeitsdatum (7 Tage nach Zahlungserinnerung ohne Reaktion)",
+      "vorbedingungen": [
+        "Zahlungserinnerung aus KP4-05 versendet, keine Reaktion",
+        "Lexoffice Mahnvorlage \"1. Mahnung\" eingerichtet"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Lexoffice: Mahnwesen → 1. Mahnung erstellen → Mahngebühren optional (gesetzlich: pauschale 40 Euro Mahnkosten)",
+          "tool": "Lexoffice",
+          "hinweis": "Mahngebühr: 40 Euro Pauschale oder 5% p.a. Verzugszinsen"
+        },
+        {
+          "nr": 2,
+          "aktion": "1. Mahnung per E-Mail versenden + optional per Briefpost",
+          "tool": "Lexoffice + Briefpost optional",
+          "hinweis": "Briefpost bei Beträgen > 500 Euro"
+        },
+        {
+          "nr": 3,
+          "aktion": "Wenn Sonderfall vermutbar: Zahlungsplan anbieten",
+          "tool": "Telefon / E-Mail",
+          "hinweis": "Manchmal gibt es einfache Erklärungen"
+        },
+        {
+          "nr": 4,
+          "aktion": "In CRM dokumentieren: 1. Mahnung versendet, Frist bis [DATUM+14 Tage]",
+          "tool": "HubSpot CRM",
+          "hinweis": "Lückenlose Dokumentation für ggf. rechtliche Schritte"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "1. Mahnung erstellt und versendet",
+        "Mahngebühren korrekt berechnet",
+        "Zahlungsfrist klar kommuniziert (14 Tage)",
+        "In CRM dokumentiert"
+      ],
+      "erwarteter_output": "1. Mahnung versendet mit neuer Zahlungsfrist",
+      "fehlerfall_eskalation": "Falls Kund:in auf Mahnung reagiert mit Zahlungsplan-Wunsch: Zahlungsplan schriftlich bestätigen."
+    },
+    {
+      "id": "KP4-07",
+      "prozess_key": "KP4",
+      "prozess": "KP4 Abrechnung",
+      "teilprozess": "4.2 Mahnwesen",
+      "aufgabe": "Zweite Mahnung & Anruf (21 Tage)",
+      "zeitaufwand": "15 Min/Fall",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Lexoffice",
+        "Telefon"
+      ],
+      "loesung": "Teilautomatisierung: Mahnung automatisch. Anruf bleibt manuell. CRM-Aufgabe automatisch anlegen: Anrufen [Kundenname] wegen Rechnung [Nr.] mit Telefonnummer.",
+      "zweck": "Letzte außergerichtliche Eskalationsstufe vor rechtlichen Schritten.",
+      "trigger": "21 Tage nach Fälligkeitsdatum",
+      "vorbedingungen": [
+        "1. Mahnung aus KP4-06 versendet, keine Reaktion",
+        "Lexoffice-Mahnvorlage \"2. Mahnung\" vorhanden",
+        "Telefonnummer des Kunden im CRM"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Lexoffice: 2. Mahnung mit konkreter Frist erstellen: \"Bitte überweisen Sie den Betrag bis spätestens [DATUM, 10 Tage]. Andernfalls müssen wir rechtliche Schritte einleiten.\"",
+          "tool": "Lexoffice",
+          "hinweis": "Frist exakt und kurz setzen: 10 Tage"
+        },
+        {
+          "nr": 2,
+          "aktion": "2. Mahnung per E-Mail + Briefpost versenden",
+          "tool": "Lexoffice + Post",
+          "hinweis": "Einschreiben-Brief belegt Empfang"
+        },
+        {
+          "nr": 3,
+          "aktion": "Telefonanruf beim Kunden: freundlich und sachlich nach dem Grund fragen",
+          "tool": "Telefon",
+          "hinweis": "Ton immer professionell und lösungsorientiert"
+        },
+        {
+          "nr": 4,
+          "aktion": "Ergebnis des Anrufs in CRM dokumentieren",
+          "tool": "HubSpot CRM",
+          "hinweis": "Alles schriftlich dokumentieren"
+        },
+        {
+          "nr": 5,
+          "aktion": "Falls keine Einigung: Inkassounternehmen oder Anwalt einschalten",
+          "tool": "Rechtsanwalt / Inkasso",
+          "hinweis": "Ab hier: Spezialisten einschalten"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "2. Mahnung erstellt und per E-Mail + Post versendet",
+        "Telefonanruf getätigt",
+        "Gesprächsergebnis in CRM dokumentiert",
+        "Nächsten Schritt definiert"
+      ],
+      "erwarteter_output": "2. Mahnung versendet, Klärungsgespräch geführt",
+      "fehlerfall_eskalation": "Falls Kund:in nicht erreichbar: Einschreiben-Rückschein als Nachweis sichern."
+    },
+    {
+      "id": "KP5-01",
+      "prozess_key": "KP5",
+      "prozess": "KP5 CRM/After-Sales",
+      "teilprozess": "5.1 Projektabschluss",
+      "aufgabe": "Abschlussgespräch",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Niedrig",
+      "empfohlene_tools": [
+        "Zoom"
+      ],
+      "loesung": "KI-Unterstützung: Gesprächsleitfaden per Prompt generieren. Transkription (Otter.ai). Manuell unersetzlich - persönliche Beziehungspflege.",
+      "zweck": "Professioneller Projektabschluss, der die Zusammenarbeit würdigt und die Basis für Folgeaufträge legt.",
+      "trigger": "Nach Abnahme des Projekts (KP3-09)",
+      "vorbedingungen": [
+        "Abnahmeprotokoll unterzeichnet",
+        "Calendly-Link für Abschlussgespräch eingerichtet"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "E-Mail an Kunden: \"Herzlichen Glückwunsch zum Abschluss! Ich möchte gerne in einem 30-minütigen Gespräch die Ergebnisse reflektieren.\"",
+          "tool": "Gmail + Calendly",
+          "hinweis": "Abschluss als Erfolgs-Moment gestalten"
+        },
+        {
+          "nr": 2,
+          "aktion": "Abschlussgespräch führen: (1) Projekterfolge zusammenfassen (5 Min), (2) Kundenfeedback einholen (10 Min), (3) Ausblick auf weitere Möglichkeiten (10 Min), (4) Nächste Schritte (5 Min)",
+          "tool": "Zoom",
+          "hinweis": "Immer mit Erfolgen beginnen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Falls Kund:in sehr zufrieden: Direkt nach Testimonial fragen und Entwurf anbieten",
+          "tool": "Verbal + E-Mail nachher",
+          "hinweis": "Im Gespräch fragen, nicht per E-Mail – höhere Erfolgsquote"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Abschlussgespräch durchgeführt",
+        "Projektergebnisse gemeinsam reflektiert",
+        "Kundenfeedback erhalten",
+        "Testimonial-Anfrage gestellt (falls Stimmung gut)"
+      ],
+      "erwarteter_output": "Abschlussgespräch geführt, Feedback erhalten, Testimonial-Anfrage gestellt",
+      "fehlerfall_eskalation": "Falls Kund:in kein Abschlussgespräch möchte: Kurze schriftliche Zusammenfassung per E-Mail und Feedback-Bogen trotzdem senden."
+    },
+    {
+      "id": "KP5-02",
+      "prozess_key": "KP5",
+      "prozess": "KP5 CRM/After-Sales",
+      "teilprozess": "5.1 Projektabschluss",
+      "aufgabe": "Feedback einholen",
+      "zeitaufwand": "15 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Google Forms"
+      ],
+      "loesung": "Automatisierung: Zapier: Abnahme unterzeichnet → Google Forms-Link automatisch per E-Mail senden. Antworten in CRM/Google Sheet speichern. KI-Auswertung monatlich.",
+      "zweck": "Systematisches Einholen von Kundenfeedback zur Qualitätssicherung und als Grundlage für Testimonials.",
+      "trigger": "Unmittelbar nach Abnahme (KP3-09), automatisch via Zapier",
+      "vorbedingungen": [
+        "Google Forms Feedback-Fragebogen eingerichtet (3-5 Fragen)",
+        "Zapier-Verbindung von Abnahme zu E-Mail aktiv"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Zapier-Trigger: Abnahmeprotokoll unterzeichnet → automatisch Feedback-E-Mail mit Google-Forms-Link versenden",
+          "tool": "Zapier → Gmail + Google Forms",
+          "hinweis": "Link prominent in E-Mail"
+        },
+        {
+          "nr": 2,
+          "aktion": "Google Forms enthält: (1) Zufriedenheit 1-5, (2) Was gefiel besonders, (3) Was könnte verbessert werden, (4) Weiterempfehlung, (5) Darf Feedback zitiert werden",
+          "tool": "Google Forms",
+          "hinweis": "Max. 5 Fragen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Monatlich: Alle Feedback-Antworten in Google Sheets auswerten → Durchschnittsnote berechnen → Insights dokumentieren",
+          "tool": "Google Sheets + Notion",
+          "hinweis": "Muster erkennen: Was wird oft kritisiert?"
+        },
+        {
+          "nr": 4,
+          "aktion": "ChatGPT-Prompt (monatlich): \"Analysiere diese Kundenfeedbacks und identifiziere 3 Stärken und 2 Verbesserungsmöglichkeiten: [FEEDBACKS]\"",
+          "tool": "ChatGPT",
+          "hinweis": "KI-Analyse zeigt Muster die man selbst übersieht"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Feedback-E-Mail automatisch versendet",
+        "Feedback-Antwort erhalten",
+        "Antworten in Google Sheets gespeichert",
+        "Monatliche Auswertung durchgeführt"
+      ],
+      "erwarteter_output": "Kundenfeedback dokumentiert, monatliche Insights generiert",
+      "fehlerfall_eskalation": "Falls keine Rückmeldung auf Feedback-Bogen: Nach 7 Tagen freundliche Erinnerung senden."
+    },
+    {
+      "id": "KP5-03",
+      "prozess_key": "KP5",
+      "prozess": "KP5 CRM/After-Sales",
+      "teilprozess": "5.1 Projektabschluss",
+      "aufgabe": "Testimonial anfragen",
+      "zeitaufwand": "10 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "E-Mail"
+      ],
+      "loesung": "KI-Prompt + Automation: Feedback-Score > 4 → automatische Testimonial-Anfrage. Prompt: Schreibe Entwurf für Testimonial basierend auf Feedback: [Text]. 2-3 Sätze.",
+      "zweck": "Aufbau von Social Proof durch authentische Kundentestimonials, die Vertrauen bei neuen Interessenten schaffen.",
+      "trigger": "Nach positivem Feedback (Score 4-5) aus KP5-02",
+      "vorbedingungen": [
+        "Kundenfeedback vorhanden (Score >= 4)",
+        "Testimonial-E-Mail-Vorlage fertig"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Zapier-Trigger (optional): Feedback-Score >= 4 in Google Forms → automatisch Testimonial-Anfrage-E-Mail versenden",
+          "tool": "Zapier → Gmail",
+          "hinweis": "Automatisierung macht Anfrage vergessen unmöglich"
+        },
+        {
+          "nr": 2,
+          "aktion": "Testimonial-E-Mail personalisieren: konkreten Projekterfolg nennen, Entwurf anbieten",
+          "tool": "Gmail + Vorlage",
+          "hinweis": "Entwurf anbieten verdoppelt Annahmequote"
+        },
+        {
+          "nr": 3,
+          "aktion": "Falls Entwurf gewünscht: ChatGPT-Prompt \"Schreibe 2-3-Satz-Testimonial auf Basis dieses Kundenfeedbacks: [FEEDBACK]. Konkrete Ergebnisse hervorheben.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Konkrete Zahlen im Testimonial sind überzeugend"
+        },
+        {
+          "nr": 4,
+          "aktion": "Erhaltenes Testimonial auf Website einpflegen und in HubSpot dokumentieren",
+          "tool": "WordPress + HubSpot",
+          "hinweis": "Mit Foto und Firmenname ist Testimonial glaubwürdiger"
+        },
+        {
+          "nr": 5,
+          "aktion": "Um Google-Bewertung bitten: Link direkt in E-Mail.",
+          "tool": "Gmail",
+          "hinweis": "Google-Bewertungen helfen bei lokaler Sichtbarkeit"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Testimonial-Anfrage gesendet",
+        "Entwurf angeboten und ggf. erstellt",
+        "Testimonial erhalten",
+        "Auf Website und in HubSpot dokumentiert",
+        "Google-Bewertungs-Link gesendet"
+      ],
+      "erwarteter_output": "Testimonial auf Website, Google-Bewertung erhalten",
+      "fehlerfall_eskalation": "Falls Kund:in Testimonial ablehnt: Vollständig akzeptieren. Stattdessen fragen: Darf die Zusammenarbeit als Referenz genannt werden?"
+    },
+    {
+      "id": "KP5-04",
+      "prozess_key": "KP5",
+      "prozess": "KP5 CRM/After-Sales",
+      "teilprozess": "5.2 Kundenbindung",
+      "aufgabe": "After-Sales Follow-up (6 Wo.)",
+      "zeitaufwand": "10 Min/Kunde",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "CRM",
+        "E-Mail"
+      ],
+      "loesung": "CRM-Sequenz: Projektabschluss → CRM-Aufgabe in 42 Tagen automatisch + personalisierte E-Mail-Vorlage vorausfüllen. KI: Verfasse Follow-up basierend auf [Projekt].",
+      "zweck": "Proaktiver After-Sales-Kontakt, der Kundenbindung stärkt und Folgeaufträge wahrscheinlicher macht.",
+      "trigger": "Automatisch 42 Tage (6 Wochen) nach Projektabschluss",
+      "vorbedingungen": [
+        "CRM-Aufgabe aus Projektabschluss angelegt",
+        "Follow-up-E-Mail-Vorlage vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Zapier/HubSpot: Projektabschluss → Aufgabe \"Follow-up\" in 42 Tagen automatisch anlegen",
+          "tool": "HubSpot / Zapier",
+          "hinweis": "Automatisch planen, damit es nicht vergessen wird"
+        },
+        {
+          "nr": 2,
+          "aktion": "E-Mail-Vorlage personalisieren: konkreten Projektnamen und implementierte Lösung nennen. ChatGPT: \"Schreibe kurze Follow-up-E-Mail (3 Sätze) für [Kunden] nach unserem [Projekt].\"",
+          "tool": "ChatGPT + Gmail",
+          "hinweis": "3 Sätze maximal – kurz und persönlich"
+        },
+        {
+          "nr": 3,
+          "aktion": "Aktuellen, relevanten Blogartikel oder Tool-Tipp anhängen",
+          "tool": "Blog / Notion Wissensbasis",
+          "hinweis": "Mehrwert > Verkaufsabsicht"
+        },
+        {
+          "nr": 4,
+          "aktion": "E-Mail senden → Antwort abwarten → falls positive Reaktion: weiteres Gespräch anbieten",
+          "tool": "Gmail",
+          "hinweis": "Nicht bei jeder Antwort sofort etwas verkaufen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Follow-up-E-Mail personalisiert (Projektbezug)",
+        "Relevanter Mehrwert-Content beigefügt",
+        "E-Mail versendet",
+        "Antwort abgewartet und ggf. reagiert"
+      ],
+      "erwarteter_output": "Kontakt zu Bestandskunden aufgefrischt",
+      "fehlerfall_eskalation": "Falls Kund:in nicht antwortet: Kein zweites Follow-up. In 3 Monaten erneut versuchen oder über Newsletter kontakt halten."
+    },
+    {
+      "id": "KP5-05",
+      "prozess_key": "KP5",
+      "prozess": "KP5 CRM/After-Sales",
+      "teilprozess": "5.2 Kundenbindung",
+      "aufgabe": "Relevante Infos teilen",
+      "zeitaufwand": "5 Min/Fall",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "E-Mail"
+      ],
+      "loesung": "KI-Workflow: RSS-Feed/Google Alerts für Kundenbranchen → KI filtert Relevanz → monatlicher Digest mit passenden Links pro Kunde. Versand manuell oder via CRM.",
+      "zweck": "Stärkung der Kundenbeziehung durch echten Mehrwert zwischen den Projekten.",
+      "trigger": "Bei Entdeckung eines für einen spezifischen Kunden relevanten Artikels/Tools – max. 1x pro Monat pro Kunden",
+      "vorbedingungen": [
+        "Kundenprofil mit Branche und Themen im CRM",
+        "Google Alerts für Kundenbranchen aktiviert"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Google Alerts / RSS-Feeds: Neue Ergebnisse täglich prüfen – gibt es etwas direkt Relevantes für Bestandskunden?",
+          "tool": "Google Alerts / Feedly",
+          "hinweis": "Alert pro Branche: \"KI Handwerk\", \"Automatisierung Freiberufler\""
+        },
+        {
+          "nr": 2,
+          "aktion": "Bei relevantem Fund: ChatGPT-Prompt \"Ist dieser Artikel für einen KI-Berater relevant, der Kunden in der Branche [BRANCHE] betreut?\"",
+          "tool": "ChatGPT",
+          "hinweis": "Nur wirklich relevante Informationen teilen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Kurze persönliche E-Mail schreiben (max. 3 Sätze): \"Ich bin gerade über [ARTIKEL] gestolpert und musste an Ihr Thema [X] denken.\"",
+          "tool": "Gmail",
+          "hinweis": "Persönlicher Bezug ist das Entscheidende"
+        },
+        {
+          "nr": 4,
+          "aktion": "In HubSpot als Aktivität \"Relevanter Content geteilt\" dokumentieren",
+          "tool": "HubSpot CRM",
+          "hinweis": "Für Jahresauswertung der Kundenbeziehungspflege"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Relevanter Content gefunden und Relevanz geprüft",
+        "Persönliche E-Mail (max. 3 Sätze) verfasst",
+        "Konkreter Bezug zum Kundenprojekt hergestellt",
+        "In HubSpot dokumentiert"
+      ],
+      "erwarteter_output": "Bestandskunde erhält relevante Information, Beziehung gestärkt",
+      "fehlerfall_eskalation": "Falls keine wirklich relevanten Infos gefunden: Nicht erzwingen – lieber nichts senden als irrelevanten Inhalt."
+    },
+    {
+      "id": "KP5-06",
+      "prozess_key": "KP5",
+      "prozess": "KP5 CRM/After-Sales",
+      "teilprozess": "5.2 Kundenbindung",
+      "aufgabe": "Geburtstags- & Weihnachtsgruß",
+      "zeitaufwand": "10 Min/Fall",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "CRM",
+        "E-Mail"
+      ],
+      "loesung": "CRM-Automatisierung: Geburtstag im CRM → automatische E-Mail am Tag. Weihnachten: Massen-E-Mail mit KI-personalisiertem Baustein je Branche.",
+      "zweck": "Persönliche Wertschätzung zu besonderen Anlässen, die die menschliche Seite der Geschäftsbeziehung stärkt.",
+      "trigger": "Automatisch an Geburtstag (CRM-Reminder) oder jährlich Anfang Dezember",
+      "vorbedingungen": [
+        "Geburtstage im HubSpot CRM eingetragen",
+        "Weihnachtsgruß-E-Mail-Vorlage vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "HubSpot-Erinnerung konfigurieren: Bei Kontakt-Geburtstag → automatische Aufgabe \"Geburtstagsgruß senden\" am Tag selbst",
+          "tool": "HubSpot CRM",
+          "hinweis": "Geburtstage beim Onboarding eintragen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Geburtstags-E-Mail: persönlich und kurz. Keine Verkaufsabsicht.",
+          "tool": "Gmail",
+          "hinweis": "Handgeschriebene Karte > E-Mail bei VIP-Kunden"
+        },
+        {
+          "nr": 3,
+          "aktion": "Anfang Dezember: Weihnachtsgrüße an alle Bestandskunden. ChatGPT: \"Erstelle eine persönliche Weihnachtsmail für Kunden in Branchen [X, Y, Z]. Kein Werbeinhalt.\"",
+          "tool": "ChatGPT + Mailchimp/Brevo",
+          "hinweis": "Segmentierung nach Branche für Personalisierung"
+        },
+        {
+          "nr": 4,
+          "aktion": "Weihnachtsmail über Mailchimp/Brevo als Batch senden",
+          "tool": "Mailchimp / Brevo",
+          "hinweis": "DSGVO: Bestandskunden = Berechtigtes Interesse"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Geburtstags-Erinnerungen in HubSpot konfiguriert",
+        "Geburtstags-E-Mail gesendet",
+        "Weihnachtsgrüße Anfang Dezember vorbereitet",
+        "Weihnachtsmails an alle Bestandskunden versendet"
+      ],
+      "erwarteter_output": "Persönlicher Gruß an Kunden gesendet, Beziehung gepflegt",
+      "fehlerfall_eskalation": "Falls Geburtstag im CRM fehlt: Beim nächsten Kontakt freundlich nachfragen oder LinkedIn-Profil prüfen."
+    },
+    {
+      "id": "MP-01",
+      "prozess_key": "MP",
+      "prozess": "MP Strategie",
+      "teilprozess": "1.1 Quartalscheck",
+      "aufgabe": "KPI-Analyse",
+      "zeitaufwand": "60 Min",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Excel",
+        "CRM"
+      ],
+      "loesung": "Tool-Funktion: Google Looker Studio: automatisches KPI-Dashboard aus CRM + Lexoffice + Google Analytics. Wöchentlicher Report per E-Mail.",
+      "zweck": "Faktenbasierte Überprüfung der Geschäftsentwicklung anhand messbarer Kennzahlen, um Kurs zu halten und Frühwarnsignale zu erkennen.",
+      "trigger": "Quartalsbeginn (Anfang Januar, April, Juli, Oktober)",
+      "vorbedingungen": [
+        "Google Looker Studio KPI-Dashboard eingerichtet",
+        "HubSpot-Daten aktuell",
+        "Lexoffice Quartalsumsatz abrufbar"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Google Looker Studio öffnen → KPI-Dashboard für das abgelaufene Quartal abrufen: Umsatz, Neukunden, Website-Besucher, Conversion-Rate, Social Media Follower",
+          "tool": "Google Looker Studio",
+          "hinweis": "Dashboard einmalig mit CRM + Lexoffice + Analytics verbinden"
+        },
+        {
+          "nr": 2,
+          "aktion": "Soll-Ist-Vergleich für alle KPIs: Tatsächliche Werte vs. Jahresziele. Abweichungen > 20% als kritisch markieren.",
+          "tool": "Google Sheets / Looker Studio",
+          "hinweis": "Tabelle mit Soll/Ist/Abweichung pflegen"
+        },
+        {
+          "nr": 3,
+          "aktion": "ChatGPT-Prompt: \"Analysiere diese Quartals-KPIs: [DATEN]. Was läuft gut, was schlecht? Was sind die 3 wichtigsten Erkenntnisse?\"",
+          "tool": "ChatGPT",
+          "hinweis": "KI-Analyse zeigt unbewusste Muster"
+        },
+        {
+          "nr": 4,
+          "aktion": "Umsatzentwicklung visualisieren: Lexoffice-Umsatzbericht (Quartale vergleichen)",
+          "tool": "Lexoffice",
+          "hinweis": "Saisonalitäten im zweiten Jahr erkennbar"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Alle KPIs für das Quartal erfasst",
+        "Soll-Ist-Vergleich durchgeführt",
+        "Abweichungen > 20% identifiziert",
+        "Erkenntnisse in Notion dokumentiert"
+      ],
+      "erwarteter_output": "Vollständiger KPI-Bericht für das Quartal",
+      "fehlerfall_eskalation": "Falls Daten nicht vollständig: Fehlende Datenpunkte schätzen und als \"Schätzung\" markieren."
+    },
+    {
+      "id": "MP-02",
+      "prozess_key": "MP",
+      "prozess": "MP Strategie",
+      "teilprozess": "1.1 Quartalscheck",
+      "aufgabe": "SWOT-Analyse",
+      "zeitaufwand": "45 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Word"
+      ],
+      "loesung": "KI-Prompt: Erstelle SWOT-Analyse für Q[X]. Basis: KPIs [Daten], abgeschlossene Projekte, Kundenfeedback. Was sind 3 Prioritäten für Q[X+1]? Manuelle Reflexion nötig.",
+      "zweck": "Ehrliche Selbstreflexion über Stärken, Schwächen, Chancen und Risiken, um strategische Prioritäten fundiert festzulegen.",
+      "trigger": "Direkt nach KPI-Analyse (MP-01)",
+      "vorbedingungen": [
+        "KPI-Auswertung aus MP-01 vorliegt",
+        "Kundenfeedbacks des Quartals vorliegen",
+        "1-2 Stunden ungestörte Zeit"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Strengths erfassen: Welche Kunden waren besonders zufrieden? Welche Projekte liefen reibungslos? Welche KPIs über Soll?",
+          "tool": "Notion / Word",
+          "hinweis": "Ehrlich – nicht zu selbstkritisch, nicht zu positiv"
+        },
+        {
+          "nr": 2,
+          "aktion": "Weaknesses erfassen: Wo gab es Reibung? Welche Aufgaben kosteten zu viel Zeit? Wo fehlte Kompetenz?",
+          "tool": "Notion / Word",
+          "hinweis": "Unangenehme Wahrheiten helfen am meisten"
+        },
+        {
+          "nr": 3,
+          "aktion": "Opportunities erfassen: Neue KI-Tools? Neue Zielgruppen? Partnerschaften?",
+          "tool": "Notion / Word + Google Alerts",
+          "hinweis": "Aktuelle KI-News einbeziehen"
+        },
+        {
+          "nr": 4,
+          "aktion": "Threats erfassen: Neue Wettbewerber? Technologie-Veralterung? Wirtschaftliche Veränderungen?",
+          "tool": "Notion / Word",
+          "hinweis": "Bedrohungen früh erkennen, nicht ignorieren"
+        },
+        {
+          "nr": 5,
+          "aktion": "ChatGPT-Prompt: \"Erstelle SWOT-Analyse für Q[X]. Stärken: [S], Schwächen: [W], Chancen: [O], Risiken: [T]. Was sind 3 strategische Prioritäten für Q[X+1]?\"",
+          "tool": "ChatGPT",
+          "hinweis": "KI-Analyse als Impulsgeber, Entscheidung manuell"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Alle 4 SWOT-Felder ausgefüllt",
+        "Mindestens 3 Punkte pro Feld",
+        "ChatGPT-Analyse durchgeführt",
+        "SWOT in Notion archiviert"
+      ],
+      "erwarteter_output": "Vollständige SWOT-Analyse für das Quartal in Notion",
+      "fehlerfall_eskalation": "Falls SWOT zu abstrakt bleibt: Konkrete Beispiele und Zahlen für jeden Punkt einfordern."
+    },
+    {
+      "id": "MP-03",
+      "prozess_key": "MP",
+      "prozess": "MP Strategie",
+      "teilprozess": "1.1 Quartalscheck",
+      "aufgabe": "Maßnahmen nächstes Quartal",
+      "zeitaufwand": "30 Min",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Trello"
+      ],
+      "loesung": "KI-Unterstützung: Prompt: Leite aus dieser SWOT-Analyse 3 SMART-Ziele für Q[X+1] ab. → Trello-Karten automatisch anlegen via API. Entscheidung bleibt manuell.",
+      "zweck": "Ableitung konkreter, messbarer Quartalsziele aus der SWOT-Analyse als Kompass für die nächsten 3 Monate.",
+      "trigger": "Direkt nach SWOT-Analyse (MP-02)",
+      "vorbedingungen": [
+        "SWOT-Analyse aus MP-02 vorhanden",
+        "Trello-Board für Quartalsziele vorhanden"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "ChatGPT-Prompt: \"Leite aus dieser SWOT-Analyse 3 SMART-Ziele für Q[X+1] ab. SMART = Spezifisch, Messbar, Attraktiv, Realistisch, Terminiert.\"",
+          "tool": "ChatGPT",
+          "hinweis": "SMART-Ziele müssen wirklich messbar sein"
+        },
+        {
+          "nr": 2,
+          "aktion": "3 SMART-Ziele kritisch prüfen: Realistisch? Klarer Messwert? Konkretes Datum?",
+          "tool": "Manual",
+          "hinweis": "Weniger ist mehr – 3 Ziele maximal"
+        },
+        {
+          "nr": 3,
+          "aktion": "Für jedes Ziel: Hauptmaßnahmen definieren (max. 3 pro Ziel) und als Trello-Karten anlegen. Fälligkeitsdaten setzen.",
+          "tool": "Trello / Zapier",
+          "hinweis": "Trello-API: Karten automatisch anlegen (optional)"
+        },
+        {
+          "nr": 4,
+          "aktion": "Quartalsziele prominent in Notion-Dashboard platzieren – täglich sichtbar",
+          "tool": "Notion / Trello",
+          "hinweis": "Sichtbarkeit erhöht Zielbindung erheblich"
+        },
+        {
+          "nr": 5,
+          "aktion": "Kalender-Eintrag für nächsten Quartals-Review in 3 Monaten anlegen",
+          "tool": "Google Calendar",
+          "hinweis": "Termin sofort legen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "3 SMART-Ziele formuliert und auf Messbarkeit geprüft",
+        "Maßnahmen für jedes Ziel definiert",
+        "Trello-Karten angelegt mit Fälligkeitsdaten",
+        "Ziele in Notion sichtbar platziert",
+        "Nächster Quartals-Review-Termin gebucht"
+      ],
+      "erwarteter_output": "3 SMART-Quartalsziele mit Maßnahmenplan in Trello",
+      "fehlerfall_eskalation": "Falls Ziele nach einem Monat unrealistisch erscheinen: Midquartal-Check einbauen und Ziele anpassen."
+    },
+    {
+      "id": "UP-01",
+      "prozess_key": "UP",
+      "prozess": "UP IT & Weiterbildung",
+      "teilprozess": "UP1 Tool-Management",
+      "aufgabe": "Software-Updates",
+      "zeitaufwand": "30 Min/Mo",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "—"
+      ],
+      "loesung": "Tool-Funktion: Automatische Updates für OS + Browser aktivieren. WordPress: Auto-Update für Plugins. Monitoring via WP-Manager oder Uptime-Tool.",
+      "zweck": "Sicherstellung einer aktuellen, sicheren Software-Infrastruktur, die Sicherheitslücken schließt.",
+      "trigger": "Monatlich, erster Montag des Monats",
+      "vorbedingungen": [
+        "Admin-Zugang zu allen relevanten Systemen",
+        "30 Minuten ungestörte Zeit"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Betriebssystem: macOS/Windows → System-Update-Prüfung → Alle verfügbaren Updates installieren",
+          "tool": "macOS Systemeinstellungen / Windows Update",
+          "hinweis": "Neustart einplanen (am Abend starten)"
+        },
+        {
+          "nr": 2,
+          "aktion": "Browser (Chrome, Firefox, etc.): Manuell auf neueste Version prüfen und aktualisieren",
+          "tool": "Browser-Einstellungen",
+          "hinweis": "Erweiterungen nach Update prüfen"
+        },
+        {
+          "nr": 3,
+          "aktion": "WordPress: Backup erstellen, dann Plugins und Theme-Updates installieren",
+          "tool": "WordPress Dashboard + UpdraftPlus",
+          "hinweis": "Immer Backup vor Plugin-Updates"
+        },
+        {
+          "nr": 4,
+          "aktion": "Zoom, Slack, weitere Desktop-Apps: auf Updates prüfen und installieren",
+          "tool": "App-interne Updates",
+          "hinweis": "Zoom besonders wichtig für Kundengespräche"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "OS-Update installiert",
+        "Browser aktualisiert",
+        "WordPress-Backup erstellt",
+        "WordPress Plugins und Theme aktualisiert",
+        "Zoom und andere Apps aktualisiert"
+      ],
+      "erwarteter_output": "Alle Systeme auf aktuellem Stand",
+      "fehlerfall_eskalation": "Falls WordPress-Plugin-Update zu Fehler führt: Backup wiederherstellen. Problematisches Plugin deaktivieren und Support kontaktieren."
+    },
+    {
+      "id": "UP-02",
+      "prozess_key": "UP",
+      "prozess": "UP IT & Weiterbildung",
+      "teilprozess": "UP1 Tool-Management",
+      "aufgabe": "Passwort-Hygiene",
+      "zeitaufwand": "15 Min/Mo",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Passwort-Manager"
+      ],
+      "loesung": "Tool-Funktion: 1Password/Bitwarden: Passwörter automatisch generieren, rotieren, 2FA verwalten. Warnmeldung bei kompromittierten Passwörtern automatisch.",
+      "zweck": "Sicherstellung der IT-Sicherheit durch regelmäßige Passwort-Hygiene und konsequente Nutzung von 2-Faktor-Authentifizierung.",
+      "trigger": "Monatlich, zusammen mit UP-01",
+      "vorbedingungen": [
+        "1Password oder Bitwarden installiert und aktiv",
+        "2FA für kritische Accounts aktiviert"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "1Password öffnen → \"Watchtower\" → Sicherheits-Audit → Kompromittierte, doppelte oder schwache Passwörter anzeigen lassen",
+          "tool": "1Password / Bitwarden",
+          "hinweis": "Watchtower prüft automatisch bekannte Datenlecks"
+        },
+        {
+          "nr": 2,
+          "aktion": "Kritische Accounts prioritär erneuern: E-Mail-Hauptkonto, CRM, Buchhaltung, Website-Backend, CloudStorage",
+          "tool": "1Password",
+          "hinweis": "Passwort automatisch mit 20+ Zeichen generieren"
+        },
+        {
+          "nr": 3,
+          "aktion": "2FA prüfen: Für alle kritischen Dienste 2FA aktiviert? Falls nicht: jetzt aktivieren",
+          "tool": "Authenticator App (Google/Authy)",
+          "hinweis": "App-basiertes 2FA > SMS-basiertes 2FA"
+        },
+        {
+          "nr": 4,
+          "aktion": "Prüfen ob neue Accounts in Passwortmanager gespeichert wurden",
+          "tool": "1Password",
+          "hinweis": "Kein Passwort außerhalb des Passwortmanagers speichern"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Sicherheits-Audit im Passwortmanager durchgeführt",
+        "Mindestens 1 kritisches Passwort erneuert",
+        "2FA für alle kritischen Accounts aktiv",
+        "Alle neuen Accounts in Passwortmanager gespeichert"
+      ],
+      "erwarteter_output": "Aktuelle Passwort-Hygiene, 2FA vollständig aktiviert",
+      "fehlerfall_eskalation": "Falls 2FA-App verloren: Backup-Codes sichern! Ohne Backup-Codes = Konto-Verlust."
+    },
+    {
+      "id": "UP-03",
+      "prozess_key": "UP",
+      "prozess": "UP IT & Weiterbildung",
+      "teilprozess": "UP1 Tool-Management",
+      "aufgabe": "Backup-Prüfung",
+      "zeitaufwand": "20 Min/Mo",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Backup-Software"
+      ],
+      "loesung": "Tool-Funktion: Automatische Backups (Backblaze, TimeMachine) + E-Mail-Alert bei Fehler. Backup-Monitoring via Statuspage. Manuelle Stichprobe bleibt sinnvoll.",
+      "zweck": "Sicherstellung vollständiger, aktueller Datensicherungen aller kritischen Geschäftsdaten.",
+      "trigger": "Monatlich, zusammen mit UP-01 und UP-02",
+      "vorbedingungen": [
+        "Backblaze oder TimeMachine eingerichtet",
+        "WordPress-Backup via UpdraftPlus aktiv"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Computer-Backup prüfen: TimeMachine → letzte Sicherung wann? Backblaze → Dashboard → alle Dateien aktuell gesichert?",
+          "tool": "TimeMachine / Backblaze",
+          "hinweis": "Backblaze zeigt Datum letztes erfolgreiches Backup"
+        },
+        {
+          "nr": 2,
+          "aktion": "WordPress-Backup prüfen: UpdraftPlus → letzte Sicherung erfolgreich? Backup-Dateien in Google Drive vorhanden?",
+          "tool": "UpdraftPlus → Google Drive",
+          "hinweis": "Mind. 3 Backups aufbewahren (wöchentlich rotieren)"
+        },
+        {
+          "nr": 3,
+          "aktion": "Stichproben-Restore: Eine beliebige Datei aus dem Backup wiederherstellen → Datei öffnbar?",
+          "tool": "Backblaze / TimeMachine",
+          "hinweis": "Restore-Test ist Pflicht – Backup ohne Restore-Test ist wertlos"
+        },
+        {
+          "nr": 4,
+          "aktion": "Wichtige Dokumente prüfen: Angebotsvorlagen, AGB, Vertragsvorlagen – alle in Cloud?",
+          "tool": "Google Drive",
+          "hinweis": "Kritische Dokumente = 3 Kopien (lokal + 2 Cloud)"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Computer-Backup geprüft und aktuell",
+        "WordPress-Backup geprüft und in Google Drive",
+        "Stichproben-Restore erfolgreich",
+        "Kritische Dokumente in Google Drive gesichert"
+      ],
+      "erwarteter_output": "Backup-Funktionsfähigkeit bestätigt, alle kritischen Daten gesichert",
+      "fehlerfall_eskalation": "Falls Backup fehlt oder fehlerhaft: Sofort manuelles Backup starten. Open-Banking-Verbindung ggf. erneuern."
+    },
+    {
+      "id": "UP-04",
+      "prozess_key": "UP",
+      "prozess": "UP IT & Weiterbildung",
+      "teilprozess": "UP1 Tool-Management",
+      "aufgabe": "Abo-Liste prüfen",
+      "zeitaufwand": "15 Min/Mo",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Excel/Notion"
+      ],
+      "loesung": "Tool-Funktion: Spendesk oder Revolut Business: Abonnements automatisch tracken + kategorisieren. KI-Prompt: Welche Abos wurden letzten Monat nicht genutzt? Manuell kündigen.",
+      "zweck": "Kostenkontrolle durch regelmäßige Überprüfung aller Software-Abonnements.",
+      "trigger": "Monatlich, letzter Freitag des Monats",
+      "vorbedingungen": [
+        "Liste aller Abonnements in Notion/Excel gepflegt",
+        "Kreditkarten-/Bankauswertung zugänglich"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Abonnements-Liste in Notion/Google Sheets öffnen → alle monatlichen und jährlichen Software-Kosten einsehen. Gesamtkosten pro Monat berechnen.",
+          "tool": "Notion / Google Sheets",
+          "hinweis": "Liste initial einmalig vollständig aufbauen"
+        },
+        {
+          "nr": 2,
+          "aktion": "Für jedes Abo kritisch fragen: \"Habe ich dieses Tool diesen Monat wirklich genutzt?\"",
+          "tool": "Toggl + Notion",
+          "hinweis": "Ehrliche Antwort – Kosten vs. Nutzen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Kreditkarten-/Kontoauszug: Gibt es Abbuchungen, die nicht in der Liste stehen?",
+          "tool": "Online-Banking",
+          "hinweis": "Regelmäßig vergessene Abos entdecken"
+        },
+        {
+          "nr": 4,
+          "aktion": "Nicht genutzte Abos kündigen oder auf günstigeren Plan wechseln",
+          "tool": "Jeweilige Service-Website",
+          "hinweis": "Kündigungsfristen beachten (oft 30 Tage)"
+        },
+        {
+          "nr": 5,
+          "aktion": "Abonnements-Liste aktualisieren und monatliche Kosten neu berechnen",
+          "tool": "Notion / Google Sheets",
+          "hinweis": "Ziel: < 150 Euro monatliche Software-Kosten"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Abonnements-Liste vollständig und aktuell",
+        "Alle ungenutzten Abos identifiziert",
+        "Ungenutztes gekündigt oder downgegradet",
+        "Kontoauszug auf vergessene Abbuchungen geprüft",
+        "Monatliche Kosten aktualisiert"
+      ],
+      "erwarteter_output": "Optimierte Abonnements-Liste, unnötige Kosten gestrichen",
+      "fehlerfall_eskalation": "Falls Kündigung vergessen und Jahresabo verlängert: Sofort kündigen. Kalender-Erinnerung 30 Tage vor Verlängerung."
+    },
+    {
+      "id": "UP-05",
+      "prozess_key": "UP",
+      "prozess": "UP IT & Weiterbildung",
+      "teilprozess": "UP2 Weiterbildung",
+      "aufgabe": "Lern-Slot blocken",
+      "zeitaufwand": "einmalig",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Kalender"
+      ],
+      "loesung": "Tool-Funktion: Google Calendar: Wiederkehrender Termin einmalig anlegen + Busy setzen → Calendly blockiert diesen Slot automatisch.",
+      "zweck": "Verbindliche Verankerung von wöchentlicher Lernzeit im Kalender.",
+      "trigger": "Einmalig aufsetzen; dann automatisch jede Woche",
+      "vorbedingungen": [
+        "Google Calendar-Account aktiv",
+        "Calendly mit Google Calendar synchronisiert"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Google Calendar öffnen → Neues Ereignis: Titel \"Lernzeit – KI & Beratung – NICHT BUCHBAR\". Freitag 9:00-12:00 Uhr. Wiederholen: jede Woche.",
+          "tool": "Google Calendar",
+          "hinweis": "Freitag morgen: kein Kundentermin-Druck"
+        },
+        {
+          "nr": 2,
+          "aktion": "Ereignis auf \"Beschäftigt\" setzen – damit Calendly diesen Slot blockiert",
+          "tool": "Google Calendar",
+          "hinweis": "Beschäftigt = Calendly zeigt keine Buchungsoptionen"
+        },
+        {
+          "nr": 3,
+          "aktion": "Farbe: Grün für Weiterbildung – visuelle Unterscheidung von Kundenterminen",
+          "tool": "Google Calendar",
+          "hinweis": "Farbkodierung hilft bei Kalender-Übersicht"
+        },
+        {
+          "nr": 4,
+          "aktion": "Erinnerung 60 Minuten vorher aktivieren",
+          "tool": "Google Calendar",
+          "hinweis": "Erinnerung vermeidet versehentliches Überbuchen"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Wiederkehrendes Ereignis im Kalender erstellt",
+        "Status auf \"Beschäftigt\" gesetzt",
+        "Calendly blockiert den Slot",
+        "Erinnerung 60 Min vorher aktiviert"
+      ],
+      "erwarteter_output": "Fester wöchentlicher Lern-Slot im Kalender",
+      "fehlerfall_eskalation": "Falls Lern-Slot wiederholt von dringenden Aufgaben verdrängt: Zeitblock auf Montagmorgen verlegen."
+    },
+    {
+      "id": "UP-06",
+      "prozess_key": "UP",
+      "prozess": "UP IT & Weiterbildung",
+      "teilprozess": "UP2 Weiterbildung",
+      "aufgabe": "Lerninhalte kuratieren",
+      "zeitaufwand": "5 Min/Wo",
+      "automatisierungs_potenzial": "Hoch",
+      "empfohlene_tools": [
+        "Pocket"
+      ],
+      "loesung": "KI-Workflow: RSS-Feeds + Google Alerts + Feedly → KI-Filter: Behalte nur Artikel zu KI-Tools für KMU. → Pocket automatisch befüllen. Wöchentlicher Digest.",
+      "zweck": "Kontinuierliche, kuratierte Sammlung relevanter Lerninhalte, die den Lern-Slot mit hochwertigen Materialien füllt.",
+      "trigger": "Täglich 5 Minuten passiv (Alerts) + wöchentlich 5 Minuten aktiv (Pocket-Review)",
+      "vorbedingungen": [
+        "Google Alerts eingerichtet",
+        "Pocket oder Readwise-Account",
+        "Feedly-Account (optional)"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Google Alerts für: \"KI Handwerk\", \"ChatGPT Kleinunternehmen\", \"Automatisierung Freiberufler\" → täglicher Digest per E-Mail",
+          "tool": "Google Alerts",
+          "hinweis": "Alerts einmalig einrichten – max. 5 Alerts"
+        },
+        {
+          "nr": 2,
+          "aktion": "Relevante Artikel direkt aus Google-Alert-E-Mail in Pocket speichern",
+          "tool": "Pocket Browser Extension",
+          "hinweis": "Nur wirklich relevante Artikel speichern"
+        },
+        {
+          "nr": 3,
+          "aktion": "ChatGPT-Filter (optional): \"Ist dieser Artikel für einen KI-Berater der Zielgruppe KMU/Handwerker relevant?\"",
+          "tool": "ChatGPT",
+          "hinweis": "Filter verhindert Information-Overload"
+        },
+        {
+          "nr": 4,
+          "aktion": "Freitags vor dem Lern-Slot: Pocket-Liste durchsehen → Artikel für heutigen Lern-Slot auswählen",
+          "tool": "Pocket",
+          "hinweis": "Max. 3 Artikel pro Lern-Session"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Google Alerts für relevante Keywords eingerichtet",
+        "Pocket-Konto aktiv und Browser-Extension installiert",
+        "Wöchentlicher Pocket-Review durchgeführt",
+        "Artikel für Lern-Slot ausgewählt"
+      ],
+      "erwarteter_output": "Kuratierte Artikel-Liste in Pocket für den Lern-Slot bereit",
+      "fehlerfall_eskalation": "Falls zu viele Artikel in Pocket (> 50): Monatlicher Clean-up: alles > 3 Monate alt ohne Lesen löschen."
+    },
+    {
+      "id": "UP-07",
+      "prozess_key": "UP",
+      "prozess": "UP IT & Weiterbildung",
+      "teilprozess": "UP2 Weiterbildung",
+      "aufgabe": "Lern-Session durchführen",
+      "zeitaufwand": "2-3 Std/Wo",
+      "automatisierungs_potenzial": "Niedrig",
+      "empfohlene_tools": [
+        "—"
+      ],
+      "loesung": "KI-Unterstützung: ChatGPT als Lernassistent: Erkläre [Konzept] und gib mir 3 Praxisübungen. Aktives Lernen bleibt manuell - nicht substituierbar.",
+      "zweck": "Kontinuierliche Vertiefung von KI-Fachwissen und Praxiskompetenzen, die direkt in die Beratungsqualität einfließen.",
+      "trigger": "Wöchentlich im geblockten Lern-Slot (UP-05), freitags 9-12 Uhr",
+      "vorbedingungen": [
+        "Lern-Slot geblockt (UP-05)",
+        "Kuratierte Inhalte aus UP-06 vorhanden",
+        "Notion Wissensdatenbank angelegt"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Pocket öffnen → priorisierte Artikel lesen (45-60 Min). Für jeden Artikel: Was ist die Kernaussage? Was ist für meine Kunden relevant?",
+          "tool": "Pocket / Browser",
+          "hinweis": "Aktives Lesen: Wichtiges in Notion notieren"
+        },
+        {
+          "nr": 2,
+          "aktion": "Neues KI-Tool praktisch ausprobieren (60 Min): Tool aus Artikel nehmen → kostenlosen Account anlegen → konkreten Anwendungsfall aus Kundenperspektive testen",
+          "tool": "Jeweiliges KI-Tool",
+          "hinweis": "Immer aus Kundenperspektive testen"
+        },
+        {
+          "nr": 3,
+          "aktion": "ChatGPT als Lernassistent nutzen: \"Erkläre mir [KONZEPT] verständlich und gib mir 3 konkrete Praxisbeispiele für den Einsatz in einem KI-Beratungskontext.\"",
+          "tool": "ChatGPT",
+          "hinweis": "Für schwierige Konzepte: mehrfach nachfragen"
+        },
+        {
+          "nr": 4,
+          "aktion": "Optional: Online-Kurs-Abschnitt (Coursera, Udemy) bearbeiten (30-45 Min)",
+          "tool": "Coursera / Udemy",
+          "hinweis": "1 Kurs pro Quartal abschließen als Ziel"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Mindestens 2 Artikel gelesen und verarbeitet",
+        "1 neues Tool praktisch ausprobiert",
+        "Erkenntnisse in Notion notiert",
+        "Lern-Session vollständig genutzt"
+      ],
+      "erwarteter_output": "Erweiterte KI-Kenntnisse, neues Tool bewertet",
+      "fehlerfall_eskalation": "Falls Lern-Session von Ablenkungen unterbrochen: \"Deep Work\"-Modus aktivieren: Handy stumm, Slack/E-Mail zu, Tür zu."
+    },
+    {
+      "id": "UP-08",
+      "prozess_key": "UP",
+      "prozess": "UP IT & Weiterbildung",
+      "teilprozess": "UP2 Weiterbildung",
+      "aufgabe": "Wissen dokumentieren",
+      "zeitaufwand": "30 Min/Wo",
+      "automatisierungs_potenzial": "Mittel",
+      "empfohlene_tools": [
+        "Notion/Obsidian"
+      ],
+      "loesung": "KI-Prompt: Fasse meine heutigen Lerninhalte in Notion-Format zusammen: Kernaussagen, Tool-Bewertung, Anwendungsideen für Kunden. Input: [Transkript/Notizen].",
+      "zweck": "Transformation von Lernerfahrungen in dauerhaft nutzbares Wissen, das bei Kundenprojekten direkt eingesetzt werden kann.",
+      "trigger": "Am Ende jedes Lern-Slots (UP-07), letzte 30 Minuten",
+      "vorbedingungen": [
+        "Notion-Wissensdatenbank mit Struktur angelegt",
+        "Lern-Session (UP-07) abgeschlossen"
+      ],
+      "schritte": [
+        {
+          "nr": 1,
+          "aktion": "Notion öffnen → Wissensdatenbank → neue Seite für heutigen Lern-Slot. Titel: \"Lern-Session [DATUM]\". Vorlage nutzen: Kernthemen, Tool-Bewertung, Anwendungsideen",
+          "tool": "Notion",
+          "hinweis": "Vorlage einmalig einrichten spart Zeit"
+        },
+        {
+          "nr": 2,
+          "aktion": "ChatGPT-Prompt: \"Fasse meine heutigen Lerninhalte in Notion-Format zusammen: (1) 3 Kernerkenntnisse, (2) Tool-Bewertung: Pros/Cons/Empfehlung, (3) 2 Anwendungsideen für Kunden. Basis: [STICHPUNKTE]\"",
+          "tool": "ChatGPT + Notion",
+          "hinweis": "Stichpunkte sofort nach Lesen notieren"
+        },
+        {
+          "nr": 3,
+          "aktion": "Anwendungsideen konkret formulieren: \"Für welchen meiner Kunden wäre [TOOL/KONZEPT] relevant?\"",
+          "tool": "Notion",
+          "hinweis": "Verbindung zu Kundenprojekten stärkt Retention"
+        },
+        {
+          "nr": 4,
+          "aktion": "Besonders wertvolle Erkenntnisse in \"Best Tools & Empfehlungen\"-Referenzseite in Notion übertragen",
+          "tool": "Notion",
+          "hinweis": "Referenz-Seite = persönliches KI-Tool-Lexikon"
+        },
+        {
+          "nr": 5,
+          "aktion": "Wissen teilen: Interessante Erkenntnis als LinkedIn-Post-Idee notieren",
+          "tool": "Notion / Trello",
+          "hinweis": "Geteiltes Wissen stärkt Expertise-Wahrnehmung"
+        }
+      ],
+      "erfolgskontrolle_checkliste": [
+        "Lern-Session in Notion dokumentiert",
+        "Mindestens 2 Anwendungsideen für Kunden notiert",
+        "Wertvolle Tools in Referenz-Seite übertragen",
+        "Potenzielle Blog-/Social-Media-Idee notiert"
+      ],
+      "erwarteter_output": "Dokumentierte Lern-Session in Notion, Anwendungsideen für Kundenberatung",
+      "fehlerfall_eskalation": "Falls Dokumentation vergessen: Spätestens am nächsten Morgen nachschreiben. Ab 3 Tagen Verzug: nur noch Stichpunkte möglich."
+    }
+  ]
+}

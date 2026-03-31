@@ -1,0 +1,132 @@
+{
+  "profile": {
+    "uuid": "55268a55-ac73-4c5b-9266-4e7e19bc03c7",
+    "metadata": {
+      "title": "Anwenderkatalog Grundschutz++",
+      "last-modified": "2026-03-12T04:13:55.762843+00:00",
+      "version": "2026-03-12T04:13:55.762859+00:00",
+      "oscal-version": "1.1.3",
+      "roles": [
+        {
+          "id": "creator",
+          "title": "Creator"
+        }
+      ],
+      "responsible-parties": [
+        {
+          "role-id": "creator",
+          "party-uuids": [
+            "e1aeae0f-325b-4b9c-971a-df50687e5415"
+          ]
+        }
+      ],
+      "parties": [
+        {
+          "uuid": "e1aeae0f-325b-4b9c-971a-df50687e5415",
+          "type": "person",
+          "name": "Bundesamt für Sicherheit in der Informationstechnik",
+          "email-addresses": [
+            "service-center@bsi.bund.de"
+          ]
+        }
+      ],
+      "remarks": "Der Grundschutz++ ist eine vom Bundesamt für Sicherheit in der Informationstechnik (BSI) entwickelte und frei verfügbare Vorgehensweise um ein ganzheitliches Informationssicherheits-Managementsystem (ISMS) in Institutionen zu errichten und erhalten. Dieser Katalog enthält sowohl die Anforderungen zur Umsetzung der Grundschutz-Methodik als auch die konkreten technisch-organisatorischen Anforderungen die zur Absicherung erforderlich sind.",
+      "props": [
+        {
+          "name": "scope_implements_norm",
+          "ns": "http://csrc.nist.gov/ns/oscal/1.0",
+          "value": "§ 44 Abs. 1 BSIG"
+        },
+        {
+          "name": "keywords",
+          "value": "Information Security Management System"
+        }
+      ],
+      "links": [
+        {
+          "href": "#6a598493-8f3b-4ad3-ad73-9fb1495916e6",
+          "rel": "reference",
+          "text": "BSI IT-Grundschutz Edition 2023"
+        }
+      ]
+    },
+    "imports": [
+      {
+        "href": "#a56d3996-baa4-4918-84e2-cb9c0568e996",
+        "include-all": {}
+      },
+      {
+        "href": "#1bbc5d91-b68e-4525-8f13-0e6cc4b028f6",
+        "include-all": {}
+      }
+    ],
+    "merge": {
+      "as-is": true
+    },
+    "modify": {
+      "set-parameters": [
+        {
+          "param-id": "gc.1.1-prm1",
+          "label": "BSI Grundschutz++",
+          "values": [
+            "BSI Grundschutz++"
+          ]
+        },
+        {
+          "param-id": "not.1.1.4-prm1",
+          "label": "BSI-Standard 200-4",
+          "values": [
+            "BSI-Standard 200-4"
+          ]
+        }
+      ]
+    },
+    "back-matter": {
+      "resources": [
+        {
+          "uuid": "6a598493-8f3b-4ad3-ad73-9fb1495916e6",
+          "title": "BSI IT-Grundschutz Edition 2023",
+          "rlinks": [
+            {
+              "href": "https://www.bsi.bund.de/DE/Themen/Unternehmen-und-Organisationen/Standards-und-Zertifizierung/IT-Grundschutz/it-grundschutz_node.html",
+              "hashes": [
+                {
+                  "algorithm": "MD5",
+                  "value": "c91280d3504b9c81c5ceaf5bdaee5c7f"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "uuid": "a56d3996-baa4-4918-84e2-cb9c0568e996",
+          "rlinks": [
+            {
+              "href": "BSI-Methodik-Grundschutz++-catalog.json",
+              "hashes": [
+                {
+                  "algorithm": "MD5",
+                  "value": "9761b3ca9903bbb4100171d61974dbc1"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "uuid": "1bbc5d91-b68e-4525-8f13-0e6cc4b028f6",
+          "rlinks": [
+            {
+              "href": "../Kernel/BSI-Stand-der-Technik-Kernel-catalog.json",
+              "hashes": [
+                {
+                  "algorithm": "MD5",
+                  "value": "36e4b1eeb8d8375ea226a2f051fc72ed"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
