@@ -213,7 +213,7 @@ R4.* (Code Quality) — nach R3.* (aendert viel Code, Tests als Sicherheitsnetz)
 | R1.2 CORS Allowlist | Phase 2 | Complete (02-01) |
 | R1.3 Security Headers | Phase 2 | Complete (02-01) |
 | R2.2 Next.js Middleware | Phase 2 | Complete (02-01) |
-| R1.4 HTML Sanitizer | Phase 3 | Pending |
+| R1.4 HTML Sanitizer | Phase 3 | Complete (03-01) |
 | R2.3 API-Key Scoping | Phase 3 | Pending |
 | R2.4 CSRF-Schutz | Phase 3 | Pending |
 | R3.1 Redis Rate Limiting | Phase 4 | Pending |
