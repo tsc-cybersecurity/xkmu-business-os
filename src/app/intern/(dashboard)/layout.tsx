@@ -6,6 +6,7 @@ import { PermissionProvider } from '@/hooks/use-permissions'
 import { ChatProvider } from '@/components/chat/chat-provider'
 import { ChatButton } from '@/components/chat/chat-button'
 import { ChatPanel } from '@/components/chat/chat-panel'
+import { CsrfProvider } from '@/components/csrf-provider'
 
 export default async function DashboardLayout({
   children,
@@ -19,6 +20,7 @@ export default async function DashboardLayout({
   }
 
   return (
+    <CsrfProvider>
     <PermissionProvider>
       <ChatProvider>
         <div className="flex h-screen overflow-hidden">
@@ -34,5 +36,6 @@ export default async function DashboardLayout({
         <ChatPanel />
       </ChatProvider>
     </PermissionProvider>
+    </CsrfProvider>
   )
 }
