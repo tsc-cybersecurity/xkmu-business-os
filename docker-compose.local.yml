@@ -34,9 +34,9 @@ services:
       - NODE_ENV=production
       - DOCKER=true
       # Supabase PostgreSQL (external stack)
-      - DATABASE_URL=postgresql://postgres:${SUPABASE_DB_PASSWORD:-48cc2ba9bf03963c170c83798ef1419a}@supabase-db:5432/postgres
+      - DATABASE_URL=postgresql://postgres:${SUPABASE_DB_PASSWORD:?SUPABASE_DB_PASSWORD must be set}@supabase-db:5432/postgres
       - DATABASE_SSL=false
-      - JWT_SECRET=${JWT_SECRET:-changeMe_jwt_secret_min32chars_2026!}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set (min 32 chars)}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       # AI Providers (optional)
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
@@ -44,7 +44,7 @@ services:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
       - SERPAPI_KEY=${SERPAPI_KEY:-}
       # Redis
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-changeMe_redis_2026!}@redis:6379
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?REDIS_PASSWORD must be set}@redis:6379
       # Next.js
       - HOSTNAME=0.0.0.0
       # Email (optional)
@@ -55,8 +55,8 @@ services:
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
       # Seed admin credentials
-      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-}
-      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:-}
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:?SEED_ADMIN_EMAIL must be set for initial seed}
+      - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:?SEED_ADMIN_PASSWORD must be set for initial seed}
     volumes:
       - ./data/uploads:/app/data
     depends_on:
@@ -81,9 +81,9 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-changeMe_redis_2026!} --bind 0.0.0.0 --protected-mode yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD must be set} --bind 0.0.0.0 --protected-mode yes
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeMe_redis_2026!}", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
