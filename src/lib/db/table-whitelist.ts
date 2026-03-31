@@ -95,6 +95,15 @@ export const GLOBAL_TABLES = [
   'grundschutz_groups',
   'grundschutz_controls',
   'grundschutz_catalog_meta',
+  'ir_scenarios',
+  'ir_detection_indicators',
+  'ir_actions',
+  'ir_escalation_levels',
+  'ir_escalation_recipients',
+  'ir_recovery_steps',
+  'ir_checklist_items',
+  'ir_lessons_learned',
+  'ir_references',
 ]
 
 // All allowed tables (union of tenant + global + join)
