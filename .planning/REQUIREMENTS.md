@@ -216,7 +216,7 @@ R4.* (Code Quality) — nach R3.* (aendert viel Code, Tests als Sicherheitsnetz)
 | R1.4 HTML Sanitizer | Phase 3 | Complete (03-01) |
 | R2.3 API-Key Scoping | Phase 3 | Pending |
 | R2.4 CSRF-Schutz | Phase 3 | Pending |
-| R3.1 Redis Rate Limiting | Phase 4 | Pending |
+| R3.1 Redis Rate Limiting | Phase 4 | Complete (04-01) |
 | R3.2 Error Handling | Phase 4 | Pending |
 | R3.3 Test-Abdeckung Kritische Services | Phase 5 | Pending |
 | R3.4 Integration-Tests Kernflows | Phase 5 | Pending |

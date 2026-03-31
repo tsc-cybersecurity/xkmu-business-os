@@ -84,7 +84,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Redis Rate Limiting: ioredis installieren + redis-client.ts Singleton + rate-limit.ts auf INCR/EXPIRE migrieren + 3 Caller auf await aktualisieren + Unit Tests
+- [x] 04-01-PLAN.md — Redis Rate Limiting: ioredis installieren + redis-client.ts Singleton + rate-limit.ts auf INCR/EXPIRE migrieren + 3 Caller auf await aktualisieren + Unit Tests
 - [ ] 04-02-PLAN.md — Error Handling: logger.warn in 11 AI-Service JSON-Parse-Catches + console.error auf logger.error in 6 grundschutz/ir-playbook Routes
 
 ### Phase 5: Test Coverage
@@ -128,6 +128,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Foundation | 2/3 | In Progress|  |
 | 2. Security Layer | 0/2 | Not started | - |
 | 3. XSS & API Protection | 2/3 | In Progress|  |
-| 4. Reliability | 0/2 | Not started | - |
+| 4. Reliability | 1/2 | In Progress|  |
 | 5. Test Coverage | 0/2 | Not started | - |
 | 6. Code Quality | 0/3 | Not started | - |
