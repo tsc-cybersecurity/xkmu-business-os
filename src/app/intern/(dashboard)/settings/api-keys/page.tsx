@@ -28,10 +28,13 @@ import {
   AlertTitle,
 } from '@/components/ui/alert'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmDialog } from '@/components/shared'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus, Key, Copy, AlertTriangle, Trash2 } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
+import { MODULES, MODULE_LABELS } from '@/lib/types/permissions'
+import { cn } from '@/lib/utils'
 
 interface ApiKey {
   id: string
@@ -44,12 +47,18 @@ interface ApiKey {
   rawKey?: string
 }
 
+// Modules to show in the scope selector (exclude internal/admin-only modules)
+const SCOPE_MODULES = MODULES.filter(
+  (m) => !['database', 'n8n_workflows', 'webhooks'].includes(m)
+)
+
 export default function ApiKeysPage() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [loading, setLoading] = useState(true)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
+  const [selectedScopes, setSelectedScopes] = useState<string[]>(['*'])
   const [newKey, setNewKey] = useState<ApiKey | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null)
@@ -74,9 +83,32 @@ export default function ApiKeysPage() {
     }
   }
 
+  const isFullAccess = selectedScopes.includes('*')
+
+  const handleFullAccessChange = (checked: boolean) => {
+    if (checked) {
+      setSelectedScopes(['*'])
+    } else {
+      setSelectedScopes([])
+    }
+  }
+
+  const handleScopeChange = (scope: string, checked: boolean) => {
+    if (checked) {
+      setSelectedScopes((prev) => [...prev.filter((s) => s !== '*'), scope])
+    } else {
+      setSelectedScopes((prev) => prev.filter((s) => s !== scope))
+    }
+  }
+
   const handleCreateKey = async () => {
     if (!newKeyName.trim()) {
       toast.error('Bitte geben Sie einen Namen ein')
+      return
+    }
+
+    if (selectedScopes.length === 0) {
+      toast.error('Bitte wählen Sie mindestens eine Berechtigung aus')
       return
     }
 
@@ -85,7 +117,7 @@ export default function ApiKeysPage() {
       const response = await fetch('/api/v1/api-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newKeyName }),
+        body: JSON.stringify({ name: newKeyName, permissions: selectedScopes }),
       })
 
       const data = await response.json()
@@ -142,6 +174,7 @@ export default function ApiKeysPage() {
     setCreateDialogOpen(false)
     setNewKey(null)
     setNewKeyName('')
+    setSelectedScopes(['*'])
   }
 
   const formatDate = (dateString: string | null) => {
@@ -158,6 +191,29 @@ export default function ApiKeysPage() {
   const isExpired = (expiresAt: string | null) => {
     if (!expiresAt) return false
     return new Date(expiresAt) < new Date()
+  }
+
+  const renderPermissionBadges = (permissions: string[]) => {
+    if (!permissions || permissions.length === 0) {
+      return <Badge variant="secondary">Kein Zugriff</Badge>
+    }
+    if (permissions.includes('*')) {
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Vollzugriff</Badge>
+    }
+    return (
+      <div className="flex gap-1 flex-wrap max-w-xs">
+        {permissions.slice(0, 3).map((perm) => (
+          <Badge key={perm} variant="outline" className="text-xs">
+            {perm}
+          </Badge>
+        ))}
+        {permissions.length > 3 && (
+          <Badge variant="outline" className="text-xs">
+            +{permissions.length - 3} weitere
+          </Badge>
+        )}
+      </div>
+    )
   }
 
   return (
@@ -233,13 +289,7 @@ export default function ApiKeysPage() {
                       </code>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1 flex-wrap">
-                        {(apiKey.permissions || []).map((perm) => (
-                          <Badge key={perm} variant="outline">
-                            {perm}
-                          </Badge>
-                        ))}
-                      </div>
+                      {renderPermissionBadges(apiKey.permissions)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(apiKey.lastUsedAt)}
@@ -276,7 +326,7 @@ export default function ApiKeysPage() {
 
       {/* Create API Key Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={handleCloseNewKeyDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {newKey ? 'API-Schlussel erstellt' : 'Neuen API-Schlussel erstellen'}
@@ -284,7 +334,7 @@ export default function ApiKeysPage() {
             <DialogDescription>
               {newKey
                 ? 'Speichern Sie diesen Schlussel jetzt - er wird nicht mehr angezeigt.'
-                : 'Geben Sie dem API-Schlussel einen aussagekraftigen Namen.'}
+                : 'Geben Sie dem API-Schlussel einen Namen und wahlen Sie die Berechtigungen.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -331,6 +381,90 @@ export default function ApiKeysPage() {
                   onChange={(e) => setNewKeyName(e.target.value)}
                   placeholder="z.B. Make Integration, Zapier, Externe App"
                 />
+              </div>
+
+              {/* Scope Selector */}
+              <div className="space-y-3">
+                <Label>Berechtigungen *</Label>
+
+                {/* Full Access option */}
+                <div className="flex items-center gap-2 p-3 rounded-md border bg-muted/30">
+                  <Checkbox
+                    id="scope-full-access"
+                    checked={isFullAccess}
+                    onCheckedChange={(checked) => handleFullAccessChange(checked === true)}
+                  />
+                  <Label
+                    htmlFor="scope-full-access"
+                    className="font-medium cursor-pointer"
+                  >
+                    Vollzugriff (alle Module)
+                  </Label>
+                </div>
+
+                {/* Per-module checkboxes */}
+                <div className={cn(
+                  'space-y-1 transition-opacity',
+                  isFullAccess ? 'opacity-40 pointer-events-none' : 'opacity-100'
+                )}>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Oder einzelne Module auswahlen:
+                  </p>
+                  <div className="grid grid-cols-1 gap-1 max-h-48 overflow-y-auto pr-1">
+                    {SCOPE_MODULES.map((module) => {
+                      const readScope = `${module}:read`
+                      const writeScope = `${module}:write`
+                      const hasRead = selectedScopes.includes(readScope)
+                      const hasWrite = selectedScopes.includes(writeScope)
+
+                      return (
+                        <div key={module} className="flex items-center gap-4 py-1 px-2 rounded hover:bg-muted/50">
+                          <span className="text-sm flex-1 text-muted-foreground">
+                            {MODULE_LABELS[module]}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <Checkbox
+                                id={`scope-${module}-read`}
+                                checked={hasRead}
+                                onCheckedChange={(checked) =>
+                                  handleScopeChange(readScope, checked === true)
+                                }
+                              />
+                              <Label
+                                htmlFor={`scope-${module}-read`}
+                                className="text-xs cursor-pointer"
+                              >
+                                Lesen
+                              </Label>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <Checkbox
+                                id={`scope-${module}-write`}
+                                checked={hasWrite}
+                                onCheckedChange={(checked) =>
+                                  handleScopeChange(writeScope, checked === true)
+                                }
+                              />
+                              <Label
+                                htmlFor={`scope-${module}-write`}
+                                className="text-xs cursor-pointer"
+                              >
+                                Schreiben
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {!isFullAccess && selectedScopes.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {selectedScopes.length} Berechtigung{selectedScopes.length !== 1 ? 'en' : ''} ausgewahlt
+                  </p>
+                )}
               </div>
 
               <DialogFooter>
