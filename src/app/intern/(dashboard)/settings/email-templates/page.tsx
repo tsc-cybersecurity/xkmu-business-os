@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/table'
 import { Mail, Loader2, Plus, Pencil, Trash2, Upload, Eye } from 'lucide-react'
 import { toast } from 'sonner'
+import { sanitizeEmailHtml } from '@/lib/utils/sanitize'
 
 interface EmailTemplate {
   id: string
@@ -235,7 +236,7 @@ export default function EmailTemplatesPage() {
           <div className="space-y-3">
             <div className="text-sm"><strong>Betreff:</strong> {previewDialog?.subject}</div>
             <div className="border rounded p-4 bg-white dark:bg-gray-950">
-              <div dangerouslySetInnerHTML={{ __html: previewDialog?.bodyHtml || '' }} className="text-sm" />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(previewDialog?.bodyHtml || '') }} className="text-sm" />
             </div>
             {previewDialog?.placeholders && previewDialog.placeholders.length > 0 && (
               <div>

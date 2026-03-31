@@ -1,4 +1,5 @@
 import { renderMarkdown } from '@/lib/utils/markdown'
+import { sanitizeHtml } from '@/lib/utils/sanitize'
 
 interface MarkdownRendererProps {
   content: string
@@ -11,7 +12,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   return (
     <div
       className={`prose prose-neutral dark:prose-invert max-w-none prose-headings:mt-6 prose-headings:mb-2 prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-pre:my-3 prose-hr:my-4 ${className || ''}`}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
     />
   )
 }
@@ -34,5 +35,5 @@ export function InlineMarkdown({ text, className }: { text: string; className?: 
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
   html = html.replace(/\n/g, '<br />')
 
-  return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />
+  return <span className={className} dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }} />
 }
