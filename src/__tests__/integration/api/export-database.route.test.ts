@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createTestRequest } from '../../helpers/mock-request'
-import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
+import { mockAuthContext, mockAuthForbidden } from '../../helpers/mock-auth'
+import { authFixture, TEST_TENANT_ID } from '../../helpers/fixtures'
 
 // ─── GET /api/v1/export/database ─────────────────────────────────────────────
 
@@ -24,48 +25,13 @@ describe('GET /api/v1/export/database', () => {
     }))
   })
 
-  function mockSessionAuth(role: string = 'admin') {
-    vi.doMock('@/lib/auth/session', () => ({
-      getSession: vi.fn().mockResolvedValue({
-        user: { tenantId: TEST_TENANT_ID, userId: TEST_USER_ID, role },
-      }),
-    }))
-    vi.doMock('@/lib/auth/api-key', () => ({
-      validateApiKey: vi.fn(),
-      getApiKeyFromRequest: vi.fn(),
-      hasPermission: vi.fn(),
-    }))
-  }
-
-  function mockNoAuth() {
-    vi.doMock('@/lib/auth/session', () => ({
-      getSession: vi.fn().mockResolvedValue(null),
-    }))
-    vi.doMock('@/lib/auth/api-key', () => ({
-      validateApiKey: vi.fn(),
-      getApiKeyFromRequest: vi.fn().mockReturnValue(null),
-      hasPermission: vi.fn(),
-    }))
-  }
-
-  function mockApiKeyAuth(hasRead: boolean = true) {
-    vi.doMock('@/lib/auth/session', () => ({
-      getSession: vi.fn().mockResolvedValue(null),
-    }))
-    vi.doMock('@/lib/auth/api-key', () => ({
-      validateApiKey: vi.fn().mockResolvedValue({ tenantId: TEST_TENANT_ID }),
-      getApiKeyFromRequest: vi.fn().mockReturnValue('test-api-key'),
-      hasPermission: vi.fn().mockReturnValue(hasRead),
-    }))
-  }
-
   async function getHandler() {
     const mod = await import('@/app/api/v1/export/database/route')
     return mod.GET
   }
 
   it('returns SQL dump for authenticated admin', async () => {
-    mockSessionAuth('admin')
+    mockAuthContext(authFixture({ role: 'admin' }))
     executeMock.mockResolvedValue([])
 
     const handler = await getHandler()
@@ -81,7 +47,7 @@ describe('GET /api/v1/export/database', () => {
   })
 
   it('returns SQL dump for authenticated owner', async () => {
-    mockSessionAuth('owner')
+    mockAuthContext(authFixture({ role: 'owner' }))
 
     const handler = await getHandler()
     const req = createTestRequest('GET', '/api/v1/export/database')
@@ -93,31 +59,27 @@ describe('GET /api/v1/export/database', () => {
   })
 
   it('returns 401 for unauthenticated request', async () => {
-    mockNoAuth()
+    mockAuthContext(null)
 
     const handler = await getHandler()
     const req = createTestRequest('GET', '/api/v1/export/database')
     const res = await handler(req)
-    const body = await res.json()
 
     expect(res.status).toBe(401)
-    expect(body.error).toBe('Nicht authentifiziert')
   })
 
   it('returns 403 for non-admin user', async () => {
-    mockSessionAuth('member')
+    mockAuthForbidden()
 
     const handler = await getHandler()
     const req = createTestRequest('GET', '/api/v1/export/database')
     const res = await handler(req)
-    const body = await res.json()
 
     expect(res.status).toBe(403)
-    expect(body.error).toBe('Keine Berechtigung')
   })
 
   it('returns 403 for viewer role', async () => {
-    mockSessionAuth('viewer')
+    mockAuthForbidden()
 
     const handler = await getHandler()
     const req = createTestRequest('GET', '/api/v1/export/database')
@@ -126,8 +88,8 @@ describe('GET /api/v1/export/database', () => {
     expect(res.status).toBe(403)
   })
 
-  it('works with API key auth', async () => {
-    mockApiKeyAuth(true)
+  it('works with API key auth (api role bypasses permission check)', async () => {
+    mockAuthContext(authFixture({ role: 'api' as const }))
 
     const handler = await getHandler()
     const req = createTestRequest('GET', '/api/v1/export/database')
@@ -139,8 +101,8 @@ describe('GET /api/v1/export/database', () => {
     expect(text).toContain('-- Export abgeschlossen')
   })
 
-  it('returns 403 when API key lacks read permission', async () => {
-    mockApiKeyAuth(false)
+  it('returns 403 when permission denied', async () => {
+    mockAuthForbidden()
 
     const handler = await getHandler()
     const req = createTestRequest('GET', '/api/v1/export/database')
@@ -150,7 +112,7 @@ describe('GET /api/v1/export/database', () => {
   })
 
   it('includes INSERT statements when tables have data', async () => {
-    mockSessionAuth('admin')
+    mockAuthContext(authFixture({ role: 'admin' }))
     executeMock.mockResolvedValue([
       { id: 'row-1', name: 'Test', tenant_id: TEST_TENANT_ID },
     ])

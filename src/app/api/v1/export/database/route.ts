@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession } from '@/lib/auth/session'
-import { validateApiKey, getApiKeyFromRequest, hasPermission } from '@/lib/auth/api-key'
+import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { TENANT_TABLES, GLOBAL_TABLES, JOIN_TABLES } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
@@ -47,36 +46,8 @@ function exportRows(rows: Record<string, unknown>[], table: string): string {
   return dump
 }
 
-async function getAuthContext(request: NextRequest) {
-  const session = await getSession()
-  if (session) {
-    const isAdmin = session.user.role === 'owner' || session.user.role === 'admin'
-    if (!isAdmin) return { error: 'forbidden' as const }
-    return { tenantId: session.user.tenantId }
-  }
-
-  const apiKey = getApiKeyFromRequest(request)
-  if (apiKey) {
-    const payload = await validateApiKey(apiKey)
-    if (payload) {
-      if (!hasPermission(payload, 'read')) return { error: 'forbidden' as const }
-      return { tenantId: payload.tenantId }
-    }
-  }
-
-  return { error: 'unauthorized' as const }
-}
-
 export async function GET(request: NextRequest) {
-  const auth = await getAuthContext(request)
-
-  if ('error' in auth) {
-    if (auth.error === 'unauthorized') {
-      return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
-    }
-    return NextResponse.json({ error: 'Keine Berechtigung' }, { status: 403 })
-  }
-
+  return withPermission(request, 'database', 'read', async (auth) => {
   const tenantId = auth.tenantId
 
   const stream = new ReadableStream({
@@ -151,5 +122,6 @@ export async function GET(request: NextRequest) {
       'Content-Disposition': `attachment; filename="database-export-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}.sql"`,
       'Transfer-Encoding': 'chunked',
     },
+  })
   })
 }

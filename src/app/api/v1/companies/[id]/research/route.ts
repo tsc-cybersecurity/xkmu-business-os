@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,
-  apiUnauthorized,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
@@ -10,34 +9,10 @@ import { CompanyResearchService } from '@/lib/services/company-research.service'
 import { FirecrawlResearchService } from '@/lib/services/firecrawl-research.service'
 import { LeadResearchService } from '@/lib/services/ai'
 import type { CompanyResearchResult, CompanyAddress } from '@/lib/services/ai'
-import { getSession } from '@/lib/auth/session'
-import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
-
-async function getAuthContext(request: NextRequest) {
-  const session = await getSession()
-  if (session) {
-    return {
-      tenantId: session.user.tenantId,
-      userId: session.user.id,
-    }
-  }
-
-  const apiKey = getApiKeyFromRequest(request)
-  if (apiKey) {
-    const payload = await validateApiKey(apiKey)
-    if (payload) {
-      return {
-        tenantId: payload.tenantId,
-        userId: null,
-      }
-    }
-  }
-
-  return null
-}
 
 /**
  * Build a comprehensive company profile text from research results
@@ -200,11 +175,7 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) {
-    return apiUnauthorized()
-  }
-
+  return withPermission(request, 'companies', 'update', async (auth) => {
   const { id } = await params
 
   try {
@@ -318,6 +289,7 @@ export async function POST(
       500
     )
   }
+  })
 }
 
 // GET /api/v1/companies/[id]/research - Get all past researches for this company
@@ -325,11 +297,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) {
-    return apiUnauthorized()
-  }
-
+  return withPermission(request, 'companies', 'update', async (auth) => {
   const { id } = await params
 
   const company = await CompanyService.getById(auth.tenantId, id)
@@ -348,5 +316,6 @@ export async function GET(
     researches,
     hasResearch: researches.length > 0 || !!aiResearch,
     research: aiResearch || null,
+  })
   })
 }

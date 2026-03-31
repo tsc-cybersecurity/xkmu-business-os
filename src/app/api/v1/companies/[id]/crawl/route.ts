@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,
-  apiUnauthorized,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
@@ -9,8 +8,7 @@ import { CompanyService } from '@/lib/services/company.service'
 import { FirecrawlResearchService } from '@/lib/services/firecrawl-research.service'
 import { FirecrawlService } from '@/lib/services/firecrawl.service'
 import { WebsiteScraperService } from '@/lib/services/ai/website-scraper.service'
-import { getSession } from '@/lib/auth/session'
-import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { aiProviders } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
@@ -18,39 +16,12 @@ import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
 
-async function getAuthContext(request: NextRequest) {
-  const session = await getSession()
-  if (session) {
-    return {
-      tenantId: session.user.tenantId,
-      userId: session.user.id,
-    }
-  }
-
-  const apiKey = getApiKeyFromRequest(request)
-  if (apiKey) {
-    const payload = await validateApiKey(apiKey)
-    if (payload) {
-      return {
-        tenantId: payload.tenantId,
-        userId: null,
-      }
-    }
-  }
-
-  return null
-}
-
 // POST /api/v1/companies/[id]/crawl - Start a full website crawl
 export async function POST(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) {
-    return apiUnauthorized()
-  }
-
+  return withPermission(request, 'companies', 'update', async (auth) => {
   const { id } = await params
 
   try {
@@ -132,6 +103,7 @@ export async function POST(
       500
     )
   }
+  })
 }
 
 // GET /api/v1/companies/[id]/crawl - Get all crawls for this company
@@ -139,11 +111,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) {
-    return apiUnauthorized()
-  }
-
+  return withPermission(request, 'companies', 'update', async (auth) => {
   const { id } = await params
 
   const company = await CompanyService.getById(auth.tenantId, id)
@@ -156,5 +124,6 @@ export async function GET(
   return apiSuccess({
     crawls,
     hasCrawls: crawls.length > 0,
+  })
   })
 }

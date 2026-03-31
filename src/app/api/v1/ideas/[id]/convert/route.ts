@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,
-  apiUnauthorized,
   apiNotFound,
   apiError,
   apiServerError,
@@ -12,32 +11,11 @@ import { LeadService } from '@/lib/services/lead.service'
 import { ActivityService } from '@/lib/services/activity.service'
 import { AIService } from '@/lib/services/ai/ai.service'
 import { WebhookService } from '@/lib/services/webhook.service'
-import { getSession } from '@/lib/auth/session'
-import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
-async function getAuthContext(request: NextRequest) {
-  const session = await getSession()
-  if (session) {
-    return {
-      tenantId: session.user.tenantId,
-      userId: session.user.id,
-      role: session.user.role,
-    }
-  }
-  const apiKey = getApiKeyFromRequest(request)
-  if (apiKey) {
-    const payload = await validateApiKey(apiKey)
-    if (payload) {
-      return { tenantId: payload.tenantId, userId: null, role: 'api' as const }
-    }
-  }
-  return null
-}
-
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await getAuthContext(request)
-  if (!auth) return apiUnauthorized()
+  return withPermission(request, 'ideas', 'update', async (auth) => {
 
   try {
     const { id } = await params
@@ -175,4 +153,5 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.error('Error converting idea', error, { module: 'IdeasConvertAPI' })
     return apiServerError()
   }
+  })
 }

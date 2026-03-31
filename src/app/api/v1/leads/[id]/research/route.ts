@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,
-  apiUnauthorized,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
@@ -10,45 +9,17 @@ import { CompanyService } from '@/lib/services/company.service'
 import { PersonService } from '@/lib/services/person.service'
 import { LeadResearchService, WebsiteScraperService } from '@/lib/services/ai'
 import { WebhookService } from '@/lib/services/webhook.service'
-import { getSession } from '@/lib/auth/session'
-import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
-
-async function getAuthContext(request: NextRequest) {
-  const session = await getSession()
-  if (session) {
-    return {
-      tenantId: session.user.tenantId,
-      userId: session.user.id,
-    }
-  }
-
-  const apiKey = getApiKeyFromRequest(request)
-  if (apiKey) {
-    const payload = await validateApiKey(apiKey)
-    if (payload) {
-      return {
-        tenantId: payload.tenantId,
-        userId: null,
-      }
-    }
-  }
-
-  return null
-}
 
 // POST /api/v1/leads/[id]/research - Start AI research for a lead
 export async function POST(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) {
-    return apiUnauthorized()
-  }
-
+  return withPermission(request, 'leads', 'update', async (auth) => {
   const { id } = await params
 
   try {
@@ -204,6 +175,7 @@ export async function POST(
       500
     )
   }
+  })
 }
 
 // GET /api/v1/leads/[id]/research - Get research status
@@ -211,11 +183,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Params }
 ) {
-  const auth = await getAuthContext(request)
-  if (!auth) {
-    return apiUnauthorized()
-  }
-
+  return withPermission(request, 'leads', 'update', async (auth) => {
   const { id } = await params
 
   const lead = await LeadService.getById(auth.tenantId, id)
@@ -226,5 +194,6 @@ export async function GET(
   return apiSuccess({
     status: lead.aiResearchStatus || 'pending',
     result: lead.aiResearchResult,
+  })
   })
 }

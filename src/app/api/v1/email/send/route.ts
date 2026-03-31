@@ -1,13 +1,11 @@
 import { NextRequest } from 'next/server'
 import {
   apiSuccess,
-  apiUnauthorized,
   apiValidationError,
   apiError,
 } from '@/lib/utils/api-response'
 import { EmailService } from '@/lib/services/email.service'
-import { getSession } from '@/lib/auth/session'
-import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { logger } from '@/lib/utils/logger'
 
@@ -21,30 +19,9 @@ const sendEmailSchema = z.object({
   personId: z.string().uuid().optional(),
 })
 
-async function getAuthContext(request: NextRequest) {
-  const session = await getSession()
-  if (session) {
-    return {
-      tenantId: session.user.tenantId,
-      userId: session.user.id,
-      role: session.user.role,
-    }
-  }
-  const apiKey = getApiKeyFromRequest(request)
-  if (apiKey) {
-    const payload = await validateApiKey(apiKey)
-    if (payload) {
-      return { tenantId: payload.tenantId, userId: null, role: 'api' as const }
-    }
-  }
-  return null
-}
-
 // POST /api/v1/email/send - Send an email
 export async function POST(request: NextRequest) {
-  const auth = await getAuthContext(request)
-  if (!auth) return apiUnauthorized()
-
+  return withPermission(request, 'activities', 'create', async (auth) => {
   try {
     const body = await request.json()
     const parseResult = sendEmailSchema.safeParse(body)
@@ -96,13 +73,12 @@ export async function POST(request: NextRequest) {
     logger.error('Email send route error', error, { module: 'EmailSendAPI' })
     return apiError('INTERNAL_ERROR', 'Interner Serverfehler', 500)
   }
+  })
 }
 
 // GET /api/v1/email/send - Check email configuration status
 export async function GET(request: NextRequest) {
-  const auth = await getAuthContext(request)
-  if (!auth) return apiUnauthorized()
-
+  return withPermission(request, 'activities', 'create', async (auth) => {
   const isConfigured = EmailService.isConfigured()
 
   if (isConfigured) {
@@ -118,5 +94,6 @@ export async function GET(request: NextRequest) {
     configured: false,
     verified: false,
     message: 'E-Mail-Versand nicht konfiguriert. Setzen Sie EMAIL_USER und EMAIL_PASSWORD in .env',
+  })
   })
 }
