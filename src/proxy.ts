@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
+import { createCsrfMiddleware } from '@edge-csrf/nextjs'
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://boss.xkmu.de')
   .split(',')
@@ -31,6 +32,14 @@ const PUBLIC_PATHS = [
 const API_KEY_PATHS = [
   '/api/v1/',
 ]
+
+const csrfProtect = createCsrfMiddleware({
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    name: 'csrf_token',
+    sameSite: 'lax',
+  },
+})
 
 function getJwtSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET
@@ -109,6 +118,11 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next()
     }
   }
+
+  // CSRF-Schutz fuer session-basierte Mutation-Routes
+  // API-Key-Requests haben den Block oben bereits verlassen (return NextResponse.next())
+  const csrfResponse = await csrfProtect(request)
+  if (csrfResponse) return csrfResponse  // 403 bei fehlendem/ungueltigem CSRF-Token
 
   // Check session for protected routes
   const sessionToken = request.cookies.get('xkmu_session')?.value
