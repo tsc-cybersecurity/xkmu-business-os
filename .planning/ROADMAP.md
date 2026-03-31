@@ -34,12 +34,12 @@ Auth-Schicht als stabiles Fundament steht. Code-Qualitaet schliesst den Mileston
   2. Alle 14 migrierten Routes geben 401 zurueck wenn eine ungueltige Session gesendet wird
   3. Der DB-Import-Route akzeptiert keinen `sql.raw()` User-Input mehr; ein Cross-Tenant-Import-Versuch wird abgelehnt
   4. Kein Passwort oder Secret ist hardcoded im Source Code; `docker-compose.local.yml` startet nicht ohne gesetzte Pflicht-Umgebungsvariablen
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Auth-Konsolidierung — alle 14 `getAuthContext`-Kopien atomar auf `withPermission()` migrieren
-- [ ] 01-02: SQL Injection Fix — `sql.raw()` im DB-Import durch parametrisierte Queries ersetzen + Cross-Tenant-Test
-- [ ] 01-03: Credentials Cleanup — Hardcoded Secrets aus Seed-Scripts und Docker Compose entfernen
+- [ ] 01-01-PLAN.md — Auth-Konsolidierung: alle 14 getAuthContext-Kopien atomar auf withPermission() migrieren
+- [ ] 01-02-PLAN.md — SQL Injection Fix: sql.raw() im DB-Import durch parametrisierte Queries ersetzen + Cross-Tenant-Test
+- [ ] 01-03-PLAN.md — Credentials Cleanup: Hardcoded Secrets aus Seed-Scripts und Docker Compose entfernen
 
 ### Phase 2: Security Layer
 **Goal**: Eine zentrale `middleware.ts` setzt Security Headers und erzwingt CORS; alle API-Routes sind gegen Middleware-Bypass (CVE-2025-29927) durch beibehaltene `withPermission()`-Checks geschuetzt.
