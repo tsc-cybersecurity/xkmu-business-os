@@ -37,7 +37,7 @@ Auth-Schicht als stabiles Fundament steht. Code-Qualitaet schliesst den Mileston
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Auth-Konsolidierung: alle 14 getAuthContext-Kopien atomar auf withPermission() migrieren
+- [x] 01-01-PLAN.md — Auth-Konsolidierung: alle 14 getAuthContext-Kopien atomar auf withPermission() migrieren
 - [x] 01-02-PLAN.md — SQL Injection Fix: sql.raw() im DB-Import durch parametrisierte Queries ersetzen + Cross-Tenant-Test
 - [x] 01-03-PLAN.md — Credentials Cleanup: Hardcoded Secrets aus Seed-Scripts und Docker Compose entfernen
 
