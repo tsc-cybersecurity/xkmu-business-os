@@ -208,7 +208,7 @@ R4.* (Code Quality) — nach R3.* (aendert viel Code, Tests als Sicherheitsnetz)
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | R2.1 Auth-Konsolidierung | Phase 1 | Pending |
-| R1.1 SQL Injection Fix | Phase 1 | Pending |
+| R1.1 SQL Injection Fix | Phase 1 | Complete (01-02) |
 | R1.5 Credentials Cleanup | Phase 1 | Pending |
 | R1.2 CORS Allowlist | Phase 2 | Pending |
 | R1.3 Security Headers | Phase 2 | Pending |
