@@ -70,7 +70,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — HTML Sanitizer: isomorphic-dompurify-Wrapper + 3 dangerouslySetInnerHTML Call Sites sanitieren
-- [ ] 03-02-PLAN.md — API-Key Scoping: SQL-Migration + AuthContext + withPermission()-Enforcement + Admin-UI Scope-Selector
+- [x] 03-02-PLAN.md — API-Key Scoping: SQL-Migration + AuthContext + withPermission()-Enforcement + Admin-UI Scope-Selector
 - [ ] 03-03-PLAN.md — CSRF-Schutz: @edge-csrf/nextjs in proxy.ts nach API-Key-Early-Return + getCsrfToken() Utility
 
 ### Phase 4: Reliability
@@ -127,7 +127,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Foundation | 2/3 | In Progress|  |
 | 2. Security Layer | 0/2 | Not started | - |
-| 3. XSS & API Protection | 1/3 | In Progress | - |
+| 3. XSS & API Protection | 2/3 | In Progress|  |
 | 4. Reliability | 0/2 | Not started | - |
 | 5. Test Coverage | 0/2 | Not started | - |
 | 6. Code Quality | 0/3 | Not started | - |

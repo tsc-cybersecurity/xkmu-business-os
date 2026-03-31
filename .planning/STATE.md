@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.4.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-security-layer/02-01 CORS hardening and security headers
-last_updated: "2026-03-31T07:38:57.935Z"
-last_activity: 2026-03-31 -- Phase 03 execution started
+stopped_at: Completed 03-xss-api-protection/03-02 API-Key Scoping
+last_updated: "2026-03-31T07:54:50.540Z"
+last_activity: 2026-03-31
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 8
-  completed_plans: 5
+  completed_plans: 7
   percent: 0
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-30)
 ## Current Position
 
 Phase: 03 (xss-api-protection) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 03
-Last activity: 2026-03-31 -- Phase 03 execution started
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-03-31
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-foundation P02 | 12 | 2 tasks | 2 files |
 | Phase 01-foundation P01 | 14 | 2 tasks | 16 files |
 | Phase 02-security-layer P01 | 6 | 4 tasks | 3 files |
+| Phase 03-xss-api-protection P02 | 12 | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,8 @@ Recent decisions affecting current work:
 - [Phase 02-security-layer]: CORS handling moved from next.config.ts to proxy.ts: next.config.ts headers() cannot read request headers, dynamic origin allowlist only possible in proxy.ts
 - [Phase 02-security-layer]: CSP starts in Content-Security-Policy-Report-Only mode — switch to enforcement after Docker build verification shows zero violations
 - [Phase 02-security-layer]: ALLOWED_ORIGINS uses :- default (not :?) — optional config with sensible default, unlike required secrets that use :?
+- [Phase 03-xss-api-protection]: API scope check uses auth.apiKeyPermissions ?? ['*'] — null for session users defaults to full access, preventing lockout
+- [Phase 03-xss-api-protection]: SQL migration WHERE clause is idempotent: leaves rows already having ['*'] or module:action scopes untouched
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T05:46:43.097Z
-Stopped at: Completed 02-security-layer/02-01 CORS hardening and security headers
+Last session: 2026-03-31T07:54:50.531Z
+Stopped at: Completed 03-xss-api-protection/03-02 API-Key Scoping
 Resume file: None
