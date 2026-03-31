@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://boss.xkmu.de')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean)
+
 const PUBLIC_PATHS = [
   '/',
   '/api-docs',
@@ -46,6 +51,12 @@ async function verifySession(token: string): Promise<boolean> {
 }
 
 export async function proxy(request: NextRequest) {
+  // CVE-2025-29927 Defense: strip x-middleware-subrequest to prevent
+  // middleware bypass on older Next.js versions. Defense-in-Depth:
+  // withPermission() in route handlers remains the actual auth gate.
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.delete('x-middleware-subrequest')
+
   const { pathname } = request.nextUrl
 
   // Redirect /catalog/* to /intern/catalog/*
@@ -65,6 +76,24 @@ export async function proxy(request: NextRequest) {
 
   if (isPublicPath) {
     return NextResponse.next()
+  }
+
+  // CORS: handle preflight OPTIONS requests
+  const origin = request.headers.get('origin') ?? ''
+  const isAllowedOrigin = ALLOWED_ORIGINS.includes(origin)
+
+  if (request.method === 'OPTIONS') {
+    const preflightHeaders: Record<string, string> = {
+      'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,PATCH,OPTIONS',
+      'Access-Control-Allow-Headers':
+        'Content-Type, X-Api-Key, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version',
+      'Access-Control-Max-Age': '86400',
+    }
+    if (isAllowedOrigin) {
+      preflightHeaders['Access-Control-Allow-Origin'] = origin
+      preflightHeaders['Access-Control-Allow-Credentials'] = 'true'
+    }
+    return new NextResponse(null, { status: 204, headers: preflightHeaders })
   }
 
   // All non-intern, non-api paths are public (CMS pages, blog, etc.)
@@ -105,18 +134,33 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  return NextResponse.next()
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  })
+
+  // CORS: set response headers for allowed origins (non-preflight requests)
+  if (isAllowedOrigin) {
+    response.headers.set('Access-Control-Allow-Origin', origin)
+    response.headers.set('Access-Control-Allow-Credentials', 'true')
+    response.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS')
+    response.headers.set(
+      'Access-Control-Allow-Headers',
+      'Content-Type, X-Api-Key, X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Date, X-Api-Version'
+    )
+  }
+
+  return response
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    {
+      source:
+        '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot)$).*)',
+      missing: [
+        { type: 'header', key: 'next-router-prefetch' },
+        { type: 'header', key: 'purpose', value: 'prefetch' },
+      ],
+    },
   ],
 }
