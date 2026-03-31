@@ -5,7 +5,7 @@ import {
   Shield, Search, Upload, Loader2, AlertTriangle, Scale, Zap,
   PanelLeftClose, PanelLeft, ChevronDown, ChevronRight,
   Monitor, Users, Eye, Globe, Clock, Info, CheckCircle2,
-  Trash2,
+  Trash2, FileDown,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { generateIrPlaybookPdf } from '@/lib/services/ir-pdf.service'
 
 // ============================================
 // Types
@@ -272,14 +273,33 @@ function ScenarioDetail({ scenario, onDelete }: { scenario: any; onDelete: () =>
             </p>
           )}
         </div>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => setShowDeleteDialog(true)}
-        >
-          <Trash2 className="mr-1 h-4 w-4" />
-          Loeschen
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              try {
+                const doc = generateIrPlaybookPdf(scenario)
+                const slug = s.slug || s.id || 'playbook'
+                doc.save(`IR-Playbook_${slug}.pdf`)
+                toast.success('PDF exportiert')
+              } catch {
+                toast.error('PDF-Export fehlgeschlagen')
+              }
+            }}
+          >
+            <FileDown className="mr-1 h-4 w-4" />
+            PDF Export
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <Trash2 className="mr-1 h-4 w-4" />
+            Loeschen
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
