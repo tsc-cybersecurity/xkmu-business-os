@@ -1,5 +1,21 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === 'development'
+
+const cspDirectives = [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  `style-src 'self'${isDev ? " 'unsafe-inline'" : ''}`,
+  "img-src 'self' data: https:",
+  "font-src 'self'",
+  `connect-src 'self'${isDev ? ' ws://localhost:*' : ''}`,
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "upgrade-insecure-requests",
+].join('; ')
+
 const nextConfig: NextConfig = {
   // Standalone output for Docker deployments
   output: 'standalone',
@@ -22,21 +38,28 @@ const nextConfig: NextConfig = {
     },
   },
 
-  // CORS headers for API routes
+  // Security headers for all responses
   async headers() {
     return [
       {
-        source: '/api/:path*',
+        source: '/(.*)',
         headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           {
-            key: 'Access-Control-Allow-Headers',
-            value: 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, X-Api-Key',
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), payment=()',
           },
+          // Report-Only: violations are reported but NOT blocked.
+          // After verifying zero violations in Docker production build,
+          // switch key to 'Content-Security-Policy' to enforce.
+          { key: 'Content-Security-Policy-Report-Only', value: cspDirectives },
         ],
       },
+      // NOTE: No CORS block here. CORS is handled in src/proxy.ts where
+      // request headers (Origin) are readable. next.config.ts headers()
+      // cannot read request headers — dynamic origin checks are impossible here.
     ]
   },
 };
