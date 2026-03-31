@@ -17,17 +17,17 @@ const PHASE_LABELS: Record<string, string> = {
 }
 
 const RESPONSIBLE_LABELS: Record<string, string> = {
-  IT_ADMIN: 'IT-Admin',
+  IT_ADMIN: 'IT-Verantwortlicher',
   MANAGEMENT: 'Geschaeftsfuehrung',
-  HR: 'HR',
+  HR: 'Personalabteilung',
   FINANCE: 'Finanzen',
   LEGAL: 'Rechtsabteilung',
-  DATA_PROTECTION_OFFICER: 'DSB',
-  XKMU_SUPPORT: 'xKMU Support',
-  ALL_STAFF: 'Alle MA',
-  AFFECTED_USER: 'Betroffener',
-  EXTERNAL_FORENSICS: 'Ext. Forensik',
-  EXTERNAL_LAWYER: 'Ext. Anwalt',
+  DATA_PROTECTION_OFFICER: 'Datenschutzbeauftragter',
+  XKMU_SUPPORT: 'xKMU Notfallkontakt',
+  ALL_STAFF: 'Alle Mitarbeiter',
+  AFFECTED_USER: 'Betroffener MA',
+  EXTERNAL_FORENSICS: 'Ext. Forensik-Dienstleister',
+  EXTERNAL_LAWYER: 'Ext. Rechtsanwalt',
 }
 
 const SEVERITY_LABELS: Record<string, string> = {
@@ -76,15 +76,16 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
   addHeader(doc, pageWidth)
   y = 30
 
-  // Title with color
-  doc.setFontSize(20)
+  // Title with color (strip emoji - jsPDF cannot render them)
+  doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
   const titleColor = s.color_hex ? hexToRgb(s.color_hex) : HEADER_COLOR
   doc.setTextColor(...titleColor)
-  const titleText = `${s.emoji || ''} Szenario ${s.id?.replace('S-', '') || ''}: ${s.title}`
+  const scenarioNum = s.id ? parseInt(s.id.replace('S-', ''), 10) : ''
+  const titleText = `Szenario ${scenarioNum}: ${s.title}`
   const titleLines = doc.splitTextToSize(titleText, contentWidth)
   doc.text(titleLines, MARGIN, y)
-  y += titleLines.length * 8
+  y += titleLines.length * 7 + 1
 
   // Subtitle (italic)
   if (s.subtitle) {
@@ -105,50 +106,40 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
   y += 3
 
   const severityText = s.severity_label || SEVERITY_LABELS[s.severity] || s.severity
-  const damageText = (s.avg_damage_eur_min != null || s.avg_damage_eur_max != null)
-    ? `Schadenspotenzial: ${formatEur(s.avg_damage_eur_min)} \u2013 ${formatEur(s.avg_damage_eur_max)}`
+  const damageRange = (s.avg_damage_eur_min != null || s.avg_damage_eur_max != null)
+    ? `${formatEur(s.avg_damage_eur_min)} \u2013 ${formatEur(s.avg_damage_eur_max)}`
     : ''
+
+  // Build description for the box from severity context
+  const boxDesc: string[] = []
+  if (damageRange) boxDesc.push(damageRange)
+  if (s.dsgvo_relevant) boxDesc.push('DSGVO-meldepflichtig')
+  if (s.nis2_relevant) boxDesc.push('NIS2-relevant')
 
   doc.setDrawColor(200, 200, 200)
   doc.setFillColor(245, 245, 250)
-  doc.roundedRect(MARGIN, y, contentWidth, 18, 2, 2, 'FD')
+  doc.roundedRect(MARGIN, y, contentWidth, 16, 2, 2, 'FD')
 
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...DARK)
-  doc.text(severityText, MARGIN + 5, y + 7)
+  doc.text(severityText, MARGIN + 5, y + 6.5)
 
-  if (s.overview) {
+  if (boxDesc.length > 0) {
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...GRAY)
-    const boxOverview = doc.splitTextToSize(s.overview.substring(0, 120) + (s.overview.length > 120 ? '...' : ''), contentWidth - 50)
-    doc.text(boxOverview, MARGIN + 45, y + 6)
+    doc.text(boxDesc.join('. ') + '.', MARGIN + 5, y + 12)
   }
 
-  y += 24
-
-  // Tags line
-  const metaParts: string[] = []
-  if (s.dsgvo_relevant) metaParts.push('DSGVO-relevant')
-  if (s.nis2_relevant) metaParts.push('NIS2-relevant')
-  if (damageText) metaParts.push(damageText)
-  if (metaParts.length > 0) {
-    doc.setFontSize(9)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(...GRAY)
-    doc.text(metaParts.join(' | '), MARGIN, y)
-    y += 5
-  }
+  y += 22
 
   // Overview text
   if (s.overview) {
-    y += 2
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...DARK)
     const overviewLines = doc.splitTextToSize(s.overview, contentWidth)
-    // Check if we need a page break
     if (y + overviewLines.length * 4.5 > 270) {
       doc.addPage()
       y = 30
@@ -225,7 +216,8 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
 
     const head = escSorted.map((e: any) => {
       const deadline = e.deadline_hours != null ? ` \u2014 ${e.deadline_hours} Std.` : ''
-      return `Stufe ${e.level}${deadline}`
+      const label = e.label || `Stufe ${e.level}`
+      return `${label}${deadline}`
     })
 
     const bodyRows: string[][] = []
@@ -233,7 +225,8 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
       const row = escSorted.map((e: any) => {
         const recipient = e.recipients?.[ri]
         if (!recipient) return ''
-        let text = recipient.role || ''
+        // Use human-readable role name, fall back to RESPONSIBLE_LABELS for enum values
+        let text = RESPONSIBLE_LABELS[recipient.role] || recipient.role || ''
         if (recipient.legal_basis) text += ` (${recipient.legal_basis})`
         return text
       })
