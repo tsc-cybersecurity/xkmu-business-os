@@ -96,11 +96,11 @@ Plans:
   2. Mindestens ein Integration Test pro Security-Service testet echte DB-Queries (keine vollstaendigen DB-Mocks)
   3. Ein Test verifiziert explizit dass Tenant A keine Daten von Tenant B lesen kann
   4. Login-Flow, CRUD fuer 3 Module und Permission-Checks sind durch Integration Tests abgedeckt
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Unit Tests fuer Auth, Tenant, Email, API-Key Services (Ziel: 80% Coverage)
-- [ ] 05-02: Integration Tests — Login-Flow, Tenant-Isolation, CRUD fuer 3 Module, Permission-Checks mit echter Test-DB
+- [ ] 05-01-PLAN.md — Unit Tests: mock-db.$dynamic() + coverage-config + 11 neue/erweiterte Test-Dateien fuer auth/session/api-key/tenant/email services (Ziel: 80% Coverage)
+- [ ] 05-02-PLAN.md — Integration Tests (real DB): test-db.ts Helper + auth-flow + tenant-isolation + api-key-scoping + CRUD (companies/leads/users) + permission-checks
 
 ### Phase 6: Code Quality
 **Goal**: Alle kritischen `as any`-Casts sind durch korrekte TypeScript-Typen ersetzt, N+1-Query-Patterns in den 8+ betroffenen Services sind durch Batch-Queries geloest und keine Page-Komponente ueberschreitet 400 Zeilen.
