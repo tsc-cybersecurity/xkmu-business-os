@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, use } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Shield, AlertTriangle, ArrowLeft, Trash2, Scale, Zap,
-  Monitor, Users, Eye, Globe, Clock, Info, CheckCircle2,
+  Monitor, Users, Eye, Globe, Clock, Info, CheckCircle2, FileDown,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,6 +21,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
+import { generateIrPlaybookPdf } from '@/lib/services/ir-pdf.service'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -239,14 +240,33 @@ export default function IrPlaybookDetailPage({ params }: { params: Promise<{ id:
             </p>
           )}
         </div>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={() => setShowDeleteDialog(true)}
-        >
-          <Trash2 className="mr-1 h-4 w-4" />
-          Loeschen
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              try {
+                const doc = generateIrPlaybookPdf(scenario)
+                const slug = s.slug || s.id || 'playbook'
+                doc.save(`IR-Playbook_${slug}.pdf`)
+                toast.success('PDF exportiert')
+              } catch {
+                toast.error('PDF-Export fehlgeschlagen')
+              }
+            }}
+          >
+            <FileDown className="mr-1 h-4 w-4" />
+            PDF Export
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <Trash2 className="mr-1 h-4 w-4" />
+            Loeschen
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
