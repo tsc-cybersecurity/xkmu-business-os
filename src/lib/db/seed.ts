@@ -4,6 +4,15 @@ import bcrypt from 'bcryptjs'
 import { tenants, users } from './schema'
 import { logger } from '@/lib/utils/logger'
 
+const adminEmail = process.env.SEED_ADMIN_EMAIL
+const adminPassword = process.env.SEED_ADMIN_PASSWORD
+if (!adminEmail || !adminPassword) {
+  throw new Error(
+    'SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD environment variables must be set before seeding. ' +
+    'Set them in your .env file or pass them to docker compose.'
+  )
+}
+
 const SEED_DATA = {
   tenant: {
     name: 'Default Organisation',
@@ -11,8 +20,8 @@ const SEED_DATA = {
     status: 'active',
   },
   user: {
-    email: process.env.SEED_ADMIN_EMAIL || 'xkmu9c0up6ab04k35f66784bljf2rqb5f43@vdix.de',
-    password: process.env.SEED_ADMIN_PASSWORD || 'fG58Ebj2@MDv6uvm',
+    email: adminEmail,
+    password: adminPassword,
     firstName: 'xKMU',
     lastName: 'Admin',
     role: 'owner',
