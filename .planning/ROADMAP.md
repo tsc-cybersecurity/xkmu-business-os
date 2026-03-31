@@ -39,7 +39,7 @@ Auth-Schicht als stabiles Fundament steht. Code-Qualitaet schliesst den Mileston
 Plans:
 - [ ] 01-01-PLAN.md — Auth-Konsolidierung: alle 14 getAuthContext-Kopien atomar auf withPermission() migrieren
 - [ ] 01-02-PLAN.md — SQL Injection Fix: sql.raw() im DB-Import durch parametrisierte Queries ersetzen + Cross-Tenant-Test
-- [ ] 01-03-PLAN.md — Credentials Cleanup: Hardcoded Secrets aus Seed-Scripts und Docker Compose entfernen
+- [x] 01-03-PLAN.md — Credentials Cleanup: Hardcoded Secrets aus Seed-Scripts und Docker Compose entfernen
 
 ### Phase 2: Security Layer
 **Goal**: Eine zentrale `middleware.ts` setzt Security Headers und erzwingt CORS; alle API-Routes sind gegen Middleware-Bypass (CVE-2025-29927) durch beibehaltene `withPermission()`-Checks geschuetzt.
@@ -126,7 +126,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
+| 1. Foundation | 1/3 | In Progress|  |
 | 2. Security Layer | 0/3 | Not started | - |
 | 3. XSS & API Protection | 0/3 | Not started | - |
 | 4. Reliability | 0/2 | Not started | - |
