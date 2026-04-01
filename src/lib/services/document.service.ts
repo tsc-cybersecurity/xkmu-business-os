@@ -39,10 +39,17 @@ const OFFER_TRANSITIONS: Record<string, string[]> = {
   sent: ['accepted', 'rejected', 'expired'],
 }
 
+const CONTRACT_TRANSITIONS: Record<string, string[]> = {
+  draft: ['sent'],
+  sent: ['signed', 'rejected'],
+  signed: ['active'],
+  active: ['terminated', 'expired'],
+}
+
 export const DocumentService = {
   async generateNumber(tenantId: string, type: string, year?: number): Promise<string> {
     const currentYear = year || new Date().getFullYear()
-    const prefix = type === 'invoice' ? 'RE' : 'AN'
+    const prefix = type === 'invoice' ? 'RE' : type === 'contract' ? 'VT' : 'AN'
     const pattern = `${prefix}-${currentYear}-%`
 
     const [result] = await db
@@ -117,6 +124,15 @@ export const DocumentService = {
         customerCity: data.customerCity || customerSnapshot.customerCity || null,
         customerCountry: data.customerCountry || customerSnapshot.customerCountry || null,
         customerVatId: data.customerVatId || customerSnapshot.customerVatId || null,
+        // Contract-specific fields
+        contractStartDate: data.contractStartDate ? new Date(data.contractStartDate) : null,
+        contractEndDate: data.contractEndDate ? new Date(data.contractEndDate) : null,
+        contractRenewalType: data.contractRenewalType || null,
+        contractRenewalPeriod: data.contractRenewalPeriod || null,
+        contractNoticePeriodDays: data.contractNoticePeriodDays ?? null,
+        contractTemplateId: emptyToNull(data.contractTemplateId),
+        projectId: emptyToNull(data.projectId),
+        contractBodyHtml: emptyToNull(data.contractBodyHtml),
         createdBy,
       })
       .returning()
@@ -326,7 +342,11 @@ export const DocumentService = {
 
     if (!existing) return null
 
-    const transitions = existing.type === 'invoice' ? INVOICE_TRANSITIONS : OFFER_TRANSITIONS
+    const transitions = existing.type === 'invoice'
+      ? INVOICE_TRANSITIONS
+      : existing.type === 'contract'
+        ? CONTRACT_TRANSITIONS
+        : OFFER_TRANSITIONS
     const allowed = transitions[existing.status || 'draft'] || []
 
     if (!allowed.includes(newStatus)) {
@@ -403,6 +423,71 @@ export const DocumentService = {
     }
 
     return invoice
+  },
+
+  async convertContractToDocument(
+    tenantId: string,
+    contractId: string,
+    targetType: 'offer' | 'invoice',
+    createdBy?: string
+  ): Promise<Document | null> {
+    const contract = await this.getById(tenantId, contractId)
+    if (!contract) return null
+    if (contract.type !== 'contract') throw new Error('Nur Vertraege koennen umgewandelt werden')
+
+    const number = await this.generateNumber(tenantId, targetType)
+
+    const [newDoc] = await db
+      .insert(documents)
+      .values({
+        tenantId,
+        type: targetType,
+        number,
+        companyId: contract.companyId,
+        contactPersonId: contract.contactPersonId,
+        status: 'draft',
+        issueDate: new Date(),
+        subtotal: contract.subtotal,
+        taxTotal: contract.taxTotal,
+        total: contract.total,
+        discount: contract.discount,
+        discountType: contract.discountType,
+        notes: contract.notes,
+        paymentTerms: contract.paymentTerms,
+        customerName: contract.customerName,
+        customerStreet: contract.customerStreet,
+        customerHouseNumber: contract.customerHouseNumber,
+        customerPostalCode: contract.customerPostalCode,
+        customerCity: contract.customerCity,
+        customerCountry: contract.customerCountry,
+        customerVatId: contract.customerVatId,
+        convertedFromId: contractId,
+        createdBy,
+      })
+      .returning()
+
+    // Copy items
+    if (contract.items.length > 0) {
+      await db.insert(documentItems).values(
+        contract.items.map((item) => ({
+          documentId: newDoc.id,
+          tenantId,
+          position: item.position,
+          productId: item.productId,
+          name: item.name,
+          description: item.description,
+          quantity: item.quantity,
+          unit: item.unit,
+          unitPrice: item.unitPrice,
+          vatRate: item.vatRate,
+          discount: item.discount,
+          discountType: item.discountType,
+          lineTotal: item.lineTotal,
+        }))
+      )
+    }
+
+    return newDoc
   },
 
   // Delegate calculation and item methods to DocumentCalculationService

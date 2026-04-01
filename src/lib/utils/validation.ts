@@ -353,9 +353,10 @@ export const updateWebhookSchema = createWebhookSchema.partial()
 // ============================================
 // Document Schemas (Rechnungen & Angebote)
 // ============================================
-export const documentTypeSchema = z.enum(['invoice', 'offer'])
+export const documentTypeSchema = z.enum(['invoice', 'offer', 'contract'])
 export const invoiceStatusSchema = z.enum(['draft', 'sent', 'paid', 'overdue', 'cancelled'])
 export const offerStatusSchema = z.enum(['draft', 'sent', 'accepted', 'rejected', 'expired'])
+export const contractStatusSchema = z.enum(['draft', 'sent', 'signed', 'active', 'terminated', 'expired', 'rejected'])
 export const discountTypeSchema = z.enum(['percent', 'fixed'])
 
 export const createDocumentSchema = z.object({
@@ -399,6 +400,20 @@ export const updateDocumentItemSchema = createDocumentItemSchema.partial()
 export const updateDocumentStatusSchema = z.object({
   status: z.string().min(1),
 })
+
+export const createContractSchema = createDocumentSchema.extend({
+  type: z.literal('contract'),
+  contractStartDate: z.string().optional(),
+  contractEndDate: z.string().optional().or(z.literal('')),
+  contractRenewalType: z.enum(['none', 'manual', 'auto']).default('none'),
+  contractRenewalPeriod: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
+  contractNoticePeriodDays: z.number().min(0).optional(),
+  contractTemplateId: uuidSchema.nullable().optional(),
+  projectId: uuidSchema.nullable().optional(),
+  contractBodyHtml: z.string().optional().or(z.literal('')),
+})
+
+export const updateContractSchema = createContractSchema.partial()
 
 // ============================================
 // CMS Page Schemas
