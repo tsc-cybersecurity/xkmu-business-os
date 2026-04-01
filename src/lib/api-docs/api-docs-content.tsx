@@ -194,7 +194,7 @@ export function ApiDocsContent() {
             <TabsTrigger
               key={service.slug}
               value={service.slug}
-              className="!flex-none shrink-0 rounded-md border px-2.5 py-1 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="!flex-none shrink-0 rounded-md border px-2.5 py-1 text-xs data-[state=active]:!bg-primary data-[state=active]:!text-primary-foreground data-[state=active]:!border-primary"
             >
               {service.name}
             </TabsTrigger>
