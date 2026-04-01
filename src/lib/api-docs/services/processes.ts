@@ -1,0 +1,181 @@
+import type { ApiService } from '../types'
+
+export const processesService: ApiService = {
+  name: 'Prozesse',
+  slug: 'processes',
+  description: 'Geschaeftsprozesse (SOPs) verwalten, Aufgaben zuweisen und KI-gestuetzte Entwicklungsanalysen durchfuehren.',
+  basePath: '/api/v1/processes',
+  auth: 'session',
+  endpoints: [
+    {
+      method: 'GET',
+      path: '/api/v1/processes',
+      summary: 'Alle Prozessbereiche auflisten',
+      response: { items: [{ id: 'uuid', key: 'SOP-01', name: 'Kundenakquise', description: 'Prozess zur Neukundengewinnung' }] },
+      curl: `curl -s https://example.com/api/v1/processes -b cookies.txt`,
+    },
+    {
+      method: 'POST',
+      path: '/api/v1/processes',
+      summary: 'Neuen Prozessbereich erstellen',
+      description: 'Erstellt einen neuen Prozessbereich. Validierung ueber Zod-Schema.',
+      requestBody: {
+        key: 'SOP-15',
+        name: 'Datenschutz-Management',
+        description: 'Prozesse rund um DSGVO-Compliance und Datenschutzfolgenabschaetzung',
+        category: 'compliance',
+      },
+      response: { id: 'uuid', key: 'SOP-15', name: 'Datenschutz-Management' },
+      curl: `curl -s -X POST https://example.com/api/v1/processes -b cookies.txt -H "Content-Type: application/json" -d '{"key":"SOP-15","name":"Datenschutz-Management","description":"Prozesse rund um DSGVO-Compliance und Datenschutzfolgenabschaetzung","category":"compliance"}'`,
+    },
+    {
+      method: 'GET',
+      path: '/api/v1/processes/{id}',
+      summary: 'Prozess mit Aufgaben abrufen',
+      description: 'Gibt einen Prozessbereich inklusive aller zugehoerigen Aufgaben zurueck.',
+      params: [
+        { name: 'id', in: 'path', required: true, type: 'string', description: 'Prozess-ID (UUID)', example: 'a1b2c3d4-0000-1111-2222-333344445555' },
+      ],
+      response: { id: 'uuid', key: 'SOP-01', name: 'Kundenakquise', tasks: [{ id: 'uuid', taskKey: 'SOP-01-001', title: 'Zielgruppe definieren' }] },
+      curl: `curl -s https://example.com/api/v1/processes/a1b2c3d4-0000-1111-2222-333344445555 -b cookies.txt`,
+    },
+    {
+      method: 'PUT',
+      path: '/api/v1/processes/{id}',
+      summary: 'Prozessbereich aktualisieren',
+      params: [
+        { name: 'id', in: 'path', required: true, type: 'string', description: 'Prozess-ID (UUID)' },
+      ],
+      requestBody: {
+        name: 'Kundenakquise (erweitert)',
+        description: 'Erweiterter Prozess inkl. Bestandskundenpflege',
+      },
+      response: { id: 'uuid', name: 'Kundenakquise (erweitert)' },
+      curl: `curl -s -X PUT https://example.com/api/v1/processes/a1b2c3d4-0000-1111-2222-333344445555 -b cookies.txt -H "Content-Type: application/json" -d '{"name":"Kundenakquise (erweitert)","description":"Erweiterter Prozess inkl. Bestandskundenpflege"}'`,
+    },
+    {
+      method: 'DELETE',
+      path: '/api/v1/processes/{id}',
+      summary: 'Prozessbereich loeschen',
+      params: [
+        { name: 'id', in: 'path', required: true, type: 'string', description: 'Prozess-ID (UUID)' },
+      ],
+      response: { deleted: true },
+      curl: `curl -s -X DELETE https://example.com/api/v1/processes/a1b2c3d4-0000-1111-2222-333344445555 -b cookies.txt`,
+    },
+    {
+      method: 'GET',
+      path: '/api/v1/processes/{id}/tasks',
+      summary: 'Aufgaben eines Prozesses auflisten',
+      params: [
+        { name: 'id', in: 'path', required: true, type: 'string', description: 'Prozess-ID (UUID)' },
+      ],
+      response: { items: [{ id: 'uuid', taskKey: 'SOP-01-001', title: 'Zielgruppe definieren', status: 'open', appStatus: 'partial' }] },
+      curl: `curl -s https://example.com/api/v1/processes/a1b2c3d4-0000-1111-2222-333344445555/tasks -b cookies.txt`,
+    },
+    {
+      method: 'POST',
+      path: '/api/v1/processes/{id}/tasks',
+      summary: 'Neue Aufgabe im Prozess erstellen',
+      description: 'Erstellt eine neue Aufgabe innerhalb eines Prozessbereichs. Validierung ueber Zod-Schema.',
+      params: [
+        { name: 'id', in: 'path', required: true, type: 'string', description: 'Prozess-ID (UUID)' },
+      ],
+      requestBody: {
+        taskKey: 'SOP-01-005',
+        title: 'Erstgespraech fuehren',
+        subprocess: 'Kontaktaufnahme',
+        purpose: 'Bedarfsanalyse beim Interessenten durchfuehren',
+        trigger: 'Qualifizierter Lead im CRM',
+        steps: [
+          { nr: 1, action: 'Termin per E-Mail vereinbaren', tool: 'CRM' },
+          { nr: 2, action: 'Gespraechsleitfaden vorbereiten' },
+          { nr: 3, action: 'Erstgespraech durchfuehren und dokumentieren', tool: 'CRM' },
+        ],
+      },
+      response: { id: 'uuid', taskKey: 'SOP-01-005', title: 'Erstgespraech fuehren' },
+      curl: `curl -s -X POST https://example.com/api/v1/processes/a1b2c3d4-0000-1111-2222-333344445555/tasks -b cookies.txt -H "Content-Type: application/json" -d '{"taskKey":"SOP-01-005","title":"Erstgespraech fuehren","subprocess":"Kontaktaufnahme","purpose":"Bedarfsanalyse beim Interessenten durchfuehren"}'`,
+    },
+    {
+      method: 'GET',
+      path: '/api/v1/processes/tasks/{taskId}',
+      summary: 'Einzelne Aufgabe abrufen',
+      params: [
+        { name: 'taskId', in: 'path', required: true, type: 'string', description: 'Aufgaben-ID (UUID)', example: 'b2c3d4e5-1111-2222-3333-444455556666' },
+      ],
+      response: { id: 'uuid', taskKey: 'SOP-01-001', title: 'Zielgruppe definieren', subprocess: 'Vorbereitung', appStatus: 'partial' },
+      curl: `curl -s https://example.com/api/v1/processes/tasks/b2c3d4e5-1111-2222-3333-444455556666 -b cookies.txt`,
+    },
+    {
+      method: 'PUT',
+      path: '/api/v1/processes/tasks/{taskId}',
+      summary: 'Aufgabe aktualisieren',
+      params: [
+        { name: 'taskId', in: 'path', required: true, type: 'string', description: 'Aufgaben-ID (UUID)' },
+      ],
+      requestBody: {
+        title: 'Zielgruppe definieren und validieren',
+        appStatus: 'full',
+        appModule: 'CRM',
+        appNotes: 'Ueber Firmen-Tags und Lead-Scoring abgedeckt',
+      },
+      response: { id: 'uuid', taskKey: 'SOP-01-001', title: 'Zielgruppe definieren und validieren', appStatus: 'full' },
+      curl: `curl -s -X PUT https://example.com/api/v1/processes/tasks/b2c3d4e5-1111-2222-3333-444455556666 -b cookies.txt -H "Content-Type: application/json" -d '{"title":"Zielgruppe definieren und validieren","appStatus":"full","appModule":"CRM"}'`,
+    },
+    {
+      method: 'DELETE',
+      path: '/api/v1/processes/tasks/{taskId}',
+      summary: 'Aufgabe loeschen',
+      params: [
+        { name: 'taskId', in: 'path', required: true, type: 'string', description: 'Aufgaben-ID (UUID)' },
+      ],
+      response: { deleted: true },
+      curl: `curl -s -X DELETE https://example.com/api/v1/processes/tasks/b2c3d4e5-1111-2222-3333-444455556666 -b cookies.txt`,
+    },
+    {
+      method: 'POST',
+      path: '/api/v1/processes/seed',
+      summary: 'Prozesse aus JSON-Dateien importieren',
+      description: 'Importiert Prozessbereiche und Aufgaben aus SOP-JSON-Dateien. Akzeptiert entweder JSON-Daten im Request-Body (mainJson, newSopsJson) oder liest aus temp-Dateien auf dem Server.',
+      requestBody: {
+        mainJson: { processes: ['...'] },
+        newSopsJson: { processes: ['...'] },
+      },
+      response: { processCount: 12, taskCount: 59 },
+      curl: `curl -s -X POST https://example.com/api/v1/processes/seed -b cookies.txt -H "Content-Type: application/json" -d '{"mainJson":{"processes":[]},"newSopsJson":{"processes":[]}}'`,
+    },
+    {
+      method: 'POST',
+      path: '/api/v1/processes/mapping',
+      summary: 'App-Mapping fuer Aufgaben massenweise aktualisieren',
+      description: 'Aktualisiert appStatus, appModule und appNotes fuer mehrere Aufgaben gleichzeitig. Keys sind taskKey-Werte.',
+      requestBody: {
+        'SOP-01-001': { appStatus: 'full', appModule: 'CRM', appNotes: 'Ueber Firmen-Tags abgedeckt' },
+        'SOP-03-002': { appStatus: 'partial', appModule: 'Finance', appNotes: 'Rechnungserstellung vorhanden, Mahnwesen fehlt' },
+      },
+      response: { updated: 2, total: 2 },
+      curl: `curl -s -X POST https://example.com/api/v1/processes/mapping -b cookies.txt -H "Content-Type: application/json" -d '{"SOP-01-001":{"appStatus":"full","appModule":"CRM","appNotes":"Ueber Firmen-Tags abgedeckt"},"SOP-03-002":{"appStatus":"partial","appModule":"Finance"}}'`,
+    },
+    {
+      method: 'GET',
+      path: '/api/v1/processes/dev-tasks',
+      summary: 'Aufgaben mit Entwicklungsanforderungen auflisten',
+      description: 'Gibt alle Prozess-Aufgaben zurueck, die Entwicklungsanforderungen (devRequirements) haben.',
+      response: { items: [{ id: 'uuid', taskKey: 'SOP-03-002', title: 'Mahnung erstellen', devRequirements: [{ tool: 'App-Feature', neededFunction: 'Mahnwesen-Modul', approach: 'Automatische Mahnstufen', effort: 'L', priority: 'hoch' }] }] },
+      curl: `curl -s https://example.com/api/v1/processes/dev-tasks -b cookies.txt`,
+    },
+    {
+      method: 'POST',
+      path: '/api/v1/processes/dev-tasks/generate',
+      summary: 'KI-Entwicklungsanalyse fuer Aufgaben generieren',
+      description: 'Analysiert per KI, welche Entwicklungsanforderungen fuer Prozess-Aufgaben bestehen. Vergleicht bestehende App-Funktionen mit SOP-Anforderungen. Optional auf bestimmte Tasks einschraenkbar.',
+      requestBody: {
+        taskKeys: ['SOP-03-002', 'SOP-05-001'],
+        overwrite: false,
+        customPrompt: undefined,
+      },
+      response: { generated: 2, errors: 0, total: 2, skipped: 0 },
+      curl: `curl -s -X POST https://example.com/api/v1/processes/dev-tasks/generate -b cookies.txt -H "Content-Type: application/json" -d '{"taskKeys":["SOP-03-002","SOP-05-001"],"overwrite":false}'`,
+    },
+  ],
+}
