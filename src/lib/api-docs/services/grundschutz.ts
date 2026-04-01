@@ -68,7 +68,7 @@ export const grundschutzService: ApiService = {
       params: [
         { name: 'id', in: 'path', required: true, type: 'string', description: 'Asset-ID (UUID)' },
       ],
-      response: null,
+      response: { success: true, data: { deleted: true } },
       curl: `curl -s -X DELETE https://example.com/api/v1/grundschutz/assets/a1b2c3d4-e5f6-7890-abcd-ef1234567890 -b cookies.txt`,
     },
     // --- Asset Categories ---
