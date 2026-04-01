@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Shield, Search, Upload, Loader2, AlertTriangle, Scale, Zap,
-  PanelLeftClose, PanelLeft, ChevronDown, ChevronRight,
+  PanelLeftClose, PanelLeft,
   Monitor, Users, Eye, Globe, Clock, Info, CheckCircle2,
   Trash2, FileDown,
 } from 'lucide-react'
@@ -125,16 +125,6 @@ const PHASE_LABELS: Record<string, { label: string; time: string }> = {
 
 const ESCALATION_COLORS = ['bg-yellow-500', 'bg-orange-500', 'bg-red-500', 'bg-red-700']
 
-const SERIES_OPTIONS = [
-  { value: 'all', label: 'Alle Serien' },
-  { value: 'I', label: 'Serie I' },
-  { value: 'II', label: 'Serie II' },
-  { value: 'III', label: 'Serie III' },
-  { value: 'IV', label: 'Serie IV' },
-  { value: 'V', label: 'Serie V' },
-  { value: 'VI', label: 'Serie VI' },
-]
-
 const SEVERITY_OPTIONS = [
   { value: 'all', label: 'Alle Schweregrade' },
   { value: 'LOW', label: 'Niedrig' },
@@ -143,15 +133,6 @@ const SEVERITY_OPTIONS = [
   { value: 'CRITICAL', label: 'Kritisch' },
   { value: 'VARIABLE', label: 'Variabel' },
 ]
-
-const SERIES_COLORS: Record<string, string> = {
-  I: 'bg-blue-500',
-  II: 'bg-green-500',
-  III: 'bg-purple-500',
-  IV: 'bg-orange-500',
-  V: 'bg-pink-500',
-  VI: 'bg-cyan-500',
-}
 
 function formatEur(value: number | null): string {
   if (value == null) return '?'
@@ -670,13 +651,11 @@ export default function IrPlaybookPage() {
   const [importing, setImporting] = useState(false)
 
   const [search, setSearch] = useState('')
-  const [series, setSeries] = useState('all')
   const [severity, setSeverity] = useState('all')
   const [dsgvoOnly, setDsgvoOnly] = useState(false)
 
   // Layout state
   const [showSidebar, setShowSidebar] = useState(true)
-  const [expandedSeries, setExpandedSeries] = useState<Set<string>>(new Set())
   const [selectedScenarioId, setSelectedScenarioId] = useState<string | null>(null)
 
   // Detail state
@@ -688,7 +667,6 @@ export default function IrPlaybookPage() {
       setLoading(true)
       const params = new URLSearchParams()
       if (search) params.set('search', search)
-      if (series !== 'all') params.set('series', series)
       if (severity !== 'all') params.set('severity', severity)
       if (dsgvoOnly) params.set('dsgvo', 'true')
 
@@ -702,7 +680,7 @@ export default function IrPlaybookPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, series, severity, dsgvoOnly])
+  }, [search, severity, dsgvoOnly])
 
   const fetchStats = useCallback(async () => {
     try {
@@ -805,25 +783,8 @@ export default function IrPlaybookPage() {
     fetchStats()
   }
 
-  // Group scenarios by series
-  const scenariosBySeries = new Map<string, ScenarioSummary[]>()
-  for (const s of scenarios) {
-    const key = s.series || 'Sonstige'
-    if (!scenariosBySeries.has(key)) scenariosBySeries.set(key, [])
-    scenariosBySeries.get(key)!.push(s)
-  }
-
-  const toggleSeries = (seriesKey: string) => {
-    setExpandedSeries(prev => {
-      const next = new Set(prev)
-      if (next.has(seriesKey)) {
-        next.delete(seriesKey)
-      } else {
-        next.add(seriesKey)
-      }
-      return next
-    })
-  }
+  // Sort scenarios by ID (S-001, S-002, ...)
+  const sortedScenarios = [...scenarios].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
 
   if (loading) {
     return (
@@ -904,16 +865,6 @@ export default function IrPlaybookPage() {
               />
             </div>
             <div className="flex gap-2">
-              <Select value={series} onValueChange={setSeries}>
-                <SelectTrigger className="h-7 text-xs flex-1">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SERIES_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <Select value={severity} onValueChange={setSeverity}>
                 <SelectTrigger className="h-7 text-xs flex-1">
                   <SelectValue />
@@ -924,56 +875,38 @@ export default function IrPlaybookPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button
+                variant={dsgvoOnly ? 'default' : 'outline'}
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setDsgvoOnly(!dsgvoOnly)}
+              >
+                <Scale className="mr-1 h-3 w-3" />
+                DSGVO
+              </Button>
             </div>
-            <Button
-              variant={dsgvoOnly ? 'default' : 'outline'}
-              size="sm"
-              className="w-full h-7 text-xs"
-              onClick={() => setDsgvoOnly(!dsgvoOnly)}
-            >
-              <Scale className="mr-1 h-3 w-3" />
-              Nur DSGVO-relevant
-            </Button>
           </div>
 
-          {/* Scenario Tree */}
+          {/* Scenario List (sorted by ID) */}
           <div className="flex-1 overflow-y-auto">
-            {Array.from(scenariosBySeries.entries()).map(([seriesKey, seriesScenarios]) => (
-              <div key={seriesKey}>
-                {/* Series header */}
-                <button
-                  onClick={() => toggleSeries(seriesKey)}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-accent transition-colors"
-                >
-                  {expandedSeries.has(seriesKey)
-                    ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  }
-                  <span className={cn('w-2 h-2 rounded-full shrink-0', SERIES_COLORS[seriesKey] || 'bg-gray-400')} />
-                  <span className="font-medium truncate">Serie {seriesKey}</span>
-                  <span className="text-xs text-muted-foreground ml-auto shrink-0">{seriesScenarios.length}</span>
-                </button>
-
-                {/* Scenarios under series */}
-                {expandedSeries.has(seriesKey) && seriesScenarios.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedScenarioId(s.id)}
-                    className={cn(
-                      'w-full flex items-center gap-2 pl-10 pr-4 py-1.5 text-left text-xs hover:bg-accent transition-colors',
-                      selectedScenarioId === s.id && 'bg-accent font-medium',
-                    )}
-                  >
-                    {s.emoji && <span className="shrink-0">{s.emoji}</span>}
-                    <span className="truncate">{s.title}</span>
-                    <span className="shrink-0 ml-auto flex items-center gap-1">
-                      {s.severity === 'CRITICAL' && <span className="w-2 h-2 rounded-full bg-red-500" title="Kritisch" />}
-                      {s.severity === 'HIGH' && <span className="w-2 h-2 rounded-full bg-orange-500" title="Hoch" />}
-                      {s.dsgvo_relevant && <Scale className="h-3 w-3 text-blue-500" />}
-                    </span>
-                  </button>
-                ))}
-              </div>
+            {sortedScenarios.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setSelectedScenarioId(s.id)}
+                className={cn(
+                  'w-full flex items-center gap-2 px-4 py-2 text-left text-xs hover:bg-accent transition-colors border-b border-border/40',
+                  selectedScenarioId === s.id && 'bg-accent font-medium',
+                )}
+              >
+                <span className="shrink-0 text-muted-foreground font-mono w-8">{s.id}</span>
+                {s.emoji && <span className="shrink-0">{s.emoji}</span>}
+                <span className="truncate">{s.title}</span>
+                <span className="shrink-0 ml-auto flex items-center gap-1">
+                  {s.severity === 'CRITICAL' && <span className="w-2 h-2 rounded-full bg-red-500" title="Kritisch" />}
+                  {s.severity === 'HIGH' && <span className="w-2 h-2 rounded-full bg-orange-500" title="Hoch" />}
+                  {s.dsgvo_relevant && <Scale className="h-3 w-3 text-blue-500" />}
+                </span>
+              </button>
             ))}
           </div>
         </div>
@@ -1027,15 +960,11 @@ export default function IrPlaybookPage() {
           ) : (
             /* Overview: card grid when no scenario selected */
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {scenarios.map((s) => (
+              {sortedScenarios.map((s) => (
                 <Card
                   key={s.id}
                   className="cursor-pointer transition-shadow hover:shadow-md"
-                  onClick={() => {
-                    setSelectedScenarioId(s.id)
-                    // Auto-expand the series
-                    setExpandedSeries(prev => new Set(prev).add(s.series))
-                  }}
+                  onClick={() => setSelectedScenarioId(s.id)}
                 >
                   <CardContent className="space-y-3 p-5">
                     <div>
@@ -1046,7 +975,7 @@ export default function IrPlaybookPage() {
                         {s.emoji && <span className="mr-1">{s.emoji}</span>}
                         {s.title}
                       </h3>
-                      <p className="mt-0.5 text-xs text-muted-foreground">Serie {s.series} &middot; {s.id}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{s.id}</p>
                     </div>
 
                     <div className="flex flex-wrap gap-1.5">
