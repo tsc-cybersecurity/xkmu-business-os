@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmDialog } from '@/components/shared'
-import { DocumentStatusBadge } from '../../../_components/status-badge'
+import { DocumentStatusBadge } from '../../_components/status-badge'
 import { toast } from 'sonner'
 import {
   FileSignature,
