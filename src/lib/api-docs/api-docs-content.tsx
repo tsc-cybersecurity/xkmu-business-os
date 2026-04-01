@@ -189,12 +189,12 @@ export function ApiDocsContent() {
       </div>
 
       <Tabs defaultValue={activeTab} key={activeTab}>
-        <TabsList className="flex h-auto w-full flex-wrap justify-start gap-1 overflow-x-auto bg-transparent p-0">
+        <TabsList variant="line" className="!flex !h-auto !w-full !flex-wrap !justify-start gap-1 bg-transparent p-0">
           {filteredServices.map((service) => (
             <TabsTrigger
               key={service.slug}
               value={service.slug}
-              className="shrink-0 rounded-md border data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="!flex-none shrink-0 rounded-md border px-2.5 py-1 text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               {service.name}
             </TabsTrigger>
