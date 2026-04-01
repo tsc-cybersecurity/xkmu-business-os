@@ -61,6 +61,8 @@ export const TENANT_TABLES = [
   'cockpit_systems',
   'grundschutz_audit_sessions',
   'grundschutz_answers',
+  'contract_templates',
+  'contract_clauses',
 ]
 
 // Tables without tenant_id that reference a tenant-scoped parent (exported via JOIN)

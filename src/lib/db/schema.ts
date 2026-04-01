@@ -794,6 +794,15 @@ export const documents = pgTable('documents', {
   customerVatId: varchar('customer_vat_id', { length: 50 }),
   // Self-reference for offer → invoice conversion
   convertedFromId: uuid('converted_from_id'),
+  // Contract-specific fields
+  contractStartDate: timestamp('contract_start_date', { withTimezone: true }),
+  contractEndDate: timestamp('contract_end_date', { withTimezone: true }),
+  contractRenewalType: varchar('contract_renewal_type', { length: 30 }).default('none'),
+  contractRenewalPeriod: varchar('contract_renewal_period', { length: 30 }),
+  contractNoticePeriodDays: integer('contract_notice_period_days'),
+  contractTemplateId: uuid('contract_template_id'),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  contractBodyHtml: text('contract_body_html'),
   // Metadata
   createdBy: uuid('created_by').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -869,6 +878,58 @@ export const documentItemsRelations = relations(documentItems, ({ one }) => ({
   product: one(products, {
     fields: [documentItems.productId],
     references: [products.id],
+  }),
+}))
+
+// ============================================
+// Contract Templates
+// ============================================
+export const contractTemplates = pgTable('contract_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  category: varchar('category', { length: 100 }).notNull(),
+  description: text('description'),
+  bodyHtml: text('body_html'),
+  placeholders: jsonb('placeholders').default([]),
+  clauses: jsonb('clauses').default([]),
+  isSystem: boolean('is_system').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_contract_templates_tenant').on(table.tenantId),
+  index('idx_contract_templates_category').on(table.category),
+])
+
+export const contractTemplatesRelations = relations(contractTemplates, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [contractTemplates.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+// ============================================
+// Contract Clauses (Bausteine)
+// ============================================
+export const contractClauses = pgTable('contract_clauses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+  category: varchar('category', { length: 100 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  bodyHtml: text('body_html'),
+  isSystem: boolean('is_system').default(false),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_contract_clauses_tenant').on(table.tenantId),
+  index('idx_contract_clauses_category').on(table.category),
+])
+
+export const contractClausesRelations = relations(contractClauses, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [contractClauses.tenantId],
+    references: [tenants.id],
   }),
 }))
 
