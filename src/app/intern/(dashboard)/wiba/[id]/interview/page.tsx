@@ -20,6 +20,8 @@ interface Requirement {
   questionText: string
   helpText: string | null
   effort: string | null
+  bsiBausteine: string[] | null
+  bsiAnforderungen: string[] | null
 }
 
 interface AnswerData {
