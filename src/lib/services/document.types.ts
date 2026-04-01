@@ -41,6 +41,15 @@ export interface CreateDocumentInput {
   customerCity?: string
   customerCountry?: string
   customerVatId?: string
+  // Contract-specific fields
+  contractStartDate?: string
+  contractEndDate?: string
+  contractRenewalType?: string
+  contractRenewalPeriod?: string
+  contractNoticePeriodDays?: number
+  contractTemplateId?: string | null
+  projectId?: string | null
+  contractBodyHtml?: string
 }
 
 export type UpdateDocumentInput = Partial<CreateDocumentInput>
