@@ -12,6 +12,9 @@ import {
   real,
   inet,
   index,
+  serial,
+  smallint,
+  char,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -1321,6 +1324,141 @@ export type GrundschutzAnswer = typeof grundschutzAnswers.$inferSelect
 export type GrundschutzAsset = typeof grundschutzAssets.$inferSelect
 export type GrundschutzAssetRelation = typeof grundschutzAssetRelationsTable.$inferSelect
 export type GrundschutzAssetControl = typeof grundschutzAssetControls.$inferSelect
+
+// ============================================
+// IR Playbook - Scenarios
+// ============================================
+export const irScenarios = pgTable('ir_scenarios', {
+  id: varchar('id', { length: 10 }).primaryKey(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  version: varchar('version', { length: 20 }).default('1.0.0').notNull(),
+  series: varchar('series', { length: 10 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  subtitle: text('subtitle'),
+  emoji: varchar('emoji', { length: 10 }),
+  colorHex: char('color_hex', { length: 6 }),
+  tags: text('tags').array().default([]),
+  affectedSystems: text('affected_systems').array().default([]),
+  severity: varchar('severity', { length: 20 }).notNull(),
+  severityLabel: varchar('severity_label', { length: 50 }),
+  likelihood: varchar('likelihood', { length: 20 }).notNull(),
+  dsgvoRelevant: boolean('dsgvo_relevant').default(false).notNull(),
+  nis2Relevant: boolean('nis2_relevant').default(false).notNull(),
+  financialRisk: varchar('financial_risk', { length: 20 }).notNull(),
+  avgDamageEurMin: integer('avg_damage_eur_min'),
+  avgDamageEurMax: integer('avg_damage_eur_max'),
+  overview: text('overview').notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow(),
+  deprecatedAt: timestamp('deprecated_at', { mode: 'date' }),
+  createdBy: varchar('created_by', { length: 100 }).default('xKMU digital solutions'),
+})
+
+// ============================================
+// IR Playbook - Detection Indicators
+// ============================================
+export const irDetectionIndicators = pgTable('ir_detection_indicators', {
+  id: serial('id').primaryKey(),
+  scenarioId: varchar('scenario_id', { length: 10 }).notNull().references(() => irScenarios.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 30 }).notNull(),
+  description: text('description').notNull(),
+  threshold: varchar('threshold', { length: 200 }),
+  sequence: smallint('sequence').default(1).notNull(),
+})
+
+// ============================================
+// IR Playbook - Actions
+// ============================================
+export const irActions = pgTable('ir_actions', {
+  id: varchar('id', { length: 30 }).primaryKey(),
+  scenarioId: varchar('scenario_id', { length: 10 }).notNull().references(() => irScenarios.id, { onDelete: 'cascade' }),
+  phase: varchar('phase', { length: 20 }).notNull(),
+  timeWindowMinutes: integer('time_window_minutes'),
+  timeLabel: varchar('time_label', { length: 50 }),
+  priority: smallint('priority').notNull(),
+  category: varchar('category', { length: 30 }).notNull(),
+  responsible: varchar('responsible', { length: 50 }),
+  action: text('action').notNull(),
+  detail: text('detail'),
+  doNot: boolean('do_not').default(false).notNull(),
+  toolHint: text('tool_hint'),
+})
+
+// ============================================
+// IR Playbook - Escalation Levels
+// ============================================
+export const irEscalationLevels = pgTable('ir_escalation_levels', {
+  id: varchar('id', { length: 15 }).primaryKey(),
+  scenarioId: varchar('scenario_id', { length: 10 }).notNull().references(() => irScenarios.id, { onDelete: 'cascade' }),
+  level: smallint('level').notNull(),
+  label: varchar('label', { length: 100 }).notNull(),
+  colorHex: char('color_hex', { length: 6 }),
+  deadlineHours: numeric('deadline_hours', { precision: 6, scale: 2 }),
+  condition: varchar('condition', { length: 200 }),
+})
+
+// ============================================
+// IR Playbook - Escalation Recipients
+// ============================================
+export const irEscalationRecipients = pgTable('ir_escalation_recipients', {
+  id: serial('id').primaryKey(),
+  escalationLevelId: varchar('escalation_level_id', { length: 15 }).notNull().references(() => irEscalationLevels.id, { onDelete: 'cascade' }),
+  role: varchar('role', { length: 200 }).notNull(),
+  contactType: varchar('contact_type', { length: 30 }).notNull(),
+  legalBasis: varchar('legal_basis', { length: 100 }),
+  message: text('message'),
+  condition: varchar('condition', { length: 200 }),
+  sequence: smallint('sequence').default(1).notNull(),
+})
+
+// ============================================
+// IR Playbook - Recovery Steps
+// ============================================
+export const irRecoverySteps = pgTable('ir_recovery_steps', {
+  id: varchar('id', { length: 15 }).primaryKey(),
+  scenarioId: varchar('scenario_id', { length: 10 }).notNull().references(() => irScenarios.id, { onDelete: 'cascade' }),
+  phaseLabel: varchar('phase_label', { length: 100 }).notNull(),
+  sequence: smallint('sequence').notNull(),
+  action: text('action').notNull(),
+  detail: text('detail'),
+  responsible: varchar('responsible', { length: 50 }).notNull(),
+  dependsOn: varchar('depends_on', { length: 15 }),
+})
+
+// ============================================
+// IR Playbook - Checklist Items
+// ============================================
+export const irChecklistItems = pgTable('ir_checklist_items', {
+  id: varchar('id', { length: 15 }).primaryKey(),
+  scenarioId: varchar('scenario_id', { length: 10 }).notNull().references(() => irScenarios.id, { onDelete: 'cascade' }),
+  sequence: smallint('sequence').notNull(),
+  category: varchar('category', { length: 30 }).notNull(),
+  item: text('item').notNull(),
+  mandatory: boolean('mandatory').default(true).notNull(),
+  dsgvoRequired: boolean('dsgvo_required').default(false).notNull(),
+})
+
+// ============================================
+// IR Playbook - Lessons Learned
+// ============================================
+export const irLessonsLearned = pgTable('ir_lessons_learned', {
+  id: varchar('id', { length: 15 }).primaryKey(),
+  scenarioId: varchar('scenario_id', { length: 10 }).notNull().references(() => irScenarios.id, { onDelete: 'cascade' }),
+  question: text('question').notNull(),
+  category: varchar('category', { length: 30 }).notNull(),
+  mapsToControl: varchar('maps_to_control', { length: 50 }),
+})
+
+// ============================================
+// IR Playbook - References
+// ============================================
+export const irReferences = pgTable('ir_references', {
+  id: serial('id').primaryKey(),
+  scenarioId: varchar('scenario_id', { length: 10 }).notNull().references(() => irScenarios.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 30 }).notNull(),
+  name: varchar('name', { length: 300 }).notNull(),
+  url: text('url'),
+})
 
 // ============================================
 // CMS Pages (Editierbare Seiten)
