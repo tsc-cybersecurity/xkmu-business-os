@@ -83,6 +83,7 @@ const navigation: NavItem[] = [
     children: [
       { name: 'Rechnungen', href: '/intern/finance/invoices', requiredModule: 'documents' },
       { name: 'Angebote', href: '/intern/finance/offers', requiredModule: 'documents' },
+      { name: 'Vertraege', href: '/intern/finance/contracts', requiredModule: 'documents' },
       { name: 'Zeiterfassung', href: '/intern/zeiterfassung', requiredModule: 'time_entries' },
     ],
   },
