@@ -1041,6 +1041,8 @@ export const wibaRequirements = pgTable('wiba_requirements', {
   questionText: text('question_text').notNull(),
   helpText: text('help_text'),
   effort: varchar('effort', { length: 10 }),
+  bsiBausteine: text('bsi_bausteine').array().default([]),
+  bsiAnforderungen: text('bsi_anforderungen').array().default([]),
 })
 
 export const wibaRequirementsRelations = relations(wibaRequirements, ({ many }) => ({

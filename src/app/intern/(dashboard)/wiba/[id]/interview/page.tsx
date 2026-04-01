@@ -386,6 +386,16 @@ export default function WibaInterviewPage({ params }: { params: Promise<{ id: st
                     </Badge>
                   )}
                 </div>
+                {currentReq.bsiBausteine && currentReq.bsiBausteine.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    <span className="text-xs text-muted-foreground mr-1">BSI Grundschutz:</span>
+                    {currentReq.bsiAnforderungen.map((anf: string) => (
+                      <Badge key={anf} variant="outline" className="text-[10px] font-mono bg-blue-50 text-blue-700">
+                        {anf}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
                 <CardTitle className="text-2xl">{currentReq.questionText}</CardTitle>
               </CardHeader>
             </Card>
