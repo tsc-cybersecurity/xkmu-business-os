@@ -42,6 +42,7 @@ interface DashboardData {
     status: string
     score: number | null
     createdAt: string
+    companyName: string | null
   }[]
   conversionRate: number
   trends: {
@@ -355,6 +356,7 @@ export default function DashboardPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Firma</TableHead>
                   <TableHead>Quelle</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Score</TableHead>
@@ -364,7 +366,8 @@ export default function DashboardPage() {
               <TableBody>
                 {data.openLeads.map((lead) => (
                   <TableRow key={lead.id}>
-                    <TableCell className="font-medium">{lead.source}</TableCell>
+                    <TableCell className="font-medium">{lead.companyName || '\u2014'}</TableCell>
+                    <TableCell className="text-muted-foreground">{lead.source}</TableCell>
                     <TableCell>
                       <Badge className={statusColors[lead.status]}>
                         {statusLabels[lead.status] || lead.status}

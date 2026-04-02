@@ -76,16 +76,19 @@ export async function GET() {
       .orderBy(desc(persons.createdAt))
       .limit(5)
 
-    // Get open leads
-    const openLeads = await db
+    // Get open leads with company name
+    const openLeadsRaw = await db
       .select({
         id: leads.id,
         source: leads.source,
         status: leads.status,
         score: leads.score,
         createdAt: leads.createdAt,
+        contactCompany: leads.contactCompany,
+        companyName: companies.name,
       })
       .from(leads)
+      .leftJoin(companies, eq(leads.companyId, companies.id))
       .where(
         and(
           eq(leads.tenantId, tenantId),
@@ -94,6 +97,11 @@ export async function GET() {
       )
       .orderBy(desc(leads.createdAt))
       .limit(5)
+
+    const openLeads = openLeadsRaw.map((l) => ({
+      ...l,
+      companyName: l.companyName || l.contactCompany || null,
+    }))
 
     // Get company status distribution
     const companyStatuses = await db
