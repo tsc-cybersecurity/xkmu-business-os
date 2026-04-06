@@ -124,3 +124,21 @@
     font-family: var(--active-font, var(--font-ubuntu)), ui-sans-serif, system-ui, sans-serif;
   }
 }
+
+/* Always show scrollbar in dashboard main area so content isn't hidden */
+main.overflow-y-auto {
+  scrollbar-gutter: stable;
+}
+main.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+main.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+main.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+main.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
