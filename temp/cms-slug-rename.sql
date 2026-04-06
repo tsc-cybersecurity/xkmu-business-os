@@ -39,37 +39,42 @@ UPDATE cms_pages SET slug = '/loesungen/d3-incident-ready-organisation',        
 -- ── Step 2: Update all href references in cms_blocks content JSON ───────────
 -- This catches service-cards items, CTA buttons, features links, etc.
 
-UPDATE cms_blocks
-SET content = replace(replace(replace(replace(replace(
-    replace(replace(replace(replace(replace(
-    replace(replace(replace(replace(replace(
-    replace(replace(replace(replace(
-      content::text,
-      '"/ki-beratung/a1"',  '"/ki-beratung/a1-ki-quick-start-potenzialanalyse"'),
-      '"/ki-beratung/a2"',  '"/ki-beratung/a2-ki-implementierung-automationen-workflows"'),
-      '"/ki-beratung/a3"',  '"/ki-beratung/a3-ki-assistenten-chatbots"'),
-      '"/ki-beratung/a4"',  '"/ki-beratung/a4-prompting-templates-governance"'),
-      '"/ki-beratung/a5"',  '"/ki-beratung/a5-ki-schulungen-enablement"'),
-      '"/it-beratung/b1"',  '"/it-beratung/b1-it-assessment-stabilitaetscheck"'),
-      '"/it-beratung/b2"',  '"/it-beratung/b2-it-architektur-modernisierung"'),
-      '"/it-beratung/b3"',  '"/it-beratung/b3-systemintegration-prozess-it"'),
-      '"/it-beratung/b4"',  '"/it-beratung/b4-betrieb-monitoring-dokumentation"'),
-      '"/it-beratung/b5"',  '"/it-beratung/b5-it-standardisierung-arbeitsplatz-it"'),
-      '"/cybersecurity/c1"','"/cybersecurity/c1-security-quick-check"'),
-      '"/cybersecurity/c2"','"/cybersecurity/c2-hardening-sicherheitsbaselines"'),
-      '"/cybersecurity/c3"','"/cybersecurity/c3-backup-recovery-ransomware-resilienz"'),
-      '"/cybersecurity/c4"','"/cybersecurity/c4-incident-response-playbooks"'),
-      '"/cybersecurity/c5"','"/cybersecurity/c5-security-awareness-phishing-schutz"'),
-      '"/cybersecurity/c6"','"/cybersecurity/c6-datenschutz-compliance-unterstuetzung"'),
-      '"/loesungen/d1"',    '"/loesungen/d1-ki-sicher-einfuehren"'),
-      '"/loesungen/d2"',    '"/loesungen/d2-sicher-automatisieren"'),
-      '"/loesungen/d3"',    '"/loesungen/d3-incident-ready-organisation"')
-    )::jsonb,
-    updated_at = now()
-WHERE content::text ~ '"/ki-beratung/a[1-5]"'
-   OR content::text ~ '"/it-beratung/b[1-5]"'
-   OR content::text ~ '"/cybersecurity/c[1-6]"'
-   OR content::text ~ '"/loesungen/d[1-3]"';
+DO $$
+DECLARE
+  r RECORD;
+  t text;
+BEGIN
+  FOR r IN
+    SELECT id, content::text AS txt
+      FROM cms_blocks
+     WHERE content::text ~ '"/ki-beratung/a[1-5]"'
+        OR content::text ~ '"/it-beratung/b[1-5]"'
+        OR content::text ~ '"/cybersecurity/c[1-6]"'
+        OR content::text ~ '"/loesungen/d[1-3]"'
+  LOOP
+    t := r.txt;
+    t := replace(t, '"/ki-beratung/a1"',  '"/ki-beratung/a1-ki-quick-start-potenzialanalyse"');
+    t := replace(t, '"/ki-beratung/a2"',  '"/ki-beratung/a2-ki-implementierung-automationen-workflows"');
+    t := replace(t, '"/ki-beratung/a3"',  '"/ki-beratung/a3-ki-assistenten-chatbots"');
+    t := replace(t, '"/ki-beratung/a4"',  '"/ki-beratung/a4-prompting-templates-governance"');
+    t := replace(t, '"/ki-beratung/a5"',  '"/ki-beratung/a5-ki-schulungen-enablement"');
+    t := replace(t, '"/it-beratung/b1"',  '"/it-beratung/b1-it-assessment-stabilitaetscheck"');
+    t := replace(t, '"/it-beratung/b2"',  '"/it-beratung/b2-it-architektur-modernisierung"');
+    t := replace(t, '"/it-beratung/b3"',  '"/it-beratung/b3-systemintegration-prozess-it"');
+    t := replace(t, '"/it-beratung/b4"',  '"/it-beratung/b4-betrieb-monitoring-dokumentation"');
+    t := replace(t, '"/it-beratung/b5"',  '"/it-beratung/b5-it-standardisierung-arbeitsplatz-it"');
+    t := replace(t, '"/cybersecurity/c1"', '"/cybersecurity/c1-security-quick-check"');
+    t := replace(t, '"/cybersecurity/c2"', '"/cybersecurity/c2-hardening-sicherheitsbaselines"');
+    t := replace(t, '"/cybersecurity/c3"', '"/cybersecurity/c3-backup-recovery-ransomware-resilienz"');
+    t := replace(t, '"/cybersecurity/c4"', '"/cybersecurity/c4-incident-response-playbooks"');
+    t := replace(t, '"/cybersecurity/c5"', '"/cybersecurity/c5-security-awareness-phishing-schutz"');
+    t := replace(t, '"/cybersecurity/c6"', '"/cybersecurity/c6-datenschutz-compliance-unterstuetzung"');
+    t := replace(t, '"/loesungen/d1"',     '"/loesungen/d1-ki-sicher-einfuehren"');
+    t := replace(t, '"/loesungen/d2"',     '"/loesungen/d2-sicher-automatisieren"');
+    t := replace(t, '"/loesungen/d3"',     '"/loesungen/d3-incident-ready-organisation"');
+    UPDATE cms_blocks SET content = t::jsonb, updated_at = now() WHERE id = r.id;
+  END LOOP;
+END $$;
 
 
 -- ── Step 3: Update published_blocks on affected pages ───────────────────────
