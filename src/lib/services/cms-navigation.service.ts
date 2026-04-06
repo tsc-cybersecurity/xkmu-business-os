@@ -4,10 +4,12 @@ import { eq, and, asc, count, sql, inArray } from 'drizzle-orm'
 import type { CmsNavigationItem, NewCmsNavigationItem } from '@/lib/db/schema'
 
 const DEFAULT_HEADER_ITEMS = [
-  { label: 'Cyber Security', href: '/cyber-security', sortOrder: 0 },
-  { label: 'KI & Automation', href: '/ki-automation', sortOrder: 1 },
-  { label: 'IT Consulting', href: '/it-consulting', sortOrder: 2 },
-  { label: 'IT-News', href: '/it-news', sortOrder: 3 },
+  { label: 'KI-Beratung', href: '/ki-beratung', sortOrder: 0 },
+  { label: 'IT-Beratung', href: '/it-beratung', sortOrder: 1 },
+  { label: 'Cybersecurity', href: '/cybersecurity', sortOrder: 2 },
+  { label: 'Kombinations-Module', href: '/loesungen', sortOrder: 3 },
+  { label: 'Pakete & Preise', href: '/pakete', sortOrder: 4 },
+  { label: 'IT-News', href: '/it-news', sortOrder: 5 },
 ]
 
 const DEFAULT_FOOTER_ITEMS = [

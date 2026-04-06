@@ -238,10 +238,12 @@ const CMS_PAGES = [
 // Navigation Items (Demo)
 // ============================================
 const NAVIGATION_ITEMS = [
-  { location: 'header', label: 'Cyber Security', href: '/cyber-security', sortOrder: 0 },
-  { location: 'header', label: 'KI & Automation', href: '/ki-automation', sortOrder: 1 },
-  { location: 'header', label: 'IT Consulting', href: '/it-consulting', sortOrder: 2 },
-  { location: 'header', label: 'IT-News', href: '/it-news', sortOrder: 3 },
+  { location: 'header', label: 'KI-Beratung', href: '/ki-beratung', sortOrder: 0 },
+  { location: 'header', label: 'IT-Beratung', href: '/it-beratung', sortOrder: 1 },
+  { location: 'header', label: 'Cybersecurity', href: '/cybersecurity', sortOrder: 2 },
+  { location: 'header', label: 'Kombinations-Module', href: '/loesungen', sortOrder: 3 },
+  { location: 'header', label: 'Pakete & Preise', href: '/pakete', sortOrder: 4 },
+  { location: 'header', label: 'IT-News', href: '/it-news', sortOrder: 5 },
   { location: 'footer', label: 'Kostenlos starten', href: '/intern/register', sortOrder: 0 },
   { location: 'footer', label: 'API-Dokumentation', href: '/api-docs', sortOrder: 1 },
   { location: 'footer', label: 'Impressum', href: '/impressum', sortOrder: 2 },
