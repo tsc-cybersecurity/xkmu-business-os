@@ -9,7 +9,7 @@ const DEFAULT_HEADER_ITEMS = [
   { label: 'Cybersecurity', href: '/cybersecurity', sortOrder: 2 },
   { label: 'Kombinations-Module', href: '/loesungen', sortOrder: 3 },
   { label: 'Pakete & Preise', href: '/pakete', sortOrder: 4 },
-  { label: 'IT-News', href: '/it-news', sortOrder: 5 },
+  { label: 'Referenzen', href: '/referenzen', sortOrder: 5 },
 ]
 
 const DEFAULT_FOOTER_ITEMS = [
