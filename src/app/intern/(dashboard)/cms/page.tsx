@@ -43,7 +43,7 @@ export default function CmsPagesPage() {
 
   const fetchPages = useCallback(async () => {
     try {
-      const response = await fetch('/api/v1/cms/pages')
+      const response = await fetch('/api/v1/cms/pages?limit=100')
       const data = await response.json()
       if (data.success) setPages(data.data)
     } catch (error) {
