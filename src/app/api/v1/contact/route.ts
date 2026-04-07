@@ -3,24 +3,34 @@ import { apiSuccess, apiValidationError, apiError } from '@/lib/utils/api-respon
 import { contactFormSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
 import { db } from '@/lib/db'
-import { tenants } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { tenants, users } from '@/lib/db/schema'
+import { eq, desc } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
-  // Step 1: Find tenant
+  // Step 1: Find tenant — use the one that has an admin user (most likely the main tenant)
   let tenantId: string
   try {
-    const [tenant] = await db
-      .select({ id: tenants.id })
-      .from(tenants)
-      .where(eq(tenants.status, 'active'))
+    // Prefer tenant that has users (= the tenant the admin created)
+    const [withUsers] = await db
+      .select({ tenantId: users.tenantId })
+      .from(users)
+      .orderBy(desc(users.createdAt))
       .limit(1)
 
-    if (!tenant) {
-      return apiError('CONFIGURATION_ERROR', 'Kein aktiver Mandant gefunden', 500)
+    if (withUsers?.tenantId) {
+      tenantId = withUsers.tenantId
+    } else {
+      const [tenant] = await db
+        .select({ id: tenants.id })
+        .from(tenants)
+        .where(eq(tenants.status, 'active'))
+        .limit(1)
+      if (!tenant) {
+        return apiError('CONFIGURATION_ERROR', 'Kein aktiver Mandant gefunden', 500)
+      }
+      tenantId = tenant.id
     }
-    tenantId = tenant.id
   } catch (error) {
     logger.error('Contact form - tenant lookup failed', error, { module: 'ContactAPI' })
     const msg = error instanceof Error ? error.message : 'Unknown'
