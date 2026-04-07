@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { tenants } from '@/lib/db/schema'
-import { asc } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +13,7 @@ export async function GET() {
     const [tenant] = await db
       .select({ settings: tenants.settings })
       .from(tenants)
-      .orderBy(asc(tenants.createdAt))
+      .where(eq(tenants.status, 'active'))
       .limit(1)
 
     const settings = (tenant?.settings ?? {}) as Record<string, unknown>
