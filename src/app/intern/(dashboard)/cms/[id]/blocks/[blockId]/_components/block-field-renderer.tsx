@@ -578,6 +578,28 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
       return (
         <>
           <div className="space-y-2">
+            <Label>Layout</Label>
+            <Select value={(content.layout as string) || 'single'} onValueChange={v => updateContent('layout', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="single">1 Spalte (nur Formular)</SelectItem>
+                <SelectItem value="form-left">2 Spalten – Formular links</SelectItem>
+                <SelectItem value="form-right">2 Spalten – Formular rechts</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {((content.layout as string) === 'form-left' || (content.layout as string) === 'form-right') && (
+            <div className="space-y-2">
+              <Label>Seiteninhalt (Markdown)</Label>
+              <Textarea
+                value={(content.sideContent as string) || ''}
+                onChange={e => updateContent('sideContent', e.target.value)}
+                placeholder="## Kontaktdaten&#10;&#10;**E-Mail:** info@firma.de&#10;**Telefon:** +49 123 456&#10;&#10;Wir antworten innerhalb von 24 Stunden."
+                rows={8}
+              />
+            </div>
+          )}
+          <div className="space-y-2">
             <Label>Submit-Button Text</Label>
             <Input value={(content.submitLabel as string) || ''} onChange={e => updateContent('submitLabel', e.target.value)} placeholder="Nachricht senden" />
           </div>
