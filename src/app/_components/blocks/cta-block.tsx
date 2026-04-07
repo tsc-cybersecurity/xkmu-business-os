@@ -17,7 +17,48 @@ interface CtaBlockProps {
   settings?: Record<string, unknown>
 }
 
+const BG_STYLES: Record<string, { bg: string; text: string; muted: string; btnOutline: string }> = {
+  brand: {
+    bg: 'bg-gradient-to-br from-[var(--brand-gradient-from)] to-[var(--brand-gradient-to)]',
+    text: 'text-white',
+    muted: '${style.muted}',
+    btnOutline: 'bg-white/10 hover:bg-white/20 text-white border-white/30',
+  },
+  dark: {
+    bg: 'bg-gradient-to-br from-slate-900 to-slate-800',
+    text: 'text-white',
+    muted: 'text-slate-300',
+    btnOutline: 'bg-white/10 hover:bg-white/20 text-white border-white/30',
+  },
+  light: {
+    bg: 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900',
+    text: 'text-foreground',
+    muted: 'text-muted-foreground',
+    btnOutline: 'border-input hover:bg-accent',
+  },
+  success: {
+    bg: 'bg-gradient-to-br from-emerald-600 to-emerald-700',
+    text: 'text-white',
+    muted: 'text-emerald-100',
+    btnOutline: 'bg-white/10 hover:bg-white/20 text-white border-white/30',
+  },
+  warning: {
+    bg: 'bg-gradient-to-br from-amber-500 to-orange-600',
+    text: 'text-white',
+    muted: 'text-amber-100',
+    btnOutline: 'bg-white/10 hover:bg-white/20 text-white border-white/30',
+  },
+  transparent: {
+    bg: 'bg-transparent',
+    text: 'text-foreground',
+    muted: 'text-muted-foreground',
+    btnOutline: 'border-input hover:bg-accent',
+  },
+}
+
 export function CtaBlock({ content, settings }: CtaBlockProps) {
+  const style = BG_STYLES[content.backgroundStyle || 'brand'] || BG_STYLES.brand
+
   return (
     <section
       className="container mx-auto px-4 py-16 md:py-24"
@@ -26,13 +67,13 @@ export function CtaBlock({ content, settings }: CtaBlockProps) {
         paddingBottom: settings?.paddingBottom ? `${settings.paddingBottom}px` : undefined,
       }}
     >
-      <div className="rounded-2xl bg-gradient-to-br from-[var(--brand-gradient-from)] to-[var(--brand-gradient-to)] p-8 md:p-12 text-white">
+      <div className={`rounded-2xl ${style.bg} p-8 md:p-12 ${style.text}`}>
         <div className="max-w-3xl mx-auto text-center space-y-6">
           {content.headline && (
             <h2 className="text-3xl md:text-4xl font-bold">{content.headline}</h2>
           )}
           {content.description && (
-            <p className="text-lg text-[var(--brand-100)]"><InlineMarkdown text={content.description} /></p>
+            <p className={`text-lg ${style.muted}`}><InlineMarkdown text={content.description} /></p>
           )}
 
           {content.buttons && content.buttons.length > 0 && (
@@ -44,7 +85,7 @@ export function CtaBlock({ content, settings }: CtaBlockProps) {
                     variant={btn.variant === 'outline' ? 'outline' : 'secondary'}
                     className={
                       btn.variant === 'outline'
-                        ? 'text-lg px-8 bg-white/10 hover:bg-white/20 text-white border-white/30'
+                        ? `text-lg px-8 ${style.btnOutline}`
                         : 'text-lg px-8'
                     }
                   >
@@ -62,10 +103,10 @@ export function CtaBlock({ content, settings }: CtaBlockProps) {
                 const Icon = item.icon ? getIcon(item.icon) : null
                 return (
                   <div key={i} className="flex flex-col items-center gap-2">
-                    {Icon && <Icon className="h-8 w-8 text-[var(--brand-100)]" />}
+                    {Icon && <Icon className={`h-8 w-8 ${style.muted}`} />}
                     <div className="font-semibold">{item.title}</div>
                     {item.subtitle && (
-                      <div className="text-sm text-[var(--brand-100)]">{item.subtitle}</div>
+                      <div className={`text-sm ${style.muted}`}>{item.subtitle}</div>
                     )}
                   </div>
                 )

@@ -115,6 +115,20 @@ export function BlockFieldRenderer({ blockType, content, updateContent: updateCo
       return (
         <>
           <div className="space-y-2">
+            <Label>Hintergrund</Label>
+            <Select value={(content.backgroundStyle as string) || 'brand'} onValueChange={v => updateContent('backgroundStyle', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="brand"><span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-gradient-to-r from-blue-600 to-purple-600" />Markenfarbe</span></SelectItem>
+                <SelectItem value="dark"><span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-slate-800" />Dunkel</span></SelectItem>
+                <SelectItem value="light"><span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-slate-200" />Hell</span></SelectItem>
+                <SelectItem value="success"><span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-emerald-600" />Grün / Erfolg</span></SelectItem>
+                <SelectItem value="warning"><span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full bg-amber-500" />Orange / Warnung</span></SelectItem>
+                <SelectItem value="transparent"><span className="flex items-center gap-2"><span className="h-3 w-3 rounded-full border" />Transparent</span></SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label>Ueberschrift</Label>
             <Input value={(content.headline as string) || ''} onChange={(e) => updateContent('headline', e.target.value)} />
           </div>
