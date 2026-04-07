@@ -2732,3 +2732,55 @@ export const taskQueueRelations = relations(taskQueue, ({ one }) => ({
 
 export type TaskQueueItem = typeof taskQueue.$inferSelect
 export type NewTaskQueueItem = typeof taskQueue.$inferInsert
+
+// ============================================
+// Workflows (Konfigurierbare Automatisierungen)
+// ============================================
+export const workflows = pgTable('workflows', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  trigger: varchar('trigger', { length: 100 }).notNull(), // e.g. 'contact.submitted', 'lead.created'
+  steps: jsonb('steps').default([]).notNull(), // Array of { action, config?, condition?, label? }
+  isActive: boolean('is_active').default(true),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_workflows_trigger').on(table.trigger),
+  index('idx_workflows_active').on(table.isActive),
+])
+
+export type Workflow = typeof workflows.$inferSelect
+export type NewWorkflow = typeof workflows.$inferInsert
+
+// ============================================
+// Workflow Runs (Ausführungsprotokolle)
+// ============================================
+export const workflowRuns = pgTable('workflow_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  workflowId: uuid('workflow_id').notNull().references(() => workflows.id, { onDelete: 'cascade' }),
+  trigger: varchar('trigger', { length: 100 }).notNull(),
+  triggerData: jsonb('trigger_data').default({}),
+  status: varchar('status', { length: 20 }).default('running').notNull(), // running, completed, failed, cancelled
+  currentStep: integer('current_step').default(0),
+  totalSteps: integer('total_steps').default(0),
+  stepResults: jsonb('step_results').default([]), // Array of { step, action, status, result?, error?, duration_ms }
+  error: text('error'),
+  startedAt: timestamp('started_at', { withTimezone: true }).defaultNow(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+}, (table) => [
+  index('idx_workflow_runs_workflow').on(table.workflowId),
+  index('idx_workflow_runs_status').on(table.status),
+  index('idx_workflow_runs_started').on(table.startedAt),
+])
+
+export const workflowRunsRelations = relations(workflowRuns, ({ one }) => ({
+  workflow: one(workflows, {
+    fields: [workflowRuns.workflowId],
+    references: [workflows.id],
+  }),
+}))
+
+export type WorkflowRun = typeof workflowRuns.$inferSelect
+export type NewWorkflowRun = typeof workflowRuns.$inferInsert

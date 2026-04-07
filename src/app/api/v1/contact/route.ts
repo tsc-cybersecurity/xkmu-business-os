@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiValidationError, apiError } from '@/lib/utils/api-response'
 import { contactFormSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
-import { LeadPipelineService } from '@/lib/services/lead-pipeline.service'
+import { WorkflowEngine } from '@/lib/services/workflow'
 import { db } from '@/lib/db'
 import { tenants } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -59,20 +59,18 @@ export async function POST(request: NextRequest) {
       status: 'new',
     })
 
-    // Step 4: Run enrichment pipeline (async, non-blocking)
-    logger.info(`Starting pipeline for lead ${lead.id}`, { module: 'ContactAPI' })
-    LeadPipelineService.process({
-      tenantId,
+    // Step 4: Fire workflow trigger (async, non-blocking)
+    WorkflowEngine.fire('contact.submitted', tenantId, {
       leadId: lead.id,
       firstName,
       lastName,
       email,
-      company: company || undefined,
-      phone: phone || undefined,
+      company: company || null,
+      phone: phone || null,
       interests,
       message,
     }).catch((err) => {
-      logger.error('Lead pipeline error', err, { module: 'ContactAPI', leadId: lead.id })
+      logger.error('Workflow trigger error', err, { module: 'ContactAPI', leadId: lead.id })
     })
 
     return apiSuccess({ id: lead.id }, undefined)

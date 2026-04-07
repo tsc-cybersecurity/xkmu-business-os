@@ -171,6 +171,7 @@ const navigation: NavItem[] = [
       { name: 'Webhooks', href: '/intern/settings/webhooks', requiredModule: 'webhooks' },
       { name: 'API-Schluessel', href: '/intern/settings/api-keys', requiredModule: 'api_keys' },
       { name: 'n8n-Verbindung', href: '/intern/settings/n8n', requiredModule: 'n8n_workflows' },
+      { name: 'Workflows', href: '/intern/settings/workflows', requiredModule: 'settings' },
       { name: 'Task-Queue', href: '/intern/settings/task-queue', requiredModule: 'settings' },
       { name: 'Datenbank', href: '/intern/settings/database', requiredModule: 'database' },
       { name: 'Export', href: '/intern/settings/export', requiredModule: 'settings' },
