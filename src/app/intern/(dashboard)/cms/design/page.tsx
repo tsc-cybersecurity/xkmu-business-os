@@ -68,7 +68,12 @@ export default function CmsDesignPage() {
     setSaving(true)
     setSaved(false)
     try {
+      // Read current tenant to preserve non-design settings
       const res = await fetch('/api/v1/tenant')
+      if (!res.ok) {
+        logger.error('Failed to read tenant for settings merge', undefined, { module: 'CmsDesign', status: res.status })
+        return
+      }
       const current = await res.json()
       const existingSettings = (current.data?.settings ?? {}) as Record<string, unknown>
 
@@ -78,10 +83,10 @@ export default function CmsDesignPage() {
         defaultAccent: settings.defaultAccent,
         defaultRadius: settings.defaultRadius,
         defaultTheme: settings.defaultTheme,
-        logoUrl: settings.logoUrl,
-        logoAlt: settings.logoAlt,
+        logoUrl: settings.logoUrl || '',
+        logoAlt: settings.logoAlt || 'xKMU',
         headerSticky: settings.headerSticky,
-        footerText: settings.footerText,
+        footerText: settings.footerText || '',
       }
 
       const putRes = await fetch('/api/v1/tenant', {
@@ -89,6 +94,11 @@ export default function CmsDesignPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings: updatedSettings }),
       })
+      if (!putRes.ok) {
+        const errBody = await putRes.text()
+        logger.error('Failed to save tenant settings', undefined, { module: 'CmsDesign', status: putRes.status, body: errBody })
+        return
+      }
       const putData = await putRes.json()
       if (putData.success) {
         setSaved(true)
