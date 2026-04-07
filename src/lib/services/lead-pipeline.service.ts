@@ -36,11 +36,15 @@ export const LeadPipelineService = {
    */
   async process(input: LeadPipelineInput): Promise<void> {
     const { tenantId, leadId } = input
+    logger.info(`Pipeline started for lead ${leadId}, tenant ${tenantId}`, { module: 'LeadPipeline' })
     try {
       // Step 1: Find or create company
+      logger.info(`Step 1: Finding/creating company "${input.company || '(none)'}"`, { module: 'LeadPipeline' })
       const companyId = await this.findOrCreateCompany(tenantId, input.company)
+      logger.info(`Step 1 done: companyId=${companyId}`, { module: 'LeadPipeline' })
 
       // Step 2: Find or create person
+      logger.info(`Step 2: Finding/creating person ${input.email}`, { module: 'LeadPipeline' })
       const personId = await this.findOrCreatePerson(tenantId, {
         firstName: input.firstName,
         lastName: input.lastName,
@@ -48,8 +52,10 @@ export const LeadPipelineService = {
         phone: input.phone,
         companyId,
       })
+      logger.info(`Step 2 done: personId=${personId}`, { module: 'LeadPipeline' })
 
       // Step 3: Link lead to company + person
+      logger.info(`Step 3: Linking lead ${leadId}`, { module: 'LeadPipeline' })
       await db
         .update(leads)
         .set({
@@ -58,8 +64,7 @@ export const LeadPipelineService = {
           updatedAt: new Date(),
         })
         .where(eq(leads.id, leadId))
-
-      logger.info(`Lead ${leadId}: linked to company=${companyId}, person=${personId}`, { module: 'LeadPipeline' })
+      logger.info(`Step 3 done: lead linked`, { module: 'LeadPipeline' })
 
       // Step 4: KI company research (async, non-blocking)
       if (input.company) {
@@ -75,8 +80,9 @@ export const LeadPipelineService = {
       // Step 7: Admin notification
       await this.notifyAdmin(tenantId, leadId, input)
 
+      logger.info(`Pipeline completed for lead ${leadId}`, { module: 'LeadPipeline' })
     } catch (error) {
-      logger.error(`Lead pipeline failed for ${leadId}`, error, { module: 'LeadPipeline' })
+      logger.error(`Lead pipeline FAILED for ${leadId}: ${error instanceof Error ? error.message : String(error)}`, error, { module: 'LeadPipeline' })
     }
   },
 

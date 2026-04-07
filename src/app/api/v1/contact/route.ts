@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Step 4: Run enrichment pipeline (async, non-blocking)
-    // Creates company/person, links to lead, scores, logs activity, notifies admin
+    logger.info(`Starting pipeline for lead ${lead.id}`, { module: 'ContactAPI' })
     LeadPipelineService.process({
       tenantId,
       leadId: lead.id,
