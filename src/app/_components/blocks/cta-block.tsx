@@ -10,6 +10,7 @@ export interface CtaBlockContent {
   buttons?: Array<{ label: string; href: string; variant?: string }>
   highlights?: Array<{ icon?: string; title: string; subtitle?: string }>
   backgroundStyle?: string
+  size?: 'full' | 'large' | 'medium' | 'small'
 }
 
 interface CtaBlockProps {
@@ -21,7 +22,7 @@ const BG_STYLES: Record<string, { bg: string; text: string; muted: string; btnOu
   brand: {
     bg: 'bg-gradient-to-br from-[var(--brand-gradient-from)] to-[var(--brand-gradient-to)]',
     text: 'text-white',
-    muted: '${style.muted}',
+    muted: 'text-white/70',
     btnOutline: 'bg-white/10 hover:bg-white/20 text-white border-white/30',
   },
   dark: {
@@ -56,24 +57,32 @@ const BG_STYLES: Record<string, { bg: string; text: string; muted: string; btnOu
   },
 }
 
+const SIZES = {
+  full:   { section: 'px-0 py-0',           box: 'rounded-none p-12 md:p-20', heading: 'text-4xl md:text-5xl', desc: 'text-xl' },
+  large:  { section: 'container mx-auto px-4 py-16 md:py-24', box: 'rounded-2xl p-10 md:p-16', heading: 'text-3xl md:text-5xl', desc: 'text-lg md:text-xl' },
+  medium: { section: 'container mx-auto px-4 py-16 md:py-24', box: 'rounded-2xl p-8 md:p-12', heading: 'text-3xl md:text-4xl', desc: 'text-lg' },
+  small:  { section: 'container mx-auto px-4 py-8 md:py-12',  box: 'rounded-xl p-6 md:p-8',   heading: 'text-2xl md:text-3xl', desc: 'text-base' },
+}
+
 export function CtaBlock({ content, settings }: CtaBlockProps) {
   const style = BG_STYLES[content.backgroundStyle || 'brand'] || BG_STYLES.brand
+  const sz = SIZES[content.size || 'medium']
 
   return (
     <section
-      className="container mx-auto px-4 py-16 md:py-24"
+      className={sz.section}
       style={{
         paddingTop: settings?.paddingTop ? `${settings.paddingTop}px` : undefined,
         paddingBottom: settings?.paddingBottom ? `${settings.paddingBottom}px` : undefined,
       }}
     >
-      <div className={`rounded-2xl ${style.bg} p-8 md:p-12 ${style.text}`}>
+      <div className={`${sz.box} ${style.bg} ${style.text}`}>
         <div className="max-w-3xl mx-auto text-center space-y-6">
           {content.headline && (
-            <h2 className="text-3xl md:text-4xl font-bold">{content.headline}</h2>
+            <h2 className={`${sz.heading} font-bold`}>{content.headline}</h2>
           )}
           {content.description && (
-            <p className={`text-lg ${style.muted}`}><InlineMarkdown text={content.description} /></p>
+            <p className={`${sz.desc} ${style.muted}`}><InlineMarkdown text={content.description} /></p>
           )}
 
           {content.buttons && content.buttons.length > 0 && (
