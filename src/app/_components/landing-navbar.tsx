@@ -56,6 +56,7 @@ export function LandingNavbar() {
   const [navItems, setNavItems] = useState<NavItemData[]>([])
   const [logoUrl, setLogoUrl] = useState(DEFAULT_LOGO_URL)
   const [logoAlt, setLogoAlt] = useState(DEFAULT_LOGO_ALT)
+  const [headerSticky, setHeaderSticky] = useState(true)
   const {
     font, setFont, fontOptions,
     accent, setAccent, accentOptions,
@@ -90,6 +91,7 @@ export function LandingNavbar() {
         if (data?.success && data.data) {
           setLogoUrl(data.data.logoUrl || DEFAULT_LOGO_URL)
           setLogoAlt(data.data.logoAlt || DEFAULT_LOGO_ALT)
+          if (data.data.headerSticky === false) setHeaderSticky(false)
         }
       })
       .catch(() => {})
@@ -102,7 +104,7 @@ export function LandingNavbar() {
   }
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 h-[100px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 shadow-sm">
+    <header className={`${headerSticky ? 'fixed' : 'relative'} top-0 left-0 right-0 z-50 h-[100px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 shadow-sm`}>
       <div className="container mx-auto px-4 h-full flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="shrink-0">

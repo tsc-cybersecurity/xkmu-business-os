@@ -11,6 +11,7 @@ interface FooterNavItem {
 
 export function LandingFooter() {
   const [dynamicLinks, setDynamicLinks] = useState<FooterNavItem[]>([])
+  const [footerText, setFooterText] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/v1/public/navigation?location=footer')
@@ -18,6 +19,15 @@ export function LandingFooter() {
       .then((data) => {
         if (data?.success && data.data?.length > 0) {
           setDynamicLinks(data.data)
+        }
+      })
+      .catch(() => {})
+
+    fetch('/api/v1/public/branding')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && data.data?.footerText) {
+          setFooterText(data.data.footerText)
         }
       })
       .catch(() => {})
@@ -42,7 +52,7 @@ export function LandingFooter() {
         )}
 
         <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} XKMU Business OS. Alle Rechte vorbehalten.</p>
+          <p>{footerText || `\u00A9 ${new Date().getFullYear()} XKMU Business OS. Alle Rechte vorbehalten.`}</p>
         </div>
       </div>
     </footer>

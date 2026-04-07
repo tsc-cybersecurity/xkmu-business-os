@@ -23,6 +23,12 @@ export async function GET() {
       data: {
         logoUrl: (settings.logoUrl as string) || DEFAULT_LOGO_URL,
         logoAlt: (settings.logoAlt as string) || DEFAULT_LOGO_ALT,
+        defaultFont: (settings.defaultFont as string) || null,
+        defaultAccent: (settings.defaultAccent as string) || null,
+        defaultRadius: (settings.defaultRadius as string) || null,
+        defaultTheme: (settings.defaultTheme as string) || null,
+        headerSticky: settings.headerSticky !== false,
+        footerText: (settings.footerText as string) || null,
       },
     })
   } catch {

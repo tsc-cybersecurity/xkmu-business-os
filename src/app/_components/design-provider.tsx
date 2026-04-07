@@ -224,39 +224,55 @@ export function DesignProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const validFonts = fontOptions.map((f) => f.id) as readonly string[]
-    const storedFont = localStorage.getItem(FONT_KEY) as FontId | null
-    if (storedFont && validFonts.includes(storedFont)) {
-      setFontState(storedFont)
-      applyFont(storedFont)
-    } else {
-      applyFont(DEFAULT_FONT)
-    }
-
-    // Theme must be applied before accent (accent reads dark class)
-    const validThemes = themeOptions.map((t) => t.id) as readonly string[]
-    const storedTheme = localStorage.getItem(THEME_KEY) as ThemeId | null
-    const activeTheme = storedTheme && validThemes.includes(storedTheme) ? storedTheme : DEFAULT_THEME
-    setThemeState(activeTheme)
-    applyTheme(activeTheme)
-    setResolvedTheme(getResolvedTheme(activeTheme))
-
     const validAccents = accentOptions.map((a) => a.id) as readonly string[]
-    const storedAccent = localStorage.getItem(ACCENT_KEY) as AccentId | null
-    if (storedAccent && validAccents.includes(storedAccent)) {
-      setAccentState(storedAccent)
-      applyAccent(storedAccent)
-    } else {
-      applyAccent(DEFAULT_ACCENT)
+    const validRadii = radiusOptions.map((r) => r.id) as readonly string[]
+    const validThemes = themeOptions.map((t) => t.id) as readonly string[]
+
+    // Apply with localStorage first, then override with server defaults if no local preference
+    function applyAll(serverFont?: string, serverAccent?: string, serverRadius?: string, serverTheme?: string) {
+      const storedFont = localStorage.getItem(FONT_KEY) as FontId | null
+      const activeFont = (storedFont && validFonts.includes(storedFont)) ? storedFont
+        : (serverFont && validFonts.includes(serverFont)) ? serverFont as FontId
+        : DEFAULT_FONT
+      setFontState(activeFont)
+      applyFont(activeFont)
+
+      const storedTheme = localStorage.getItem(THEME_KEY) as ThemeId | null
+      const activeTheme = (storedTheme && validThemes.includes(storedTheme)) ? storedTheme
+        : (serverTheme && validThemes.includes(serverTheme)) ? serverTheme as ThemeId
+        : DEFAULT_THEME
+      setThemeState(activeTheme)
+      applyTheme(activeTheme)
+      setResolvedTheme(getResolvedTheme(activeTheme))
+
+      const storedAccent = localStorage.getItem(ACCENT_KEY) as AccentId | null
+      const activeAccent = (storedAccent && validAccents.includes(storedAccent)) ? storedAccent
+        : (serverAccent && validAccents.includes(serverAccent)) ? serverAccent as AccentId
+        : DEFAULT_ACCENT
+      setAccentState(activeAccent)
+      applyAccent(activeAccent)
+
+      const storedRadius = localStorage.getItem(RADIUS_KEY) as RadiusId | null
+      const activeRadius = (storedRadius && validRadii.includes(storedRadius)) ? storedRadius
+        : (serverRadius && validRadii.includes(serverRadius)) ? serverRadius as RadiusId
+        : DEFAULT_RADIUS
+      setRadiusState(activeRadius)
+      applyRadius(activeRadius)
     }
 
-    const validRadii = radiusOptions.map((r) => r.id) as readonly string[]
-    const storedRadius = localStorage.getItem(RADIUS_KEY) as RadiusId | null
-    if (storedRadius && validRadii.includes(storedRadius)) {
-      setRadiusState(storedRadius)
-      applyRadius(storedRadius)
-    } else {
-      applyRadius(DEFAULT_RADIUS)
-    }
+    // Apply hardcoded defaults immediately to avoid flash
+    applyAll()
+
+    // Then fetch server defaults and re-apply if no localStorage overrides
+    fetch('/api/v1/public/branding')
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => {
+        if (data?.success && data.data) {
+          const d = data.data
+          applyAll(d.defaultFont, d.defaultAccent, d.defaultRadius, d.defaultTheme)
+        }
+      })
+      .catch(() => {})
 
     // Listen for system theme changes
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
@@ -264,7 +280,6 @@ export function DesignProvider({ children }: { children: ReactNode }) {
       if ((localStorage.getItem(THEME_KEY) || DEFAULT_THEME) === 'system') {
         applyTheme('system')
         setResolvedTheme(getResolvedTheme('system'))
-        // Re-apply accent for dark/light switch
         const currentAccent = (localStorage.getItem(ACCENT_KEY) || DEFAULT_ACCENT) as AccentId
         applyAccent(currentAccent)
       }
