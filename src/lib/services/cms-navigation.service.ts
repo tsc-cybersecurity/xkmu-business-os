@@ -59,11 +59,10 @@ export const CmsNavigationService = {
       .orderBy(asc(cmsNavigationItems.sortOrder))
   },
 
-  async create(tenantId: string, data: CreateNavigationItemInput): Promise<CmsNavigationItem> {
+  async create(data: CreateNavigationItemInput): Promise<CmsNavigationItem> {
     const [item] = await db
       .insert(cmsNavigationItems)
       .values({
-        tenantId,
         location: data.location,
         label: data.label,
         href: data.href,
@@ -114,7 +113,7 @@ export const CmsNavigationService = {
       .where(inArray(cmsNavigationItems.id, itemIds))
   },
 
-  async seedDefaults(tenantId: string): Promise<{ seeded: boolean; count: number }> {
+  async seedDefaults(): Promise<{ seeded: boolean; count: number }> {
     const [{ total }] = await db
       .select({ total: count() })
       .from(cmsNavigationItems)
@@ -125,7 +124,6 @@ export const CmsNavigationService = {
 
     const allItems = [
       ...DEFAULT_HEADER_ITEMS.map((item) => ({
-        tenantId,
         location: 'header' as const,
         label: item.label,
         href: item.href,
@@ -134,7 +132,6 @@ export const CmsNavigationService = {
         isVisible: true,
       })),
       ...DEFAULT_FOOTER_ITEMS.map((item) => ({
-        tenantId,
         location: 'footer' as const,
         label: item.label,
         href: item.href,

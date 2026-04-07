@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const page = await CmsPageService.create(auth.tenantId, validation.data, auth.userId ?? undefined)
+      const page = await CmsPageService.create(validation.data, auth.userId ?? undefined)
       return apiSuccess(page, undefined, 201)
     } catch (error) {
       logger.error('Error creating CMS page', error, { module: 'CmsPagesAPI' })

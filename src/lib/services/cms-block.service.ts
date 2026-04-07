@@ -20,18 +20,12 @@ export interface UpdateCmsBlockInput {
 }
 
 // CMS ist global — kein tenantId-Filter bei Queries.
-// tenantId wird nur bei INSERT verwendet (DB-Spalte NOT NULL), von der Page übernommen.
 
 async function markPageDraftChanges(pageId: string) {
   await db
     .update(cmsPages)
     .set({ hasDraftChanges: true, updatedAt: new Date() })
     .where(and(eq(cmsPages.id, pageId), eq(cmsPages.status, 'published')))
-}
-
-async function getPageTenantId(pageId: string): Promise<string | null> {
-  const [page] = await db.select({ tenantId: cmsPages.tenantId }).from(cmsPages).where(eq(cmsPages.id, pageId)).limit(1)
-  return page?.tenantId ?? null
 }
 
 export const CmsBlockService = {
@@ -44,11 +38,9 @@ export const CmsBlockService = {
   },
 
   async create(pageId: string, data: CreateCmsBlockInput): Promise<CmsBlock> {
-    const tenantId = await getPageTenantId(pageId)
     const [block] = await db
       .insert(cmsBlocks)
       .values({
-        tenantId: tenantId!,
         pageId,
         blockType: data.blockType,
         sortOrder: data.sortOrder ?? 0,
@@ -128,7 +120,6 @@ export const CmsBlockService = {
     const [block] = await db
       .insert(cmsBlocks)
       .values({
-        tenantId: original.tenantId,
         pageId: original.pageId,
         blockType: original.blockType,
         sortOrder: (original.sortOrder ?? 0) + 1,

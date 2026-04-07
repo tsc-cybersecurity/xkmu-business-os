@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const template = await CmsBlockTemplateService.create(auth.tenantId, validation.data)
+      const template = await CmsBlockTemplateService.create(validation.data)
       return apiSuccess(template, undefined, 201)
     } catch (error) {
       logger.error('Error creating CMS template', error, { module: 'CmsTemplatesAPI' })

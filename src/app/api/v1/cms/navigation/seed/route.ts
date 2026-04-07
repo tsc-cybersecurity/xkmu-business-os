@@ -7,7 +7,7 @@ import { logger } from '@/lib/utils/logger'
 export async function POST(request: NextRequest) {
   return withPermission(request, 'cms', 'create', async (auth) => {
     try {
-      const result = await CmsNavigationService.seedDefaults(auth.tenantId)
+      const result = await CmsNavigationService.seedDefaults()
       return apiSuccess(result)
     } catch (error) {
       logger.error('Error seeding navigation defaults', error, { module: 'CmsNavigationSeedAPI' })

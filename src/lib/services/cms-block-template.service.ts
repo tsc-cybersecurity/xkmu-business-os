@@ -23,11 +23,10 @@ export const CmsBlockTemplateService = {
       .where(conditions.length > 0 ? and(...conditions) : undefined)
   },
 
-  async create(tenantId: string, data: CreateCmsBlockTemplateInput): Promise<CmsBlockTemplate> {
+  async create(data: CreateCmsBlockTemplateInput): Promise<CmsBlockTemplate> {
     const [template] = await db
       .insert(cmsBlockTemplates)
       .values({
-        tenantId,
         name: data.name,
         blockType: data.blockType,
         content: data.content ?? {},
@@ -81,7 +80,6 @@ export const CmsBlockTemplateService = {
     const [template] = await db
       .insert(cmsBlockTemplates)
       .values({
-        tenantId: block.tenantId,
         name,
         blockType: block.blockType,
         content: block.content,

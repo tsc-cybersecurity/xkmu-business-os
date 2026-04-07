@@ -1467,7 +1467,7 @@ export const irReferences = pgTable('ir_references', {
 // ============================================
 export const cmsPages = pgTable('cms_pages', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   slug: varchar('slug', { length: 255 }).notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   seoTitle: varchar('seo_title', { length: 70 }),
@@ -1508,7 +1508,7 @@ export const cmsPagesRelations = relations(cmsPages, ({ one, many }) => ({
 export const cmsBlocks = pgTable('cms_blocks', {
   id: uuid('id').primaryKey().defaultRandom(),
   pageId: uuid('page_id').notNull().references(() => cmsPages.id, { onDelete: 'cascade' }),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   blockType: varchar('block_type', { length: 50 }).notNull(),
   sortOrder: integer('sort_order').default(0),
   content: jsonb('content').default({}),
@@ -1537,7 +1537,7 @@ export const cmsBlocksRelations = relations(cmsBlocks, ({ one }) => ({
 // ============================================
 export const cmsBlockTemplates = pgTable('cms_block_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull(),
   blockType: varchar('block_type', { length: 50 }).notNull(),
   content: jsonb('content').default({}),
@@ -1561,7 +1561,7 @@ export const cmsBlockTemplatesRelations = relations(cmsBlockTemplates, ({ one })
 // ============================================
 export const cmsNavigationItems = pgTable('cms_navigation_items', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   location: varchar('location', { length: 20 }).notNull(), // 'header' | 'footer'
   label: varchar('label', { length: 100 }).notNull(),
   href: varchar('href', { length: 500 }).notNull(),

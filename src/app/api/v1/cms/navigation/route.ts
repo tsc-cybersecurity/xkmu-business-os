@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const item = await CmsNavigationService.create(auth.tenantId, validation.data)
+      const item = await CmsNavigationService.create(validation.data)
       return apiSuccess(item, undefined, 201)
     } catch (error) {
       logger.error('Error creating navigation item', error, { module: 'CmsNavigationAPI' })

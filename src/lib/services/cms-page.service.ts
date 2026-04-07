@@ -26,14 +26,12 @@ export interface CmsPageWithBlocks extends CmsPage {
 }
 
 // CMS ist global (nicht mandantenspezifisch) — jeder mit Designer-Recht kann alle Seiten bearbeiten.
-// tenantId wird nur bei INSERT verwendet (DB-Spalte NOT NULL).
 
 export const CmsPageService = {
-  async create(tenantId: string, data: CreateCmsPageInput, createdBy?: string): Promise<CmsPage> {
+  async create(data: CreateCmsPageInput, createdBy?: string): Promise<CmsPage> {
     const [page] = await db
       .insert(cmsPages)
       .values({
-        tenantId,
         slug: data.slug,
         title: data.title,
         seoTitle: data.seoTitle || null,
