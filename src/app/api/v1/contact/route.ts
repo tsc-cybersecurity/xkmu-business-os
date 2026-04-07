@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiValidationError, apiError } from '@/lib/utils/api-response'
 import { contactFormSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
+import { LeadPipelineService } from '@/lib/services/lead-pipeline.service'
 import { db } from '@/lib/db'
 import { tenants } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     const lead = await LeadService.create(tenantId, {
       source: 'website',
       sourceDetail: 'Kontaktformular',
-      title: `${firstName} ${lastName} - ${company || 'Privat'}`,
+      title: `${firstName} ${lastName} – ${company || 'Privat'}`,
       contactFirstName: firstName,
       contactLastName: lastName,
       contactCompany: company || undefined,
@@ -56,6 +57,22 @@ export async function POST(request: NextRequest) {
       tags: interests,
       notes: message,
       status: 'new',
+    })
+
+    // Step 4: Run enrichment pipeline (async, non-blocking)
+    // Creates company/person, links to lead, scores, logs activity, notifies admin
+    LeadPipelineService.process({
+      tenantId,
+      leadId: lead.id,
+      firstName,
+      lastName,
+      email,
+      company: company || undefined,
+      phone: phone || undefined,
+      interests,
+      message,
+    }).catch((err) => {
+      logger.error('Lead pipeline error', err, { module: 'ContactAPI', leadId: lead.id })
     })
 
     return apiSuccess({ id: lead.id }, undefined)
