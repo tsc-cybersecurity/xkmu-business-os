@@ -54,10 +54,14 @@ export default function CmsDesignPage() {
 
   const fetchSettings = useCallback(async () => {
     try {
-      const res = await fetch('/api/v1/tenant')
+      const res = await fetch('/api/v1/cms/design')
+      if (!res.ok) {
+        logger.error('Failed to fetch design settings', undefined, { module: 'CmsDesign', status: res.status })
+        return
+      }
       const data = await res.json()
-      if (data.success && data.data?.settings) {
-        const s = data.data.settings as Record<string, unknown>
+      if (data.success && data.data) {
+        const s = data.data as Record<string, unknown>
         setSettings({
           defaultFont: (s.defaultFont as FontId) || DEFAULTS.defaultFont,
           defaultAccent: (s.defaultAccent as AccentId) || DEFAULTS.defaultAccent,
@@ -87,38 +91,26 @@ export default function CmsDesignPage() {
     setSaving(true)
     setSaved(false)
     try {
-      // Read current tenant to preserve non-design settings
-      const res = await fetch('/api/v1/tenant')
-      if (!res.ok) {
-        logger.error('Failed to read tenant for settings merge', undefined, { module: 'CmsDesign', status: res.status })
-        return
-      }
-      const current = await res.json()
-      const existingSettings = (current.data?.settings ?? {}) as Record<string, unknown>
-
-      const updatedSettings = {
-        ...existingSettings,
-        defaultFont: settings.defaultFont,
-        defaultAccent: settings.defaultAccent,
-        defaultRadius: settings.defaultRadius,
-        defaultTheme: settings.defaultTheme,
-        logoUrl: settings.logoUrl || '',
-        logoAlt: settings.logoAlt || 'xKMU',
-        headerSticky: settings.headerSticky,
-        footerText: settings.footerText || '',
-        contactHeadline: settings.contactHeadline || '',
-        contactDescription: settings.contactDescription || '',
-        contactInterestTags: settings.contactInterestTags.filter((t) => t.trim()),
-      }
-
-      const putRes = await fetch('/api/v1/tenant', {
+      const putRes = await fetch('/api/v1/cms/design', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: updatedSettings }),
+        body: JSON.stringify({
+          defaultFont: settings.defaultFont,
+          defaultAccent: settings.defaultAccent,
+          defaultRadius: settings.defaultRadius,
+          defaultTheme: settings.defaultTheme,
+          logoUrl: settings.logoUrl || '',
+          logoAlt: settings.logoAlt || 'xKMU',
+          headerSticky: settings.headerSticky,
+          footerText: settings.footerText || '',
+          contactHeadline: settings.contactHeadline || '',
+          contactDescription: settings.contactDescription || '',
+          contactInterestTags: settings.contactInterestTags.filter((t) => t.trim()),
+        }),
       })
       if (!putRes.ok) {
         const errBody = await putRes.text()
-        logger.error('Failed to save tenant settings', undefined, { module: 'CmsDesign', status: putRes.status, body: errBody })
+        logger.error('Failed to save design settings', undefined, { module: 'CmsDesign', status: putRes.status, body: errBody })
         return
       }
       const putData = await putRes.json()
