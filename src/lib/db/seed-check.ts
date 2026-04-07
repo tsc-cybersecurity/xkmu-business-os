@@ -637,6 +637,14 @@ const BLOCK_TEMPLATES = [
 
   // --- Placeholder (1 neu) ---
   { name: 'Platzhalter Coming Soon', blockType: 'placeholder', content: { icon: 'Clock', title: 'Coming Soon', description: 'Dieser Bereich wird gerade fuer Sie vorbereitet. Schauen Sie bald wieder vorbei!' }, settings: {}, isSystem: true },
+
+  // --- Contact Form ---
+  { name: 'Kontaktformular Standard', blockType: 'contact-form', content: { interestTags: ['KI-Beratung', 'IT-Beratung', 'Cybersecurity', 'Managed Services'], submitLabel: 'Nachricht senden', successHeadline: 'Vielen Dank fuer Ihre Nachricht!', successMessage: 'Wir melden uns schnellstmoeglich bei Ihnen.', privacyUrl: '/datenschutz' }, settings: {}, isSystem: true },
+
+  // --- Columns ---
+  { name: '2 Spalten gleich', blockType: 'columns', content: { columns: 2, layout: 'equal', left: [{ blockType: 'text', content: { content: '## Linke Spalte\n\nInhalt hier einfuegen.' } }], right: [{ blockType: 'text', content: { content: '## Rechte Spalte\n\nInhalt hier einfuegen.' } }] }, settings: {}, isSystem: true },
+  { name: '2 Spalten Formular rechts', blockType: 'columns', content: { columns: 2, layout: 'right-wide', left: [{ blockType: 'text', content: { content: '## Kontakt\n\n**E-Mail:** info@firma.de\n**Telefon:** +49 123 456 789\n\nMo-Fr 9:00 - 17:00 Uhr' } }], right: [{ blockType: 'contact-form', content: { submitLabel: 'Nachricht senden', privacyUrl: '/datenschutz' } }] }, settings: {}, isSystem: true },
+  { name: '3 Spalten gleich', blockType: 'columns', content: { columns: 3, layout: 'equal', left: [{ blockType: 'text', content: { content: '### Spalte 1' } }], center: [{ blockType: 'text', content: { content: '### Spalte 2' } }], right: [{ blockType: 'text', content: { content: '### Spalte 3' } }] }, settings: {}, isSystem: true },
 ]
 
 async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>) {

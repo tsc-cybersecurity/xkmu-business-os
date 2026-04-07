@@ -182,30 +182,6 @@ const CMS_PAGES = [
     ],
   },
   {
-    slug: '/cyber-security',
-    title: 'Cyber Security',
-    status: 'published',
-    blocks: [
-      { blockType: 'placeholder', sortOrder: 0, content: { icon: 'Shield', title: 'Cyber Security', description: 'Schuetzen Sie Ihr Unternehmen vor digitalen Bedrohungen mit unseren umfassenden Sicherheitsloesungen.' } },
-    ],
-  },
-  {
-    slug: '/ki-automation',
-    title: 'KI & Automation',
-    status: 'published',
-    blocks: [
-      { blockType: 'placeholder', sortOrder: 0, content: { icon: 'Bot', title: 'KI & Automation', description: 'Nutzen Sie die Kraft kuenstlicher Intelligenz, um Ihre Geschäftsprozesse zu automatisieren und zu optimieren.' } },
-    ],
-  },
-  {
-    slug: '/it-consulting',
-    title: 'IT Consulting',
-    status: 'published',
-    blocks: [
-      { blockType: 'placeholder', sortOrder: 0, content: { icon: 'Monitor', title: 'IT Consulting', description: 'Strategische IT-Beratung für die digitale Transformation Ihres Unternehmens.' } },
-    ],
-  },
-  {
     slug: '/agb',
     title: 'Allgemeine Geschäftsbedingungen',
     status: 'published',
