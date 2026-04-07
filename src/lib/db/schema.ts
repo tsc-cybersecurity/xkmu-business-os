@@ -1614,6 +1614,30 @@ export type CmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferSelect
 export type NewCmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferInsert
 
 // ============================================
+// CMS Settings (Design & Konfiguration pro Tenant)
+// ============================================
+export const cmsSettings = pgTable('cms_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  key: varchar('key', { length: 100 }).notNull(),
+  value: jsonb('value').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cms_settings_tenant_key').on(table.tenantId, table.key),
+])
+
+export const cmsSettingsRelations = relations(cmsSettings, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [cmsSettings.tenantId],
+    references: [tenants.id],
+  }),
+}))
+
+export type CmsSettings = typeof cmsSettings.$inferSelect
+export type NewCmsSettings = typeof cmsSettings.$inferInsert
+
+// ============================================
 // Blog Posts (Blog-Beiträge)
 // ============================================
 export const blogPosts = pgTable('blog_posts', {

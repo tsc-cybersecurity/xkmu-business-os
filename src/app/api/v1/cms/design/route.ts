@@ -2,31 +2,21 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
-import { tenants } from '@/lib/db/schema'
-import { eq, sql } from 'drizzle-orm'
+import { cmsSettings } from '@/lib/db/schema'
+import { eq, and } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
-const DESIGN_KEYS = [
-  'defaultFont', 'defaultAccent', 'defaultRadius', 'defaultTheme',
-  'logoUrl', 'logoAlt', 'headerSticky', 'footerText',
-  'contactHeadline', 'contactDescription', 'contactInterestTags',
-]
+const SETTINGS_KEY = 'design'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'cms', 'read', async (auth) => {
-    const [tenant] = await db
-      .select({ settings: tenants.settings })
-      .from(tenants)
-      .where(eq(tenants.id, auth.tenantId))
+    const [row] = await db
+      .select({ value: cmsSettings.value })
+      .from(cmsSettings)
+      .where(and(eq(cmsSettings.tenantId, auth.tenantId), eq(cmsSettings.key, SETTINGS_KEY)))
       .limit(1)
 
-    const settings = (tenant?.settings ?? {}) as Record<string, unknown>
-    const design: Record<string, unknown> = {}
-    for (const key of DESIGN_KEYS) {
-      design[key] = settings[key] ?? null
-    }
-
-    return apiSuccess(design)
+    return apiSuccess(row?.value ?? {})
   })
 }
 
@@ -35,29 +25,40 @@ export async function PUT(request: NextRequest) {
     try {
       const body = await request.json()
 
-      // Only allow design keys to be updated
-      const patch: Record<string, unknown> = {}
-      for (const key of DESIGN_KEYS) {
-        if (key in body) {
-          patch[key] = body[key]
-        }
+      // Check if row exists
+      const [existing] = await db
+        .select({ id: cmsSettings.id })
+        .from(cmsSettings)
+        .where(and(eq(cmsSettings.tenantId, auth.tenantId), eq(cmsSettings.key, SETTINGS_KEY)))
+        .limit(1)
+
+      let result: Record<string, unknown>
+
+      if (existing) {
+        // Update: merge new values into existing
+        const [updated] = await db
+          .update(cmsSettings)
+          .set({
+            value: body,
+            updatedAt: new Date(),
+          })
+          .where(eq(cmsSettings.id, existing.id))
+          .returning({ value: cmsSettings.value })
+        result = (updated?.value ?? body) as Record<string, unknown>
+      } else {
+        // Insert new row
+        const [inserted] = await db
+          .insert(cmsSettings)
+          .values({
+            tenantId: auth.tenantId,
+            key: SETTINGS_KEY,
+            value: body,
+          })
+          .returning({ value: cmsSettings.value })
+        result = (inserted?.value ?? body) as Record<string, unknown>
       }
 
-      if (Object.keys(patch).length === 0) {
-        return apiError('VALIDATION_ERROR', 'No design fields provided', 400)
-      }
-
-      // Merge into existing settings using jsonb concatenation
-      const [updated] = await db
-        .update(tenants)
-        .set({
-          settings: sql`COALESCE(${tenants.settings}, '{}'::jsonb) || ${JSON.stringify(patch)}::jsonb`,
-          updatedAt: new Date(),
-        })
-        .where(eq(tenants.id, auth.tenantId))
-        .returning({ settings: tenants.settings })
-
-      return apiSuccess(updated?.settings ?? patch)
+      return apiSuccess(result)
     } catch (error) {
       logger.error('Failed to update design settings', error, { module: 'CmsDesignAPI' })
       return apiError('UPDATE_FAILED', 'Failed to update design settings', 500)

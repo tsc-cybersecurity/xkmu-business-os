@@ -35,6 +35,7 @@ export const TENANT_TABLES = [
   'cms_blocks',
   'cms_block_templates',
   'cms_navigation_items',
+  'cms_settings',
   'blog_posts',
   'media_uploads',
   'generated_images',
