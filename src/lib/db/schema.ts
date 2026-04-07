@@ -1589,7 +1589,7 @@ export type NewCmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferIns
 // ============================================
 export const cmsSettings = pgTable('cms_settings', {
   id: uuid('id').primaryKey().defaultRandom(),
-  key: varchar('key', { length: 100 }).notNull().unique(),
+  key: varchar('key', { length: 100 }).notNull(),
   value: jsonb('value').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

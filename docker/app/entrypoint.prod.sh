@@ -113,12 +113,8 @@ DO $$ BEGIN
   END IF;
 END $$;
 
--- Add unique constraint if missing
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cms_settings_key_unique') THEN
-    ALTER TABLE cms_settings ADD CONSTRAINT cms_settings_key_unique UNIQUE (key);
-  END IF;
-END $$;
+-- Drop unique constraint if it exists (causes Drizzle prompt)
+ALTER TABLE cms_settings DROP CONSTRAINT IF EXISTS cms_settings_key_unique;
 EOSQL
 echo "Pre-Drizzle migrations complete!"
 
