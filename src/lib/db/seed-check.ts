@@ -159,7 +159,7 @@ function getSslConfig(): 'require' | false {
   return false
 }
 
-async function seedCmsPages(db: ReturnType<typeof drizzle>, tenantId: string) {
+async function seedCmsPages(db: ReturnType<typeof drizzle>) {
   let created = 0
   for (const pageData of CMS_PAGES) {
     const existing = await db
@@ -173,7 +173,6 @@ async function seedCmsPages(db: ReturnType<typeof drizzle>, tenantId: string) {
     const [page] = await db
       .insert(cmsPages)
       .values({
-        tenantId,
         slug: pageData.slug,
         title: pageData.title,
         status: pageData.status,
@@ -183,7 +182,6 @@ async function seedCmsPages(db: ReturnType<typeof drizzle>, tenantId: string) {
 
     for (const blockData of pageData.blocks) {
       await db.insert(cmsBlocks).values({
-        tenantId,
         pageId: page.id,
         blockType: blockData.blockType,
         sortOrder: blockData.sortOrder,
@@ -304,15 +302,14 @@ const NAVIGATION_ITEMS = [
   { location: 'footer', label: 'Datenschutz', href: '/datenschutz', sortOrder: 5 },
 ]
 
-async function seedNavigation(db: ReturnType<typeof drizzle>, tenantId: string) {
-  const [{ total }] = await db.select({ total: count() }).from(cmsNavigationItems).where(eq(cmsNavigationItems.tenantId, tenantId))
+async function seedNavigation(db: ReturnType<typeof drizzle>) {
+  const [{ total }] = await db.select({ total: count() }).from(cmsNavigationItems)
   if (Number(total) > 0) {
     logger.info('Navigation already exists, skipping...')
     return 0
   }
 
   const items = NAVIGATION_ITEMS.map((item) => ({
-    tenantId,
     location: item.location,
     label: item.label,
     href: item.href,
@@ -667,15 +664,15 @@ const BLOCK_TEMPLATES = [
   { name: 'Platzhalter Coming Soon', blockType: 'placeholder', content: { icon: 'Clock', title: 'Coming Soon', description: 'Dieser Bereich wird gerade fuer Sie vorbereitet. Schauen Sie bald wieder vorbei!' }, settings: {}, isSystem: true },
 ]
 
-async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>, tenantId: string) {
-  const [{ total }] = await db.select({ total: count() }).from(cmsBlockTemplates).where(eq(cmsBlockTemplates.tenantId, tenantId))
+async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>) {
+  const [{ total }] = await db.select({ total: count() }).from(cmsBlockTemplates)
   if (Number(total) > 0) {
     logger.info('CMS block templates already exist, skipping...')
     return 0
   }
 
   for (const tmpl of BLOCK_TEMPLATES) {
-    await db.insert(cmsBlockTemplates).values({ tenantId, ...tmpl })
+    await db.insert(cmsBlockTemplates).values({ ...tmpl })
   }
   logger.info(`Created ${BLOCK_TEMPLATES.length} CMS block templates`)
   return BLOCK_TEMPLATES.length
@@ -842,7 +839,7 @@ async function seedCheck() {
   }
 
   // 3. Seed CMS pages (always check, even for existing tenants)
-  const cmsCreated = await seedCmsPages(db, tenantId)
+  const cmsCreated = await seedCmsPages(db)
   if (cmsCreated > 0) {
     logger.info(`Created ${cmsCreated} CMS pages`)
   } else {
@@ -850,7 +847,7 @@ async function seedCheck() {
   }
 
   // 4. Seed CMS navigation
-  await seedNavigation(db, tenantId)
+  await seedNavigation(db)
 
   // 5. Seed blog posts
   if (adminUserId) {
@@ -880,8 +877,8 @@ async function seedCheck() {
   // 12. Seed CMS block type definitions (global, no tenant)
   await seedCmsBlockTypeDefinitions(db)
 
-  // 13. Seed CMS block templates (per tenant)
-  await seedCmsBlockTemplates(db, tenantId)
+  // 13. Seed CMS block templates (global)
+  await seedCmsBlockTemplates(db)
 
   logger.info('Seed check completed!', { module: 'SeedCheck' })
   logger.info(`Login: ${SEED_DATA.user.email} / ${SEED_DATA.user.password}`, { module: 'SeedCheck' })
