@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Palette, Loader2, Save, Type, RectangleHorizontal, Sun, Image } from 'lucide-react'
+import { Palette, Loader2, Save, Type, RectangleHorizontal, Sun, Image, MessageSquare, X, Plus } from 'lucide-react'
 import { fontOptions, accentOptions, radiusOptions, themeOptions, type FontId, type AccentId, type RadiusId, type ThemeId } from '@/app/_components/design-provider'
 import { logger } from '@/lib/utils/logger'
 
@@ -19,7 +19,18 @@ interface DesignSettings {
   logoAlt: string
   headerSticky: boolean
   footerText: string
+  contactHeadline: string
+  contactDescription: string
+  contactInterestTags: string[]
 }
+
+const DEFAULT_TAGS = [
+  'KI-Beratung', 'KI-Automatisierung', 'KI-Assistenten & Chatbots',
+  'IT-Assessment', 'IT-Architektur & Cloud', 'Systemintegration',
+  'Security Quick Check', 'Hardening & Baselines', 'Backup & Recovery',
+  'Incident Response', 'Security Awareness', 'Datenschutz & Compliance',
+  'NIS-2 Unterstützung', 'Kombinations-Modul', 'Managed Services',
+]
 
 const DEFAULTS: DesignSettings = {
   defaultFont: 'ubuntu',
@@ -30,6 +41,9 @@ const DEFAULTS: DesignSettings = {
   logoAlt: 'xKMU',
   headerSticky: true,
   footerText: '',
+  contactHeadline: 'Kontakt',
+  contactDescription: 'Haben Sie Fragen oder möchten Sie mehr über unsere Leistungen erfahren? Schreiben Sie uns!',
+  contactInterestTags: DEFAULT_TAGS,
 }
 
 export default function CmsDesignPage() {
@@ -53,6 +67,11 @@ export default function CmsDesignPage() {
           logoAlt: (s.logoAlt as string) || 'xKMU',
           headerSticky: s.headerSticky !== false,
           footerText: (s.footerText as string) || '',
+          contactHeadline: (s.contactHeadline as string) || DEFAULTS.contactHeadline,
+          contactDescription: (s.contactDescription as string) || DEFAULTS.contactDescription,
+          contactInterestTags: Array.isArray(s.contactInterestTags) && s.contactInterestTags.length > 0
+            ? (s.contactInterestTags as string[])
+            : DEFAULT_TAGS,
         })
       }
     } catch (error) {
@@ -87,6 +106,9 @@ export default function CmsDesignPage() {
         logoAlt: settings.logoAlt || 'xKMU',
         headerSticky: settings.headerSticky,
         footerText: settings.footerText || '',
+        contactHeadline: settings.contactHeadline || '',
+        contactDescription: settings.contactDescription || '',
+        contactInterestTags: settings.contactInterestTags.filter((t) => t.trim()),
       }
 
       const putRes = await fetch('/api/v1/tenant', {
@@ -337,6 +359,94 @@ export default function CmsDesignPage() {
               value={settings.footerText}
               onChange={(e) => setSettings((s) => ({ ...s, footerText: e.target.value }))}
             />
+          </CardContent>
+        </Card>
+
+        {/* Kontaktformular */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
+              Kontaktformular
+            </CardTitle>
+            <CardDescription>Überschrift, Beschreibung und Themen-Tags für das Kontaktformular</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Überschrift</Label>
+                <Input
+                  value={settings.contactHeadline}
+                  onChange={(e) => setSettings((s) => ({ ...s, contactHeadline: e.target.value }))}
+                  placeholder="Kontakt"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Beschreibung</Label>
+                <Input
+                  value={settings.contactDescription}
+                  onChange={(e) => setSettings((s) => ({ ...s, contactDescription: e.target.value }))}
+                  placeholder="Haben Sie Fragen? Schreiben Sie uns!"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Themen-Tags (Interessen)</Label>
+              <p className="text-xs text-muted-foreground">Besucher wählen daraus beim Kontaktformular. Klicken Sie auf X zum Entfernen.</p>
+              <div className="flex flex-wrap gap-2">
+                {settings.contactInterestTags.map((tag, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm bg-muted"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => setSettings((s) => ({
+                        ...s,
+                        contactInterestTags: s.contactInterestTags.filter((_, idx) => idx !== i),
+                      }))}
+                      className="ml-1 text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  id="newTag"
+                  placeholder="Neues Thema hinzufügen..."
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      const input = e.currentTarget
+                      const val = input.value.trim()
+                      if (val && !settings.contactInterestTags.includes(val)) {
+                        setSettings((s) => ({ ...s, contactInterestTags: [...s.contactInterestTags, val] }))
+                        input.value = ''
+                      }
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const input = document.getElementById('newTag') as HTMLInputElement
+                    const val = input?.value.trim()
+                    if (val && !settings.contactInterestTags.includes(val)) {
+                      setSettings((s) => ({ ...s, contactInterestTags: [...s.contactInterestTags, val] }))
+                      input.value = ''
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

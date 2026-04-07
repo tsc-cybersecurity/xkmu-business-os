@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,11 +8,12 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { CheckCircle2, Loader2, Mail } from 'lucide-react'
 
-const interestTags = [
-  'Cyber Security', 'Penetration Testing', 'IT-Audit', 'Cloud Security',
-  'KI-Integration', 'Automatisierung', 'Chatbots', 'Datenanalyse',
-  'IT-Beratung', 'Digitalisierung', 'Cloud Migration', 'IT-Strategie',
-  'Managed Services', 'Support', 'Schulungen', 'Softwareentwicklung',
+const DEFAULT_INTEREST_TAGS = [
+  'KI-Beratung', 'KI-Automatisierung', 'KI-Assistenten & Chatbots',
+  'IT-Assessment', 'IT-Architektur & Cloud', 'Systemintegration',
+  'Security Quick Check', 'Hardening & Baselines', 'Backup & Recovery',
+  'Incident Response', 'Security Awareness', 'Datenschutz & Compliance',
+  'NIS-2 Unterstützung', 'Kombinations-Modul', 'Managed Services',
 ]
 
 interface FormErrors {
@@ -39,6 +40,25 @@ export default function KontaktPage() {
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [interestTags, setInterestTags] = useState<string[]>(DEFAULT_INTEREST_TAGS)
+  const [contactHeadline, setContactHeadline] = useState('Kontakt')
+  const [contactDescription, setContactDescription] = useState('Haben Sie Fragen oder möchten Sie mehr über unsere Leistungen erfahren? Schreiben Sie uns!')
+
+  useEffect(() => {
+    fetch('/api/v1/public/branding', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.success && data.data) {
+          const d = data.data
+          if (Array.isArray(d.contactInterestTags) && d.contactInterestTags.length > 0) {
+            setInterestTags(d.contactInterestTags)
+          }
+          if (d.contactHeadline) setContactHeadline(d.contactHeadline)
+          if (d.contactDescription) setContactDescription(d.contactDescription)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const toggleInterest = (tag: string) => {
     setFormData(prev => ({
@@ -123,9 +143,9 @@ export default function KontaktPage() {
             <Mail className="h-8 w-8 text-[var(--brand-600)] dark:text-[var(--brand-400)]" />
           </div>
         </div>
-        <h1 className="text-4xl font-bold mb-3">Kontakt</h1>
+        <h1 className="text-4xl font-bold mb-3">{contactHeadline}</h1>
         <p className="text-lg text-muted-foreground">
-          Haben Sie Fragen oder möchten Sie mehr über unsere Leistungen erfahren? Schreiben Sie uns!
+          {contactDescription}
         </p>
       </div>
 

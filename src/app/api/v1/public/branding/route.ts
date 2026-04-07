@@ -29,6 +29,9 @@ export async function GET() {
         defaultTheme: (settings.defaultTheme as string) || null,
         headerSticky: settings.headerSticky !== false,
         footerText: (settings.footerText as string) || null,
+        contactHeadline: (settings.contactHeadline as string) || null,
+        contactDescription: (settings.contactDescription as string) || null,
+        contactInterestTags: (settings.contactInterestTags as string[]) || null,
       },
     })
   } catch {
