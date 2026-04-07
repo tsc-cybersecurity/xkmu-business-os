@@ -92,6 +92,37 @@ fi
 
 
 # ------------------------------------
+# Pre-Drizzle SQL migrations (idempotent)
+# ------------------------------------
+echo "Running pre-Drizzle SQL migrations..."
+PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=0 <<'EOSQL'
+-- Remove tenant_id from CMS/Blog tables (global, not multi-tenant)
+ALTER TABLE cms_pages DROP COLUMN IF EXISTS tenant_id;
+ALTER TABLE cms_blocks DROP COLUMN IF EXISTS tenant_id;
+ALTER TABLE cms_block_templates DROP COLUMN IF EXISTS tenant_id;
+ALTER TABLE cms_navigation_items DROP COLUMN IF EXISTS tenant_id;
+ALTER TABLE blog_posts DROP COLUMN IF EXISTS tenant_id;
+
+-- cms_settings: drop tenant_id, ensure unique key
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='cms_settings' AND column_name='tenant_id') THEN
+    -- Keep only newest row per key before dropping
+    DELETE FROM cms_settings a USING cms_settings b WHERE a.key = b.key AND a.id <> b.id AND a.updated_at < b.updated_at;
+    DROP INDEX IF EXISTS idx_cms_settings_tenant_key;
+    ALTER TABLE cms_settings DROP COLUMN tenant_id;
+  END IF;
+END $$;
+
+-- Add unique constraint if missing
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'cms_settings_key_unique') THEN
+    ALTER TABLE cms_settings ADD CONSTRAINT cms_settings_key_unique UNIQUE (key);
+  END IF;
+END $$;
+EOSQL
+echo "Pre-Drizzle migrations complete!"
+
+# ------------------------------------
 # Sync database schema via Drizzle
 # ------------------------------------
 echo "Syncing database schema..."
