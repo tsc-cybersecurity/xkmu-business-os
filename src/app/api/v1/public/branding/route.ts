@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { tenants, cmsSettings } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { cmsSettings } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,25 +10,10 @@ const DEFAULT_LOGO_ALT = 'xKMU'
 
 export async function GET() {
   try {
-    // Find active tenant
-    const [tenant] = await db
-      .select({ id: tenants.id })
-      .from(tenants)
-      .where(eq(tenants.status, 'active'))
-      .limit(1)
-
-    if (!tenant) {
-      return NextResponse.json({
-        success: true,
-        data: { logoUrl: DEFAULT_LOGO_URL, logoAlt: DEFAULT_LOGO_ALT },
-      })
-    }
-
-    // Read design settings from cms_settings table
     const [row] = await db
       .select({ value: cmsSettings.value })
       .from(cmsSettings)
-      .where(and(eq(cmsSettings.tenantId, tenant.id), eq(cmsSettings.key, 'design')))
+      .where(eq(cmsSettings.key, 'design'))
       .limit(1)
 
     const s = (row?.value ?? {}) as Record<string, unknown>

@@ -1614,25 +1614,17 @@ export type CmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferSelect
 export type NewCmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferInsert
 
 // ============================================
-// CMS Settings (Design & Konfiguration pro Tenant)
+// CMS Settings (Design & Konfiguration – global, kein Tenant)
 // ============================================
 export const cmsSettings = pgTable('cms_settings', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
-  key: varchar('key', { length: 100 }).notNull(),
+  key: varchar('key', { length: 100 }).notNull().unique(),
   value: jsonb('value').default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
-  index('idx_cms_settings_tenant_key').on(table.tenantId, table.key),
+  index('idx_cms_settings_key').on(table.key),
 ])
-
-export const cmsSettingsRelations = relations(cmsSettings, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [cmsSettings.tenantId],
-    references: [tenants.id],
-  }),
-}))
 
 export type CmsSettings = typeof cmsSettings.$inferSelect
 export type NewCmsSettings = typeof cmsSettings.$inferInsert
