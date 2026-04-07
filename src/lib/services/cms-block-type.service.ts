@@ -289,6 +289,41 @@ const BLOCK_TYPE_DEFAULTS: Array<Omit<NewCmsBlockTypeDefinition, 'id' | 'created
     isActive: true,
     sortOrder: 19,
   },
+  {
+    slug: 'contact-form',
+    name: 'Kontaktformular',
+    description: 'Kontaktformular mit Themen-Tags, Validierung und Lead-Erstellung',
+    icon: 'Mail',
+    category: 'content',
+    fields: ['interestTags', 'submitLabel', 'successHeadline', 'successMessage', 'privacyUrl'],
+    defaultContent: {
+      interestTags: ['KI-Beratung', 'IT-Beratung', 'Cybersecurity', 'Managed Services'],
+      submitLabel: 'Nachricht senden',
+      successHeadline: 'Vielen Dank fuer Ihre Nachricht!',
+      successMessage: 'Wir haben Ihre Anfrage erhalten und werden uns schnellstmoeglich bei Ihnen melden.',
+      privacyUrl: '/datenschutz',
+    },
+    defaultSettings: {},
+    isActive: true,
+    sortOrder: 22,
+  },
+  {
+    slug: 'columns',
+    name: 'Spalten-Layout',
+    description: 'Mehrspalten-Layout mit eingebetteten Bloecken (2 oder 3 Spalten)',
+    icon: 'Columns3',
+    category: 'layout',
+    fields: ['columns', 'layout', 'left', 'center', 'right'],
+    defaultContent: {
+      columns: 2,
+      layout: 'equal',
+      left: [{ blockType: 'text', content: { content: 'Linke Spalte' } }],
+      right: [{ blockType: 'text', content: { content: 'Rechte Spalte' } }],
+    },
+    defaultSettings: {},
+    isActive: true,
+    sortOrder: 23,
+  },
 ]
 
 export const CmsBlockTypeService = {
