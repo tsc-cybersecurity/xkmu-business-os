@@ -573,6 +573,44 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
           </div>
         </>
       )
+    case 'contact-form': {
+      const interestTags = (content.interestTags as string[]) || []
+      return (
+        <>
+          <div className="space-y-2">
+            <Label>Submit-Button Text</Label>
+            <Input value={(content.submitLabel as string) || ''} onChange={e => updateContent('submitLabel', e.target.value)} placeholder="Nachricht senden" />
+          </div>
+          <div className="space-y-2">
+            <Label>Erfolgs-Überschrift</Label>
+            <Input value={(content.successHeadline as string) || ''} onChange={e => updateContent('successHeadline', e.target.value)} placeholder="Vielen Dank für Ihre Nachricht!" />
+          </div>
+          <div className="space-y-2">
+            <Label>Erfolgsmeldung</Label>
+            <Input value={(content.successMessage as string) || ''} onChange={e => updateContent('successMessage', e.target.value)} placeholder="Wir werden uns schnellstmöglich melden." />
+          </div>
+          <div className="space-y-2">
+            <Label>Datenschutz-URL</Label>
+            <Input value={(content.privacyUrl as string) || ''} onChange={e => updateContent('privacyUrl', e.target.value)} placeholder="/datenschutz" />
+          </div>
+          <div className="space-y-2">
+            <Label>Themen-Tags (Interessen)</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {interestTags.map((tag, i) => (
+                <span key={i} className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-sm bg-muted">
+                  {tag}
+                  <button type="button" onClick={() => { const updated = interestTags.filter((_, idx) => idx !== i); updateContent('interestTags', updated) }} className="ml-1 text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input id="newContactTag" placeholder="Neues Thema..." onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const val = e.currentTarget.value.trim(); if (val && !interestTags.includes(val)) { updateContent('interestTags', [...interestTags, val]); e.currentTarget.value = '' } } }} />
+              <Button type="button" variant="outline" size="icon" onClick={() => { const input = document.getElementById('newContactTag') as HTMLInputElement; const val = input?.value.trim(); if (val && !interestTags.includes(val)) { updateContent('interestTags', [...interestTags, val]); input.value = '' } }}><Plus className="h-4 w-4" /></Button>
+            </div>
+          </div>
+        </>
+      )
+    }
     default:
       return (
         <div className="space-y-2">

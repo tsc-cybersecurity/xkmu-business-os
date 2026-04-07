@@ -960,6 +960,47 @@ const pages = [
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // 6. KONTAKT
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  {
+    slug: '/kontakt',
+    title: 'Kontakt',
+    seoTitle: 'Kontakt | xKMU',
+    seoDescription: 'Haben Sie Fragen oder möchten Sie mehr über unsere Leistungen erfahren? Schreiben Sie uns!',
+    status: 'published',
+    blocks: [
+      {
+        blockType: 'hero',
+        sortOrder: 0,
+        content: {
+          badge: { icon: 'Mail', text: 'Wir freuen uns auf Ihre Nachricht' },
+          headline: 'Kontakt',
+          subheadline: 'Haben Sie Fragen oder möchten Sie mehr über unsere Leistungen erfahren? Schreiben Sie uns – wir melden uns schnellstmöglich.',
+          size: 'small',
+        },
+      },
+      {
+        blockType: 'contact-form',
+        sortOrder: 1,
+        content: {
+          interestTags: [
+            'KI-Beratung', 'KI-Automatisierung', 'KI-Assistenten & Chatbots',
+            'IT-Assessment', 'IT-Architektur & Cloud', 'Systemintegration',
+            'Security Quick Check', 'Hardening & Baselines', 'Backup & Recovery',
+            'Incident Response', 'Security Awareness', 'Datenschutz & Compliance',
+            'NIS-2 Unterstützung', 'Kombinations-Modul', 'Managed Services',
+          ],
+          submitLabel: 'Nachricht senden',
+          successHeadline: 'Vielen Dank für Ihre Nachricht!',
+          successMessage: 'Wir haben Ihre Anfrage erhalten und werden uns schnellstmöglich bei Ihnen melden.',
+          privacyUrl: '/datenschutz',
+        },
+      },
+    ],
+  },
 ]
 
 // ─── Slugs to remove (old naming) ───────────────────────────────────────────────

@@ -22,9 +22,11 @@ import { DividerBlock } from './blocks/divider-block'
 import { ComparisonBlock } from './blocks/comparison-block'
 import { ServiceCardsBlock } from './blocks/service-cards-block'
 import { BlogListingBlock } from './blocks/blog-listing-block'
+import { ContactFormBlock } from './blocks/contact-form-block'
 import type { HeroBlockContent } from './blocks/hero-block'
 import type { BannerBlockContent } from './blocks/banner-block'
 import type { BlogListingBlockContent } from './blocks/blog-listing-block'
+import type { ContactFormBlockContent } from './blocks/contact-form-block'
 import type { CardsBlockContent } from './blocks/cards-block'
 import type { ComparisonBlockContent } from './blocks/comparison-block'
 import type { CtaBlockContent } from './blocks/cta-block'
@@ -123,6 +125,8 @@ export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRende
       return <ServiceCardsBlock content={content as ServiceCardsBlockContent} settings={settings} />
     case 'blog-listing':
       return <BlogListingBlock content={content as BlogListingBlockContent} settings={settings} />
+    case 'contact-form':
+      return <ContactFormBlock content={content as ContactFormBlockContent} settings={settings} />
     default:
       return (
         <div className="container mx-auto px-4 py-8">
