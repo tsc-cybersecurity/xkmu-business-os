@@ -126,7 +126,7 @@ echo "Pre-Drizzle migrations complete!"
 # Sync database schema via Drizzle
 # ------------------------------------
 echo "Syncing database schema..."
-npx drizzle-kit push --force
+yes | npx drizzle-kit push --force
 echo "Schema sync complete!"
 
 # ------------------------------------
