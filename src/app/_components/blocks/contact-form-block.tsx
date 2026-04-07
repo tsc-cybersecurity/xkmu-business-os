@@ -7,11 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { CheckCircle2, Loader2 } from 'lucide-react'
-import { InlineMarkdown } from '../markdown-renderer'
 
 export interface ContactFormBlockContent {
-  layout?: 'single' | 'form-left' | 'form-right'
-  sideContent?: string
   interestTags?: string[]
   submitLabel?: string
   successHeadline?: string
@@ -48,8 +45,6 @@ export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
   const successHeadline = content.successHeadline || 'Vielen Dank für Ihre Nachricht!'
   const successMessage = content.successMessage || 'Wir haben Ihre Anfrage erhalten und werden uns schnellstmöglich bei Ihnen melden.'
   const privacyUrl = content.privacyUrl || '/datenschutz'
-  const layout = content.layout || 'single'
-  const sideContent = content.sideContent || ''
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -115,17 +110,9 @@ export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
     }
   }
 
-  const isTwoCol = layout === 'form-left' || layout === 'form-right'
-
-  const sidePanel = isTwoCol && sideContent ? (
-    <div className="prose prose-sm dark:prose-invert max-w-none">
-      <InlineMarkdown text={sideContent} />
-    </div>
-  ) : null
-
   if (submitted) {
     return (
-      <div className={`container mx-auto px-4 py-16 ${isTwoCol ? 'max-w-5xl' : 'max-w-2xl'} text-center`}>
+      <div className="container mx-auto px-4 py-16 max-w-2xl text-center">
         <div className="flex justify-center mb-6">
           <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-6">
             <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
@@ -140,7 +127,14 @@ export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
     )
   }
 
-  const formElement = (
+  return (
+    <section
+      className="py-4"
+      style={{
+        paddingTop: settings?.paddingTop ? `${settings.paddingTop}px` : undefined,
+        paddingBottom: settings?.paddingBottom ? `${settings.paddingBottom}px` : undefined,
+      }}
+    >
     <form onSubmit={handleSubmit} className="space-y-6 rounded-lg border bg-card p-8">
         {errors.general && (
           <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
@@ -210,27 +204,6 @@ export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
           {submitting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" />Wird gesendet...</>) : submitLabel}
         </Button>
       </form>
-  )
-
-  return (
-    <section
-      className={`container mx-auto px-4 py-12 ${isTwoCol ? 'max-w-5xl' : 'max-w-2xl'}`}
-      style={{
-        paddingTop: settings?.paddingTop ? `${settings.paddingTop}px` : undefined,
-        paddingBottom: settings?.paddingBottom ? `${settings.paddingBottom}px` : undefined,
-      }}
-    >
-      {isTwoCol ? (
-        <div className="grid md:grid-cols-2 gap-8 items-start">
-          {layout === 'form-left' ? (
-            <>{formElement}{sidePanel}</>
-          ) : (
-            <>{sidePanel}{formElement}</>
-          )}
-        </div>
-      ) : (
-        formElement
-      )}
     </section>
   )
 }

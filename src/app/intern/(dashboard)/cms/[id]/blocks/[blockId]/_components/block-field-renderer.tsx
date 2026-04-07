@@ -578,28 +578,6 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
       return (
         <>
           <div className="space-y-2">
-            <Label>Layout</Label>
-            <Select value={(content.layout as string) || 'single'} onValueChange={v => updateContent('layout', v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="single">1 Spalte (nur Formular)</SelectItem>
-                <SelectItem value="form-left">2 Spalten – Formular links</SelectItem>
-                <SelectItem value="form-right">2 Spalten – Formular rechts</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          {((content.layout as string) === 'form-left' || (content.layout as string) === 'form-right') && (
-            <div className="space-y-2">
-              <Label>Seiteninhalt (Markdown)</Label>
-              <Textarea
-                value={(content.sideContent as string) || ''}
-                onChange={e => updateContent('sideContent', e.target.value)}
-                placeholder="## Kontaktdaten&#10;&#10;**E-Mail:** info@firma.de&#10;**Telefon:** +49 123 456&#10;&#10;Wir antworten innerhalb von 24 Stunden."
-                rows={8}
-              />
-            </div>
-          )}
-          <div className="space-y-2">
             <Label>Submit-Button Text</Label>
             <Input value={(content.submitLabel as string) || ''} onChange={e => updateContent('submitLabel', e.target.value)} placeholder="Nachricht senden" />
           </div>
@@ -629,6 +607,67 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               <Input id="newContactTag" placeholder="Neues Thema..." onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const val = e.currentTarget.value.trim(); if (val && !interestTags.includes(val)) { updateContent('interestTags', [...interestTags, val]); e.currentTarget.value = '' } } }} />
               <Button type="button" variant="outline" size="icon" onClick={() => { const input = document.getElementById('newContactTag') as HTMLInputElement; const val = input?.value.trim(); if (val && !interestTags.includes(val)) { updateContent('interestTags', [...interestTags, val]); input.value = '' } }}><Plus className="h-4 w-4" /></Button>
             </div>
+          </div>
+        </>
+      )
+    }
+    case 'columns': {
+      const cols = (content.columns as number) || 2
+      return (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Spalten</Label>
+              <Select value={String(cols)} onValueChange={v => updateContent('columns', parseInt(v))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2">2 Spalten</SelectItem>
+                  <SelectItem value="3">3 Spalten</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Verteilung</Label>
+              <Select value={(content.layout as string) || 'equal'} onValueChange={v => updateContent('layout', v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="equal">Gleich breit</SelectItem>
+                  <SelectItem value="left-wide">Links breiter (2:1)</SelectItem>
+                  <SelectItem value="right-wide">Rechts breiter (1:2)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Linke Spalte (Blöcke als JSON)</Label>
+            <Textarea
+              value={JSON.stringify(content.left || [], null, 2)}
+              onChange={e => { try { updateContent('left', JSON.parse(e.target.value)) } catch { /* ignore */ } }}
+              rows={6}
+              className="font-mono text-xs"
+              placeholder='[{"blockType":"text","content":{"content":"Beispieltext"}}]'
+            />
+          </div>
+          {cols === 3 && (
+            <div className="space-y-2">
+              <Label>Mittlere Spalte (Blöcke als JSON)</Label>
+              <Textarea
+                value={JSON.stringify(content.center || [], null, 2)}
+                onChange={e => { try { updateContent('center', JSON.parse(e.target.value)) } catch { /* ignore */ } }}
+                rows={6}
+                className="font-mono text-xs"
+              />
+            </div>
+          )}
+          <div className="space-y-2">
+            <Label>Rechte Spalte (Blöcke als JSON)</Label>
+            <Textarea
+              value={JSON.stringify(content.right || [], null, 2)}
+              onChange={e => { try { updateContent('right', JSON.parse(e.target.value)) } catch { /* ignore */ } }}
+              rows={6}
+              className="font-mono text-xs"
+              placeholder='[{"blockType":"contact-form","content":{"submitLabel":"Senden"}}]'
+            />
           </div>
         </>
       )
