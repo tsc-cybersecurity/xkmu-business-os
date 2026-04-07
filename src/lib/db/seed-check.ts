@@ -445,8 +445,8 @@ Mit XKMU Business OS können Sie direkt loslegen. Die Plattform integriert versc
   },
 ]
 
-async function seedBlogPosts(db: ReturnType<typeof drizzle>, tenantId: string, authorId: string) {
-  const [{ total }] = await db.select({ total: count() }).from(blogPosts).where(eq(blogPosts.tenantId, tenantId))
+async function seedBlogPosts(db: ReturnType<typeof drizzle>, authorId: string) {
+  const [{ total }] = await db.select({ total: count() }).from(blogPosts)
   if (Number(total) > 0) {
     logger.info('Blog posts already exist, skipping...')
     return 0
@@ -455,7 +455,6 @@ async function seedBlogPosts(db: ReturnType<typeof drizzle>, tenantId: string, a
   let created = 0
   for (const post of BLOG_POSTS) {
     await db.insert(blogPosts).values({
-      tenantId,
       title: post.title,
       slug: post.slug,
       excerpt: post.excerpt,
@@ -580,7 +579,7 @@ async function seedCmsBlockTypeDefinitions(db: ReturnType<typeof drizzle>) {
 }
 
 // ============================================
-// CMS Block Templates (per tenant)
+// CMS Block Templates (global)
 // ============================================
 const BLOCK_TEMPLATES = [
   { name: 'Hero Standard', blockType: 'hero', content: { backgroundImage: '', overlayGradient: 'linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.6), rgba(0,0,0,0.7))', badge: { icon: 'Building2', text: 'Willkommen' }, headline: 'Ihr Unternehmen.', headlineHighlight: 'Unsere Loesung.', subheadline: 'Professionelle Dienstleistungen fuer Ihren Erfolg.', buttons: [{ label: 'Mehr erfahren', href: '#', variant: 'default' }, { label: 'Kontakt', href: '/kontakt', variant: 'outline' }], stats: [{ value: '10+', label: 'Jahre Erfahrung' }, { value: '100+', label: 'Kunden' }, { value: '24/7', label: 'Support' }] }, settings: {}, isSystem: true },
@@ -851,7 +850,7 @@ async function seedCheck() {
 
   // 5. Seed blog posts
   if (adminUserId) {
-    await seedBlogPosts(db, tenantId, adminUserId)
+    await seedBlogPosts(db, adminUserId)
   }
 
   // 6. Seed AI prompt templates

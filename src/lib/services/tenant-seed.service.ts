@@ -414,7 +414,7 @@ export class TenantSeedService {
 
     const cmsCount = await this.seedCmsPages()
     const navCount = await this.seedNavigation()
-    const blogCount = await this.seedBlogPosts(tenantId, userId)
+    const blogCount = await this.seedBlogPosts(userId)
     const bizCounts = await this.seedExampleBusinessData(tenantId, userId)
 
     return {
@@ -544,13 +544,12 @@ export class TenantSeedService {
     return items.length
   }
 
-  private static async seedBlogPosts(tenantId: string, authorId: string): Promise<number> {
-    const [{ total }] = await db.select({ total: count() }).from(blogPosts).where(eq(blogPosts.tenantId, tenantId))
+  private static async seedBlogPosts(authorId: string): Promise<number> {
+    const [{ total }] = await db.select({ total: count() }).from(blogPosts)
     if (Number(total) > 0) return 0
 
     for (const post of BLOG_POSTS) {
       await db.insert(blogPosts).values({
-        tenantId,
         title: post.title,
         slug: post.slug,
         excerpt: post.excerpt,

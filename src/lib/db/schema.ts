@@ -80,7 +80,6 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   dinAnswers: many(dinAnswers),
   wibaAuditSessions: many(wibaAuditSessions),
   wibaAnswers: many(wibaAnswers),
-  blogPosts: many(blogPosts),
   mediaUploads: many(mediaUploads),
   companyResearches: many(companyResearches),
   firecrawlResearches: many(firecrawlResearches),
@@ -1606,7 +1605,6 @@ export type NewCmsSettings = typeof cmsSettings.$inferInsert
 // ============================================
 export const blogPosts = pgTable('blog_posts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
   title: varchar('title', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull(),
   excerpt: text('excerpt'),
@@ -1626,17 +1624,13 @@ export const blogPosts = pgTable('blog_posts', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
-  index('idx_blog_posts_tenant_slug').on(table.tenantId, table.slug),
-  index('idx_blog_posts_tenant_status').on(table.tenantId, table.status),
-  index('idx_blog_posts_tenant_published').on(table.tenantId, table.publishedAt),
-  index('idx_blog_posts_tenant_category').on(table.tenantId, table.category),
+  index('idx_blog_posts_slug').on(table.slug),
+  index('idx_blog_posts_status').on(table.status),
+  index('idx_blog_posts_published').on(table.publishedAt),
+  index('idx_blog_posts_category').on(table.category),
 ])
 
 export const blogPostsRelations = relations(blogPosts, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [blogPosts.tenantId],
-    references: [tenants.id],
-  }),
   author: one(users, {
     fields: [blogPosts.authorId],
     references: [users.id],

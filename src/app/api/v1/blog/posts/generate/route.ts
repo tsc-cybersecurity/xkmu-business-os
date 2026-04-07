@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       // Save as draft — handle duplicate slugs
       let slug = generated.slug
       try {
-        const post = await BlogPostService.create(auth.tenantId, {
+        const post = await BlogPostService.create({
           title: generated.title,
           slug,
           excerpt: generated.excerpt,
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         if (dbMessage.includes('unique') || dbMessage.includes('duplicate') || dbMessage.includes('23505')) {
           logger.warn('Slug conflict for', { module: 'BlogPostsGenerateAPI' })
           const uniqueSlug = await BlogPostService.generateSlug(generated.title)
-          const post = await BlogPostService.create(auth.tenantId, {
+          const post = await BlogPostService.create({
             title: generated.title,
             slug: uniqueSlug,
             excerpt: generated.excerpt,

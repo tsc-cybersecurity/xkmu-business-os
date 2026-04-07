@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const post = await BlogPostService.create(auth.tenantId, validation.data, auth.userId ?? undefined)
+      const post = await BlogPostService.create(validation.data, auth.userId ?? undefined)
       return apiSuccess(post, undefined, 201)
     } catch (error) {
       logger.error('Error creating blog post', error, { module: 'BlogPostsAPI' })

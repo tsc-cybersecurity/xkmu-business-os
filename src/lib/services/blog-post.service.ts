@@ -31,15 +31,13 @@ export interface CreateBlogPostInput {
 export type UpdateBlogPostInput = Partial<CreateBlogPostInput>
 
 // Blog ist global (nicht mandantenspezifisch) — wie CMS.
-// tenantId wird nur bei INSERT verwendet (DB-Spalte NOT NULL).
 
 export const BlogPostService = {
-  async create(tenantId: string, data: CreateBlogPostInput, authorId?: string): Promise<BlogPost> {
+  async create(data: CreateBlogPostInput, authorId?: string): Promise<BlogPost> {
     const slug = data.slug || await this.generateSlug(data.title)
     const [post] = await db
       .insert(blogPosts)
       .values({
-        tenantId,
         title: data.title,
         slug,
         excerpt: data.excerpt || null,
