@@ -38,10 +38,14 @@ interface ServiceCardItem {
 interface BlockFieldRendererProps {
   blockType: string
   content: Record<string, unknown>
-  updateContent: (key: string, value: unknown) => void
+  updateContent?: (key: string, value: unknown) => void
+  onContentChange?: (newContent: Record<string, unknown>) => void
 }
 
-export function BlockFieldRenderer({ blockType, content, updateContent }: BlockFieldRendererProps) {
+export function BlockFieldRenderer({ blockType, content, updateContent: updateContentProp, onContentChange }: BlockFieldRendererProps) {
+  const updateContent = updateContentProp ?? ((key: string, value: unknown) => {
+    onContentChange?.({ ...content, [key]: value })
+  })
   switch (blockType) {
     case 'hero':
       return (
@@ -613,6 +617,53 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
     }
     case 'columns': {
       const cols = (content.columns as number) || 2
+      const SUB_BLOCK_OPTIONS = [
+        { value: 'text', label: 'Text' },
+        { value: 'heading', label: 'Überschrift' },
+        { value: 'cta', label: 'Call-to-Action' },
+        { value: 'contact-form', label: 'Kontaktformular' },
+        { value: 'cards', label: 'Karten' },
+        { value: 'features', label: 'Features' },
+        { value: 'image', label: 'Bild' },
+        { value: 'banner', label: 'Banner' },
+        { value: 'stats', label: 'Statistiken' },
+        { value: 'faq', label: 'FAQ' },
+      ]
+      const renderColumnEditor = (columnKey: 'left' | 'center' | 'right', label: string) => {
+        const blocks = ((content[columnKey] || []) as Array<{ blockType: string; content: Record<string, unknown>; settings?: Record<string, unknown> }>)
+        const updateBlocks = (newBlocks: typeof blocks) => updateContent(columnKey, newBlocks)
+        return (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-semibold">{label}</Label>
+              <Select onValueChange={v => updateBlocks([...blocks, { blockType: v, content: {} }])}>
+                <SelectTrigger className="w-[200px]"><SelectValue placeholder="Block hinzufügen..." /></SelectTrigger>
+                <SelectContent>
+                  {SUB_BLOCK_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {blocks.length === 0 && <p className="text-sm text-muted-foreground italic">Keine Blöcke. Wählen Sie oben einen Block-Typ.</p>}
+            {blocks.map((block, i) => (
+              <div key={i} className="rounded-lg border p-4 space-y-3 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{SUB_BLOCK_OPTIONS.find(o => o.value === block.blockType)?.label || block.blockType}</span>
+                  <div className="flex gap-1">
+                    {i > 0 && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { const n = [...blocks]; [n[i-1], n[i]] = [n[i], n[i-1]]; updateBlocks(n) }}>↑</Button>}
+                    {i < blocks.length - 1 && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { const n = [...blocks]; [n[i], n[i+1]] = [n[i+1], n[i]]; updateBlocks(n) }}>↓</Button>}
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => updateBlocks(blocks.filter((_, idx) => idx !== i))}><Trash2 className="h-3.5 w-3.5" /></Button>
+                  </div>
+                </div>
+                <BlockFieldRenderer
+                  blockType={block.blockType}
+                  content={block.content}
+                  onContentChange={(newContent) => { const n = [...blocks]; n[i] = { ...n[i], content: newContent }; updateBlocks(n) }}
+                />
+              </div>
+            ))}
+          </div>
+        )
+      }
       return (
         <>
           <div className="grid grid-cols-2 gap-3">
@@ -638,37 +689,9 @@ export function BlockFieldRenderer({ blockType, content, updateContent }: BlockF
               </Select>
             </div>
           </div>
-          <div className="space-y-2">
-            <Label>Linke Spalte (Blöcke als JSON)</Label>
-            <Textarea
-              value={JSON.stringify(content.left || [], null, 2)}
-              onChange={e => { try { updateContent('left', JSON.parse(e.target.value)) } catch { /* ignore */ } }}
-              rows={6}
-              className="font-mono text-xs"
-              placeholder='[{"blockType":"text","content":{"content":"Beispieltext"}}]'
-            />
-          </div>
-          {cols === 3 && (
-            <div className="space-y-2">
-              <Label>Mittlere Spalte (Blöcke als JSON)</Label>
-              <Textarea
-                value={JSON.stringify(content.center || [], null, 2)}
-                onChange={e => { try { updateContent('center', JSON.parse(e.target.value)) } catch { /* ignore */ } }}
-                rows={6}
-                className="font-mono text-xs"
-              />
-            </div>
-          )}
-          <div className="space-y-2">
-            <Label>Rechte Spalte (Blöcke als JSON)</Label>
-            <Textarea
-              value={JSON.stringify(content.right || [], null, 2)}
-              onChange={e => { try { updateContent('right', JSON.parse(e.target.value)) } catch { /* ignore */ } }}
-              rows={6}
-              className="font-mono text-xs"
-              placeholder='[{"blockType":"contact-form","content":{"submitLabel":"Senden"}}]'
-            />
-          </div>
+          {renderColumnEditor('left', 'Linke Spalte')}
+          {cols === 3 && renderColumnEditor('center', 'Mittlere Spalte')}
+          {renderColumnEditor('right', 'Rechte Spalte')}
         </>
       )
     }
