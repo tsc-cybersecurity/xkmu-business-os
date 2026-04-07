@@ -1467,7 +1467,6 @@ export const irReferences = pgTable('ir_references', {
 // ============================================
 export const cmsPages = pgTable('cms_pages', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   slug: varchar('slug', { length: 255 }).notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   seoTitle: varchar('seo_title', { length: 70 }),
@@ -1486,15 +1485,11 @@ export const cmsPages = pgTable('cms_pages', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
-  index('idx_cms_pages_tenant_slug').on(table.tenantId, table.slug),
-  index('idx_cms_pages_tenant_status').on(table.tenantId, table.status),
+  index('idx_cms_pages_slug').on(table.slug),
+  index('idx_cms_pages_status').on(table.status),
 ])
 
 export const cmsPagesRelations = relations(cmsPages, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [cmsPages.tenantId],
-    references: [tenants.id],
-  }),
   createdByUser: one(users, {
     fields: [cmsPages.createdBy],
     references: [users.id],
@@ -1508,7 +1503,6 @@ export const cmsPagesRelations = relations(cmsPages, ({ one, many }) => ({
 export const cmsBlocks = pgTable('cms_blocks', {
   id: uuid('id').primaryKey().defaultRandom(),
   pageId: uuid('page_id').notNull().references(() => cmsPages.id, { onDelete: 'cascade' }),
-  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   blockType: varchar('block_type', { length: 50 }).notNull(),
   sortOrder: integer('sort_order').default(0),
   content: jsonb('content').default({}),
@@ -1518,17 +1512,12 @@ export const cmsBlocks = pgTable('cms_blocks', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
   index('idx_cms_blocks_page_sort').on(table.pageId, table.sortOrder),
-  index('idx_cms_blocks_tenant').on(table.tenantId),
 ])
 
 export const cmsBlocksRelations = relations(cmsBlocks, ({ one }) => ({
   page: one(cmsPages, {
     fields: [cmsBlocks.pageId],
     references: [cmsPages.id],
-  }),
-  tenant: one(tenants, {
-    fields: [cmsBlocks.tenantId],
-    references: [tenants.id],
   }),
 }))
 
@@ -1537,7 +1526,6 @@ export const cmsBlocksRelations = relations(cmsBlocks, ({ one }) => ({
 // ============================================
 export const cmsBlockTemplates = pgTable('cms_block_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull(),
   blockType: varchar('block_type', { length: 50 }).notNull(),
   content: jsonb('content').default({}),
@@ -1545,23 +1533,14 @@ export const cmsBlockTemplates = pgTable('cms_block_templates', {
   isSystem: boolean('is_system').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
-  index('idx_cms_block_templates_tenant').on(table.tenantId),
-  index('idx_cms_block_templates_tenant_type').on(table.tenantId, table.blockType),
+  index('idx_cms_block_templates_type').on(table.blockType),
 ])
-
-export const cmsBlockTemplatesRelations = relations(cmsBlockTemplates, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [cmsBlockTemplates.tenantId],
-    references: [tenants.id],
-  }),
-}))
 
 // ============================================
 // CMS Navigation Items (Navigations-Einträge)
 // ============================================
 export const cmsNavigationItems = pgTable('cms_navigation_items', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   location: varchar('location', { length: 20 }).notNull(), // 'header' | 'footer'
   label: varchar('label', { length: 100 }).notNull(),
   href: varchar('href', { length: 500 }).notNull(),
@@ -1572,14 +1551,10 @@ export const cmsNavigationItems = pgTable('cms_navigation_items', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
-  index('idx_cms_nav_items_tenant_location_sort').on(table.tenantId, table.location, table.sortOrder),
+  index('idx_cms_nav_items_location_sort').on(table.location, table.sortOrder),
 ])
 
 export const cmsNavigationItemsRelations = relations(cmsNavigationItems, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [cmsNavigationItems.tenantId],
-    references: [tenants.id],
-  }),
   page: one(cmsPages, {
     fields: [cmsNavigationItems.pageId],
     references: [cmsPages.id],

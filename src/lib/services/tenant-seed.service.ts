@@ -387,12 +387,12 @@ export class TenantSeedService {
     await RoleService.seedDefaultRoles(tenantId)
     await this.seedAiPromptTemplates(tenantId)
     await this.seedProductCategories(tenantId)
-    await this.seedCmsBlockTemplates(tenantId)
+    await this.seedCmsBlockTemplates()
     await this.seedCmsBlockTypeDefinitions()
     await this.seedDinData()
     // CMS-Seiten und Navigation sind essentiell (Startseite, Impressum, AGB, Datenschutz)
-    await this.seedCmsPages(tenantId)
-    await this.seedNavigation(tenantId)
+    await this.seedCmsPages()
+    await this.seedNavigation()
   }
 
   /**
@@ -412,8 +412,8 @@ export class TenantSeedService {
     // Strukturelle Daten (Rollen, AI Prompts, Kategorien etc.) sicherstellen
     await this.seedStructuralData(tenantId)
 
-    const cmsCount = await this.seedCmsPages(tenantId)
-    const navCount = await this.seedNavigation(tenantId)
+    const cmsCount = await this.seedCmsPages()
+    const navCount = await this.seedNavigation()
     const blogCount = await this.seedBlogPosts(tenantId, userId)
     const bizCounts = await this.seedExampleBusinessData(tenantId, userId)
 
@@ -467,12 +467,12 @@ export class TenantSeedService {
     return BLOCK_TYPE_DEFAULTS.length
   }
 
-  private static async seedCmsBlockTemplates(tenantId: string): Promise<number> {
-    const [{ total }] = await db.select({ total: count() }).from(cmsBlockTemplates).where(eq(cmsBlockTemplates.tenantId, tenantId))
+  private static async seedCmsBlockTemplates(): Promise<number> {
+    const [{ total }] = await db.select({ total: count() }).from(cmsBlockTemplates)
     if (Number(total) > 0) return 0
 
     for (const tmpl of BLOCK_TEMPLATES) {
-      await db.insert(cmsBlockTemplates).values({ tenantId, ...tmpl })
+      await db.insert(cmsBlockTemplates).values(tmpl)
     }
     return BLOCK_TEMPLATES.length
   }
@@ -491,13 +491,13 @@ export class TenantSeedService {
 
   // ---- Demo seed functions ----
 
-  private static async seedCmsPages(tenantId: string): Promise<number> {
+  private static async seedCmsPages(): Promise<number> {
     let created = 0
     for (const pageData of CMS_PAGES) {
       const existing = await db
         .select()
         .from(cmsPages)
-        .where(and(eq(cmsPages.tenantId, tenantId), eq(cmsPages.slug, pageData.slug)))
+        .where(eq(cmsPages.slug, pageData.slug))
         .limit(1)
 
       if (existing.length > 0) continue
@@ -505,7 +505,6 @@ export class TenantSeedService {
       const [page] = await db
         .insert(cmsPages)
         .values({
-          tenantId,
           slug: pageData.slug,
           title: pageData.title,
           status: pageData.status,
@@ -515,7 +514,6 @@ export class TenantSeedService {
 
       for (const blockData of pageData.blocks) {
         await db.insert(cmsBlocks).values({
-          tenantId,
           pageId: page.id,
           blockType: blockData.blockType,
           sortOrder: blockData.sortOrder,
@@ -529,12 +527,11 @@ export class TenantSeedService {
     return created
   }
 
-  private static async seedNavigation(tenantId: string): Promise<number> {
-    const [{ total }] = await db.select({ total: count() }).from(cmsNavigationItems).where(eq(cmsNavigationItems.tenantId, tenantId))
+  private static async seedNavigation(): Promise<number> {
+    const [{ total }] = await db.select({ total: count() }).from(cmsNavigationItems)
     if (Number(total) > 0) return 0
 
     const items = NAVIGATION_ITEMS.map((item) => ({
-      tenantId,
       location: item.location,
       label: item.label,
       href: item.href,

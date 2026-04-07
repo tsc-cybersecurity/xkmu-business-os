@@ -9,7 +9,7 @@
 
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import { cmsPages, cmsBlocks, tenants } from '../schema'
+import { cmsPages, cmsBlocks } from '../schema'
 import { eq } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
@@ -30,15 +30,7 @@ async function seed() {
   const client = postgres(connectionString, { ssl })
   const db = drizzle(client)
 
-  // Get first tenant (system tenant)
-  const [tenant] = await db.select().from(tenants).limit(1)
-  if (!tenant) {
-    logger.error('No tenant found. Create a tenant first.', undefined, { module: 'CmsSeed' })
-    process.exit(1)
-  }
-
-  const tenantId = tenant.id
-  logger.info(`Seeding CMS for tenant: ${tenant.name} (${tenantId})`)
+  logger.info('Seeding CMS pages...')
 
   // Define pages with their blocks
   const pages = [
@@ -375,7 +367,6 @@ Wir uebermitteln personenbezogene Daten an Dritte nur dann, wenn dies im Rahmen 
     const [page] = await db
       .insert(cmsPages)
       .values({
-        tenantId,
         slug: pageData.slug,
         title: pageData.title,
         status: pageData.status,
@@ -385,7 +376,6 @@ Wir uebermitteln personenbezogene Daten an Dritte nur dann, wenn dies im Rahmen 
 
     for (const blockData of pageData.blocks) {
       await db.insert(cmsBlocks).values({
-        tenantId,
         pageId: page.id,
         blockType: blockData.blockType,
         sortOrder: blockData.sortOrder,

@@ -11,8 +11,8 @@
 
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import { cmsPages, cmsBlocks, tenants } from '../schema'
-import { eq, and } from 'drizzle-orm'
+import { cmsPages, cmsBlocks } from '../schema'
+import { eq } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
 // ─── Helper: Module detail page blocks ─────────────────────────────────────────
@@ -985,22 +985,14 @@ async function seed() {
   const client = postgres(connectionString, { ssl })
   const db = drizzle(client)
 
-  // Get first tenant
-  const [tenant] = await db.select().from(tenants).limit(1)
-  if (!tenant) {
-    logger.error('No tenant found. Create a tenant first.', undefined, { module: 'CmsWebsiteSeed' })
-    process.exit(1)
-  }
-
-  const tenantId = tenant.id
-  logger.info(`Seeding CMS website for tenant: ${tenant.name} (${tenantId})`)
+  logger.info('Seeding CMS website pages...')
 
   // 1. Remove obsolete pages
   for (const slug of obsoleteSlugs) {
     const existing = await db
       .select({ id: cmsPages.id })
       .from(cmsPages)
-      .where(and(eq(cmsPages.tenantId, tenantId), eq(cmsPages.slug, slug)))
+      .where(eq(cmsPages.slug, slug))
       .limit(1)
 
     if (existing.length > 0) {
@@ -1019,7 +1011,7 @@ async function seed() {
     const existing = await db
       .select({ id: cmsPages.id })
       .from(cmsPages)
-      .where(and(eq(cmsPages.tenantId, tenantId), eq(cmsPages.slug, pageData.slug)))
+      .where(eq(cmsPages.slug, pageData.slug))
       .limit(1)
 
     let pageId: string
@@ -1048,7 +1040,6 @@ async function seed() {
       const [page] = await db
         .insert(cmsPages)
         .values({
-          tenantId,
           slug: pageData.slug,
           title: pageData.title,
           seoTitle: pageData.seoTitle || null,
@@ -1066,7 +1057,6 @@ async function seed() {
     // Insert blocks
     for (const blockData of pageData.blocks) {
       await db.insert(cmsBlocks).values({
-        tenantId,
         pageId,
         blockType: blockData.blockType,
         sortOrder: blockData.sortOrder,

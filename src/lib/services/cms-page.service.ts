@@ -100,7 +100,6 @@ export const CmsPageService = {
       const blocks = snapshotBlocks.map((b) => ({
         id: b.id,
         pageId: page.id,
-        tenantId: page.tenantId,
         blockType: b.blockType,
         sortOrder: b.sortOrder,
         content: b.content,
