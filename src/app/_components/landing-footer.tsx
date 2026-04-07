@@ -23,11 +23,14 @@ export function LandingFooter() {
       })
       .catch(() => {})
 
-    fetch('/api/v1/public/branding')
+    fetch('/api/v1/public/branding', { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (data?.success && data.data?.footerText) {
-          setFooterText(data.data.footerText)
+        if (data?.success && data.data) {
+          const ft = data.data.footerText
+          if (ft && typeof ft === 'string' && ft.trim().length > 0) {
+            setFooterText(ft)
+          }
         }
       })
       .catch(() => {})
@@ -52,7 +55,7 @@ export function LandingFooter() {
         )}
 
         <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>{footerText || `\u00A9 ${new Date().getFullYear()} XKMU Business OS. Alle Rechte vorbehalten.`}</p>
+          <p>{footerText ? footerText : <>&copy; {new Date().getFullYear()} XKMU Business OS. Alle Rechte vorbehalten.</>}</p>
         </div>
       </div>
     </footer>
