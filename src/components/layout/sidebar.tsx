@@ -14,6 +14,7 @@ import {
   Brain,
   Monitor,
   ListTodo,
+  Mail,
   Sun,
   Moon,
   MonitorSmartphone,
@@ -71,7 +72,6 @@ const navigation: NavItem[] = [
       { name: 'Angebote', href: '/intern/finance/offers', requiredModule: 'documents' },
       { name: 'Verträge', href: '/intern/finance/contracts', requiredModule: 'documents' },
       { name: 'Zeiterfassung', href: '/intern/zeiterfassung', requiredModule: 'time_entries' },
-      { name: 'E-Mail Inbox', href: '/intern/emails', requiredModule: 'settings' },
       { name: 'Leads', href: '/intern/leads', requiredModule: 'leads' },
       { name: 'Chancen', href: '/intern/chancen', requiredModule: 'opportunities' },
       { name: 'Ideen', href: '/intern/ideas', requiredModule: 'ideas' },
@@ -145,6 +145,13 @@ const navigation: NavItem[] = [
     name: 'Task-Queue',
     href: '/intern/settings/task-queue',
     icon: ListTodo,
+    requiredModule: 'settings',
+  },
+  // ── E-Mail Inbox (standalone) ──
+  {
+    name: 'E-Mail Inbox',
+    href: '/intern/emails',
+    icon: Mail,
     requiredModule: 'settings',
   },
 ]
