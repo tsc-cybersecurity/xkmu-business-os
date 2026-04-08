@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
       // 5. Load business profile if exists
       const [latestProfile] = await db
-        .select({ analysis: businessProfiles.analysis })
+        .select({ analysis: businessProfiles.rawAnalysis })
         .from(businessProfiles)
         .where(eq(businessProfiles.tenantId, tenantId))
         .orderBy(desc(businessProfiles.createdAt))
