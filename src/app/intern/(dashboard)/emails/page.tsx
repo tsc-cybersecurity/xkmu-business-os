@@ -23,6 +23,11 @@ import {
   MailOpen,
   ArrowLeft,
   Link2,
+  Inbox,
+  Send,
+  FileEdit,
+  Trash2,
+  ShieldAlert,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logger } from '@/lib/utils/logger'
@@ -30,38 +35,43 @@ import { sanitizeEmailHtml } from '@/lib/utils/sanitize'
 import { ComposeDialog } from './_components/compose-dialog'
 import { Pencil, Reply, ReplyAll, Forward } from 'lucide-react'
 
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
 interface EmailAccount {
   id: string
   name: string
   email: string
 }
 
+interface AddressObj {
+  address: string
+  name?: string
+}
+
 interface EmailMessage {
   id: string
   accountId: string
-  messageId: string
+  messageId: string | null
+  folder: string | null
+  subject: string | null
+  fromAddress: string | null
   fromName: string | null
-  fromEmail: string
-  toAddresses: string[]
-  ccAddresses: string[] | null
-  subject: string
+  toAddresses: AddressObj[]
+  ccAddresses: AddressObj[]
   snippet: string | null
-  bodyHtml: string | null
-  bodyText: string | null
+  date: string | null
   isRead: boolean
   isStarred: boolean
   hasAttachments: boolean
-  attachments: EmailAttachment[] | null
-  receivedAt: string
-  linkedLeadId: string | null
-  linkedCompanyId: string | null
-  linkedPersonId: string | null
-}
-
-interface EmailAttachment {
-  filename: string
-  contentType: string
-  size: number
+  attachments: Array<{ filename: string; size: number; contentType: string }> | null
+  direction: string | null
+  leadId: string | null
+  companyId: string | null
+  personId: string | null
+  bodyHtml: string | null
+  bodyText: string | null
 }
 
 interface LinkSearchResult {
@@ -70,8 +80,35 @@ interface LinkSearchResult {
   type: 'lead' | 'company' | 'person'
 }
 
-function formatRelativeDate(dateString: string): string {
-  const date = new Date(dateString)
+/* ------------------------------------------------------------------ */
+/*  Folder definitions                                                 */
+/* ------------------------------------------------------------------ */
+
+const FOLDERS = [
+  { id: 'INBOX', label: 'Posteingang', icon: Inbox },
+  { id: 'Sent', label: 'Gesendet', icon: Send },
+  { id: 'Drafts', label: 'Entwuerfe', icon: FileEdit },
+  { id: 'Trash', label: 'Papierkorb', icon: Trash2 },
+  { id: 'Spam', label: 'Spam', icon: ShieldAlert },
+] as const
+
+/* ------------------------------------------------------------------ */
+/*  Display helpers                                                    */
+/* ------------------------------------------------------------------ */
+
+function formatAddress(addr: AddressObj): string {
+  return addr.name ? addr.name : addr.address
+}
+
+function formatAddressList(addrs: AddressObj[] | null | undefined): string {
+  if (!addrs || addrs.length === 0) return ''
+  return addrs.map(formatAddress).join(', ')
+}
+
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return ''
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const yesterday = new Date(today)
@@ -99,9 +136,25 @@ function formatFileSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
+function senderDisplay(email: EmailMessage): string {
+  return email.fromName || email.fromAddress || 'Unbekannt'
+}
+
+function senderDetailDisplay(email: EmailMessage): string {
+  if (email.fromName && email.fromAddress) {
+    return `${email.fromName} <${email.fromAddress}>`
+  }
+  return email.fromName || email.fromAddress || 'Unbekannt'
+}
+
+/* ------------------------------------------------------------------ */
+/*  Page component                                                     */
+/* ------------------------------------------------------------------ */
+
 export default function EmailsPage() {
   const [accounts, setAccounts] = useState<EmailAccount[]>([])
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all')
+  const [selectedFolder, setSelectedFolder] = useState<string>('INBOX')
   const [emails, setEmails] = useState<EmailMessage[]>([])
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null)
   const [loading, setLoading] = useState(true)
@@ -132,6 +185,7 @@ export default function EmailsPage() {
       const params = new URLSearchParams()
       if (selectedAccountId !== 'all') params.set('accountId', selectedAccountId)
       if (searchQuery) params.set('search', searchQuery)
+      if (selectedFolder) params.set('folder', selectedFolder)
 
       const response = await fetch(`/api/v1/emails?${params.toString()}`)
       const data = await response.json()
@@ -144,7 +198,7 @@ export default function EmailsPage() {
       setLoading(false)
       setRefreshing(false)
     }
-  }, [selectedAccountId, searchQuery])
+  }, [selectedAccountId, searchQuery, selectedFolder])
 
   useEffect(() => {
     fetchAccounts()
@@ -165,7 +219,7 @@ export default function EmailsPage() {
         // Mark as read
         if (!email.isRead) {
           await fetch(`/api/v1/emails/${email.id}`, {
-            method: 'PATCH',
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ isRead: true }),
           })
@@ -184,7 +238,7 @@ export default function EmailsPage() {
   const handleToggleRead = async (emailId: string, currentlyRead: boolean) => {
     try {
       await fetch(`/api/v1/emails/${emailId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isRead: !currentlyRead }),
       })
@@ -203,7 +257,7 @@ export default function EmailsPage() {
   const handleToggleStar = async (emailId: string, currentlyStarred: boolean) => {
     try {
       await fetch(`/api/v1/emails/${emailId}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isStarred: !currentlyStarred }),
       })
@@ -221,6 +275,11 @@ export default function EmailsPage() {
   const handleRefresh = () => {
     setRefreshing(true)
     fetchEmails()
+  }
+
+  const handleFolderChange = (folderId: string) => {
+    setSelectedFolder(folderId)
+    setSelectedEmail(null)
   }
 
   const handleLinkSearch = (query: string) => {
@@ -249,12 +308,12 @@ export default function EmailsPage() {
     if (!selectedEmail) return
     try {
       const payload: Record<string, string> = {}
-      if (result.type === 'lead') payload.linkedLeadId = result.id
-      if (result.type === 'company') payload.linkedCompanyId = result.id
-      if (result.type === 'person') payload.linkedPersonId = result.id
+      if (result.type === 'lead') payload.leadId = result.id
+      if (result.type === 'company') payload.companyId = result.id
+      if (result.type === 'person') payload.personId = result.id
 
       await fetch(`/api/v1/emails/${selectedEmail.id}`, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
@@ -268,6 +327,7 @@ export default function EmailsPage() {
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">E-Mails</h1>
@@ -310,10 +370,58 @@ export default function EmailsPage() {
         </Select>
       </div>
 
-      {/* Main content: two-column layout */}
-      <div className="flex gap-4" style={{ minHeight: 'calc(100vh - 280px)' }}>
+      {/* Mobile folder selector */}
+      <div className="md:hidden">
+        <Select value={selectedFolder} onValueChange={handleFolderChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FOLDERS.map((folder) => (
+              <SelectItem key={folder.id} value={folder.id}>
+                {folder.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Main content: three-column layout */}
+      <div className="flex gap-0" style={{ minHeight: 'calc(100vh - 280px)' }}>
+        {/* Folder sidebar */}
+        <div className="hidden w-48 shrink-0 md:block">
+          <Card className="h-full rounded-r-none border-r-0">
+            <CardContent className="p-2">
+              <nav className="space-y-1">
+                {FOLDERS.map((folder) => {
+                  const Icon = folder.icon
+                  const isActive = selectedFolder === folder.id
+                  return (
+                    <button
+                      key={folder.id}
+                      onClick={() => handleFolderChange(folder.id)}
+                      className={cn(
+                        'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      <Icon className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{folder.label}</span>
+                    </button>
+                  )
+                })}
+              </nav>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Email list */}
-        <Card className={cn('flex-shrink-0 overflow-hidden', selectedEmail ? 'hidden md:block md:w-[400px] lg:w-[480px]' : 'w-full')}>
+        <Card className={cn(
+          'flex-shrink-0 overflow-hidden md:rounded-l-none md:border-l-0',
+          selectedEmail ? 'hidden md:block md:w-[400px] lg:w-[480px]' : 'w-full md:flex-1'
+        )}>
           <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center justify-center py-16">
@@ -330,7 +438,7 @@ export default function EmailsPage() {
                 </p>
               </div>
             ) : (
-              <div className="divide-y">
+              <div className="divide-y overflow-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
                 {emails.map((email) => (
                   <button
                     key={email.id}
@@ -366,10 +474,10 @@ export default function EmailsPage() {
                               !email.isRead ? 'font-semibold' : 'text-muted-foreground'
                             )}
                           >
-                            {email.fromName || email.fromEmail}
+                            {senderDisplay(email)}
                           </span>
                           <span className="shrink-0 text-xs text-muted-foreground">
-                            {formatRelativeDate(email.receivedAt)}
+                            {formatDate(email.date)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -404,7 +512,7 @@ export default function EmailsPage() {
 
         {/* Detail view */}
         {selectedEmail && (
-          <Card className="flex-1 overflow-hidden">
+          <Card className="flex-1 overflow-hidden rounded-l-none border-l-0">
             <CardContent className="p-0">
               {loadingDetail ? (
                 <div className="flex items-center justify-center py-16">
@@ -464,25 +572,21 @@ export default function EmailsPage() {
                     <div className="mt-3 space-y-1 text-sm">
                       <div className="flex gap-2">
                         <span className="font-medium text-muted-foreground w-12">Von:</span>
-                        <span>
-                          {selectedEmail.fromName
-                            ? `${selectedEmail.fromName} <${selectedEmail.fromEmail}>`
-                            : selectedEmail.fromEmail}
-                        </span>
+                        <span>{senderDetailDisplay(selectedEmail)}</span>
                       </div>
                       <div className="flex gap-2">
                         <span className="font-medium text-muted-foreground w-12">An:</span>
-                        <span>{selectedEmail.toAddresses?.join(', ')}</span>
+                        <span>{formatAddressList(selectedEmail.toAddresses) || '-'}</span>
                       </div>
                       {selectedEmail.ccAddresses && selectedEmail.ccAddresses.length > 0 && (
                         <div className="flex gap-2">
                           <span className="font-medium text-muted-foreground w-12">CC:</span>
-                          <span>{selectedEmail.ccAddresses.join(', ')}</span>
+                          <span>{formatAddressList(selectedEmail.ccAddresses)}</span>
                         </div>
                       )}
                       <div className="flex gap-2">
                         <span className="font-medium text-muted-foreground w-12">Datum:</span>
-                        <span>{formatRelativeDate(selectedEmail.receivedAt)}</span>
+                        <span>{formatDate(selectedEmail.date) || '-'}</span>
                       </div>
                     </div>
 
@@ -567,7 +671,7 @@ export default function EmailsPage() {
 
         {/* No selection placeholder (desktop only) */}
         {!selectedEmail && !loading && emails.length > 0 && (
-          <Card className="hidden flex-1 md:block">
+          <Card className="hidden flex-1 md:block rounded-l-none border-l-0">
             <CardContent className="flex h-full flex-col items-center justify-center py-16 text-center">
               <Mail className="h-12 w-12 text-muted-foreground/30" />
               <p className="mt-4 text-muted-foreground">
@@ -586,13 +690,13 @@ export default function EmailsPage() {
         originalEmail={composeMode !== 'new' && selectedEmail ? {
           id: selectedEmail.id,
           accountId: selectedEmail.accountId,
-          fromAddress: selectedEmail.fromEmail || '',
+          fromAddress: selectedEmail.fromAddress || '',
           fromName: selectedEmail.fromName || '',
-          toAddresses: (selectedEmail.toAddresses || []).map(a => typeof a === 'string' ? { address: a } : a),
-          ccAddresses: (selectedEmail.ccAddresses || []).map(a => typeof a === 'string' ? { address: a } : a),
+          toAddresses: Array.isArray(selectedEmail.toAddresses) ? selectedEmail.toAddresses : [],
+          ccAddresses: Array.isArray(selectedEmail.ccAddresses) ? selectedEmail.ccAddresses : [],
           subject: selectedEmail.subject || '',
           bodyHtml: selectedEmail.bodyHtml || selectedEmail.bodyText || '',
-          date: selectedEmail.receivedAt || '',
+          date: selectedEmail.date || '',
         } : undefined}
         onSent={() => fetchEmails()}
       />
