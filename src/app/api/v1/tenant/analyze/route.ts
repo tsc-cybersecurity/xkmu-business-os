@@ -2,10 +2,10 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
-import { tenants, products, productCategories, leads, businessProfiles } from '@/lib/db/schema'
+import { products, productCategories, leads, businessProfiles } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
-import { AiProviderService } from '@/lib/services/ai-provider.service'
+import { AIService } from '@/lib/services/ai/ai.service'
 import { TenantService } from '@/lib/services/tenant.service'
 import { logger } from '@/lib/utils/logger'
 
@@ -97,17 +97,17 @@ export async function POST(request: NextRequest) {
       })
 
       // 7. Call AI
-      const provider = await AiProviderService.getDefaultProvider(tenantId)
-      if (!provider) return apiError('NO_AI_PROVIDER', 'Kein KI-Provider konfiguriert', 400)
-
-      const aiResult = await AiProviderService.generateText(provider, {
-        systemPrompt: template.systemPrompt,
-        userPrompt,
+      const fullPrompt = `${template.systemPrompt}\n\n${userPrompt}`
+      const aiResult = await AIService.completeWithContext(fullPrompt, {
+        tenantId,
+        feature: 'company_knowledge',
+      }, {
         maxTokens: 4000,
+        temperature: 0.3,
       })
 
-      if (!aiResult.success || !aiResult.text) {
-        return apiError('AI_ERROR', aiResult.error || 'KI-Analyse fehlgeschlagen', 500)
+      if (!aiResult.text) {
+        return apiError('AI_ERROR', 'KI-Analyse fehlgeschlagen – keine Antwort', 500)
       }
 
       // 8. Save result to tenant settings
