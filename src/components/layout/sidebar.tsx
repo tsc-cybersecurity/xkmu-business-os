@@ -192,10 +192,7 @@ export function Sidebar({ user }: SidebarProps) {
     return () => mq.removeEventListener('change', handleChange)
   }, [])
 
-  // Clear manual overrides on navigation so auto-expand takes effect
-  useEffect(() => {
-    setManualToggles({})
-  }, [pathname])
+  // Don't clear manual toggles on navigation - keep user's expand state
 
   // Auto-expand groups whose children match the current path
   const isGroupActive = (item: NavItem): boolean => {
@@ -298,7 +295,7 @@ export function Sidebar({ user }: SidebarProps) {
                     onClick={() => {
                       toggleExpanded(item.name)
                       if (item.href && !expanded) {
-                        window.location.href = item.href
+                        router.push(item.href)
                       }
                     }}
                     className={cn(
