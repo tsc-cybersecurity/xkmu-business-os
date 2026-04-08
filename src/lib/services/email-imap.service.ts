@@ -67,7 +67,8 @@ export const EmailImapService = {
           : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
         // Search for messages since the sync date
-        const messageUids = await client.search({ since: sinceDate }, { uid: true })
+        const searchResult = await client.search({ since: sinceDate }, { uid: true })
+        const messageUids = Array.isArray(searchResult) ? searchResult : []
 
         if (messageUids.length === 0) {
           logger.info('No new messages found', { module: 'email-imap', accountId, folder })
