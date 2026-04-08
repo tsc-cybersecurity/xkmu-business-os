@@ -73,8 +73,22 @@ export async function GET(request: NextRequest, context: RouteContext) {
       const total = Number(countRows[0]?.total ?? 0)
       const totalPages = Math.ceil(total / (limit ?? 20))
 
+      // Mask sensitive fields (passwords, secrets, tokens)
+      const SENSITIVE_PATTERNS = /password|secret|token|api_key|private_key|credential/i
+      const maskedRows = dataRows.map((row) => {
+        const masked: Row = {}
+        for (const [key, value] of Object.entries(row)) {
+          if (SENSITIVE_PATTERNS.test(key) && value && typeof value === 'string') {
+            masked[key] = '••••••••'
+          } else {
+            masked[key] = value
+          }
+        }
+        return masked
+      })
+
       return apiSuccess(
-        { columns, rows: dataRows, hasTenantId },
+        { columns, rows: maskedRows, hasTenantId },
         { page: page ?? 1, limit: limit ?? 20, total, totalPages }
       )
     } catch (error) {
