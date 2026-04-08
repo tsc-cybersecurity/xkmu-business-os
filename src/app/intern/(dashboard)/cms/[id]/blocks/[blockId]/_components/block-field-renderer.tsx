@@ -31,8 +31,9 @@ interface ServiceCardItem {
   badge?: string
   title?: string
   description?: string
+  href?: string
   checklistItems?: string[]
-  deliverables?: string[]
+  deliverables?: Array<string | { label: string; color?: string }>
 }
 
 interface BlockFieldRendererProps {
