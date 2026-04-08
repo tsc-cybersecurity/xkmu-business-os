@@ -920,6 +920,7 @@ function ServiceCardsField({
             <Input placeholder="Titel" value={item.title || ''} onChange={(e) => updateItem(i, 'title', e.target.value)} className="text-sm col-span-3" />
           </div>
           <Input placeholder="Beschreibung" value={item.description || ''} onChange={(e) => updateItem(i, 'description', e.target.value)} className="text-sm" />
+          <Input placeholder="Link (z.B. /ki-beratung/a1)" value={item.href || ''} onChange={(e) => updateItem(i, 'href', e.target.value)} className="text-sm" />
           <div className="space-y-1">
             <Label className="text-xs">Checkliste (eins pro Zeile)</Label>
             <Textarea
@@ -933,8 +934,8 @@ function ServiceCardsField({
           <div className="space-y-1">
             <Label className="text-xs">Deliverables (kommagetrennt)</Label>
             <Input
-              value={(item.deliverables || []).join(', ')}
-              onChange={(e) => updateItem(i, 'deliverables', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
+              value={(item.deliverables || []).map((d: unknown) => typeof d === 'string' ? d : (d as Record<string, unknown>)?.label || '').join(', ')}
+              onChange={(e) => updateItem(i, 'deliverables', e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean).map((label: string) => ({ label, color: 'blue' })))}
               className="text-sm"
               placeholder="Ergebnis 1, Ergebnis 2, Ergebnis 3"
             />
