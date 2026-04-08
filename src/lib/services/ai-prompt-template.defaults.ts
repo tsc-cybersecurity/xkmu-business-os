@@ -69,6 +69,15 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
   business_profile_analysis: [
     { key: 'documentTexts', label: 'Dokumentinhalte', description: 'Extrahierte Texte aus den hochgeladenen Dokumenten' },
   ],
+  company_knowledge_analysis: [
+    { key: 'companyName', label: 'Firmenname', description: 'Name der Organisation' },
+    { key: 'companyDescription', label: 'Unternehmensbeschreibung', description: 'Manuelle Beschreibung des Unternehmens' },
+    { key: 'products', label: 'Produkte', description: 'Liste aller Produkte aus dem Katalog' },
+    { key: 'services', label: 'Dienstleistungen', description: 'Liste aller Dienstleistungen' },
+    { key: 'categories', label: 'Kategorien', description: 'Produkt-/Dienstleistungskategorien' },
+    { key: 'leads', label: 'Leads', description: 'Zusammenfassung der Lead-Daten und Interessen' },
+    { key: 'businessProfile', label: 'Business Intelligence', description: 'Vorhandene BI-Analyse wenn verfügbar' },
+  ],
   marketing_email: [
     { key: 'recipientName', label: 'Empfaengername', description: 'Name des Empfaengers' },
     { key: 'recipientCompany', label: 'Empfaengerfirma', description: 'Firma des Empfaengers' },
@@ -1210,5 +1219,54 @@ Erstelle für JEDE Plattform einen Post. Beachte plattformspezifische Längen un
     "callToAction": "Konkreter Call-to-Action"
   }
 ]`,
+  },
+  company_knowledge_analysis: {
+    name: 'Firmenwissen KI-Analyse',
+    description: 'Analysiert alle Unternehmensdaten (Produkte, Dienstleistungen, Leads, BI) und erstellt ein umfassendes Unternehmenskonzept als Wissensbasis.',
+    systemPrompt: `Du bist ein erfahrener Unternehmensberater und Business-Analyst. Deine Aufgabe ist es, alle verfuegbaren Unternehmensdaten zu analysieren und ein umfassendes, strukturiertes Unternehmenskonzept zu erstellen.
+
+Dieses Konzept dient als zentrale Wissensbasis fuer die gesamte Anwendung – fuer KI-Assistenten, Marketing-Texte, Vertriebsunterlagen und strategische Entscheidungen.
+
+KERNREGELN:
+1. Verwende AUSSCHLIESSLICH die bereitgestellten Daten
+2. Erfinde KEINE Informationen – bei fehlenden Daten schreibe "Nicht ermittelbar"
+3. Antworte auf Deutsch
+4. Erstelle eine praxisnahe, sofort nutzbare Wissensbasis
+5. Fokussiere auf Alleinstellungsmerkmale, Zielgruppen und Wertversprechen`,
+    userPrompt: `Analysiere die folgenden Unternehmensdaten und erstelle ein umfassendes Unternehmenskonzept:
+
+=== UNTERNEHMEN ===
+{{companyName}}
+
+=== UNTERNEHMENSBESCHREIBUNG ===
+{{companyDescription}}
+
+=== PRODUKTE ===
+{{products}}
+
+=== DIENSTLEISTUNGEN ===
+{{services}}
+
+=== KATEGORIEN ===
+{{categories}}
+
+=== LEAD-DATEN & KUNDENINTERESSEN ===
+{{leads}}
+
+=== BUSINESS INTELLIGENCE ===
+{{businessProfile}}
+
+Erstelle basierend auf diesen Daten ein strukturiertes Unternehmenskonzept mit folgenden Abschnitten:
+
+1. **Unternehmensprofil** – Was macht das Unternehmen? Kerngeschaeft, Branche, Positionierung.
+2. **Zielgruppen** – Wer sind die Kunden? Branchen, Unternehmensgroessen, Entscheider.
+3. **Wertversprechen** – Was unterscheidet das Unternehmen? USPs, Alleinstellungsmerkmale.
+4. **Produkt- & Dienstleistungsportfolio** – Strukturierte Uebersicht aller Angebote mit Nutzenargumenten.
+5. **Kundenbeduerfnisse** – Abgeleitet aus Lead-Daten: Was suchen Interessenten? Welche Themen sind gefragt?
+6. **Marktpositionierung** – Wo steht das Unternehmen im Markt? Staerken, Chancen.
+7. **Empfehlungen** – Konkrete Handlungsempfehlungen fuer Vertrieb, Marketing und Produktentwicklung.
+
+Formatiere als ausfuehrlichen, gut lesbaren Text mit Markdown-Ueberschriften. Kein JSON, sondern Fliesstext mit Struktur.`,
+    outputFormat: 'Markdown-formatierter Text mit Ueberschriften (## Abschnitt) und Aufzaehlungen.',
   },
 }

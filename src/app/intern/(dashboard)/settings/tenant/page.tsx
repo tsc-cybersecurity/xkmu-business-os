@@ -257,11 +257,19 @@ export default function TenantSettingsPage() {
 
   const handleAiAnalyze = async () => {
     setAnalyzingAi(true)
+    toast.info('KI-Analyse wird gestartet – das kann bis zu 30 Sekunden dauern...')
     try {
-      toast.info('KI-Analyse wird gestartet...')
-      await fetch('/api/v1/tenant/analyze', { method: 'POST' })
+      const res = await fetch('/api/v1/tenant/analyze', { method: 'POST' })
+      const data = await res.json()
+      if (data.success && data.data?.knowledge) {
+        setCompanyKnowledge(data.data.knowledge)
+        const s = data.data.stats
+        toast.success(`Analyse abgeschlossen: ${s.products} Produkte, ${s.services} Dienstleistungen, ${s.leads} Leads ausgewertet`)
+      } else {
+        toast.error(data.error?.message || 'KI-Analyse fehlgeschlagen')
+      }
     } catch {
-      // Endpoint may not exist yet - toast already shown
+      toast.error('Fehler bei der KI-Analyse')
     } finally {
       setAnalyzingAi(false)
     }
