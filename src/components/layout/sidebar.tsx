@@ -99,17 +99,17 @@ const navigation: NavItem[] = [
       { name: 'Workflows', href: '/intern/settings/workflows', requiredModule: 'settings' },
     ],
   },
-  // ── IT-Sicherheit ──
+  // ── Cybersecurity ──
   {
-    name: 'IT-Sicherheit',
+    name: 'Cybersecurity',
     href: '/intern/cybersecurity',
     icon: Shield,
     children: [
-      { name: 'IT-Grundschutz++', href: '/intern/cybersecurity/grundschutz', requiredModule: 'basisabsicherung' },
-      { name: 'IT-Assets', href: '/intern/cybersecurity/grundschutz/assets', requiredModule: 'basisabsicherung' },
-      { name: 'IR Playbooks', href: '/intern/cybersecurity/ir-playbook', requiredModule: 'basisabsicherung' },
-      { name: 'DIN SPEC 27076', href: '/intern/din-audit', requiredModule: 'din_audits' },
-      { name: 'WiBA-Check', href: '/intern/wiba', requiredModule: 'wiba_audits' },
+      { name: 'CS DIN SPEC 27076', href: '/intern/din-audit', requiredModule: 'din_audits' },
+      { name: 'CS WiBA-Check BSI', href: '/intern/wiba', requiredModule: 'wiba_audits' },
+      { name: 'CS IT-Grundschutz++', href: '/intern/cybersecurity/grundschutz', requiredModule: 'basisabsicherung' },
+      { name: 'CS IR Playbooks', href: '/intern/cybersecurity/ir-playbook', requiredModule: 'basisabsicherung' },
+      { name: 'IT-Assets (Kunden)', href: '/intern/cybersecurity/grundschutz/assets', requiredModule: 'basisabsicherung' },
       { name: 'Fördermitteldatenbank', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
     ],
   },
@@ -160,10 +160,14 @@ export function Sidebar() {
     setManualToggles({})
   }, [pathname])
 
-  // Auto-expand groups whose href or children match the current path
+  // Auto-expand groups whose children match the current path
   const isGroupActive = (item: NavItem): boolean => {
+    // Groups with children: only expand if a CHILD matches (not the parent href)
+    if (item.children && item.children.length > 0) {
+      return item.children.some((c) => pathname.startsWith(c.href))
+    }
+    // Standalone items: match by href
     if (item.href && pathname.startsWith(item.href)) return true
-    if (item.children) return item.children.some((c) => pathname.startsWith(c.href))
     return false
   }
 
