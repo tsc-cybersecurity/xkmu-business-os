@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { cmsSettings } from '@/lib/db/schema'
+import { cmsSettings, tenants } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
 export const dynamic = 'force-dynamic'
@@ -10,6 +10,7 @@ const DEFAULT_LOGO_ALT = 'xKMU'
 
 export async function GET() {
   try {
+    // 1. CMS Design settings
     const [row] = await db
       .select({ value: cmsSettings.value })
       .from(cmsSettings)
@@ -18,11 +19,27 @@ export async function GET() {
 
     const s = (row?.value ?? {}) as Record<string, unknown>
 
+    // 2. Fallback: check tenant settings for logo (uploaded via Organisation page)
+    let logoUrl = (s.logoUrl as string) || ''
+    let logoAlt = (s.logoAlt as string) || ''
+
+    if (!logoUrl) {
+      const allTenants = await db
+        .select({ settings: tenants.settings, name: tenants.name })
+        .from(tenants)
+        .where(eq(tenants.status, 'active'))
+
+      const real = allTenants.find((t) => t.name !== 'Default Organisation') || allTenants[0]
+      const ts = (real?.settings ?? {}) as Record<string, unknown>
+      logoUrl = (ts.logoUrl as string) || ''
+      if (!logoAlt) logoAlt = (ts.logoAlt as string) || ''
+    }
+
     return NextResponse.json({
       success: true,
       data: {
-        logoUrl: (s.logoUrl as string) || DEFAULT_LOGO_URL,
-        logoAlt: (s.logoAlt as string) || DEFAULT_LOGO_ALT,
+        logoUrl: logoUrl || DEFAULT_LOGO_URL,
+        logoAlt: logoAlt || DEFAULT_LOGO_ALT,
         defaultFont: (s.defaultFont as string) || null,
         defaultAccent: (s.defaultAccent as string) || null,
         defaultRadius: (s.defaultRadius as string) || null,
