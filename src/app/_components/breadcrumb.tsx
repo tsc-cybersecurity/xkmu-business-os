@@ -9,34 +9,12 @@ const defaultPathLabels: Record<string, string> = {
   'agb': 'AGB',
   'impressum': 'Impressum',
   'datenschutz': 'Datenschutz',
-  'cyber-security': 'Cyber Security',
-  'ki-automation': 'KI & Automation',
-  'it-consulting': 'IT Consulting',
   'ki-beratung': 'KI-Beratung',
   'it-beratung': 'IT-Beratung',
   'cybersecurity': 'Cybersecurity-Beratung',
   'loesungen': 'Kombinations-Module',
   'pakete': 'Pakete & Preise',
   'referenzen': 'Referenzen',
-  'a1': 'KI-Quick-Start & Potenzialanalyse',
-  'a2': 'KI-Implementierung',
-  'a3': 'KI-Assistenten & Chatbots',
-  'a4': 'Prompting & Governance',
-  'a5': 'KI-Schulungen',
-  'b1': 'IT-Assessment',
-  'b2': 'IT-Architektur',
-  'b3': 'Systemintegration',
-  'b4': 'Betrieb & Monitoring',
-  'b5': 'IT-Standardisierung',
-  'c1': 'Security Quick Check',
-  'c2': 'Hardening',
-  'c3': 'Backup & Recovery',
-  'c4': 'Incident Response',
-  'c5': 'Security Awareness',
-  'c6': 'Datenschutz & Compliance',
-  'd1': 'KI sicher einführen',
-  'd2': 'Sicher automatisieren',
-  'd3': 'Incident-ready Organisation',
   'it-news': 'IT-News',
   'kontakt': 'Kontakt',
 }
@@ -46,6 +24,7 @@ export function Breadcrumb() {
   const [dynamicLabels, setDynamicLabels] = useState<Record<string, string>>({})
 
   useEffect(() => {
+    // Load nav labels
     Promise.all([
       fetch('/api/v1/public/navigation?location=header').then((r) => r.ok ? r.json() : null),
       fetch('/api/v1/public/navigation?location=footer').then((r) => r.ok ? r.json() : null),
@@ -60,10 +39,26 @@ export function Breadcrumb() {
           const slug = item.href.replace(/^\//, '').split('/')[0]
           if (slug) labels[slug] = item.label
         }
-        setDynamicLabels(labels)
+        setDynamicLabels(prev => ({ ...prev, ...labels }))
       })
       .catch(() => {})
   }, [])
+
+  // Load CMS page title for current path
+  useEffect(() => {
+    if (pathname === '/') return
+    fetch(`/api/v1/public/pages${pathname}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.success && data.data?.title) {
+          const lastSegment = pathname.split('/').filter(Boolean).pop()
+          if (lastSegment) {
+            setDynamicLabels(prev => ({ ...prev, [lastSegment]: data.data.title }))
+          }
+        }
+      })
+      .catch(() => {})
+  }, [pathname])
 
   if (pathname === '/') return null
 
