@@ -238,7 +238,7 @@ export function Sidebar({ user }: SidebarProps) {
       <div className="flex h-14 items-center justify-between border-b px-4">
         {!collapsed && (
           <Link href="/intern/dashboard" className="font-semibold text-lg hover:text-primary transition-colors">
-            xKMU OS
+            xKMU BusinessOS
             <sup className="ml-1 text-[10px] font-normal text-muted-foreground">v{packageJson.version}</sup>
           </Link>
         )}
