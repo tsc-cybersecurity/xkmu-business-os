@@ -14,10 +14,19 @@ import {
   Brain,
   Monitor,
   ListTodo,
+  Sun,
+  Moon,
+  MonitorSmartphone,
+  LogOut,
+  User,
+  ExternalLink,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { usePermissions } from '@/hooks/use-permissions'
+import { useDesign } from '@/app/_components/design-provider'
 import type { Module } from '@/lib/types/permissions'
 import packageJson from '../../../package.json'
 
@@ -138,11 +147,39 @@ const navigation: NavItem[] = [
   },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  user?: { firstName?: string | null; lastName?: string | null; email: string }
+}
+
+export function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [manualToggles, setManualToggles] = useState<Record<string, boolean>>({})
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const { hasPermission, loading: permissionsLoading } = usePermissions()
+  const { theme, setTheme } = useDesign()
+
+  const initials = user
+    ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || user.email[0].toUpperCase()
+    : 'U'
+  const displayName = user
+    ? (user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email)
+    : 'User'
+
+  const handleLogout = async () => {
+    await fetch('/api/v1/auth/logout', { method: 'POST' })
+    router.push('/')
+    router.refresh()
+  }
+
+  const cycleTheme = () => {
+    const order = ['light', 'dark', 'system'] as const
+    const idx = order.indexOf(theme)
+    setTheme(order[(idx + 1) % order.length])
+  }
+  const ThemeIcon = theme === 'dark' ? Moon : theme === 'system' ? MonitorSmartphone : Sun
+  const themeLabel = theme === 'dark' ? 'Dunkel' : theme === 'system' ? 'System' : 'Hell'
 
   // Auto-collapse sidebar on small screens
   useEffect(() => {
@@ -324,6 +361,81 @@ export function Sidebar() {
         })}
       </nav>
 
+      {/* Bottom: Website + Theme + User */}
+      <div className="border-t p-2 space-y-1">
+        {/* Quick links row */}
+        <div className="flex items-center gap-1">
+          <Link
+            href="/"
+            target="_blank"
+            className={cn(
+              'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+              collapsed ? 'justify-center flex-1' : 'flex-1'
+            )}
+            title="Webseite öffnen"
+          >
+            <Globe className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Webseite</span>}
+            {!collapsed && <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground/50" />}
+          </Link>
+          {!collapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={cycleTheme}
+              title={`Theme: ${themeLabel}`}
+            >
+              <ThemeIcon className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* User */}
+        {collapsed ? (
+          <Link href="/intern/settings/profile" className="flex justify-center py-2" title={displayName}>
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+            </Avatar>
+          </Link>
+        ) : (
+          <>
+            <button
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
+              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            >
+              <Avatar className="h-6 w-6">
+                <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+              </Avatar>
+              <span className="flex-1 text-left truncate">{displayName}</span>
+              <ChevronRight className={cn('h-4 w-4 transition-transform', userMenuOpen && 'rotate-90')} />
+            </button>
+            {userMenuOpen && (
+              <div className="ml-7 space-y-1">
+                <Link
+                  href="/intern/settings"
+                  className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  Einstellungen
+                </Link>
+                <Link
+                  href="/intern/settings/profile"
+                  className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  Profil
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Abmelden
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </aside>
   )
 }

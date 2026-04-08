@@ -24,9 +24,9 @@ export default async function DashboardLayout({
     <PermissionProvider>
       <ChatProvider>
         <div className="flex h-screen overflow-hidden">
-          <Sidebar />
+          <Sidebar user={session.user} />
           <div className="flex flex-1 flex-col overflow-hidden">
-            <Header user={session.user} />
+            <Header />
             <main className="flex-1 overflow-y-auto bg-muted/30 p-3 sm:p-6">
               {children}
             </main>
