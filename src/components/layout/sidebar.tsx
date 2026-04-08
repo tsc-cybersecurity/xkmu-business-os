@@ -256,33 +256,25 @@ export function Sidebar() {
                     <item.icon className="h-4 w-4 shrink-0" />
                   </Link>
                 ) : (
-                  // Expanded: click toggles children, icon area links to category page
-                  <div className="flex items-center">
-                    <Link
-                      href={item.href || '#'}
-                      className={cn(
-                        'flex items-center gap-3 rounded-l-md px-3 py-2 text-sm font-medium transition-colors flex-1',
-                        isActive
-                          ? 'bg-accent text-accent-foreground'
-                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                      )}
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 text-left">{item.name}</span>
-                    </Link>
-                    <button
-                      onClick={() => toggleExpanded(item.name)}
-                      className={cn(
-                        'rounded-r-md px-2 py-2 text-sm transition-colors',
-                        isActive
-                          ? 'bg-accent text-accent-foreground'
-                          : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                      )}
-                      aria-label={expanded ? `${item.name} einklappen` : `${item.name} ausklappen`}
-                    >
-                      <ChevronRight className={cn('h-4 w-4 transition-transform', expanded && 'rotate-90')} />
-                    </button>
-                  </div>
+                  // Expanded: click expands children AND navigates to hub page
+                  <button
+                    onClick={() => {
+                      toggleExpanded(item.name)
+                      if (item.href && !expanded) {
+                        window.location.href = item.href
+                      }
+                    }}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-accent text-accent-foreground'
+                        : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    )}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 text-left">{item.name}</span>
+                    <ChevronRight className={cn('h-4 w-4 transition-transform', expanded && 'rotate-90')} />
+                  </button>
                 )}
                 {!collapsed && expanded && (
                   <div className="ml-7 mt-1 space-y-1">
