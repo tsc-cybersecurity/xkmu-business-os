@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
       // 2. Load products
       const allProducts = await db
-        .select({ name: products.name, description: products.description, type: products.type, price: products.basePrice })
+        .select({ name: products.name, description: products.description, type: products.type, price: products.priceNet })
         .from(products)
         .where(eq(products.tenantId, tenantId))
 
