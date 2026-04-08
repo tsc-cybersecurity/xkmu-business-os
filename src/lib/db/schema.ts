@@ -2784,3 +2784,106 @@ export const workflowRunsRelations = relations(workflowRuns, ({ one }) => ({
 
 export type WorkflowRun = typeof workflowRuns.$inferSelect
 export type NewWorkflowRun = typeof workflowRuns.$inferInsert
+
+// ============================================
+// E-Mail Accounts (IMAP/SMTP Konfiguration)
+// ============================================
+export const emailAccounts = pgTable('email_accounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(), // Display name, e.g. "Support", "Info"
+  email: varchar('email', { length: 255 }).notNull(),
+  // IMAP
+  imapHost: varchar('imap_host', { length: 255 }).notNull(),
+  imapPort: integer('imap_port').default(993),
+  imapUser: varchar('imap_user', { length: 255 }).notNull(),
+  imapPassword: text('imap_password').notNull(), // encrypted at rest
+  imapTls: boolean('imap_tls').default(true),
+  // SMTP
+  smtpHost: varchar('smtp_host', { length: 255 }),
+  smtpPort: integer('smtp_port').default(587),
+  smtpUser: varchar('smtp_user', { length: 255 }),
+  smtpPassword: text('smtp_password'),
+  smtpTls: boolean('smtp_tls').default(true),
+  // Sync
+  isActive: boolean('is_active').default(true),
+  syncEnabled: boolean('sync_enabled').default(true),
+  syncInterval: integer('sync_interval').default(5), // minutes
+  lastSyncAt: timestamp('last_sync_at', { withTimezone: true }),
+  lastSyncError: text('last_sync_error'),
+  syncFolder: varchar('sync_folder', { length: 100 }).default('INBOX'),
+  // Meta
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_email_accounts_active').on(table.isActive),
+  index('idx_email_accounts_email').on(table.email),
+])
+
+export type EmailAccount = typeof emailAccounts.$inferSelect
+export type NewEmailAccount = typeof emailAccounts.$inferInsert
+
+// ============================================
+// E-Mails (Synchronisierte Nachrichten)
+// ============================================
+export const emails = pgTable('emails', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => emailAccounts.id, { onDelete: 'cascade' }),
+  messageId: varchar('message_id', { length: 500 }), // RFC Message-ID
+  uid: integer('uid'), // IMAP UID
+  folder: varchar('folder', { length: 100 }).default('INBOX'),
+  subject: text('subject'),
+  fromAddress: varchar('from_address', { length: 255 }),
+  fromName: varchar('from_name', { length: 255 }),
+  toAddresses: jsonb('to_addresses').default([]), // [{address, name}]
+  ccAddresses: jsonb('cc_addresses').default([]),
+  bccAddresses: jsonb('bcc_addresses').default([]),
+  bodyText: text('body_text'),
+  bodyHtml: text('body_html'),
+  snippet: varchar('snippet', { length: 500 }),
+  date: timestamp('date', { withTimezone: true }),
+  isRead: boolean('is_read').default(false),
+  isStarred: boolean('is_starred').default(false),
+  hasAttachments: boolean('has_attachments').default(false),
+  attachments: jsonb('attachments').default([]), // [{filename, size, contentType}]
+  headers: jsonb('headers').default({}),
+  // Verknüpfungen
+  leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+  personId: uuid('person_id').references(() => persons.id, { onDelete: 'set null' }),
+  // Direction
+  direction: varchar('direction', { length: 10 }).default('inbound'), // inbound | outbound
+  // Meta
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_emails_account').on(table.accountId),
+  index('idx_emails_date').on(table.date),
+  index('idx_emails_from').on(table.fromAddress),
+  index('idx_emails_lead').on(table.leadId),
+  index('idx_emails_company').on(table.companyId),
+  index('idx_emails_person').on(table.personId),
+  index('idx_emails_message_id').on(table.messageId),
+  index('idx_emails_uid').on(table.accountId, table.uid),
+])
+
+export const emailsRelations = relations(emails, ({ one }) => ({
+  account: one(emailAccounts, {
+    fields: [emails.accountId],
+    references: [emailAccounts.id],
+  }),
+  lead: one(leads, {
+    fields: [emails.leadId],
+    references: [leads.id],
+  }),
+  company: one(companies, {
+    fields: [emails.companyId],
+    references: [companies.id],
+  }),
+  person: one(persons, {
+    fields: [emails.personId],
+    references: [persons.id],
+  }),
+}))
+
+export type Email = typeof emails.$inferSelect
+export type NewEmail = typeof emails.$inferInsert
