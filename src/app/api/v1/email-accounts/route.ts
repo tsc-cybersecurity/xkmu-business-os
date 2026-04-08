@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import db from '@/lib/db'
+import { db } from '@/lib/db'
 import { emailAccounts } from '@/lib/db/schema'
 import { eq, asc } from 'drizzle-orm'
 

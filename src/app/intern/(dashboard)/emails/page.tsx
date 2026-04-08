@@ -27,6 +27,8 @@ import {
 import { cn } from '@/lib/utils'
 import { logger } from '@/lib/utils/logger'
 import { sanitizeEmailHtml } from '@/lib/utils/sanitize'
+import { ComposeDialog } from './_components/compose-dialog'
+import { Pencil, Reply, ReplyAll, Forward } from 'lucide-react'
 
 interface EmailAccount {
   id: string
@@ -109,6 +111,8 @@ export default function EmailsPage() {
   const [linkSearch, setLinkSearch] = useState('')
   const [linkResults, setLinkResults] = useState<LinkSearchResult[]>([])
   const [showLinkDropdown, setShowLinkDropdown] = useState(false)
+  const [composeOpen, setComposeOpen] = useState(false)
+  const [composeMode, setComposeMode] = useState<'new' | 'reply' | 'replyAll' | 'forward'>('new')
   const linkSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const fetchAccounts = useCallback(async () => {
@@ -269,14 +273,15 @@ export default function EmailsPage() {
           <h1 className="text-3xl font-bold">E-Mails</h1>
           <p className="text-muted-foreground">Eingehende E-Mails verwalten</p>
         </div>
-        <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-          {refreshing ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <RefreshCcw className="mr-2 h-4 w-4" />
-          )}
-          Aktualisieren
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => { setComposeMode('new'); setComposeOpen(true) }}>
+            <Pencil className="mr-2 h-4 w-4" />Neue E-Mail
+          </Button>
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+            {refreshing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
+            Aktualisieren
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -440,6 +445,15 @@ export default function EmailsPage() {
                           />
                           {selectedEmail.isStarred ? 'Ent-markieren' : 'Markieren'}
                         </Button>
+                        <Button variant="outline" size="sm" onClick={() => { setComposeMode('reply'); setComposeOpen(true) }}>
+                          <Reply className="mr-1 h-3 w-3" />Antworten
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => { setComposeMode('replyAll'); setComposeOpen(true) }}>
+                          <ReplyAll className="mr-1 h-3 w-3" />Allen
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => { setComposeMode('forward'); setComposeOpen(true) }}>
+                          <Forward className="mr-1 h-3 w-3" />Weiterleiten
+                        </Button>
                       </div>
                     </div>
 
@@ -563,6 +577,25 @@ export default function EmailsPage() {
           </Card>
         )}
       </div>
+
+      <ComposeDialog
+        open={composeOpen}
+        onOpenChange={setComposeOpen}
+        accounts={accounts.map(a => ({ id: a.id, name: a.name, email: a.email }))}
+        mode={composeMode}
+        originalEmail={composeMode !== 'new' && selectedEmail ? {
+          id: selectedEmail.id,
+          accountId: selectedEmail.accountId,
+          fromAddress: selectedEmail.fromAddress || '',
+          fromName: selectedEmail.fromName || '',
+          toAddresses: (selectedEmail.toAddresses || []) as Array<{ address: string; name?: string }>,
+          ccAddresses: (selectedEmail.ccAddresses || []) as Array<{ address: string; name?: string }>,
+          subject: selectedEmail.subject || '',
+          bodyHtml: selectedEmail.bodyHtml || selectedEmail.bodyText || '',
+          date: selectedEmail.date || '',
+        } : undefined}
+        onSent={() => fetchEmails()}
+      />
     </div>
   )
 }
