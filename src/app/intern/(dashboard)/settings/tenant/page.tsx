@@ -5,11 +5,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { ArrowLeft, Save, Building, Database, Loader2, ImageIcon, Trash2, Upload } from 'lucide-react'
+import { ArrowLeft, Save, Building, Database, Loader2, ImageIcon, Trash2, Upload, Bot, Sparkles } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
 
 interface Tenant {
@@ -61,9 +62,13 @@ export default function TenantSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [seedingDemo, setSeedingDemo] = useState(false)
+  const [analyzingAi, setAnalyzingAi] = useState(false)
 
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+
+  const [companyDescription, setCompanyDescription] = useState('')
+  const [companyKnowledge, setCompanyKnowledge] = useState('')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -124,6 +129,8 @@ export default function TenantSettingsPage() {
           website: data.data.website || '',
         })
         setLogoUrl((data.data.settings?.logoUrl as string) || null)
+        setCompanyDescription((data.data.settings?.companyDescription as string) || '')
+        setCompanyKnowledge((data.data.settings?.companyKnowledge as string) || '')
       }
     } catch (error) {
       logger.error('Failed to fetch tenant', error, { module: 'SettingsTenantPage' })
@@ -154,7 +161,14 @@ export default function TenantSettingsPage() {
       const response = await fetch('/api/v1/tenant', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          settings: {
+            ...tenant?.settings,
+            companyDescription,
+            companyKnowledge,
+          },
+        }),
       })
 
       const data = await response.json()
@@ -241,6 +255,18 @@ export default function TenantSettingsPage() {
     }
   }
 
+  const handleAiAnalyze = async () => {
+    setAnalyzingAi(true)
+    try {
+      toast.info('KI-Analyse wird gestartet...')
+      await fetch('/api/v1/tenant/analyze', { method: 'POST' })
+    } catch {
+      // Endpoint may not exist yet - toast already shown
+    } finally {
+      setAnalyzingAi(false)
+    }
+  }
+
   const handleSeedDemo = async () => {
     if (!confirm('Möchten Sie Beispieldaten importieren? Bereits vorhandene Daten werden nicht ueberschrieben.')) {
       return
@@ -290,6 +316,14 @@ export default function TenantSettingsPage() {
     })
   }
 
+  const f = (field: keyof typeof formData) => ({
+    id: field,
+    value: formData[field],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+      setFormData({ ...formData, [field]: e.target.value }),
+    className: 'text-sm h-9',
+  })
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -300,6 +334,7 @@ export default function TenantSettingsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" aria-label="Zurück" asChild>
@@ -320,32 +355,24 @@ export default function TenantSettingsPage() {
         </Button>
       </div>
 
-      <div className="grid gap-6">
+      {/* 2-Column Grid */}
+      <div className="grid md:grid-cols-2 gap-6">
+
+        {/* Row 1 Left: Allgemeine Einstellungen */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Building className="h-4 w-4" />
               Allgemeine Einstellungen
             </CardTitle>
-            <CardDescription>
-              Grundlegende Informationen zu Ihrer Organisation
-            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Organisationsname *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                placeholder="Meine Firma GmbH"
-              />
+          <CardContent className="pt-0 space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="name" className="text-sm">Organisationsname *</Label>
+              <Input {...f('name')} placeholder="Meine Firma GmbH" />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="slug">URL-Slug *</Label>
+            <div className="space-y-1">
+              <Label htmlFor="slug" className="text-sm">URL-Slug *</Label>
               <Input
                 id="slug"
                 value={formData.slug}
@@ -356,226 +383,203 @@ export default function TenantSettingsPage() {
                   })
                 }
                 placeholder="meine-firma"
+                className="text-sm h-9"
               />
-              <p className="text-sm text-muted-foreground">
-                Wird fur interne URLs verwendet. Nur Kleinbuchstaben, Zahlen und
-                Bindestriche erlaubt.
+              <p className="text-xs text-muted-foreground">
+                Nur Kleinbuchstaben, Zahlen und Bindestriche.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="legalForm">Rechtsform</Label>
-                <Input id="legalForm" value={formData.legalForm} onChange={(e) => setFormData({ ...formData, legalForm: e.target.value })} placeholder="z.B. GmbH, UG, e.K." />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="legalForm" className="text-sm">Rechtsform</Label>
+                <Input {...f('legalForm')} placeholder="z.B. GmbH, UG" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="managingDirector">Geschäftsfuehrer</Label>
-                <Input id="managingDirector" value={formData.managingDirector} onChange={(e) => setFormData({ ...formData, managingDirector: e.target.value })} placeholder="Max Mustermann" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Adresse</CardTitle>
-            <CardDescription>Firmenanschrift</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2 col-span-2">
-                <Label htmlFor="street">Strasse</Label>
-                <Input id="street" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} placeholder="Musterstrasse" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="houseNumber">Hausnummer</Label>
-                <Input id="houseNumber" value={formData.houseNumber} onChange={(e) => setFormData({ ...formData, houseNumber: e.target.value })} placeholder="42" />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="postalCode">PLZ</Label>
-                <Input id="postalCode" value={formData.postalCode} onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })} placeholder="12345" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">Ort</Label>
-                <Input id="city" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="Berlin" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="country">Land</Label>
-                <Input id="country" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} placeholder="DE" />
+              <div className="space-y-1">
+                <Label htmlFor="managingDirector" className="text-sm">Geschäftsfuehrer</Label>
+                <Input {...f('managingDirector')} placeholder="Max Mustermann" />
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Row 1 Right: Rechtliche Angaben */}
         <Card>
-          <CardHeader>
-            <CardTitle>Kontakt</CardTitle>
-            <CardDescription>Erreichbarkeit der Organisation</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Rechtliche Angaben</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="orgPhone">Telefon</Label>
-                <Input id="orgPhone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+49 30 12345678" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="orgEmail">E-Mail</Label>
-                <Input id="orgEmail" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="info@firma.de" />
-              </div>
+          <CardContent className="pt-0 space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="tradeRegister" className="text-sm">Handelsregister</Label>
+              <Input {...f('tradeRegister')} placeholder="HRB 12345, AG Berlin-Charlottenburg" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="orgWebsite">Website</Label>
-              <Input id="orgWebsite" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://www.firma.de" />
+            <div className="space-y-1">
+              <Label htmlFor="vatId" className="text-sm">USt-IdNr.</Label>
+              <Input {...f('vatId')} placeholder="DE123456789" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="taxNumber" className="text-sm">Steuernummer</Label>
+              <Input {...f('taxNumber')} placeholder="27/123/12345" />
             </div>
           </CardContent>
         </Card>
 
+        {/* Row 2 Left: Adresse */}
         <Card>
-          <CardHeader>
-            <CardTitle>Rechtliche Angaben</CardTitle>
-            <CardDescription>Handelsregister, Steuernummern</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Adresse</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="tradeRegister">Handelsregister</Label>
-              <Input id="tradeRegister" value={formData.tradeRegister} onChange={(e) => setFormData({ ...formData, tradeRegister: e.target.value })} placeholder="HRB 12345, Amtsgericht Berlin-Charlottenburg" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="vatId">Umsatzsteuer-ID</Label>
-                <Input id="vatId" value={formData.vatId} onChange={(e) => setFormData({ ...formData, vatId: e.target.value })} placeholder="DE123456789" />
+          <CardContent className="pt-0 space-y-3">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1 col-span-2">
+                <Label htmlFor="street" className="text-sm">Strasse</Label>
+                <Input {...f('street')} placeholder="Musterstrasse" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="taxNumber">Steuernummer</Label>
-                <Input id="taxNumber" value={formData.taxNumber} onChange={(e) => setFormData({ ...formData, taxNumber: e.target.value })} placeholder="27/123/12345" />
+              <div className="space-y-1">
+                <Label htmlFor="houseNumber" className="text-sm">Hausnr.</Label>
+                <Input {...f('houseNumber')} placeholder="42" />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Bankverbindung 1</CardTitle>
-            <CardDescription>Primaere Bankverbindung</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="bankName1">Bank</Label>
-              <Input id="bankName1" value={formData.bankName1} onChange={(e) => setFormData({ ...formData, bankName1: e.target.value })} placeholder="Deutsche Bank" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bankIban1">IBAN</Label>
-                <Input id="bankIban1" value={formData.bankIban1} onChange={(e) => setFormData({ ...formData, bankIban1: e.target.value })} placeholder="DE89 3704 0044 0532 0130 00" />
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="postalCode" className="text-sm">PLZ</Label>
+                <Input {...f('postalCode')} placeholder="12345" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="bankBic1">BIC</Label>
-                <Input id="bankBic1" value={formData.bankBic1} onChange={(e) => setFormData({ ...formData, bankBic1: e.target.value })} placeholder="COBADEFFXXX" />
+              <div className="space-y-1">
+                <Label htmlFor="city" className="text-sm">Ort</Label>
+                <Input {...f('city')} placeholder="Berlin" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="country" className="text-sm">Land</Label>
+                <Input {...f('country')} placeholder="DE" />
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Row 2 Right: Kontakt */}
         <Card>
-          <CardHeader>
-            <CardTitle>Bankverbindung 2</CardTitle>
-            <CardDescription>Optionale zweite Bankverbindung</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Kontakt</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="bankName2">Bank</Label>
-              <Input id="bankName2" value={formData.bankName2} onChange={(e) => setFormData({ ...formData, bankName2: e.target.value })} placeholder="Sparkasse" />
+          <CardContent className="pt-0 space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="phone" className="text-sm">Telefon</Label>
+              <Input {...f('phone')} placeholder="+49 30 12345678" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="bankIban2">IBAN</Label>
-                <Input id="bankIban2" value={formData.bankIban2} onChange={(e) => setFormData({ ...formData, bankIban2: e.target.value })} placeholder="DE89 3704 0044 0532 0130 00" />
+            <div className="space-y-1">
+              <Label htmlFor="email" className="text-sm">E-Mail</Label>
+              <Input {...f('email')} type="email" placeholder="info@firma.de" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="website" className="text-sm">Website</Label>
+              <Input {...f('website')} placeholder="https://www.firma.de" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Row 3 Left: Bankverbindung 1 */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Bankverbindung 1</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="bankName1" className="text-sm">Bank</Label>
+              <Input {...f('bankName1')} placeholder="Deutsche Bank" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="bankIban1" className="text-sm">IBAN</Label>
+                <Input {...f('bankIban1')} placeholder="DE89 3704 0044 0532 0130 00" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="bankBic2">BIC</Label>
-                <Input id="bankBic2" value={formData.bankBic2} onChange={(e) => setFormData({ ...formData, bankBic2: e.target.value })} placeholder="COBADEFFXXX" />
+              <div className="space-y-1">
+                <Label htmlFor="bankBic1" className="text-sm">BIC</Label>
+                <Input {...f('bankBic1')} placeholder="COBADEFFXXX" />
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+        {/* Row 3 Right: Bankverbindung 2 */}
         <Card>
-          <CardHeader>
-            <CardTitle>Status & Abonnement</CardTitle>
-            <CardDescription>
-              Informationen zu Ihrem aktuellen Plan
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Bankverbindung 2</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="pt-0 space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="bankName2" className="text-sm">Bank</Label>
+              <Input {...f('bankName2')} placeholder="Sparkasse" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="bankIban2" className="text-sm">IBAN</Label>
+                <Input {...f('bankIban2')} placeholder="DE89 3704 0044 0532 0130 00" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="bankBic2" className="text-sm">BIC</Label>
+                <Input {...f('bankBic2')} placeholder="COBADEFFXXX" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Row 4 Left: Status & Abo */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Status & Abo</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Status</span>
               <Badge className={statusColors[tenant?.status || 'active']}>
                 {statusLabels[tenant?.status || 'active'] || tenant?.status}
               </Badge>
             </div>
-
             {tenant?.trialEndsAt && (
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Testphase endet am
-                </span>
-                <span className="font-medium">
-                  {formatDate(tenant.trialEndsAt)}
-                </span>
+                <span className="text-sm text-muted-foreground">Trial-Ende</span>
+                <span className="text-sm font-medium">{formatDate(tenant.trialEndsAt)}</span>
               </div>
             )}
-
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Erstellt am</span>
-              <span className="font-medium">
-                {formatDate(tenant?.createdAt || null)}
-              </span>
+              <span className="text-sm font-medium">{formatDate(tenant?.createdAt || null)}</span>
             </div>
-
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Tenant-ID</span>
-              <code className="text-xs bg-muted px-2 py-1 rounded">
-                {tenant?.id}
-              </code>
+              <code className="text-xs bg-muted px-2 py-0.5 rounded">{tenant?.id}</code>
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ImageIcon className="h-5 w-5" />
-            Branding
-          </CardTitle>
-          <CardDescription>
-            Logo für die öffentliche Webseite. Wird in der Navigationsleiste angezeigt.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-start gap-6">
-            <div className="shrink-0 w-48 h-24 border rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden">
-              {logoUrl ? (
-                <Image src={logoUrl} alt="Logo" width={192} height={96} className="max-h-full max-w-full object-contain" unoptimized />
-              ) : (
-                <div className="text-center text-muted-foreground text-sm">
-                  <ImageIcon className="h-8 w-8 mx-auto mb-1 opacity-40" />
-                  Standard-Logo
-                </div>
-              )}
-            </div>
-            <div className="space-y-3">
-              <div>
+        {/* Row 4 Right: Branding */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ImageIcon className="h-4 w-4" />
+              Branding
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-3">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0 w-36 h-20 border rounded-lg flex items-center justify-center bg-muted/30 overflow-hidden">
+                {logoUrl ? (
+                  <Image src={logoUrl} alt="Logo" width={144} height={80} className="max-h-full max-w-full object-contain" unoptimized />
+                ) : (
+                  <div className="text-center text-muted-foreground text-xs">
+                    <ImageIcon className="h-6 w-6 mx-auto mb-1 opacity-40" />
+                    Standard-Logo
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="logo-upload" className="cursor-pointer">
-                  <Button variant="outline" asChild disabled={uploadingLogo}>
+                  <Button variant="outline" size="sm" asChild disabled={uploadingLogo}>
                     <span>
                       {uploadingLogo ? (
-                        <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Wird hochgeladen...</>
+                        <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />Hochladen...</>
                       ) : (
-                        <><Upload className="mr-2 h-4 w-4" />Logo hochladen</>
+                        <><Upload className="mr-1.5 h-3.5 w-3.5" />Logo hochladen</>
                       )}
                     </span>
                   </Button>
@@ -588,76 +592,104 @@ export default function TenantSettingsPage() {
                   onChange={handleLogoUpload}
                   disabled={uploadingLogo}
                 />
+                {logoUrl && (
+                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-8 text-xs" onClick={handleLogoRemove}>
+                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                    Entfernen
+                  </Button>
+                )}
+                <p className="text-xs text-muted-foreground">PNG, JPG, WebP, GIF. Max 5 MB.</p>
               </div>
-              {logoUrl && (
-                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={handleLogoRemove}>
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Logo entfernen
-                </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Row 5: Firmenwissen & KI-Analyse (full width) */}
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Sparkles className="h-4 w-4" />
+              Firmenwissen & KI-Analyse
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="companyDescription" className="text-sm">Unternehmensbeschreibung</Label>
+                <Textarea
+                  id="companyDescription"
+                  value={companyDescription}
+                  onChange={(e) => setCompanyDescription(e.target.value)}
+                  placeholder="Was macht Ihr Unternehmen? Beschreiben Sie Ihre Produkte, Dienstleistungen und Zielgruppe..."
+                  className="text-sm min-h-[160px] resize-y"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="companyKnowledge" className="text-sm">Unternehmenskonzept (KI-generiert)</Label>
+                <Textarea
+                  id="companyKnowledge"
+                  value={companyKnowledge}
+                  onChange={(e) => setCompanyKnowledge(e.target.value)}
+                  placeholder="Wird automatisch durch die KI-Analyse generiert..."
+                  className="text-sm min-h-[160px] resize-y"
+                />
+              </div>
+            </div>
+            <Button variant="outline" onClick={handleAiAnalyze} disabled={analyzingAi}>
+              {analyzingAi ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Analyse läuft...</>
+              ) : (
+                <><Bot className="mr-2 h-4 w-4" />KI-Analyse starten</>
               )}
-              <p className="text-xs text-muted-foreground">
-                PNG, JPG, WebP oder GIF. Max. 5 MB.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
-            Demo-Daten
-          </CardTitle>
-          <CardDescription>
-            Importieren Sie Beispieldaten um das System kennenzulernen.
-            Es werden CMS-Seiten, Blog-Posts, Firmen, Personen, Leads,
-            Produkte und Aktivitäten angelegt. Bereits vorhandene Daten
-            werden nicht ueberschrieben.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={handleSeedDemo} disabled={seedingDemo} variant="outline">
-            {seedingDemo ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Wird importiert...
-              </>
-            ) : (
-              <>
-                <Database className="mr-2 h-4 w-4" />
-                Demo-Daten importieren
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-destructive">Gefahrenzone</CardTitle>
-          <CardDescription>
-            Diese Aktionen konnen nicht ruckgangig gemacht werden
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg">
-            <div>
-              <p className="font-medium">Organisation loschen</p>
-              <p className="text-sm text-muted-foreground">
-                Alle Daten werden unwiderruflich geloscht.
-              </p>
-            </div>
-            <Button variant="destructive" disabled>
-              Organisation loschen
             </Button>
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Das Loschen der Organisation ist derzeit deaktiviert. Kontaktieren Sie
-            den Support, wenn Sie Ihre Organisation loschen mochten.
-          </p>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        {/* Demo-Daten (full width) */}
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Database className="h-4 w-4" />
+              Demo-Daten
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-4">
+              <Button onClick={handleSeedDemo} disabled={seedingDemo} variant="outline" size="sm">
+                {seedingDemo ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Wird importiert...</>
+                ) : (
+                  <><Database className="mr-2 h-4 w-4" />Demo-Daten importieren</>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                CMS-Seiten, Blog-Posts, Firmen, Personen, Leads, Produkte und Aktivitäten. Vorhandene Daten werden nicht ueberschrieben.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Gefahrenzone (full width) */}
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-destructive">Gefahrenzone</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center justify-between p-3 border border-destructive/20 rounded-lg">
+              <div>
+                <p className="text-sm font-medium">Organisation loschen</p>
+                <p className="text-xs text-muted-foreground">
+                  Alle Daten werden unwiderruflich geloscht. Kontaktieren Sie den Support.
+                </p>
+              </div>
+              <Button variant="destructive" size="sm" disabled>
+                Organisation loschen
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+      </div>
     </div>
   )
 }
