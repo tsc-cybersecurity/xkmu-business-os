@@ -31,12 +31,6 @@ export const TENANT_TABLES = [
   'wiba_answers',
   'n8n_connections',
   'n8n_workflow_logs',
-  'cms_pages',
-  'cms_blocks',
-  'cms_block_templates',
-  'cms_navigation_items',
-  'cms_settings',
-  'blog_posts',
   'media_uploads',
   'generated_images',
   'company_researches',
@@ -81,20 +75,28 @@ export const JOIN_TABLES: Array<{
 
 // Tables with tenant_id column but globally accessible (no tenant filter in queries)
 // These were made global so all users (e.g. Designer role) can access them
-export const GLOBAL_WITH_TENANT_ID = new Set([
+export const GLOBAL_WITH_TENANT_ID = new Set<string>([])
+
+// Global tables (no tenant_id column at all, exported completely)
+export const GLOBAL_TABLES = [
+  // CMS (kein tenant_id)
   'cms_pages',
   'cms_blocks',
   'cms_block_templates',
   'cms_navigation_items',
+  'cms_settings',
+  'cms_block_type_definitions',
   'blog_posts',
-])
-
-// Global tables (no tenant_id column at all, exported completely)
-export const GLOBAL_TABLES = [
+  // Email (kein tenant_id)
+  'email_accounts',
+  'emails',
+  // Workflows
+  'workflows',
+  'workflow_runs',
+  // Audit / Standards
   'din_requirements',
   'din_grants',
   'wiba_requirements',
-  'cms_block_type_definitions',
   'grundschutz_groups',
   'grundschutz_controls',
   'grundschutz_catalog_meta',
