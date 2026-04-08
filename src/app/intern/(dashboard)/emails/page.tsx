@@ -586,13 +586,13 @@ export default function EmailsPage() {
         originalEmail={composeMode !== 'new' && selectedEmail ? {
           id: selectedEmail.id,
           accountId: selectedEmail.accountId,
-          fromAddress: selectedEmail.fromAddress || '',
+          fromAddress: selectedEmail.fromEmail || '',
           fromName: selectedEmail.fromName || '',
-          toAddresses: (selectedEmail.toAddresses || []) as Array<{ address: string; name?: string }>,
-          ccAddresses: (selectedEmail.ccAddresses || []) as Array<{ address: string; name?: string }>,
+          toAddresses: (selectedEmail.toAddresses || []).map(a => typeof a === 'string' ? { address: a } : a),
+          ccAddresses: (selectedEmail.ccAddresses || []).map(a => typeof a === 'string' ? { address: a } : a),
           subject: selectedEmail.subject || '',
           bodyHtml: selectedEmail.bodyHtml || selectedEmail.bodyText || '',
-          date: selectedEmail.date || '',
+          date: selectedEmail.receivedAt || '',
         } : undefined}
         onSent={() => fetchEmails()}
       />
