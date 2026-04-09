@@ -128,36 +128,34 @@ export const IrPlaybookService = {
 
     const imported: string[] = []
 
+    const errors: string[] = []
+
     for (const s of scenarios) {
       try {
         const scenarioId = s.id as string
-        if (!scenarioId) continue
+        if (!scenarioId) { errors.push('Szenario ohne ID übersprungen'); continue }
 
         const slug = scenarioId.toLowerCase().replace(/[^a-z0-9]/g, '-')
+        const title = (s.title as string) || scenarioId
+        const description = (s.description as string) || ''
+        const severity = (s.severity as string) || 'MEDIUM'
+        const series = (s.series as string) || (s.band as string) || (meta.series as string) || 'I'
+        const version = (meta.version as string) || '1.0'
+        const author = (meta.author as string) || 'xKMU'
+        const dsgvo = description.toLowerCase().includes('dsgvo')
+        const nis2 = description.toLowerCase().includes('nis-2')
 
         // Upsert scenario
         await db.execute(sql`
           INSERT INTO ir_scenarios (id, slug, version, series, title, overview, severity, likelihood, dsgvo_relevant, nis2_relevant, financial_risk, created_by)
-          VALUES (
-            ${scenarioId},
-            ${slug},
-            ${(meta.version as string) || '1.0'},
-            ${(s.series as string) || (s.band as string) || (meta.series as string) || 'I'},
-            ${s.title as string},
-            ${(s.description as string) || ''},
-            ${(s.severity as string) || 'MEDIUM'},
-            ${'MEDIUM'},
-            ${!!(s.description as string)?.toLowerCase().includes('dsgvo')},
-            ${!!(s.description as string)?.toLowerCase().includes('nis-2')},
-            ${'MEDIUM'},
-            ${(meta.author as string) || 'xKMU'}
-          )
+          VALUES (${scenarioId}, ${slug}, ${version}, ${series}, ${title}, ${description}, ${severity}, ${'MEDIUM'}, ${dsgvo}, ${nis2}, ${'MEDIUM'}, ${author})
           ON CONFLICT (id) DO UPDATE SET
             title = EXCLUDED.title,
             overview = EXCLUDED.overview,
             severity = EXCLUDED.severity,
             series = EXCLUDED.series,
             version = EXCLUDED.version,
+            slug = EXCLUDED.slug,
             updated_at = NOW()
         `)
 
@@ -185,7 +183,9 @@ export const IrPlaybookService = {
 
         imported.push(scenarioId)
       } catch (err) {
-        logger.error(`Failed to import scenario ${s.id}`, err, { module: 'IrPlaybook' })
+        const msg = `Szenario ${s.id}: ${err instanceof Error ? err.message : String(err)}`
+        logger.error(msg, err, { module: 'IrPlaybook' })
+        errors.push(msg)
       }
     }
 
@@ -316,19 +316,21 @@ export const IrPlaybookService = {
       }
     }
 
-    logger.info(`IR Playbook import: ${imported.length} scenarios, ${actions.length} actions, ${escalation.length} escalations`, { module: 'IrPlaybook' })
-    return imported
+    logger.info(`IR Playbook import: ${imported.length} scenarios, ${actions.length} actions, ${escalation.length} escalations, ${errors.length} errors`, { module: 'IrPlaybook' })
+    if (errors.length > 0) logger.warn(`Import errors: ${errors.join('; ')}`, { module: 'IrPlaybook' })
+    return { imported, errors }
   },
 
   /** Import a single scenario (legacy wrapper) */
   async importScenario(scenarioJson: Record<string, unknown>) {
     const result = await this.importFullPlaybook({ scenarios: [scenarioJson] })
-    return result[0]
+    return result.imported[0]
   },
 
   /** Import multiple scenarios in batch (legacy wrapper) */
   async importBatch(scenarios: Record<string, unknown>[]) {
-    return this.importFullPlaybook({ scenarios })
+    const result = await this.importFullPlaybook({ scenarios })
+    return result.imported
   },
 
   /** Get immediate actions across all scenarios */

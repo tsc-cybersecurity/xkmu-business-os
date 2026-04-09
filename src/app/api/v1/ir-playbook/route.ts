@@ -33,8 +33,12 @@ export async function POST(request: NextRequest) {
 
       // Full playbook file with scenarios + actions + escalation + recovery + checklist + lessons + references
       if (body.scenarios && Array.isArray(body.scenarios)) {
-        const imported = await IrPlaybookService.importFullPlaybook(body)
-        return apiSuccess({ imported: imported.length, ids: imported }, undefined, 201)
+        const result = await IrPlaybookService.importFullPlaybook(body)
+        return apiSuccess({
+          imported: result.imported.length,
+          ids: result.imported,
+          errors: result.errors.length > 0 ? result.errors : undefined,
+        }, undefined, 201)
       }
       // Single scenario
       if (body.id) {
