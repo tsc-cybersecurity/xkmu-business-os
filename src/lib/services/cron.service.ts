@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/lib/db'
-import { cronJobs, taskQueue } from '@/lib/db/schema'
+import { cronJobs, taskQueue, tenants } from '@/lib/db/schema'
 import { eq, and, lte, asc } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 import type { CronJob } from '@/lib/db/schema'
@@ -132,6 +132,10 @@ export const CronService = {
   async executeJob(job: CronJob): Promise<{ success: boolean; error?: string }> {
     const startTime = Date.now()
 
+    // Get tenant for task-queue logging
+    const allTenants = await db.select({ id: tenants.id, name: tenants.name }).from(tenants).where(eq(tenants.status, 'active'))
+    const tenant = allTenants.find(t => t.name !== 'Default Organisation') || allTenants[0]
+
     // Mark as running
     await db.update(cronJobs).set({
       lastRunStatus: 'running',
@@ -139,27 +143,24 @@ export const CronService = {
     }).where(eq(cronJobs.id, job.id))
 
     try {
-      let result: string = 'OK'
+      let msg: string = 'OK'
 
       switch (job.actionType) {
         case 'email_sync': {
           const { EmailImapService } = await import('./email-imap.service')
           const syncResult = await EmailImapService.syncAll()
-          result = `Synced ${syncResult.results?.length ?? 0} accounts`
+          msg = `Synced ${syncResult.results?.length ?? 0} accounts`
           break
         }
         case 'workflow': {
           const config = (job.actionConfig || {}) as Record<string, unknown>
           const trigger = (config.trigger as string) || 'cron.triggered'
           const { WorkflowEngine } = await import('./workflow')
-          // Find tenant for workflow (use first active)
-          const { tenants } = await import('@/lib/db/schema')
-          const [tenant] = await db.select({ id: tenants.id }).from(tenants).where(eq(tenants.status, 'active')).limit(1)
           if (tenant) {
             await WorkflowEngine.fire(trigger, tenant.id, { cronJobId: job.id, cronJobName: job.name })
-            result = `Workflow trigger "${trigger}" fired`
+            msg = `Workflow trigger "${trigger}" fired`
           } else {
-            result = 'No active tenant found'
+            msg = 'No active tenant found'
           }
           break
         }
@@ -171,30 +172,32 @@ export const CronService = {
           const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
           const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`
           const res = await fetch(fullUrl, { method, headers: config.headers as Record<string, string> || {} })
-          result = `${method} ${url} → ${res.status}`
+          msg = `${method} ${url} → ${res.status}`
           break
         }
         default:
-          result = `Unknown action type: ${job.actionType}`
+          msg = `Unknown action type: ${job.actionType}`
       }
 
       const durationMs = Date.now() - startTime
 
       // Log to task_queue
-      const { tenants } = await import('@/lib/db/schema')
-      const [tenant] = await db.select({ id: tenants.id }).from(tenants).where(eq(tenants.status, 'active')).limit(1)
       if (tenant) {
-        await db.insert(taskQueue).values({
-          tenantId: tenant.id,
-          type: 'cron',
-          status: 'completed',
-          priority: 3,
-          payload: { cronJobId: job.id, cronJobName: job.name, actionType: job.actionType, result },
-          result: { success: true, durationMs, result },
-          executedAt: new Date(),
-          referenceType: 'cron_job',
-          referenceId: job.id,
-        })
+        try {
+          await db.insert(taskQueue).values({
+            tenantId: tenant.id,
+            type: 'cron',
+            status: 'completed',
+            priority: 3,
+            payload: { cronJobId: job.id, cronJobName: job.name, actionType: job.actionType, message: msg },
+            result: { success: true, durationMs, message: msg },
+            executedAt: new Date(),
+            referenceType: 'cron_job',
+            referenceId: job.id,
+          })
+        } catch (logErr) {
+          logger.warn(`Failed to log cron result to task_queue: ${logErr}`, { module: 'CronService' })
+        }
       }
 
       // Update job status + next run
@@ -206,7 +209,7 @@ export const CronService = {
         updatedAt: new Date(),
       }).where(eq(cronJobs.id, job.id))
 
-      logger.info(`Cron "${job.name}" completed in ${durationMs}ms: ${result}`, { module: 'CronService' })
+      logger.info(`Cron "${job.name}" completed in ${durationMs}ms: ${msg}`, { module: 'CronService' })
       return { success: true }
 
     } catch (error) {
@@ -214,20 +217,22 @@ export const CronService = {
       const durationMs = Date.now() - startTime
 
       // Log failure to task_queue
-      const { tenants } = await import('@/lib/db/schema')
-      const [tenant] = await db.select({ id: tenants.id }).from(tenants).where(eq(tenants.status, 'active')).limit(1)
       if (tenant) {
-        await db.insert(taskQueue).values({
-          tenantId: tenant.id,
-          type: 'cron',
-          status: 'failed',
-          priority: 3,
-          payload: { cronJobId: job.id, cronJobName: job.name, actionType: job.actionType },
-          error: errorMsg,
-          executedAt: new Date(),
-          referenceType: 'cron_job',
-          referenceId: job.id,
-        })
+        try {
+          await db.insert(taskQueue).values({
+            tenantId: tenant.id,
+            type: 'cron',
+            status: 'failed',
+            priority: 3,
+            payload: { cronJobId: job.id, cronJobName: job.name, actionType: job.actionType },
+            error: errorMsg,
+            executedAt: new Date(),
+            referenceType: 'cron_job',
+            referenceId: job.id,
+          })
+        } catch (logErr) {
+          logger.warn(`Failed to log cron error to task_queue: ${logErr}`, { module: 'CronService' })
+        }
       }
 
       await db.update(cronJobs).set({

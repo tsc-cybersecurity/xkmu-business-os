@@ -135,7 +135,7 @@ npx tsx src/lib/db/seed-check.ts
 # Setup cron for scheduled jobs
 # ------------------------------------
 echo "Setting up cron jobs..."
-CRON_URL="http://localhost:3000/api/v1/cron-jobs/tick"
+CRON_URL="http://localhost:3000/api/cron/tick"
 
 # Create crontab: tick every minute
 cat > /tmp/crontab <<EOCRON
