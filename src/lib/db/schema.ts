@@ -2887,3 +2887,35 @@ export const emailsRelations = relations(emails, ({ one }) => ({
 
 export type Email = typeof emails.$inferSelect
 export type NewEmail = typeof emails.$inferInsert
+
+// ============================================
+// Cron Jobs (Geplante Aufgaben)
+// ============================================
+export const cronJobs = pgTable('cron_jobs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  // Schedule
+  interval: varchar('interval', { length: 20 }).notNull(), // '5min' | '15min' | '30min' | '60min' | 'daily'
+  dailyAt: varchar('daily_at', { length: 5 }), // HH:MM for daily jobs, e.g. '08:00'
+  // Action
+  actionType: varchar('action_type', { length: 50 }).notNull(), // 'api_call' | 'workflow' | 'email_sync' | 'custom'
+  actionConfig: jsonb('action_config').default({}), // { url, method, workflowId, etc. }
+  // State
+  isActive: boolean('is_active').default(true),
+  lastRunAt: timestamp('last_run_at', { withTimezone: true }),
+  lastRunStatus: varchar('last_run_status', { length: 20 }), // 'success' | 'failed' | 'running'
+  lastRunError: text('last_run_error'),
+  nextRunAt: timestamp('next_run_at', { withTimezone: true }),
+  runCount: integer('run_count').default(0),
+  // Meta
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_cron_jobs_active').on(table.isActive),
+  index('idx_cron_jobs_next_run').on(table.nextRunAt),
+])
+
+export type CronJob = typeof cronJobs.$inferSelect
+export type NewCronJob = typeof cronJobs.$inferInsert

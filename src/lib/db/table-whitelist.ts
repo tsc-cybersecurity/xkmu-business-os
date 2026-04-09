@@ -109,6 +109,8 @@ export const GLOBAL_TABLES = [
   'ir_checklist_items',
   'ir_lessons_learned',
   'ir_references',
+  // Cron Jobs
+  'cron_jobs',
 ]
 
 // All allowed tables (union of tenant + global + join)
