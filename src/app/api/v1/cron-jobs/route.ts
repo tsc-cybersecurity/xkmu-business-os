@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         actionType: body.actionType,
         actionConfig: body.actionConfig,
         isActive: body.isActive,
-        createdBy: auth.userId,
+        createdBy: auth.userId ?? undefined,
       })
       return apiSuccess(job, undefined, 201)
     } catch (error) {
