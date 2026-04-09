@@ -145,7 +145,7 @@ export const CronService = {
         case 'email_sync': {
           const { EmailImapService } = await import('./email-imap.service')
           const syncResult = await EmailImapService.syncAll()
-          result = `Synced ${syncResult.length} accounts`
+          result = `Synced ${syncResult.results?.length ?? 0} accounts`
           break
         }
         case 'workflow': {
