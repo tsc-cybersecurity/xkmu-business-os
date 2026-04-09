@@ -16,7 +16,7 @@ import {
   CheckCircle2, AlertCircle, RefreshCcw,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { INTERVAL_OPTIONS, ACTION_TYPE_OPTIONS } from '@/lib/services/cron.service'
+import { INTERVAL_OPTIONS, ACTION_TYPE_OPTIONS } from '@/lib/constants/cron'
 
 interface CronJobItem {
   id: string
