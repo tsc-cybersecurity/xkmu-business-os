@@ -132,6 +132,23 @@ echo "Checking if seed is needed..."
 npx tsx src/lib/db/seed-check.ts
 
 # ------------------------------------
+# Setup cron for scheduled jobs
+# ------------------------------------
+echo "Setting up cron jobs..."
+CRON_URL="http://localhost:3000/api/v1/cron-jobs/tick"
+
+# Create crontab: tick every minute
+cat > /tmp/crontab <<EOCRON
+* * * * * wget -q -O /dev/null "$CRON_URL" 2>&1 | logger -t xkmu-cron
+EOCRON
+
+# Install crontab and start crond in background
+crontab /tmp/crontab
+crond -b -l 8
+rm /tmp/crontab
+echo "Cron daemon started (tick every minute)"
+
+# ------------------------------------
 # Start the application
 # ------------------------------------
 echo "Starting Next.js production server..."
