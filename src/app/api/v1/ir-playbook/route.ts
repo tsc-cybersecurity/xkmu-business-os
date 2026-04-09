@@ -31,12 +31,15 @@ export async function POST(request: NextRequest) {
     try {
       const body = await request.json()
 
+      // Full playbook file with scenarios + actions + escalation + recovery + checklist + lessons + references
       if (body.scenarios && Array.isArray(body.scenarios)) {
-        const imported = await IrPlaybookService.importBatch(body.scenarios)
+        const imported = await IrPlaybookService.importFullPlaybook(body)
         return apiSuccess({ imported: imported.length, ids: imported }, undefined, 201)
-      } else if (body.id) {
+      }
+      // Single scenario
+      if (body.id) {
         const id = await IrPlaybookService.importScenario(body)
-        return apiSuccess({ imported: 1, ids: [id] }, undefined, 201)
+        return apiSuccess({ imported: id ? 1 : 0, ids: id ? [id] : [] }, undefined, 201)
       }
 
       return apiError('INVALID_FORMAT', 'Erwartet {"scenarios": [...]} oder einzelnes Szenario mit "id"', 400)

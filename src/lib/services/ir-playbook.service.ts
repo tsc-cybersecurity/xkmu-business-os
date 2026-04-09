@@ -115,28 +115,220 @@ export const IrPlaybookService = {
     }
   },
 
-  /** Import a scenario from JSON using the ir_import_scenario function */
-  async importScenario(scenarioJson: Record<string, unknown>) {
-    const wrapped = JSON.stringify({ scenario: scenarioJson })
-    const result = await db.execute(
-      sql`SELECT ir_import_scenario(${wrapped}::jsonb) as scenario_id`
-    )
-    const rows = result as unknown as Array<{ scenario_id: string }>
-    return rows[0]?.scenario_id
-  },
+  /** Import a full playbook JSON file (scenarios + actions + escalation + recovery + checklist + lessons + references) */
+  async importFullPlaybook(data: Record<string, unknown>) {
+    const scenarios = (data.scenarios || []) as Array<Record<string, unknown>>
+    const actions = (data.actions || []) as Array<Record<string, unknown>>
+    const escalation = (data.escalation_levels || []) as Array<Record<string, unknown>>
+    const recovery = (data.recovery_steps || []) as Array<Record<string, unknown>>
+    const checklist = (data.checklist_items || []) as Array<Record<string, unknown>>
+    const lessons = (data.lessons_learned || []) as Array<Record<string, unknown>>
+    const references = (data.references || []) as Array<Record<string, unknown>>
+    const meta = (data.meta || {}) as Record<string, unknown>
 
-  /** Import multiple scenarios in batch */
-  async importBatch(scenarios: Record<string, unknown>[]) {
     const imported: string[] = []
+
     for (const s of scenarios) {
       try {
-        const id = await this.importScenario(s)
-        if (id) imported.push(id)
+        const scenarioId = s.id as string
+        if (!scenarioId) continue
+
+        const slug = scenarioId.toLowerCase().replace(/[^a-z0-9]/g, '-')
+
+        // Upsert scenario
+        await db.execute(sql`
+          INSERT INTO ir_scenarios (id, slug, version, series, title, overview, severity, likelihood, dsgvo_relevant, nis2_relevant, financial_risk, created_by)
+          VALUES (
+            ${scenarioId},
+            ${slug},
+            ${(meta.version as string) || '1.0'},
+            ${(s.series as string) || (s.band as string) || (meta.series as string) || 'I'},
+            ${s.title as string},
+            ${(s.description as string) || ''},
+            ${(s.severity as string) || 'MEDIUM'},
+            ${'MEDIUM'},
+            ${!!(s.description as string)?.toLowerCase().includes('dsgvo')},
+            ${!!(s.description as string)?.toLowerCase().includes('nis-2')},
+            ${'MEDIUM'},
+            ${(meta.author as string) || 'xKMU'}
+          )
+          ON CONFLICT (id) DO UPDATE SET
+            title = EXCLUDED.title,
+            overview = EXCLUDED.overview,
+            severity = EXCLUDED.severity,
+            series = EXCLUDED.series,
+            version = EXCLUDED.version,
+            updated_at = NOW()
+        `)
+
+        // Import trigger_indicators as detection_indicators
+        const triggers = (s.trigger_indicators || []) as string[]
+        if (triggers.length > 0) {
+          await db.execute(sql`DELETE FROM ir_detection_indicators WHERE scenario_id = ${scenarioId}`)
+          for (let i = 0; i < triggers.length; i++) {
+            await db.execute(sql`
+              INSERT INTO ir_detection_indicators (scenario_id, type, description, sequence)
+              VALUES (${scenarioId}, 'trigger', ${triggers[i]}, ${i + 1})
+            `)
+          }
+        }
+
+        // Import BSI controls as references
+        const bsiControls = (s.bsi_controls || []) as string[]
+        for (const ctrl of bsiControls) {
+          await db.execute(sql`
+            INSERT INTO ir_references (scenario_id, title, url)
+            VALUES (${scenarioId}, ${'BSI ' + ctrl}, ${'https://www.bsi.bund.de/grundschutz'})
+            ON CONFLICT DO NOTHING
+          `)
+        }
+
+        imported.push(scenarioId)
       } catch (err) {
-        logger.error(`Failed to import scenario ${(s as Record<string, unknown>).id}`, err, { module: 'IrPlaybook' })
+        logger.error(`Failed to import scenario ${s.id}`, err, { module: 'IrPlaybook' })
       }
     }
+
+    // Import actions
+    for (const a of actions) {
+      try {
+        const actionId = a.id as string
+        const scenarioId = a.scenario_id as string
+        if (!actionId || !scenarioId) continue
+
+        await db.execute(sql`
+          INSERT INTO ir_actions (id, scenario_id, phase, priority, category, responsible, action, detail)
+          VALUES (
+            ${actionId},
+            ${scenarioId},
+            ${'immediate'},
+            ${(a.step as number) || 1},
+            ${'response'},
+            ${'IT/GF'},
+            ${(a.title as string) || ''},
+            ${(a.description as string) || ''}
+          )
+          ON CONFLICT (id) DO UPDATE SET
+            action = EXCLUDED.action,
+            detail = EXCLUDED.detail,
+            priority = EXCLUDED.priority
+        `)
+      } catch (err) {
+        logger.error(`Failed to import action ${a.id}`, err, { module: 'IrPlaybook' })
+      }
+    }
+
+    // Import escalation levels
+    for (const e of escalation) {
+      try {
+        const scenarioId = e.scenario_id as string
+        if (!scenarioId) continue
+        await db.execute(sql`
+          INSERT INTO ir_escalation_levels (scenario_id, level, trigger_condition, action, condition_expression)
+          VALUES (
+            ${scenarioId},
+            ${(e.level as number) || 1},
+            ${(e.trigger as string) || ''},
+            ${(e.action as string) || ''},
+            ${(e.condition as string) || null}
+          )
+          ON CONFLICT DO NOTHING
+        `)
+      } catch (err) {
+        logger.error(`Failed to import escalation ${e.id}`, err, { module: 'IrPlaybook' })
+      }
+    }
+
+    // Import recovery steps
+    for (const r of recovery) {
+      try {
+        const scenarioId = r.scenario_id as string
+        if (!scenarioId) continue
+        await db.execute(sql`
+          INSERT INTO ir_recovery_steps (scenario_id, phase, step_order, action, detail)
+          VALUES (
+            ${scenarioId},
+            ${'recovery'},
+            ${(r.step as number) || 1},
+            ${(r.title as string) || ''},
+            ${(r.description as string) || ''}
+          )
+          ON CONFLICT DO NOTHING
+        `)
+      } catch (err) {
+        logger.error(`Failed to import recovery ${r.id}`, err, { module: 'IrPlaybook' })
+      }
+    }
+
+    // Import checklist items
+    for (const c of checklist) {
+      try {
+        const scenarioId = c.scenario_id as string
+        if (!scenarioId) continue
+        await db.execute(sql`
+          INSERT INTO ir_checklist_items (scenario_id, phase, item, sequence)
+          VALUES (
+            ${scenarioId},
+            ${'response'},
+            ${(c.item as string) || ''},
+            ${1}
+          )
+          ON CONFLICT DO NOTHING
+        `)
+      } catch (err) {
+        logger.error(`Failed to import checklist ${c.id}`, err, { module: 'IrPlaybook' })
+      }
+    }
+
+    // Import lessons learned
+    for (const l of lessons) {
+      try {
+        const scenarioId = l.scenario_id as string
+        if (!scenarioId) continue
+        await db.execute(sql`
+          INSERT INTO ir_lessons_learned (scenario_id, finding, improvement, bsi_mapping)
+          VALUES (
+            ${scenarioId},
+            ${(l.finding as string) || ''},
+            ${(l.improvement as string) || ''},
+            ${(l.bsi_mapping as string) || null}
+          )
+          ON CONFLICT DO NOTHING
+        `)
+      } catch (err) {
+        logger.error(`Failed to import lesson ${l.id}`, err, { module: 'IrPlaybook' })
+      }
+    }
+
+    // Import references
+    for (const ref of references) {
+      try {
+        const relevantScenarios = (ref.relevant_scenarios || []) as string[]
+        for (const scenarioId of relevantScenarios) {
+          await db.execute(sql`
+            INSERT INTO ir_references (scenario_id, title, url)
+            VALUES (${scenarioId}, ${(ref.title as string) || ''}, ${(ref.url as string) || ''})
+            ON CONFLICT DO NOTHING
+          `)
+        }
+      } catch (err) {
+        logger.error(`Failed to import reference ${ref.id}`, err, { module: 'IrPlaybook' })
+      }
+    }
+
+    logger.info(`IR Playbook import: ${imported.length} scenarios, ${actions.length} actions, ${escalation.length} escalations`, { module: 'IrPlaybook' })
     return imported
+  },
+
+  /** Import a single scenario (legacy wrapper) */
+  async importScenario(scenarioJson: Record<string, unknown>) {
+    const result = await this.importFullPlaybook({ scenarios: [scenarioJson] })
+    return result[0]
+  },
+
+  /** Import multiple scenarios in batch (legacy wrapper) */
+  async importBatch(scenarios: Record<string, unknown>[]) {
+    return this.importFullPlaybook({ scenarios })
   },
 
   /** Get immediate actions across all scenarios */
