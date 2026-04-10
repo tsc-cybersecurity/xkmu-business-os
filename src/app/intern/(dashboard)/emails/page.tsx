@@ -307,21 +307,62 @@ export default function EmailsPage() {
   const handleLinkTo = async (result: LinkSearchResult) => {
     if (!selectedEmail) return
     try {
-      const payload: Record<string, string> = {}
+      const payload: Record<string, string | null> = {}
       if (result.type === 'lead') payload.leadId = result.id
       if (result.type === 'company') payload.companyId = result.id
       if (result.type === 'person') payload.personId = result.id
 
-      await fetch(`/api/v1/emails/${selectedEmail.id}`, {
+      const response = await fetch(`/api/v1/emails/${selectedEmail.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err?.error?.message || 'Verknuepfung fehlgeschlagen')
+      }
+
+      // Update local state so the badge/chip reflects the link immediately
+      const patched: Partial<EmailMessage> = {
+        leadId: result.type === 'lead' ? result.id : selectedEmail.leadId,
+        companyId: result.type === 'company' ? result.id : selectedEmail.companyId,
+        personId: result.type === 'person' ? result.id : selectedEmail.personId,
+      }
+      setSelectedEmail((prev) => (prev ? { ...prev, ...patched } : null))
+      setEmails((prev) =>
+        prev.map((e) => (e.id === selectedEmail.id ? { ...e, ...patched } : e))
+      )
+
       toast.success(`Verknuepft mit ${result.label}`)
       setShowLinkDropdown(false)
       setLinkSearch('')
+      setLinkResults([])
     } catch (error) {
-      toast.error('Verknuepfung fehlgeschlagen')
+      const msg = error instanceof Error ? error.message : 'Verknuepfung fehlgeschlagen'
+      toast.error(msg)
+      logger.error('handleLinkTo failed', error, { module: 'EmailsPage' })
+    }
+  }
+
+  const handleUnlink = async () => {
+    if (!selectedEmail) return
+    try {
+      const response = await fetch(`/api/v1/emails/${selectedEmail.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: null, companyId: null, personId: null }),
+      })
+      if (!response.ok) throw new Error('Entknuepfen fehlgeschlagen')
+
+      const patched = { leadId: null, companyId: null, personId: null }
+      setSelectedEmail((prev) => (prev ? { ...prev, ...patched } : null))
+      setEmails((prev) =>
+        prev.map((e) => (e.id === selectedEmail.id ? { ...e, ...patched } : e))
+      )
+      toast.success('Verknuepfung entfernt')
+    } catch (error) {
+      toast.error('Entknuepfen fehlgeschlagen')
     }
   }
 
@@ -592,6 +633,28 @@ export default function EmailsPage() {
 
                     {/* Link to entity */}
                     <div className="mt-3 relative">
+                      {(selectedEmail.leadId || selectedEmail.companyId || selectedEmail.personId) && (
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
+                          <span className="text-xs text-muted-foreground">Verknuepft:</span>
+                          {selectedEmail.leadId && (
+                            <Badge variant="secondary" className="text-xs">Lead</Badge>
+                          )}
+                          {selectedEmail.companyId && (
+                            <Badge variant="secondary" className="text-xs">Firma</Badge>
+                          )}
+                          {selectedEmail.personId && (
+                            <Badge variant="secondary" className="text-xs">Person</Badge>
+                          )}
+                          <button
+                            type="button"
+                            onClick={handleUnlink}
+                            className="text-xs text-muted-foreground hover:text-destructive"
+                            title="Verknuepfung entfernen"
+                          >
+                            entfernen
+                          </button>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2">
                         <Link2 className="h-4 w-4 text-muted-foreground" />
                         <Input
