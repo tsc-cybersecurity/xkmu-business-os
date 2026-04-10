@@ -2,6 +2,29 @@ import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
+/** Extract the most useful message from a postgres/drizzle error */
+function formatPgError(err: unknown): string {
+  if (err instanceof Error) {
+    // Drizzle wraps the underlying pg error in `cause`
+    const cause = (err as unknown as { cause?: unknown }).cause as
+      | { message?: string; detail?: string; hint?: string; code?: string; column?: string; constraint?: string }
+      | undefined
+    if (cause && typeof cause === 'object') {
+      const parts = [
+        cause.message,
+        cause.detail ? `detail=${cause.detail}` : null,
+        cause.hint ? `hint=${cause.hint}` : null,
+        cause.column ? `column=${cause.column}` : null,
+        cause.constraint ? `constraint=${cause.constraint}` : null,
+        cause.code ? `code=${cause.code}` : null,
+      ].filter(Boolean)
+      if (parts.length > 0) return parts.join(' | ')
+    }
+    return err.message
+  }
+  return String(err)
+}
+
 export const IrPlaybookService = {
   /** List all active scenarios (summary view) */
   async listScenarios(filters?: {
@@ -39,7 +62,6 @@ export const IrPlaybookService = {
 
   /** Get single scenario with ALL related data */
   async getScenario(scenarioId: string) {
-    // 1. Scenario
     const scenarioResult = await db.execute(
       sql`SELECT * FROM ir_scenarios WHERE id = ${scenarioId}`
     )
@@ -48,13 +70,11 @@ export const IrPlaybookService = {
 
     const scenario = scenarios[0]
 
-    // 2. Detection indicators
     const indicatorsResult = await db.execute(
       sql`SELECT * FROM ir_detection_indicators WHERE scenario_id = ${scenarioId} ORDER BY sequence`
     )
     const detection_indicators = indicatorsResult as unknown as Record<string, unknown>[]
 
-    // 3. Actions (phase order, priority, warnings last)
     const actionsResult = await db.execute(
       sql`SELECT * FROM ir_actions WHERE scenario_id = ${scenarioId}
           ORDER BY
@@ -63,7 +83,6 @@ export const IrPlaybookService = {
     )
     const actions = actionsResult as unknown as Record<string, unknown>[]
 
-    // 4. Escalation levels with recipients
     const levelsResult = await db.execute(
       sql`SELECT * FROM ir_escalation_levels WHERE scenario_id = ${scenarioId} ORDER BY level`
     )
@@ -79,25 +98,21 @@ export const IrPlaybookService = {
       })
     )
 
-    // 5. Recovery steps
     const recoveryResult = await db.execute(
       sql`SELECT * FROM ir_recovery_steps WHERE scenario_id = ${scenarioId} ORDER BY sequence`
     )
     const recovery_steps = recoveryResult as unknown as Record<string, unknown>[]
 
-    // 6. Checklist items
     const checklistResult = await db.execute(
       sql`SELECT * FROM ir_checklist_items WHERE scenario_id = ${scenarioId} ORDER BY sequence`
     )
     const checklist = checklistResult as unknown as Record<string, unknown>[]
 
-    // 7. Lessons learned
     const lessonsResult = await db.execute(
       sql`SELECT * FROM ir_lessons_learned WHERE scenario_id = ${scenarioId}`
     )
     const lessons_learned = lessonsResult as unknown as Record<string, unknown>[]
 
-    // 8. References
     const referencesResult = await db.execute(
       sql`SELECT * FROM ir_references WHERE scenario_id = ${scenarioId}`
     )
@@ -115,7 +130,21 @@ export const IrPlaybookService = {
     }
   },
 
-  /** Import a full playbook JSON file (scenarios + actions + escalation + recovery + checklist + lessons + references) */
+  /**
+   * Import a full playbook JSON file.
+   * Expected input shape (scenarios_sXXX_sYYY.json):
+   * {
+   *   meta: { band, series, version, author },
+   *   scenarios: [{ id, title, description, band, series, severity, category, bsi_controls[], trigger_indicators[] }],
+   *   actions: [{ id, scenario_id, step, title, description }],
+   *   escalation_levels: [{ id, scenario_id, level, trigger, action, condition? }],
+   *   escalation_recipients: [{ id, role, contact, relevant_scenarios[] }],
+   *   recovery_steps: [{ id, scenario_id, step, title, description }],
+   *   checklist_items: [{ id, scenario_id, item }],
+   *   lessons_learned: [{ id, scenario_id, finding, bsi_mapping, improvement }],
+   *   references: [{ id, title, url, relevant_scenarios[] }]
+   * }
+   */
   async importFullPlaybook(data: Record<string, unknown>) {
     const scenarios = (data.scenarios || []) as Array<Record<string, unknown>>
     const actions = (data.actions || []) as Array<Record<string, unknown>>
@@ -127,9 +156,9 @@ export const IrPlaybookService = {
     const meta = (data.meta || {}) as Record<string, unknown>
 
     const imported: string[] = []
-
     const errors: string[] = []
 
+    // ── Scenarios ────────────────────────────────────────────────────────────
     for (const s of scenarios) {
       try {
         const scenarioId = s.id as string
@@ -141,14 +170,19 @@ export const IrPlaybookService = {
         const severity = (s.severity as string) || 'MEDIUM'
         const series = (s.series as string) || (s.band as string) || (meta.series as string) || 'I'
         const version = (meta.version as string) || '1.0'
-        const author = (meta.author as string) || 'xKMU'
+        const author = ((meta.author as string) || 'xKMU').substring(0, 100)
         const dsgvo = description.toLowerCase().includes('dsgvo')
-        const nis2 = description.toLowerCase().includes('nis-2')
+        const nis2 = description.toLowerCase().includes('nis-2') || description.toLowerCase().includes('nis2')
 
-        // Upsert scenario
         await db.execute(sql`
-          INSERT INTO ir_scenarios (id, slug, version, series, title, overview, severity, likelihood, dsgvo_relevant, nis2_relevant, financial_risk, created_by)
-          VALUES (${scenarioId}, ${slug}, ${version}, ${series}, ${title}, ${description}, ${severity}, ${'MEDIUM'}, ${dsgvo}, ${nis2}, ${'MEDIUM'}, ${author})
+          INSERT INTO ir_scenarios (
+            id, slug, version, series, title, overview, severity, likelihood,
+            dsgvo_relevant, nis2_relevant, financial_risk, created_by
+          )
+          VALUES (
+            ${scenarioId}, ${slug}, ${version}, ${series}, ${title}, ${description},
+            ${severity}, ${'MEDIUM'}, ${dsgvo}, ${nis2}, ${'MEDIUM'}, ${author}
+          )
           ON CONFLICT (id) DO UPDATE SET
             title = EXCLUDED.title,
             overview = EXCLUDED.overview,
@@ -156,57 +190,57 @@ export const IrPlaybookService = {
             series = EXCLUDED.series,
             version = EXCLUDED.version,
             slug = EXCLUDED.slug,
+            dsgvo_relevant = EXCLUDED.dsgvo_relevant,
+            nis2_relevant = EXCLUDED.nis2_relevant,
             updated_at = NOW()
         `)
 
-        // Import trigger_indicators as detection_indicators
+        // Trigger indicators
         const triggers = (s.trigger_indicators || []) as string[]
         if (triggers.length > 0) {
           await db.execute(sql`DELETE FROM ir_detection_indicators WHERE scenario_id = ${scenarioId}`)
           for (let i = 0; i < triggers.length; i++) {
             await db.execute(sql`
               INSERT INTO ir_detection_indicators (scenario_id, type, description, sequence)
-              VALUES (${scenarioId}, 'trigger', ${triggers[i]}, ${i + 1})
+              VALUES (${scenarioId}, ${'USER_REPORT'}, ${triggers[i]}, ${i + 1})
             `)
           }
         }
 
-        // Import BSI controls as references
+        // BSI controls → references
         const bsiControls = (s.bsi_controls || []) as string[]
         for (const ctrl of bsiControls) {
           await db.execute(sql`
-            INSERT INTO ir_references (scenario_id, title, url)
-            VALUES (${scenarioId}, ${'BSI ' + ctrl}, ${'https://www.bsi.bund.de/grundschutz'})
+            INSERT INTO ir_references (scenario_id, type, name, url)
+            VALUES (${scenarioId}, ${'STANDARD'}, ${'BSI ' + ctrl}, ${'https://www.bsi.bund.de/grundschutz'})
             ON CONFLICT DO NOTHING
           `)
         }
 
         imported.push(scenarioId)
       } catch (err) {
-        const msg = `Szenario ${s.id}: ${err instanceof Error ? err.message : String(err)}`
+        const msg = `Szenario ${s.id}: ${formatPgError(err)}`
         logger.error(msg, err, { module: 'IrPlaybook' })
         errors.push(msg)
       }
     }
 
-    // Import actions
+    // ── Actions ──────────────────────────────────────────────────────────────
+    // Schema: id(PK), scenario_id, phase, priority(smallint), category, responsible, action, detail
     for (const a of actions) {
       try {
         const actionId = a.id as string
         const scenarioId = a.scenario_id as string
         if (!actionId || !scenarioId) continue
+        const priority = (a.step as number) || (a.priority as number) || 1
+        const actionText = (a.title as string) || (a.action as string) || ''
+        const detailText = (a.description as string) || (a.detail as string) || null
 
         await db.execute(sql`
           INSERT INTO ir_actions (id, scenario_id, phase, priority, category, responsible, action, detail)
           VALUES (
-            ${actionId},
-            ${scenarioId},
-            ${'immediate'},
-            ${(a.step as number) || 1},
-            ${'response'},
-            ${'IT/GF'},
-            ${(a.title as string) || ''},
-            ${(a.description as string) || ''}
+            ${actionId}, ${scenarioId}, ${'IMMEDIATE'}, ${priority},
+            ${'CONTAINMENT'}, ${'IT_ADMIN'}, ${actionText}, ${detailText}
           )
           ON CONFLICT (id) DO UPDATE SET
             action = EXCLUDED.action,
@@ -214,110 +248,165 @@ export const IrPlaybookService = {
             priority = EXCLUDED.priority
         `)
       } catch (err) {
-        logger.error(`Failed to import action ${a.id}`, err, { module: 'IrPlaybook' })
+        const msg = `Action ${a.id}: ${formatPgError(err)}`
+        logger.error(msg, err, { module: 'IrPlaybook' })
+        errors.push(msg)
       }
     }
 
-    // Import escalation levels
+    // ── Escalation levels ────────────────────────────────────────────────────
+    // Schema: id(PK varchar15), scenario_id, level(smallint), label(NN), color_hex, deadline_hours, condition
+    // JSON action/trigger text is merged into `label` (schema has no action text column).
     for (const e of escalation) {
       try {
+        const escId = e.id as string
         const scenarioId = e.scenario_id as string
-        if (!scenarioId) continue
+        if (!escId || !scenarioId) continue
+        const level = (e.level as number) || 1
+        const trigger = (e.trigger as string) || ''
+        const actionText = (e.action as string) || ''
+        const label = [trigger, actionText].filter(Boolean).join(' → ').substring(0, 100) || `Level ${level}`
+        const condition = (e.condition as string) || null
+
         await db.execute(sql`
-          INSERT INTO ir_escalation_levels (scenario_id, level, trigger_condition, action, condition_expression)
-          VALUES (
-            ${scenarioId},
-            ${(e.level as number) || 1},
-            ${(e.trigger as string) || ''},
-            ${(e.action as string) || ''},
-            ${(e.condition as string) || null}
-          )
-          ON CONFLICT DO NOTHING
+          INSERT INTO ir_escalation_levels (id, scenario_id, level, label, condition)
+          VALUES (${escId}, ${scenarioId}, ${level}, ${label}, ${condition})
+          ON CONFLICT (id) DO UPDATE SET
+            label = EXCLUDED.label,
+            condition = EXCLUDED.condition,
+            level = EXCLUDED.level
         `)
       } catch (err) {
-        logger.error(`Failed to import escalation ${e.id}`, err, { module: 'IrPlaybook' })
+        const msg = `Eskalation ${e.id}: ${formatPgError(err)}`
+        logger.error(msg, err, { module: 'IrPlaybook' })
+        errors.push(msg)
       }
     }
 
-    // Import recovery steps
+    // ── Recovery steps ───────────────────────────────────────────────────────
+    // Schema: id(PK varchar15), scenario_id, phase_label(NN), sequence(NN), action(NN), detail, responsible(NN), depends_on
     for (const r of recovery) {
       try {
+        const recId = r.id as string
         const scenarioId = r.scenario_id as string
-        if (!scenarioId) continue
+        if (!recId || !scenarioId) continue
+        const sequence = (r.step as number) || (r.sequence as number) || 1
+        const actionText = (r.title as string) || (r.action as string) || ''
+        const detailText = (r.description as string) || (r.detail as string) || null
+
         await db.execute(sql`
-          INSERT INTO ir_recovery_steps (scenario_id, phase, step_order, action, detail)
+          INSERT INTO ir_recovery_steps (id, scenario_id, phase_label, sequence, action, detail, responsible)
           VALUES (
-            ${scenarioId},
-            ${'recovery'},
-            ${(r.step as number) || 1},
-            ${(r.title as string) || ''},
-            ${(r.description as string) || ''}
+            ${recId}, ${scenarioId}, ${'Recovery'}, ${sequence},
+            ${actionText}, ${detailText}, ${'IT_ADMIN'}
           )
-          ON CONFLICT DO NOTHING
+          ON CONFLICT (id) DO UPDATE SET
+            action = EXCLUDED.action,
+            detail = EXCLUDED.detail,
+            sequence = EXCLUDED.sequence
         `)
       } catch (err) {
-        logger.error(`Failed to import recovery ${r.id}`, err, { module: 'IrPlaybook' })
+        const msg = `Recovery ${r.id}: ${formatPgError(err)}`
+        logger.error(msg, err, { module: 'IrPlaybook' })
+        errors.push(msg)
       }
     }
 
-    // Import checklist items
+    // ── Checklist items ──────────────────────────────────────────────────────
+    // Schema: id(PK varchar15), scenario_id, sequence(NN), category(NN), item(NN), mandatory, dsgvo_required
+    const checklistSeqByScenario = new Map<string, number>()
     for (const c of checklist) {
       try {
+        const chkId = c.id as string
         const scenarioId = c.scenario_id as string
-        if (!scenarioId) continue
+        if (!chkId || !scenarioId) continue
+        const seq = (checklistSeqByScenario.get(scenarioId) || 0) + 1
+        checklistSeqByScenario.set(scenarioId, seq)
+        const itemText = (c.item as string) || ''
+        const isDsgvo = itemText.toLowerCase().includes('dsgvo')
+
         await db.execute(sql`
-          INSERT INTO ir_checklist_items (scenario_id, phase, item, sequence)
+          INSERT INTO ir_checklist_items (id, scenario_id, sequence, category, item, dsgvo_required)
           VALUES (
-            ${scenarioId},
-            ${'response'},
-            ${(c.item as string) || ''},
-            ${1}
+            ${chkId}, ${scenarioId}, ${seq}, ${'TECHNICAL'}, ${itemText}, ${isDsgvo}
           )
-          ON CONFLICT DO NOTHING
+          ON CONFLICT (id) DO UPDATE SET
+            item = EXCLUDED.item,
+            sequence = EXCLUDED.sequence,
+            dsgvo_required = EXCLUDED.dsgvo_required
         `)
       } catch (err) {
-        logger.error(`Failed to import checklist ${c.id}`, err, { module: 'IrPlaybook' })
+        const msg = `Checklist ${c.id}: ${formatPgError(err)}`
+        logger.error(msg, err, { module: 'IrPlaybook' })
+        errors.push(msg)
       }
     }
 
-    // Import lessons learned
+    // ── Lessons learned ──────────────────────────────────────────────────────
+    // Schema: id(PK varchar15), scenario_id, question(NN), category(NN), maps_to_control
     for (const l of lessons) {
       try {
+        const llId = l.id as string
         const scenarioId = l.scenario_id as string
-        if (!scenarioId) continue
+        if (!llId || !scenarioId) continue
+        const finding = (l.finding as string) || ''
+        const improvement = (l.improvement as string) || ''
+        const question = [finding, improvement ? `Verbesserung: ${improvement}` : null]
+          .filter(Boolean)
+          .join('\n\n')
+        const bsiMapping = (l.bsi_mapping as string) || null
+
         await db.execute(sql`
-          INSERT INTO ir_lessons_learned (scenario_id, finding, improvement, bsi_mapping)
+          INSERT INTO ir_lessons_learned (id, scenario_id, question, category, maps_to_control)
           VALUES (
-            ${scenarioId},
-            ${(l.finding as string) || ''},
-            ${(l.improvement as string) || ''},
-            ${(l.bsi_mapping as string) || null}
+            ${llId}, ${scenarioId}, ${question}, ${'PROCESS'}, ${bsiMapping}
           )
-          ON CONFLICT DO NOTHING
+          ON CONFLICT (id) DO UPDATE SET
+            question = EXCLUDED.question,
+            maps_to_control = EXCLUDED.maps_to_control
         `)
       } catch (err) {
-        logger.error(`Failed to import lesson ${l.id}`, err, { module: 'IrPlaybook' })
+        const msg = `Lesson ${l.id}: ${formatPgError(err)}`
+        logger.error(msg, err, { module: 'IrPlaybook' })
+        errors.push(msg)
       }
     }
 
-    // Import references
+    // ── References (many-to-many via relevant_scenarios) ────────────────────
+    // Schema: id(serial), scenario_id, type(NN), name(NN), url
     for (const ref of references) {
       try {
         const relevantScenarios = (ref.relevant_scenarios || []) as string[]
+        const title = (ref.title as string) || ''
+        const url = (ref.url as string) || ''
+        const urlLower = url.toLowerCase()
+        const refType = urlLower.includes('dsgvo') || urlLower.includes('gesetz')
+          ? 'LEGAL'
+          : urlLower.includes('bsi')
+          ? 'STANDARD'
+          : 'GUIDE'
+
         for (const scenarioId of relevantScenarios) {
           await db.execute(sql`
-            INSERT INTO ir_references (scenario_id, title, url)
-            VALUES (${scenarioId}, ${(ref.title as string) || ''}, ${(ref.url as string) || ''})
+            INSERT INTO ir_references (scenario_id, type, name, url)
+            VALUES (${scenarioId}, ${refType}, ${title}, ${url})
             ON CONFLICT DO NOTHING
           `)
         }
       } catch (err) {
-        logger.error(`Failed to import reference ${ref.id}`, err, { module: 'IrPlaybook' })
+        const msg = `Reference ${ref.id}: ${formatPgError(err)}`
+        logger.error(msg, err, { module: 'IrPlaybook' })
+        errors.push(msg)
       }
     }
 
-    logger.info(`IR Playbook import: ${imported.length} scenarios, ${actions.length} actions, ${escalation.length} escalations, ${errors.length} errors`, { module: 'IrPlaybook' })
-    if (errors.length > 0) logger.warn(`Import errors: ${errors.join('; ')}`, { module: 'IrPlaybook' })
+    logger.info(
+      `IR Playbook import: ${imported.length}/${scenarios.length} scenarios, ${actions.length} actions, ${escalation.length} escalations, ${recovery.length} recovery, ${checklist.length} checklist, ${lessons.length} lessons, ${errors.length} errors`,
+      { module: 'IrPlaybook' }
+    )
+    if (errors.length > 0) {
+      logger.warn(`IR Playbook import errors: ${errors.slice(0, 5).join(' ||| ')}`, { module: 'IrPlaybook' })
+    }
     return { imported, errors }
   },
 

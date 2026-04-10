@@ -115,6 +115,78 @@ END $$;
 
 -- Drop unique constraint if it exists (causes Drizzle prompt)
 ALTER TABLE cms_settings DROP CONSTRAINT IF EXISTS cms_settings_key_unique;
+
+-- ── IR Playbook: convert enum columns to varchar ───────────────────────────
+-- Old schema used enums (ir_series, ir_severity, ir_action_phase, ...) which
+-- only accepted hardcoded values like series='I'..'VI'. The JSON imports use
+-- series='XI' etc., so we widen the columns to varchar. Views and functions
+-- depending on the enum types must be dropped first — they are recreated
+-- after drizzle-kit push below.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name='ir_scenarios' AND column_name='series' AND udt_name='ir_series'
+  ) THEN
+    RAISE NOTICE 'Converting ir_playbook enum columns to varchar...';
+
+    -- Drop dependent views
+    DROP VIEW IF EXISTS ir_scenario_summary CASCADE;
+    DROP VIEW IF EXISTS ir_dsgvo_checklist CASCADE;
+    DROP VIEW IF EXISTS ir_immediate_actions CASCADE;
+    DROP VIEW IF EXISTS ir_bsi_control_mapping CASCADE;
+
+    -- Drop dependent functions (signatures reference the enum types)
+    DROP FUNCTION IF EXISTS ir_import_scenario(jsonb) CASCADE;
+    DROP FUNCTION IF EXISTS ir_get_actions(varchar) CASCADE;
+    DROP FUNCTION IF EXISTS ir_search_scenarios(boolean, ir_series) CASCADE;
+
+    -- ir_scenarios
+    ALTER TABLE ir_scenarios ALTER COLUMN series TYPE varchar(10) USING series::text;
+    ALTER TABLE ir_scenarios ALTER COLUMN severity TYPE varchar(20) USING severity::text;
+    ALTER TABLE ir_scenarios ALTER COLUMN likelihood TYPE varchar(20) USING likelihood::text;
+    ALTER TABLE ir_scenarios ALTER COLUMN financial_risk TYPE varchar(20) USING financial_risk::text;
+
+    -- ir_actions
+    ALTER TABLE ir_actions ALTER COLUMN phase TYPE varchar(20) USING phase::text;
+    ALTER TABLE ir_actions ALTER COLUMN category TYPE varchar(30) USING category::text;
+    ALTER TABLE ir_actions ALTER COLUMN responsible TYPE varchar(50) USING responsible::text;
+
+    -- ir_escalation_recipients
+    ALTER TABLE ir_escalation_recipients ALTER COLUMN contact_type TYPE varchar(30) USING contact_type::text;
+
+    -- ir_recovery_steps
+    ALTER TABLE ir_recovery_steps ALTER COLUMN responsible TYPE varchar(50) USING responsible::text;
+
+    -- ir_checklist_items
+    ALTER TABLE ir_checklist_items ALTER COLUMN category TYPE varchar(30) USING category::text;
+
+    -- ir_lessons_learned
+    ALTER TABLE ir_lessons_learned ALTER COLUMN category TYPE varchar(30) USING category::text;
+
+    -- ir_references
+    ALTER TABLE ir_references ALTER COLUMN type TYPE varchar(30) USING type::text;
+
+    -- ir_detection_indicators
+    ALTER TABLE ir_detection_indicators ALTER COLUMN type TYPE varchar(30) USING type::text;
+
+    -- Drop now-orphaned enum types
+    DROP TYPE IF EXISTS ir_series CASCADE;
+    DROP TYPE IF EXISTS ir_severity CASCADE;
+    DROP TYPE IF EXISTS ir_likelihood CASCADE;
+    DROP TYPE IF EXISTS ir_financial_risk CASCADE;
+    DROP TYPE IF EXISTS ir_action_phase CASCADE;
+    DROP TYPE IF EXISTS ir_action_category CASCADE;
+    DROP TYPE IF EXISTS ir_responsible CASCADE;
+    DROP TYPE IF EXISTS ir_contact_type CASCADE;
+    DROP TYPE IF EXISTS ir_checklist_category CASCADE;
+    DROP TYPE IF EXISTS ir_lessons_category CASCADE;
+    DROP TYPE IF EXISTS ir_reference_type CASCADE;
+    DROP TYPE IF EXISTS ir_indicator_type CASCADE;
+
+    RAISE NOTICE 'IR Playbook enum conversion complete.';
+  END IF;
+END $$;
 EOSQL
 echo "Pre-Drizzle migrations complete!"
 
@@ -124,6 +196,68 @@ echo "Pre-Drizzle migrations complete!"
 echo "Syncing database schema..."
 printf 'n\n%.0s' {1..20} | npx drizzle-kit push --force
 echo "Schema sync complete!"
+
+# ------------------------------------
+# Post-Drizzle SQL: recreate IR Playbook views
+# ------------------------------------
+echo "Recreating IR Playbook views..."
+PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=0 <<'EOSQL'
+CREATE OR REPLACE VIEW ir_scenario_summary AS
+SELECT
+  s.id, s.series, s.slug, s.title, s.emoji, s.color_hex,
+  s.severity, s.severity_label, s.likelihood,
+  s.dsgvo_relevant, s.nis2_relevant, s.financial_risk,
+  s.avg_damage_eur_min, s.avg_damage_eur_max,
+  s.tags, s.affected_systems,
+  s.deprecated_at IS NULL AS is_active,
+  COUNT(DISTINCT a.id)    AS action_count,
+  COUNT(DISTINCT CASE WHEN a.do_not THEN a.id END) AS warning_count,
+  COUNT(DISTINCT el.id)   AS escalation_levels,
+  COUNT(DISTINCT rs.id)   AS recovery_steps,
+  COUNT(DISTINCT ci.id)   AS checklist_items,
+  COUNT(DISTINCT ll.id)   AS lessons_learned_count
+FROM ir_scenarios s
+LEFT JOIN ir_actions           a  ON a.scenario_id  = s.id
+LEFT JOIN ir_escalation_levels el ON el.scenario_id = s.id
+LEFT JOIN ir_recovery_steps    rs ON rs.scenario_id = s.id
+LEFT JOIN ir_checklist_items   ci ON ci.scenario_id = s.id
+LEFT JOIN ir_lessons_learned   ll ON ll.scenario_id = s.id
+GROUP BY s.id;
+
+CREATE OR REPLACE VIEW ir_dsgvo_checklist AS
+SELECT
+  s.id AS scenario_id, s.title AS scenario_title, s.series,
+  ci.id AS item_id, ci.sequence, ci.category, ci.item, ci.mandatory
+FROM ir_checklist_items ci
+JOIN ir_scenarios s ON s.id = ci.scenario_id
+WHERE ci.dsgvo_required = TRUE
+ORDER BY s.id, ci.sequence;
+
+CREATE OR REPLACE VIEW ir_immediate_actions AS
+SELECT
+  s.id AS scenario_id, s.title AS scenario_title, s.emoji, s.severity,
+  a.id AS action_id, a.time_label, a.time_window_minutes, a.priority,
+  a.category, a.responsible, a.action, a.detail, a.do_not, a.tool_hint
+FROM ir_actions a
+JOIN ir_scenarios s ON s.id = a.scenario_id
+WHERE a.phase = 'IMMEDIATE'
+  AND (a.time_window_minutes IS NULL OR a.time_window_minutes <= 30)
+  AND s.deprecated_at IS NULL
+ORDER BY s.id, a.priority;
+
+CREATE OR REPLACE VIEW ir_bsi_control_mapping AS
+SELECT
+  ll.maps_to_control,
+  COUNT(DISTINCT ll.scenario_id) AS scenario_count,
+  ARRAY_AGG(DISTINCT s.id ORDER BY s.id) AS scenario_ids,
+  ARRAY_AGG(DISTINCT s.title ORDER BY s.title) AS scenario_titles
+FROM ir_lessons_learned ll
+JOIN ir_scenarios s ON s.id = ll.scenario_id
+WHERE ll.maps_to_control IS NOT NULL
+GROUP BY ll.maps_to_control
+ORDER BY scenario_count DESC, ll.maps_to_control;
+EOSQL
+echo "IR Playbook views ready."
 
 # ------------------------------------
 # Run seed if needed
