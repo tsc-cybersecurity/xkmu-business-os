@@ -266,21 +266,10 @@ echo "Checking if seed is needed..."
 npx tsx src/lib/db/seed-check.ts
 
 # ------------------------------------
-# Setup cron for scheduled jobs
+# Scheduled jobs: handled by src/instrumentation.ts (in-process ticker)
+# No OS-level crond required. node:20-alpine does not ship crond by default,
+# so we run the tick loop inside the Next.js server process.
 # ------------------------------------
-echo "Setting up cron jobs..."
-CRON_URL="http://localhost:3000/api/cron/tick"
-
-# Create crontab: tick every minute
-cat > /tmp/crontab <<EOCRON
-* * * * * wget -q -O /dev/null "$CRON_URL" 2>&1 | logger -t xkmu-cron
-EOCRON
-
-# Install crontab and start crond in background
-crontab /tmp/crontab
-crond -b -l 8
-rm /tmp/crontab
-echo "Cron daemon started (tick every minute)"
 
 # ------------------------------------
 # Start the application
