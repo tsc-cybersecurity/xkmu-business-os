@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -70,6 +71,28 @@ interface EmailMessage {
   leadId: string | null
   companyId: string | null
   personId: string | null
+  linkedLead?: {
+    id: string
+    title: string | null
+    contactFirstName: string | null
+    contactLastName: string | null
+    contactCompany: string | null
+    contactEmail: string | null
+    status: string | null
+  } | null
+  linkedCompany?: {
+    id: string
+    name: string
+    city: string | null
+    email: string | null
+  } | null
+  linkedPerson?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string | null
+    jobTitle: string | null
+  } | null
   bodyHtml: string | null
   bodyText: string | null
 }
@@ -323,16 +346,27 @@ export default function EmailsPage() {
         throw new Error(err?.error?.message || 'Verknuepfung fehlgeschlagen')
       }
 
-      // Update local state so the badge/chip reflects the link immediately
-      const patched: Partial<EmailMessage> = {
-        leadId: result.type === 'lead' ? result.id : selectedEmail.leadId,
-        companyId: result.type === 'company' ? result.id : selectedEmail.companyId,
-        personId: result.type === 'person' ? result.id : selectedEmail.personId,
+      // Use the API response which includes linkedLead/linkedCompany/linkedPerson
+      const body = await response.json()
+      const updated = body?.data as EmailMessage | undefined
+
+      if (updated) {
+        setSelectedEmail((prev) => (prev ? { ...prev, ...updated } : null))
+        setEmails((prev) =>
+          prev.map((e) => (e.id === selectedEmail.id ? { ...e, ...updated } : e))
+        )
+      } else {
+        // Fallback: patch just the IDs if the response was unusable
+        const patched: Partial<EmailMessage> = {
+          leadId: result.type === 'lead' ? result.id : selectedEmail.leadId,
+          companyId: result.type === 'company' ? result.id : selectedEmail.companyId,
+          personId: result.type === 'person' ? result.id : selectedEmail.personId,
+        }
+        setSelectedEmail((prev) => (prev ? { ...prev, ...patched } : null))
+        setEmails((prev) =>
+          prev.map((e) => (e.id === selectedEmail.id ? { ...e, ...patched } : e))
+        )
       }
-      setSelectedEmail((prev) => (prev ? { ...prev, ...patched } : null))
-      setEmails((prev) =>
-        prev.map((e) => (e.id === selectedEmail.id ? { ...e, ...patched } : e))
-      )
 
       toast.success(`Verknuepft mit ${result.label}`)
       setShowLinkDropdown(false)
@@ -355,10 +389,18 @@ export default function EmailsPage() {
       })
       if (!response.ok) throw new Error('Entknuepfen fehlgeschlagen')
 
-      const patched = { leadId: null, companyId: null, personId: null }
-      setSelectedEmail((prev) => (prev ? { ...prev, ...patched } : null))
+      const body = await response.json()
+      const updated = (body?.data as EmailMessage | undefined) || {
+        leadId: null,
+        companyId: null,
+        personId: null,
+        linkedLead: null,
+        linkedCompany: null,
+        linkedPerson: null,
+      }
+      setSelectedEmail((prev) => (prev ? { ...prev, ...updated } : null))
       setEmails((prev) =>
-        prev.map((e) => (e.id === selectedEmail.id ? { ...e, ...patched } : e))
+        prev.map((e) => (e.id === selectedEmail.id ? { ...e, ...updated } : e))
       )
       toast.success('Verknuepfung entfernt')
     } catch (error) {
@@ -634,25 +676,92 @@ export default function EmailsPage() {
                     {/* Link to entity */}
                     <div className="mt-3 relative">
                       {(selectedEmail.leadId || selectedEmail.companyId || selectedEmail.personId) && (
-                        <div className="flex flex-wrap items-center gap-2 mb-2">
-                          <span className="text-xs text-muted-foreground">Verknuepft:</span>
-                          {selectedEmail.leadId && (
-                            <Badge variant="secondary" className="text-xs">Lead</Badge>
+                        <div className="mb-2 space-y-1.5 rounded-md border bg-muted/30 p-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-muted-foreground">Verknuepft mit</span>
+                            <button
+                              type="button"
+                              onClick={handleUnlink}
+                              className="text-xs text-muted-foreground hover:text-destructive"
+                              title="Verknuepfung entfernen"
+                            >
+                              entfernen
+                            </button>
+                          </div>
+
+                          {selectedEmail.linkedLead && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Badge variant="secondary" className="text-xs shrink-0">Lead</Badge>
+                              <Link
+                                href={`/intern/leads/${selectedEmail.linkedLead.id}`}
+                                className="flex flex-col hover:underline"
+                              >
+                                <span className="font-medium">
+                                  {selectedEmail.linkedLead.title ||
+                                    [selectedEmail.linkedLead.contactFirstName, selectedEmail.linkedLead.contactLastName]
+                                      .filter(Boolean)
+                                      .join(' ') ||
+                                    selectedEmail.linkedLead.contactCompany ||
+                                    selectedEmail.linkedLead.contactEmail ||
+                                    'Lead'}
+                                </span>
+                                {(selectedEmail.linkedLead.contactCompany || selectedEmail.linkedLead.contactEmail) && (
+                                  <span className="text-muted-foreground">
+                                    {[selectedEmail.linkedLead.contactCompany, selectedEmail.linkedLead.contactEmail]
+                                      .filter(Boolean)
+                                      .join(' — ')}
+                                  </span>
+                                )}
+                              </Link>
+                              {selectedEmail.linkedLead.status && (
+                                <Badge variant="outline" className="ml-auto text-[10px]">
+                                  {selectedEmail.linkedLead.status}
+                                </Badge>
+                              )}
+                            </div>
                           )}
-                          {selectedEmail.companyId && (
-                            <Badge variant="secondary" className="text-xs">Firma</Badge>
+
+                          {selectedEmail.linkedCompany && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Badge variant="secondary" className="text-xs shrink-0">Firma</Badge>
+                              <Link
+                                href={`/intern/contacts/companies/${selectedEmail.linkedCompany.id}`}
+                                className="flex flex-col hover:underline"
+                              >
+                                <span className="font-medium">{selectedEmail.linkedCompany.name}</span>
+                                {(selectedEmail.linkedCompany.city || selectedEmail.linkedCompany.email) && (
+                                  <span className="text-muted-foreground">
+                                    {[selectedEmail.linkedCompany.city, selectedEmail.linkedCompany.email]
+                                      .filter(Boolean)
+                                      .join(' — ')}
+                                  </span>
+                                )}
+                              </Link>
+                            </div>
                           )}
-                          {selectedEmail.personId && (
-                            <Badge variant="secondary" className="text-xs">Person</Badge>
+
+                          {selectedEmail.linkedPerson && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <Badge variant="secondary" className="text-xs shrink-0">Person</Badge>
+                              <Link
+                                href={`/intern/contacts/persons/${selectedEmail.linkedPerson.id}`}
+                                className="flex flex-col hover:underline"
+                              >
+                                <span className="font-medium">
+                                  {[selectedEmail.linkedPerson.firstName, selectedEmail.linkedPerson.lastName]
+                                    .filter(Boolean)
+                                    .join(' ')}
+                                </span>
+                                {(selectedEmail.linkedPerson.jobTitle || selectedEmail.linkedPerson.email) && (
+                                  <span className="text-muted-foreground">
+                                    {[selectedEmail.linkedPerson.jobTitle, selectedEmail.linkedPerson.email]
+                                      .filter(Boolean)
+                                      .join(' — ')}
+                                  </span>
+                                )}
+                              </Link>
+                            </div>
                           )}
-                          <button
-                            type="button"
-                            onClick={handleUnlink}
-                            className="text-xs text-muted-foreground hover:text-destructive"
-                            title="Verknuepfung entfernen"
-                          >
-                            entfernen
-                          </button>
                         </div>
                       )}
                       <div className="flex items-center gap-2">

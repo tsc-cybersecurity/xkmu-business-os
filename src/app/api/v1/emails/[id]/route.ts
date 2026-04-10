@@ -3,29 +3,64 @@ import { apiSuccess, apiNotFound, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 import { db } from '@/lib/db'
-import { emails } from '@/lib/db/schema'
+import { emails, leads, companies, persons } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
 interface RouteParams {
   params: Promise<{ id: string }>
 }
 
-// GET /api/v1/emails/[id] - Get single email with full body
+// GET /api/v1/emails/[id] - Get single email with full body + linked entities
 export async function GET(request: NextRequest, { params }: RouteParams) {
   return withPermission(request, 'settings', 'read', async () => {
     const { id } = await params
 
     try {
-      const [email] = await db
-        .select()
+      const [row] = await db
+        .select({
+          email: emails,
+          lead: {
+            id: leads.id,
+            title: leads.title,
+            contactFirstName: leads.contactFirstName,
+            contactLastName: leads.contactLastName,
+            contactCompany: leads.contactCompany,
+            contactEmail: leads.contactEmail,
+            status: leads.status,
+          },
+          company: {
+            id: companies.id,
+            name: companies.name,
+            city: companies.city,
+            email: companies.email,
+          },
+          person: {
+            id: persons.id,
+            firstName: persons.firstName,
+            lastName: persons.lastName,
+            email: persons.email,
+            jobTitle: persons.jobTitle,
+          },
+        })
         .from(emails)
+        .leftJoin(leads, eq(emails.leadId, leads.id))
+        .leftJoin(companies, eq(emails.companyId, companies.id))
+        .leftJoin(persons, eq(emails.personId, persons.id))
         .where(eq(emails.id, id))
 
-      if (!email) {
+      if (!row) {
         return apiNotFound('Email not found')
       }
 
-      return apiSuccess(email)
+      // Flatten: merge email fields + nullable linkedLead/linkedCompany/linkedPerson
+      const result = {
+        ...row.email,
+        linkedLead: row.lead?.id ? row.lead : null,
+        linkedCompany: row.company?.id ? row.company : null,
+        linkedPerson: row.person?.id ? row.person : null,
+      }
+
+      return apiSuccess(result)
     } catch (error) {
       logger.error('Failed to get email', error, { module: 'EmailsAPI' })
       return apiError('INTERNAL_ERROR', 'Failed to get email', 500)
@@ -64,7 +99,49 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         return apiNotFound('Email not found')
       }
 
-      return apiSuccess(updated)
+      // Re-fetch with joins so the client gets fresh linkedLead/linkedCompany/linkedPerson
+      const [row] = await db
+        .select({
+          email: emails,
+          lead: {
+            id: leads.id,
+            title: leads.title,
+            contactFirstName: leads.contactFirstName,
+            contactLastName: leads.contactLastName,
+            contactCompany: leads.contactCompany,
+            contactEmail: leads.contactEmail,
+            status: leads.status,
+          },
+          company: {
+            id: companies.id,
+            name: companies.name,
+            city: companies.city,
+            email: companies.email,
+          },
+          person: {
+            id: persons.id,
+            firstName: persons.firstName,
+            lastName: persons.lastName,
+            email: persons.email,
+            jobTitle: persons.jobTitle,
+          },
+        })
+        .from(emails)
+        .leftJoin(leads, eq(emails.leadId, leads.id))
+        .leftJoin(companies, eq(emails.companyId, companies.id))
+        .leftJoin(persons, eq(emails.personId, persons.id))
+        .where(eq(emails.id, id))
+
+      const result = row
+        ? {
+            ...row.email,
+            linkedLead: row.lead?.id ? row.lead : null,
+            linkedCompany: row.company?.id ? row.company : null,
+            linkedPerson: row.person?.id ? row.person : null,
+          }
+        : updated
+
+      return apiSuccess(result)
     } catch (error) {
       logger.error('Failed to update email', error, { module: 'EmailsAPI' })
       return apiError('INTERNAL_ERROR', 'Failed to update email', 500)
