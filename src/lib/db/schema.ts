@@ -1389,10 +1389,10 @@ export const irEscalationLevels = pgTable('ir_escalation_levels', {
   id: varchar('id', { length: 15 }).primaryKey(),
   scenarioId: varchar('scenario_id', { length: 10 }).notNull().references(() => irScenarios.id, { onDelete: 'cascade' }),
   level: smallint('level').notNull(),
-  label: varchar('label', { length: 100 }).notNull(),
+  label: varchar('label', { length: 500 }).notNull(),
   colorHex: char('color_hex', { length: 6 }),
   deadlineHours: numeric('deadline_hours', { precision: 6, scale: 2 }),
-  condition: varchar('condition', { length: 200 }),
+  condition: varchar('condition', { length: 500 }),
 })
 
 // ============================================

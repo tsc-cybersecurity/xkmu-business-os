@@ -198,51 +198,108 @@ export function generateIrPlaybookPdf(scenario: any): jsPDF {
   }
 
   // ============================================
-  // SECTION 2: Meldewege (Escalation Table)
+  // SECTION 2: Meldewege (Escalation List)
   // ============================================
   if (escalation.length > 0) {
-    y = checkPageBreak(doc, y, 40, pageWidth)
+    y = checkPageBreak(doc, y, 30, pageWidth)
     y = addSectionTitle(doc, '2. Meldewege', y)
 
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(...GRAY)
     doc.text('Informationskaskade \u2014 zeitkritische Abfolge:', MARGIN, y)
-    y += 4
+    y += 6
 
-    // Build escalation table
     const escSorted = [...escalation].sort((a, b) => (a.level || 0) - (b.level || 0))
-    const maxRecipients = Math.max(...escSorted.map((e: any) => e.recipients?.length || 0), 1)
+    const LINE_H = 4.5
+    const INDENT_LABEL = 22 // width reserved for "Auslöser:" / "Aktion:" etc.
 
-    const head = escSorted.map((e: any) => {
-      const deadline = e.deadline_hours != null ? ` \u2014 ${e.deadline_hours} Std.` : ''
-      const label = e.label || `Stufe ${e.level}`
-      return `${label}${deadline}`
-    })
+    for (const e of escSorted) {
+      // Parse label which may contain "trigger -> action" from importer
+      const rawLabel: string = (e.label as string) || `Stufe ${e.level}`
+      // Accept both ASCII "->" and unicode "\u2192" as separator
+      const parts = rawLabel.split(/\s*(?:\u2192|->)\s*/)
+      const triggerText = parts[0] || ''
+      const actionText = parts.slice(1).join(' -> ') || ''
 
-    const bodyRows: string[][] = []
-    for (let ri = 0; ri < maxRecipients; ri++) {
-      const row = escSorted.map((e: any) => {
-        const recipient = e.recipients?.[ri]
-        if (!recipient) return ''
-        // Use human-readable role name, fall back to RESPONSIBLE_LABELS for enum values
-        let text = RESPONSIBLE_LABELS[recipient.role] || recipient.role || ''
-        if (recipient.legal_basis) text += ` (${recipient.legal_basis})`
-        return text
-      })
-      bodyRows.push(row)
+      // Level header bar
+      y = checkPageBreak(doc, y, 18, pageWidth)
+      const deadline = e.deadline_hours != null ? `  (${e.deadline_hours} Std.)` : ''
+      const headerText = `Stufe ${e.level || '?'}${deadline}`
+
+      doc.setFillColor(...HEADER_COLOR)
+      doc.rect(MARGIN, y - 3.5, contentWidth, 5.5, 'F')
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(255, 255, 255)
+      doc.text(headerText, MARGIN + 3, y + 0.5)
+      y += 6
+
+      doc.setFontSize(9)
+      doc.setTextColor(...DARK)
+      const textWidth = contentWidth - INDENT_LABEL - 4
+
+      // Auslöser
+      if (triggerText) {
+        doc.setFont('helvetica', 'bold')
+        doc.text('Ausloeser:', MARGIN + 3, y)
+        doc.setFont('helvetica', 'normal')
+        const lines = doc.splitTextToSize(triggerText, textWidth)
+        doc.text(lines, MARGIN + INDENT_LABEL, y)
+        const used = Math.max(1, lines.length)
+        y += used * LINE_H
+        y = checkPageBreak(doc, y, 6, pageWidth)
+      }
+
+      // Aktion
+      if (actionText) {
+        doc.setFont('helvetica', 'bold')
+        doc.text('Aktion:', MARGIN + 3, y)
+        doc.setFont('helvetica', 'normal')
+        const lines = doc.splitTextToSize(actionText, textWidth)
+        doc.text(lines, MARGIN + INDENT_LABEL, y)
+        const used = Math.max(1, lines.length)
+        y += used * LINE_H
+        y = checkPageBreak(doc, y, 6, pageWidth)
+      }
+
+      // Bedingung
+      if (e.condition) {
+        doc.setFont('helvetica', 'bold')
+        doc.text('Bedingung:', MARGIN + 3, y)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(...GRAY)
+        const lines = doc.splitTextToSize(String(e.condition), textWidth)
+        doc.text(lines, MARGIN + INDENT_LABEL, y)
+        const used = Math.max(1, lines.length)
+        y += used * LINE_H
+        doc.setTextColor(...DARK)
+        y = checkPageBreak(doc, y, 6, pageWidth)
+      }
+
+      // Empfänger (falls vorhanden)
+      const recipients = (e.recipients || []) as any[]
+      if (recipients.length > 0) {
+        doc.setFont('helvetica', 'bold')
+        doc.text('Empfaenger:', MARGIN + 3, y)
+        doc.setFont('helvetica', 'normal')
+        let firstLine = true
+        for (const r of recipients) {
+          let text = RESPONSIBLE_LABELS[r.role] || r.role || ''
+          if (r.legal_basis) text += ` (${r.legal_basis})`
+          const lines = doc.splitTextToSize('\u2022 ' + text, textWidth)
+          const xStart = firstLine ? MARGIN + INDENT_LABEL : MARGIN + INDENT_LABEL
+          doc.text(lines, xStart, y)
+          y += Math.max(1, lines.length) * LINE_H
+          y = checkPageBreak(doc, y, 6, pageWidth)
+          firstLine = false
+        }
+      }
+
+      y += 3 // spacing between levels
     }
 
-    autoTable(doc, {
-      startY: y,
-      head: [head],
-      body: bodyRows,
-      margin: { left: MARGIN, right: MARGIN },
-      styles: { fontSize: 8, cellPadding: 3, overflow: 'linebreak' },
-      headStyles: { fillColor: [...HEADER_COLOR], textColor: [255, 255, 255], fontStyle: 'bold' },
-    })
-
-    y = (doc as any).lastAutoTable.finalY + 8
+    y += 4
   }
 
   // ============================================

@@ -265,8 +265,9 @@ export const IrPlaybookService = {
         const level = (e.level as number) || 1
         const trigger = (e.trigger as string) || ''
         const actionText = (e.action as string) || ''
-        const label = [trigger, actionText].filter(Boolean).join(' → ').substring(0, 100) || `Level ${level}`
-        const condition = (e.condition as string) || null
+        // ASCII arrow so jsPDF helvetica can render and the PDF parser can split
+        const label = [trigger, actionText].filter(Boolean).join(' -> ').substring(0, 500) || `Level ${level}`
+        const condition = ((e.condition as string) || '').substring(0, 500) || null
 
         await db.execute(sql`
           INSERT INTO ir_escalation_levels (id, scenario_id, level, label, condition)
