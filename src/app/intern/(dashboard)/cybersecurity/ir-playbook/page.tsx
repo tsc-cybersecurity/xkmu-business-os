@@ -651,8 +651,17 @@ export default function IrPlaybookPage() {
   const [importing, setImporting] = useState(false)
 
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [severity, setSeverity] = useState('all')
   const [dsgvoOnly, setDsgvoOnly] = useState(false)
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+
+  // Debounce the search input by 300ms so the scenario list doesn't refetch
+  // on every keystroke (and the sidebar doesn't flicker/lose focus).
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   // Layout state
   const [showSidebar, setShowSidebar] = useState(true)
@@ -666,7 +675,7 @@ export default function IrPlaybookPage() {
     try {
       setLoading(true)
       const params = new URLSearchParams()
-      if (search) params.set('search', search)
+      if (debouncedSearch) params.set('search', debouncedSearch)
       if (severity !== 'all') params.set('severity', severity)
       if (dsgvoOnly) params.set('dsgvo', 'true')
 
@@ -679,8 +688,9 @@ export default function IrPlaybookPage() {
       toast.error('Fehler beim Laden der Szenarien')
     } finally {
       setLoading(false)
+      setHasLoadedOnce(true)
     }
-  }, [search, severity, dsgvoOnly])
+  }, [debouncedSearch, severity, dsgvoOnly])
 
   const fetchStats = useCallback(async () => {
     try {
@@ -786,7 +796,10 @@ export default function IrPlaybookPage() {
   // Sort scenarios by ID (S-001, S-002, ...)
   const sortedScenarios = [...scenarios].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
 
-  if (loading) {
+  // Full-screen spinner ONLY on initial load. Subsequent refreshes (filter
+  // changes, search) keep the UI mounted so the search input doesn't lose
+  // focus on every keystroke.
+  if (loading && !hasLoadedOnce) {
     return (
       <div className="flex items-center justify-center py-16">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -794,7 +807,7 @@ export default function IrPlaybookPage() {
     )
   }
 
-  if (scenarios.length === 0) {
+  if (scenarios.length === 0 && !debouncedSearch && severity === 'all' && !dsgvoOnly) {
     return (
       <div className="space-y-6 p-6">
         <div className="flex items-center gap-3">
@@ -888,7 +901,17 @@ export default function IrPlaybookPage() {
           </div>
 
           {/* Scenario List (sorted by ID) */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto relative">
+            {loading && (
+              <div className="absolute right-3 top-2 z-10">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+            {sortedScenarios.length === 0 && !loading && (
+              <div className="px-4 py-6 text-center text-xs text-muted-foreground">
+                Keine Szenarien gefunden
+              </div>
+            )}
             {sortedScenarios.map((s) => (
               <button
                 key={s.id}
