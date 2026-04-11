@@ -10,8 +10,11 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
@@ -113,6 +116,10 @@ export default function TaskQueuePage() {
   const [totalPages, setTotalPages] = useState(1)
   const [serverStats, setServerStats] = useState<ServerStats | null>(null)
 
+  // Bulk delete confirmation dialog
+  const [bulkDeleteScope, setBulkDeleteScope] = useState<'all' | 'older-than' | 'without-error' | null>(null)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+
   const fetchItems = useCallback(async () => {
     try {
       const params = new URLSearchParams({
@@ -211,6 +218,30 @@ export default function TaskQueuePage() {
     }
   }
 
+  const confirmBulkDelete = async () => {
+    if (!bulkDeleteScope) return
+    setBulkDeleting(true)
+    try {
+      const response = await fetch(`/api/v1/task-queue?scope=${bulkDeleteScope}`, {
+        method: 'DELETE',
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast.success(`${data.data.deleted} Task(s) gelöscht`)
+        setSelected(new Set())
+        setPage(1)
+        fetchItems()
+      } else {
+        toast.error(data?.error?.message || 'Löschen fehlgeschlagen')
+      }
+    } catch {
+      toast.error('Löschen fehlgeschlagen')
+    } finally {
+      setBulkDeleting(false)
+      setBulkDeleteScope(null)
+    }
+  }
+
   const savePayload = async () => {
     if (!editItem) return
     try {
@@ -264,6 +295,31 @@ export default function TaskQueuePage() {
           <Button variant="outline" size="icon" onClick={fetchItems} title="Aktualisieren">
             <RefreshCcw className="h-4 w-4" />
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" disabled={stats.total === 0}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Aufräumen
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuItem onClick={() => setBulkDeleteScope('older-than')}>
+                <Clock className="h-4 w-4 mr-2" />
+                Älter als 24 Stunden
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBulkDeleteScope('without-error')}>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Alle ohne Fehler
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setBulkDeleteScope('all')}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Alle löschen
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" onClick={executeSelected} disabled={selected.size === 0 || executing}>
             {executing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
             Ausgewählte ({selected.size})
@@ -518,6 +574,58 @@ export default function TaskQueuePage() {
           </div>
         </div>
       )}
+
+      {/* Bulk Delete Confirmation */}
+      <Dialog open={bulkDeleteScope !== null} onOpenChange={(open) => { if (!open) setBulkDeleteScope(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tasks löschen</DialogTitle>
+            <DialogDescription>
+              {bulkDeleteScope === 'all' && (
+                <>
+                  Möchtest du <strong>alle {stats.total} Tasks</strong> dieses Tenants
+                  unwiderruflich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+                </>
+              )}
+              {bulkDeleteScope === 'older-than' && (
+                <>
+                  Möchtest du alle Tasks löschen, die <strong>älter als 24 Stunden</strong> sind?
+                  Neuere Tasks bleiben unberührt.
+                </>
+              )}
+              {bulkDeleteScope === 'without-error' && (
+                <>
+                  Möchtest du alle Tasks <strong>ohne Fehler</strong> löschen
+                  (erledigt, wartend, läuft, storniert)? Fehlgeschlagene Tasks
+                  bleiben für die Fehleranalyse erhalten.
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDeleteScope(null)} disabled={bulkDeleting}>
+              Abbrechen
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmBulkDelete}
+              disabled={bulkDeleting}
+            >
+              {bulkDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Lösche...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Löschen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Payload Dialog */}
       <Dialog open={!!editItem} onOpenChange={(open) => { if (!open) setEditItem(null) }}>

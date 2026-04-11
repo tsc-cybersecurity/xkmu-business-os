@@ -6,7 +6,7 @@
 import { db } from '@/lib/db'
 import { taskQueue } from '@/lib/db/schema'
 import type { TaskQueueItem, NewTaskQueueItem } from '@/lib/db/schema'
-import { eq, and, asc, desc, count, lte, inArray } from 'drizzle-orm'
+import { eq, ne, and, asc, desc, count, lte, inArray } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
 export interface TaskQueueFilters {
@@ -117,6 +117,45 @@ export const TaskQueueService = {
       .where(and(eq(taskQueue.tenantId, tenantId), eq(taskQueue.id, id)))
       .returning({ id: taskQueue.id })
     return result.length > 0
+  },
+
+  /**
+   * Bulk-delete tasks for the given tenant.
+   *
+   * scope:
+   *  - 'all'           → every task in the tenant (use with care)
+   *  - 'older-than'    → tasks whose createdAt is older than maxAgeMs
+   *  - 'without-error' → tasks whose status is not 'failed' (i.e. completed,
+   *                       cancelled, pending, running with no error column).
+   *                       Useful for clearing successful runs while keeping
+   *                       failures around for debugging.
+   */
+  async deleteBulk(
+    tenantId: string,
+    scope: 'all' | 'older-than' | 'without-error',
+    options: { maxAgeMs?: number } = {}
+  ): Promise<number> {
+    const conditions = [eq(taskQueue.tenantId, tenantId)]
+
+    if (scope === 'older-than') {
+      const maxAgeMs = options.maxAgeMs ?? 24 * 60 * 60 * 1000
+      const cutoff = new Date(Date.now() - maxAgeMs)
+      conditions.push(lte(taskQueue.createdAt, cutoff))
+    } else if (scope === 'without-error') {
+      conditions.push(ne(taskQueue.status, 'failed'))
+    }
+    // scope === 'all' has no extra condition beyond tenantId
+
+    const result = await db
+      .delete(taskQueue)
+      .where(and(...conditions))
+      .returning({ id: taskQueue.id })
+
+    logger.info(
+      `Bulk deleted ${result.length} task(s) (scope=${scope}) for tenant ${tenantId}`,
+      { module: 'TaskQueue' }
+    )
+    return result.length
   },
 
   async execute(tenantId: string, id: string): Promise<TaskQueueItem | null> {

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
+import { apiSuccess, apiServerError, apiError } from '@/lib/utils/api-response'
 import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { withPermission } from '@/lib/auth/require-permission'
 
@@ -44,6 +44,39 @@ export async function POST(request: NextRequest) {
         referenceId: body.referenceId,
       })
       return apiSuccess(item, undefined, 201)
+    } catch {
+      return apiServerError()
+    }
+  })
+}
+
+// DELETE /api/v1/task-queue?scope=all|older-than|without-error
+//
+// Bulk delete. The scope query param controls which tasks are removed:
+//   - all           → every task in the tenant
+//   - older-than    → tasks created more than 24h ago (override via maxAgeHours)
+//   - without-error → every task whose status is not 'failed'
+//
+// Returns { deleted: number }.
+export async function DELETE(request: NextRequest) {
+  return withPermission(request, 'settings', 'delete', async (auth) => {
+    try {
+      const { searchParams } = new URL(request.url)
+      const scope = searchParams.get('scope')
+
+      if (scope !== 'all' && scope !== 'older-than' && scope !== 'without-error') {
+        return apiError(
+          'INVALID_SCOPE',
+          'scope must be one of: all, older-than, without-error',
+          400
+        )
+      }
+
+      const maxAgeHours = parseInt(searchParams.get('maxAgeHours') || '24', 10) || 24
+      const maxAgeMs = Math.max(1, maxAgeHours) * 60 * 60 * 1000
+
+      const deleted = await TaskQueueService.deleteBulk(auth.tenantId, scope, { maxAgeMs })
+      return apiSuccess({ deleted })
     } catch {
       return apiServerError()
     }
