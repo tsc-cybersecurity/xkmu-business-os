@@ -84,6 +84,17 @@ function getReferenceLink(item: QueueItem): string | null {
   return null
 }
 
+interface ServerStats {
+  total: number
+  pending: number
+  running: number
+  completed: number
+  failed: number
+  cancelled: number
+}
+
+const PAGE_SIZE_OPTIONS = [50, 100, 200, 500]
+
 export default function TaskQueuePage() {
   const [items, setItems] = useState<QueueItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,22 +106,45 @@ export default function TaskQueuePage() {
   const [editItem, setEditItem] = useState<QueueItem | null>(null)
   const [editPayload, setEditPayload] = useState('')
 
+  // Pagination state
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(100)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [serverStats, setServerStats] = useState<ServerStats | null>(null)
+
   const fetchItems = useCallback(async () => {
     try {
-      const params = new URLSearchParams({ limit: '100' })
+      const params = new URLSearchParams({
+        limit: String(pageSize),
+        page: String(page),
+      })
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (typeFilter !== 'all') params.set('type', typeFilter)
       const response = await fetch(`/api/v1/task-queue?${params}`)
       const data = await response.json()
-      if (data.success) setItems(data.data)
+      if (data.success) {
+        setItems(data.data)
+        if (data.meta) {
+          setTotalCount(Number(data.meta.total) || 0)
+          setTotalPages(Number(data.meta.totalPages) || 1)
+          if (data.meta.stats) setServerStats(data.meta.stats as ServerStats)
+        }
+      }
     } catch {
       toast.error('Tasks konnten nicht geladen werden')
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, typeFilter])
+  }, [statusFilter, typeFilter, page, pageSize])
 
   useEffect(() => { fetchItems() }, [fetchItems])
+
+  // Reset to page 1 when filters or page-size change so we don't end up
+  // on an out-of-range page after narrowing the result set.
+  useEffect(() => {
+    setPage(1)
+  }, [statusFilter, typeFilter, pageSize])
 
   const toggleSelect = (id: string) => {
     setSelected(prev => {
@@ -195,12 +229,16 @@ export default function TaskQueuePage() {
   }
 
   const types = [...new Set(items.map(i => i.type))].sort()
+  // Pending count for "Alle ausführen" still has to come from the current
+  // page (executeAll only operates on what the user sees / filters allow).
   const pendingCount = items.filter(i => i.status === 'pending').length
-  const stats = {
-    total: items.length,
-    pending: items.filter(i => i.status === 'pending').length,
-    completed: items.filter(i => i.status === 'completed').length,
-    failed: items.filter(i => i.status === 'failed').length,
+  // Stats cards show TENANT-WIDE totals from the server, not just the current
+  // page — otherwise users with >100 tasks saw misleading counts.
+  const stats = serverStats ?? {
+    total: 0,
+    pending: 0,
+    completed: 0,
+    failed: 0,
   }
 
   if (loading) {
@@ -433,6 +471,53 @@ export default function TaskQueuePage() {
           )
         })}
       </div>
+
+      {/* Pagination footer */}
+      {totalCount > 0 && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-t pt-4">
+          <div className="text-sm text-muted-foreground">
+            {totalCount === 0
+              ? 'Keine Einträge'
+              : `Zeige ${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, totalCount)} von ${totalCount}`}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Pro Seite:</span>
+              <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                <SelectTrigger className="h-8 w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page <= 1}
+              >
+                Zurück
+              </Button>
+              <span className="text-xs text-muted-foreground px-2">
+                Seite {page} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page >= totalPages}
+              >
+                Weiter
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Payload Dialog */}
       <Dialog open={!!editItem} onOpenChange={(open) => { if (!open) setEditItem(null) }}>

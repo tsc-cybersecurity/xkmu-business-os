@@ -29,19 +29,44 @@ export const TaskQueueService = {
 
     const whereClause = and(...conditions)
 
-    const [items, [{ total }]] = await Promise.all([
+    // Stats are tenant-scoped but unaffected by status/type filters so the
+    // counter cards always show the total picture, not just the current page.
+    const tenantOnlyWhere = eq(taskQueue.tenantId, tenantId)
+
+    const [items, [{ total }], statsRows] = await Promise.all([
       db.select()
         .from(taskQueue)
         .where(whereClause!)
-        .orderBy(asc(taskQueue.priority), asc(taskQueue.scheduledFor))
+        .orderBy(desc(taskQueue.createdAt))
         .limit(limit)
         .offset(offset),
       db.select({ total: count() }).from(taskQueue).where(whereClause!),
+      db.select({ status: taskQueue.status, count: count() })
+        .from(taskQueue)
+        .where(tenantOnlyWhere)
+        .groupBy(taskQueue.status),
     ])
+
+    const stats = {
+      total: 0,
+      pending: 0,
+      running: 0,
+      completed: 0,
+      failed: 0,
+      cancelled: 0,
+    }
+    for (const row of statsRows) {
+      const n = Number(row.count)
+      stats.total += n
+      if (row.status && row.status in stats) {
+        ;(stats as Record<string, number>)[row.status] = n
+      }
+    }
 
     return {
       items,
       meta: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) },
+      stats,
     }
   },
 

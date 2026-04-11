@@ -2,22 +2,31 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { parsePaginationParams } from '@/lib/utils/api-response'
 
 // GET /api/v1/task-queue - List tasks with filters
+//
+// Note: this endpoint uses its own pagination parsing instead of the global
+// parsePaginationParams() helper because the task queue is a log/history
+// view and the user may legitimately want to see hundreds of entries on a
+// single page. Cap is 500 here vs. 100 in the global helper.
 export async function GET(request: NextRequest) {
   return withPermission(request, 'settings', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
-    const pagination = parsePaginationParams(searchParams)
+
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
+    const rawLimit = parseInt(searchParams.get('limit') || '100', 10) || 100
+    const limit = Math.max(1, Math.min(rawLimit, 500))
+
     const status = searchParams.get('status') || undefined
     const type = searchParams.get('type') || undefined
 
     const result = await TaskQueueService.list(auth.tenantId, {
-      ...pagination,
+      page,
+      limit,
       status,
       type,
     })
-    return apiSuccess(result.items, result.meta)
+    return apiSuccess(result.items, { ...result.meta, stats: result.stats })
   })
 }
 

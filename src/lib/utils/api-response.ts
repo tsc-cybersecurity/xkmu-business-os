@@ -8,6 +8,9 @@ export interface ApiSuccessResponse<T> {
     limit?: number
     total?: number
     totalPages?: number
+    // Endpoint-specific extras (e.g. aggregated stats for the task queue).
+    // Kept as a loose record so individual routes can attach what they need.
+    [key: string]: unknown
   }
 }
 
