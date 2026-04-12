@@ -2922,3 +2922,269 @@ export const cronJobs = pgTable('cron_jobs', {
 
 export type CronJob = typeof cronJobs.$inferSelect
 export type NewCronJob = typeof cronJobs.$inferInsert
+
+// ============================================
+// Management Framework: EOS – Vision/Traction Organizer
+// ============================================
+export const vto = pgTable('vto', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  coreValues: text('core_values').array().default([]),
+  purposeNiche: jsonb('purpose_niche').default({}),
+  tenYearTarget: text('ten_year_target'),
+  marketingStrategy: jsonb('marketing_strategy').default({}),
+  threeYearPicture: jsonb('three_year_picture').default({}),
+  oneYearPlan: jsonb('one_year_plan').default({}),
+  isActive: boolean('is_active').default(true),
+  updatedBy: uuid('updated_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_vto_tenant').on(table.tenantId),
+])
+
+// ============================================
+// Management Framework: EOS – Rocks (Quartalsprioritäten)
+// ============================================
+export const rocks = pgTable('rocks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  quarter: varchar('quarter', { length: 10 }).notNull(),
+  dueDate: timestamp('due_date', { withTimezone: true }),
+  status: varchar('status', { length: 20 }).default('on-track'),
+  linkedObjectiveIds: uuid('linked_objective_ids').array().default([]),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_rocks_tenant').on(table.tenantId),
+  index('idx_rocks_quarter').on(table.tenantId, table.quarter),
+])
+
+export const rockMilestones = pgTable('rock_milestones', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  rockId: uuid('rock_id').notNull().references(() => rocks.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  dueDate: timestamp('due_date', { withTimezone: true }),
+  completed: boolean('completed').default(false),
+  sequence: integer('sequence').default(0),
+})
+
+// ============================================
+// Management Framework: EOS – Scorecard
+// ============================================
+export const scorecardMetrics = pgTable('scorecard_metrics', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 150 }).notNull(),
+  ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  goal: numeric('goal', { precision: 15, scale: 2 }),
+  unit: varchar('unit', { length: 20 }).default('Stk'),
+  frequency: varchar('frequency', { length: 20 }).default('weekly'),
+  isActive: boolean('is_active').default(true),
+  sequence: integer('sequence').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_scorecard_metrics_tenant').on(table.tenantId),
+])
+
+export const scorecardEntries = pgTable('scorecard_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  metricId: uuid('metric_id').notNull().references(() => scorecardMetrics.id, { onDelete: 'cascade' }),
+  week: varchar('week', { length: 10 }).notNull(),
+  actual: numeric('actual', { precision: 15, scale: 2 }),
+  note: text('note'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_scorecard_entries_metric_week').on(table.metricId, table.week),
+])
+
+// ============================================
+// Management Framework: EOS – Issues (IDS-Liste)
+// ============================================
+export const eosIssues = pgTable('eos_issues', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  priority: varchar('priority', { length: 10 }).default('medium'),
+  status: varchar('status', { length: 20 }).default('open'),
+  createdBy: uuid('created_by').references(() => users.id),
+  solution: text('solution'),
+  solvedAt: timestamp('solved_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_eos_issues_tenant').on(table.tenantId),
+  index('idx_eos_issues_status').on(table.tenantId, table.status),
+])
+
+// ============================================
+// Management Framework: EOS – Meeting Sessions (L10)
+// ============================================
+export const meetingSessions = pgTable('meeting_sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).default('L10 Meeting'),
+  meetingDate: timestamp('meeting_date', { withTimezone: true }).defaultNow(),
+  status: varchar('status', { length: 20 }).default('open'),
+  attendees: uuid('attendees').array().default([]),
+  agenda: jsonb('agenda').default([]),
+  notes: text('notes'),
+  issuesDiscussed: uuid('issues_discussed').array().default([]),
+  todoItems: jsonb('todo_items').default([]),
+  closedAt: timestamp('closed_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_meeting_sessions_tenant').on(table.tenantId),
+  index('idx_meeting_sessions_date').on(table.tenantId, table.meetingDate),
+])
+
+// ============================================
+// Management Framework: OKR – Zyklen
+// ============================================
+export const okrCycles = pgTable('okr_cycles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  type: varchar('type', { length: 20 }).default('quarterly'),
+  startDate: timestamp('start_date', { withTimezone: true }).notNull(),
+  endDate: timestamp('end_date', { withTimezone: true }).notNull(),
+  isActive: boolean('is_active').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_okr_cycles_tenant').on(table.tenantId),
+  index('idx_okr_cycles_active').on(table.tenantId, table.isActive),
+])
+
+// ============================================
+// Management Framework: OKR – Objectives
+// ============================================
+export const okrObjectives = pgTable('okr_objectives', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  cycleId: uuid('cycle_id').notNull().references(() => okrCycles.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 20 }).default('active'),
+  linkedRockIds: uuid('linked_rock_ids').array().default([]),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_okr_objectives_cycle').on(table.cycleId),
+  index('idx_okr_objectives_tenant').on(table.tenantId),
+])
+
+// ============================================
+// Management Framework: OKR – Key Results
+// ============================================
+export const okrKeyResults = pgTable('okr_key_results', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  objectiveId: uuid('objective_id').notNull().references(() => okrObjectives.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  startValue: numeric('start_value', { precision: 15, scale: 2 }).default('0'),
+  targetValue: numeric('target_value', { precision: 15, scale: 2 }).notNull(),
+  currentValue: numeric('current_value', { precision: 15, scale: 2 }).default('0'),
+  unit: varchar('unit', { length: 30 }).default('%'),
+  confidence: smallint('confidence').default(1),
+  sequence: integer('sequence').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_okr_kr_objective').on(table.objectiveId),
+])
+
+// ============================================
+// Management Framework: OKR – Check-ins
+// ============================================
+export const okrCheckins = pgTable('okr_checkins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  keyResultId: uuid('key_result_id').notNull().references(() => okrKeyResults.id, { onDelete: 'cascade' }),
+  value: numeric('value', { precision: 15, scale: 2 }).notNull(),
+  confidence: smallint('confidence'),
+  note: text('note'),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_okr_checkins_kr').on(table.keyResultId),
+])
+
+// ============================================
+// Management Framework: SOPs – Dokumente
+// ============================================
+export const sopDocuments = pgTable('sop_documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  category: varchar('category', { length: 50 }).notNull(),
+  version: varchar('version', { length: 20 }).default('1.0.0'),
+  status: varchar('status', { length: 20 }).default('draft'),
+  ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  purpose: text('purpose'),
+  scope: text('scope'),
+  tools: text('tools').array().default([]),
+  linkedSopIds: uuid('linked_sop_ids').array().default([]),
+  tags: text('tags').array().default([]),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  approvedBy: uuid('approved_by').references(() => users.id),
+  reviewDate: timestamp('review_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+}, (table) => [
+  index('idx_sop_documents_tenant').on(table.tenantId),
+  index('idx_sop_documents_category').on(table.tenantId, table.category),
+  index('idx_sop_documents_status').on(table.tenantId, table.status),
+])
+
+// ============================================
+// Management Framework: SOPs – Schritte
+// ============================================
+export const sopSteps = pgTable('sop_steps', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sopId: uuid('sop_id').notNull().references(() => sopDocuments.id, { onDelete: 'cascade' }),
+  sequence: integer('sequence').notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  responsible: varchar('responsible', { length: 100 }),
+  estimatedMinutes: integer('estimated_minutes'),
+  checklistItems: text('checklist_items').array().default([]),
+  warnings: text('warnings').array().default([]),
+}, (table) => [
+  index('idx_sop_steps_sop').on(table.sopId),
+])
+
+// ============================================
+// Management Framework: SOPs – Versionshistorie
+// ============================================
+export const sopVersions = pgTable('sop_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sopId: uuid('sop_id').notNull().references(() => sopDocuments.id, { onDelete: 'cascade' }),
+  version: varchar('version', { length: 20 }).notNull(),
+  changeNote: text('change_note'),
+  snapshot: jsonb('snapshot').default({}),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_sop_versions_sop').on(table.sopId),
+])
+
+// Type exports: Management Framework
+export type VTO = typeof vto.$inferSelect
+export type Rock = typeof rocks.$inferSelect
+export type NewRock = typeof rocks.$inferInsert
+export type ScorecardMetric = typeof scorecardMetrics.$inferSelect
+export type ScorecardEntry = typeof scorecardEntries.$inferSelect
+export type EosIssue = typeof eosIssues.$inferSelect
+export type MeetingSession = typeof meetingSessions.$inferSelect
+export type OkrCycle = typeof okrCycles.$inferSelect
+export type OkrObjective = typeof okrObjectives.$inferSelect
+export type OkrKeyResult = typeof okrKeyResults.$inferSelect
+export type OkrCheckin = typeof okrCheckins.$inferSelect
+export type SopDocument = typeof sopDocuments.$inferSelect
+export type NewSopDocument = typeof sopDocuments.$inferInsert
+export type SopStep = typeof sopSteps.$inferSelect
+export type SopVersion = typeof sopVersions.$inferSelect
