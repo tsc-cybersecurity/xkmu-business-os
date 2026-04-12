@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
   return withPermission(request, 'processes', 'create', async (auth) => {
     try {
       const body = await request.json()
-      const project = await ProjectService.create(auth.tenantId, body)
+
+      const project = await ProjectService.create(auth.tenantId, {
+        ...body,
+        startDate: body.startDate ? new Date(body.startDate) : undefined,
+        endDate: body.endDate ? new Date(body.endDate) : undefined,
+      })
       return apiSuccess(project, undefined, 201)
     } catch {
       return apiServerError()

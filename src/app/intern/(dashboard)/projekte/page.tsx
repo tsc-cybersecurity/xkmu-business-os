@@ -73,10 +73,13 @@ export default function ProjektePage() {
           startDate: newStartDate || undefined, endDate: newEndDate || undefined,
         }),
       })
-      if ((await res.json()).success) {
+      const data = await res.json()
+      if (data.success) {
         setShowNew(false); setNewName(''); setNewDesc(''); setNewCompanyId('none')
         setNewPriority('mittel'); setNewStartDate(''); setNewEndDate('')
         fetchData(); toast.success('Projekt erstellt')
+      } else {
+        toast.error(data?.error?.message || 'Erstellen fehlgeschlagen')
       }
     } catch { toast.error('Erstellen fehlgeschlagen') }
     finally { setCreating(false) }

@@ -20,7 +20,12 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     try {
       const { id } = await params
       const body = await request.json()
-      const project = await ProjectService.update(auth.tenantId, id, body)
+      const parsed = {
+        ...body,
+        startDate: body.startDate === null ? null : body.startDate ? new Date(body.startDate) : undefined,
+        endDate: body.endDate === null ? null : body.endDate ? new Date(body.endDate) : undefined,
+      }
+      const project = await ProjectService.update(auth.tenantId, id, parsed)
       if (!project) return apiNotFound('Projekt nicht gefunden')
       return apiSuccess(project)
     } catch {
