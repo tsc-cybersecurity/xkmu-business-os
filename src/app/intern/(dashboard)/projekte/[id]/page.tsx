@@ -63,8 +63,8 @@ function PriorityDot({ priority }: { priority: string | null }) {
 // ============================================
 // Droppable Column
 // ============================================
-function DroppableColumn({ column, tasks, onAddTask, onClickTask }: {
-  column: Column; tasks: TaskItem[]; onAddTask: (colId: string) => void; onClickTask: (task: TaskItem) => void
+function DroppableColumn({ column, tasks, allTasks, onAddTask, onClickTask }: {
+  column: Column; tasks: TaskItem[]; allTasks: TaskItem[]; onAddTask: (colId: string) => void; onClickTask: (task: TaskItem) => void
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
   return (
@@ -75,7 +75,14 @@ function DroppableColumn({ column, tasks, onAddTask, onClickTask }: {
         <Badge variant="secondary" className="text-xs ml-auto">{tasks.length}</Badge>
       </div>
       <div ref={setNodeRef} className={cn('flex-1 overflow-y-auto p-2 space-y-2 min-h-[100px] transition-colors', isOver && 'bg-primary/5')}>
-        {tasks.map(task => <DraggableCard key={task.id} task={task} onClick={() => onClickTask(task)} />)}
+        {tasks.map(task => (
+          <DraggableCard
+            key={task.id}
+            task={task}
+            subtasks={allTasks.filter(t => t.parentTaskId === task.id)}
+            onClick={() => onClickTask(task)}
+          />
+        ))}
         <Button variant="ghost" size="sm" className="w-full justify-start text-xs text-muted-foreground h-7" onClick={() => onAddTask(column.id)}>
           <Plus className="h-3 w-3 mr-1" />Aufgabe
         </Button>
@@ -87,11 +94,15 @@ function DroppableColumn({ column, tasks, onAddTask, onClickTask }: {
 // ============================================
 // Draggable Task Card
 // ============================================
-function DraggableCard({ task, onClick, overlay }: { task: TaskItem; onClick?: () => void; overlay?: boolean }) {
+function DraggableCard({ task, subtasks, onClick, overlay }: {
+  task: TaskItem; subtasks?: TaskItem[]; onClick?: () => void; overlay?: boolean
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id })
   const style = overlay ? {} : { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.3 : 1 }
   const checkDone = (task.checklist || []).filter(c => c.checked).length
   const checkTotal = (task.checklist || []).length
+  const subs = subtasks || []
+  const subsDone = subs.filter(s => s.columnId === 'done').length
 
   return (
     <div ref={overlay ? undefined : setNodeRef} style={style} {...(overlay ? {} : attributes)}>
@@ -113,6 +124,29 @@ function DraggableCard({ task, onClick, overlay }: { task: TaskItem; onClick?: (
               {checkTotal > 0 && <span className="text-[10px] text-muted-foreground">{checkDone}/{checkTotal}</span>}
               {task.delegatedTo && <Badge variant="outline" className="text-[10px] px-1 py-0">{task.delegatedTo.startsWith('agent:') ? 'KI' : 'Delegiert'}</Badge>}
             </div>
+            {subs.length > 0 && (
+              <div className="pt-1 border-t border-border/40 space-y-0.5">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <CheckCircle2 className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-[10px] font-medium text-muted-foreground">{subsDone}/{subs.length} Unteraufgaben</span>
+                  {subs.length > 0 && (
+                    <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary/60 rounded-full transition-all" style={{ width: `${(subsDone / subs.length) * 100}%` }} />
+                    </div>
+                  )}
+                </div>
+                {subs.slice(0, 3).map(st => (
+                  <div key={st.id} className="flex items-center gap-1.5 text-[10px]">
+                    {st.columnId === 'done'
+                      ? <CheckCircle2 className="h-2.5 w-2.5 text-green-500 shrink-0" />
+                      : <span className="w-2.5 h-2.5 rounded-full border border-muted-foreground/40 shrink-0" />}
+                    <span className={cn('truncate', st.columnId === 'done' && 'line-through text-muted-foreground')}>{st.title}</span>
+                    {st.assigneeName && <span className="text-muted-foreground ml-auto shrink-0">{st.assigneeName}</span>}
+                  </div>
+                ))}
+                {subs.length > 3 && <span className="text-[10px] text-muted-foreground">+{subs.length - 3} weitere</span>}
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -568,10 +602,10 @@ export default function ProjectBoardPage() {
             <div className="flex gap-4 h-full">
               {columns.map(column => (
                 <DroppableColumn key={column.id} column={column} tasks={project.tasks.filter(t => t.columnId === column.id && !t.parentTaskId)}
-                  onAddTask={colId => { setNewTaskColumn(colId); setNewTaskTitle('') }} onClickTask={openDetail} />
+                  allTasks={project.tasks} onAddTask={colId => { setNewTaskColumn(colId); setNewTaskTitle('') }} onClickTask={openDetail} />
               ))}
             </div>
-            <DragOverlay>{activeTask && <div className="w-72"><DraggableCard task={activeTask} overlay /></div>}</DragOverlay>
+            <DragOverlay>{activeTask && <div className="w-72"><DraggableCard task={activeTask} subtasks={project.tasks.filter(t => t.parentTaskId === activeTask.id)} overlay /></div>}</DragOverlay>
           </DndContext>
         </TabsContent>
 
@@ -802,38 +836,75 @@ export default function ProjectBoardPage() {
                 <CheckCircle2 className="h-3.5 w-3.5" />Unteraufgaben ({subtasks.length})
               </label>
               {subtasks.length > 0 && (
-                <div className="space-y-1 mb-2">
+                <div className="space-y-2 mb-2">
                   {subtasks.map(st => {
                     const stCheckDone = (st.checklist || []).filter(c => c.checked).length
                     const stCheckTotal = (st.checklist || []).length
+                    const isDone = st.columnId === 'done'
                     return (
-                      <div key={st.id} className="flex items-center gap-2 text-sm group rounded-md hover:bg-muted/50 px-1 py-0.5 -mx-1">
-                        <input
-                          type="checkbox"
-                          checked={st.columnId === 'done'}
-                          onChange={() => toggleSubtaskDone(st)}
-                          className="rounded shrink-0"
-                        />
-                        <button
-                          className={cn(
-                            'flex-1 text-left hover:underline truncate',
-                            st.columnId === 'done' && 'line-through text-muted-foreground'
-                          )}
-                          onClick={() => openSubtaskDetail(st)}
-                        >
-                          {st.title}
-                        </button>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {st.priority && st.priority !== 'mittel' && <PriorityDot priority={st.priority} />}
-                          {stCheckTotal > 0 && <span className="text-[10px] text-muted-foreground">{stCheckDone}/{stCheckTotal}</span>}
-                          {st.dueDate && <span className="text-[10px] text-muted-foreground">{new Date(st.dueDate).toLocaleDateString('de-DE')}</span>}
-                          {st.assigneeName && <span className="text-[10px] text-muted-foreground">{st.assigneeName}</span>}
-                          {st.delegatedTo && (
-                            <Badge variant="outline" className="text-[10px]">
-                              {st.delegatedTo.startsWith('agent:') ? 'KI' : 'Delegiert'}
-                            </Badge>
-                          )}
-                          <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100" onClick={() => deleteSubtask(st.id)}>
+                      <div
+                        key={st.id}
+                        className={cn(
+                          'group rounded-lg border p-2.5 hover:shadow-sm transition-shadow cursor-pointer',
+                          isDone && 'opacity-60'
+                        )}
+                        onClick={() => openSubtaskDetail(st)}
+                      >
+                        <div className="flex items-start gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isDone}
+                            onChange={e => { e.stopPropagation(); toggleSubtaskDone(st) }}
+                            onClick={e => e.stopPropagation()}
+                            className="rounded mt-0.5 shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <PriorityDot priority={st.priority} />
+                              <span className={cn('text-sm font-medium truncate', isDone && 'line-through')}>
+                                {st.title}
+                              </span>
+                            </div>
+                            {st.description && (
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{st.description}</p>
+                            )}
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {st.assigneeName && (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                  <User className="h-2.5 w-2.5" />{st.assigneeName}
+                                </span>
+                              )}
+                              {st.dueDate && (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                  <Calendar className="h-2.5 w-2.5" />{new Date(st.dueDate).toLocaleDateString('de-DE')}
+                                </span>
+                              )}
+                              {st.estimatedMinutes && (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                  <Clock className="h-2.5 w-2.5" />{Math.round(st.estimatedMinutes / 60)}h
+                                </span>
+                              )}
+                              {stCheckTotal > 0 && (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                  <CheckCircle2 className="h-2.5 w-2.5" />{stCheckDone}/{stCheckTotal}
+                                </span>
+                              )}
+                              {(st.labels || []).map((l, i) => (
+                                <Badge key={i} variant="secondary" className="text-[9px] px-1 py-0">{l}</Badge>
+                              ))}
+                              {st.delegatedTo && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  {st.delegatedTo.startsWith('agent:') ? 'KI' : 'Delegiert'}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 shrink-0"
+                            onClick={e => { e.stopPropagation(); deleteSubtask(st.id) }}
+                          >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </div>
