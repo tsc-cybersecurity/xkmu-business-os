@@ -841,16 +841,17 @@ export default function ProjectBoardPage() {
                     const stCheckDone = (st.checklist || []).filter(c => c.checked).length
                     const stCheckTotal = (st.checklist || []).length
                     const isDone = st.columnId === 'done'
+                    const stSubtaskCount = project ? project.tasks.filter(t => t.parentTaskId === st.id).length : 0
                     return (
                       <div
                         key={st.id}
                         className={cn(
-                          'group rounded-lg border p-2.5 hover:shadow-sm transition-shadow cursor-pointer',
+                          'group rounded-lg border p-3 hover:shadow-sm transition-shadow cursor-pointer',
                           isDone && 'opacity-60'
                         )}
                         onClick={() => openSubtaskDetail(st)}
                       >
-                        <div className="flex items-start gap-2">
+                        <div className="flex items-start gap-2.5">
                           <input
                             type="checkbox"
                             checked={isDone}
@@ -859,43 +860,59 @@ export default function ProjectBoardPage() {
                             className="rounded mt-0.5 shrink-0"
                           />
                           <div className="flex-1 min-w-0">
+                            {/* Title row */}
                             <div className="flex items-center gap-1.5">
                               <PriorityDot priority={st.priority} />
                               <span className={cn('text-sm font-medium truncate', isDone && 'line-through')}>
                                 {st.title}
                               </span>
+                              <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
+                                {PRIORITY_LABELS[st.priority || 'mittel'] || 'Mittel'}
+                              </span>
                             </div>
-                            {st.description && (
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{st.description}</p>
-                            )}
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              {st.assigneeName && (
-                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                                  <User className="h-2.5 w-2.5" />{st.assigneeName}
-                                </span>
-                              )}
-                              {st.dueDate && (
-                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                                  <Calendar className="h-2.5 w-2.5" />{new Date(st.dueDate).toLocaleDateString('de-DE')}
-                                </span>
-                              )}
-                              {st.estimatedMinutes && (
-                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                                  <Clock className="h-2.5 w-2.5" />{Math.round(st.estimatedMinutes / 60)}h
-                                </span>
-                              )}
-                              {stCheckTotal > 0 && (
-                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                                  <CheckCircle2 className="h-2.5 w-2.5" />{stCheckDone}/{stCheckTotal}
-                                </span>
-                              )}
+
+                            {/* Description */}
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                              {st.description || 'Keine Beschreibung'}
+                            </p>
+
+                            {/* Metadata grid — always visible */}
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 mt-2 text-[11px]">
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <User className="h-3 w-3 shrink-0" />
+                                <span className="truncate">{st.assigneeName || 'Nicht zugewiesen'}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Calendar className="h-3 w-3 shrink-0" />
+                                <span>{st.dueDate ? new Date(st.dueDate).toLocaleDateString('de-DE') : 'Kein Datum'}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Clock className="h-3 w-3 shrink-0" />
+                                <span>{st.estimatedMinutes ? `${Math.round(st.estimatedMinutes / 60)}h geschaetzt` : 'Keine Schaetzung'}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <CheckCircle2 className="h-3 w-3 shrink-0" />
+                                <span>{stCheckTotal > 0 ? `${stCheckDone}/${stCheckTotal} Checkliste` : 'Keine Checkliste'}</span>
+                              </div>
+                            </div>
+
+                            {/* Labels + badges row */}
+                            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                               {(st.labels || []).map((l, i) => (
-                                <Badge key={i} variant="secondary" className="text-[9px] px-1 py-0">{l}</Badge>
+                                <Badge key={i} variant="secondary" className="text-[9px] px-1.5 py-0">{l}</Badge>
                               ))}
                               {st.delegatedTo && (
                                 <Badge variant="outline" className="text-[10px]">
-                                  {st.delegatedTo.startsWith('agent:') ? 'KI' : 'Delegiert'}
+                                  {st.delegatedTo.startsWith('agent:') ? 'KI-Agent' : 'Delegiert'}
                                 </Badge>
+                              )}
+                              {st.columnId && st.columnId !== 'backlog' && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  {(project?.columns as Column[])?.find(c => c.id === st.columnId)?.name || st.columnId}
+                                </Badge>
+                              )}
+                              {stSubtaskCount > 0 && (
+                                <Badge variant="secondary" className="text-[10px]">{stSubtaskCount} Unter-Unteraufgaben</Badge>
                               )}
                             </div>
                           </div>
