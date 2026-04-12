@@ -26,7 +26,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
   ArrowLeft, Loader2, Plus, Calendar, User, GripVertical, Save, Trash2,
-  Clock, GanttChart, CheckCircle2, Settings2, Building2,
+  Clock, GanttChart, CheckCircle2, Settings2, Building2, List, ChevronRight, ChevronDown as ChevronDownIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -150,6 +150,143 @@ function DraggableCard({ task, subtasks, onClick, overlay }: {
           </div>
         </div>
       </Card>
+    </div>
+  )
+}
+
+// ============================================
+// Task List View (hierarchical)
+// ============================================
+function TaskListRow({ task, subtasks, allTasks, columns, depth, onClickTask, onToggleDone }: {
+  task: TaskItem; subtasks: TaskItem[]; allTasks: TaskItem[]; columns: Column[]
+  depth: number; onClickTask: (t: TaskItem) => void; onToggleDone: (t: TaskItem) => void
+}) {
+  const [expanded, setExpanded] = useState(true)
+  const isDone = task.columnId === 'done'
+  const checkDone = (task.checklist || []).filter(c => c.checked).length
+  const checkTotal = (task.checklist || []).length
+  const col = columns.find(c => c.id === task.columnId)
+
+  return (
+    <>
+      <div
+        className={cn(
+          'flex items-center gap-2 px-3 py-2 hover:bg-muted/50 border-b border-border/30 cursor-pointer group',
+          isDone && 'opacity-60'
+        )}
+        style={{ paddingLeft: `${12 + depth * 24}px` }}
+      >
+        {/* Expand toggle */}
+        <button
+          className="w-4 h-4 flex items-center justify-center shrink-0"
+          onClick={e => { e.stopPropagation(); setExpanded(!expanded) }}
+        >
+          {subtasks.length > 0 ? (
+            expanded ? <ChevronDownIcon className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          ) : <span className="w-3.5" />}
+        </button>
+
+        {/* Checkbox */}
+        <input
+          type="checkbox"
+          checked={isDone}
+          onChange={e => { e.stopPropagation(); onToggleDone(task) }}
+          className="rounded shrink-0"
+        />
+
+        {/* Priority + Title */}
+        <div className="flex items-center gap-1.5 flex-1 min-w-0" onClick={() => onClickTask(task)}>
+          <PriorityDot priority={task.priority} />
+          <span className={cn('text-sm font-medium truncate', isDone && 'line-through')}>{task.title}</span>
+        </div>
+
+        {/* Metadata columns */}
+        <div className="flex items-center gap-3 shrink-0 text-[11px] text-muted-foreground">
+          {/* Status */}
+          {col && (
+            <span className="flex items-center gap-1 w-20">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: col.color }} />
+              <span className="truncate">{col.name}</span>
+            </span>
+          )}
+          {/* Assignee */}
+          <span className="w-24 truncate">{task.assigneeName || '—'}</span>
+          {/* Due date */}
+          <span className="w-20">{task.dueDate ? new Date(task.dueDate).toLocaleDateString('de-DE') : '—'}</span>
+          {/* Checklist/Subtask progress */}
+          <span className="w-16 text-right">
+            {subtasks.length > 0
+              ? `${subtasks.filter(s => s.columnId === 'done').length}/${subtasks.length}`
+              : checkTotal > 0 ? `${checkDone}/${checkTotal}` : '—'}
+          </span>
+        </div>
+      </div>
+
+      {/* Children */}
+      {expanded && subtasks.map(st => (
+        <TaskListRow
+          key={st.id}
+          task={st}
+          subtasks={allTasks.filter(t => t.parentTaskId === st.id)}
+          allTasks={allTasks}
+          columns={columns}
+          depth={depth + 1}
+          onClickTask={onClickTask}
+          onToggleDone={onToggleDone}
+        />
+      ))}
+    </>
+  )
+}
+
+function TaskListView({ tasks, columns, onClickTask, onToggleDone }: {
+  tasks: TaskItem[]; columns: Column[]
+  onClickTask: (t: TaskItem) => void; onToggleDone: (t: TaskItem) => void
+}) {
+  const rootTasks = tasks.filter(t => !t.parentTaskId)
+  const parentCount = rootTasks.length
+  const totalSubs = tasks.length - parentCount
+  const doneCount = tasks.filter(t => t.columnId === 'done').length
+
+  if (tasks.length === 0) {
+    return <div className="text-center py-12 text-muted-foreground">Noch keine Aufgaben vorhanden.</div>
+  }
+
+  return (
+    <div className="max-w-5xl">
+      {/* Summary */}
+      <div className="flex items-center gap-4 mb-3 text-xs text-muted-foreground px-3">
+        <span>{parentCount} Aufgaben</span>
+        {totalSubs > 0 && <span>{totalSubs} Unteraufgaben</span>}
+        <span>{doneCount}/{tasks.length} erledigt</span>
+      </div>
+
+      {/* Column headers */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+        <div className="flex-1" style={{ paddingLeft: '52px' }}>Aufgabe</div>
+        <div className="flex items-center gap-3 shrink-0">
+          <span className="w-20">Status</span>
+          <span className="w-24">Zugewiesen</span>
+          <span className="w-20">Faellig</span>
+          <span className="w-16 text-right">Fortschritt</span>
+        </div>
+      </div>
+
+      {/* Rows */}
+      <div>
+        {rootTasks.map(task => (
+          <TaskListRow
+            key={task.id}
+            task={task}
+            subtasks={tasks.filter(t => t.parentTaskId === task.id)}
+            allTasks={tasks}
+            columns={columns}
+            depth={0}
+            onClickTask={onClickTask}
+            onToggleDone={onToggleDone}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -587,14 +724,25 @@ export default function ProjectBoardPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="kanban" className="flex-1 flex flex-col">
+      <Tabs defaultValue="tasks" className="flex-1 flex flex-col">
         <div className="border-b px-6">
           <TabsList className="h-10 bg-transparent p-0 gap-4">
+            <TabsTrigger value="tasks" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"><List className="h-4 w-4 mr-1" />Aufgaben</TabsTrigger>
             <TabsTrigger value="kanban" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">Kanban</TabsTrigger>
             <TabsTrigger value="timeline" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"><GanttChart className="h-4 w-4 mr-1" />Timeline</TabsTrigger>
             <TabsTrigger value="details" className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"><Settings2 className="h-4 w-4 mr-1" />Details</TabsTrigger>
           </TabsList>
         </div>
+
+        {/* Task List */}
+        <TabsContent value="tasks" className="flex-1 overflow-auto p-4 m-0">
+          <TaskListView
+            tasks={project.tasks}
+            columns={columns}
+            onClickTask={openDetail}
+            onToggleDone={toggleSubtaskDone}
+          />
+        </TabsContent>
 
         {/* Kanban */}
         <TabsContent value="kanban" className="flex-1 overflow-x-auto p-4 m-0">
