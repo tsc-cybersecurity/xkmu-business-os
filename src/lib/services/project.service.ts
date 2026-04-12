@@ -108,6 +108,7 @@ export const ProjectService = {
     title: string; description?: string; columnId?: string; priority?: string
     assignedTo?: string; startDate?: Date; dueDate?: Date; estimatedMinutes?: number
     labels?: string[]; referenceType?: string; referenceId?: string
+    parentTaskId?: string; delegatedTo?: string
   }): Promise<ProjectTask> {
     // Get max position in column
     const existing = await db.select({ position: projectTasks.position }).from(projectTasks)
@@ -123,6 +124,8 @@ export const ProjectService = {
       dueDate: data.dueDate || null, estimatedMinutes: data.estimatedMinutes || null,
       labels: data.labels || [], referenceType: data.referenceType || null,
       referenceId: data.referenceId || null,
+      parentTaskId: data.parentTaskId || null,
+      delegatedTo: data.delegatedTo || null,
     }).returning()
     return task
   },
@@ -132,6 +135,7 @@ export const ProjectService = {
     assignedTo: string | null; startDate: Date | null; dueDate: Date | null
     completedAt: Date | null; estimatedMinutes: number | null
     checklist: unknown; labels: string[]; comments: unknown
+    parentTaskId: string | null; delegatedTo: string | null
   }>): Promise<ProjectTask | null> {
     const updateData: Partial<NewProjectTask> = { updatedAt: new Date() }
     if (data.title !== undefined) updateData.title = data.title
@@ -147,6 +151,8 @@ export const ProjectService = {
     if (data.checklist !== undefined) updateData.checklist = data.checklist
     if (data.labels !== undefined) updateData.labels = data.labels
     if (data.comments !== undefined) updateData.comments = data.comments
+    if (data.parentTaskId !== undefined) updateData.parentTaskId = data.parentTaskId
+    if (data.delegatedTo !== undefined) updateData.delegatedTo = data.delegatedTo
 
     // Auto-set completedAt when moved to done column
     if (data.columnId === 'done' && !data.completedAt) {
@@ -159,6 +165,9 @@ export const ProjectService = {
   },
 
   async deleteTask(tenantId: string, taskId: string): Promise<boolean> {
+    // Delete child tasks first (subtasks)
+    await db.delete(projectTasks)
+      .where(and(eq(projectTasks.tenantId, tenantId), eq(projectTasks.parentTaskId, taskId)))
     const result = await db.delete(projectTasks)
       .where(and(eq(projectTasks.tenantId, tenantId), eq(projectTasks.id, taskId)))
       .returning({ id: projectTasks.id })

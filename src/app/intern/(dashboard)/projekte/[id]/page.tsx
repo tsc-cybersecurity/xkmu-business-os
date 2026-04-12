@@ -38,6 +38,7 @@ interface TaskItem {
   priority: string | null; assignedTo: string | null; assigneeName?: string; startDate: string | null; dueDate: string | null
   completedAt: string | null; estimatedMinutes: number | null
   labels: string[]; checklist: CheckItem[]; comments: Array<{ text: string; createdAt: string }>
+  parentTaskId: string | null; delegatedTo: string | null
 }
 interface ProjectData {
   id: string; name: string; description: string | null; columns: Column[]; tasks: TaskItem[]
@@ -110,6 +111,7 @@ function DraggableCard({ task, onClick, overlay }: { task: TaskItem; onClick?: (
               {task.assigneeName && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><User className="h-2.5 w-2.5" />{task.assigneeName}</span>}
               {task.estimatedMinutes && <span className="text-[10px] text-muted-foreground flex items-center gap-0.5"><Clock className="h-2.5 w-2.5" />{Math.round(task.estimatedMinutes / 60)}h</span>}
               {checkTotal > 0 && <span className="text-[10px] text-muted-foreground">{checkDone}/{checkTotal}</span>}
+              {task.delegatedTo && <Badge variant="outline" className="text-[10px] px-1 py-0">{task.delegatedTo.startsWith('agent:') ? 'KI' : 'Delegiert'}</Badge>}
             </div>
           </div>
         </div>
@@ -243,6 +245,10 @@ export default function ProjectBoardPage() {
   const [saving, setSaving] = useState(false)
 
   const [editAssignedTo, setEditAssignedTo] = useState<string | null>(null)
+  const [editDelegatedTo, setEditDelegatedTo] = useState('')
+  const [subtasks, setSubtasks] = useState<TaskItem[]>([])
+  const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
+  const [addingSubtask, setAddingSubtask] = useState(false)
 
   // Project details edit (controlled form)
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([])
@@ -372,12 +378,64 @@ export default function ProjectBoardPage() {
     setEditDesc(task.description || '')
     setEditPriority(task.priority || 'mittel')
     setEditAssignedTo(task.assignedTo || null)
+    setEditDelegatedTo(task.delegatedTo || '')
     setEditStartDate(task.startDate ? task.startDate.split('T')[0] : '')
     setEditDueDate(task.dueDate ? task.dueDate.split('T')[0] : '')
     setEditEstimate(task.estimatedMinutes ? String(task.estimatedMinutes) : '')
     setEditLabels((task.labels || []).join(', '))
     setEditChecklist([...(task.checklist || [])])
     setEditComment('')
+    setNewSubtaskTitle('')
+    // Subtasks: filter from all loaded tasks
+    if (project) {
+      setSubtasks(project.tasks.filter(t => t.parentTaskId === task.id))
+    }
+  }
+
+  const addSubtask = async () => {
+    if (!newSubtaskTitle.trim() || !detailTask || !project) return
+    setAddingSubtask(true)
+    try {
+      const res = await fetch(`/api/v1/projects/${project.id}/tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newSubtaskTitle,
+          columnId: detailTask.columnId,
+          parentTaskId: detailTask.id,
+          priority: detailTask.priority || 'mittel',
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setNewSubtaskTitle('')
+        await fetchProject()
+        // Update subtasks from refreshed project
+        setSubtasks(prev => [...prev, data.data])
+      }
+    } catch { toast.error('Unteraufgabe erstellen fehlgeschlagen') }
+    finally { setAddingSubtask(false) }
+  }
+
+  const toggleSubtaskDone = async (subtask: TaskItem) => {
+    if (!project) return
+    const newColumn = subtask.columnId === 'done' ? 'backlog' : 'done'
+    await fetch(`/api/v1/projects/${project.id}/tasks/${subtask.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ columnId: newColumn }),
+    })
+    setSubtasks(prev => prev.map(s =>
+      s.id === subtask.id ? { ...s, columnId: newColumn } : s
+    ))
+    fetchProject()
+  }
+
+  const deleteSubtask = async (subtaskId: string) => {
+    if (!project) return
+    await fetch(`/api/v1/projects/${project.id}/tasks/${subtaskId}`, { method: 'DELETE' })
+    setSubtasks(prev => prev.filter(s => s.id !== subtaskId))
+    fetchProject()
   }
 
   const saveDetail = async () => {
@@ -397,6 +455,7 @@ export default function ProjectBoardPage() {
           estimatedMinutes: editEstimate ? parseInt(editEstimate) : null,
           labels: editLabels ? editLabels.split(',').map(l => l.trim()).filter(Boolean) : [],
           checklist: editChecklist, comments,
+          delegatedTo: editDelegatedTo || null,
         }),
       })
       const data = await res.json()
@@ -471,7 +530,7 @@ export default function ProjectBoardPage() {
           <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="flex gap-4 h-full">
               {columns.map(column => (
-                <DroppableColumn key={column.id} column={column} tasks={project.tasks.filter(t => t.columnId === column.id)}
+                <DroppableColumn key={column.id} column={column} tasks={project.tasks.filter(t => t.columnId === column.id && !t.parentTaskId)}
                   onAddTask={colId => { setNewTaskColumn(colId); setNewTaskTitle('') }} onClickTask={openDetail} />
               ))}
             </div>
@@ -662,6 +721,73 @@ export default function ProjectBoardPage() {
                 <Input placeholder="Neuer Punkt..." value={newCheckItem} onChange={e => setNewCheckItem(e.target.value)} className="text-sm h-8"
                   onKeyDown={e => { if (e.key === 'Enter') addCheckItem() }} />
                 <Button variant="outline" size="sm" className="h-8" onClick={addCheckItem}>+</Button>
+              </div>
+            </div>
+
+            {/* Delegierung */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block flex items-center gap-1">
+                <User className="h-3.5 w-3.5" />Delegiert an
+              </label>
+              <Select value={editDelegatedTo || '__none__'} onValueChange={v => setEditDelegatedTo(v === '__none__' ? '' : v)}>
+                <SelectTrigger><SelectValue placeholder="Nicht delegiert" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Nicht delegiert —</SelectItem>
+                  {users.map(u => <SelectItem key={u.id} value={`user:${u.id}`}>{u.name}</SelectItem>)}
+                  <SelectItem value="agent:ki-research">KI-Agent: Research</SelectItem>
+                  <SelectItem value="agent:ki-text">KI-Agent: Texterstellung</SelectItem>
+                  <SelectItem value="agent:ki-analysis">KI-Agent: Analyse</SelectItem>
+                </SelectContent>
+              </Select>
+              {editDelegatedTo?.startsWith('agent:') && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  KI-Agenten-Ausfuehrung wird in einer zukuenftigen Version verfuegbar.
+                </p>
+              )}
+            </div>
+
+            {/* Unteraufgaben */}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-2 block flex items-center gap-1">
+                <CheckCircle2 className="h-3.5 w-3.5" />Unteraufgaben ({subtasks.length})
+              </label>
+              {subtasks.length > 0 && (
+                <div className="space-y-1 mb-2">
+                  {subtasks.map(st => (
+                    <div key={st.id} className="flex items-center gap-2 text-sm group">
+                      <input
+                        type="checkbox"
+                        checked={st.columnId === 'done'}
+                        onChange={() => toggleSubtaskDone(st)}
+                        className="rounded"
+                      />
+                      <span className={cn('flex-1', st.columnId === 'done' && 'line-through text-muted-foreground')}>
+                        {st.title}
+                      </span>
+                      {st.assigneeName && <span className="text-xs text-muted-foreground">{st.assigneeName}</span>}
+                      {st.delegatedTo && (
+                        <Badge variant="outline" className="text-[10px]">
+                          {st.delegatedTo.startsWith('agent:') ? 'KI' : 'Delegiert'}
+                        </Badge>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 shrink-0" onClick={() => deleteSubtask(st.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Neue Unteraufgabe..."
+                  value={newSubtaskTitle}
+                  onChange={e => setNewSubtaskTitle(e.target.value)}
+                  className="text-sm h-8"
+                  onKeyDown={e => { if (e.key === 'Enter') addSubtask() }}
+                />
+                <Button variant="outline" size="sm" className="h-8 shrink-0" onClick={addSubtask} disabled={addingSubtask || !newSubtaskTitle.trim()}>
+                  {addingSubtask ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                </Button>
               </div>
             </div>
 

@@ -2541,6 +2541,8 @@ export const projectTasks = pgTable('project_tasks', {
   checklist: jsonb('checklist').default([]), // [{text, checked}]
   labels: text('labels').array().default([]),
   comments: jsonb('comments').default([]), // [{userId, text, createdAt}]
+  parentTaskId: uuid('parent_task_id'),
+  delegatedTo: varchar('delegated_to', { length: 100 }),
   referenceType: varchar('reference_type', { length: 50 }),
   referenceId: uuid('reference_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -2548,6 +2550,7 @@ export const projectTasks = pgTable('project_tasks', {
 }, (table) => [
   index('idx_project_tasks_project').on(table.projectId),
   index('idx_project_tasks_column').on(table.projectId, table.columnId),
+  index('idx_project_tasks_parent').on(table.parentTaskId),
 ])
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
