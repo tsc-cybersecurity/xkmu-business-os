@@ -48,25 +48,36 @@ export default function OkrPage() {
     if (d.success) {
       setCycles(d.data)
       const active = d.data.find((c: any) => c.isActive)
-      if (active && !selectedCycle) setSelectedCycle(active.id)
+      if (active) {
+        setSelectedCycle(active.id)
+        setActiveCycleName(active.name)
+      } else {
+        setLoading(false)
+      }
+    } else {
+      setLoading(false)
     }
-  }, [selectedCycle])
+  }, [])
 
   const loadObjectives = useCallback(async () => {
-    if (!selectedCycle) { setObjectives([]); setLoading(false); return }
+    if (!selectedCycle) { setObjectives([]); return }
     const d = await api(`/api/v1/okr/objectives?cycleId=${selectedCycle}`)
     if (d.success) {
       setObjectives(d.data)
       const total = d.data.length > 0 ? Math.round(d.data.reduce((s: number, o: any) => s + o.progress, 0) / d.data.length) : 0
       setOverallProgress(total)
     }
-    const cycle = cycles.find(c => c.id === selectedCycle)
-    setActiveCycleName(cycle?.name || '')
     setLoading(false)
-  }, [selectedCycle, cycles])
+  }, [selectedCycle])
 
   useEffect(() => { loadCycles() }, [loadCycles])
-  useEffect(() => { if (selectedCycle) loadObjectives() }, [selectedCycle, loadObjectives])
+  useEffect(() => {
+    if (selectedCycle) {
+      const cycle = cycles.find(c => c.id === selectedCycle)
+      if (cycle) setActiveCycleName(cycle.name)
+      loadObjectives()
+    }
+  }, [selectedCycle, loadObjectives, cycles])
 
   const createCycle = async () => {
     if (!cycleForm.name.trim() || !cycleForm.startDate || !cycleForm.endDate) return
