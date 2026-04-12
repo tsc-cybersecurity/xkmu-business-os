@@ -187,6 +187,10 @@ BEGIN
     RAISE NOTICE 'IR Playbook enum conversion complete.';
   END IF;
 END $$;
+-- ── project_tasks: add parent_task_id + delegated_to columns ────────────
+ALTER TABLE project_tasks ADD COLUMN IF NOT EXISTS parent_task_id UUID;
+ALTER TABLE project_tasks ADD COLUMN IF NOT EXISTS delegated_to VARCHAR(100);
+CREATE INDEX IF NOT EXISTS idx_project_tasks_parent ON project_tasks (parent_task_id);
 EOSQL
 echo "Pre-Drizzle migrations complete!"
 
