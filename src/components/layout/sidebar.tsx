@@ -123,6 +123,18 @@ const navigation: NavItem[] = [
       { name: 'Fördermitteldatenbank', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
     ],
   },
+  // ── Management ──
+  {
+    name: 'Management',
+    href: '/intern/management',
+    icon: Monitor,
+    children: [
+      { name: 'Dashboard', href: '/intern/management' },
+      { name: 'EOS Framework', href: '/intern/management/eos' },
+      { name: 'OKR Ziele', href: '/intern/management/okr' },
+      { name: 'SOPs Prozesse', href: '/intern/management/sops' },
+    ],
+  },
   // ── Einstellungen ──
   {
     name: 'Einstellungen',
