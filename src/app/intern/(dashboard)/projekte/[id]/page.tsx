@@ -249,6 +249,7 @@ export default function ProjectBoardPage() {
   const [subtasks, setSubtasks] = useState<TaskItem[]>([])
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('')
   const [addingSubtask, setAddingSubtask] = useState(false)
+  const [taskStack, setTaskStack] = useState<TaskItem[]>([])
 
   // Project details edit (controlled form)
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([])
@@ -372,7 +373,7 @@ export default function ProjectBoardPage() {
     if ((await res.json()).success) { setNewTaskColumn(null); setNewTaskTitle(''); fetchProject() }
   }
 
-  const openDetail = (task: TaskItem) => {
+  const populateDetailForm = (task: TaskItem) => {
     setDetailTask(task)
     setEditTitle(task.title)
     setEditDesc(task.description || '')
@@ -386,10 +387,31 @@ export default function ProjectBoardPage() {
     setEditChecklist([...(task.checklist || [])])
     setEditComment('')
     setNewSubtaskTitle('')
-    // Subtasks: filter from all loaded tasks
     if (project) {
       setSubtasks(project.tasks.filter(t => t.parentTaskId === task.id))
     }
+  }
+
+  const openDetail = (task: TaskItem) => {
+    setTaskStack([])
+    populateDetailForm(task)
+  }
+
+  const openSubtaskDetail = (subtask: TaskItem) => {
+    if (detailTask) {
+      setTaskStack(prev => [...prev, detailTask])
+    }
+    populateDetailForm(subtask)
+  }
+
+  const goBackToParent = () => {
+    const stack = [...taskStack]
+    const parentSnapshot = stack.pop()
+    if (!parentSnapshot) return
+    setTaskStack(stack)
+    // Use the freshest version of the parent from the project state
+    const freshParent = project?.tasks.find(t => t.id === parentSnapshot.id) || parentSnapshot
+    populateDetailForm(freshParent)
   }
 
   const addSubtask = async () => {
@@ -459,16 +481,31 @@ export default function ProjectBoardPage() {
         }),
       })
       const data = await res.json()
-      if (data.success) { setDetailTask(null); fetchProject(); toast.success('Gespeichert') }
+      if (data.success) {
+        toast.success('Gespeichert')
+        await fetchProject()
+        if (taskStack.length > 0) {
+          goBackToParent()
+        } else {
+          setDetailTask(null)
+        }
+      }
       else { toast.error('Fehler beim Speichern') }
     } catch { toast.error('Fehler') }
     finally { setSaving(false) }
   }
 
   const deleteTask = async () => {
-    if (!detailTask || !project || !confirm('Aufgabe loeschen?')) return
+    if (!detailTask || !project) return
+    const isSubtask = taskStack.length > 0
+    if (!confirm(isSubtask ? 'Unteraufgabe loeschen?' : 'Aufgabe und alle Unteraufgaben loeschen?')) return
     await fetch(`/api/v1/projects/${project.id}/tasks/${detailTask.id}`, { method: 'DELETE' })
-    setDetailTask(null); fetchProject()
+    await fetchProject()
+    if (isSubtask) {
+      goBackToParent()
+    } else {
+      setDetailTask(null)
+    }
   }
 
   const toggleCheckItem = (index: number) => {
@@ -658,7 +695,20 @@ export default function ProjectBoardPage() {
       {/* Task Detail Dialog */}
       <Dialog open={!!detailTask} onOpenChange={open => { if (!open) setDetailTask(null) }}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Aufgabe bearbeiten</DialogTitle></DialogHeader>
+          <DialogHeader>
+            {taskStack.length > 0 && (
+              <button
+                onClick={goBackToParent}
+                className="flex items-center gap-1 text-xs text-primary hover:underline mb-1"
+              >
+                <ArrowLeft className="h-3 w-3" />
+                {taskStack[taskStack.length - 1].title}
+              </button>
+            )}
+            <DialogTitle>
+              {detailTask?.parentTaskId ? 'Unteraufgabe bearbeiten' : 'Aufgabe bearbeiten'}
+            </DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
             <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="text-lg font-semibold" />
             <Textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={3} placeholder="Beschreibung..." />
@@ -753,28 +803,43 @@ export default function ProjectBoardPage() {
               </label>
               {subtasks.length > 0 && (
                 <div className="space-y-1 mb-2">
-                  {subtasks.map(st => (
-                    <div key={st.id} className="flex items-center gap-2 text-sm group">
-                      <input
-                        type="checkbox"
-                        checked={st.columnId === 'done'}
-                        onChange={() => toggleSubtaskDone(st)}
-                        className="rounded"
-                      />
-                      <span className={cn('flex-1', st.columnId === 'done' && 'line-through text-muted-foreground')}>
-                        {st.title}
-                      </span>
-                      {st.assigneeName && <span className="text-xs text-muted-foreground">{st.assigneeName}</span>}
-                      {st.delegatedTo && (
-                        <Badge variant="outline" className="text-[10px]">
-                          {st.delegatedTo.startsWith('agent:') ? 'KI' : 'Delegiert'}
-                        </Badge>
-                      )}
-                      <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100 shrink-0" onClick={() => deleteSubtask(st.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
+                  {subtasks.map(st => {
+                    const stCheckDone = (st.checklist || []).filter(c => c.checked).length
+                    const stCheckTotal = (st.checklist || []).length
+                    return (
+                      <div key={st.id} className="flex items-center gap-2 text-sm group rounded-md hover:bg-muted/50 px-1 py-0.5 -mx-1">
+                        <input
+                          type="checkbox"
+                          checked={st.columnId === 'done'}
+                          onChange={() => toggleSubtaskDone(st)}
+                          className="rounded shrink-0"
+                        />
+                        <button
+                          className={cn(
+                            'flex-1 text-left hover:underline truncate',
+                            st.columnId === 'done' && 'line-through text-muted-foreground'
+                          )}
+                          onClick={() => openSubtaskDetail(st)}
+                        >
+                          {st.title}
+                        </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {st.priority && st.priority !== 'mittel' && <PriorityDot priority={st.priority} />}
+                          {stCheckTotal > 0 && <span className="text-[10px] text-muted-foreground">{stCheckDone}/{stCheckTotal}</span>}
+                          {st.dueDate && <span className="text-[10px] text-muted-foreground">{new Date(st.dueDate).toLocaleDateString('de-DE')}</span>}
+                          {st.assigneeName && <span className="text-[10px] text-muted-foreground">{st.assigneeName}</span>}
+                          {st.delegatedTo && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {st.delegatedTo.startsWith('agent:') ? 'KI' : 'Delegiert'}
+                            </Badge>
+                          )}
+                          <Button variant="ghost" size="icon" className="h-5 w-5 opacity-0 group-hover:opacity-100" onClick={() => deleteSubtask(st.id)}>
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
               <div className="flex gap-2">
