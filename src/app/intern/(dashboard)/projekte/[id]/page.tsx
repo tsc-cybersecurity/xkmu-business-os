@@ -244,10 +244,58 @@ export default function ProjectBoardPage() {
 
   const [editAssignedTo, setEditAssignedTo] = useState<string | null>(null)
 
-  // Project details edit
+  // Project details edit (controlled form)
   const [companies, setCompanies] = useState<Array<{ id: string; name: string }>>([])
   const [users, setUsers] = useState<Array<{ id: string; name: string }>>([])
   const [projectSaving, setProjectSaving] = useState(false)
+
+  // Controlled fields for Details tab — synced from project on load
+  const [detailName, setDetailName] = useState('')
+  const [detailDesc, setDetailDesc] = useState('')
+  const [detailStatus, setDetailStatus] = useState('active')
+  const [detailPriority, setDetailPriority] = useState('mittel')
+  const [detailType, setDetailType] = useState('kanban')
+  const [detailCompanyId, setDetailCompanyId] = useState('__none__')
+  const [detailStartDate, setDetailStartDate] = useState('')
+  const [detailEndDate, setDetailEndDate] = useState('')
+  const [detailBudget, setDetailBudget] = useState('')
+  const [detailTags, setDetailTags] = useState('')
+  const [detailsDirty, setDetailsDirty] = useState(false)
+
+  // Sync controlled fields when project loads/changes
+  useEffect(() => {
+    if (!project) return
+    setDetailName(project.name || '')
+    setDetailDesc(project.description || '')
+    setDetailStatus(project.status || 'active')
+    setDetailPriority(project.priority || 'mittel')
+    setDetailType(project.projectType || 'kanban')
+    setDetailCompanyId(project.companyId || '__none__')
+    setDetailStartDate(project.startDate ? project.startDate.split('T')[0] : '')
+    setDetailEndDate(project.endDate ? project.endDate.split('T')[0] : '')
+    setDetailBudget(project.budget || '')
+    setDetailTags((project.tags || []).join(', '))
+    setDetailsDirty(false)
+  }, [project])
+
+  const markDirty = () => setDetailsDirty(true)
+
+  const saveAllDetails = async () => {
+    if (!project) return
+    await saveProject({
+      name: detailName,
+      description: detailDesc || null,
+      status: detailStatus,
+      priority: detailPriority,
+      projectType: detailType,
+      companyId: detailCompanyId === '__none__' ? null : detailCompanyId,
+      startDate: detailStartDate || null,
+      endDate: detailEndDate || null,
+      budget: detailBudget || null,
+      tags: detailTags ? detailTags.split(',').map(t => t.trim()).filter(Boolean) : [],
+    })
+    setDetailsDirty(false)
+  }
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
@@ -444,16 +492,16 @@ export default function ProjectBoardPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Name</Label>
-                  <Input defaultValue={project.name} onBlur={e => { if (e.target.value !== project.name) saveProject({ name: e.target.value }) }} />
+                  <Input value={detailName} onChange={e => { setDetailName(e.target.value); markDirty() }} />
                 </div>
                 <div className="space-y-2">
                   <Label>Beschreibung</Label>
-                  <Textarea defaultValue={project.description || ''} rows={3} onBlur={e => { if (e.target.value !== (project.description || '')) saveProject({ description: e.target.value || null }) }} />
+                  <Textarea value={detailDesc} rows={3} onChange={e => { setDetailDesc(e.target.value); markDirty() }} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Status</Label>
-                    <Select value={project.status || 'active'} onValueChange={v => saveProject({ status: v })}>
+                    <Select value={detailStatus} onValueChange={v => { setDetailStatus(v); markDirty() }}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="active">Aktiv</SelectItem>
@@ -465,7 +513,7 @@ export default function ProjectBoardPage() {
                   </div>
                   <div className="space-y-2">
                     <Label>Prioritaet</Label>
-                    <Select value={project.priority || 'mittel'} onValueChange={v => saveProject({ priority: v })}>
+                    <Select value={detailPriority} onValueChange={v => { setDetailPriority(v); markDirty() }}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="kritisch">Kritisch</SelectItem>
@@ -478,7 +526,7 @@ export default function ProjectBoardPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Projekttyp</Label>
-                  <Select value={project.projectType || 'kanban'} onValueChange={v => saveProject({ projectType: v })}>
+                  <Select value={detailType} onValueChange={v => { setDetailType(v); markDirty() }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="kanban">Kanban</SelectItem>
@@ -495,7 +543,7 @@ export default function ProjectBoardPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label className="flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5" />Firma</Label>
-                  <Select value={project.companyId || '__none__'} onValueChange={v => saveProject({ companyId: v === '__none__' ? null : v })}>
+                  <Select value={detailCompanyId} onValueChange={v => { setDetailCompanyId(v); markDirty() }}>
                     <SelectTrigger><SelectValue placeholder="Keine Firma zugeordnet" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="__none__">— Keine Firma —</SelectItem>
@@ -506,24 +554,34 @@ export default function ProjectBoardPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label>Startdatum</Label>
-                    <Input type="date" defaultValue={project.startDate ? project.startDate.split('T')[0] : ''} onBlur={e => saveProject({ startDate: e.target.value || null })} />
+                    <Input type="date" value={detailStartDate} onChange={e => { setDetailStartDate(e.target.value); markDirty() }} />
                   </div>
                   <div className="space-y-2">
                     <Label>Enddatum</Label>
-                    <Input type="date" defaultValue={project.endDate ? project.endDate.split('T')[0] : ''} onBlur={e => saveProject({ endDate: e.target.value || null })} />
+                    <Input type="date" value={detailEndDate} onChange={e => { setDetailEndDate(e.target.value); markDirty() }} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Budget (EUR)</Label>
-                  <Input type="number" defaultValue={project.budget || ''} placeholder="z.B. 5000" onBlur={e => saveProject({ budget: e.target.value || null })} />
+                  <Input type="number" value={detailBudget} placeholder="z.B. 5000" onChange={e => { setDetailBudget(e.target.value); markDirty() }} />
                 </div>
                 <div className="space-y-2">
                   <Label>Tags (kommagetrennt)</Label>
-                  <Input defaultValue={(project.tags || []).join(', ')} placeholder="z.B. Website, Redesign" onBlur={e => saveProject({ tags: e.target.value ? e.target.value.split(',').map(t => t.trim()).filter(Boolean) : [] })} />
+                  <Input value={detailTags} placeholder="z.B. Website, Redesign" onChange={e => { setDetailTags(e.target.value); markDirty() }} />
                 </div>
-                {projectSaving && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Speichern...</div>}
               </CardContent>
             </Card>
+          </div>
+
+          {/* Save button (sticky at bottom) */}
+          <div className="max-w-4xl mt-6 flex items-center gap-3">
+            <Button onClick={saveAllDetails} disabled={!detailsDirty || projectSaving}>
+              {projectSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              Speichern
+            </Button>
+            {detailsDirty && (
+              <span className="text-xs text-muted-foreground">Ungespeicherte Aenderungen</span>
+            )}
           </div>
         </TabsContent>
       </Tabs>
