@@ -133,6 +133,7 @@ const navigation: NavItem[] = [
       { name: 'EOS Framework', href: '/intern/management/eos' },
       { name: 'OKR Ziele', href: '/intern/management/okr' },
       { name: 'SOPs Prozesse', href: '/intern/management/sops' },
+      { name: 'Deliverables', href: '/intern/management/deliverables' },
     ],
   },
   // ── Einstellungen ──
