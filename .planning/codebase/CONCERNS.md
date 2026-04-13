@@ -1,203 +1,191 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-04-13
 
-## Security Concerns
+## Fire-and-Forget Async Operations
 
-### SQL Injection via `sql.raw()` in Database Import
+**Webhook and Workflow Triggers:**
+- Issue: Workflows and webhooks are fired asynchronously without awaiting completion or guaranteed delivery
+- Files: `src/lib/services/lead.service.ts` (lines 344, 351, 373), `src/app/api/v1/contact/route.ts`, `src/app/api/v1/companies/route.ts`
+- Impact: Failed webhook/workflow execution is silently swallowed; no retry mechanism; business logic may not complete. Leads changing status might trigger workflows that fail without operator visibility.
+- Current: Some calls use `.catch(() => {})` which silently ignores errors; others don't catch at all
+- Fix approach: Implement a webhook/workflow delivery queue (extend TaskQueueService) with retry logic and dead-letter tracking
 
-- Issue: The database import route uses `sql.raw()` to execute user-supplied SQL statements parsed from uploaded `.sql` files. While only INSERT statements against whitelisted tables are accepted, the statement content itself is not sanitized beyond regex matching.
-- Files: `src/app/api/v1/import/database/route.ts:188` (DELETE with string interpolation), `src/app/api/v1/import/database/route.ts:212` (raw INSERT execution)
-- Impact: A crafted SQL file could potentially inject malicious SQL within an INSERT statement (e.g., subqueries, function calls). The DELETE uses string interpolation for `tenantId` which comes from the authenticated session (lower risk, but still bad practice).
-- Fix approach: Use parameterized queries for DELETE. For INSERT, consider parsing values and re-constructing parameterized inserts rather than executing raw SQL strings.
+## Database Connection Pooling
 
-### Wildcard CORS on All API Routes
+**Low Pool Size for High Concurrency:**
+- Issue: Fixed pool size of 20 connections with idle_timeout of 20 seconds
+- Files: `src/lib/db/index.ts` (lines 40-42)
+- Impact: Under load (e.g., multiple email syncs, IR playbook imports, concurrent requests), connection exhaustion can cause request queueing or timeouts. No adaptive scaling.
+- Current: `max: 20, idle_timeout: 20, connect_timeout: 10`
+- Fix approach: Profile production load; increase `max` to 40-50 and add connection metrics/monitoring
 
-- Issue: `Access-Control-Allow-Origin: *` is set for all `/api/*` routes in `next.config.ts:32`. Combined with `Access-Control-Allow-Credentials: true`, this allows any origin to make credentialed requests.
-- Files: `next.config.ts:30-36`
-- Impact: Any website can make API calls to the application. While session cookies use `sameSite: lax`, API key-based auth via headers is fully exposed.
-- Fix approach: Replace wildcard with explicit allowed origins (e.g., `boss.xkmu.de`). Remove `Allow-Credentials` if wildcard is kept (browsers reject `*` with credentials anyway, but it signals intent).
+## N+1 Query Patterns
 
-### No CSRF Protection
+**IR Playbook Service Escalation Levels:**
+- Issue: Fetching all escalation levels in loop, then separately querying recipients per level
+- Files: `src/lib/services/ir-playbook.service.ts` (lines 91-99)
+- Impact: 1 query for levels + N queries for recipients; scales linearly with escalation levels. Large incident playbooks trigger many DB round-trips.
+- Fix approach: Use SQL JOIN to fetch levels + recipients in single query, or batch the recipient fetches
 
-- Issue: No CSRF tokens or middleware detected. No `middleware.ts` file exists. Session cookies use `sameSite: lax` which protects against POST from cross-origin, but GET-based state changes would be vulnerable.
-- Files: `src/lib/auth/session.ts:30-33` (cookie config)
-- Impact: Any mutation via GET request (if any exist) is vulnerable to CSRF. The `sameSite: lax` setting mitigates most POST-based CSRF.
-- Fix approach: Add Next.js middleware for CSRF token validation on mutation routes, or ensure all mutations use POST/PUT/DELETE only.
+**Email Sync - No Batch Processing:**
+- Issue: `syncAccount()` processes messages one at a time in a loop without batching
+- Files: `src/lib/services/email-imap.service.ts` (lines 82-93)
+- Impact: Each message triggers separate DB insert; many emails in a single sync session means many roundtrips
+- Fix approach: Batch inserts into groups of 50-100 messages per transaction
 
-### No Security Headers (CSP, X-Frame-Options, etc.)
+## Type Safety Issues with `as unknown` / `as any`
 
-- Issue: No Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, or other security headers are configured.
-- Files: `next.config.ts` (no security headers in `headers()` function)
-- Impact: Application is vulnerable to clickjacking, MIME-type sniffing, and has no XSS mitigation from CSP.
-- Fix approach: Add security headers in `next.config.ts` `headers()` function: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy` with appropriate directives.
+**Unsafe Type Coercion in Services:**
+- Issue: 1028+ uses of `as any`, `as unknown`, `!!`, `!.` across codebase
+- Files: Widespread across `src/lib/services/**`, `src/app/intern/**`, `src/components/**`
+- Impact: Runtime errors if shape assumptions fail; harder to refactor; loses TypeScript safety benefits
+- Current: Examples: `src/lib/services/ir-playbook.service.ts` line 59, `src/lib/services/ir-playbook.service.ts` line 68, `src/lib/services/ir-playbook.service.ts` line 76
+- Fix approach: Add stricter `tsconfig` settings; run `@typescript-eslint/no-unsafe-type` linter rule; migrate hot-path services first
 
-### Hardcoded Default Admin Credentials in Source Code
+## Missing Transaction Boundaries
 
-- Issue: Default admin email and password are hardcoded as fallbacks in seed files. These are committed to version control.
-- Files: `src/lib/db/seed-check.ts:20-21`, `src/lib/db/seed.ts:14-15`
-- Impact: If `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` env vars are not set, a known email/password combination is used. The password `fG58Ebj2@MDv6uvm` is in the git history.
-- Fix approach: Remove hardcoded fallbacks. Require env vars or fail the seed process if they are missing.
+**IR Playbook Import - Partial Success Risk:**
+- Issue: Large JSON import in `importFullPlaybook()` inserts groups/controls/links but if one insert fails mid-stream, partial data remains in DB
+- Files: `src/lib/services/grundschutz-catalog.service.ts` (lines 150+)
+- Impact: Database integrity compromised; next import has conflicting data; manual cleanup required
+- Current: Uses `db.transaction()` for catalog import (good) but not all import services do
+- Fix approach: Ensure ALL multi-step imports use transactions; add rollback testing
 
-### API Key Auth Bypasses Permission Checks
+## Workflow Engine Condition Evaluation
 
-- Issue: In `withPermission()`, when auth role is `'api'`, the handler is called immediately without any module/action permission check.
-- Files: `src/lib/auth/require-permission.ts:25-27`
-- Impact: Any valid API key gets full access to all modules and all actions, regardless of the intended scope. This defeats the purpose of granular permissions.
-- Fix approach: Check API key scopes against the requested module/action, similar to how roleId permissions are checked.
+**Limited Expression Language - Silent Fallback:**
+- Issue: `evaluateCondition()` uses regex-based parsing for simple conditions; unknown formats default to `true`
+- Files: `src/lib/services/workflow/engine.ts` (lines 39-84, specifically line 79-80)
+- Impact: Typos in condition syntax silently execute the step when intended to skip. Complex conditions can't be expressed. Debugging difficult.
+- Fix approach: Add condition validation at workflow creation time; log unexpected formats as warnings; consider expression evaluator library (e.g., `expr-eval`)
 
-### Duplicate `getAuthContext` Implementations (14 files)
+## SMTP Transport Not Closed
 
-- Issue: 14 API route files define their own local `getAuthContext()` function instead of using the shared one from `src/lib/auth/auth-context.ts`. These have slightly different implementations and inconsistent permission checks.
-- Files: `src/app/api/v1/companies/[id]/research/route.ts`, `src/app/api/v1/email/send/route.ts`, `src/app/api/v1/export/database/route.ts`, `src/app/api/v1/import/database/route.ts`, `src/app/api/v1/leads/[id]/research/route.ts`, `src/app/api/v1/persons/[id]/research/route.ts`, `src/app/api/v1/companies/[id]/crawl/route.ts`, `src/app/api/v1/companies/[id]/analyze-document/route.ts`, `src/app/api/v1/companies/[id]/persons/route.ts`, `src/app/api/v1/companies/[id]/research/[researchId]/apply/route.ts`, `src/app/api/v1/companies/[id]/research/[researchId]/reject/route.ts`, `src/app/api/v1/ideas/[id]/convert/route.ts`, `src/app/api/v1/leads/[id]/outreach/route.ts`, `src/app/api/v1/ai-prompt-templates/seed/route.ts`
-- Impact: Inconsistent auth handling. Some check admin role, some don't. Bug fixes to auth logic must be replicated across all 14 copies.
-- Fix approach: Migrate all 14 routes to use the shared `getAuthContext` from `src/lib/auth/auth-context.ts` and wrap with `withPermission()`.
+**Resource Leak in Email Sending:**
+- Issue: `nodemailer` transport created but never explicitly closed
+- Files: `src/lib/services/email-smtp.service.ts` (lines 48-90)
+- Impact: SMTP connections may linger after send; under high email volume, connection leaks accumulate
+- Fix approach: Add `transport.close()` in finally block; test with connection monitoring
 
-### No HTML Sanitization Library
+## Unhandled Promise Rejections
 
-- Issue: Markdown rendering uses `dangerouslySetInnerHTML` with a custom markdown-to-HTML converter. While `escapeHtml()` is applied to text content, there is no DOMPurify or similar library to sanitize the final HTML output.
-- Files: `src/lib/utils/markdown.ts`, `src/app/_components/markdown-renderer.tsx:14`, `src/app/intern/(dashboard)/settings/email-templates/page.tsx:238`
-- Impact: If any edge case in the custom markdown parser produces unsafe HTML, XSS is possible. The email template preview renders raw HTML from the database.
-- Fix approach: Add `dompurify` (or `isomorphic-dompurify`) as a dependency and sanitize all `dangerouslySetInnerHTML` inputs.
+**Cron Ticker Async Handler:**
+- Issue: `CronService.tick()` error caught but execution continues; no circuit breaker
+- Files: `src/instrumentation.ts` (lines 47-52)
+- Impact: If tick() starts failing (e.g., DB connection lost), it will keep retrying every 60s with no backoff, logging errors but not alerting
+- Fix approach: Add exponential backoff, circuit breaker, or alert threshold after N consecutive failures
 
-## Performance Concerns
+## CSRF Cookie Set as Non-HttpOnly
 
-### Sequential Awaits in Loops (N+1 Query Patterns)
+**Security Configuration Issue:**
+- Issue: CSRF token cookie set with `httpOnly: false` to allow frontend read
+- Files: `src/proxy.ts` (lines 173-178)
+- Impact: JavaScript can access token; vulnerable to XSS attacks that steal the token. The double-submit cookie pattern requires frontend access, but this is still risky.
+- Current: `httpOnly: false, secure: process.env.NODE_ENV === 'production'`
+- Fix approach: Consider storing CSRF token in JavaScript memory or sessionStorage only; validate that secure flag is set in production (confirm via env check in logs)
 
-- Issue: Multiple services execute database queries inside for-loops, causing N+1 query patterns.
-- Files:
-  - `src/lib/services/ai-prompt-template.service.ts:128-129` - checks existing per slug in seedDefaults loop
-  - `src/lib/services/cms-block.service.ts:106-107` - updates sort order one-by-one
-  - `src/lib/services/cms-navigation.service.ts:105-106` - updates sort order one-by-one
-  - `src/lib/services/din-audit.service.ts:204-205` - saves answers one-by-one
-  - `src/lib/services/document-calculation.service.ts:194-195` - updates item sort order one-by-one
-  - `src/lib/services/ai/image-generation.service.ts:477-478` - deletes images one-by-one
-  - `src/app/api/v1/processes/dev-tasks/generate/route.ts:98-99` - loads tasks per process
-  - `src/app/api/v1/social-media/topics/generate/route.ts:60-61` - creates topics one-by-one
-- Impact: Slow operations for lists with many items. Each loop iteration adds a database round-trip.
-- Fix approach: Use batch operations: `INSERT ... VALUES (...), (...)`, bulk `UPDATE` with `CASE WHEN`, or `Promise.all()` where order doesn't matter.
+## Rate Limiting Fails Open Without Alerting
 
-### In-Memory Rate Limiter Does Not Scale
+**Silent Degradation When Redis Down:**
+- Issue: Rate limiter returns null (allows request) when Redis is unavailable
+- Files: `src/lib/utils/rate-limit.ts` (lines 33-38, 51-54)
+- Impact: If Redis goes down, rate limiting is completely disabled. API becomes vulnerable to brute-force attacks on login, email send, etc. Only warning is a log line.
+- Fix approach: Return 503 Service Unavailable instead of failing open on auth endpoints; alert on Redis connection failures
 
-- Issue: Rate limiting uses an in-memory `Map` that only works for a single process/container.
-- Files: `src/lib/utils/rate-limit.ts`
-- Impact: If the app runs with multiple replicas (horizontal scaling), rate limits are per-instance, not global. An attacker could bypass limits by hitting different instances.
-- Fix approach: The docker-compose already includes Redis (`REDIS_URL` is configured). Move rate limiting to Redis with `INCR`/`EXPIRE` pattern.
+## Workflow Engine Continues After Step Failures
 
-### Monolithic Schema File (2551 lines)
+**Partial Workflow Execution - No Halt Mechanism:**
+- Issue: Individual step failures don't stop workflow; missing action definitions are logged but workflow continues
+- Files: `src/lib/services/workflow/engine.ts` (lines 169, 188-195)
+- Impact: Workflow marked as completed even with critical failures; dependent steps execute with incomplete data; operator unaware of partial failure
+- Fix approach: Add step `requiresSuccess` flag to mark blocking steps; update completion logic to mark as failed if any required step fails
 
-- Issue: The entire database schema is in a single file.
-- Files: `src/lib/db/schema.ts` (2551 lines)
-- Impact: Difficult to navigate, slow IDE responsiveness, merge conflicts likely when multiple features touch the schema.
-- Fix approach: Split into domain-specific schema files (e.g., `schema/auth.ts`, `schema/crm.ts`, `schema/cms.ts`) and re-export from an index.
+## Large Monolithic Components
 
-### Large Page Components
+**Overly Complex Pages (800+ lines):**
+- Issue: Multiple UI pages exceed 1000 lines; tightly coupled logic
+- Files: 
+  - `src/app/intern/(dashboard)/cybersecurity/ir-playbook/page.tsx` (1063 lines)
+  - `src/app/intern/(dashboard)/finance/contracts/[id]/page.tsx` (629 lines)
+  - `src/app/intern/(dashboard)/settings/tenant/page.tsx` (703 lines)
+  - `src/app/intern/(dashboard)/emails/page.tsx` (877 lines)
+- Impact: Hard to test, slow to compile, high refactor risk, components resist reuse
+- Fix approach: Extract forms into separate components (`ContractForm`, `TenantSettingsForm`); create custom hooks for form state management
 
-- Issue: Several page components exceed 600-1000+ lines, mixing data fetching, state management, and UI.
-- Files:
-  - `src/app/intern/(dashboard)/cockpit/page.tsx` (1158 lines)
-  - `src/components/shared/ai-research-card.tsx` (1047 lines)
-  - `src/app/intern/(dashboard)/prozesse/dev/page.tsx` (983 lines)
-  - `src/app/intern/(dashboard)/cybersecurity/grundschutz/assets/[id]/page.tsx` (883 lines)
-  - `src/app/intern/(dashboard)/cms/[id]/blocks/[blockId]/_components/block-field-renderer.tsx` (878 lines)
-  - `src/app/intern/(dashboard)/chancen/page.tsx` (763 lines)
-  - `src/app/intern/(dashboard)/catalog/_components/product-form.tsx` (760 lines)
-- Impact: Hard to maintain, test, and review. Slow re-renders when any state changes in a large component.
-- Fix approach: Extract sub-components, custom hooks for data fetching, and separate container/presentation patterns.
+## Seed Data Security Concerns
 
-## Code Quality Concerns
+**Hardcoded Placeholder Credentials:**
+- Issue: Seed files contain placeholder data (bank IBANs, passwords) that might be used in development
+- Files: `src/lib/db/seeds/`, `src/app/intern/(dashboard)/settings/tenant/page.tsx` (lines 505, 528 show placeholder BIC codes)
+- Impact: If seed data is accidentally deployed to production or used as template, credentials are visible. No validation prevents reusing seed credentials.
+- Fix approach: Never seed production; add SQL constraint to reject seed IBANs/BICS; document seed-data-only markers
 
-### Excessive `as any` Casts (42 instances)
+## Email Sync Message Parsing Fragility
 
-- Issue: 42 occurrences of `as any` across the codebase, concentrated in the CMS block field renderer.
-- Files: `src/app/intern/(dashboard)/cms/[id]/blocks/[blockId]/_components/block-field-renderer.tsx` (20+ instances), `src/app/_components/cms-block-renderer.tsx` (4 instances)
-- Impact: Defeats TypeScript's type safety. Runtime errors possible from incorrect assumptions about data shape.
-- Fix approach: Define proper interfaces for each CMS block type's content structure. Use discriminated unions for block types.
+**Multiple Exception Handlers with Silent Failures:**
+- Issue: Message parsing in `email-imap.service.ts` has nested try-catch blocks (lines 84-93) with error increments but limited context
+- Files: `src/lib/services/email-imap.service.ts`
+- Impact: Malformed emails silently fail to sync; users unaware of missing messages. Error count incremented but no detail on which UID failed or why.
+- Fix approach: Log UID and error details; implement retry for transient failures; separate parsing errors from message-not-found
 
-### ESLint Rule Suppressions
+## JSON Repair Fallback in AI Responses
 
-- Issue: 8 `eslint-disable` comments, primarily suppressing `react-hooks/exhaustive-deps`.
-- Files: `src/app/intern/(dashboard)/cybersecurity/basisabsicherung/[id]/checklist/[checklistId]/page.tsx:133,157`, `src/app/intern/(dashboard)/cybersecurity/grundschutz/page.tsx:117`, `src/app/intern/(dashboard)/ideas/[id]/page.tsx:72`, `src/app/intern/(dashboard)/prozesse/page.tsx:304`, `src/app/intern/(dashboard)/wiba/[id]/interview/page.tsx:137`, `src/app/_components/blocks/blog-listing-block.tsx:52`
-- Impact: Missing dependencies in `useEffect` can cause stale closures and bugs that are hard to debug.
-- Fix approach: Fix dependency arrays or extract logic into stable callbacks with `useCallback`.
+**Truncated Response Handling Not Guaranteed:**
+- Issue: `parseJsonFromResponse()` in lead-research service attempts repair but may still fail silently
+- Files: `src/lib/services/ai/lead-research.service.ts` (lines 200-228)
+- Impact: Truncated AI responses lose data; research result is marked complete but contains incomplete analysis
+- Fix approach: Return error instead of throwing; let caller decide whether to retry or use partial data; log truncation as warning with token count
 
-### Inconsistent Error Handling in Newer Routes
+## Missing Idempotency Keys
 
-- Issue: Newer API routes (grundschutz, ir-playbook) use `console.error` instead of the established `logger` utility.
-- Files: `src/app/api/v1/grundschutz/assets/route.ts:45,64`, `src/app/api/v1/grundschutz/assets/[id]/route.ts:21,44,65`, `src/app/api/v1/grundschutz/assets/[id]/controls/route.ts:33`, `src/app/api/v1/ir-playbook/route.ts:22,44`, `src/app/api/v1/ir-playbook/views/route.ts:28`, `src/app/api/v1/ir-playbook/[id]/route.ts:21,37`
-- Impact: These errors may not appear in structured logs. Inconsistent with the codebase convention of using `logger.error()`.
-- Fix approach: Replace `console.error` with `logger.error(message, error, { module: '...' })` pattern.
+**Task Queue - No Idempotency for Retries:**
+- Issue: TaskQueue operations (create, execute) lack idempotency keys
+- Files: `src/lib/services/task-queue.service.ts`
+- Impact: If a task is retried, it may execute twice (e.g., duplicate email send, duplicate webhook call). No way to deduplicate based on intent.
+- Fix approach: Add optional `idempotencyKey` field to task; check if key exists before processing
 
-### Silent Error Swallowing in AI Services
+## Database SSL Configuration Default
 
-- Issue: Many AI service catch blocks are empty (no error variable captured, no logging).
-- Files: `src/lib/services/ai/ai.service.ts:272,335,382`, `src/lib/services/ai/blog-ai.service.ts:175`, `src/lib/services/ai/business-intelligence-ai.service.ts:55`, `src/lib/services/ai/cms-ai.service.ts:37,74`, `src/lib/services/ai/document-analysis.service.ts:73`, `src/lib/services/ai/image-generation.service.ts:460`
-- Impact: AI failures are silently swallowed. Debugging AI issues becomes very difficult because errors leave no trace.
-- Fix approach: Add `logger.warn()` or `logger.error()` in catch blocks, even if the error is expected/recoverable.
+**SSL Disabled by Default for Non-Docker:**
+- Issue: `getSslConfig()` defaults to `false` (no SSL) for non-Docker environments
+- Files: `src/lib/db/index.ts` (lines 21-33)
+- Impact: Production PostgreSQL connections may run over unencrypted TCP if DATABASE_SSL not explicitly set. Risk in cloud deployments.
+- Fix approach: Default to `ssl: 'require'` in production; only disable for Docker/local dev with explicit flag
 
-## Test Coverage Gaps
+## Email Account Sync Without Bounds
 
-### Only 19 of 70 Services Have Unit Tests
+**No Limits on Sync Scope:**
+- Issue: `syncAccount()` fetches all messages since last sync (or 30 days) with no batch size limit
+- Files: `src/lib/services/email-imap.service.ts` (lines 65-71)
+- Impact: Syncing account with thousands of unsync'd emails causes OOM or long hanging request. No pagination/chunking.
+- Fix approach: Implement max messages per sync (e.g., 500); return continuation token for client to paginate
 
-- Issue: 70 service files exist in `src/lib/services/`, but only 19 have corresponding unit tests.
-- Files: `src/__tests__/unit/services/` (19 test files) vs `src/lib/services/` (70 service files)
-- Untested critical services include:
-  - `src/lib/services/ai-provider.service.ts` - AI provider management
-  - `src/lib/services/email.service.ts` - Email sending
-  - `src/lib/services/tenant.service.ts` - Multi-tenant management
-  - `src/lib/services/tenant-seed.service.ts` - Tenant data seeding
-  - `src/lib/services/opportunity.service.ts` - Sales pipeline
-  - `src/lib/services/project.service.ts` - Project management
-  - `src/lib/services/firecrawl.service.ts` - Web scraping
-  - `src/lib/services/api-key.service.ts` - API key management
-- Impact: 73% of services have zero automated tests. Regressions can ship unnoticed.
-- Risk: High - especially for auth-related services (`api-key.service.ts`, `tenant.service.ts`)
-- Fix approach: Prioritize tests for auth, email, and tenant services. Use existing test patterns from `src/__tests__/unit/services/` as templates.
+## Validation Library Bloat
 
-### Only 4 Integration Tests
+**Large Validation File (753 lines):**
+- Issue: `src/lib/utils/validation.ts` contains all Zod schemas in one file
+- Files: `src/lib/utils/validation.ts`
+- Impact: Hard to find schemas; slow IDE performance; tightly couples unrelated features; refactoring one schema affects file size checks
+- Fix approach: Split into feature-specific files (e.g., `schemas/lead.ts`, `schemas/company.ts`); use barrel exports
 
-- Issue: Only 4 integration test files exist for 215 API routes.
-- Files: `src/__tests__/integration/api/` (admin-database, auth, companies, export-database)
-- Impact: API contract changes can break clients without test failures.
-- Fix approach: Add integration tests for critical flows: login, CRUD on core entities, permission checks.
+## Untyped Error Handlers
 
-### No E2E Tests
+**Catch Blocks with `unknown`:**
+- Issue: Many error handlers cast caught errors to string without type guards
+- Files: Throughout services and API routes
+- Impact: Loss of error stack traces; difficulty debugging; generic messages to users
+- Current pattern: `catch(err) { const msg = err instanceof Error ? err.message : String(err) }`
+- Fix approach: Create standardized error type (AppError extends Error); log full error with context; return structured error response
 
-- Issue: No end-to-end test framework or tests detected.
-- Impact: Full user flows (login -> create entity -> verify) are never automatically tested.
-- Fix approach: Add Playwright or Cypress for critical paths.
+## Missing Tenant Isolation Audit
 
-## Architecture Concerns
-
-### No Next.js Middleware
-
-- Issue: No `middleware.ts` file exists at the project root or in `src/`.
-- Impact: No centralized auth check, no request logging, no redirect logic. Each API route must handle its own auth independently, leading to the duplicated `getAuthContext` problem.
-- Fix approach: Add `middleware.ts` with auth verification for `/api/v1/*` (except public routes) and `/intern/*` paths.
-
-### Docker-Compose Exposes Default Secrets
-
-- Issue: `docker-compose.local.yml` contains default values for secrets (JWT_SECRET, Redis password, Supabase DB password) via `${VAR:-default}` syntax.
-- Files: `docker-compose.local.yml:37-38`
-- Impact: If deployed without setting env vars, the application runs with known credentials.
-- Fix approach: Remove default values for security-critical variables. Fail startup if they are not set.
-
-### Session Has No Refresh/Rotation
-
-- Issue: JWT sessions last 7 days with no refresh mechanism. Once issued, a token is valid until expiry.
-- Files: `src/lib/auth/session.ts:6` (7-day duration), no refresh endpoint exists
-- Impact: Compromised tokens remain valid for up to 7 days. No way to revoke sessions (stateless JWT).
-- Fix approach: Add a shorter-lived access token with a refresh token pattern, or store sessions server-side for revocation capability.
-
-## Dependencies at Risk
-
-### No Lock File Pinning Visible
-
-- Issue: All dependencies in `package.json` use caret ranges (`^`), which means minor/patch updates can change behavior.
-- Files: `package.json`
-- Impact: Builds may produce different results depending on when `npm install` runs. A breaking change in a minor version could cause production issues.
-- Fix approach: Ensure `package-lock.json` or equivalent is committed and used in CI/Docker builds with `npm ci`.
+**No Verification that All Queries are Tenant-Scoped:**
+- Issue: Large codebase without automated checks that queries include tenant filters
+- Files: All service files
+- Impact: Potential data leak if developer forgets tenant filter in multi-tenant queries. No linting rule prevents this.
+- Fix approach: Add ESLint rule or comment-based guard; audit high-risk services (lead, company, opportunity); add integration test for tenant isolation per module
 
 ---
 
-*Concerns audit: 2026-03-30*
+*Concerns audit: 2026-04-13*

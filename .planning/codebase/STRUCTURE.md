@@ -1,438 +1,409 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-04-13
 
 ## Directory Layout
 
 ```
-xKMU-BusinessOS/
-├── src/                        # All application source code
-│   ├── app/                    # Next.js App Router (pages + API)
-│   ├── components/             # Shared React components
-│   ├── hooks/                  # Custom React hooks
-│   ├── lib/                    # Core business logic, DB, auth, utils
-│   └── __tests__/              # Test files
-├── drizzle/                    # Drizzle ORM migration files
-│   └── migrations/             # SQL migration files
-├── docker/                     # Docker config and scripts
-│   ├── app/                    # App Dockerfile context
-│   ├── postgres/               # PostgreSQL custom config
-│   └── scripts/                # Deployment scripts
-├── data/                       # Runtime data (not committed)
-│   └── uploads/                # User-uploaded files
-├── docs/                       # Project documentation
-├── public/                     # Static assets (favicon, etc.)
-├── docker-compose.yml          # Development compose
-├── docker-compose.local.yml    # Production compose (on server)
-├── docker-compose.prod.yml     # Alternative production compose
-├── drizzle.config.ts           # Drizzle ORM configuration
-├── next.config.ts              # Next.js configuration
-├── package.json                # Dependencies and scripts
-├── tsconfig.json               # TypeScript configuration
-├── vitest.config.ts            # Test configuration
-├── eslint.config.mjs           # ESLint configuration
-├── postcss.config.mjs          # PostCSS configuration
-└── components.json             # shadcn/ui configuration
+xkmu-business-os/
+├── src/                          # Source code root
+│   ├── app/                      # Next.js App Router (pages, API routes, layouts)
+│   │   ├── (public)/            # Public routes (no auth required)
+│   │   │   ├── layout.tsx        # Global public layout with CMS nav
+│   │   │   ├── page.tsx          # Homepage
+│   │   │   ├── [...slug]/page.tsx # CMS dynamic routes
+│   │   │   ├── it-news/          # Blog listing & detail pages
+│   │   │   ├── agb/              # Legal pages (AGB, Datenschutz, Impressum)
+│   │   │   └── kontakt/page.tsx  # Contact form
+│   │   ├── intern/               # Authenticated app (auth required)
+│   │   │   ├── (auth)/           # Auth group (login, register)
+│   │   │   │   ├── layout.tsx    # Auth page wrapper with branding
+│   │   │   │   ├── login/page.tsx
+│   │   │   │   └── register/page.tsx
+│   │   │   └── (dashboard)/      # Dashboard group (protected pages)
+│   │   │       ├── layout.tsx    # Dashboard wrapper with sidebar nav
+│   │   │       ├── blog/         # Blog management
+│   │   │       ├── cms/          # CMS page editor
+│   │   │       ├── contacts/     # Contact/person management
+│   │   │       ├── crm/          # Company/lead management
+│   │   │       ├── cockpit/      # System/integration controls
+│   │   │       ├── din-audit/    # DIN 27001 audit module
+│   │   │       ├── wiba/         # WIBA compliance module
+│   │   │       ├── catalog/      # Product/service catalog
+│   │   │       ├── business-intelligence/
+│   │   │       ├── chat/         # AI chat interface
+│   │   │       ├── ideas/        # Idea management
+│   │   │       ├── finance/      # Accounting/invoicing
+│   │   │       ├── emails/       # Email management
+│   │   │       ├── leads/        # Lead database
+│   │   │       ├── intelligence/ # BI insights
+│   │   │       ├── processes/    # Process management
+│   │   │       └── projects/     # Project management
+│   │   ├── api/
+│   │   │   ├── v1/               # REST API v1 endpoints
+│   │   │   │   ├── auth/         # /api/v1/auth/* (login, logout, permissions)
+│   │   │   │   ├── companies/    # /api/v1/companies/* (CRUD + research)
+│   │   │   │   ├── blog/         # /api/v1/blog/posts/* (CRUD + AI generation)
+│   │   │   │   ├── cms/          # /api/v1/cms/* (pages, blocks, navigation)
+│   │   │   │   ├── chat/         # /api/v1/chat/* (conversations, messages)
+│   │   │   │   ├── din/          # /api/v1/din/* (audits, requirements, grants)
+│   │   │   │   ├── wiba/         # /api/v1/wiba/* (audits, requirements)
+│   │   │   │   ├── ai/           # /api/v1/ai/* (completion, research, status)
+│   │   │   │   ├── cockpit/      # /api/v1/cockpit/* (system configs)
+│   │   │   │   └── [other]/      # contacts, leads, finance, ideas, etc.
+│   │   │   ├── cron/
+│   │   │   │   └── tick/route.ts # /api/cron/tick (background job trigger)
+│   │   │   └── health/route.ts   # /api/health (liveness check)
+│   │   ├── api-docs/             # API documentation pages
+│   │   ├── _components/          # Layout-specific components
+│   │   ├── fonts/                # Local font files (.woff2)
+│   │   ├── globals.css           # Global Tailwind + custom CSS
+│   │   └── layout.tsx            # Root layout with DesignProvider
+│   ├── components/               # Reusable UI components
+│   │   ├── chat/                 # Chat UI components
+│   │   ├── din-audit/            # DIN audit UI components
+│   │   ├── layout/               # Layout-specific components (sidebar, nav)
+│   │   ├── shared/               # Shared components (tables, forms, dialogs)
+│   │   ├── ui/                   # Shadcn/Radix UI base components (button, input, etc.)
+│   │   ├── wiba/                 # WIBA UI components
+│   │   └── csrf-provider.tsx     # CSRF token context provider
+│   ├── hooks/                    # React hooks
+│   │   └── use-permissions.tsx   # Permission checking hook + provider
+│   ├── lib/                      # Core business logic layer
+│   │   ├── auth/                 # Authentication & authorization
+│   │   │   ├── session.ts        # JWT session creation/verification
+│   │   │   ├── api-key.ts        # API key validation
+│   │   │   ├── auth-context.ts   # Auth context types
+│   │   │   └── permissions.ts    # Permission checking guard
+│   │   ├── db/                   # Database layer
+│   │   │   ├── index.ts          # Drizzle ORM connection singleton
+│   │   │   ├── schema.ts         # Database schema (3190 lines, all tables)
+│   │   │   ├── seed.ts           # Base seed script
+│   │   │   ├── seed-check.ts     # Check if seed already run
+│   │   │   ├── table-whitelist.ts # Admin inspection whitelist
+│   │   │   └── seeds/            # Feature-specific seeds
+│   │   │       ├── cms-seed.ts
+│   │   │       ├── din-seed.ts
+│   │   │       ├── wiba-seed.ts
+│   │   │       ├── management-framework.seed.ts
+│   │   │       └── [other].seed.ts
+│   │   ├── services/             # Business logic (domain services)
+│   │   │   ├── user.service.ts   # User CRUD & authentication
+│   │   │   ├── company.service.ts
+│   │   │   ├── blog.service.ts
+│   │   │   ├── cms.service.ts
+│   │   │   ├── cron.service.ts
+│   │   │   ├── activity.service.ts
+│   │   │   ├── ai-provider.service.ts
+│   │   │   ├── ai-prompt-template.service.ts
+│   │   │   ├── ai/               # AI-specific services
+│   │   │   │   ├── ai.service.ts
+│   │   │   │   ├── openai.provider.ts
+│   │   │   │   ├── gemini.provider.ts
+│   │   │   │   ├── deepseek.provider.ts
+│   │   │   │   ├── ollama.provider.ts
+│   │   │   │   ├── blog-ai.service.ts
+│   │   │   │   ├── cms-ai.service.ts
+│   │   │   │   ├── document-analysis.service.ts
+│   │   │   │   ├── image-generation.service.ts
+│   │   │   │   ├── lead-research.service.ts
+│   │   │   │   ├── marketing-ai.service.ts
+│   │   │   │   ├── website-scraper.service.ts
+│   │   │   │   └── [other].service.ts
+│   │   │   ├── workflow/         # Workflow/pipeline engine (future)
+│   │   │   ├── task-queue-handlers/ # Background task handlers
+│   │   │   └── [domain].service.ts # Domain-specific services
+│   │   ├── types/                # TypeScript type definitions
+│   │   │   ├── auth.types.ts     # User, Session, AuthContext types
+│   │   │   └── permissions.ts    # Module, Action, Permission types
+│   │   ├── utils/                # Utility functions (cross-cutting)
+│   │   │   ├── api-response.ts   # apiSuccess(), apiError() utilities
+│   │   │   ├── validation.ts     # Zod schemas & validateAndParse()
+│   │   │   ├── logger.ts         # Console logger with module context
+│   │   │   ├── rate-limit.ts     # Redis-backed rate limiting
+│   │   │   ├── redis-client.ts   # Redis connection singleton
+│   │   │   ├── sanitize.ts       # HTML/text sanitization
+│   │   │   ├── markdown.ts       # Markdown parsing
+│   │   │   ├── csrf.ts           # CSRF token generation
+│   │   │   ├── icon-map.ts       # Icon name mappings
+│   │   │   └── cms-metadata.ts   # CMS SEO & metadata utils
+│   │   ├── constants/            # Constants & enums
+│   │   ├── api-docs/             # API documentation registry
+│   │   │   ├── registry.ts       # Doc registry builder
+│   │   │   └── services/         # Doc files per API domain
+│   │   │       ├── auth.ts
+│   │   │       ├── companies.ts
+│   │   │       ├── blog.ts
+│   │   │       └── [other].ts
+│   ├── __tests__/                # Test files
+│   │   ├── unit/                 # Unit tests
+│   │   └── integration/          # Integration tests
+│   ├── instrumentation.ts        # Next.js hook for cron startup
+│   └── proxy.ts                  # Middleware for auth, CSRF, CORS
+├── drizzle/                      # Database migrations
+│   └── migrations/               # SQL migration files
+├── docker/                       # Docker configuration
+│   ├── app/                      # App container
+│   ├── postgres/                 # PostgreSQL container
+│   └── scripts/                  # Container startup scripts
+├── docs/                         # Documentation
+│   └── superpowers/              # Feature documentation
+├── public/                       # Static assets
+├── .github/                      # GitHub Actions CI/CD
+├── .planning/                    # Planning documents (GSD)
+│   └── codebase/                 # Architecture documents (this folder)
+├── .env                          # Environment variables (not committed)
+├── next.config.ts               # Next.js configuration
+├── tsconfig.json                # TypeScript configuration
+├── tailwind.config.ts           # Tailwind CSS configuration
+├── drizzle.config.ts            # Drizzle ORM configuration
+├── package.json                 # Node.js dependencies
+├── eslint.config.mjs            # ESLint configuration
+└── README.md                    # Project documentation
 ```
 
 ## Directory Purposes
 
-**`src/app/`** - Next.js App Router
-- Purpose: All routes (pages and API endpoints)
-- Contains: Route groups, page components, API handlers, layouts
-- Key files: `layout.tsx` (root), `globals.css`
+**src/app/(public)/**
+- Purpose: Public-facing website pages without authentication
+- Contains: Homepage, blog listing, legal pages (AGB, Datenschutz, Impressum), contact form
+- Key files: `layout.tsx` (wraps with global nav), `page.tsx` (homepage), `[...slug]/page.tsx` (CMS dynamic routes)
 
-**`src/app/(public)/`** - Public Website
-- Purpose: Marketing/landing pages visible without authentication
-- Contains: Static pages (impressum, datenschutz, agb), service pages, blog
-- Layout: `src/app/(public)/layout.tsx` (navbar + footer + breadcrumb)
+**src/app/intern/(auth)/**
+- Purpose: Authentication pages (login, register, password reset)
+- Contains: Login & register forms, API submission handlers
+- Key files: `layout.tsx` (branded auth wrapper), `login/page.tsx`, `register/page.tsx`
+- Guard: No auth required; public but restricted to unauthenticated users
 
-**`src/app/intern/(auth)/`** - Authentication Pages
-- Purpose: Login and registration flows
-- Contains: `login/page.tsx`, `register/page.tsx`
+**src/app/intern/(dashboard)/**
+- Purpose: Main authenticated application with multiple business modules
+- Contains: Blog management, CMS editor, CRM, DIN audit, WIBA, catalog, etc.
+- Key files: `layout.tsx` (dashboard shell with sidebar), feature subdirectories
+- Guard: Requires valid JWT session; permissions checked per module
 
-**`src/app/intern/(dashboard)/`** - Authenticated Dashboard
-- Purpose: All internal business application pages
-- Contains: Feature-specific directories, each with `page.tsx`
-- Layout: `src/app/intern/(dashboard)/layout.tsx` (sidebar + header + chat)
+**src/app/api/v1/**
+- Purpose: RESTful API endpoints for all business operations
+- Contains: CRUD routes, AI/service integrations, reporting endpoints
+- Pattern: Each resource has `route.ts` with POST/GET/PUT/DELETE handlers
+- Auth: JWT in cookie (validated by middleware), CSRF for mutations
 
-**`src/app/api/v1/`** - REST API
-- Purpose: All API endpoints, versioned under v1
-- Contains: Resource-based directories with `route.ts` files
-- Pattern: Each directory = one resource, nested `[id]/route.ts` for single-item operations
+**src/lib/db/**
+- Purpose: Data persistence layer with Drizzle ORM
+- Key file: `schema.ts` (3190 lines) — defines all 50+ tables, multi-tenant structure, relations
+- Database: PostgreSQL with migrations in `drizzle/migrations/`
+- Seeds: Feature-specific seed files for DIN, WIBA, CMS, management frameworks
 
-**`src/components/`** - Shared Components
-- Purpose: Reusable React components used across pages
-- Contains: UI primitives, layout, domain-specific component groups
+**src/lib/services/**
+- Purpose: Business logic encapsulation, organized by domain
+- Pattern: Static methods on singleton objects (e.g., `UserService.create()`, `CompanyService.research()`)
+- Scope: Each service scopes operations by `tenantId` (first parameter)
+- AI services: Separate `ai/` subfolder with provider adapters (OpenAI, Gemini, Deepseek, Ollama) and domain-specific AI services (blog, CMS, document analysis, image generation, research)
 
-**`src/lib/`** - Core Library
-- Purpose: All non-UI code (business logic, DB, auth, utilities)
-- Contains: Organized by concern (auth, db, services, utils, types, constants)
+**src/lib/auth/**
+- Purpose: Authentication & authorization logic
+- Components:
+  - `session.ts`: JWT creation/verification (httpOnly cookie)
+  - `permissions.ts`: Permission guard decorator for routes
+  - `api-key.ts`: API key lookup and validation
+  - `auth-context.ts`: Type definitions for auth data
 
-**`src/__tests__/`** - Test Files
-- Purpose: Unit and integration tests
-- Contains: Mirrors source structure under `unit/` and `integration/`
+**src/lib/utils/**
+- Purpose: Cross-cutting utility functions
+- Key files:
+  - `api-response.ts`: Standardized response wrappers (`apiSuccess()`, `apiError()`)
+  - `validation.ts`: Zod schemas for common inputs (login, register, etc.)
+  - `logger.ts`: Console logging with module context
+  - `rate-limit.ts`: Redis-backed rate limiting (brute-force protection)
+  - `csrf.ts`: CSRF token generation
+  - `sanitize.ts`: HTML/text sanitization (XSS protection)
+
+**src/components/**
+- Purpose: Reusable React UI components
+- Structure:
+  - `ui/`: Shadcn/Radix base components (button, input, dialog, etc.) — auto-generated
+  - `shared/`: Domain-agnostic components (tables, forms, modals)
+  - `layout/`: Dashboard navigation, sidebars, headers
+  - Domain folders: `chat/`, `din-audit/`, `wiba/` for feature-specific UI
+
+**src/hooks/**
+- Purpose: React custom hooks for client-side logic
+- Key: `use-permissions.tsx` — loads permissions from API, provides context for permission checks
+
+**public/**
+- Purpose: Static assets served directly by Next.js
+- Contains: Favicons, images, fonts (though main fonts are in `src/app/fonts/`)
 
 ## Key File Locations
 
 **Entry Points:**
-- `src/app/layout.tsx`: Root layout (fonts, metadata, DesignProvider)
-- `src/app/intern/(dashboard)/layout.tsx`: Dashboard shell (auth check, sidebar, header, chat)
-- `src/app/(public)/layout.tsx`: Public site shell (navbar, footer)
+
+| Route | File | Purpose |
+|-------|------|---------|
+| `/` | `src/app/(public)/page.tsx` | Homepage |
+| `/intern/login` | `src/app/intern/(auth)/login/page.tsx` | Login page |
+| `/intern/blog` | `src/app/intern/(dashboard)/blog/page.tsx` | Blog management |
+| `POST /api/v1/auth/login` | `src/app/api/v1/auth/login/route.ts` | Login API |
+| `GET /api/v1/auth/permissions` | `src/app/api/v1/auth/permissions/route.ts` | Permissions API |
+| `POST /api/cron/tick` | `src/app/api/cron/tick/route.ts` | Cron trigger |
 
 **Configuration:**
-- `next.config.ts`: Next.js config (standalone output, CORS headers, image domains)
-- `drizzle.config.ts`: Drizzle ORM config (connection, migration output)
-- `tsconfig.json`: TypeScript config (path aliases: `@/` -> `src/`)
-- `vitest.config.ts`: Test runner config
-- `components.json`: shadcn/ui component config
 
-**Database:**
-- `src/lib/db/schema.ts`: All 70+ table definitions (2551 lines, single file)
-- `src/lib/db/index.ts`: Connection pool with lazy initialization via Proxy
-- `src/lib/db/seed.ts`: Seed runner
-- `src/lib/db/seeds/`: Individual seed files (DIN, WiBA, CMS seeds)
-- `src/lib/db/table-whitelist.ts`: Allowed tables for DB admin operations
+| File | Purpose |
+|------|---------|
+| `next.config.ts` | Next.js settings (CSP headers, image domains, server packages) |
+| `tsconfig.json` | TypeScript compiler options & path aliases (`@/` = `src/`) |
+| `tailwind.config.ts` | Tailwind CSS theme, plugins, content paths |
+| `drizzle.config.ts` | Drizzle ORM migration & studio settings |
+| `package.json` | Node.js dependencies & scripts (dev, build, test, db) |
+| `eslint.config.mjs` | ESLint rules (next.js recommended) |
 
-**Authentication:**
-- `src/lib/auth/session.ts`: JWT session create/get/delete/require
-- `src/lib/auth/auth-context.ts`: Unified auth extraction (session or API key)
-- `src/lib/auth/require-permission.ts`: `withPermission()` middleware
-- `src/lib/auth/permissions.ts`: Permission check against DB
-- `src/lib/auth/api-key.ts`: API key validation
+**Core Logic:**
 
-**Validation:**
-- `src/lib/utils/validation.ts`: All Zod schemas (739 lines, single file)
+| File | Purpose |
+|------|---------|
+| `src/lib/db/index.ts` | Drizzle ORM connection singleton |
+| `src/lib/db/schema.ts` | Database schema (all tables, 3190 lines) |
+| `src/lib/services/user.service.ts` | User CRUD & authentication |
+| `src/lib/services/company.service.ts` | Company CRUD & research |
+| `src/lib/services/cron.service.ts` | Background job processor |
+| `src/lib/auth/permissions.ts` | RBAC permission checker |
+| `src/lib/utils/api-response.ts` | API response utilities |
+| `src/proxy.ts` | Middleware: JWT validation, CSRF check, CORS |
+| `src/instrumentation.ts` | Next.js hook: cron ticker startup |
 
-**API Response Helpers:**
-- `src/lib/utils/api-response.ts`: `apiSuccess`, `apiError`, pagination helpers
+**Testing:**
 
-**Logging:**
-- `src/lib/utils/logger.ts`: Console-based structured logger
-
-**Types:**
-- `src/lib/types/auth.types.ts`: Session, AuthContext, ApiKeyPayload types
-- `src/lib/types/permissions.ts`: Module/Action definitions, default role permissions
-
-## Service Layer Organization
-
-**`src/lib/services/`** contains 50+ service files following the pattern `{domain}.service.ts`:
-
-**CRM Services:**
-- `lead.service.ts`: Lead management (CRUD, filtering, scoring)
-- `company.service.ts`: Company management
-- `person.service.ts`: Contact person management
-- `opportunity.service.ts`: Sales opportunities
-- `activity.service.ts`: Activity tracking (calls, emails, notes)
-
-**Finance Services:**
-- `document.service.ts`: Invoices and offers
-- `document-calculation.service.ts`: Price/tax calculations
-- `document-template.service.ts`: Document templates
-- `receipt.service.ts`: Receipt management
-
-**Content Services:**
-- `blog-post.service.ts`: Blog posts
-- `cms-page.service.ts`, `cms-block.service.ts`, `cms-navigation.service.ts`: CMS system
-- `social-media-post.service.ts`, `social-media-topic.service.ts`: Social media
-- `marketing-campaign.service.ts`, `marketing-task.service.ts`: Marketing campaigns
-
-**Security/Audit Services:**
-- `din-audit.service.ts`, `din-scoring.service.ts`, `din-pdf.service.ts`: DIN SPEC 27076 audits
-- `wiba-audit.service.ts`, `wiba-scoring.service.ts`, `wiba-pdf.service.ts`: WiBA checks
-- `grundschutz-audit.service.ts`, `grundschutz-catalog.service.ts`, `grundschutz-asset.service.ts`: BSI Grundschutz
-- `ir-playbook.service.ts`: Incident response playbooks
-- `cockpit.service.ts`: IT system cockpit
-
-**AI Services (`src/lib/services/ai/`):**
-- `ai.service.ts`: Core AI abstraction (provider registry, routing, logging)
-- `gemini.provider.ts`, `openai.provider.ts`, `openrouter.provider.ts`, `deepseek.provider.ts`, `kimi.provider.ts`, `ollama.provider.ts`: AI providers
-- `lead-research.service.ts`: AI-powered lead/company research
-- `blog-ai.service.ts`: AI blog generation
-- `marketing-ai.service.ts`: AI marketing content
-- `social-media-ai.service.ts`: AI social posts
-- `cms-ai.service.ts`: AI CMS content
-- `idea-ai.service.ts`: Idea processing
-- `image-generation.service.ts`: AI image generation
-- `kie.provider.ts`, `kie.service.ts`: kie.ai video generation
-
-**Infrastructure Services:**
-- `webhook.service.ts`: Outgoing webhooks
-- `task-queue.service.ts`: Background task queue
-- `email.service.ts`, `email-template.service.ts`: Email sending
-- `n8n.service.ts`: n8n workflow integration
-- `firecrawl.service.ts`, `firecrawl-research.service.ts`: Web scraping
-- `media-upload.service.ts`: File uploads
-- `image-optimizer.service.ts`: Image optimization
-
-## Component Organization
-
-**`src/components/ui/`** - UI Primitives (shadcn/ui)
-- 23 components: `button.tsx`, `card.tsx`, `dialog.tsx`, `table.tsx`, `input.tsx`, `select.tsx`, `tabs.tsx`, `form.tsx`, `badge.tsx`, etc.
-- Pattern: shadcn/ui components, do not modify directly
-
-**`src/components/layout/`** - Layout Components
-- `sidebar.tsx`: Main navigation sidebar
-- `header.tsx`: Top header bar with user info
-- `breadcrumbs.tsx`: Breadcrumb navigation
-
-**`src/components/shared/`** - Reusable Business Components
-- `confirm-dialog.tsx`: Confirmation modal
-- `empty-state.tsx`: Empty state placeholder
-- `form-field.tsx`: Form field wrapper
-- `loading-states.tsx`: Loading spinners/skeletons
-- `quick-create-dialog.tsx`: Quick entity creation
-- `ai-research-card.tsx`: AI research results display
-- `icon-picker.tsx`: Icon selector
-- `image-field.tsx`: Image upload field
-- `image-generator-dialog.tsx`: AI image generation dialog
-
-**`src/components/chat/`** - AI Chat Components
-- `chat-provider.tsx`: Chat context provider
-- `chat-button.tsx`: Floating chat trigger
-- `chat-panel.tsx`: Chat panel UI
-
-**`src/components/din-audit/`** - DIN Audit Components
-**`src/components/wiba/`** - WiBA Check Components
-
-## Dashboard Route Structure
-
-```
-src/app/intern/(dashboard)/
-├── dashboard/                  # Main dashboard/home
-├── leads/                      # Lead management
-│   ├── page.tsx               # Lead list
-│   ├── new/page.tsx           # Create lead
-│   ├── [id]/page.tsx          # Lead detail
-│   └── _components/           # Lead-specific components
-├── contacts/                   # Contact management
-│   ├── companies/page.tsx     # Company list
-│   └── persons/page.tsx       # Person list
-├── chancen/page.tsx           # Opportunities (Google Maps search)
-├── catalog/                    # Product catalog
-│   ├── products/page.tsx
-│   ├── services/page.tsx
-│   ├── categories/page.tsx
-│   └── _components/
-├── finance/                    # Financial documents
-│   ├── invoices/page.tsx
-│   ├── offers/page.tsx
-│   └── _components/
-├── marketing/                  # Marketing campaigns
-│   ├── page.tsx               # Campaign list
-│   ├── new/page.tsx
-│   ├── [id]/page.tsx
-│   ├── newsletter/page.tsx
-│   └── templates/page.tsx
-├── social-media/               # Social media management
-│   ├── page.tsx
-│   ├── new/page.tsx
-│   ├── [id]/page.tsx
-│   ├── topics/page.tsx
-│   └── content-plan/page.tsx
-├── blog/                       # Blog management
-│   ├── page.tsx
-│   ├── new/page.tsx
-│   └── [id]/page.tsx
-├── ideas/                      # Idea management
-│   ├── page.tsx
-│   └── [id]/page.tsx
-├── projekte/                   # Project management
-│   └── [id]/page.tsx
-├── prozesse/                   # Process handbook
-│   ├── page.tsx
-│   ├── [id]/page.tsx
-│   └── dev/page.tsx
-├── zeiterfassung/page.tsx     # Time tracking
-├── cybersecurity/              # Security tools
-│   ├── basisabsicherung/      # Basic security assessment
-│   ├── grundschutz/           # BSI Grundschutz
-│   └── ir-playbook/           # Incident response
-├── din-audit/                  # DIN SPEC 27076 audits
-│   ├── page.tsx
-│   ├── new/page.tsx
-│   ├── [id]/page.tsx
-│   └── grants/page.tsx
-├── wiba/                       # WiBA checks
-│   ├── page.tsx
-│   ├── new/page.tsx
-│   └── [id]/page.tsx
-├── business-intelligence/      # BI dashboard
-├── cockpit/page.tsx           # IT system cockpit
-├── chat/page.tsx              # AI chat
-├── cms/                        # CMS editor
-│   ├── page.tsx
-│   ├── [id]/page.tsx
-│   ├── navigation/page.tsx
-│   └── templates/page.tsx
-├── website/page.tsx           # Website preview
-├── images/page.tsx            # Image generation
-├── marketing-ki/page.tsx      # AI marketing agent
-├── n8n-workflows/              # n8n integration
-│   ├── page.tsx
-│   ├── new/page.tsx
-│   └── [id]/page.tsx
-└── settings/                   # System settings
-    ├── profile/page.tsx
-    ├── tenant/page.tsx
-    ├── users/page.tsx
-    ├── roles/page.tsx
-    ├── ai-providers/page.tsx
-    ├── ai-prompts/page.tsx
-    ├── ai-logs/page.tsx
-    ├── api-keys/page.tsx
-    ├── webhooks/page.tsx
-    ├── email-templates/page.tsx
-    ├── database/page.tsx
-    ├── n8n/page.tsx
-    ├── task-queue/page.tsx
-    ├── import/page.tsx
-    ├── export/page.tsx
-    ├── api-docs/page.tsx
-    └── app-docs/page.tsx
-```
-
-## API Route Structure
-
-```
-src/app/api/
-├── health/                     # Health check endpoint
-└── v1/                         # Versioned API
-    ├── auth/                   # Login, register, logout, session
-    ├── leads/                  # Lead CRUD + [id] + inbound
-    ├── companies/              # Company CRUD + [id]
-    ├── persons/                # Person CRUD + [id]
-    ├── opportunities/          # Opportunity CRUD
-    ├── products/               # Product CRUD + [id]
-    ├── product-categories/     # Category CRUD
-    ├── documents/              # Invoice/offer CRUD + [id]
-    ├── document-templates/     # Document template CRUD
-    ├── ai/                     # AI completion endpoints
-    ├── ai-providers/           # AI provider config
-    ├── ai-prompt-templates/    # Prompt template CRUD
-    ├── ai-logs/                # AI usage logs
-    ├── chat/                   # Chat conversations
-    ├── blog/                   # Blog posts
-    ├── cms/                    # CMS pages + blocks
-    ├── marketing/              # Campaigns + tasks
-    ├── social-media/           # Posts + topics
-    ├── newsletter/             # Newsletter management
-    ├── ideas/                  # Idea CRUD + AI processing
-    ├── activities/             # Activity tracking
-    ├── din/                    # DIN audit endpoints
-    ├── wiba/                   # WiBA check endpoints
-    ├── grundschutz/            # BSI Grundschutz
-    ├── ir-playbook/            # Incident response
-    ├── cockpit/                # IT system cockpit
-    ├── business-intelligence/  # BI analysis
-    ├── images/                 # Image generation
-    ├── media/                  # File uploads
-    ├── email/                  # Email sending
-    ├── email-templates/        # Email templates
-    ├── feedback/               # Feedback forms
-    ├── projects/               # Project management
-    ├── processes/              # Process handbook
-    ├── time-entries/           # Time tracking
-    ├── receipts/               # Receipt management
-    ├── kpi/                    # KPI dashboard
-    ├── seo/                    # SEO tools
-    ├── export/                 # Data export
-    ├── import/                 # Data import
-    ├── n8n/                    # n8n integration
-    ├── kie/                    # kie.ai video
-    ├── webhooks/               # Webhook config
-    ├── api-keys/               # API key management
-    ├── users/                  # User management
-    ├── roles/                  # Role management
-    ├── tenant/                 # Tenant settings
-    ├── admin/                  # Admin operations
-    ├── dashboard/              # Dashboard aggregation
-    ├── contact/                # Public contact form
-    ├── public/                 # Public API (no auth)
-    └── task-queue/             # Background task management
-```
+| File | Purpose |
+|------|---------|
+| `src/__tests__/unit/` | Unit tests for utilities, services |
+| `src/__tests__/integration/` | Integration tests for APIs |
+| `vitest.config.ts` | Vitest configuration (if exists) |
 
 ## Naming Conventions
 
 **Files:**
-- Pages: `page.tsx` (Next.js convention)
-- Layouts: `layout.tsx`
-- API routes: `route.ts`
-- Services: `kebab-case.service.ts` (e.g., `lead.service.ts`, `blog-post.service.ts`)
-- AI providers: `kebab-case.provider.ts` (e.g., `gemini.provider.ts`)
-- UI components: `kebab-case.tsx` (e.g., `confirm-dialog.tsx`)
-- Types: `kebab-case.types.ts` (e.g., `auth.types.ts`)
-- Seeds: `kebab-case.seed.ts` (e.g., `din-requirements.seed.ts`)
-- Task handlers: `kebab-case.handler.ts`
+
+| Pattern | Example | Purpose |
+|---------|---------|---------|
+| `*.service.ts` | `user.service.ts` | Business logic class |
+| `*.provider.ts` | `openai.provider.ts` | External API adapter |
+| `*.types.ts` | `auth.types.ts` | TypeScript type definitions |
+| `route.ts` | `src/app/api/v1/auth/login/route.ts` | Next.js route handler |
+| `page.tsx` | `src/app/intern/(dashboard)/blog/page.tsx` | Next.js page component |
+| `layout.tsx` | `src/app/intern/(dashboard)/layout.tsx` | Next.js layout wrapper |
+| `*.test.ts` | `user.service.test.ts` | Test file (co-located) |
+| `*-seed.ts` | `din-seed.ts` | Database seed script |
 
 **Directories:**
-- Route groups: `(groupname)` (e.g., `(public)`, `(auth)`, `(dashboard)`)
-- Dynamic routes: `[param]` (e.g., `[id]`, `[slug]`)
-- Private components: `_components/` (not routable)
-- Resource names: kebab-case plural (e.g., `leads/`, `social-media/`, `ai-providers/`)
 
-**Code Naming:**
-- Services: PascalCase const objects (e.g., `LeadService`, `CompanyService`)
-- Schemas: camelCase (e.g., `createLeadSchema`, `updateCompanySchema`)
-- DB tables: camelCase exports, snake_case SQL names
-- Types/Interfaces: PascalCase (e.g., `LeadWithRelations`, `CreateLeadInput`)
+| Pattern | Example | Purpose |
+|---------|---------|---------|
+| `(groupName)` | `(public)`, `(dashboard)` | Route group (no URL segment) |
+| `[param]` | `[id]`, `[slug]` | Dynamic route segment |
+| `[...slug]` | `[...slug]` | Catch-all route segment |
+| Lowercase with hyphens | `din-audit/`, `blog-posts/` | Feature folders |
+
+**Functions & Variables:**
+
+| Pattern | Example | Purpose |
+|---------|---------|---------|
+| camelCase | `getUserById()`, `validateEmail()` | Functions, variables |
+| PascalCase | `UserService`, `Session` | Classes, types, interfaces |
+| UPPER_SNAKE_CASE | `SALT_ROUNDS`, `JWT_SECRET` | Constants |
+| `use*` | `usePermissions()`, `useAsync()` | React hooks |
+| `with*` | `withPermission()` | Higher-order function/wrapper |
+| `is*`, `has*` | `isActive()`, `hasPermission()` | Boolean functions |
 
 ## Where to Add New Code
 
-**New Feature (e.g., "Tickets"):**
-1. DB schema: Add table to `src/lib/db/schema.ts` with `tenantId` FK
-2. Run migration: `npx drizzle-kit generate` then `npx drizzle-kit migrate`
-3. Validation: Add Zod schemas to `src/lib/utils/validation.ts`
-4. Service: Create `src/lib/services/ticket.service.ts`
-5. API routes: Create `src/app/api/v1/tickets/route.ts` and `src/app/api/v1/tickets/[id]/route.ts`
-6. Permission: Add module to `MODULES` array in `src/lib/types/permissions.ts`
-7. Dashboard page: Create `src/app/intern/(dashboard)/tickets/page.tsx`
-8. Sidebar link: Add entry in `src/components/layout/sidebar.tsx`
-9. Tests: Add to `src/__tests__/unit/services/` or `src/__tests__/integration/api/`
+**New Feature (e.g., new module in dashboard):**
 
-**New AI-Powered Feature:**
-1. Create domain AI service: `src/lib/services/ai/{domain}-ai.service.ts`
-2. Use `AIService.complete()` from `src/lib/services/ai/ai.service.ts`
-3. Add prompt template via `AiPromptTemplateService.getOrDefault(tenantId, slug)` from `src/lib/services/ai-prompt-template.service.ts`
-4. API route: `src/app/api/v1/{resource}/generate/route.ts` or similar
+1. **Database schema:** Add table(s) to `src/lib/db/schema.ts`
+   - Include `tenantId` foreign key, timestamps (`createdAt`, `updatedAt`)
+   - Define relations if related to existing tables
+   - Create seed script at `src/lib/db/seeds/feature-seed.ts`
 
-**New Shared Component:**
-- Reusable business component: `src/components/shared/{name}.tsx`
-- UI primitive: Use `npx shadcn@latest add {component}` (adds to `src/components/ui/`)
-- Feature-specific: `src/app/intern/(dashboard)/{feature}/_components/{name}.tsx`
+2. **Service layer:** Create `src/lib/services/feature.service.ts`
+   - Export static methods for CRUD, search, complex operations
+   - Always scope by `tenantId` (first parameter)
+   - Handle validation and business rules
 
-**New Utility:**
-- Shared helper: `src/lib/utils/{name}.ts`
-- Constants: `src/lib/constants/{name}.ts`
-- Types: `src/lib/types/{name}.ts`
+3. **API routes:** Create `src/app/api/v1/feature/` directory
+   - `route.ts` for collection endpoints (`GET` list, `POST` create)
+   - `[id]/route.ts` for item endpoints (`GET`, `PUT`, `DELETE`)
+   - Call `withPermission(request, 'feature', action)` guard at start
+   - Validate input with Zod schema
+   - Call service, return standardized response
+
+4. **UI pages:** Create `src/app/intern/(dashboard)/feature/` directory
+   - `page.tsx` for list view
+   - `[id]/page.tsx` for detail/edit view
+   - Call API endpoints via `fetch()`
+   - Use `usePermissions()` hook to show/hide UI based on permissions
+
+5. **Components:** Create `src/components/feature/` if complex UI
+   - Extract form, table, dialog components into separate files
+   - Use Shadcn/Radix UI base components for consistency
+
+6. **Tests:** Create `src/__tests__/unit/services/feature.service.test.ts`
+   - Test service methods independently
+   - Mock database, external services
+
+**New Component (shared across features):**
+
+1. Create at `src/components/shared/{component-name}/` if reusable across modules
+2. Or create at `src/components/{feature-name}/` if feature-specific
+3. Use Shadcn/Radix base components from `src/components/ui/`
+4. Export from `index.ts` if multi-file component
+
+**New Utility Function:**
+
+1. If cross-cutting (used in 3+ places): `src/lib/utils/feature-name.ts`
+2. If domain-specific: Within the service or page that uses it
+3. Write with clear parameters, return types, and error handling
+4. Document edge cases in comments
+
+**New API Provider (AI, external service):**
+
+1. Create at `src/lib/services/ai/{provider-name}.provider.ts`
+2. Implement provider interface (e.g., `async complete(prompt)`, `async generateImage(prompt)`)
+3. Handle rate limiting, retry logic, error mapping
+4. Return typed result
+5. Register in `src/lib/services/ai/ai.service.ts` switch statement
 
 ## Special Directories
 
-**`data/uploads/`:**
-- Purpose: User-uploaded files (media, documents)
-- Generated: Yes (at runtime)
-- Committed: No
+**drizzle/migrations/**
+- Purpose: Database schema migrations (auto-generated by drizzle-kit)
+- Generated: Yes (by `npm run db:generate`)
+- Committed: Yes (part of source control)
+- Approach: Auto-generated; modify schema.ts and run `db:generate` to create migration
 
-**`drizzle/migrations/`:**
-- Purpose: SQL migration files generated by Drizzle Kit
-- Generated: Yes (via `npx drizzle-kit generate`)
-- Committed: Yes
+**.next/**
+- Purpose: Next.js build output (cache, server, static files)
+- Generated: Yes (by `npm run build`)
+- Committed: No (gitignored)
 
-**`docker/`:**
-- Purpose: Docker build context, PostgreSQL config, deployment scripts
-- Generated: No
-- Committed: Yes
+**public/**
+- Purpose: Static assets served at root `/`
+- Generated: No (manually added)
+- Committed: Yes (images, favicons, etc.)
 
-**`src/app/_components/`:**
-- Purpose: Root-level shared components (DesignProvider, landing page components)
-- Contains: `design-provider.tsx`, `landing-navbar.tsx`, `landing-footer.tsx`, `breadcrumb.tsx`, `blocks/` (CMS block renderers)
-- Not routable (underscore prefix)
+**docker/**
+- Purpose: Container configuration for local dev and production
+- Postgres, app service, environment setup
+- Committed: Yes (part of deployment)
 
-**`src/lib/db/seeds/`:**
-- Purpose: Seed data for catalog/reference tables (DIN requirements, WiBA requirements, CMS defaults)
-- Generated: No
-- Run via: `src/lib/db/seed.ts`
+**.env (local only)**
+- Purpose: Local environment variables (secrets, DB URL, API keys)
+- Generated: No (manually created for local dev)
+- Committed: No (.gitignored)
+
+**.planning/codebase/**
+- Purpose: Architecture documentation (ARCHITECTURE.md, STRUCTURE.md, TESTING.md, CONVENTIONS.md, CONCERNS.md)
+- Generated: By GSD codebase mapper
+- Committed: Yes (reference for development)
 
 ---
 
-*Structure analysis: 2026-03-30*
+*Structure analysis: 2026-04-13*

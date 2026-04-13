@@ -1,230 +1,281 @@
 # Architecture
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-04-13
 
 ## Pattern Overview
 
-**Overall:** Next.js App Router Monolith with Multi-Tenant Architecture
+**Overall:** Server-driven multi-tenant SaaS with Next.js App Router and RESTful API
 
 **Key Characteristics:**
-- Single Next.js application serving both public website and internal dashboard
-- Multi-tenant data isolation via `tenantId` on virtually every database table
-- Service-layer pattern for business logic, API route handlers are thin wrappers
-- JWT-based session auth with RBAC (role-based access control)
-- AI provider abstraction layer supporting 6+ providers with runtime switching
-- Docker-only deployment (standalone output)
+- **Multi-tenancy:** All data scoped by `tenantId` in database schema
+- **Layered API-first design:** Separation of API routes, services, database, and UI concerns
+- **SSR + API hybrid:** Public pages server-rendered, authenticated dashboard via API + client state
+- **In-process cron:** Background tasks triggered via server instrumentation, no external scheduler
+- **Service-oriented services:** Domain-specific service classes for business logic (AI, CMS, DIN, etc.)
+- **Role-based access control (RBAC):** Permissions stored per tenant per role, checked at API layer and client
 
 ## Layers
 
-**Presentation Layer (Client):**
-- Purpose: React client components for UI
-- Location: `src/app/intern/(dashboard)/` (dashboard pages), `src/app/(public)/` (public pages)
-- Contains: Page components (`page.tsx`), route-specific `_components/` directories
-- Depends on: API layer via `fetch('/api/v1/...')`
-- Used by: End users via browser
+**API Routes:**
+- Purpose: HTTP entry points, request/response handling, validation, rate limiting
+- Location: `src/app/api/v1/` (REST endpoints), `src/app/api/cron/` (background triggers)
+- Contains: Route handlers using Next.js `route.ts` pattern with POST/GET/PUT/DELETE
+- Depends on: Services, database, utilities (validation, auth, response formatting)
+- Used by: Frontend UI, external API consumers
 
-**API Layer:**
-- Purpose: RESTful API endpoints with auth/permission checks
-- Location: `src/app/api/v1/`
-- Contains: `route.ts` files with GET/POST/PUT/DELETE handlers
-- Depends on: Auth layer, Service layer, Validation utilities
-- Used by: Dashboard client, external integrations, API keys
-
-**Service Layer:**
-- Purpose: All business logic, database queries, orchestration
+**Services:**
+- Purpose: Business logic encapsulation for each domain (AI, CMS, Auth, Companies, etc.)
 - Location: `src/lib/services/`
-- Contains: `*.service.ts` files as singleton objects (e.g., `LeadService`, `CompanyService`)
-- Depends on: Database layer, AI layer
-- Used by: API route handlers exclusively
-
-**AI Abstraction Layer:**
-- Purpose: Unified interface to multiple AI providers
-- Location: `src/lib/services/ai/`
-- Contains: Provider implementations, domain-specific AI services
-- Depends on: External AI APIs, `ai_providers` DB table for config
-- Used by: Service layer for AI-powered features
+- Contains: Classes/objects with static methods handling operations (create, update, fetch, process)
+- Key files: `user.service.ts`, `ai/ai.service.ts`, `company.service.ts`, workflow handlers
+- Depends on: Database (Drizzle ORM), external APIs (OpenAI, Gemini, n8n), utilities
+- Used by: API routes, cron jobs, background task handlers
 
 **Database Layer:**
-- Purpose: Schema definition, connection management, ORM
+- Purpose: Data persistence with multi-tenant isolation
 - Location: `src/lib/db/`
-- Contains: Single schema file (`schema.ts`, 2551 lines, 70+ tables), connection pool, seeds
-- Depends on: PostgreSQL via `postgres` driver
-- Used by: Service layer
+- Contains: Drizzle ORM schema, migrations, seed scripts
+- Key files: `index.ts` (connection singleton), `schema.ts` (3190 lines, all tables and relations)
+- Depends on: PostgreSQL, environment config
+- Used by: All services and route handlers
 
-**Auth Layer:**
-- Purpose: Authentication, authorization, permission checking
+**Frontend/UI Components:**
+- Purpose: Server-rendered pages (public) and client-side dashboard UI
+- Location: `src/components/` (reusable components), `src/app/` (pages and layouts)
+- Contains: React components (both RSC and client), layout wrappers, forms
+- Uses: Shadcn/radix-ui, react-hook-form, zod validation, tailwind CSS
+- Depends on: API routes (via fetch), hooks (usePermissions), context providers
+- User-facing: HTML rendered by Next.js
+
+**Utilities & Helpers:**
+- Purpose: Cross-cutting functions (validation, logging, rate limiting, CSRF, response formatting)
+- Location: `src/lib/utils/`
+- Contains: `api-response.ts`, `validation.ts`, `logger.ts`, `rate-limit.ts`, `sanitize.ts`, `markdown.ts`
+- Depends on: zod for validation, redis for rate limiting, standard Node APIs
+- Used by: API routes, services, client components
+
+**Authentication & Authorization:**
+- Purpose: Session management, API key auth, JWT validation, CSRF protection
 - Location: `src/lib/auth/`
-- Contains: Session management, API key validation, permission middleware
-- Depends on: Database layer (users, roles, role_permissions tables)
-- Used by: API layer
+- Contains: `session.ts`, `api-key.ts`, `auth-context.ts`, `permissions.ts`
+- Key flows:
+  - JWT in secure httpOnly cookie (set via `createSession()`)
+  - CSRF token in dual-submit pattern (cookie + header check in `src/proxy.ts`)
+  - API key auth for programmatic access
+  - Permissions loaded per-request via middleware and cached in client context
+- Used by: Middleware (`src/proxy.ts`), route handlers, client hooks
 
 ## Data Flow
 
-**Authenticated Dashboard Request:**
+**Public Page Request (Website):**
 
-1. User navigates to `/intern/(dashboard)/leads`
-2. Server-side layout (`layout.tsx`) calls `getSession()` to verify JWT cookie
-3. If no session, redirect to `/intern/login`
-4. Client component mounts, calls `fetch('/api/v1/leads')`
-5. API route handler calls `withPermission(request, 'leads', 'read', handler)`
-6. `withPermission` extracts auth from session cookie or API key via `getAuthContext()`
-7. Permission check runs against role permissions in DB
-8. Handler calls `LeadService.list(auth.tenantId, filters)`
-9. Service queries DB with `tenantId` filter (data isolation)
-10. Response returned as `apiSuccess(items, meta)`
+1. User visits `/` or `/it-news/[slug]`
+2. Next.js App Router matches route to `src/app/(public)/page.tsx` or `src/app/(public)/[...slug]/page.tsx`
+3. Route renders using CMS data via `CmsService` (calls `src/lib/services/cms.service.ts`)
+4. CMS service queries database (via `src/lib/db/index.ts`) for pages, blocks, navigation
+5. Page server-renders with SEO metadata and global CMS navigation
+6. HTML returned to client with design theme from `designSettings` table (global, not tenant-scoped)
+7. No auth required; CORS handled in `src/proxy.ts` middleware
 
-**API Key Request (External):**
+**Authenticated User Login Flow:**
 
-1. External system sends request with `X-Api-Key` header
-2. `getAuthContext()` falls through session check, validates API key
-3. API key auth gets `role: 'api'` which bypasses granular permission checks
-4. Same service layer handles the request with `tenantId` from API key
+1. User submits login form to `POST /api/v1/auth/login`
+2. Route handler in `src/app/api/v1/auth/login/route.ts`:
+   - Rate limits via `rateLimit()` (Redis-backed)
+   - Validates email/password with Zod schema
+   - Calls `UserService.authenticate(tenantId, email, password)`
+   - Service finds user, compares password hash (bcrypt)
+   - Updates `lastLoginAt` timestamp
+   - Returns `SessionUser` (id, tenantId, email, role, roleId)
+3. Route handler calls `createSession(user)` to generate JWT signed with `JWT_SECRET`
+4. JWT stored in httpOnly, Secure, SameSite cookie
+5. CSRF token generated and returned to client (stored in `csrf_token` cookie)
+6. Client redirected to `/intern/` (authenticated dashboard)
 
-**State Management:**
-- No global client state manager (no Redux, Zustand, etc.)
-- Each page manages its own state via React `useState`/`useEffect`
-- Data fetching: direct `fetch` calls to API routes from client components
-- Permission state: `PermissionProvider` context (`src/hooks/use-permissions.tsx`)
-- Chat state: `ChatProvider` context (`src/components/chat/chat-provider.tsx`)
+**Dashboard Data Fetch with Permissions:**
+
+1. Dashboard layout (`src/app/intern/(dashboard)/layout.tsx`) mounts `PermissionProvider`
+2. Provider calls `GET /api/v1/auth/permissions` to fetch user's role permissions
+3. Route handler (`src/app/api/v1/auth/permissions/route.ts`):
+   - Extracts JWT from cookies via middleware (`src/proxy.ts`)
+   - Verifies token via `jwtVerify()`
+   - Loads user from database using `userId` from payload
+   - Queries `rolePermissions` table for user's role
+   - Returns permissions map keyed by module (e.g., `{ companies: { read: true, create: true } }`)
+4. Client component calls `usePermissions()` hook to check `hasPermission('companies', 'read')`
+5. Renders UI conditionally based on permissions
+
+**API Route with Auth Guard & Service Call:**
+
+Example: `POST /api/v1/companies/[id]/research`
+
+1. Request comes in with JWT in cookie, CSRF tokens in cookie and `x-csrf-token` header
+2. Middleware (`src/proxy.ts`):
+   - Validates CSRF token (double-submit cookie check)
+   - Verifies JWT signature
+   - Extracts `userId`, `tenantId`, `role` from payload
+   - Attaches to request context
+3. Route handler calls `withPermission(request, 'companies', 'create')`
+4. Permission guard verifies user has permission, returns 403 if denied
+5. Handler parses body, validates input with Zod schema
+6. Calls `CompanyService.research(tenantId, companyId, researchParams)`
+7. Service:
+   - Queries database for company (verifying tenantId match)
+   - Calls AI service `LeadResearchService.research()` to generate research data
+   - Inserts `companyResearches` records into database
+   - Returns operation result
+8. Route handler returns `apiSuccess()` with result data
+9. Client receives `{ success: true, data: {...}, meta?: {...} }`
+
+**Background Cron Job Execution:**
+
+1. Next.js server starts, calls `register()` in `src/instrumentation.ts`
+2. Guard checks: not in build phase, not in edge runtime, only once per process (HMR guard)
+3. Stagger first tick by 30s (let migrations run first)
+4. Every 60s, call `CronService.tick()`
+5. Service in `src/lib/services/cron.service.ts`:
+   - Queries `cronJobs` table for pending jobs (status='pending', nextRunAt <= now)
+   - For each job, deserializes handler from `handlerCode` (stored as string)
+   - Calls handler (e.g., `CronJobHandlers.sendNewsletters()`)
+   - Updates job status, `lastRunAt`, `nextRunAt`
+   - Catches errors and logs via `logger.error()`
+6. Jobs run in-process, use same DB connection pool and logger as main app
+
+**State Management (Client):**
+
+1. Permissions fetched once via `PermissionProvider`, cached in React Context
+2. Form state managed locally with `react-hook-form` + Zod validation
+3. No centralized client state (Redux, Zustand) observed; component-level state via useState
+4. API calls via `fetch()`, responses handled in event handlers
+5. Toast notifications via `sonner` library on success/error
+6. Theme toggling managed by `next-themes` provider
 
 ## Key Abstractions
 
-**Service Objects:**
-- Purpose: Encapsulate all business logic for a domain
-- Examples: `src/lib/services/lead.service.ts`, `src/lib/services/company.service.ts`, `src/lib/services/document.service.ts`
-- Pattern: Exported const object with async methods, always takes `tenantId` as first param
-- Example signature: `LeadService.create(tenantId: string, data: CreateLeadInput): Promise<Lead>`
+**Service Pattern:**
+- Purpose: Encapsulate domain logic and external API interactions
+- Examples: `UserService`, `CompanyService`, `AiService`, `CmsService`, `DinAuditService`
+- Pattern: Static methods on singleton objects, pure functions with side effects
+- Invariant: Services always scope operations to `tenantId` (passed as first param)
 
-**AI Provider Interface:**
-- Purpose: Swap AI backends without changing business code
-- Examples: `src/lib/services/ai/gemini.provider.ts`, `src/lib/services/ai/openai.provider.ts`, `src/lib/services/ai/openrouter.provider.ts`, `src/lib/services/ai/deepseek.provider.ts`, `src/lib/services/ai/kimi.provider.ts`, `src/lib/services/ai/ollama.provider.ts`
-- Pattern: `AIProvider` interface with `name`, `complete(prompt, options)`, `isAvailable()` methods
-- Registration: Static providers registered in `src/lib/services/ai/index.ts`, DB-configured providers created at runtime via factory in `src/lib/services/ai/ai.service.ts`
+**API Response Wrapper:**
+- Purpose: Consistent response format across all endpoints
+- File: `src/lib/utils/api-response.ts`
+- Pattern: `apiSuccess<T>(data, meta)` returns `{ success: true, data, meta }`, `apiError(code, message, status)` returns `{ success: false, error: { code, message, details } }`
+- Rationale: Standardizes client error handling, enables metadata (pagination, stats)
 
-**Domain-Specific AI Services:**
-- Purpose: Combine AI calls with domain knowledge for specific features
-- Examples: `src/lib/services/ai/lead-research.service.ts`, `src/lib/services/ai/blog-ai.service.ts`, `src/lib/services/ai/marketing-ai.service.ts`, `src/lib/services/ai/social-media-ai.service.ts`, `src/lib/services/ai/cms-ai.service.ts`
-- Pattern: Each uses `AIService` for completions but adds domain-specific prompt construction
+**Drizzle ORM Schema Relations:**
+- Purpose: Define database structure with type-safe queries
+- File: `src/lib/db/schema.ts` (3190 lines)
+- Pattern: Each table has `pgTable()` definition + `relations()` for foreign keys and one-to-many relationships
+- Multi-tenancy: Every table includes `tenantId` foreign key, indexed for performance
+- Example: `tenantsRelations` defines `many(users)`, `many(companies)`, etc. — enables querying via relations
 
-**Validation Schemas:**
-- Purpose: Type-safe request validation
-- Location: `src/lib/utils/validation.ts` (single file, all schemas)
-- Pattern: Zod schemas with `validateAndParse(schema, body)` helper
-- Example: `createLeadSchema`, `updateLeadSchema`, `createCompanySchema`
+**Rate Limiting:**
+- Purpose: Prevent abuse and brute force attacks
+- File: `src/lib/utils/rate-limit.ts`
+- Pattern: Redis-backed sliding window, IP-based keys (e.g., `rate:auth-login:{ip}`)
+- Usage: `const limited = await rateLimit(request, 'auth-login', 10, 60_000)` — max 10 requests per 60s
 
-**API Response Helpers:**
-- Purpose: Consistent JSON response format
-- Location: `src/lib/utils/api-response.ts`
-- Pattern: `apiSuccess(data, meta?)`, `apiError(code, message, status)`, `apiNotFound()`, `apiServerError()`
-- Response shape: `{ success: true, data: T, meta?: {...} }` or `{ success: false, error: { code, message, details? } }`
+**Validation & Zod Schemas:**
+- Purpose: Input validation and type inference
+- Files: `src/lib/utils/validation.ts` (shared schemas), individual route files (domain-specific)
+- Pattern: Define schema once, use for validation + TypeScript types
+- Response: `validateAndParse(schema, data)` returns `{ success, data?, errors? }`, formatted errors sent to client
+
+**Permission Guard:**
+- Purpose: Check user has module+action permission before executing
+- File: `src/lib/auth/permissions.ts`
+- Pattern: `withPermission(request, module, action)` returns error or next(request)
+- Storage: `rolePermissions` table (roleId, module, canCreate/Read/Update/Delete booleans)
+- Lookup: Cached in session JWT payload or fetched per-request
 
 ## Entry Points
 
-**Root Layout:**
-- Location: `src/app/layout.tsx`
-- Triggers: Every page load
-- Responsibilities: Font loading, HTML structure, `DesignProvider` wrapper, JSON-LD schema
+**Public Website:**
+- Location: `src/app/(public)/layout.tsx` → root layout
+- Triggers: Requests to `/` (homepage), `/it-news`, `/datenschutz`, etc.
+- Responsibilities:
+  - Load global design settings (theme, fonts, colors)
+  - Fetch CMS navigation from database (cached, no tenantId filtering)
+  - Render header/footer with xKMU branding
+  - Pass children (page content) to DesignProvider for styling
 
-**Dashboard Layout:**
+**Authentication Pages:**
+- Location: `src/app/intern/(auth)/layout.tsx`
+- Pages: `login/page.tsx`, `register/page.tsx`
+- Triggers: Requests to `/intern/login`, `/intern/register`
+- Responsibilities:
+  - Show login/register forms
+  - Submit to `POST /api/v1/auth/login` or `POST /api/v1/auth/register`
+  - Redirect to dashboard on success, show error on failure
+  - No permission checks (public routes)
+
+**Authenticated Dashboard:**
 - Location: `src/app/intern/(dashboard)/layout.tsx`
-- Triggers: Any `/intern/*` dashboard page
-- Responsibilities: Session validation, redirect to login if unauthenticated, renders Sidebar + Header + ChatPanel + PermissionProvider
+- Sections: blog, CMS, CRM, companies, leads, DIN audit, WIBA, catalog, cockpit, etc.
+- Triggers: Requests to `/intern/blog`, `/intern/contacts`, `/intern/din-audit`, etc.
+- Responsibilities:
+  - Load user session from JWT cookie (middleware validates)
+  - Mount PermissionProvider to load and cache permissions
+  - Render sidebar navigation with modules
+  - Pass children (feature pages) with context
+  - Each feature page calls APIs (`GET /api/v1/{resource}`) to load data
 
-**Public Layout:**
-- Location: `src/app/(public)/layout.tsx`
-- Triggers: Any public page (landing, services, legal pages)
-- Responsibilities: Landing navbar, footer, breadcrumb
+**API Server (v1):**
+- Location: `src/app/api/v1/`
+- Routes: `/auth/*`, `/companies/*`, `/blog/*`, `/cms/*`, `/din/*`, `/wiba/*`, `/ai/*`, etc.
+- Triggers: HTTP requests from frontend, webhooks, third-party integrations
+- Responsibilities:
+  - Validate requests (CSRF, JWT, input schema)
+  - Check permissions (RBAC)
+  - Call services to execute business logic
+  - Return standardized JSON responses
 
-**API Health Check:**
-- Location: `src/app/api/health/`
-- Triggers: Docker health checks, monitoring
-
-## Authentication & Authorization
-
-**Authentication Methods:**
-1. **JWT Session Cookie** (`xkmu_session`): 7-day expiry, HS256 signed, httpOnly, secure in production
-   - Implementation: `src/lib/auth/session.ts`
-   - Login: `src/app/api/v1/auth/` routes
-2. **API Key** (`X-Api-Key` header): SHA-256 hashed in DB, prefix-based lookup
-   - Implementation: `src/lib/auth/api-key.ts`
-
-**Authorization Model:**
-- `withPermission(request, module, action, handler)` wrapper for all API routes
-- Implementation: `src/lib/auth/require-permission.ts`
-- Dual-path authorization:
-  1. **Granular RBAC**: If user has `roleId`, check `role_permissions` table for module+action
-  2. **Legacy fallback**: owner/admin get full access, member gets read/create/update, viewer gets read-only
-- 38 modules defined in `src/lib/types/permissions.ts` (companies, leads, products, etc.)
-- 4 CRUD actions: create, read, update, delete
-- 6 default role templates: owner, admin, member, viewer, auditor, designer
-
-## Multi-Tenancy
-
-**Implementation:** Row-level isolation via `tenantId` column
-
-- Every data table includes `tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' })`
-- Every service method takes `tenantId` as first parameter
-- Every DB query includes `eq(table.tenantId, tenantId)` in WHERE clause
-- `tenantId` comes from authenticated session or API key, never from client input
-- Tenant created on registration, user gets `owner` role for their tenant
-
-**Tenant Scoped Tables (all 70+ tables except):**
-- `tenants` (top-level)
-- `dinRequirements`, `wibaRequirements`, `grundschutzGroups/Controls` (shared catalog data)
+**Cron Scheduler:**
+- Location: `src/instrumentation.ts`
+- Trigger: Server startup (Node.js runtime only, not build phase)
+- Responsibilities:
+  - Start in-process interval (60s)
+  - Call `CronService.tick()` to process pending jobs
+  - Log execution, catch errors, continue running
 
 ## Error Handling
 
-**Strategy:** Try/catch in API handlers, structured error responses
+**Strategy:** Try-catch at route handler level, log errors, return standardized error responses
 
 **Patterns:**
-- API routes wrap handler logic in try/catch, return `apiError()` or `apiServerError()`
-- Validation errors return `apiValidationError(formatZodErrors(errors))` with field-level detail
-- Auth failures return `apiUnauthorized()` (401) or `apiForbidden()` (403)
-- Service layer uses `logger.error()` for server-side logging, throws or returns null for errors
-- No global error boundary detected for client components
+- **Validation errors:** `apiValidationError(details)` with field-level feedback
+  - Example: `{ success: false, error: { code: 'VALIDATION_ERROR', message: 'Validation failed', details: [{ field: 'email', message: 'Invalid email' }] } }`
+- **Auth errors:** `apiUnauthorized()` (401) for missing JWT, `apiForbidden()` (403) for missing permissions
+- **Not found:** `apiNotFound()` (404) for missing resources (company, user, etc.)
+- **Server errors:** `apiServerError()` (500) with generic message, actual error logged
+- **Rate limit:** Return 429 with error message
+- **CSRF failure:** Return 403 with error message in `src/proxy.ts`
+
+**Logging:**
+- File: `src/lib/utils/logger.ts`
+- Pattern: `logger.info(message, { module: 'ModuleName' })`, `logger.error(message, error, { module: 'ModuleName' })`
+- Context: Each call includes module name for traceability
+- Output: Console (JSON structure in production for log aggregation)
 
 ## Cross-Cutting Concerns
 
-**Logging:**
-- Custom logger at `src/lib/utils/logger.ts`
-- Console-based with structured JSON context (module, tenantId, userId)
-- Levels: debug (dev only), info, warn, error
-- Usage: `logger.error('Create lead error', error, { module: 'LeadsAPI' })`
+**Logging:** Console-based logger in `src/lib/utils/logger.ts`, called from services and route handlers with module context
 
-**Validation:**
-- Zod schemas in `src/lib/utils/validation.ts`
-- `validateAndParse(schema, body)` returns `{ success, data }` or `{ success, errors }`
-- `formatZodErrors()` converts Zod errors to `{ field, message }[]` for API responses
+**Validation:** Zod schemas in `src/lib/utils/validation.ts` (shared) and route files (domain-specific), `validateAndParse()` utility returns typed result
 
-**Rate Limiting:**
-- Utility at `src/lib/utils/rate-limit.ts`
+**Authentication:** 
+- JWT in httpOnly cookie (set by `createSession()`)
+- CSRF in cookie + header (double-submit pattern validated in `src/proxy.ts`)
+- Session verified per-request via middleware
 
-**Task Queue:**
-- DB-backed task queue at `src/lib/services/task-queue.service.ts`
-- Tasks stored in `task_queue` table, processed via manual trigger (button-based, not cron)
-- Handlers in `src/lib/services/task-queue-handlers/` (currently: `dunning.handler.ts`)
+**Authorization:** Role-based permissions checked via `withPermission()` guard, permissions map cached in client context via `usePermissions()` hook
 
-**Webhooks:**
-- Outgoing webhook system: fires on events like `lead.created`, `lead.won`, `research.completed`
-- Service: `src/lib/services/webhook.service.ts`
-- Webhook definitions stored per tenant
+**Multi-tenancy:** Every table includes `tenantId` foreign key, all queries filtered by `tenantId`, services always scope operations by tenant
 
-**Activity Tracking:**
-- `activities` table tracks CRM interactions (email, call, note, meeting, ai_outreach)
-- Service: `src/lib/services/activity.service.ts`
-
-## API Design
-
-**Convention:** REST, versioned under `/api/v1/`
-
-**URL Pattern:** `/api/v1/{resource}` for collection, `/api/v1/{resource}/[id]` for single item
-
-**Pagination:** Query params `?page=1&limit=20`, response meta: `{ page, limit, total, totalPages }`
-
-**Filtering:** Query params specific to each resource (e.g., `?status=new&source=manual&search=term`)
-
-**CORS:** Configured in `next.config.ts` with permissive `Access-Control-Allow-Origin: *`
+**Request/Response:** Standardized format via `apiSuccess()` and `apiError()` utilities, pagination meta attached when applicable
 
 ---
 
-*Architecture analysis: 2026-03-30*
+*Architecture analysis: 2026-04-13*

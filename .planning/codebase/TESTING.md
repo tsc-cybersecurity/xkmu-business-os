@@ -1,359 +1,397 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-03-30
+**Analysis Date:** 2026-04-13
 
 ## Test Framework
 
 **Runner:**
-- Vitest 4.1.0
-- Config: `vitest.config.ts`
-- Environment: `node`
-- Globals: enabled (`describe`, `it`, `expect`, `vi` available without import, but explicitly imported anyway)
+- Vitest v4.1.0
+- Config: `vitest.config.ts` at project root
+- Environment: Node.js (not browser)
 
 **Assertion Library:**
-- Vitest built-in (`expect`)
+- Vitest built-in expect API (compatible with Jest)
+- No separate assertion library needed
 
-**Coverage:**
-- `@vitest/coverage-v8` 4.1.0
-
-**Run Commands:**
+**Test Commands:**
 ```bash
-npm test                  # Run all tests (vitest run)
-npm run test:unit         # Run unit tests only (src/__tests__/unit)
-npm run test:integration  # Run integration tests only (src/__tests__/integration)
-npm run test:watch        # Watch mode (vitest)
-npm run test:coverage     # Coverage report (vitest run --coverage)
+npm run test              # Run all tests once
+npm run test:unit        # Run only unit tests in src/__tests__/unit
+npm run test:integration # Run only integration tests in src/__tests__/integration
+npm run test:watch       # Watch mode - reruns on file changes
+npm run test:coverage    # Generate coverage report (uses @vitest/coverage-v8)
 ```
 
 ## Test File Organization
 
-**Location:** Centralized `src/__tests__/` directory (not co-located with source files)
+**Location:**
+- Co-located under `src/__tests__/` directory
+- Two main categories:
+  - `src/__tests__/unit/` - Unit tests for services, utilities, auth
+  - `src/__tests__/integration/` - Integration tests using mocked DB
+  - `src/__tests__/integration-real/` - Real database tests (skipped if `TEST_DATABASE_URL` not set)
+- Test files matched to source structure: `src/lib/services/activity.service.ts` → `src/__tests__/unit/services/activity.service.test.ts`
+
+**Naming:**
+- Pattern: `{module-or-feature}.test.ts`
+- Examples: `auth-key.test.ts`, `activity.service.test.ts`, `companies.route.test.ts`
 
 **Structure:**
 ```
 src/__tests__/
-  setup.ts                              # Global setup (restores mocks)
-  helpers/
-    fixtures.ts                         # Test data factories
-    mock-db.ts                          # Drizzle DB mock helper
-    mock-auth.ts                        # Auth context mock helper
-    mock-request.ts                     # NextRequest factory
-  unit/
-    services/
-      company.service.test.ts           # 19 service test files
-      lead.service.test.ts
-      ...
-    validation/
-      company.validation.test.ts        # 17 validation test files
-      lead.validation.test.ts
-      ...
-  integration/
-    api/
-      companies.route.test.ts           # 4 route integration tests
-      auth.route.test.ts
-      admin-database.route.test.ts
-      export-database.route.test.ts
-```
-
-**Naming:**
-- Unit service tests: `{entity}.service.test.ts`
-- Unit validation tests: `{entity}.validation.test.ts`
-- Integration route tests: `{entity}.route.test.ts`
-
-**Include pattern** (from `vitest.config.ts`):
-```
-src/__tests__/**/*.test.ts
-```
-
-## Test Setup
-
-**Global setup** at `src/__tests__/setup.ts`:
-```typescript
-import { beforeEach, vi } from 'vitest'
-
-beforeEach(() => {
-  vi.restoreAllMocks()
-})
-```
-
-**Path alias** in `vitest.config.ts`:
-```typescript
-resolve: {
-  alias: { '@': path.resolve(__dirname, './src') }
-}
+├── unit/                          # Unit tests (no DB)
+│   ├── auth/
+│   │   ├── api-key.test.ts
+│   │   └── require-permission.test.ts
+│   ├── services/
+│   │   ├── activity.service.test.ts
+│   │   ├── ai.service.test.ts
+│   │   └── ...
+│   └── proxy.test.ts
+├── integration/                   # Integration tests (mocked DB)
+│   └── api/
+│       ├── auth.route.test.ts
+│       ├── companies.route.test.ts
+│       └── ...
+├── integration-real/              # Real database tests
+│   ├── crud/
+│   │   ├── companies.test.ts
+│   │   ├── leads.test.ts
+│   │   └── users.test.ts
+│   ├── api-key-scoping.test.ts
+│   ├── auth-flow.test.ts
+│   ├── permission-checks.test.ts
+│   ├── tenant-isolation.test.ts
+│   └── setup/
+│       └── test-db.ts             # Real DB helpers
+├── helpers/                       # Shared test utilities
+│   ├── fixtures.ts                # Test data constants
+│   ├── mock-db.ts                 # DB mocking helper
+│   ├── mock-auth.ts               # Auth mocking helper
+│   ├── mock-request.ts            # HTTP request mocking helper
+│   └── ...
+└── setup.ts                       # Global test setup (beforeEach hooks)
 ```
 
 ## Test Structure
 
-**Service Unit Tests:**
+**Suite Organization:**
 ```typescript
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { companyFixture, TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
+import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
 
-// Mock side-effect dependencies
-vi.mock('@/lib/services/webhook.service', () => ({
-  WebhookService: { fire: vi.fn().mockResolvedValue(undefined) },
-}))
-
-describe('CompanyService', () => {
-  let dbMock: ReturnType<typeof setupDbMock>
-
-  beforeEach(() => {
-    vi.resetModules()           // Reset module cache for clean mocks
-    dbMock = setupDbMock()      // Set up fresh DB mock
-  })
-
-  // Dynamic import AFTER mocks are set up
-  async function getService() {
-    const mod = await import('@/lib/services/company.service')
-    return mod.CompanyService
-  }
-
-  describe('create', () => {
-    it('creates a company and returns it', async () => {
-      const fixture = companyFixture()
-      dbMock.mockInsert.mockResolvedValue([fixture])
-
-      const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, { name: 'Test GmbH' }, TEST_USER_ID)
-
-      expect(result).toEqual(fixture)
-      expect(dbMock.db.insert).toHaveBeenCalled()
-    })
-  })
-})
-```
-
-**Key pattern:** Services are dynamically imported (`await import(...)`) AFTER `vi.doMock()` calls to ensure mocks are in place. This is critical because Vitest uses module-level mocking.
-
-**Validation Unit Tests:**
-```typescript
-import { describe, it, expect } from 'vitest'
-import { createCompanySchema } from '@/lib/utils/validation'
-
-describe('createCompanySchema', () => {
-  it('accepts valid minimal input', () => {
-    const result = createCompanySchema.safeParse({ name: 'Test GmbH' })
-    expect(result.success).toBe(true)
-  })
-
-  it('rejects missing name', () => {
-    const result = createCompanySchema.safeParse({})
-    expect(result.success).toBe(false)
-  })
-})
-```
-
-Validation tests are straightforward schema.safeParse() assertions -- no mocks needed.
-
-**Integration (Route) Tests:**
-```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { setupDbMock } from '../../helpers/mock-db'
-import { mockAuthContext } from '../../helpers/mock-auth'
-import { createTestRequest } from '../../helpers/mock-request'
-import { authFixture, companyFixture, createCompanyInput } from '../../helpers/fixtures'
-
-vi.mock('@/lib/services/webhook.service', () => ({
-  WebhookService: { fire: vi.fn().mockResolvedValue(undefined) },
-}))
-
-describe('POST /api/v1/companies', () => {
+describe('auth/api-key module', () => {
   let dbMock: ReturnType<typeof setupDbMock>
 
   beforeEach(() => {
     vi.resetModules()
     dbMock = setupDbMock()
-    mockAuthContext(authFixture())   // Mock auth to allow requests
   })
 
-  async function getHandler() {
-    const mod = await import('@/app/api/v1/companies/route')
-    return mod.POST
+  async function getModule() {
+    return import('@/lib/auth/api-key')
   }
 
-  it('returns 201 with valid data', async () => {
-    dbMock.mockSelect.mockResolvedValue([])        // No duplicate
-    dbMock.mockInsert.mockResolvedValue([companyFixture()])
-
-    const handler = await getHandler()
-    const req = createTestRequest('POST', '/api/v1/companies', createCompanyInput())
-    const res = await handler(req)
-    const body = await res.json()
-
-    expect(res.status).toBe(201)
-    expect(body.success).toBe(true)
+  describe('generateApiKey', () => {
+    it('returns key starting with xkmu_', async () => {
+      const mod = await getModule()
+      const { key } = mod.generateApiKey()
+      expect(key).toMatch(/^xkmu_/)
+    })
   })
+})
+```
+
+**Key patterns:**
+
+1. **Module resetting:** `vi.resetModules()` in `beforeEach()` to clear module cache between tests
+2. **Lazy module loading:** `const mod = await import('@/module-path')` allows fresh module with fresh mocks
+3. **Fixture pattern:** Create fixture factory functions that return test data with optional overrides:
+```typescript
+function apiKeyRowFixture(overrides: Record<string, unknown> = {}) {
+  return {
+    id: TEST_KEY_ID,
+    tenantId: TEST_TENANT_ID,
+    // ... default values
+    ...overrides,
+  }
+}
+```
+
+4. **Arrange-Act-Assert:** Clear separation:
+```typescript
+it('updates lastUsedAt after successful validation', async () => {
+  // Arrange
+  const row = apiKeyRowFixture()
+  dbMock.mockSelect.mockResolvedValue([row])
+  dbMock.mockUpdate.mockResolvedValue([])
+
+  // Act
+  const mod = await getModule()
+  await mod.validateApiKey('xkmu_abcde12345')
+
+  // Assert
+  expect(dbMock.db.update).toHaveBeenCalled()
 })
 ```
 
 ## Mocking
 
-**Framework:** Vitest built-in (`vi.mock`, `vi.doMock`, `vi.fn`)
+**Framework:** Vitest's built-in `vi` module
 
-**Database Mock** (`src/__tests__/helpers/mock-db.ts`):
-- `setupDbMock()` creates a complete chainable mock for Drizzle ORM operations
-- Mocks `db.insert()`, `db.select()`, `db.update()`, `db.delete()` with chainable methods (`.from()`, `.where()`, `.values()`, `.returning()`, etc.)
-- Returns `mockInsert`, `mockSelect`, `mockUpdate`, `mockDelete` chain managers
-- Each manager has `.mockResolvedValue(value)` and `.mockResolvedValueOnce(value)`
-- Uses `vi.doMock('@/lib/db', () => ({ db }))` for module-level mock
+**Patterns:**
 
-**Auth Mock** (`src/__tests__/helpers/mock-auth.ts`):
-- `mockAuthContext(auth)` - mocks `withPermission` to bypass auth and call handler directly
-- `mockAuthForbidden()` - mocks `withPermission` to return 403
-- `mockAuthAdmin()` - shortcut for `mockAuthContext(authFixture())`
+1. **Module mocking:** `vi.doMock()` for complete module replacement:
+```typescript
+vi.doMock('bcryptjs', () => ({
+  default: {
+    hash: vi.fn().mockResolvedValue('$2a$10$mockhashedvalue'),
+    compare: vi.fn().mockResolvedValue(true),
+  },
+}))
+```
 
-**Request Mock** (`src/__tests__/helpers/mock-request.ts`):
-- `createTestRequest(method, url, body?)` - creates `NextRequest` instance
-- `createTestParams(id)` - creates `{ params: Promise<{ id }> }` for dynamic route params
+2. **Function mocking:** `vi.fn()` for individual functions:
+```typescript
+const mockGetSession = vi.fn()
+const mockCreateSession = vi.fn().mockResolvedValue(undefined)
+```
 
-**What to mock:**
-- Always mock `@/lib/db` via `setupDbMock()` (no real database in tests)
-- Always mock `@/lib/auth/require-permission` via `mockAuthContext()` in integration tests
-- Mock fire-and-forget services like `WebhookService.fire` with `vi.mock()`
-- Mock external AI providers when testing AI services
+3. **Mock chaining:** `mockResolvedValue()` and `mockResolvedValueOnce()` for sequential responses:
+```typescript
+dbMock.mockSelect.mockResolvedValueOnce(fixtures)  // First call
+dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])  // Second call
+```
 
-**What NOT to mock:**
-- Zod validation schemas (test directly with `.safeParse()`)
-- Pure utility functions (`emptyToNull`, `formatZodErrors`)
-- The service/route under test itself
+4. **DB mocking helper** from `src/__tests__/helpers/mock-db.ts`:
+```typescript
+function setupDbMock() {
+  const insertMock = createChainMockManager()
+  const selectMock = createChainMockManager()
+  const updateMock = createChainMockManager()
+  const deleteMock = createChainMockManager()
+
+  const db = {
+    insert: vi.fn().mockImplementation(() => insertMock.createFreshChain()),
+    select: vi.fn().mockImplementation(() => selectMock.createFreshChain()),
+    update: vi.fn().mockImplementation(() => updateMock.createFreshChain()),
+    delete: vi.fn().mockImplementation(() => deleteMock.createFreshChain()),
+  }
+
+  vi.doMock('@/lib/db', () => ({ db }))
+
+  return {
+    db,
+    mockInsert: insertMock,
+    mockSelect: selectMock,
+    mockUpdate: updateMock,
+    mockDelete: deleteMock,
+  }
+}
+```
+
+5. **Request mocking helper** - `createTestRequest()` creates fake Next.js Request objects:
+```typescript
+const req = createTestRequest('POST', '/api/v1/auth/login', {
+  email: 'admin@test.de',
+  password: 'Password123!',
+})
+const res = await handler(req)
+const body = await res.json()
+```
+
+**What to Mock:**
+- External dependencies (bcrypt, email, AI providers)
+- Database operations (use DB mock helper)
+- HTTP requests (use request mock helper)
+- Session/auth (use auth mock helper)
+- Time-dependent code (use vi.useFakeTimers() if needed)
+
+**What NOT to Mock:**
+- Internal service logic (test actual implementation)
+- Validation schemas (let Zod validate actual behavior)
+- Error handling paths (verify actual error responses)
+- Business logic flows (test real interactions between modules)
 
 ## Fixtures and Factories
 
-**Location:** `src/__tests__/helpers/fixtures.ts`
-
-**Constants:**
+**Test Data:**
 ```typescript
+// From src/__tests__/helpers/fixtures.ts
 export const TEST_TENANT_ID = '00000000-0000-0000-0000-000000000001'
 export const TEST_USER_ID = '00000000-0000-0000-0000-000000000002'
 export const TEST_COMPANY_ID = '00000000-0000-0000-0000-000000000003'
-```
+export const TEST_KEY_ID = '00000000-0000-0000-0000-000000000060'
 
-**Fixture pattern:**
-```typescript
-export function companyFixture(overrides: Record<string, unknown> = {}) {
+// Fixture factory pattern
+function activityFixture(overrides: Record<string, unknown> = {}) {
   return {
-    id: TEST_COMPANY_ID,
+    id: TEST_ACTIVITY_ID,
     tenantId: TEST_TENANT_ID,
-    name: 'Test GmbH',
-    // ... all fields with sensible defaults ...
-    ...overrides,
-  }
-}
-
-export function createCompanyInput(overrides: Record<string, unknown> = {}) {
-  return {
-    name: 'Test GmbH',
-    city: 'Berlin',
-    country: 'DE',
-    status: 'prospect',
+    leadId: null,
+    type: 'note',
+    subject: 'Test Subject',
+    content: 'Test Content',
+    metadata: {},
+    userId: TEST_USER_ID,
+    createdAt: new Date('2026-01-01T00:00:00Z'),
+    updatedAt: new Date('2026-01-01T00:00:00Z'),
     ...overrides,
   }
 }
 ```
 
-**Currently only company fixtures exist.** Other service tests likely define inline data. When adding new test fixtures, follow the same pattern in `fixtures.ts`.
+**Location:**
+- Global fixtures: `src/__tests__/helpers/fixtures.ts` (TEST_TENANT_ID, TEST_USER_ID, etc.)
+- Local fixtures: Defined at top of test file using factory functions
+- Database setup helpers: `src/__tests__/integration-real/setup/test-db.ts`
+
+**Factory Functions:**
+- Accept optional `overrides` object for flexible test data
+- Return complete, realistic test data
+- Multiple variants for different scenarios (e.g., `activityFixture` and `activityWithUserFixture`)
 
 ## Coverage
 
-**Requirements:** No minimum threshold enforced
-**Tool:** `@vitest/coverage-v8`
+**Requirements:** Not enforced (no coverage threshold in vitest.config)
 
+**View Coverage:**
 ```bash
-npm run test:coverage     # Generates coverage report
+npm run test:coverage
 ```
+
+Coverage report generated by `@vitest/coverage-v8`. Results typically displayed in terminal and written to coverage directory.
 
 ## Test Types
 
-**Unit Tests (services):**
-- 19 test files in `src/__tests__/unit/services/`
-- Test service methods in isolation with mocked DB
-- Cover CRUD operations, edge cases (empty strings, nulls, defaults)
-- ~6,400 lines total
+**Unit Tests:**
+- Located: `src/__tests__/unit/`
+- Scope: Single function or module in isolation
+- Mocks: All external dependencies (DB, HTTP, crypto)
+- Speed: Fast (milliseconds per test)
+- Example: `src/__tests__/unit/auth/api-key.test.ts` tests `generateApiKey()`, `hashApiKey()`, `validateApiKey()` functions in isolation
+- No database calls; all I/O is mocked
 
-**Unit Tests (validation):**
-- 17 test files in `src/__tests__/unit/validation/`
-- Test Zod schema validation with valid/invalid inputs
-- Cover boundary conditions, required fields, format validation
-- ~4,900 lines total
+**Integration Tests (Mocked DB):**
+- Located: `src/__tests__/integration/`
+- Scope: API routes with mocked database
+- Mocks: Database via `setupDbMock()`, auth sessions via `vi.doMock()`
+- Speed: Fast (uses mocks)
+- Example: `src/__tests__/integration/api/auth.route.test.ts` tests complete auth flow with mocked DB
+- Verifies integration between route handler → service → mock DB
 
-**Integration Tests (routes):**
-- 4 test files in `src/__tests__/integration/api/`
-- Test API route handlers end-to-end (with mocked DB and auth)
-- Cover HTTP status codes, response format, error handling
-- ~1,550 lines total
-- Files: `auth.route.test.ts`, `companies.route.test.ts`, `admin-database.route.test.ts`, `export-database.route.test.ts`
+**Integration Tests (Real DB):**
+- Located: `src/__tests__/integration-real/`
+- Scope: CRUD operations and business logic with actual database
+- Mocks: Nothing - uses real test database
+- Speed: Slower (database I/O)
+- Skipped by default: Only runs if `TEST_DATABASE_URL` environment variable is set
+- Example: `src/__tests__/integration-real/crud/companies.test.ts` creates, reads, updates, deletes real database records
+- Includes lifecycle: `beforeAll()` for setup, `afterAll()` for cleanup
 
 **E2E Tests:**
-- Not present. No Playwright/Cypress configuration exists.
+- Not detected in codebase
+- Not currently used
 
-**Component Tests:**
-- Not present. No React Testing Library or component test files exist.
+## Common Patterns
 
-## CI/CD Test Integration
+**Async Testing:**
+```typescript
+describe('validateApiKey', () => {
+  it('returns ApiKeyPayload with permissions when key is valid', async () => {
+    const row = apiKeyRowFixture({ permissions: ['*'] })
+    dbMock.mockSelect.mockResolvedValue([row])
+    dbMock.mockUpdate.mockResolvedValue([])
 
-- No CI pipeline configuration detected in the repository
-- Docker-based deployment via Portainer on Hetzner server
-- `npm run build` (Next.js build) is used as a pre-push check per project convention
-- Tests are run manually via `npm test`
+    const mod = await getModule()
+    const result = await mod.validateApiKey('xkmu_abcde12345')
 
-## Test Coverage Gaps
+    expect(result).not.toBeNull()
+    expect(result?.permissions).toEqual(['*'])
+  })
+})
+```
+- Use `async/await` syntax
+- `mockResolvedValue()` for promises
+- `mockResolvedValueOnce()` for sequential promise calls
 
-**Untested services (51 of 70 service files have no tests):**
-- All AI service files: `src/lib/services/ai/*.ts` (24 files)
-- Business intelligence: `src/lib/services/business-document.service.ts`, `src/lib/services/business-profile.service.ts`
-- DIN audit services: `src/lib/services/din-audit.service.ts`, `src/lib/services/din-requirement.service.ts`, etc.
-- Chat service: `src/lib/services/chat.service.ts`
-- Cockpit service: `src/lib/services/cockpit.service.ts`
-- CMS services (partial): `src/lib/services/cms-block-template.service.ts`, `src/lib/services/cms-block-type.service.ts`
-- Document calculation: `src/lib/services/document-calculation.service.ts`
-- Email template: `src/lib/services/email-template.service.ts`
-- Opportunity: `src/lib/services/opportunity.service.ts`
-- N8N workflow: `src/lib/services/n8n-workflow.service.ts`
+**Error Testing:**
+```typescript
+it('returns null when key does not start with xkmu_', async () => {
+  const mod = await getModule()
+  const result = await mod.validateApiKey('invalid_key_format')
+  expect(result).toBeNull()
+})
 
-**Untested API routes:**
-- Only 4 of ~90+ route files have integration tests
-- Missing: leads, products, documents, CMS, marketing, social media, DIN, cockpit, AI, chat, opportunities, etc.
+it('returns false for wrong key', async () => {
+  const bcrypt = await import('bcryptjs')
+  vi.mocked(bcrypt.default.compare).mockResolvedValueOnce(false as unknown as void)
 
-**No component tests:**
-- Zero React component testing
-- No tests for client-side state management or form behavior
-- No tests for shared components in `src/components/shared/`
+  const mod = await getModule()
+  const result = await mod.verifyApiKey('xkmu_wrongkey', '$2a$10$mockhashedvalue')
+  expect(result).toBe(false)
+})
+```
+- Test null/falsy returns for error conditions
+- Mock specific behavior for negative cases
+- Verify error messages are sensible (use `expect(body.error.message).toContain(...)`
 
-**No E2E tests:**
-- No browser-based testing
-- No critical path testing (login flow, CRUD flows)
+**Pagination Testing:**
+```typescript
+it('returns paginated results with meta', async () => {
+  dbMock.mockSelect.mockResolvedValueOnce(fixtures)
+  dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
-**Missing test areas:**
-- Auth middleware behavior (rate limiting at `src/lib/utils/rate-limit.ts`)
-- Webhook delivery logic
-- AI provider response parsing (especially Gemini thinking parts)
-- PDF generation (`jspdf`)
-- File upload/media handling
-- Multi-tenant isolation (ensuring tenant A cannot access tenant B data)
+  const service = await getService()
+  const result = await service.list(TEST_TENANT_ID)
 
-## Patterns for Writing New Tests
+  expect(result.items).toHaveLength(2)
+  expect(result.meta.total).toBe(2)
+  expect(result.meta.page).toBe(1)
+  expect(result.meta.limit).toBe(50)
+  expect(result.meta.totalPages).toBe(1)
+})
+```
+- Mock select queries twice: once for items, once for count
+- Verify both items and metadata in response
 
-**Adding a new service test:**
-1. Create file at `src/__tests__/unit/services/{name}.service.test.ts`
-2. Import and use `setupDbMock()` from helpers
-3. Use `vi.resetModules()` in `beforeEach`
-4. Dynamic import the service under test
-5. Mock side-effect dependencies with `vi.mock()`
+**Tenant Isolation Testing (Real DB):**
+```typescript
+it('getById() returns null for wrong tenantId (isolation check)', async () => {
+  const { CompanyService } = await import('@/lib/services/company.service')
+  const notFound = await CompanyService.getById('00000000-0000-0000-0000-000000000099', createdId)
+  expect(notFound).toBeNull()
+})
+```
+- Real DB tests include tenant isolation verification
+- Ensures service methods check `tenantId` in queries
+- Prevents cross-tenant data leaks
 
-**Adding a new validation test:**
-1. Create file at `src/__tests__/unit/validation/{name}.validation.test.ts`
-2. Import schema from `@/lib/utils/validation`
-3. Test with `schema.safeParse()` -- no mocking needed
+**Setup and Teardown (Real DB):**
+```typescript
+describe.skipIf(!hasTestDb)('CRUD: Companies — real DB', () => {
+  let db: TestDb
+  let createdId: string
 
-**Adding a new route integration test:**
-1. Create file at `src/__tests__/integration/api/{name}.route.test.ts`
-2. Import `setupDbMock`, `mockAuthContext`, `createTestRequest` from helpers
-3. Mock auth and DB in `beforeEach`
-4. Dynamic import the route handler
-5. Assert HTTP status codes and response body structure
+  beforeAll(async () => {
+    db = createTestDb()
+    await seedTestTenant(db, TEST_INTEGRATION_TENANT_A)
+  })
+
+  afterAll(async () => {
+    try {
+      await cleanupTestTenant(db, TEST_INTEGRATION_TENANT_A)
+    } finally {
+      // always runs cleanup
+    }
+  })
+})
+```
+- Use `beforeAll()` to initialize test database and seed data
+- Use `afterAll()` with try/finally to guarantee cleanup runs
+- `describe.skipIf(!hasTestDb)` skips test suite if real DB not available
 
 ---
 
-*Testing analysis: 2026-03-30*
+*Testing analysis: 2026-04-13*
