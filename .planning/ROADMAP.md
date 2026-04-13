@@ -63,8 +63,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: Deliverable-Seed — 15 Module aus xKMU_Deliverable_Katalog_v1 + 63 Deliverables mit Modul-Zuordnung, idempotent
-- [ ] 03-02: SOP-Seed — 93 operative SOPs aus Framework v2 mit automation_level, ai_capable, maturity_level, executor, produces_deliverable_id wo definiert, idempotent by source_task_id
+- [x] 03-01: Deliverable-Seed — 15 Module aus xKMU_Deliverable_Katalog_v1 + 63 Deliverables mit Modul-Zuordnung, idempotent
+- [x] 03-02: SOP-Seed — 93 operative SOPs aus Framework v2 mit automation_level, ai_capable, maturity_level, executor, produces_deliverable_id wo definiert, idempotent by source_task_id
 
 ### Phase 4: UI — Deliverables & SOP-Erweiterung
 **Goal**: Deliverable-Listen-/Detailseiten, erweiterte SOP-Detailseite und Execution-Verlauf sind fuer den Nutzer im Intern-Bereich erreichbar und navigierbar.
