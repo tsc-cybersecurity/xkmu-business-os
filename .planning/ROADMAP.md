@@ -31,8 +31,8 @@ Dieser Meilenstein baut das Deliverable-Modul von Grund auf, erweitert das SOP-S
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: Shared Enums & Konstanten — categories, status, automation_level, executor, severity als TypeScript-Konstanten und Drizzle-Enums
-- [ ] 01-02: Drizzle-Schema fuer deliverable_modules, deliverables, execution_logs + ALTER TABLE fuer sopDocuments/sopSteps + Migration generieren und ausfuehren
+- [x] 01-01: Shared Enums & Konstanten — categories, status, automation_level, executor, severity als TypeScript-Konstanten und Drizzle-Enums
+- [x] 01-02: Drizzle-Schema fuer deliverable_modules, deliverables, execution_logs + ALTER TABLE fuer sopDocuments/sopSteps + Migration generieren und ausfuehren
 
 ### Phase 2: Services & API-Routen
 **Goal**: Vollstaendiges Backend fuer Deliverables, SOP-Deliverable-Verknuepfung und Execution Logs ist verfuegbar und aufrufbar.
