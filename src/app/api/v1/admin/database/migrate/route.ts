@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       })
     } catch (error) {
       logger.error('Migration list error', error, { module: 'MigrateAPI' })
-      return apiServerError(error)
+      return apiServerError(error instanceof Error ? error.message : 'Migration list failed')
     }
   })
 }
