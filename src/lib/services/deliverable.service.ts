@@ -11,9 +11,31 @@ export const DeliverableService = {
     if (filters?.moduleId) conditions.push(eq(deliverables.moduleId, filters.moduleId))
     if (filters?.categoryCode) conditions.push(eq(deliverables.categoryCode, filters.categoryCode))
     if (filters?.status) conditions.push(eq(deliverables.status, filters.status))
-    return db.select().from(deliverables)
+    const rows = await db.select({
+      id: deliverables.id,
+      tenantId: deliverables.tenantId,
+      moduleId: deliverables.moduleId,
+      name: deliverables.name,
+      description: deliverables.description,
+      format: deliverables.format,
+      umfang: deliverables.umfang,
+      trigger: deliverables.trigger,
+      category: deliverables.category,
+      categoryCode: deliverables.categoryCode,
+      status: deliverables.status,
+      version: deliverables.version,
+      createdAt: deliverables.createdAt,
+      updatedAt: deliverables.updatedAt,
+      moduleCode: deliverableModules.code,
+      moduleName: deliverableModules.name,
+    }).from(deliverables)
+      .leftJoin(deliverableModules, eq(deliverables.moduleId, deliverableModules.id))
       .where(and(...conditions))
-      .orderBy(desc(deliverables.updatedAt))
+      .orderBy(deliverableModules.code, deliverables.name)
+    return rows.map(r => ({
+      ...r,
+      module: r.moduleCode ? { code: r.moduleCode, name: r.moduleName } : null,
+    }))
   },
 
   async getById(tenantId: string, id: string) {

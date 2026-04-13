@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Loader2, ArrowLeft, Package } from 'lucide-react'
-import { FRAMEWORK_CATEGORIES, getCategoryLabel } from '@/lib/constants/framework'
+import { getCategoryLabel } from '@/lib/constants/framework'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -30,6 +30,7 @@ export default function DeliverablesPage() {
     const params = new URLSearchParams()
     if (moduleFilter !== 'all') params.set('module', moduleFilter)
     if (categoryFilter !== 'all') params.set('category', categoryFilter)
+    params.set('limit', '500')
     const res = await fetch(`/api/v1/deliverables?${params}`)
     const d = await res.json()
     if (d.success) setDeliverables(d.data)
@@ -74,16 +75,17 @@ export default function DeliverablesPage() {
           </SelectContent>
         </Select>
 
-        {/* Kategorie-Filter aus framework.ts */}
+        {/* Kategorie-Filter (A=KI-Beratung, B=IT-Beratung, C=Cybersecurity, D=Schnittstellen) */}
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-52">
             <SelectValue placeholder="Alle Kategorien" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Alle Kategorien</SelectItem>
-            {FRAMEWORK_CATEGORIES.map(c => (
-              <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>
-            ))}
+            {[...new Set(modules.map(m => m.categoryCode))].filter(Boolean).sort().map(code => {
+              const label = modules.find(m => m.categoryCode === code)?.category || code
+              return <SelectItem key={code} value={code}>{label}</SelectItem>
+            })}
           </SelectContent>
         </Select>
       </div>
