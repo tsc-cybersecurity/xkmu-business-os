@@ -1,14 +1,8 @@
-# Roadmap: xKMU BusinessOS — Security & Quality Hardening (v1.4.0)
+# Roadmap: xKMU Framework v2 Integration
 
 ## Overview
 
-Dieses Milestone schliesst alle bekannten Sicherheitsluecken in einer produktiven
-Multi-Tenant-Plattform. Der kritische Pfad beginnt mit Auth-Konsolidierung (R2.1) —
-14 duplizierte `getAuthContext`-Kopien werden atomisch auf die zentrale `withPermission()`
-migriert, bevor jede weitere Sicherheitsschicht daruber gebaut wird. Anschliessend
-kommen Security Headers, CORS, HTML-Sanitizer und API-Key Scoping. Reliability
-(Redis Rate Limiting, Error Handling) und Test-Abdeckung folgen sobald die gehaertete
-Auth-Schicht als stabiles Fundament steht. Code-Qualitaet schliesst den Milestone ab.
+Dieser Meilenstein baut das Deliverable-Modul von Grund auf, erweitert das SOP-Schema, seedet alle 15 Module mit 63 Deliverables und 93 operativen SOPs, verknuepft SOPs bidirektional mit ihren Deliverables und zeigt Statistiken im Management-Dashboard. Die SOP-Deliverable-Kette wird das Rueckgrat der Beratungsautomatisierung.
 
 ## Phases
 
@@ -16,117 +10,104 @@ Auth-Schicht als stabiles Fundament steht. Code-Qualitaet schliesst den Mileston
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Foundation** - Auth-Konsolidierung + P0 Security Fixes (SQL Injection, Credentials)
-- [ ] **Phase 2: Security Layer** - Middleware + Security Headers + CORS
-- [ ] **Phase 3: XSS & API Protection** - HTML Sanitizer + CSRF + API-Key Scoping
-- [ ] **Phase 4: Reliability** - Redis Rate Limiting + Error Handling
-- [x] **Phase 5: Test Coverage** - Unit Tests + Integration Tests fuer kritische Services (completed 2026-03-31)
-- [ ] **Phase 6: Code Quality** - TypeScript Strictness + N+1 Fixes + Komponenten-Splitting
+- [ ] **Phase 1: DB-Schema & Migrations** - Alle neuen und erweiterten Datenbanktabellen sowie gemeinsame Konstanten anlegen
+- [ ] **Phase 2: Services & API-Routen** - Vollstaendiges Backend fuer Deliverables, SOP-Deliverable-Verknuepfung und Execution Logs
+- [ ] **Phase 3: Seed-Daten** - Alle 15 Module, 63 Deliverables und 93 SOPs idempotent einspielen
+- [ ] **Phase 4: UI — Deliverables & SOP-Erweiterung** - Deliverable-Listen-/Detailseiten, SOP-Detail-Erweiterungen, bidirektionale Navigation und Execution-Verlauf
+- [ ] **Phase 5: Management Dashboard** - Deliverable-Statistiken und SOP-Maturity-Uebersicht auf der Management-Seite
 
 ## Phase Details
 
-### Phase 1: Foundation
-**Goal**: Die Auth-Logik ist auf eine einzige kanonische Implementierung reduziert und alle P0-Sicherheitsluecken (SQL Injection, Hardcoded Credentials) sind geschlossen.
+### Phase 1: DB-Schema & Migrations
+**Goal**: Alle neuen und erweiterten Datenbanktabellen sowie gemeinsame TypeScript-Konstanten sind angelegt und migriert, sodass jede nachfolgende Phase darauf aufbauen kann.
 **Depends on**: Nothing (first phase)
-**Requirements**: R2.1, R1.1, R1.5
+**Requirements**: DEL-01, DEL-02, ENUM-01, ENUM-02, ENUM-03, SOP-01, SOP-02, SOP-03, SOP-04, SOP-05, SOP-06, SOP-07, SOP-08, SOP-09, EXEC-01
 **Success Criteria** (what must be TRUE):
-  1. `grep -rn "async function getAuthContext" src/app/api/` gibt null Ergebnisse zurueck
-  2. Alle 14 migrierten Routes geben 401 zurueck wenn eine ungueltige Session gesendet wird
-  3. Der DB-Import-Route akzeptiert keinen `sql.raw()` User-Input mehr; ein Cross-Tenant-Import-Versuch wird abgelehnt
-  4. Kein Passwort oder Secret ist hardcoded im Source Code; `docker-compose.local.yml` startet nicht ohne gesetzte Pflicht-Umgebungsvariablen
-**Plans**: 3 plans
+  1. Tabellen `deliverables` und `deliverable_modules` existieren in der DB mit allen definierten Spalten und korrekten tenant_id-FKs
+  2. Tabelle `execution_logs` existiert mit allen Spalten (entity_type, entity_id, started_at, executed_by, quality_score, cost_estimate_usd usw.)
+  3. sopDocuments hat alle neuen Felder (automation_level, ai_capable, maturity_level, estimated_duration_minutes, produces_deliverable_id, subprocess, source_task_id) — alle nullable
+  4. sopSteps hat das neue Feld `executor` (enum: agent, human, flex) — nullable
+  5. TypeScript-Konstanten fuer categories, status_enum, automation_level_enum, executor_enum und severity_enum sind definiert und werden konsistent exportiert
+**Plans**: 2 plans
 
 Plans:
-- [x] 01-01-PLAN.md — Auth-Konsolidierung: alle 14 getAuthContext-Kopien atomar auf withPermission() migrieren
-- [x] 01-02-PLAN.md — SQL Injection Fix: sql.raw() im DB-Import durch parametrisierte Queries ersetzen + Cross-Tenant-Test
-- [x] 01-03-PLAN.md — Credentials Cleanup: Hardcoded Secrets aus Seed-Scripts und Docker Compose entfernen
+- [ ] 01-01: Shared Enums & Konstanten — categories, status, automation_level, executor, severity als TypeScript-Konstanten und Drizzle-Enums
+- [ ] 01-02: Drizzle-Schema fuer deliverable_modules, deliverables, execution_logs + ALTER TABLE fuer sopDocuments/sopSteps + Migration generieren und ausfuehren
 
-### Phase 2: Security Layer
-**Goal**: `src/proxy.ts` (Next.js 16 Nachfolger von middleware.ts) setzt Security Headers und erzwingt CORS via ALLOWED_ORIGINS Allowlist; alle API-Routes sind gegen Middleware-Bypass (CVE-2025-29927) durch beibehaltene `withPermission()`-Checks geschuetzt.
+### Phase 2: Services & API-Routen
+**Goal**: Vollstaendiges Backend fuer Deliverables, SOP-Deliverable-Verknuepfung und Execution Logs ist verfuegbar und aufrufbar.
 **Depends on**: Phase 1
-**Requirements**: R2.2, R1.2, R1.3
+**Requirements**: DEL-03, DEL-04, DEL-05, LINK-01, LINK-02, LINK-03, EXEC-02, EXEC-03
 **Success Criteria** (what must be TRUE):
-  1. Ein Request mit `x-middleware-subrequest`-Header an 5 geschuetzte Routes gibt jeweils 401 zurueck
-  2. `curl -I https://boss.xkmu.de` zeigt `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff` und `Referrer-Policy` in der Antwort
-  3. Ein Request mit `Origin: https://evil.com` erhaelt den Origin nicht als `Access-Control-Allow-Origin` zurueck
-  4. Der Production-Docker-Build zeigt null CSP-Violations in der Browser-Konsole (Report-Only Mode)
-  5. Statische Assets (`/_next/static/*`) werden nicht durch Proxy verlangsamt (matcher konfiguriert)
+  1. `GET /api/v1/deliverables` gibt paginierte Deliverable-Liste mit Filter nach Modul und Kategorie zurueck
+  2. `GET /api/v1/deliverables/[id]` gibt Deliverable-Detail inklusive verknuepfter SOPs zurueck
+  3. `GET /api/v1/deliverables/modules` gibt alle Module mit Deliverable-Count zurueck
+  4. SOP-Detail-API gibt das verknuepfte Deliverable (via produces_deliverable_id) zurueck
+  5. `GET /api/v1/execution-logs` gibt Ausfuehrungsprotokoll gefiltert nach entity_type/entity_id zurueck; `POST` legt neuen Eintrag an
 **Plans**: 2 plans
 
 Plans:
-- [x] 02-01-PLAN.md — Security Layer Implementation: CORS Wildcard entfernen + Security Headers (next.config.ts) + CVE-2025-29927 Defense + CORS Allowlist (src/proxy.ts) + Build-Verifikation
-- [ ] 02-02-PLAN.md — Production Verification: curl-Checks gegen boss.xkmu.de (5 CVE-bypass-Routes) + Browser CSP-Violations Checkpoint
+- [ ] 02-01: DeliverableService (CRUD, list/filter/pagination, getByModule) + API-Routen GET/POST /deliverables, GET/PATCH/DELETE /deliverables/[id], GET /deliverables/modules
+- [ ] 02-02: ExecutionLogService (create, list by entity, getStats) + API-Routen GET/POST /execution-logs + SOP-Detail-API um produces_deliverable erweiternt
 
-### Phase 3: XSS & API Protection
-**Goal**: Alle User-HTML-Ausgaben sind durch `isomorphic-dompurify` gesaeubert, mutierenden REST-Requests sind per CSRF-Token geschuetzt und API-Keys haben granulare Modul-Berechtigungen statt Full-Access.
+### Phase 3: Seed-Daten
+**Goal**: Alle 15 Module, 63 Deliverables und 93 operative SOPs sind idempotent in der Datenbank vorhanden und korrekt miteinander verknuepft.
 **Depends on**: Phase 2
-**Requirements**: R1.4, R2.4, R2.3
+**Requirements**: SEED-01, SEED-02, SEED-03, SSEED-01, SSEED-02, SSEED-03
 **Success Criteria** (what must be TRUE):
-  1. Jeder `dangerouslySetInnerHTML`-Aufruf im Codebase importiert den zentralen `sanitize.ts`-Wrapper
-  2. Ein POST-Request ohne gueltigen CSRF-Token wird mit 403 abgelehnt; ein API-Key-Request (Machine-to-Machine) ist davon ausgenommen
-  3. Bestehende API-Keys (z.B. n8n-Workflows) funktionieren nach der Schema-Migration weiterhin mit `scope: '*'`
-  4. Ein API-Key mit `scope: 'leads:read'` erhaelt 403 wenn er auf `/api/v1/companies` zugreift
-**Plans**: 3 plans
-
-Plans:
-- [x] 03-01-PLAN.md — HTML Sanitizer: isomorphic-dompurify-Wrapper + 3 dangerouslySetInnerHTML Call Sites sanitieren
-- [x] 03-02-PLAN.md — API-Key Scoping: SQL-Migration + AuthContext + withPermission()-Enforcement + Admin-UI Scope-Selector
-- [ ] 03-03-PLAN.md — CSRF-Schutz: @edge-csrf/nextjs in proxy.ts nach API-Key-Early-Return + getCsrfToken() Utility
-
-### Phase 4: Reliability
-**Goal**: Der Rate Limiter funktioniert ueber Container-Neustarts hinweg und alle Silent-Error-Swallowing-Stellen in AI-Services und anderen Bereichen geben strukturierte Fehler an den User weiter.
-**Depends on**: Phase 3
-**Requirements**: R3.1, R3.2
-**Success Criteria** (what must be TRUE):
-  1. Nach einem Container-Neustart gilt der Rate-Limit-Counter weiter; ein zweiter Container sieht denselben Zaehler
-  2. Wenn Redis nicht erreichbar ist, werden Requests trotzdem durchgelassen (Fail-Open) und ein Warning geloggt
-  3. Kein `catch {}` oder leerer `catch`-Block mehr im Codebase; AI-Provider-Fehler erscheinen als Fehlermeldung im UI statt als Stille
+  1. `GET /api/v1/deliverables/modules` liefert genau 15 Module (A1-A5, B1-B5, C1-C3, D1-D3)
+  2. `GET /api/v1/deliverables` liefert genau 63 Deliverables mit korrekter Modul-Zuordnung
+  3. SOPs-Endpoint liefert 93 operative SOPs (SOP-MK001 bis SOP-UP003) mit gesetztem source_task_id
+  4. SOPs mit definiertem produces_deliverable haben einen gueltigen produces_deliverable_id-FK
+  5. Seed-Skripte koennen mehrfach ausgefuehrt werden ohne Duplikate (check-before-insert)
 **Plans**: 2 plans
 
 Plans:
-- [x] 04-01-PLAN.md — Redis Rate Limiting: ioredis installieren + redis-client.ts Singleton + rate-limit.ts auf INCR/EXPIRE migrieren + 3 Caller auf await aktualisieren + Unit Tests
-- [ ] 04-02-PLAN.md — Error Handling: logger.warn in 11 AI-Service JSON-Parse-Catches + console.error auf logger.error in 6 grundschutz/ir-playbook Routes
+- [ ] 03-01: Deliverable-Seed — 15 Module aus xKMU_Deliverable_Katalog_v1 + 63 Deliverables mit Modul-Zuordnung, idempotent
+- [ ] 03-02: SOP-Seed — 93 operative SOPs aus Framework v2 mit automation_level, ai_capable, maturity_level, executor, produces_deliverable_id wo definiert, idempotent by source_task_id
 
-### Phase 5: Test Coverage
-**Goal**: Auth-, Tenant-, Email- und API-Key-Services haben mindestens 80% Test-Abdeckung mit Integration Tests die echte DB-Queries ausfuehren; Tenant-Isolation ist durch Cross-Tenant-Tests verifiziert.
-**Depends on**: Phase 4
-**Requirements**: R3.3, R3.4
+### Phase 4: UI — Deliverables & SOP-Erweiterung
+**Goal**: Deliverable-Listen-/Detailseiten, erweiterte SOP-Detailseite und Execution-Verlauf sind fuer den Nutzer im Intern-Bereich erreichbar und navigierbar.
+**Depends on**: Phase 3
+**Requirements**: DEL-06, DEL-07, DEL-08, UI-01, UI-02, LINK-04, EXEC-04
 **Success Criteria** (what must be TRUE):
-  1. `vitest --coverage` zeigt mindestens 80% Coverage fuer `src/lib/services/auth/`, `tenant/`, `email/`, `api-key/`
-  2. Mindestens ein Integration Test pro Security-Service testet echte DB-Queries (keine vollstaendigen DB-Mocks)
-  3. Ein Test verifiziert explizit dass Tenant A keine Daten von Tenant B lesen kann
-  4. Login-Flow, CRUD fuer 3 Module und Permission-Checks sind durch Integration Tests abgedeckt
-**Plans**: 1 plan
-
-Plans:
-- [x] 05-01: Unit Tests fuer Auth, Tenant, Email, API-Key Services (Ziel: 80% Coverage)
-
-### Phase 6: Code Quality
-**Goal**: Alle kritischen `as any`-Casts sind durch korrekte TypeScript-Typen ersetzt, N+1-Query-Patterns in den 8+ betroffenen Services sind durch Batch-Queries geloest und keine Page-Komponente ueberschreitet 400 Zeilen.
-**Depends on**: Phase 5
-**Requirements**: R4.1, R4.2, R4.3
-**Success Criteria** (what must be TRUE):
-  1. `grep -rn "as any" src/` gibt null Ergebnisse oder nur dokumentierte Ausnahmen zurueck
-  2. `npx next build` und `tsc --noEmit` laufen fehlerfrei durch
-  3. Kein `await` in `for`/`forEach`/`map`-Loops fuer DB-Queries; Batch-Inserts oder Joins stattdessen
-  4. Keine Komponente im `src/app/` Verzeichnis hat mehr als 400 Zeilen
+  1. Nutzer kann unter /intern/management/deliverables eine gefilterte Deliverable-Liste nach Modul und Kategorie anzeigen
+  2. Nutzer kann ein Deliverable-Detail aufrufen und sieht dort die verknuepften SOPs mit Direktlink
+  3. Sidebar-Navigation zeigt "Deliverables" als Eintrag unter Management
+  4. SOP-Detailseite zeigt Maturity-Badge, Automation-Level, Dauer, Executor und das verknuepfte Deliverable mit Direktlink
+  5. SOP-Listenseite erlaubt Filter nach automation_level und maturity_level
+  6. Ausfuehrungshistorie (Execution Log) ist auf SOP- und Deliverable-Detailseiten sichtbar
 **Plans**: 3 plans
+**UI hint**: yes
 
 Plans:
-- [ ] 06-01-PLAN.md — TypeScript Strictness: 43 `as any`-Casts durch korrekte Typen ersetzen (22 in cms-block-renderer, 18 in block-field-renderer, 3 anderswo)
-- [x] 06-02-PLAN.md — N+1 Query Fixes: 8 sequentielle DB-Loops durch inArray/CASE-WHEN/Promise.all ersetzen
-- [ ] 06-03-PLAN.md — Komponenten-Splitting: 7 grosse Page-Komponenten (760-1158 Zeilen) in Sub-Komponenten aufteilen
+- [ ] 04-01: Deliverable-Listenseite mit Modul-/Kategorie-Filter + Sidebar-Navigationseintrag
+- [ ] 04-02: Deliverable-Detailseite mit verknuepften SOPs + SOP-Detailseite mit neuen Feldern und Deliverable-Link (bidirektionale Navigation)
+- [ ] 04-03: SOP-Listenseiten-Filter (automation_level, maturity_level) + Execution-Log-Anzeige auf Detail-Seiten
+
+### Phase 5: Management Dashboard
+**Goal**: Die Management-Uebersichtsseite zeigt Deliverable-Statistiken und SOP-Maturity-Verteilung, sodass der Stand des gesamten Frameworks auf einen Blick erkennbar ist.
+**Depends on**: Phase 4
+**Requirements**: UI-03, UI-04
+**Success Criteria** (what must be TRUE):
+  1. Management-Seite zeigt Anzahl der Deliverables pro Modul und pro Kategorie
+  2. Management-Seite zeigt SOP-Maturity-Verteilung als Balkendiagramm oder vergleichbare Visualisierung
+  3. Beide Statistik-Bereiche aktualisieren sich korrekt wenn neue Seed-Daten eingespielt werden
+**Plans**: 1 plan
+**UI hint**: yes
+
+Plans:
+- [ ] 05-01: Management-Dashboard-Erweiterung — Deliverable-Statistiken (pro Modul/Kategorie) + SOP-Maturity-Balkendiagramm
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/3 | In Progress|  |
-| 2. Security Layer | 0/2 | Not started | - |
-| 3. XSS & API Protection | 2/3 | In Progress|  |
-| 4. Reliability | 1/2 | In Progress|  |
-| 5. Test Coverage | 1/1 | Complete   | 2026-03-31 |
-| 6. Code Quality | 1/3 | In Progress|  |
+| 1. DB-Schema & Migrations | 0/2 | Not started | - |
+| 2. Services & API-Routen | 0/2 | Not started | - |
+| 3. Seed-Daten | 0/2 | Not started | - |
+| 4. UI — Deliverables & SOP-Erweiterung | 0/3 | Not started | - |
+| 5. Management Dashboard | 0/1 | Not started | - |

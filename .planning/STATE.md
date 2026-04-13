@@ -1,41 +1,24 @@
----
-gsd_state_version: 1.0
-milestone: v1.4.0
-milestone_name: milestone
-status: executing
-stopped_at: Completed 06-code-quality/06-02 N+1 Query Fixes
-last_updated: "2026-03-31T11:20:05.014Z"
-last_activity: 2026-03-31
-progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 15
-  completed_plans: 15
-  percent: 0
----
-
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-30)
+See: .planning/PROJECT.md (updated 2026-04-13)
 
-**Core value:** Die Anwendung muss sicher und zuverlaessig sein — Multi-Tenant-Isolation, korrekte Authentifizierung/Autorisierung und keine Sicherheitsluecken, die Kundendaten gefaehrden koennten.
-**Current focus:** Phase 06 — code-quality
+**Core value:** Jeder dokumentierte Prozess erzeugt ein definiertes Deliverable — versioniert, mandantenfaehig und KI-generierbar.
+**Current focus:** Phase 1 — DB-Schema & Migrations
 
 ## Current Position
 
-Phase: 06
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-03-31
+Phase: 1 of 5 (DB-Schema & Migrations)
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-04-13 — Roadmap erstellt, Meilenstein Framework v2 Integration initialisiert
 
 Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
-
 - Total plans completed: 0
 - Average duration: -
 - Total execution time: 0 hours
@@ -47,18 +30,10 @@ Progress: [░░░░░░░░░░] 0%
 | - | - | - | - |
 
 **Recent Trend:**
-
 - Last 5 plans: -
 - Trend: -
 
 *Updated after each plan completion*
-| Phase 01-foundation P03 | 3 | 2 tasks | 3 files |
-| Phase 01-foundation P02 | 12 | 2 tasks | 2 files |
-| Phase 01-foundation P01 | 14 | 2 tasks | 16 files |
-| Phase 02-security-layer P01 | 6 | 4 tasks | 3 files |
-| Phase 03-xss-api-protection P02 | 12 | 3 tasks | 8 files |
-| Phase 04-reliability P01 | 8 | 3 tasks | 8 files |
-| Phase 06-code-quality P02 | 14 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -67,26 +42,10 @@ Progress: [░░░░░░░░░░] 0%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Init: Auth-Konsolidierung (R2.1) ist der kritische Pfad — alle 14 Routes atomar in einer PR migrieren
-- Init: CSP startet in Report-Only Mode, erst nach Docker-Build-Validierung auf Enforcement umschalten
-- Init: Bestehende API-Keys erhalten `scope: '*'` bei der Schema-Migration (Backward Compatibility)
-- Init: Redis Rate Limiter mit Fail-Open Design — kein Hard-Dependency auf Redis fuer Basis-Funktionalitaet
-- [Phase 01-foundation]: Use :? (not :-) for required secrets in docker-compose.local.yml — fails fast with clear error on missing env vars
-- [Phase 01-foundation]: Seed scripts throw at module load time (before SEED_DATA) when SEED_ADMIN_EMAIL or SEED_ADMIN_PASSWORD missing
-- [Phase 01-foundation]: sql.identifier() used for column names in INSERT (not sql.raw) — zero sql.raw calls in import route
-- [Phase 01-foundation]: tenant_id override is unconditional in import — auth.tenantId always wins over any value in uploaded SQL
-- [Phase 01-foundation]: All 14 routes migrated atomically to withPermission() in one PR — no partial migration state
-- [Phase 01-foundation]: Redundant manual admin check in ai-prompt-templates/seed removed — withPermission RBAC handles it via DEFAULT_ROLE_PERMISSIONS
-- [Phase 02-security-layer]: CORS handling moved from next.config.ts to proxy.ts: next.config.ts headers() cannot read request headers, dynamic origin allowlist only possible in proxy.ts
-- [Phase 02-security-layer]: CSP starts in Content-Security-Policy-Report-Only mode — switch to enforcement after Docker build verification shows zero violations
-- [Phase 02-security-layer]: ALLOWED_ORIGINS uses :- default (not :?) — optional config with sensible default, unlike required secrets that use :?
-- [Phase 03-xss-api-protection]: API scope check uses auth.apiKeyPermissions ?? ['*'] — null for session users defaults to full access, preventing lockout
-- [Phase 03-xss-api-protection]: SQL migration WHERE clause is idempotent: leaves rows already having ['*'] or module:action scopes untouched
-- [Phase 04-reliability]: getRedisClient() factory pattern prevents Next.js build-time Redis instantiation
-- [Phase 04-reliability]: Fail-open design for Redis rate limiter: null client and incr() errors both allow requests through
-- [Phase 06-code-quality]: din-audit saveBulkAnswers uses Promise.all not INSERT ON CONFLICT — no unique constraint on (sessionId, requirementId)
-- [Phase 06-code-quality]: CASE WHEN batch UPDATE uses ::uuid cast — PostgreSQL rejects uncast string literals against UUID columns
-- [Phase 06-code-quality]: topics generate route uses direct db.insert batch — SocialMediaTopicService.create is pure INSERT with no side effects
+- Init: Deliverables als eigene Tabelle (eigenstaendige Entitaet, kein JSON in SOPs)
+- Init: SOP-Schema erweitern statt neue Tabelle (ALTER TABLE, kein Neubau)
+- Init: Framework-Kategorien als Code-Konstanten, nicht als DB-Tabelle
+- Init: Execution Log als eigene Tabelle (Trennung Stammdaten / Laufzeitdaten)
 
 ### Pending Todos
 
@@ -98,6 +57,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-31T10:21:35.854Z
-Stopped at: Completed 06-code-quality/06-02 N+1 Query Fixes
+Last session: 2026-04-13
+Stopped at: Roadmap und State initialisiert — bereit fuer `/gsd:plan-phase 1`
 Resume file: None
