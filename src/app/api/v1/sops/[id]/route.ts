@@ -8,7 +8,7 @@ type Params = Promise<{ id: string }>
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'processes', 'read', async (auth) => {
     const { id } = await params
-    const sop = await SopService.getById(auth.tenantId, id)
+    const sop = await SopService.getByIdWithDeliverable(auth.tenantId, id)
     if (!sop) return apiNotFound('SOP nicht gefunden')
     return apiSuccess(sop)
   })

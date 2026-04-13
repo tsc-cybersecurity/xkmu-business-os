@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { sopDocuments, sopSteps, sopVersions } from '@/lib/db/schema'
+import { sopDocuments, sopSteps, sopVersions, deliverables } from '@/lib/db/schema'
 import { eq, and, desc, asc, ilike, or, isNull } from 'drizzle-orm'
 
 export const SopService = {
@@ -29,6 +29,24 @@ export const SopService = {
     const versions = await db.select().from(sopVersions)
       .where(eq(sopVersions.sopId, id)).orderBy(desc(sopVersions.createdAt))
     return { ...doc, steps, versions }
+  },
+
+  async getByIdWithDeliverable(tenantId: string, id: string) {
+    const [doc] = await db.select().from(sopDocuments)
+      .where(and(eq(sopDocuments.tenantId, tenantId), eq(sopDocuments.id, id), isNull(sopDocuments.deletedAt)))
+    if (!doc) return null
+    const steps = await db.select().from(sopSteps)
+      .where(eq(sopSteps.sopId, id)).orderBy(asc(sopSteps.sequence))
+    const versions = await db.select().from(sopVersions)
+      .where(eq(sopVersions.sopId, id)).orderBy(desc(sopVersions.createdAt))
+    // Fetch linked deliverable if producesDeliverableId is set
+    let producesDeliverable = null
+    if (doc.producesDeliverableId) {
+      const [del] = await db.select().from(deliverables)
+        .where(eq(deliverables.id, doc.producesDeliverableId))
+      producesDeliverable = del ?? null
+    }
+    return { ...doc, steps, versions, producesDeliverable }
   },
 
   async create(tenantId: string, data: Record<string, unknown>) {
