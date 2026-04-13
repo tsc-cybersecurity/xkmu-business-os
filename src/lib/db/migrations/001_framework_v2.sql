@@ -4,8 +4,6 @@
 -- 2026-04-13
 -- ============================================
 
-BEGIN;
-
 -- ============================================
 -- 1. Neue Tabelle: deliverable_modules
 -- ============================================
@@ -98,5 +96,3 @@ CREATE INDEX IF NOT EXISTS idx_execution_logs_tenant ON execution_logs(tenant_id
 CREATE INDEX IF NOT EXISTS idx_execution_logs_entity ON execution_logs(tenant_id, entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_execution_logs_status ON execution_logs(tenant_id, status);
 CREATE INDEX IF NOT EXISTS idx_execution_logs_started ON execution_logs(tenant_id, started_at);
-
-COMMIT;
