@@ -10,6 +10,7 @@ import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
 import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.defaults'
 import { seedManagementFramework } from './seeds/management-framework.seed'
 import { seedDeliverableCatalog } from './seeds/deliverable-catalog.seed'
+import { seedSopCatalog } from './seeds/sop-catalog.seed'
 import { logger } from '@/lib/utils/logger'
 
 const adminEmail = process.env.SEED_ADMIN_EMAIL
@@ -870,6 +871,9 @@ async function seedCheck() {
 
   // 15. Seed Deliverable Catalog (16 Module + 70 Deliverables)
   await seedDeliverableCatalog(tenantId)
+
+  // 16. Seed SOP Catalog (alle SOPs aus Framework v2)
+  await seedSopCatalog(tenantId)
 
   logger.info('Seed check completed!', { module: 'SeedCheck' })
   logger.info(`Login: ${SEED_DATA.user.email} / ${SEED_DATA.user.password}`, { module: 'SeedCheck' })
