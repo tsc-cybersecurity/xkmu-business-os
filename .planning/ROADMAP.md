@@ -47,8 +47,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: DeliverableService (CRUD, list/filter/pagination, getByModule) + API-Routen GET/POST /deliverables, GET/PATCH/DELETE /deliverables/[id], GET /deliverables/modules
-- [ ] 02-02: ExecutionLogService (create, list by entity, getStats) + API-Routen GET/POST /execution-logs + SOP-Detail-API um produces_deliverable erweiternt
+- [x] 02-01: DeliverableService (CRUD, list/filter/pagination, getByModule) + API-Routen GET/POST /deliverables, GET/PATCH/DELETE /deliverables/[id], GET /deliverables/modules
+- [x] 02-02: ExecutionLogService (create, list by entity, getStats) + API-Routen GET/POST /execution-logs + SOP-Detail-API um produces_deliverable erweiternt
 
 ### Phase 3: Seed-Daten
 **Goal**: Alle 15 Module, 63 Deliverables und 93 operative SOPs sind idempotent in der Datenbank vorhanden und korrekt miteinander verknuepft.
