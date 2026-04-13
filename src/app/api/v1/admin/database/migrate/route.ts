@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
       })
     } catch (error) {
       logger.error('Migration execution error', error, { module: 'MigrateAPI' })
-      return apiServerError(error)
+      return apiServerError(error instanceof Error ? error.message : 'Migration execution failed')
     }
   })
 }
