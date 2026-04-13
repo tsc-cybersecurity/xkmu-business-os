@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Loader2, ArrowLeft, Save, Upload, Plus, Trash2, AlertTriangle, CheckSquare, Package, ExternalLink } from 'lucide-react'
+import { ExecutionLogPanel } from '@/components/management/execution-log-panel'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -159,7 +160,7 @@ export default function SopDetailPage() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList><TabsTrigger value="editor">Editor</TabsTrigger><TabsTrigger value="preview">Preview</TabsTrigger><TabsTrigger value="versions">Versionen</TabsTrigger><TabsTrigger value="framework">Framework</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="editor">Editor</TabsTrigger><TabsTrigger value="preview">Preview</TabsTrigger><TabsTrigger value="versions">Versionen</TabsTrigger><TabsTrigger value="framework">Framework</TabsTrigger><TabsTrigger value="execution">Ausfuehrungen</TabsTrigger></TabsList>
 
         {/* ── Editor ──────────────────────────────────────── */}
         <TabsContent value="editor" className="space-y-4">
@@ -365,6 +366,11 @@ export default function SopDetailPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Ausfuehrungen ────────────────────────────────── */}
+        <TabsContent value="execution">
+          <ExecutionLogPanel entityType="sop" entityId={id} />
         </TabsContent>
       </Tabs>
     </div>

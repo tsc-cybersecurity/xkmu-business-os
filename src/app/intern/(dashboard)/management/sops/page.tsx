@@ -31,17 +31,21 @@ export default function SopsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
   const [form, setForm] = useState({ title: '', category: 'Vertrieb', purpose: '', scope: '' })
+  const [automationFilter, setAutomationFilter] = useState('all')
+  const [maturityFilter, setMaturityFilter] = useState('all')
 
   const load = useCallback(async () => {
     const params = new URLSearchParams()
     if (catFilter !== 'all') params.set('category', catFilter)
     if (statusFilter !== 'all') params.set('status', statusFilter)
     if (search.trim()) params.set('q', search.trim())
+    if (automationFilter !== 'all') params.set('automation_level', automationFilter)
+    if (maturityFilter !== 'all') params.set('maturity_level', maturityFilter)
     const res = await fetch(`/api/v1/sops?${params}`)
     const d = await res.json()
     if (d.success) setSops(d.data)
     setLoading(false)
-  }, [catFilter, statusFilter, search])
+  }, [catFilter, statusFilter, search, automationFilter, maturityFilter])
 
   useEffect(() => { const t = setTimeout(load, 300); return () => clearTimeout(t) }, [load])
 
@@ -91,6 +95,26 @@ export default function SopsPage() {
             <SelectItem value="archived">Archiviert</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={automationFilter} onValueChange={setAutomationFilter}>
+          <SelectTrigger className="w-48"><SelectValue placeholder="Automatisierung" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle Automatisierung</SelectItem>
+            <SelectItem value="manual">Manuell</SelectItem>
+            <SelectItem value="semi">Semi-Auto</SelectItem>
+            <SelectItem value="full">Vollautomatisch</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={maturityFilter} onValueChange={setMaturityFilter}>
+          <SelectTrigger className="w-40"><SelectValue placeholder="Reifegrad" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Alle Reifegrade</SelectItem>
+            <SelectItem value="1">Reife 1/5</SelectItem>
+            <SelectItem value="2">Reife 2/5</SelectItem>
+            <SelectItem value="3">Reife 3/5</SelectItem>
+            <SelectItem value="4">Reife 4/5</SelectItem>
+            <SelectItem value="5">Reife 5/5</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* SOP Grid */}
@@ -117,6 +141,19 @@ export default function SopsPage() {
                   {s.tags?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2">
                       {s.tags.slice(0, 4).map((t: string) => <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>)}
+                    </div>
+                  )}
+                  {/* Neue Framework-Badges */}
+                  {(s.automation_level || s.maturity_level) && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {s.automation_level && (
+                        <Badge variant={s.automation_level === 'full' ? 'default' : 'secondary'} className="text-xs">
+                          {s.automation_level === 'manual' ? 'Manuell' : s.automation_level === 'semi' ? 'Semi-Auto' : 'Vollautomatisch'}
+                        </Badge>
+                      )}
+                      {s.maturity_level && (
+                        <Badge variant="outline" className="text-xs">Reife {s.maturity_level}/5</Badge>
+                      )}
                     </div>
                   )}
                 </CardContent>

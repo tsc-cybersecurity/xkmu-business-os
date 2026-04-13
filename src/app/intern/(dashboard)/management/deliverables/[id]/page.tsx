@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Loader2, ArrowLeft, FileText, ExternalLink } from 'lucide-react'
 import { getCategoryLabel } from '@/lib/constants/framework'
+import { ExecutionLogPanel } from '@/components/management/execution-log-panel'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -166,6 +167,11 @@ export default function DeliverableDetailPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Execution Log */}
+      <div>
+        <ExecutionLogPanel entityType="deliverable" entityId={id} />
       </div>
     </div>
   )
