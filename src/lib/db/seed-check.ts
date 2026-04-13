@@ -869,11 +869,16 @@ async function seedCheck() {
   // 14. Seed Management Framework (VTO, Rocks, Scorecard, Issues, OKRs, SOPs)
   await seedManagementFramework(tenantId)
 
-  // 15. Seed Deliverable Catalog (16 Module + 70 Deliverables)
-  await seedDeliverableCatalog(tenantId)
+  // 15. Seed Deliverable Catalog (16 Module + 70 Deliverables) — fuer alle Tenants
+  const allTenants = await db.select({ id: tenants.id }).from(tenants)
+  for (const t of allTenants) {
+    await seedDeliverableCatalog(t.id)
+  }
 
-  // 16. Seed SOP Catalog (alle SOPs aus Framework v2)
-  await seedSopCatalog(tenantId)
+  // 16. Seed SOP Catalog (alle SOPs aus Framework v2) — fuer alle Tenants
+  for (const t of allTenants) {
+    await seedSopCatalog(t.id)
+  }
 
   logger.info('Seed check completed!', { module: 'SeedCheck' })
   logger.info(`Login: ${SEED_DATA.user.email} / ${SEED_DATA.user.password}`, { module: 'SeedCheck' })
