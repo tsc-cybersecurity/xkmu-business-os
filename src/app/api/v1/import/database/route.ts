@@ -18,6 +18,8 @@ const IMPORT_ORDER = [
   // Allgemein
   'ideas', 'activities', 'webhooks', 'audit_log',
   'documents', 'document_items', 'document_templates', 'email_templates',
+  // Management Framework v2
+  'deliverable_modules', 'deliverables', 'execution_logs',
   // Prozesse & Projekte
   'processes', 'process_tasks', 'projects', 'project_tasks',
   // Zeiterfassung & Finance
