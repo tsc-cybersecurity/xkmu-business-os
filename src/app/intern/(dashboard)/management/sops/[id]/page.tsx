@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2, ArrowLeft, Save, Upload, Plus, Trash2, AlertTriangle, CheckSquare } from 'lucide-react'
+import { Loader2, ArrowLeft, Save, Upload, Plus, Trash2, AlertTriangle, CheckSquare, Package, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -21,6 +21,19 @@ const CATEGORIES = [
   'Finanzen & Buchhaltung', 'HR & Onboarding', 'Kundenservice', 'Compliance & DSGVO',
 ]
 const STATUS_LABELS: Record<string, string> = { draft: 'Entwurf', review: 'Review', approved: 'Freigegeben', archived: 'Archiviert' }
+const AUTOMATION_LEVEL_LABELS: Record<string, string> = {
+  manual: 'Manuell', semi: 'Semi-Auto', full: 'Vollautomatisch'
+}
+const AUTOMATION_LEVEL_VARIANT: Record<string, 'default' | 'secondary' | 'outline'> = {
+  manual: 'secondary', semi: 'outline', full: 'default'
+}
+const EXECUTOR_LABELS: Record<string, string> = {
+  agent: 'Agent', human: 'Mensch', flex: 'Flexibel'
+}
+const MATURITY_COLORS: Record<number, string> = {
+  1: 'text-red-500', 2: 'text-orange-500', 3: 'text-yellow-500',
+  4: 'text-blue-500', 5: 'text-green-600'
+}
 
 export default function SopDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -113,6 +126,26 @@ export default function SopDetailPage() {
               <Badge variant="outline">v{sop.version}</Badge>
               <Badge variant={sop.status === 'approved' ? 'default' : 'secondary'}>{STATUS_LABELS[sop.status] || sop.status}</Badge>
             </div>
+            {(sop.automation_level || sop.maturity_level || sop.estimated_duration_minutes || sop.ai_capable) && (
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                {sop.automation_level && (
+                  <Badge variant={AUTOMATION_LEVEL_VARIANT[sop.automation_level] || 'secondary'}>
+                    {AUTOMATION_LEVEL_LABELS[sop.automation_level] || sop.automation_level}
+                  </Badge>
+                )}
+                {sop.maturity_level && (
+                  <Badge variant="outline" className={MATURITY_COLORS[sop.maturity_level]}>
+                    Reife {sop.maturity_level}/5
+                  </Badge>
+                )}
+                {sop.estimated_duration_minutes && (
+                  <Badge variant="outline">ca. {sop.estimated_duration_minutes} Min.</Badge>
+                )}
+                {sop.ai_capable && (
+                  <Badge variant="default" className="bg-violet-600">KI-faehig</Badge>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -126,7 +159,7 @@ export default function SopDetailPage() {
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList><TabsTrigger value="editor">Editor</TabsTrigger><TabsTrigger value="preview">Preview</TabsTrigger><TabsTrigger value="versions">Versionen</TabsTrigger></TabsList>
+        <TabsList><TabsTrigger value="editor">Editor</TabsTrigger><TabsTrigger value="preview">Preview</TabsTrigger><TabsTrigger value="versions">Versionen</TabsTrigger><TabsTrigger value="framework">Framework</TabsTrigger></TabsList>
 
         {/* ── Editor ──────────────────────────────────────── */}
         <TabsContent value="editor" className="space-y-4">
@@ -175,6 +208,20 @@ export default function SopDetailPage() {
                   <div><label className="text-sm font-medium block mb-1">Beschreibung</label><Textarea value={s.description || ''} onChange={e => updateStep(i, 'description', e.target.value)} rows={2} /></div>
                   <div><label className="text-sm font-medium block mb-1">Warnungen (kommagetrennt)</label><Input value={(s.warnings || []).join(', ')} onChange={e => updateStep(i, 'warnings', e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean))} /></div>
                   <div><label className="text-sm font-medium block mb-1">Checkliste (kommagetrennt)</label><Input value={(s.checklistItems || []).join(', ')} onChange={e => updateStep(i, 'checklistItems', e.target.value.split(',').map((x: string) => x.trim()).filter(Boolean))} /></div>
+                  <div>
+                    <label className="text-sm font-medium block mb-1">Executor</label>
+                    <Select value={s.executor || ''} onValueChange={v => updateStep(i, 'executor', v || null)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Kein Executor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Keiner</SelectItem>
+                        <SelectItem value="human">{EXECUTOR_LABELS.human}</SelectItem>
+                        <SelectItem value="agent">{EXECUTOR_LABELS.agent}</SelectItem>
+                        <SelectItem value="flex">{EXECUTOR_LABELS.flex}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </CardContent>
               </Card>
             ))}</div>
@@ -242,6 +289,82 @@ export default function SopDetailPage() {
               </CardContent>
             </Card>
           ))}
+        </TabsContent>
+
+        {/* ── Framework ───────────────────────────────────── */}
+        <TabsContent value="framework" className="space-y-4">
+          {/* Deliverable-Verknuepfung */}
+          {sop.produces_deliverable ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                  <Package className="h-4 w-4" />Produziertes Deliverable
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Link href={`/intern/management/deliverables/${sop.produces_deliverable.id}`}
+                  className="flex items-center justify-between p-3 rounded-md border hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {sop.produces_deliverable.module?.code}
+                    </Badge>
+                    <span className="font-medium">{sop.produces_deliverable.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {sop.produces_deliverable.category}
+                    </Badge>
+                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                Diese SOP produziert kein Deliverable
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Weitere Framework-Metadaten */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                Prozess-Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {sop.source_task_id && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Task-ID</p>
+                    <p className="text-sm font-mono font-medium">{sop.source_task_id}</p>
+                  </div>
+                )}
+                {sop.subprocess && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Teilprozess</p>
+                    <p className="text-sm">{sop.subprocess}</p>
+                  </div>
+                )}
+                {sop.automation_level && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Automatisierung</p>
+                    <p className="text-sm">{AUTOMATION_LEVEL_LABELS[sop.automation_level] || sop.automation_level}</p>
+                  </div>
+                )}
+                {sop.maturity_level && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Reifegrad</p>
+                    <p className={`text-sm font-semibold ${MATURITY_COLORS[sop.maturity_level] || ''}`}>
+                      {sop.maturity_level} / 5
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
