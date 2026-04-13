@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Loader2, Target, BarChart3, FileText, ArrowRight, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
+import { Loader2, Target, BarChart3, FileText, ArrowRight, CheckCircle2, AlertCircle, Clock, Package, Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FRAMEWORK_CATEGORIES } from '@/lib/constants/framework'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -17,22 +18,29 @@ export default function ManagementDashboard() {
   const [issues, setIssues] = useState<any[]>([])
   const [okr, setOkr] = useState<any>(null)
   const [sops, setSops] = useState<any[]>([])
+  const [modules, setModules] = useState<any[]>([])
+  const [sopStats, setSopStats] = useState<{ maturityDistribution: Array<{ level: number; count: number; label: string }>; totalSops: number } | null>(null)
 
   const load = useCallback(async () => {
     try {
-      const [rRes, sRes, iRes, oRes, sopRes] = await Promise.all([
+      const [rRes, sRes, iRes, oRes, sopRes, modRes, statsRes] = await Promise.all([
         fetch('/api/v1/eos/rocks'), fetch('/api/v1/eos/scorecard'),
         fetch('/api/v1/eos/issues?status=open'), fetch('/api/v1/okr/dashboard'),
         fetch('/api/v1/sops'),
+        fetch('/api/v1/deliverables/modules'),
+        fetch('/api/v1/sops/stats'),
       ])
-      const [rD, sD, iD, oD, sopD] = await Promise.all([
+      const [rD, sD, iD, oD, sopD, modD, statsD] = await Promise.all([
         rRes.json(), sRes.json(), iRes.json(), oRes.json(), sopRes.json(),
+        modRes.json(), statsRes.json(),
       ])
       if (rD.success) setRocks(rD.data)
       if (sD.success) setScorecard(sD.data)
       if (iD.success) setIssues(iD.data)
       if (oD.success) setOkr(oD.data)
       if (sopD.success) setSops(sopD.data)
+      if (modD.success) setModules(modD.data)
+      if (statsD.success) setSopStats(statsD.data)
     } catch { /* ignore */ }
     setLoading(false)
   }, [])
@@ -193,6 +201,93 @@ export default function ManagementDashboard() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Deliverables Section (UI-03) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-semibold flex items-center gap-2"><Package className="h-5 w-5" />Deliverables</h2>
+          <Link href="/intern/management/deliverables"><Button variant="ghost" size="sm">Details <ArrowRight className="h-4 w-4 ml-1" /></Button></Link>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Gesamt</CardTitle></CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {modules.reduce((sum: number, m: any) => sum + (m.deliverableCount ?? 0), 0)} Deliverables
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">{modules.length} Module</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Nach Kategorie</CardTitle></CardHeader>
+            <CardContent>
+              {modules.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Keine Daten</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {FRAMEWORK_CATEGORIES.map((cat) => {
+                    const count = modules
+                      .filter((m: any) => m.categoryCode === cat.code)
+                      .reduce((sum: number, m: any) => sum + (m.deliverableCount ?? 0), 0)
+                    if (count === 0) return null
+                    return (
+                      <Badge key={cat.code} variant="outline" className="text-xs">
+                        {cat.code}: {count}
+                      </Badge>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+        {modules.length > 0 && (
+          <div className="mt-3">
+            <p className="text-sm font-medium text-muted-foreground mb-2">Pro Modul</p>
+            <div className="grid gap-1 md:grid-cols-2">
+              {modules.map((m: any) => (
+                <div key={m.id} className="flex items-center justify-between p-2 rounded border">
+                  <span className="text-sm truncate mr-2">{m.code} — {m.name}</span>
+                  <Badge variant="secondary" className="shrink-0">{m.deliverableCount ?? 0}</Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* SOP-Maturity Section (UI-04) */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-semibold flex items-center gap-2"><Layers className="h-5 w-5" />SOP-Maturity</h2>
+          <Link href="/intern/management/sops"><Button variant="ghost" size="sm">Details <ArrowRight className="h-4 w-4 ml-1" /></Button></Link>
+        </div>
+        <Card>
+          <CardContent className="pt-4">
+            {sopStats ? (
+              <div className="space-y-3">
+                {sopStats.maturityDistribution.map((d) => {
+                  const pct = sopStats.totalSops > 0 ? Math.round((d.count / sopStats.totalSops) * 100) : 0
+                  const barColor = d.level === 1 ? 'bg-red-500' : d.level === 2 ? 'bg-orange-400' : d.level === 3 ? 'bg-yellow-400' : d.level === 4 ? 'bg-blue-500' : 'bg-green-500'
+                  return (
+                    <div key={d.level}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">Level {d.level} — {d.label}</span>
+                        <span className="text-sm text-muted-foreground">{d.count} ({pct}%)</span>
+                      </div>
+                      <div className="w-full bg-secondary rounded-full h-2">
+                        <div className={cn('h-2 rounded-full transition-all', barColor)} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">Keine SOP-Daten</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
