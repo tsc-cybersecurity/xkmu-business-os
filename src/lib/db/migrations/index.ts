@@ -1,0 +1,32 @@
+/**
+ * Migration Registry — zentrale Liste aller DB-Migrationen.
+ *
+ * Neue Migration hinzufuegen:
+ * 1. SQL-Datei in src/lib/db/migrations/ anlegen (z.B. 002_feature_x.sql)
+ * 2. Hier als Eintrag registrieren
+ * 3. Bei naechstem App-Start wird sie automatisch ausgefuehrt
+ *
+ * Regeln:
+ * - Jede Migration muss idempotent sein (IF NOT EXISTS, IF NOT EXISTS)
+ * - Reihenfolge bestimmt Ausfuehrungsreihenfolge
+ * - Einmal ausgefuehrt, nie wieder (Tracking via _migrations Tabelle)
+ */
+
+export interface Migration {
+  /** Eindeutiger Name — identisch mit Dateiname */
+  name: string
+  /** Kurzbeschreibung fuer Logs */
+  description: string
+}
+
+export const MIGRATIONS: Migration[] = [
+  {
+    name: '001_framework_v2.sql',
+    description: 'Deliverable-Module, Deliverables, Execution Logs + SOP-Erweiterungen',
+  },
+  // Naechste Migration hier eintragen:
+  // {
+  //   name: '002_xxx.sql',
+  //   description: '...',
+  // },
+]

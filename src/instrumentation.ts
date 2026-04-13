@@ -38,6 +38,17 @@ export async function register() {
   const { CronService } = await import('@/lib/services/cron.service')
   const { logger } = await import('@/lib/utils/logger')
 
+  // Auto-Migration: pendende SQL-Migrationen ausfuehren
+  try {
+    const { runPendingMigrations } = await import('@/lib/db/migrator')
+    const result = await runPendingMigrations()
+    if (result.executed > 0) {
+      logger.info(`${result.executed} Migration(en) beim Start ausgefuehrt`, { module: 'Startup' })
+    }
+  } catch (err) {
+    logger.error('Auto-Migration Fehler (App startet trotzdem)', err, { module: 'Startup' })
+  }
+
   logger.info('In-process cron ticker starting (60s interval)', { module: 'CronTicker' })
 
   // Stagger the first tick by 30s so we don't race with startup migrations.
