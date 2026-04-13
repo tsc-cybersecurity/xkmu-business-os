@@ -81,9 +81,9 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01: Deliverable-Listenseite mit Modul-/Kategorie-Filter + Sidebar-Navigationseintrag
+- [x] 04-01: Deliverable-Listenseite mit Modul-/Kategorie-Filter + Sidebar-Navigationseintrag
 - [ ] 04-02: Deliverable-Detailseite mit verknuepften SOPs + SOP-Detailseite mit neuen Feldern und Deliverable-Link (bidirektionale Navigation)
-- [ ] 04-03: SOP-Listenseiten-Filter (automation_level, maturity_level) + Execution-Log-Anzeige auf Detail-Seiten
+- [x] 04-03: SOP-Listenseiten-Filter (automation_level, maturity_level) + Execution-Log-Anzeige auf Detail-Seiten
 
 ### Phase 5: Management Dashboard
 **Goal**: Die Management-Uebersichtsseite zeigt Deliverable-Statistiken und SOP-Maturity-Verteilung, sodass der Stand des gesamten Frameworks auf einen Blick erkennbar ist.
