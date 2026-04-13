@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         const all = await readdir(MIGRATIONS_DIR)
         files = all.filter((f) => f.endsWith('.sql')).sort()
       } catch {
-        return apiError('Migrations-Verzeichnis nicht gefunden', 404)
+        return apiError('NOT_FOUND', 'Migrations-Verzeichnis nicht gefunden', 404)
       }
 
       // Filtern
