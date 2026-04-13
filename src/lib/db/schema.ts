@@ -3113,6 +3113,60 @@ export const okrCheckins = pgTable('okr_checkins', {
 ])
 
 // ============================================
+// Framework v2: Deliverable-Module
+// ============================================
+export const deliverableModules = pgTable('deliverable_modules', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  // Modul-Identifikation
+  code: varchar('code', { length: 10 }).notNull(),        // z.B. 'A1', 'B3', 'D2'
+  name: varchar('name', { length: 255 }).notNull(),        // z.B. 'Neukundenakquise'
+  // Kategorie (Buchstabe A-D aus Deliverable-Katalog)
+  category: varchar('category', { length: 10 }).notNull(), // 'A' | 'B' | 'C' | 'D'
+  categoryCode: varchar('category_code', { length: 10 }),  // z.B. 'V', 'M', 'IT' (Framework-Kategorie)
+  // Inhalt
+  ziel: text('ziel'),                                      // Modulziel aus Katalog
+  preis: varchar('preis', { length: 100 }),                // z.B. '1.200 EUR'
+  // Meta
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_deliverable_modules_tenant').on(table.tenantId),
+  index('idx_deliverable_modules_code').on(table.tenantId, table.code),
+])
+
+// ============================================
+// Framework v2: Deliverables
+// ============================================
+export const deliverables = pgTable('deliverables', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  // Modul-Zuordnung
+  moduleId: uuid('module_id').references(() => deliverableModules.id, { onDelete: 'set null' }),
+  // Identifikation
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  // Typ & Format
+  format: varchar('format', { length: 100 }),              // z.B. 'PDF', 'DOCX', 'Excel'
+  umfang: varchar('umfang', { length: 100 }),              // z.B. '5-10 Seiten'
+  trigger: varchar('trigger', { length: 255 }),            // Was loest die Erstellung aus?
+  // Kategorisierung (Framework-Kategorie)
+  category: varchar('category', { length: 50 }),           // z.B. 'IT & Cybersicherheit'
+  categoryCode: varchar('category_code', { length: 10 }),  // z.B. 'IT', 'V', 'M'
+  // Status & Versionierung
+  status: varchar('status', { length: 20 }).default('draft'),
+  version: varchar('version', { length: 20 }).default('1.0.0'),
+  // Meta
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_deliverables_tenant').on(table.tenantId),
+  index('idx_deliverables_module').on(table.tenantId, table.moduleId),
+  index('idx_deliverables_category').on(table.tenantId, table.categoryCode),
+  index('idx_deliverables_status').on(table.tenantId, table.status),
+])
+
+// ============================================
 // Management Framework: SOPs – Dokumente
 // ============================================
 export const sopDocuments = pgTable('sop_documents', {
@@ -3134,6 +3188,14 @@ export const sopDocuments = pgTable('sop_documents', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  // Framework v2: Neue Felder (alle nullable fuer Abwaertskompatibilitaet)
+  automationLevel: varchar('automation_level', { length: 20 }),           // SOP-01: 'manual' | 'semi' | 'full'
+  aiCapable: boolean('ai_capable'),                                         // SOP-02
+  maturityLevel: integer('maturity_level'),                                 // SOP-03: 1-5
+  estimatedDurationMinutes: integer('estimated_duration_minutes'),          // SOP-05
+  producesDeliverableId: uuid('produces_deliverable_id').references(() => deliverables.id, { onDelete: 'set null' }), // SOP-06
+  subprocess: varchar('subprocess', { length: 255 }),                      // SOP-07
+  sourceTaskId: varchar('source_task_id', { length: 50 }),                 // SOP-08: z.B. 'KP1-01'
 }, (table) => [
   index('idx_sop_documents_tenant').on(table.tenantId),
   index('idx_sop_documents_category').on(table.tenantId, table.category),
@@ -3153,6 +3215,8 @@ export const sopSteps = pgTable('sop_steps', {
   estimatedMinutes: integer('estimated_minutes'),
   checklistItems: text('checklist_items').array().default([]),
   warnings: text('warnings').array().default([]),
+  // Framework v2: Neues Feld (nullable fuer Abwaertskompatibilitaet)
+  executor: varchar('executor', { length: 10 }),  // SOP-04: 'agent' | 'human' | 'flex'
 }, (table) => [
   index('idx_sop_steps_sop').on(table.sopId),
 ])
@@ -3172,6 +3236,44 @@ export const sopVersions = pgTable('sop_versions', {
   index('idx_sop_versions_sop').on(table.sopId),
 ])
 
+// ============================================
+// Framework v2: Execution Logs
+// ============================================
+export const executionLogs = pgTable('execution_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  // Was wurde ausgefuehrt?
+  entityType: varchar('entity_type', { length: 20 }).notNull(), // 'sop' | 'deliverable'
+  entityId: uuid('entity_id').notNull(),
+  entityVersion: varchar('entity_version', { length: 20 }),
+  // Zeitstempel
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  // Wer/Wie
+  executedBy: varchar('executed_by', { length: 10 }).notNull(), // 'agent' | 'human'
+  // Ergebnis
+  status: varchar('status', { length: 20 }).notNull(),          // 'completed' | 'aborted' | 'escalated'
+  abortReason: text('abort_reason'),
+  qualityScore: real('quality_score'),                           // 0.0 - 1.0
+  durationMinutes: real('duration_minutes'),
+  costEstimateUsd: real('cost_estimate_usd'),
+  flags: text('flags').array().default([]),
+  // Verknuepfungen
+  linkedClientId: uuid('linked_client_id'),
+  linkedProjectId: uuid('linked_project_id'),
+  // Genehmigung
+  humanApproved: boolean('human_approved').default(false),
+  humanApprovedBy: uuid('human_approved_by').references(() => users.id, { onDelete: 'set null' }),
+  humanApprovedAt: timestamp('human_approved_at', { withTimezone: true }),
+  // Meta
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_execution_logs_tenant').on(table.tenantId),
+  index('idx_execution_logs_entity').on(table.tenantId, table.entityType, table.entityId),
+  index('idx_execution_logs_status').on(table.tenantId, table.status),
+  index('idx_execution_logs_started').on(table.tenantId, table.startedAt),
+])
+
 // Type exports: Management Framework
 export type VTO = typeof vto.$inferSelect
 export type Rock = typeof rocks.$inferSelect
@@ -3188,3 +3290,10 @@ export type SopDocument = typeof sopDocuments.$inferSelect
 export type NewSopDocument = typeof sopDocuments.$inferInsert
 export type SopStep = typeof sopSteps.$inferSelect
 export type SopVersion = typeof sopVersions.$inferSelect
+// Type exports: Framework v2
+export type DeliverableModule = typeof deliverableModules.$inferSelect
+export type NewDeliverableModule = typeof deliverableModules.$inferInsert
+export type Deliverable = typeof deliverables.$inferSelect
+export type NewDeliverable = typeof deliverables.$inferInsert
+export type ExecutionLog = typeof executionLogs.$inferSelect
+export type NewExecutionLog = typeof executionLogs.$inferInsert
