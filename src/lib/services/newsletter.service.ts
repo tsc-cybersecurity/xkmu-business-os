@@ -6,86 +6,89 @@
 import { db } from '@/lib/db'
 import { newsletterSubscribers, newsletterCampaigns } from '@/lib/db/schema'
 import type { NewsletterSubscriber, NewsletterCampaign } from '@/lib/db/schema'
-import { eq, and, count, desc, ilike, inArray } from 'drizzle-orm'
+import { eq, and, count, desc, ilike } from 'drizzle-orm'
 import { EmailService } from '@/lib/services/email.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const NewsletterService = {
   // --- Subscribers ---
-  async listSubscribers(tenantId: string, filters: { status?: string; search?: string; page?: number; limit?: number } = {}) {
+  async listSubscribers(_tenantId: string, filters: { status?: string; search?: string; page?: number; limit?: number } = {}) {
     const { status, search, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
-    const conditions = [eq(newsletterSubscribers.tenantId, tenantId)]
+    const conditions = []
     if (status) conditions.push(eq(newsletterSubscribers.status, status))
     if (search) conditions.push(ilike(newsletterSubscribers.email, `%${search}%`))
 
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
     const [items, [{ total }]] = await Promise.all([
-      db.select().from(newsletterSubscribers).where(and(...conditions)).orderBy(desc(newsletterSubscribers.subscribedAt)).limit(limit).offset(offset),
-      db.select({ total: count() }).from(newsletterSubscribers).where(and(...conditions)),
+      db.select().from(newsletterSubscribers).where(whereClause).orderBy(desc(newsletterSubscribers.subscribedAt)).limit(limit).offset(offset),
+      db.select({ total: count() }).from(newsletterSubscribers).where(whereClause),
     ])
     return { items, meta: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) } }
   },
 
-  async createSubscriber(tenantId: string, data: { email: string; name?: string; tags?: string[] }): Promise<NewsletterSubscriber> {
+  async createSubscriber(_tenantId: string, data: { email: string; name?: string; tags?: string[] }): Promise<NewsletterSubscriber> {
     const [sub] = await db.insert(newsletterSubscribers).values({
-      tenantId, email: data.email, name: data.name || null, tags: data.tags || [],
+      tenantId: TENANT_ID, email: data.email, name: data.name || null, tags: data.tags || [],
     }).returning()
     return sub
   },
 
-  async deleteSubscriber(tenantId: string, id: string): Promise<boolean> {
-    const result = await db.delete(newsletterSubscribers).where(and(eq(newsletterSubscribers.tenantId, tenantId), eq(newsletterSubscribers.id, id))).returning({ id: newsletterSubscribers.id })
+  async deleteSubscriber(_tenantId: string, id: string): Promise<boolean> {
+    const result = await db.delete(newsletterSubscribers).where(eq(newsletterSubscribers.id, id)).returning({ id: newsletterSubscribers.id })
     return result.length > 0
   },
 
-  async importSubscribers(tenantId: string, entries: Array<{ email: string; name?: string; tags?: string[] }>): Promise<number> {
+  async importSubscribers(_tenantId: string, entries: Array<{ email: string; name?: string; tags?: string[] }>): Promise<number> {
     let created = 0
     for (const entry of entries) {
       const [existing] = await db.select({ id: newsletterSubscribers.id }).from(newsletterSubscribers)
-        .where(and(eq(newsletterSubscribers.tenantId, tenantId), eq(newsletterSubscribers.email, entry.email))).limit(1)
+        .where(eq(newsletterSubscribers.email, entry.email)).limit(1)
       if (existing) continue
-      await this.createSubscriber(tenantId, entry)
+      await this.createSubscriber(_tenantId, entry)
       created++
     }
     return created
   },
 
   // --- Campaigns ---
-  async listCampaigns(tenantId: string) {
-    return db.select().from(newsletterCampaigns).where(eq(newsletterCampaigns.tenantId, tenantId)).orderBy(desc(newsletterCampaigns.createdAt))
+  async listCampaigns(_tenantId: string) {
+    return db.select().from(newsletterCampaigns).orderBy(desc(newsletterCampaigns.createdAt))
   },
 
-  async getCampaign(tenantId: string, id: string): Promise<NewsletterCampaign | null> {
-    const [campaign] = await db.select().from(newsletterCampaigns).where(and(eq(newsletterCampaigns.tenantId, tenantId), eq(newsletterCampaigns.id, id))).limit(1)
+  async getCampaign(_tenantId: string, id: string): Promise<NewsletterCampaign | null> {
+    const [campaign] = await db.select().from(newsletterCampaigns).where(eq(newsletterCampaigns.id, id)).limit(1)
     return campaign ?? null
   },
 
-  async createCampaign(tenantId: string, data: { name: string; subject?: string; bodyHtml?: string; segmentTags?: string[] }): Promise<NewsletterCampaign> {
+  async createCampaign(_tenantId: string, data: { name: string; subject?: string; bodyHtml?: string; segmentTags?: string[] }): Promise<NewsletterCampaign> {
     const [campaign] = await db.insert(newsletterCampaigns).values({
-      tenantId, name: data.name, subject: data.subject || '', bodyHtml: data.bodyHtml || '', segmentTags: data.segmentTags || [],
+      tenantId: TENANT_ID, name: data.name, subject: data.subject || '', bodyHtml: data.bodyHtml || '', segmentTags: data.segmentTags || [],
     }).returning()
     return campaign
   },
 
-  async updateCampaign(tenantId: string, id: string, data: Partial<{ name: string; subject: string; bodyHtml: string; segmentTags: string[] }>): Promise<NewsletterCampaign | null> {
+  async updateCampaign(_tenantId: string, id: string, data: Partial<{ name: string; subject: string; bodyHtml: string; segmentTags: string[] }>): Promise<NewsletterCampaign | null> {
     const [campaign] = await db.update(newsletterCampaigns).set({ ...data, updatedAt: new Date() })
-      .where(and(eq(newsletterCampaigns.tenantId, tenantId), eq(newsletterCampaigns.id, id))).returning()
+      .where(eq(newsletterCampaigns.id, id)).returning()
     return campaign ?? null
   },
 
-  async deleteCampaign(tenantId: string, id: string): Promise<boolean> {
-    const result = await db.delete(newsletterCampaigns).where(and(eq(newsletterCampaigns.tenantId, tenantId), eq(newsletterCampaigns.id, id))).returning({ id: newsletterCampaigns.id })
+  async deleteCampaign(_tenantId: string, id: string): Promise<boolean> {
+    const result = await db.delete(newsletterCampaigns).where(eq(newsletterCampaigns.id, id)).returning({ id: newsletterCampaigns.id })
     return result.length > 0
   },
 
   // --- Send Campaign ---
-  async sendCampaign(tenantId: string, campaignId: string): Promise<{ sent: number; failed: number }> {
-    const campaign = await this.getCampaign(tenantId, campaignId)
+  async sendCampaign(_tenantId: string, campaignId: string): Promise<{ sent: number; failed: number }> {
+    const campaign = await this.getCampaign(_tenantId, campaignId)
     if (!campaign) throw new Error('Kampagne nicht gefunden')
     if (!campaign.subject || !campaign.bodyHtml) throw new Error('Betreff oder Inhalt fehlt')
 
     // Get active subscribers (optionally filtered by segment tags)
-    const conditions = [eq(newsletterSubscribers.tenantId, tenantId), eq(newsletterSubscribers.status, 'active')]
+    const conditions = [eq(newsletterSubscribers.status, 'active')]
     const subscribers = await db.select().from(newsletterSubscribers).where(and(...conditions))
 
     // Filter by segment tags if set
@@ -104,7 +107,7 @@ export const NewsletterService = {
         const html = campaign.bodyHtml!.replace(/\{\{name\}\}/g, subscriber.name || subscriber.email)
         const subject = campaign.subject!.replace(/\{\{name\}\}/g, subscriber.name || subscriber.email)
 
-        const result = await EmailService.send(tenantId, {
+        const result = await EmailService.send(_tenantId, {
           to: subscriber.email,
           subject,
           body: html.replace(/<[^>]+>/g, ' ').trim(),
