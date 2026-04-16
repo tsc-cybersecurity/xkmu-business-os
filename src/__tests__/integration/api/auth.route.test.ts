@@ -7,7 +7,7 @@ import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
 
 const sessionUser = {
   id: TEST_USER_ID,
-  tenantId: TEST_TENANT_ID,
+  // tenantId entfernt — AUTH-02
   email: 'admin@test.de',
   firstName: 'Max',
   lastName: 'Mustermann',
@@ -52,7 +52,7 @@ describe('POST /api/v1/auth/login', () => {
   it('returns 200 with valid credentials', async () => {
     vi.doMock('@/lib/services/user.service', () => ({
       UserService: {
-        findByEmail: vi.fn().mockResolvedValue(dbUser),
+        // findByEmail entfernt — login-route nutzt es nicht mehr direkt (AUTH-01)
         authenticate: vi.fn().mockResolvedValue({
           success: true,
           user: sessionUser,
@@ -77,7 +77,7 @@ describe('POST /api/v1/auth/login', () => {
   it('returns 401 with wrong password', async () => {
     vi.doMock('@/lib/services/user.service', () => ({
       UserService: {
-        findByEmail: vi.fn().mockResolvedValue(dbUser),
+        // findByEmail entfernt — login-route nutzt es nicht mehr direkt (AUTH-01)
         authenticate: vi.fn().mockResolvedValue({
           success: false,
           error: 'Invalid credentials',
@@ -101,7 +101,11 @@ describe('POST /api/v1/auth/login', () => {
   it('returns 401 for non-existent user', async () => {
     vi.doMock('@/lib/services/user.service', () => ({
       UserService: {
-        findByEmail: vi.fn().mockResolvedValue(null),
+        // AUTH-01: authenticate() handles user lookup internally now
+        authenticate: vi.fn().mockResolvedValue({
+          success: false,
+          error: 'Invalid credentials',
+        }),
       },
     }))
 

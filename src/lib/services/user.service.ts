@@ -54,11 +54,11 @@ export const UserService = {
   },
 
   async authenticate(
-    tenantId: string,
     email: string,
     password: string
   ): Promise<AuthResult> {
-    const user = await this.getByEmail(tenantId, email)
+    // AUTH-01: direkte Email-Suche, kein cross-tenant Iterieren
+    const user = await this.findByEmail(email)
 
     if (!user) {
       return { success: false, error: 'Invalid credentials' }
@@ -82,7 +82,7 @@ export const UserService = {
 
     const sessionUser: SessionUser = {
       id: user.id,
-      tenantId: user.tenantId,
+      // tenantId entfernt — AUTH-02
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,

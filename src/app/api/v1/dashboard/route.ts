@@ -4,6 +4,7 @@ import { eq, desc, sql, and, gte } from 'drizzle-orm'
 import { getSession } from '@/lib/auth/session'
 import { apiSuccess, apiUnauthorized, apiServerError } from '@/lib/utils/api-response'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET() {
   try {
@@ -12,7 +13,7 @@ export async function GET() {
       return apiUnauthorized('Nicht autorisiert')
     }
 
-    const tenantId = session.user.tenantId
+    const tenantId = TENANT_ID
 
     // Get counts
     const [companiesCount] = await db

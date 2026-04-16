@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Session erstellen
     const sessionUser: SessionUser = {
       id: user.id,
-      tenantId: tenant.id,
+      // tenantId entfernt — AUTH-02
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,

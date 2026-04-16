@@ -22,14 +22,8 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validation.data
 
-    // Find user by email across all tenants
-    const user = await UserService.findByEmail(email)
-    if (!user) {
-      return apiError('INVALID_CREDENTIALS', 'Invalid credentials', 401)
-    }
-
-    // Authenticate with the user's tenant
-    const result = await UserService.authenticate(user.tenantId, email, password)
+    // AUTH-01: direkte Email-Suche, kein cross-tenant Iterieren
+    const result = await UserService.authenticate(email, password)
 
     if (!result.success || !result.user) {
       return apiError('INVALID_CREDENTIALS', result.error || 'Invalid credentials', 401)

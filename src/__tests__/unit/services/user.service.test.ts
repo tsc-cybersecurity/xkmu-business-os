@@ -106,7 +106,7 @@ describe('UserService', () => {
   describe('authenticate', () => {
     it('returns success with session user for valid credentials', async () => {
       const fixture = userFixture()
-      // getByEmail -> select
+      // findByEmail -> select (AUTH-01: kein tenantId-Parameter mehr)
       dbMock.mockSelect.mockResolvedValueOnce([fixture])
       // update lastLoginAt
       dbMock.mockUpdate.mockResolvedValue([fixture])
@@ -115,10 +115,11 @@ describe('UserService', () => {
       vi.mocked(bcrypt.default.compare).mockResolvedValueOnce(true as never)
 
       const service = await getService()
-      const result = await service.authenticate(TEST_TENANT_ID, 'test@example.com', 'correct')
+      // AUTH-01: kein tenantId-Parameter mehr
+      const result = await service.authenticate('test@example.com', 'correct')
 
       expect(result.success).toBe(true)
-      if (result.success) {
+      if (result.user) {
         expect(result.user.email).toBe('test@example.com')
         expect(result.user.id).toBe(TEST_USER_ID)
       }
@@ -128,7 +129,8 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.authenticate(TEST_TENANT_ID, 'nobody@example.com', 'pass')
+      // AUTH-01: kein tenantId-Parameter mehr
+      const result = await service.authenticate('nobody@example.com', 'pass')
 
       expect(result.success).toBe(false)
       if (!result.success) {
@@ -141,7 +143,8 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.authenticate(TEST_TENANT_ID, 'test@example.com', 'pass')
+      // AUTH-01: kein tenantId-Parameter mehr
+      const result = await service.authenticate('test@example.com', 'pass')
 
       expect(result.success).toBe(false)
       if (!result.success) {
@@ -157,7 +160,8 @@ describe('UserService', () => {
       vi.mocked(bcrypt.default.compare).mockResolvedValueOnce(false as never)
 
       const service = await getService()
-      const result = await service.authenticate(TEST_TENANT_ID, 'test@example.com', 'wrongpass')
+      // AUTH-01: kein tenantId-Parameter mehr
+      const result = await service.authenticate('test@example.com', 'wrongpass')
 
       expect(result.success).toBe(false)
       if (!result.success) {

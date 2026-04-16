@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { validateApiKey, getApiKeyFromRequest } from '@/lib/auth/api-key'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface AuthContext {
   tenantId: string
@@ -17,7 +18,7 @@ export async function getAuthContext(
   const session = await getSession()
   if (session) {
     return {
-      tenantId: session.user.tenantId,
+      tenantId: TENANT_ID,              // AUTH-03: statische Konstante, nicht aus JWT
       userId: session.user.id,
       role: session.user.role,
       roleId: session.user.roleId ?? null,
@@ -31,7 +32,7 @@ export async function getAuthContext(
     const payload = await validateApiKey(apiKey)
     if (payload) {
       return {
-        tenantId: payload.tenantId,
+        tenantId: TENANT_ID,            // AUTH-04: payload.tenantId ignoriert, TENANT_ID stattdessen
         userId: null,
         role: 'api',
         roleId: null,

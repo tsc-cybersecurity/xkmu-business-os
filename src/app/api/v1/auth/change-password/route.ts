@@ -14,6 +14,7 @@ import {
 import { getSession } from '@/lib/auth/session'
 import { UserService } from '@/lib/services/user.service'
 import bcrypt from 'bcryptjs'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     // Get user with password hash
     const user = await UserService.getById(
-      session.user.tenantId,
+      TENANT_ID,
       session.user.id
     )
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // Update password
     await UserService.updatePassword(
-      session.user.tenantId,
+      TENANT_ID,
       session.user.id,
       newPassword
     )
