@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { n8nConnections, n8nWorkflowLogs } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 interface N8nWorkflow {
   id: string
@@ -24,11 +25,11 @@ interface N8nExecution {
   [key: string]: unknown
 }
 
-async function getConnection(tenantId: string) {
+async function getConnection(_tenantId: string) {
   const [conn] = await db
     .select()
     .from(n8nConnections)
-    .where(and(eq(n8nConnections.tenantId, tenantId), eq(n8nConnections.isActive, true)))
+    .where(eq(n8nConnections.isActive, true))
     .limit(1)
 
   if (!conn) {
@@ -39,11 +40,11 @@ async function getConnection(tenantId: string) {
 }
 
 async function n8nFetch(
-  tenantId: string,
+  _tenantId: string,
   path: string,
   options: RequestInit = {}
 ): Promise<unknown> {
-  const conn = await getConnection(tenantId)
+  const conn = await getConnection(_tenantId)
   const baseUrl = conn.apiUrl.replace(/\/$/, '')
 
   const response = await fetch(`${baseUrl}/api/v1${path}`, {
@@ -69,18 +70,17 @@ export const N8nService = {
   // Connection Management
   // ==========================================
 
-  async getConnection(tenantId: string) {
+  async getConnection(_tenantId: string) {
     const [conn] = await db
       .select()
       .from(n8nConnections)
-      .where(eq(n8nConnections.tenantId, tenantId))
       .limit(1)
 
     return conn || null
   },
 
-  async upsertConnection(tenantId: string, data: { name: string; apiUrl: string; apiKey: string }) {
-    const existing = await this.getConnection(tenantId)
+  async upsertConnection(_tenantId: string, data: { name: string; apiUrl: string; apiKey: string }) {
+    const existing = await this.getConnection(_tenantId)
 
     if (existing) {
       const [updated] = await db
@@ -99,7 +99,7 @@ export const N8nService = {
     const [created] = await db
       .insert(n8nConnections)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         name: data.name,
         apiUrl: data.apiUrl,
         apiKey: data.apiKey,
@@ -109,9 +109,9 @@ export const N8nService = {
     return created
   },
 
-  async testConnection(tenantId: string): Promise<{ success: boolean; message: string }> {
+  async testConnection(_tenantId: string): Promise<{ success: boolean; message: string }> {
     try {
-      await n8nFetch(tenantId, '/workflows?limit=1')
+      await n8nFetch(_tenantId, '/workflows?limit=1')
       return { success: true, message: 'Verbindung erfolgreich' }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Verbindungsfehler'
@@ -123,57 +123,57 @@ export const N8nService = {
   // Workflow Management
   // ==========================================
 
-  async listWorkflows(tenantId: string): Promise<N8nWorkflow[]> {
-    const data = await n8nFetch(tenantId, '/workflows') as { data?: N8nWorkflow[] }
+  async listWorkflows(_tenantId: string): Promise<N8nWorkflow[]> {
+    const data = await n8nFetch(_tenantId, '/workflows') as { data?: N8nWorkflow[] }
     return data.data || []
   },
 
-  async getWorkflow(tenantId: string, workflowId: string): Promise<N8nWorkflow> {
-    const data = await n8nFetch(tenantId, `/workflows/${workflowId}`) as N8nWorkflow
+  async getWorkflow(_tenantId: string, workflowId: string): Promise<N8nWorkflow> {
+    const data = await n8nFetch(_tenantId, `/workflows/${workflowId}`) as N8nWorkflow
     return data
   },
 
-  async createWorkflow(tenantId: string, workflowJson: Record<string, unknown>): Promise<N8nWorkflow> {
-    const data = await n8nFetch(tenantId, '/workflows', {
+  async createWorkflow(_tenantId: string, workflowJson: Record<string, unknown>): Promise<N8nWorkflow> {
+    const data = await n8nFetch(_tenantId, '/workflows', {
       method: 'POST',
       body: JSON.stringify(workflowJson),
     }) as N8nWorkflow
     return data
   },
 
-  async updateWorkflow(tenantId: string, workflowId: string, workflowJson: Record<string, unknown>): Promise<N8nWorkflow> {
-    const data = await n8nFetch(tenantId, `/workflows/${workflowId}`, {
+  async updateWorkflow(_tenantId: string, workflowId: string, workflowJson: Record<string, unknown>): Promise<N8nWorkflow> {
+    const data = await n8nFetch(_tenantId, `/workflows/${workflowId}`, {
       method: 'PUT',
       body: JSON.stringify(workflowJson),
     }) as N8nWorkflow
     return data
   },
 
-  async deleteWorkflow(tenantId: string, workflowId: string): Promise<void> {
-    await n8nFetch(tenantId, `/workflows/${workflowId}`, {
+  async deleteWorkflow(_tenantId: string, workflowId: string): Promise<void> {
+    await n8nFetch(_tenantId, `/workflows/${workflowId}`, {
       method: 'DELETE',
     })
   },
 
-  async activateWorkflow(tenantId: string, workflowId: string, active: boolean): Promise<N8nWorkflow> {
-    const data = await n8nFetch(tenantId, `/workflows/${workflowId}/${active ? 'activate' : 'deactivate'}`, {
+  async activateWorkflow(_tenantId: string, workflowId: string, active: boolean): Promise<N8nWorkflow> {
+    const data = await n8nFetch(_tenantId, `/workflows/${workflowId}/${active ? 'activate' : 'deactivate'}`, {
       method: 'POST',
     }) as N8nWorkflow
     return data
   },
 
-  async executeWorkflow(tenantId: string, workflowId: string, inputData?: Record<string, unknown>): Promise<unknown> {
+  async executeWorkflow(_tenantId: string, workflowId: string, inputData?: Record<string, unknown>): Promise<unknown> {
     const body = inputData ? { data: inputData } : undefined
-    const data = await n8nFetch(tenantId, `/workflows/${workflowId}/run`, {
+    const data = await n8nFetch(_tenantId, `/workflows/${workflowId}/run`, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     })
     return data
   },
 
-  async getExecutions(tenantId: string, workflowId?: string): Promise<N8nExecution[]> {
+  async getExecutions(_tenantId: string, workflowId?: string): Promise<N8nExecution[]> {
     const query = workflowId ? `?workflowId=${workflowId}` : ''
-    const data = await n8nFetch(tenantId, `/executions${query}`) as { data?: N8nExecution[] }
+    const data = await n8nFetch(_tenantId, `/executions${query}`) as { data?: N8nExecution[] }
     return data.data || []
   },
 
@@ -181,7 +181,7 @@ export const N8nService = {
   // Workflow Log Management
   // ==========================================
 
-  async createWorkflowLog(tenantId: string, data: {
+  async createWorkflowLog(_tenantId: string, data: {
     n8nWorkflowId?: string
     n8nWorkflowName?: string
     prompt?: string
@@ -193,7 +193,7 @@ export const N8nService = {
     const [log] = await db
       .insert(n8nWorkflowLogs)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         n8nWorkflowId: data.n8nWorkflowId || null,
         n8nWorkflowName: data.n8nWorkflowName || null,
         prompt: data.prompt || null,
@@ -207,11 +207,10 @@ export const N8nService = {
     return log
   },
 
-  async listWorkflowLogs(tenantId: string, limit = 50) {
+  async listWorkflowLogs(_tenantId: string, limit = 50) {
     return db
       .select()
       .from(n8nWorkflowLogs)
-      .where(eq(n8nWorkflowLogs.tenantId, tenantId))
       .orderBy(desc(n8nWorkflowLogs.createdAt))
       .limit(limit)
   },
