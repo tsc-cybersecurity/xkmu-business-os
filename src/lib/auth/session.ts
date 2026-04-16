@@ -19,6 +19,7 @@ export async function createSession(user: SessionUser): Promise<string> {
   const token = await new SignJWT({
     user,
     expiresAt: expiresAt.toISOString(),
+    v: 2,                              // Session-Version — Force-Logout alter Sessions
   })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -48,6 +49,9 @@ export async function getSession(): Promise<Session | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret())
     const session = payload as unknown as Session
+
+    // Force-Logout: alte Sessions ohne v=2 werden abgewiesen
+    if (session.v !== 2) return null
 
     if (new Date(session.expiresAt) < new Date()) {
       return null
