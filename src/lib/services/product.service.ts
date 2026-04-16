@@ -3,6 +3,7 @@ import { products, productCategories } from '@/lib/db/schema'
 import { eq, and, ilike, count, arrayContains, sql, or, getTableColumns } from 'drizzle-orm'
 import type { Product, NewProduct } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface ProductWithCategory extends Product {
   category: { id: string; name: string } | null
@@ -58,17 +59,17 @@ function emptyToNull<T>(value: T): T | null {
 
 export const ProductService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreateProductInput,
     createdBy?: string
   ): Promise<Product> {
     const slug = emptyToNull(data.slug)
-      || await this.generateSlug(data.name, tenantId)
+      || await this.generateSlug(data.name, _tenantId)
 
     const [product] = await db
       .insert(products)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         type: data.type,
         name: data.name,
         description: emptyToNull(data.description),
@@ -104,7 +105,7 @@ export const ProductService = {
     return product
   },
 
-  async getById(tenantId: string, productId: string): Promise<ProductWithCategory | null> {
+  async getById(_tenantId: string, productId: string): Promise<ProductWithCategory | null> {
     const [row] = await db
       .select({
         ...getTableColumns(products),
@@ -115,7 +116,7 @@ export const ProductService = {
       })
       .from(products)
       .leftJoin(productCategories, eq(products.categoryId, productCategories.id))
-      .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
+      .where(eq(products.id, productId))
       .limit(1)
 
     if (!row) return null
@@ -127,7 +128,7 @@ export const ProductService = {
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     productId: string,
     data: UpdateProductInput
   ): Promise<Product | null> {
@@ -171,29 +172,29 @@ export const ProductService = {
     const [product] = await db
       .update(products)
       .set(updateData)
-      .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
+      .where(eq(products.id, productId))
       .returning()
 
     return product ?? null
   },
 
-  async delete(tenantId: string, productId: string): Promise<boolean> {
+  async delete(_tenantId: string, productId: string): Promise<boolean> {
     const result = await db
       .delete(products)
-      .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
+      .where(eq(products.id, productId))
       .returning({ id: products.id })
 
     return result.length > 0
   },
 
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters: ProductFilters = {}
   ): Promise<PaginatedResult<ProductWithCategory>> {
     const { type, status, categoryId, tags, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(products.tenantId, tenantId)]
+    const conditions = []
 
     if (type) {
       conditions.push(eq(products.type, type))
@@ -224,7 +225,7 @@ export const ProductService = {
       )
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [rows, [{ count: total }]] = await Promise.all([
       db
@@ -260,7 +261,7 @@ export const ProductService = {
     }
   },
 
-  async generateSlug(name: string, tenantId: string): Promise<string> {
+  async generateSlug(name: string, _tenantId: string): Promise<string> {
     let base = name
       .toLowerCase()
       .replace(/[äÄ]/g, 'ae')
@@ -277,7 +278,7 @@ export const ProductService = {
       const existing = await db
         .select({ id: products.id })
         .from(products)
-        .where(and(eq(products.tenantId, tenantId), eq(products.slug, slug)))
+        .where(eq(products.slug, slug))
         .limit(1)
 
       if (existing.length === 0) return slug
@@ -286,14 +287,13 @@ export const ProductService = {
   },
 
   async listPublic(
-    tenantId: string,
+    _tenantId: string,
     filters: { categoryId?: string; search?: string; page?: number; limit?: number } = {}
   ): Promise<PaginatedResult<ProductWithCategory>> {
     const { categoryId, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
     const conditions = [
-      eq(products.tenantId, tenantId),
       eq(products.isPublic, true),
       eq(products.status, 'active'),
     ]
@@ -334,19 +334,16 @@ export const ProductService = {
     }
   },
 
-  async search(tenantId: string, query: string, limit = 10): Promise<Product[]> {
+  async search(_tenantId: string, query: string, limit = 10): Promise<Product[]> {
     if (!query.trim()) return []
 
     const items = await db
       .select()
       .from(products)
       .where(
-        and(
-          eq(products.tenantId, tenantId),
-          or(
-            ilike(products.name, `%${query}%`),
-            ilike(products.sku, `%${query}%`)
-          )
+        or(
+          ilike(products.name, `%${query}%`),
+          ilike(products.sku, `%${query}%`)
         )
       )
       .limit(limit)
@@ -355,14 +352,14 @@ export const ProductService = {
   },
 
   async addTag(
-    tenantId: string,
+    _tenantId: string,
     productId: string,
     tag: string
   ): Promise<Product | null> {
     const product = await db
       .select()
       .from(products)
-      .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
+      .where(eq(products.id, productId))
       .limit(1)
       .then(r => r[0] ?? null)
 
@@ -370,24 +367,24 @@ export const ProductService = {
     const currentTags = product.tags || []
     if (currentTags.includes(tag)) return product
 
-    return this.update(tenantId, productId, { tags: [...currentTags, tag] })
+    return this.update(_tenantId, productId, { tags: [...currentTags, tag] })
   },
 
   async removeTag(
-    tenantId: string,
+    _tenantId: string,
     productId: string,
     tag: string
   ): Promise<Product | null> {
     const product = await db
       .select()
       .from(products)
-      .where(and(eq(products.tenantId, tenantId), eq(products.id, productId)))
+      .where(eq(products.id, productId))
       .limit(1)
       .then(r => r[0] ?? null)
 
     if (!product) return null
     const currentTags = product.tags || []
 
-    return this.update(tenantId, productId, { tags: currentTags.filter(t => t !== tag) })
+    return this.update(_tenantId, productId, { tags: currentTags.filter(t => t !== tag) })
   },
 }
