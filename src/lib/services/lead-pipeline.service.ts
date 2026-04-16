@@ -15,6 +15,7 @@ import { db } from '@/lib/db'
 import { leads, companies, persons, activities } from '@/lib/db/schema'
 import { eq, and, ilike, or } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 interface LeadPipelineInput {
   tenantId: string
@@ -89,7 +90,7 @@ export const LeadPipelineService = {
   /**
    * Find existing company by name or create new one
    */
-  async findOrCreateCompany(tenantId: string, companyName?: string): Promise<string> {
+  async findOrCreateCompany(_tenantId: string, companyName?: string): Promise<string> {
     const name = companyName?.trim()
 
     if (!name) {
@@ -97,14 +98,14 @@ export const LeadPipelineService = {
       const [existing] = await db
         .select({ id: companies.id })
         .from(companies)
-        .where(and(eq(companies.tenantId, tenantId), eq(companies.name, NO_COMPANY_NAME)))
+        .where(eq(companies.name, NO_COMPANY_NAME))
         .limit(1)
 
       if (existing) return existing.id
 
       const [created] = await db
         .insert(companies)
-        .values({ tenantId, name: NO_COMPANY_NAME, status: 'active', country: 'DE' })
+        .values({ tenantId: TENANT_ID, name: NO_COMPANY_NAME, status: 'active', country: 'DE' })
         .returning({ id: companies.id })
       return created.id
     }
@@ -113,7 +114,7 @@ export const LeadPipelineService = {
     const [existing] = await db
       .select({ id: companies.id })
       .from(companies)
-      .where(and(eq(companies.tenantId, tenantId), ilike(companies.name, name)))
+      .where(ilike(companies.name, name))
       .limit(1)
 
     if (existing) return existing.id
@@ -121,7 +122,7 @@ export const LeadPipelineService = {
     // Create new company
     const [created] = await db
       .insert(companies)
-      .values({ tenantId, name, status: 'active', country: 'DE' })
+      .values({ tenantId: TENANT_ID, name, status: 'active', country: 'DE' })
       .returning({ id: companies.id })
 
     logger.info(`Created company: ${name}`, { module: 'LeadPipeline' })
@@ -132,14 +133,14 @@ export const LeadPipelineService = {
    * Find existing person by email or create new one
    */
   async findOrCreatePerson(
-    tenantId: string,
+    _tenantId: string,
     data: { firstName: string; lastName: string; email: string; phone?: string; companyId: string }
   ): Promise<string> {
     // Search by email first
     const [existing] = await db
       .select({ id: persons.id })
       .from(persons)
-      .where(and(eq(persons.tenantId, tenantId), ilike(persons.email, data.email)))
+      .where(ilike(persons.email, data.email))
       .limit(1)
 
     if (existing) {
@@ -155,7 +156,7 @@ export const LeadPipelineService = {
     const [created] = await db
       .insert(persons)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         companyId: data.companyId,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -172,10 +173,10 @@ export const LeadPipelineService = {
   /**
    * Trigger async KI research on the company
    */
-  async triggerCompanyResearch(tenantId: string, companyId: string, companyName: string): Promise<void> {
+  async triggerCompanyResearch(_tenantId: string, companyId: string, companyName: string): Promise<void> {
     try {
       const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-      await TaskQueueService.create(tenantId, {
+      await TaskQueueService.create(_tenantId, {
         type: 'ai',
         priority: 2,
         payload: {
@@ -196,7 +197,7 @@ export const LeadPipelineService = {
   /**
    * Score lead based on available data + interests
    */
-  async scoreLeadWithKI(tenantId: string, leadId: string, input: LeadPipelineInput): Promise<void> {
+  async scoreLeadWithKI(_tenantId: string, leadId: string, input: LeadPipelineInput): Promise<void> {
     try {
       let score = 20 // Basis
 
@@ -241,7 +242,7 @@ export const LeadPipelineService = {
    * Log activity for the lead
    */
   async logActivity(
-    tenantId: string,
+    _tenantId: string,
     leadId: string,
     companyId: string,
     personId: string,
@@ -249,7 +250,7 @@ export const LeadPipelineService = {
   ): Promise<void> {
     try {
       await db.insert(activities).values({
-        tenantId,
+        tenantId: TENANT_ID,
         leadId,
         companyId,
         personId,
@@ -274,10 +275,10 @@ export const LeadPipelineService = {
   /**
    * Notify admin about new lead via task queue email
    */
-  async notifyAdmin(tenantId: string, leadId: string, input: LeadPipelineInput): Promise<void> {
+  async notifyAdmin(_tenantId: string, leadId: string, input: LeadPipelineInput): Promise<void> {
     try {
       const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-      await TaskQueueService.create(tenantId, {
+      await TaskQueueService.create(_tenantId, {
         type: 'email',
         priority: 1,
         payload: {
