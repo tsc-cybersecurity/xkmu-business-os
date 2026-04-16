@@ -1,11 +1,12 @@
 import { db } from '@/lib/db'
 import { contractClauses } from '@/lib/db/schema'
 import { eq, and, or, isNull, asc } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const ContractClauseService = {
-  async list(tenantId: string, category?: string) {
+  async list(_tenantId: string, category?: string) {
     const conditions = [
-      or(eq(contractClauses.tenantId, tenantId), isNull(contractClauses.tenantId)),
+      or(eq(contractClauses.tenantId, TENANT_ID), isNull(contractClauses.tenantId)),
     ]
     if (category) conditions.push(eq(contractClauses.category, category))
 
@@ -16,21 +17,21 @@ export const ContractClauseService = {
       .orderBy(contractClauses.sortOrder, asc(contractClauses.name))
   },
 
-  async getById(tenantId: string, id: string) {
+  async getById(_tenantId: string, id: string) {
     const [row] = await db
       .select()
       .from(contractClauses)
       .where(
         and(
           eq(contractClauses.id, id),
-          or(eq(contractClauses.tenantId, tenantId), isNull(contractClauses.tenantId))
+          or(eq(contractClauses.tenantId, TENANT_ID), isNull(contractClauses.tenantId))
         )
       )
       .limit(1)
     return row ?? null
   },
 
-  async create(tenantId: string, data: {
+  async create(_tenantId: string, data: {
     name: string
     category: string
     bodyHtml?: string
@@ -39,7 +40,7 @@ export const ContractClauseService = {
     const [row] = await db
       .insert(contractClauses)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         name: data.name,
         category: data.category,
         bodyHtml: data.bodyHtml || null,
@@ -50,32 +51,32 @@ export const ContractClauseService = {
     return row
   },
 
-  async update(tenantId: string, id: string, data: Partial<{
+  async update(_tenantId: string, id: string, data: Partial<{
     name: string
     category: string
     bodyHtml: string
     sortOrder: number
   }>) {
-    const existing = await this.getById(tenantId, id)
+    const existing = await this.getById(_tenantId, id)
     if (!existing) return null
     if (existing.isSystem) throw new Error('System-Bausteine koennen nicht bearbeitet werden')
 
     const [row] = await db
       .update(contractClauses)
       .set({ ...data, updatedAt: new Date() })
-      .where(and(eq(contractClauses.id, id), eq(contractClauses.tenantId, tenantId)))
+      .where(and(eq(contractClauses.id, id), eq(contractClauses.tenantId, TENANT_ID)))
       .returning()
     return row ?? null
   },
 
-  async delete(tenantId: string, id: string) {
-    const existing = await this.getById(tenantId, id)
+  async delete(_tenantId: string, id: string) {
+    const existing = await this.getById(_tenantId, id)
     if (!existing) return false
     if (existing.isSystem) throw new Error('System-Bausteine koennen nicht geloescht werden')
 
     const result = await db
       .delete(contractClauses)
-      .where(and(eq(contractClauses.id, id), eq(contractClauses.tenantId, tenantId)))
+      .where(and(eq(contractClauses.id, id), eq(contractClauses.tenantId, TENANT_ID)))
       .returning({ id: contractClauses.id })
     return result.length > 0
   },

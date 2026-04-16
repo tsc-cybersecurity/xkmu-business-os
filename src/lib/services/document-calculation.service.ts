@@ -3,6 +3,7 @@ import { documents, documentItems } from '@/lib/db/schema'
 import { eq, and, sql, inArray } from 'drizzle-orm'
 import type { Document, DocumentItem, NewDocumentItem } from '@/lib/db/schema'
 import type { CreateDocumentItemInput, UpdateDocumentItemInput } from './document.types'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export function emptyToNull<T>(value: T): T | null {
   if (value === '' || value === undefined) return null
@@ -27,11 +28,11 @@ export function calculateLineTotal(
 }
 
 export const DocumentCalculationService = {
-  async recalculateTotals(tenantId: string, docId: string): Promise<Document | null> {
+  async recalculateTotals(_tenantId: string, docId: string): Promise<Document | null> {
     const items = await db
       .select()
       .from(documentItems)
-      .where(and(eq(documentItems.tenantId, tenantId), eq(documentItems.documentId, docId)))
+      .where(eq(documentItems.documentId, docId))
 
     let subtotal = 0
     let taxTotal = 0
@@ -47,7 +48,7 @@ export const DocumentCalculationService = {
     const [doc] = await db
       .select({ discount: documents.discount, discountType: documents.discountType })
       .from(documents)
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .limit(1)
 
     if (!doc) return null
@@ -72,7 +73,7 @@ export const DocumentCalculationService = {
         total: total.toFixed(2),
         updatedAt: new Date(),
       })
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .returning()
 
     return updated ?? null
@@ -80,12 +81,12 @@ export const DocumentCalculationService = {
 
   // === Item Methods ===
 
-  async addItem(tenantId: string, docId: string, data: CreateDocumentItemInput): Promise<DocumentItem> {
+  async addItem(_tenantId: string, docId: string, data: CreateDocumentItemInput): Promise<DocumentItem> {
     // Get next position
     const [maxPos] = await db
       .select({ max: sql<number>`COALESCE(MAX(${documentItems.position}), -1)` })
       .from(documentItems)
-      .where(and(eq(documentItems.tenantId, tenantId), eq(documentItems.documentId, docId)))
+      .where(eq(documentItems.documentId, docId))
 
     const position = (maxPos?.max ?? -1) + 1
     const quantity = data.quantity ?? 1
@@ -96,7 +97,7 @@ export const DocumentCalculationService = {
       .insert(documentItems)
       .values({
         documentId: docId,
-        tenantId,
+        tenantId: TENANT_ID,
         position,
         productId: emptyToNull(data.productId),
         name: data.name,
@@ -111,12 +112,12 @@ export const DocumentCalculationService = {
       })
       .returning()
 
-    await this.recalculateTotals(tenantId, docId)
+    await this.recalculateTotals(_tenantId, docId)
     return item
   },
 
   async updateItem(
-    tenantId: string,
+    _tenantId: string,
     docId: string,
     itemId: string,
     data: UpdateDocumentItemInput
@@ -127,7 +128,6 @@ export const DocumentCalculationService = {
       .from(documentItems)
       .where(
         and(
-          eq(documentItems.tenantId, tenantId),
           eq(documentItems.documentId, docId),
           eq(documentItems.id, itemId)
         )
@@ -161,23 +161,21 @@ export const DocumentCalculationService = {
       .set(updateData)
       .where(
         and(
-          eq(documentItems.tenantId, tenantId),
           eq(documentItems.documentId, docId),
           eq(documentItems.id, itemId)
         )
       )
       .returning()
 
-    await this.recalculateTotals(tenantId, docId)
+    await this.recalculateTotals(_tenantId, docId)
     return item ?? null
   },
 
-  async removeItem(tenantId: string, docId: string, itemId: string): Promise<boolean> {
+  async removeItem(_tenantId: string, docId: string, itemId: string): Promise<boolean> {
     const result = await db
       .delete(documentItems)
       .where(
         and(
-          eq(documentItems.tenantId, tenantId),
           eq(documentItems.documentId, docId),
           eq(documentItems.id, itemId)
         )
@@ -185,12 +183,12 @@ export const DocumentCalculationService = {
       .returning({ id: documentItems.id })
 
     if (result.length > 0) {
-      await this.recalculateTotals(tenantId, docId)
+      await this.recalculateTotals(_tenantId, docId)
     }
     return result.length > 0
   },
 
-  async reorderItems(tenantId: string, docId: string, itemIds: string[]): Promise<void> {
+  async reorderItems(_tenantId: string, docId: string, itemIds: string[]): Promise<void> {
     if (itemIds.length === 0) return
     const caseExpr = sql`CASE id ${sql.join(
       itemIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${i}`),
@@ -201,18 +199,17 @@ export const DocumentCalculationService = {
       .set({ position: caseExpr })
       .where(
         and(
-          eq(documentItems.tenantId, tenantId),
           eq(documentItems.documentId, docId),
           inArray(documentItems.id, itemIds)
         )
       )
   },
 
-  async getItems(tenantId: string, docId: string): Promise<DocumentItem[]> {
+  async getItems(_tenantId: string, docId: string): Promise<DocumentItem[]> {
     return db
       .select()
       .from(documentItems)
-      .where(and(eq(documentItems.tenantId, tenantId), eq(documentItems.documentId, docId)))
+      .where(eq(documentItems.documentId, docId))
       .orderBy(documentItems.position)
   },
 }

@@ -10,6 +10,7 @@ import {
 } from '@/lib/db/schema'
 import type { GrundschutzAsset, GrundschutzAssetRelation, GrundschutzAssetControl } from '@/lib/db/schema'
 import { eq, and, asc, desc, count, ilike, or, sql } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CreateAssetInput {
   companyId: string
@@ -54,9 +55,8 @@ export interface AssetListFilters {
 
 export const GrundschutzAssetService = {
   /** Assets eines Unternehmens auflisten mit optionalen Filtern */
-  async list(tenantId: string, companyId: string, filters?: AssetListFilters) {
+  async list(_tenantId: string, companyId: string, filters?: AssetListFilters) {
     const conditions = [
-      eq(grundschutzAssets.tenantId, tenantId),
       eq(grundschutzAssets.companyId, companyId),
     ]
 
@@ -91,7 +91,6 @@ export const GrundschutzAssetService = {
       assetId: grundschutzAssetControls.assetId,
       count: count(),
     }).from(grundschutzAssetControls)
-      .where(eq(grundschutzAssetControls.tenantId, tenantId))
       .groupBy(grundschutzAssetControls.assetId)
 
     const countMap = new Map(controlCounts.map(c => [c.assetId, Number(c.count)]))
@@ -104,7 +103,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Einzelnes Asset mit Details, Relationen und Control-Mappings */
-  async getById(tenantId: string, assetId: string) {
+  async getById(_tenantId: string, assetId: string) {
     const [row] = await db.select({
       asset: grundschutzAssets,
       companyName: companies.name,
@@ -115,7 +114,7 @@ export const GrundschutzAssetService = {
       .from(grundschutzAssets)
       .leftJoin(companies, eq(grundschutzAssets.companyId, companies.id))
       .leftJoin(users, eq(grundschutzAssets.ownerId, users.id))
-      .where(and(eq(grundschutzAssets.tenantId, tenantId), eq(grundschutzAssets.id, assetId)))
+      .where(eq(grundschutzAssets.id, assetId))
       .limit(1)
 
     if (!row) return null
@@ -124,12 +123,9 @@ export const GrundschutzAssetService = {
     const relations = await db.select()
       .from(grundschutzAssetRelationsTable)
       .where(
-        and(
-          eq(grundschutzAssetRelationsTable.tenantId, tenantId),
-          or(
-            eq(grundschutzAssetRelationsTable.sourceAssetId, assetId),
-            eq(grundschutzAssetRelationsTable.targetAssetId, assetId),
-          ),
+        or(
+          eq(grundschutzAssetRelationsTable.sourceAssetId, assetId),
+          eq(grundschutzAssetRelationsTable.targetAssetId, assetId),
         ),
       )
 
@@ -175,7 +171,7 @@ export const GrundschutzAssetService = {
     // Control-Mappings laden
     const controlMappings = await db.select()
       .from(grundschutzAssetControls)
-      .where(and(eq(grundschutzAssetControls.tenantId, tenantId), eq(grundschutzAssetControls.assetId, assetId)))
+      .where(eq(grundschutzAssetControls.assetId, assetId))
       .orderBy(asc(grundschutzAssetControls.controlId))
 
     return {
@@ -188,9 +184,9 @@ export const GrundschutzAssetService = {
   },
 
   /** Asset erstellen */
-  async create(tenantId: string, data: CreateAssetInput): Promise<GrundschutzAsset> {
+  async create(_tenantId: string, data: CreateAssetInput): Promise<GrundschutzAsset> {
     const [asset] = await db.insert(grundschutzAssets).values({
-      tenantId,
+      tenantId: TENANT_ID,
       companyId: data.companyId,
       name: data.name,
       description: data.description || null,
@@ -212,7 +208,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Asset aktualisieren */
-  async update(tenantId: string, assetId: string, data: UpdateAssetInput): Promise<GrundschutzAsset | null> {
+  async update(_tenantId: string, assetId: string, data: UpdateAssetInput): Promise<GrundschutzAsset | null> {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
 
     if (data.name !== undefined) updates.name = data.name
@@ -231,24 +227,24 @@ export const GrundschutzAssetService = {
     if (data.notes !== undefined) updates.notes = data.notes
 
     const [asset] = await db.update(grundschutzAssets).set(updates)
-      .where(and(eq(grundschutzAssets.tenantId, tenantId), eq(grundschutzAssets.id, assetId)))
+      .where(eq(grundschutzAssets.id, assetId))
       .returning()
 
     return asset || null
   },
 
   /** Asset loeschen */
-  async delete(tenantId: string, assetId: string): Promise<boolean> {
+  async delete(_tenantId: string, assetId: string): Promise<boolean> {
     const result = await db.delete(grundschutzAssets)
-      .where(and(eq(grundschutzAssets.tenantId, tenantId), eq(grundschutzAssets.id, assetId)))
+      .where(eq(grundschutzAssets.id, assetId))
       .returning({ id: grundschutzAssets.id })
     return result.length > 0
   },
 
   /** Relation zwischen Assets erstellen */
-  async createRelation(tenantId: string, data: CreateAssetRelationInput): Promise<GrundschutzAssetRelation> {
+  async createRelation(_tenantId: string, data: CreateAssetRelationInput): Promise<GrundschutzAssetRelation> {
     const [relation] = await db.insert(grundschutzAssetRelationsTable).values({
-      tenantId,
+      tenantId: TENANT_ID,
       sourceAssetId: data.sourceAssetId,
       targetAssetId: data.targetAssetId,
       relationType: data.relationType,
@@ -259,19 +255,18 @@ export const GrundschutzAssetService = {
   },
 
   /** Relation loeschen */
-  async deleteRelation(tenantId: string, relationId: string): Promise<boolean> {
+  async deleteRelation(_tenantId: string, relationId: string): Promise<boolean> {
     const result = await db.delete(grundschutzAssetRelationsTable)
-      .where(and(eq(grundschutzAssetRelationsTable.tenantId, tenantId), eq(grundschutzAssetRelationsTable.id, relationId)))
+      .where(eq(grundschutzAssetRelationsTable.id, relationId))
       .returning({ id: grundschutzAssetRelationsTable.id })
     return result.length > 0
   },
 
   /** Control-Mapping erstellen oder aktualisieren (Upsert) */
-  async upsertControlMapping(tenantId: string, assetId: string, data: AssetControlMappingInput): Promise<GrundschutzAssetControl> {
+  async upsertControlMapping(_tenantId: string, assetId: string, data: AssetControlMappingInput): Promise<GrundschutzAssetControl> {
     // Pruefen ob Mapping existiert
     const [existing] = await db.select().from(grundschutzAssetControls)
       .where(and(
-        eq(grundschutzAssetControls.tenantId, tenantId),
         eq(grundschutzAssetControls.assetId, assetId),
         eq(grundschutzAssetControls.controlId, data.controlId),
       )).limit(1)
@@ -288,7 +283,7 @@ export const GrundschutzAssetService = {
     }
 
     const [mapping] = await db.insert(grundschutzAssetControls).values({
-      tenantId,
+      tenantId: TENANT_ID,
       assetId,
       controlId: data.controlId,
       applicability: data.applicability || 'applicable',
@@ -301,7 +296,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Schutzbedarf-Uebersicht: Aggregate pro Kategorie */
-  async getSchutzbedarfOverview(tenantId: string, companyId: string) {
+  async getSchutzbedarfOverview(_tenantId: string, companyId: string) {
     const assets = await db.select({
       categoryType: grundschutzAssets.categoryType,
       vertraulichkeit: grundschutzAssets.vertraulichkeit,
@@ -309,7 +304,7 @@ export const GrundschutzAssetService = {
       verfuegbarkeit: grundschutzAssets.verfuegbarkeit,
     })
       .from(grundschutzAssets)
-      .where(and(eq(grundschutzAssets.tenantId, tenantId), eq(grundschutzAssets.companyId, companyId)))
+      .where(eq(grundschutzAssets.companyId, companyId))
 
     const totalAssets = assets.length
     const hochValues = new Set(['hoch', 'sehr_hoch'])

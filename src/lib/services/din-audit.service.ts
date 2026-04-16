@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { dinAuditSessions, dinAnswers, dinRequirements, companies, users } from '@/lib/db/schema'
 import { eq, and, count, desc, sql } from 'drizzle-orm'
 import type { DinAuditSession, DinAnswer, NewDinAuditSession } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface DinAuditFilters {
   status?: string
@@ -21,11 +22,11 @@ export interface SaveAnswerInput {
 }
 
 export const DinAuditService = {
-  async create(tenantId: string, consultantId: string, data: CreateAuditInput): Promise<DinAuditSession> {
+  async create(_tenantId: string, consultantId: string, data: CreateAuditInput): Promise<DinAuditSession> {
     const [session] = await db
       .insert(dinAuditSessions)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         clientCompanyId: data.clientCompanyId,
         consultantId,
         reviewerId: data.reviewerId || undefined,
@@ -35,11 +36,11 @@ export const DinAuditService = {
     return session
   },
 
-  async getById(tenantId: string, sessionId: string) {
+  async getById(_tenantId: string, sessionId: string) {
     const [session] = await db
       .select()
       .from(dinAuditSessions)
-      .where(and(eq(dinAuditSessions.tenantId, tenantId), eq(dinAuditSessions.id, sessionId)))
+      .where(eq(dinAuditSessions.id, sessionId))
       .limit(1)
     if (!session) return null
 
@@ -61,31 +62,31 @@ export const DinAuditService = {
     return { ...session, clientCompany: company, consultant, answers }
   },
 
-  async update(tenantId: string, sessionId: string, data: Partial<NewDinAuditSession>): Promise<DinAuditSession | null> {
+  async update(_tenantId: string, sessionId: string, data: Partial<NewDinAuditSession>): Promise<DinAuditSession | null> {
     const [session] = await db
       .update(dinAuditSessions)
       .set({ ...data, updatedAt: new Date() })
-      .where(and(eq(dinAuditSessions.tenantId, tenantId), eq(dinAuditSessions.id, sessionId)))
+      .where(eq(dinAuditSessions.id, sessionId))
       .returning()
     return session ?? null
   },
 
-  async delete(tenantId: string, sessionId: string): Promise<boolean> {
+  async delete(_tenantId: string, sessionId: string): Promise<boolean> {
     const result = await db
       .delete(dinAuditSessions)
-      .where(and(eq(dinAuditSessions.tenantId, tenantId), eq(dinAuditSessions.id, sessionId)))
+      .where(eq(dinAuditSessions.id, sessionId))
       .returning({ id: dinAuditSessions.id })
     return result.length > 0
   },
 
-  async list(tenantId: string, filters: DinAuditFilters = {}) {
+  async list(_tenantId: string, filters: DinAuditFilters = {}) {
     const { status, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(dinAuditSessions.tenantId, tenantId)]
+    const conditions = []
     if (status) conditions.push(eq(dinAuditSessions.status, status))
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ total }]] = await Promise.all([
       db
@@ -104,11 +105,11 @@ export const DinAuditService = {
         })
         .from(dinAuditSessions)
         .leftJoin(companies, eq(dinAuditSessions.clientCompanyId, companies.id))
-        .where(whereClause!)
+        .where(whereClause)
         .orderBy(desc(dinAuditSessions.createdAt))
         .limit(limit)
         .offset(offset),
-      db.select({ total: count() }).from(dinAuditSessions).where(whereClause!),
+      db.select({ total: count() }).from(dinAuditSessions).where(whereClause),
     ])
 
     // Get answer counts per session
@@ -160,7 +161,7 @@ export const DinAuditService = {
     }
   },
 
-  async saveAnswer(tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<DinAnswer> {
+  async saveAnswer(_tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<DinAnswer> {
     // Check if answer already exists for this session+requirement
     const [existing] = await db
       .select()
@@ -189,7 +190,7 @@ export const DinAuditService = {
     const [answer] = await db
       .insert(dinAnswers)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         sessionId,
         requirementId: data.requirementId,
         status: data.status,
@@ -199,14 +200,14 @@ export const DinAuditService = {
     return answer
   },
 
-  async saveBulkAnswers(tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<DinAnswer[]> {
-    return Promise.all(answers.map(a => this.saveAnswer(tenantId, sessionId, a)))
+  async saveBulkAnswers(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<DinAnswer[]> {
+    return Promise.all(answers.map(a => this.saveAnswer(_tenantId, sessionId, a)))
   },
 
-  async getAnswers(tenantId: string, sessionId: string): Promise<DinAnswer[]> {
+  async getAnswers(_tenantId: string, sessionId: string): Promise<DinAnswer[]> {
     return db
       .select()
       .from(dinAnswers)
-      .where(and(eq(dinAnswers.tenantId, tenantId), eq(dinAnswers.sessionId, sessionId)))
+      .where(eq(dinAnswers.sessionId, sessionId))
   },
 }

@@ -7,35 +7,35 @@ import { db } from '@/lib/db'
 import { emailTemplates } from '@/lib/db/schema'
 import type { EmailTemplate, NewEmailTemplate } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const EmailTemplateService = {
-  async list(tenantId: string): Promise<EmailTemplate[]> {
+  async list(_tenantId: string): Promise<EmailTemplate[]> {
     return db
       .select()
       .from(emailTemplates)
-      .where(eq(emailTemplates.tenantId, tenantId))
       .orderBy(emailTemplates.slug)
   },
 
-  async getBySlug(tenantId: string, slug: string): Promise<EmailTemplate | null> {
+  async getBySlug(_tenantId: string, slug: string): Promise<EmailTemplate | null> {
     const [template] = await db
       .select()
       .from(emailTemplates)
-      .where(and(eq(emailTemplates.tenantId, tenantId), eq(emailTemplates.slug, slug)))
+      .where(eq(emailTemplates.slug, slug))
       .limit(1)
     return template ?? null
   },
 
-  async getById(tenantId: string, id: string): Promise<EmailTemplate | null> {
+  async getById(_tenantId: string, id: string): Promise<EmailTemplate | null> {
     const [template] = await db
       .select()
       .from(emailTemplates)
-      .where(and(eq(emailTemplates.tenantId, tenantId), eq(emailTemplates.id, id)))
+      .where(eq(emailTemplates.id, id))
       .limit(1)
     return template ?? null
   },
 
-  async create(tenantId: string, data: {
+  async create(_tenantId: string, data: {
     slug: string
     name: string
     subject: string
@@ -45,7 +45,7 @@ export const EmailTemplateService = {
     const [template] = await db
       .insert(emailTemplates)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         slug: data.slug,
         name: data.name,
         subject: data.subject,
@@ -56,7 +56,7 @@ export const EmailTemplateService = {
     return template
   },
 
-  async update(tenantId: string, id: string, data: Partial<{
+  async update(_tenantId: string, id: string, data: Partial<{
     slug: string
     name: string
     subject: string
@@ -75,15 +75,15 @@ export const EmailTemplateService = {
     const [template] = await db
       .update(emailTemplates)
       .set(updateData)
-      .where(and(eq(emailTemplates.tenantId, tenantId), eq(emailTemplates.id, id)))
+      .where(eq(emailTemplates.id, id))
       .returning()
     return template ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(emailTemplates)
-      .where(and(eq(emailTemplates.tenantId, tenantId), eq(emailTemplates.id, id)))
+      .where(eq(emailTemplates.id, id))
       .returning({ id: emailTemplates.id })
     return result.length > 0
   },
@@ -96,12 +96,12 @@ export const EmailTemplateService = {
     return result
   },
 
-  async seed(tenantId: string): Promise<number> {
+  async seed(_tenantId: string): Promise<number> {
     let created = 0
     for (const tpl of DEFAULT_EMAIL_TEMPLATES) {
-      const existing = await this.getBySlug(tenantId, tpl.slug)
+      const existing = await this.getBySlug(_tenantId, tpl.slug)
       if (existing) continue
-      await this.create(tenantId, tpl)
+      await this.create(_tenantId, tpl)
       created++
     }
     return created

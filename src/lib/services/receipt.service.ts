@@ -9,30 +9,33 @@ import { eq, and, desc, count } from 'drizzle-orm'
 import { AIService } from '@/lib/services/ai/ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const ReceiptService = {
-  async list(tenantId: string, filters: { status?: string; page?: number; limit?: number } = {}) {
+  async list(_tenantId: string, filters: { status?: string; page?: number; limit?: number } = {}) {
     const { status, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(receipts.tenantId, tenantId)]
+    const conditions = []
     if (status) conditions.push(eq(receipts.status, status))
 
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
     const [items, [{ total }]] = await Promise.all([
-      db.select().from(receipts).where(and(...conditions)).orderBy(desc(receipts.createdAt)).limit(limit).offset(offset),
-      db.select({ total: count() }).from(receipts).where(and(...conditions)),
+      db.select().from(receipts).where(whereClause).orderBy(desc(receipts.createdAt)).limit(limit).offset(offset),
+      db.select({ total: count() }).from(receipts).where(whereClause),
     ])
 
     return { items, meta: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) } }
   },
 
-  async getById(tenantId: string, id: string): Promise<Receipt | null> {
+  async getById(_tenantId: string, id: string): Promise<Receipt | null> {
     const [receipt] = await db.select().from(receipts)
-      .where(and(eq(receipts.tenantId, tenantId), eq(receipts.id, id))).limit(1)
+      .where(eq(receipts.id, id)).limit(1)
     return receipt ?? null
   },
 
-  async create(tenantId: string, data: {
+  async create(_tenantId: string, data: {
     fileName?: string
     fileUrl?: string
     amount?: string
@@ -43,7 +46,7 @@ export const ReceiptService = {
     ocrData?: unknown
   }): Promise<Receipt> {
     const [receipt] = await db.insert(receipts).values({
-      tenantId,
+      tenantId: TENANT_ID,
       fileName: data.fileName || null,
       fileUrl: data.fileUrl || null,
       amount: data.amount || null,
@@ -56,7 +59,7 @@ export const ReceiptService = {
     return receipt
   },
 
-  async update(tenantId: string, id: string, data: Partial<{
+  async update(_tenantId: string, id: string, data: Partial<{
     amount: string
     date: Date
     vendor: string
@@ -65,29 +68,29 @@ export const ReceiptService = {
     notes: string
   }>): Promise<Receipt | null> {
     const [receipt] = await db.update(receipts).set(data)
-      .where(and(eq(receipts.tenantId, tenantId), eq(receipts.id, id))).returning()
+      .where(eq(receipts.id, id)).returning()
     return receipt ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db.delete(receipts)
-      .where(and(eq(receipts.tenantId, tenantId), eq(receipts.id, id)))
+      .where(eq(receipts.id, id))
       .returning({ id: receipts.id })
     return result.length > 0
   },
 
-  async extractWithAI(tenantId: string, imageBase64: string): Promise<{
+  async extractWithAI(_tenantId: string, imageBase64: string): Promise<{
     amount?: string
     date?: string
     vendor?: string
     category?: string
   }> {
     try {
-      const template = await AiPromptTemplateService.getOrDefault(tenantId, 'receipt_ocr')
+      const template = await AiPromptTemplateService.getOrDefault(_tenantId, 'receipt_ocr')
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { imageDescription: imageBase64.substring(0, 500) })
 
       const response = await AIService.completeWithContext(userPrompt,
-        { tenantId, feature: 'receipt_ocr' },
+        { tenantId: _tenantId, feature: 'receipt_ocr' },
         { maxTokens: 500, temperature: 0.1, systemPrompt: template.systemPrompt },
       )
 

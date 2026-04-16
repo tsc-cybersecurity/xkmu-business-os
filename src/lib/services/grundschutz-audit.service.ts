@@ -11,6 +11,7 @@ import {
 } from '@/lib/db/schema'
 import type { GrundschutzAuditSession, GrundschutzAnswer } from '@/lib/db/schema'
 import { eq, and, asc, desc, count, sql } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CreateAuditInput {
   title?: string
@@ -45,9 +46,9 @@ export interface AuditScoring {
 
 export const GrundschutzAuditService = {
   /** Audit-Session erstellen */
-  async create(tenantId: string, consultantId: string, data: CreateAuditInput): Promise<GrundschutzAuditSession> {
+  async create(_tenantId: string, consultantId: string, data: CreateAuditInput): Promise<GrundschutzAuditSession> {
     const [session] = await db.insert(grundschutzAuditSessions).values({
-      tenantId,
+      tenantId: TENANT_ID,
       consultantId,
       clientCompanyId: data.clientCompanyId,
       title: data.title || 'Grundschutz++ Audit',
@@ -62,7 +63,6 @@ export const GrundschutzAuditService = {
     // Filter nach Gruppen wenn angegeben
     let filteredControls = allControls
     if (data.filterGroups && data.filterGroups.length > 0) {
-      const groupSet = new Set(data.filterGroups)
       // Auch Untergruppen einschliessen
       const subGroups = await db.select({ id: grundschutzGroups.id, parentId: grundschutzGroups.parentId })
         .from(grundschutzGroups)
@@ -89,7 +89,7 @@ export const GrundschutzAuditService = {
     // Batch-Insert der Answers
     if (filteredControls.length > 0) {
       const answerRows = filteredControls.map(c => ({
-        tenantId,
+        tenantId: TENANT_ID,
         sessionId: session.id,
         controlId: c.id,
         status: 'offen' as const,
@@ -103,7 +103,7 @@ export const GrundschutzAuditService = {
   },
 
   /** Session abrufen mit Statistiken */
-  async getById(tenantId: string, sessionId: string) {
+  async getById(_tenantId: string, sessionId: string) {
     const [session] = await db.select({
       session: grundschutzAuditSessions,
       companyName: companies.name,
@@ -113,7 +113,7 @@ export const GrundschutzAuditService = {
       .from(grundschutzAuditSessions)
       .leftJoin(companies, eq(grundschutzAuditSessions.clientCompanyId, companies.id))
       .leftJoin(users, eq(grundschutzAuditSessions.consultantId, users.id))
-      .where(and(eq(grundschutzAuditSessions.tenantId, tenantId), eq(grundschutzAuditSessions.id, sessionId)))
+      .where(eq(grundschutzAuditSessions.id, sessionId))
       .limit(1)
 
     if (!session) return null
@@ -138,14 +138,13 @@ export const GrundschutzAuditService = {
   },
 
   /** Alle Sessions eines Tenants */
-  async list(tenantId: string) {
+  async list(_tenantId: string) {
     const sessions = await db.select({
       session: grundschutzAuditSessions,
       companyName: companies.name,
     })
       .from(grundschutzAuditSessions)
       .leftJoin(companies, eq(grundschutzAuditSessions.clientCompanyId, companies.id))
-      .where(eq(grundschutzAuditSessions.tenantId, tenantId))
       .orderBy(desc(grundschutzAuditSessions.createdAt))
 
     // Counts pro Session
@@ -172,21 +171,21 @@ export const GrundschutzAuditService = {
   },
 
   /** Session loeschen */
-  async delete(tenantId: string, sessionId: string): Promise<boolean> {
+  async delete(_tenantId: string, sessionId: string): Promise<boolean> {
     const result = await db.delete(grundschutzAuditSessions)
-      .where(and(eq(grundschutzAuditSessions.tenantId, tenantId), eq(grundschutzAuditSessions.id, sessionId)))
+      .where(eq(grundschutzAuditSessions.id, sessionId))
       .returning({ id: grundschutzAuditSessions.id })
     return result.length > 0
   },
 
   /** Session-Status aktualisieren */
-  async updateStatus(tenantId: string, sessionId: string, status: string): Promise<GrundschutzAuditSession | null> {
+  async updateStatus(_tenantId: string, sessionId: string, status: string): Promise<GrundschutzAuditSession | null> {
     const updates: Record<string, unknown> = { status, updatedAt: new Date() }
     if (status === 'in_progress' && !updates.startedAt) updates.startedAt = new Date()
     if (status === 'completed') updates.completedAt = new Date()
 
     const [session] = await db.update(grundschutzAuditSessions).set(updates)
-      .where(and(eq(grundschutzAuditSessions.tenantId, tenantId), eq(grundschutzAuditSessions.id, sessionId)))
+      .where(eq(grundschutzAuditSessions.id, sessionId))
       .returning()
     return session || null
   },
@@ -223,7 +222,7 @@ export const GrundschutzAuditService = {
   },
 
   /** Einzelne Antwort speichern */
-  async saveAnswer(tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<GrundschutzAnswer> {
+  async saveAnswer(_tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<GrundschutzAnswer> {
     // Prüfe ob Answer existiert
     const [existing] = await db.select().from(grundschutzAnswers)
       .where(and(
@@ -242,7 +241,7 @@ export const GrundschutzAuditService = {
 
     // Neu anlegen
     const [answer] = await db.insert(grundschutzAnswers).values({
-      tenantId,
+      tenantId: TENANT_ID,
       sessionId,
       controlId: data.controlId,
       status: data.status,
@@ -253,10 +252,10 @@ export const GrundschutzAuditService = {
   },
 
   /** Batch-Answers speichern */
-  async saveAnswersBatch(tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<number> {
+  async saveAnswersBatch(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<number> {
     let saved = 0
     for (const a of answers) {
-      await this.saveAnswer(tenantId, sessionId, a)
+      await this.saveAnswer(_tenantId, sessionId, a)
       saved++
     }
     return saved

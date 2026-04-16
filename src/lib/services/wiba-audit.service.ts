@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { wibaAuditSessions, wibaAnswers, wibaRequirements, companies, users } from '@/lib/db/schema'
 import { eq, and, count, desc, sql } from 'drizzle-orm'
 import type { WibaAuditSession, WibaAnswer, NewWibaAuditSession } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface WibaAuditFilters {
   status?: string
@@ -20,11 +21,11 @@ export interface SaveAnswerInput {
 }
 
 export const WibaAuditService = {
-  async create(tenantId: string, consultantId: string, data: CreateAuditInput): Promise<WibaAuditSession> {
+  async create(_tenantId: string, consultantId: string, data: CreateAuditInput): Promise<WibaAuditSession> {
     const [session] = await db
       .insert(wibaAuditSessions)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         clientCompanyId: data.clientCompanyId,
         consultantId,
         status: 'draft',
@@ -33,11 +34,11 @@ export const WibaAuditService = {
     return session
   },
 
-  async getById(tenantId: string, sessionId: string) {
+  async getById(_tenantId: string, sessionId: string) {
     const [session] = await db
       .select()
       .from(wibaAuditSessions)
-      .where(and(eq(wibaAuditSessions.tenantId, tenantId), eq(wibaAuditSessions.id, sessionId)))
+      .where(eq(wibaAuditSessions.id, sessionId))
       .limit(1)
     if (!session) return null
 
@@ -72,7 +73,7 @@ export const WibaAuditService = {
     return { ...session, clientCompany: company, consultant, answers }
   },
 
-  async update(tenantId: string, sessionId: string, data: Partial<NewWibaAuditSession>): Promise<WibaAuditSession | null> {
+  async update(_tenantId: string, sessionId: string, data: Partial<NewWibaAuditSession>): Promise<WibaAuditSession | null> {
     const updateData: Record<string, unknown> = { updatedAt: new Date() }
     if (data.status !== undefined) updateData.status = data.status
     if (data.startedAt !== undefined) updateData.startedAt = data.startedAt ? new Date(data.startedAt as unknown as string) : null
@@ -81,27 +82,27 @@ export const WibaAuditService = {
     const [session] = await db
       .update(wibaAuditSessions)
       .set(updateData)
-      .where(and(eq(wibaAuditSessions.tenantId, tenantId), eq(wibaAuditSessions.id, sessionId)))
+      .where(eq(wibaAuditSessions.id, sessionId))
       .returning()
     return session ?? null
   },
 
-  async delete(tenantId: string, sessionId: string): Promise<boolean> {
+  async delete(_tenantId: string, sessionId: string): Promise<boolean> {
     const result = await db
       .delete(wibaAuditSessions)
-      .where(and(eq(wibaAuditSessions.tenantId, tenantId), eq(wibaAuditSessions.id, sessionId)))
+      .where(eq(wibaAuditSessions.id, sessionId))
       .returning({ id: wibaAuditSessions.id })
     return result.length > 0
   },
 
-  async list(tenantId: string, filters: WibaAuditFilters = {}) {
+  async list(_tenantId: string, filters: WibaAuditFilters = {}) {
     const { status, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(wibaAuditSessions.tenantId, tenantId)]
+    const conditions = []
     if (status) conditions.push(eq(wibaAuditSessions.status, status))
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ total }]] = await Promise.all([
       db
@@ -119,11 +120,11 @@ export const WibaAuditService = {
         })
         .from(wibaAuditSessions)
         .leftJoin(companies, eq(wibaAuditSessions.clientCompanyId, companies.id))
-        .where(whereClause!)
+        .where(whereClause)
         .orderBy(desc(wibaAuditSessions.createdAt))
         .limit(limit)
         .offset(offset),
-      db.select({ total: count() }).from(wibaAuditSessions).where(whereClause!),
+      db.select({ total: count() }).from(wibaAuditSessions).where(whereClause),
     ])
 
     const sessionIds = items.map((i) => i.id)
@@ -172,7 +173,7 @@ export const WibaAuditService = {
     }
   },
 
-  async saveAnswer(tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<WibaAnswer> {
+  async saveAnswer(_tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<WibaAnswer> {
     const [existing] = await db
       .select()
       .from(wibaAnswers)
@@ -200,7 +201,7 @@ export const WibaAuditService = {
     const [answer] = await db
       .insert(wibaAnswers)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         sessionId,
         requirementId: data.requirementId,
         status: data.status,
@@ -210,19 +211,19 @@ export const WibaAuditService = {
     return answer
   },
 
-  async saveBulkAnswers(tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<WibaAnswer[]> {
+  async saveBulkAnswers(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<WibaAnswer[]> {
     const results: WibaAnswer[] = []
     for (const answer of answers) {
-      const saved = await this.saveAnswer(tenantId, sessionId, answer)
+      const saved = await this.saveAnswer(_tenantId, sessionId, answer)
       results.push(saved)
     }
     return results
   },
 
-  async getAnswers(tenantId: string, sessionId: string): Promise<WibaAnswer[]> {
+  async getAnswers(_tenantId: string, sessionId: string): Promise<WibaAnswer[]> {
     return db
       .select()
       .from(wibaAnswers)
-      .where(and(eq(wibaAnswers.tenantId, tenantId), eq(wibaAnswers.sessionId, sessionId)))
+      .where(eq(wibaAnswers.sessionId, sessionId))
   },
 }

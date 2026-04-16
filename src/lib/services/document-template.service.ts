@@ -8,42 +8,43 @@ import type { DocumentTemplate } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { AIService } from '@/lib/services/ai/ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const DocumentTemplateService = {
-  async list(tenantId: string, category?: string): Promise<DocumentTemplate[]> {
-    const conditions = [eq(documentTemplates.tenantId, tenantId)]
+  async list(_tenantId: string, category?: string): Promise<DocumentTemplate[]> {
+    const conditions = []
     if (category) conditions.push(eq(documentTemplates.category, category))
-    return db.select().from(documentTemplates).where(and(...conditions)).orderBy(documentTemplates.name)
+    return db.select().from(documentTemplates).where(conditions.length > 0 ? and(...conditions) : undefined).orderBy(documentTemplates.name)
   },
 
-  async getById(tenantId: string, id: string): Promise<DocumentTemplate | null> {
+  async getById(_tenantId: string, id: string): Promise<DocumentTemplate | null> {
     const [tpl] = await db.select().from(documentTemplates)
-      .where(and(eq(documentTemplates.tenantId, tenantId), eq(documentTemplates.id, id))).limit(1)
+      .where(eq(documentTemplates.id, id)).limit(1)
     return tpl ?? null
   },
 
-  async create(tenantId: string, data: {
+  async create(_tenantId: string, data: {
     name: string; category?: string; bodyHtml?: string; placeholders?: unknown; headerHtml?: string; footerHtml?: string
   }): Promise<DocumentTemplate> {
     const [tpl] = await db.insert(documentTemplates).values({
-      tenantId, name: data.name, category: data.category || null,
+      tenantId: TENANT_ID, name: data.name, category: data.category || null,
       bodyHtml: data.bodyHtml || '', placeholders: data.placeholders || [],
       headerHtml: data.headerHtml || null, footerHtml: data.footerHtml || null,
     }).returning()
     return tpl
   },
 
-  async update(tenantId: string, id: string, data: Partial<{
+  async update(_tenantId: string, id: string, data: Partial<{
     name: string; category: string; bodyHtml: string; placeholders: unknown; headerHtml: string; footerHtml: string
   }>): Promise<DocumentTemplate | null> {
     const [tpl] = await db.update(documentTemplates).set({ ...data, updatedAt: new Date() })
-      .where(and(eq(documentTemplates.tenantId, tenantId), eq(documentTemplates.id, id))).returning()
+      .where(eq(documentTemplates.id, id)).returning()
     return tpl ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db.delete(documentTemplates)
-      .where(and(eq(documentTemplates.tenantId, tenantId), eq(documentTemplates.id, id)))
+      .where(eq(documentTemplates.id, id))
       .returning({ id: documentTemplates.id })
     return result.length > 0
   },
@@ -56,30 +57,30 @@ export const DocumentTemplateService = {
     return result
   },
 
-  async generateWithAI(tenantId: string, templateId: string, context: string): Promise<string> {
-    const tpl = await this.getById(tenantId, templateId)
+  async generateWithAI(_tenantId: string, templateId: string, context: string): Promise<string> {
+    const tpl = await this.getById(_tenantId, templateId)
     if (!tpl) throw new Error('Template nicht gefunden')
 
-    const promptTemplate = await AiPromptTemplateService.getOrDefault(tenantId, 'document_template_fill')
+    const promptTemplate = await AiPromptTemplateService.getOrDefault(_tenantId, 'document_template_fill')
     const userPrompt = AiPromptTemplateService.applyPlaceholders(promptTemplate.userPrompt, {
       context, template: tpl.bodyHtml || '',
     })
 
     const response = await AIService.completeWithContext(userPrompt,
-      { tenantId, feature: 'document_template_generate' },
+      { tenantId: _tenantId, feature: 'document_template_generate' },
       { maxTokens: 4000, temperature: 0.3, systemPrompt: promptTemplate.systemPrompt },
     )
 
     return response.text
   },
 
-  async seed(tenantId: string): Promise<number> {
+  async seed(_tenantId: string): Promise<number> {
     let created = 0
     for (const tpl of DEFAULT_DOC_TEMPLATES) {
       const existing = await db.select({ id: documentTemplates.id }).from(documentTemplates)
-        .where(and(eq(documentTemplates.tenantId, tenantId), eq(documentTemplates.name, tpl.name))).limit(1)
+        .where(eq(documentTemplates.name, tpl.name)).limit(1)
       if (existing.length > 0) continue
-      await this.create(tenantId, tpl)
+      await this.create(_tenantId, tpl)
       created++
     }
     return created

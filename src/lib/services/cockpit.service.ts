@@ -3,6 +3,7 @@ import { cockpitSystems, cockpitCredentials } from '@/lib/db/schema'
 import { eq, and, ilike, count, sql } from 'drizzle-orm'
 import type { CockpitSystem, NewCockpitSystem, CockpitCredential } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CockpitSystemFilters {
   category?: string
@@ -46,14 +47,14 @@ function emptyToNull<T>(value: T): T | null {
 
 export const CockpitService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreateCockpitSystemInput,
     userId?: string
   ): Promise<CockpitSystem> {
     const [system] = await db
       .insert(cockpitSystems)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         name: data.name,
         hostname: emptyToNull(data.hostname),
         url: emptyToNull(data.url),
@@ -73,11 +74,11 @@ export const CockpitService = {
     return system
   },
 
-  async getById(tenantId: string, id: string): Promise<(CockpitSystem & { credentials: CockpitCredential[] }) | null> {
+  async getById(_tenantId: string, id: string): Promise<(CockpitSystem & { credentials: CockpitCredential[] }) | null> {
     const [system] = await db
       .select()
       .from(cockpitSystems)
-      .where(and(eq(cockpitSystems.tenantId, tenantId), eq(cockpitSystems.id, id)))
+      .where(eq(cockpitSystems.id, id))
       .limit(1)
 
     if (!system) return null
@@ -92,7 +93,7 @@ export const CockpitService = {
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     id: string,
     data: UpdateCockpitSystemInput
   ): Promise<CockpitSystem | null> {
@@ -104,29 +105,29 @@ export const CockpitService = {
     const [system] = await db
       .update(cockpitSystems)
       .set(updateData)
-      .where(and(eq(cockpitSystems.tenantId, tenantId), eq(cockpitSystems.id, id)))
+      .where(eq(cockpitSystems.id, id))
       .returning()
 
     return system ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(cockpitSystems)
-      .where(and(eq(cockpitSystems.tenantId, tenantId), eq(cockpitSystems.id, id)))
+      .where(eq(cockpitSystems.id, id))
       .returning({ id: cockpitSystems.id })
 
     return result.length > 0
   },
 
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters: CockpitSystemFilters = {}
   ): Promise<PaginatedResult<CockpitSystem & { credentialCount: number }>> {
     const { category, status, search, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(cockpitSystems.tenantId, tenantId)]
+    const conditions = []
 
     if (category) {
       conditions.push(eq(cockpitSystems.category, category))
@@ -142,7 +143,7 @@ export const CockpitService = {
       )
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const credentialCountSq = db
       .select({
@@ -198,22 +199,19 @@ export const CockpitService = {
     }
   },
 
-  async getCategories(tenantId: string): Promise<string[]> {
+  async getCategories(_tenantId: string): Promise<string[]> {
     const result = await db
       .selectDistinct({ category: cockpitSystems.category })
       .from(cockpitSystems)
       .where(
-        and(
-          eq(cockpitSystems.tenantId, tenantId),
-          sql`${cockpitSystems.category} IS NOT NULL AND ${cockpitSystems.category} != ''`
-        )
+        sql`${cockpitSystems.category} IS NOT NULL AND ${cockpitSystems.category} != ''`
       )
       .orderBy(cockpitSystems.category)
 
     return result.map((r) => r.category!).filter(Boolean)
   },
 
-  async getStats(tenantId: string): Promise<{
+  async getStats(_tenantId: string): Promise<{
     total: number
     byStatus: Record<string, number>
     byCategory: Record<string, number>
@@ -225,7 +223,6 @@ export const CockpitService = {
           count: count(),
         })
         .from(cockpitSystems)
-        .where(eq(cockpitSystems.tenantId, tenantId))
         .groupBy(cockpitSystems.status),
       db
         .select({
@@ -233,7 +230,6 @@ export const CockpitService = {
           count: count(),
         })
         .from(cockpitSystems)
-        .where(eq(cockpitSystems.tenantId, tenantId))
         .groupBy(cockpitSystems.category),
     ])
 
@@ -311,7 +307,7 @@ export const CockpitService = {
   },
 
   /** Verify a credential belongs to a system owned by the tenant */
-  async verifyCredentialOwnership(tenantId: string, systemId: string, credentialId: string): Promise<boolean> {
+  async verifyCredentialOwnership(_tenantId: string, systemId: string, credentialId: string): Promise<boolean> {
     const rows = await db
       .select({ id: cockpitCredentials.id })
       .from(cockpitCredentials)
@@ -320,7 +316,6 @@ export const CockpitService = {
         and(
           eq(cockpitCredentials.id, credentialId),
           eq(cockpitCredentials.systemId, systemId),
-          eq(cockpitSystems.tenantId, tenantId)
         )
       )
       .limit(1)
