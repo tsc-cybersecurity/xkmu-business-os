@@ -72,13 +72,38 @@ UPDATE persons SET created_by = NULL
   WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673')
   AND tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673';
 
-UPDATE opportunities SET created_by = NULL
-  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673')
-  AND tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673';
+-- opportunities has NO created_by column — skipped
+-- social_media_posts: DELETE-target (Gruppe A), cascade handles FKs
 
+-- products.created_by — migriert in Gruppe B, FK auf xkmu-Admin umhaengen
+UPDATE products
+  SET created_by = (SELECT id FROM users WHERE tenant_id = '7b6c13c5-1800-47b2-a12f-10ccb11f6358' LIMIT 1)
+  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673');
+
+-- documents.created_by — migriert in Gruppe B
+UPDATE documents
+  SET created_by = (SELECT id FROM users WHERE tenant_id = '7b6c13c5-1800-47b2-a12f-10ccb11f6358' LIMIT 1)
+  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673');
+
+-- cms_pages.created_by — CMS ist global (kein tenant_id), aber FK kann auf default-Admin zeigen
+UPDATE cms_pages SET created_by = NULL
+  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673');
+
+-- marketing_campaigns.created_by — Gruppe A (delete), aber vor DELETE users evtl. benoetigt
+UPDATE marketing_campaigns SET created_by = NULL
+  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673');
+
+-- generated_images.created_by — Gruppe A (delete)
+UPDATE generated_images SET created_by = NULL
+  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673');
+
+-- cockpit_systems.created_by — Gruppe A (delete)
+UPDATE cockpit_systems SET created_by = NULL
+  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673');
+
+-- social_media_posts.created_by — Gruppe A (delete)
 UPDATE social_media_posts SET created_by = NULL
-  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673')
-  AND tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673';
+  WHERE created_by IN (SELECT id FROM users WHERE tenant_id = '2ce4949e-8017-4d26-9d60-66c3f4060673');
 
 -- ============================================================
 -- GRUPPE A: DELETE — CRM-Seed und Demo-Daten aus default
