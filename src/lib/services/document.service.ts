@@ -4,6 +4,7 @@ import { eq, and, ilike, count, sql, or, desc, getTableColumns } from 'drizzle-o
 import type { Document, NewDocument, DocumentItem } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 import { DocumentCalculationService, emptyToNull } from './document-calculation.service'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // Re-export types so existing imports continue to work
 export type {
@@ -47,7 +48,7 @@ const CONTRACT_TRANSITIONS: Record<string, string[]> = {
 }
 
 export const DocumentService = {
-  async generateNumber(tenantId: string, type: string, year?: number): Promise<string> {
+  async generateNumber(_tenantId: string, type: string, year?: number): Promise<string> {
     const currentYear = year || new Date().getFullYear()
     const prefix = type === 'invoice' ? 'RE' : type === 'contract' ? 'VT' : 'AN'
     const pattern = `${prefix}-${currentYear}-%`
@@ -57,7 +58,6 @@ export const DocumentService = {
       .from(documents)
       .where(
         and(
-          eq(documents.tenantId, tenantId),
           eq(documents.type, type),
           sql`${documents.number} LIKE ${pattern}`
         )
@@ -67,17 +67,17 @@ export const DocumentService = {
     return `${prefix}-${currentYear}-${String(nextNum).padStart(4, '0')}`
   },
 
-  async getNextNumber(tenantId: string, type: string): Promise<string> {
-    return this.generateNumber(tenantId, type)
+  async getNextNumber(_tenantId: string, type: string): Promise<string> {
+    return this.generateNumber(_tenantId, type)
   },
 
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreateDocumentInput,
     createdBy?: string
   ): Promise<Document> {
     // Auto-generate number if not provided
-    const number = data.number || await this.generateNumber(tenantId, data.type)
+    const number = data.number || await this.generateNumber(_tenantId, data.type)
 
     // Snapshot company address if companyId provided and no customer address given
     let customerSnapshot: Partial<NewDocument> = {}
@@ -85,7 +85,7 @@ export const DocumentService = {
       const [company] = await db
         .select()
         .from(companies)
-        .where(and(eq(companies.tenantId, tenantId), eq(companies.id, data.companyId)))
+        .where(eq(companies.id, data.companyId))
         .limit(1)
 
       if (company) {
@@ -104,7 +104,7 @@ export const DocumentService = {
     const [doc] = await db
       .insert(documents)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         type: data.type,
         number,
         companyId: emptyToNull(data.companyId),
@@ -140,7 +140,7 @@ export const DocumentService = {
     return doc
   },
 
-  async getById(tenantId: string, docId: string): Promise<DocumentWithDetails | null> {
+  async getById(_tenantId: string, docId: string): Promise<DocumentWithDetails | null> {
     const [row] = await db
       .select({
         ...getTableColumns(documents),
@@ -157,7 +157,7 @@ export const DocumentService = {
       .from(documents)
       .leftJoin(companies, eq(documents.companyId, companies.id))
       .leftJoin(persons, eq(documents.contactPersonId, persons.id))
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .limit(1)
 
     if (!row) return null
@@ -165,7 +165,7 @@ export const DocumentService = {
     const items = await db
       .select()
       .from(documentItems)
-      .where(and(eq(documentItems.tenantId, tenantId), eq(documentItems.documentId, docId)))
+      .where(eq(documentItems.documentId, docId))
       .orderBy(documentItems.position)
 
     return {
@@ -177,7 +177,7 @@ export const DocumentService = {
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     docId: string,
     data: UpdateDocumentInput
   ): Promise<Document | null> {
@@ -185,7 +185,7 @@ export const DocumentService = {
     const existing = await db
       .select({ status: documents.status })
       .from(documents)
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .limit(1)
       .then(r => r[0])
 
@@ -228,18 +228,18 @@ export const DocumentService = {
     const [doc] = await db
       .update(documents)
       .set(updateData)
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .returning()
 
     return doc ?? null
   },
 
-  async delete(tenantId: string, docId: string): Promise<boolean> {
+  async delete(_tenantId: string, docId: string): Promise<boolean> {
     // Only draft documents can be deleted
     const existing = await db
       .select({ status: documents.status })
       .from(documents)
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .limit(1)
       .then(r => r[0])
 
@@ -250,20 +250,20 @@ export const DocumentService = {
 
     const result = await db
       .delete(documents)
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .returning({ id: documents.id })
 
     return result.length > 0
   },
 
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters: DocumentFilters = {}
   ): Promise<PaginatedResult<DocumentListItem>> {
     const { type, status, companyId, dateFrom, dateTo, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(documents.tenantId, tenantId)]
+    const conditions = []
 
     if (type) conditions.push(eq(documents.type, type))
 
@@ -289,7 +289,7 @@ export const DocumentService = {
       )
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [rows, [{ count: total }]] = await Promise.all([
       db
@@ -332,11 +332,11 @@ export const DocumentService = {
     }
   },
 
-  async updateStatus(tenantId: string, docId: string, newStatus: string): Promise<Document | null> {
+  async updateStatus(_tenantId: string, docId: string, newStatus: string): Promise<Document | null> {
     const existing = await db
       .select({ status: documents.status, type: documents.type })
       .from(documents)
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .limit(1)
       .then(r => r[0])
 
@@ -356,26 +356,26 @@ export const DocumentService = {
     const [doc] = await db
       .update(documents)
       .set({ status: newStatus, updatedAt: new Date() })
-      .where(and(eq(documents.tenantId, tenantId), eq(documents.id, docId)))
+      .where(eq(documents.id, docId))
       .returning()
 
     return doc ?? null
   },
 
-  async convertOfferToInvoice(tenantId: string, offerId: string, createdBy?: string): Promise<Document | null> {
-    const offer = await this.getById(tenantId, offerId)
+  async convertOfferToInvoice(_tenantId: string, offerId: string, createdBy?: string): Promise<Document | null> {
+    const offer = await this.getById(_tenantId, offerId)
     if (!offer) return null
     if (offer.type !== 'offer') throw new Error('Nur Angebote können umgewandelt werden')
     if (offer.status !== 'accepted' && offer.status !== 'sent') {
       throw new Error('Nur versendete oder angenommene Angebote können umgewandelt werden')
     }
 
-    const number = await this.generateNumber(tenantId, 'invoice')
+    const number = await this.generateNumber(_tenantId, 'invoice')
 
     const [invoice] = await db
       .insert(documents)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         type: 'invoice',
         number,
         companyId: offer.companyId,
@@ -406,7 +406,7 @@ export const DocumentService = {
       await db.insert(documentItems).values(
         offer.items.map((item) => ({
           documentId: invoice.id,
-          tenantId,
+          tenantId: TENANT_ID,
           position: item.position,
           productId: item.productId,
           name: item.name,
@@ -426,21 +426,21 @@ export const DocumentService = {
   },
 
   async convertContractToDocument(
-    tenantId: string,
+    _tenantId: string,
     contractId: string,
     targetType: 'offer' | 'invoice',
     createdBy?: string
   ): Promise<Document | null> {
-    const contract = await this.getById(tenantId, contractId)
+    const contract = await this.getById(_tenantId, contractId)
     if (!contract) return null
     if (contract.type !== 'contract') throw new Error('Nur Vertraege koennen umgewandelt werden')
 
-    const number = await this.generateNumber(tenantId, targetType)
+    const number = await this.generateNumber(_tenantId, targetType)
 
     const [newDoc] = await db
       .insert(documents)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         type: targetType,
         number,
         companyId: contract.companyId,
@@ -471,7 +471,7 @@ export const DocumentService = {
       await db.insert(documentItems).values(
         contract.items.map((item) => ({
           documentId: newDoc.id,
-          tenantId,
+          tenantId: TENANT_ID,
           position: item.position,
           productId: item.productId,
           name: item.name,
