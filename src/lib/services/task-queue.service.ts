@@ -6,6 +6,7 @@
 import { db } from '@/lib/db'
 import { taskQueue } from '@/lib/db/schema'
 import type { TaskQueueItem, NewTaskQueueItem } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, ne, and, asc, desc, count, lte, inArray } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
@@ -18,32 +19,27 @@ export interface TaskQueueFilters {
 }
 
 export const TaskQueueService = {
-  async list(tenantId: string, filters: TaskQueueFilters = {}) {
+  async list(_tenantId: string, filters: TaskQueueFilters = {}) {
     const { status, type, scheduledBefore, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(taskQueue.tenantId, tenantId)]
+    const conditions: ReturnType<typeof eq>[] = []
     if (status) conditions.push(eq(taskQueue.status, status))
     if (type) conditions.push(eq(taskQueue.type, type))
     if (scheduledBefore) conditions.push(lte(taskQueue.scheduledFor, scheduledBefore))
 
-    const whereClause = and(...conditions)
-
-    // Stats are tenant-scoped but unaffected by status/type filters so the
-    // counter cards always show the total picture, not just the current page.
-    const tenantOnlyWhere = eq(taskQueue.tenantId, tenantId)
+    const whereClause = conditions.length ? and(...conditions) : undefined
 
     const [items, [{ total }], statsRows] = await Promise.all([
       db.select()
         .from(taskQueue)
-        .where(whereClause!)
+        .where(whereClause)
         .orderBy(desc(taskQueue.createdAt))
         .limit(limit)
         .offset(offset),
-      db.select({ total: count() }).from(taskQueue).where(whereClause!),
+      db.select({ total: count() }).from(taskQueue).where(whereClause),
       db.select({ status: taskQueue.status, count: count() })
         .from(taskQueue)
-        .where(tenantOnlyWhere)
         .groupBy(taskQueue.status),
     ])
 
@@ -70,16 +66,16 @@ export const TaskQueueService = {
     }
   },
 
-  async getById(tenantId: string, id: string): Promise<TaskQueueItem | null> {
+  async getById(_tenantId: string, id: string): Promise<TaskQueueItem | null> {
     const [item] = await db
       .select()
       .from(taskQueue)
-      .where(and(eq(taskQueue.tenantId, tenantId), eq(taskQueue.id, id)))
+      .where(eq(taskQueue.id, id))
       .limit(1)
     return item ?? null
   },
 
-  async create(tenantId: string, data: {
+  async create(_tenantId: string, data: {
     type: string
     priority?: number
     payload?: unknown
@@ -90,7 +86,7 @@ export const TaskQueueService = {
     const [item] = await db
       .insert(taskQueue)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         type: data.type,
         priority: data.priority ?? 2,
         payload: data.payload ?? {},
@@ -102,19 +98,19 @@ export const TaskQueueService = {
     return item
   },
 
-  async cancel(tenantId: string, id: string): Promise<boolean> {
+  async cancel(_tenantId: string, id: string): Promise<boolean> {
     const [item] = await db
       .update(taskQueue)
       .set({ status: 'cancelled', updatedAt: new Date() })
-      .where(and(eq(taskQueue.tenantId, tenantId), eq(taskQueue.id, id), eq(taskQueue.status, 'pending')))
+      .where(and(eq(taskQueue.id, id), eq(taskQueue.status, 'pending')))
       .returning({ id: taskQueue.id })
     return !!item
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(taskQueue)
-      .where(and(eq(taskQueue.tenantId, tenantId), eq(taskQueue.id, id)))
+      .where(eq(taskQueue.id, id))
       .returning({ id: taskQueue.id })
     return result.length > 0
   },
@@ -123,7 +119,7 @@ export const TaskQueueService = {
    * Bulk-delete tasks for the given tenant.
    *
    * scope:
-   *  - 'all'           → every task in the tenant (use with care)
+   *  - 'all'           → every task (use with care)
    *  - 'older-than'    → tasks whose createdAt is older than maxAgeMs
    *  - 'without-error' → tasks whose status is not 'failed' (i.e. completed,
    *                       cancelled, pending, running with no error column).
@@ -131,11 +127,11 @@ export const TaskQueueService = {
    *                       failures around for debugging.
    */
   async deleteBulk(
-    tenantId: string,
+    _tenantId: string,
     scope: 'all' | 'older-than' | 'without-error',
     options: { maxAgeMs?: number } = {}
   ): Promise<number> {
-    const conditions = [eq(taskQueue.tenantId, tenantId)]
+    const conditions: ReturnType<typeof eq>[] = []
 
     if (scope === 'older-than') {
       const maxAgeMs = options.maxAgeMs ?? 24 * 60 * 60 * 1000
@@ -144,26 +140,26 @@ export const TaskQueueService = {
     } else if (scope === 'without-error') {
       conditions.push(ne(taskQueue.status, 'failed'))
     }
-    // scope === 'all' has no extra condition beyond tenantId
+    // scope === 'all' has no extra conditions
 
     const result = await db
       .delete(taskQueue)
-      .where(and(...conditions))
+      .where(conditions.length ? and(...conditions) : undefined)
       .returning({ id: taskQueue.id })
 
     logger.info(
-      `Bulk deleted ${result.length} task(s) (scope=${scope}) for tenant ${tenantId}`,
+      `Bulk deleted ${result.length} task(s) (scope=${scope})`,
       { module: 'TaskQueue' }
     )
     return result.length
   },
 
-  async execute(tenantId: string, id: string): Promise<TaskQueueItem | null> {
+  async execute(_tenantId: string, id: string): Promise<TaskQueueItem | null> {
     // Mark as running
     const [item] = await db
       .update(taskQueue)
       .set({ status: 'running', updatedAt: new Date() })
-      .where(and(eq(taskQueue.tenantId, tenantId), eq(taskQueue.id, id), eq(taskQueue.status, 'pending')))
+      .where(and(eq(taskQueue.id, id), eq(taskQueue.status, 'pending')))
       .returning()
 
     if (!item) return null
@@ -202,12 +198,12 @@ export const TaskQueueService = {
     }
   },
 
-  async executeBatch(tenantId: string, ids: string[]): Promise<{ completed: number; failed: number }> {
+  async executeBatch(_tenantId: string, ids: string[]): Promise<{ completed: number; failed: number }> {
     let completed = 0
     let failed = 0
 
     for (const id of ids) {
-      const result = await this.execute(tenantId, id)
+      const result = await this.execute(_tenantId, id)
       if (result?.status === 'completed') completed++
       else if (result?.status === 'failed') failed++
     }
@@ -215,25 +211,23 @@ export const TaskQueueService = {
     return { completed, failed }
   },
 
-  async executeAllPending(tenantId: string): Promise<{ completed: number; failed: number }> {
+  async executeAllPending(_tenantId: string): Promise<{ completed: number; failed: number }> {
     const pending = await db
       .select({ id: taskQueue.id })
       .from(taskQueue)
       .where(and(
-        eq(taskQueue.tenantId, tenantId),
         eq(taskQueue.status, 'pending'),
         lte(taskQueue.scheduledFor, new Date()),
       ))
       .orderBy(asc(taskQueue.priority), asc(taskQueue.scheduledFor))
 
-    return this.executeBatch(tenantId, pending.map(p => p.id))
+    return this.executeBatch(_tenantId, pending.map(p => p.id))
   },
 
-  async getStats(tenantId: string) {
+  async getStats(_tenantId: string) {
     const rows = await db
       .select({ status: taskQueue.status, count: count() })
       .from(taskQueue)
-      .where(eq(taskQueue.tenantId, tenantId))
       .groupBy(taskQueue.status)
 
     const stats: Record<string, number> = { pending: 0, running: 0, completed: 0, failed: 0, cancelled: 0 }

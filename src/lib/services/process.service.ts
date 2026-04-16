@@ -6,6 +6,7 @@
 import { db } from '@/lib/db'
 import { processes, processTasks } from '@/lib/db/schema'
 import type { Process, NewProcess, ProcessTask, NewProcessTask } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, asc, count } from 'drizzle-orm'
 
 // ============================================
@@ -15,11 +16,10 @@ import { eq, and, asc, count } from 'drizzle-orm'
 export const ProcessService = {
   // --- Processes ---
 
-  async list(tenantId: string): Promise<(Process & { taskCount: number })[]> {
+  async list(_tenantId: string): Promise<(Process & { taskCount: number })[]> {
     const items = await db
       .select()
       .from(processes)
-      .where(eq(processes.tenantId, tenantId))
       .orderBy(asc(processes.sortOrder), asc(processes.key))
 
     // Get task counts
@@ -29,7 +29,6 @@ export const ProcessService = {
         count: count(),
       })
       .from(processTasks)
-      .where(eq(processTasks.tenantId, tenantId))
       .groupBy(processTasks.processId)
 
     const countMap = new Map(counts.map(c => [c.processId, Number(c.count)]))
@@ -40,25 +39,25 @@ export const ProcessService = {
     }))
   },
 
-  async getById(tenantId: string, id: string): Promise<Process | null> {
+  async getById(_tenantId: string, id: string): Promise<Process | null> {
     const [process] = await db
       .select()
       .from(processes)
-      .where(and(eq(processes.tenantId, tenantId), eq(processes.id, id)))
+      .where(eq(processes.id, id))
       .limit(1)
     return process ?? null
   },
 
-  async getByKey(tenantId: string, key: string): Promise<Process | null> {
+  async getByKey(_tenantId: string, key: string): Promise<Process | null> {
     const [process] = await db
       .select()
       .from(processes)
-      .where(and(eq(processes.tenantId, tenantId), eq(processes.key, key)))
+      .where(eq(processes.key, key))
       .limit(1)
     return process ?? null
   },
 
-  async create(tenantId: string, data: {
+  async create(_tenantId: string, data: {
     key: string
     name: string
     description?: string
@@ -67,7 +66,7 @@ export const ProcessService = {
     const [process] = await db
       .insert(processes)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         key: data.key,
         name: data.name,
         description: data.description || null,
@@ -77,7 +76,7 @@ export const ProcessService = {
     return process
   },
 
-  async update(tenantId: string, id: string, data: Partial<{
+  async update(_tenantId: string, id: string, data: Partial<{
     key: string
     name: string
     description: string
@@ -92,22 +91,22 @@ export const ProcessService = {
     const [process] = await db
       .update(processes)
       .set(updateData)
-      .where(and(eq(processes.tenantId, tenantId), eq(processes.id, id)))
+      .where(eq(processes.id, id))
       .returning()
     return process ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(processes)
-      .where(and(eq(processes.tenantId, tenantId), eq(processes.id, id)))
+      .where(eq(processes.id, id))
       .returning({ id: processes.id })
     return result.length > 0
   },
 
   // --- Dev Tasks (all tasks with devRequirements across processes) ---
 
-  async listDevTasks(tenantId: string): Promise<(ProcessTask & { processKey: string; processName: string })[]> {
+  async listDevTasks(_tenantId: string): Promise<(ProcessTask & { processKey: string; processName: string })[]> {
     const rows = await db
       .select({
         task: processTasks,
@@ -116,7 +115,6 @@ export const ProcessService = {
       })
       .from(processTasks)
       .innerJoin(processes, eq(processTasks.processId, processes.id))
-      .where(eq(processTasks.tenantId, tenantId))
       .orderBy(asc(processes.sortOrder), asc(processTasks.sortOrder), asc(processTasks.taskKey))
 
     return rows
@@ -130,27 +128,24 @@ export const ProcessService = {
 
   // --- Process Tasks ---
 
-  async listTasks(tenantId: string, processId: string): Promise<ProcessTask[]> {
+  async listTasks(_tenantId: string, processId: string): Promise<ProcessTask[]> {
     return db
       .select()
       .from(processTasks)
-      .where(and(
-        eq(processTasks.tenantId, tenantId),
-        eq(processTasks.processId, processId),
-      ))
+      .where(eq(processTasks.processId, processId))
       .orderBy(asc(processTasks.sortOrder), asc(processTasks.taskKey))
   },
 
-  async getTaskById(tenantId: string, taskId: string): Promise<ProcessTask | null> {
+  async getTaskById(_tenantId: string, taskId: string): Promise<ProcessTask | null> {
     const [task] = await db
       .select()
       .from(processTasks)
-      .where(and(eq(processTasks.tenantId, tenantId), eq(processTasks.id, taskId)))
+      .where(eq(processTasks.id, taskId))
       .limit(1)
     return task ?? null
   },
 
-  async createTask(tenantId: string, processId: string, data: {
+  async createTask(_tenantId: string, processId: string, data: {
     taskKey: string
     subprocess?: string
     title: string
@@ -170,7 +165,7 @@ export const ProcessService = {
     const [task] = await db
       .insert(processTasks)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         processId,
         taskKey: data.taskKey,
         subprocess: data.subprocess || null,
@@ -192,7 +187,7 @@ export const ProcessService = {
     return task
   },
 
-  async updateTask(tenantId: string, taskId: string, data: Partial<{
+  async updateTask(_tenantId: string, taskId: string, data: Partial<{
     taskKey: string
     subprocess: string
     title: string
@@ -237,12 +232,12 @@ export const ProcessService = {
     const [task] = await db
       .update(processTasks)
       .set(updateData)
-      .where(and(eq(processTasks.tenantId, tenantId), eq(processTasks.id, taskId)))
+      .where(eq(processTasks.id, taskId))
       .returning()
     return task ?? null
   },
 
-  async updateTaskByKey(tenantId: string, taskKey: string, data: {
+  async updateTaskByKey(_tenantId: string, taskKey: string, data: {
     appStatus?: string
     appNotes?: string
     appModule?: string | null
@@ -257,22 +252,22 @@ export const ProcessService = {
     const result = await db
       .update(processTasks)
       .set(updateData)
-      .where(and(eq(processTasks.tenantId, tenantId), eq(processTasks.taskKey, taskKey)))
+      .where(eq(processTasks.taskKey, taskKey))
       .returning({ id: processTasks.id })
     return result.length > 0
   },
 
-  async deleteTask(tenantId: string, taskId: string): Promise<boolean> {
+  async deleteTask(_tenantId: string, taskId: string): Promise<boolean> {
     const result = await db
       .delete(processTasks)
-      .where(and(eq(processTasks.tenantId, tenantId), eq(processTasks.id, taskId)))
+      .where(eq(processTasks.id, taskId))
       .returning({ id: processTasks.id })
     return result.length > 0
   },
 
   // --- Seed from JSON ---
 
-  async seed(tenantId: string, mainJson: MainJsonData, newSopsJson: NewSopItem[]): Promise<{
+  async seed(_tenantId: string, mainJson: MainJsonData, newSopsJson: NewSopItem[]): Promise<{
     processCount: number
     taskCount: number
   }> {
@@ -285,13 +280,13 @@ export const ProcessService = {
 
     for (const [key, area] of Object.entries(mainJson.prozessbereiche)) {
       // Check if already exists
-      const existing = await this.getByKey(tenantId, key)
+      const existing = await this.getByKey(_tenantId, key)
       if (existing) {
         processMap.set(key, existing.id)
         continue
       }
 
-      const process = await this.create(tenantId, {
+      const process = await this.create(_tenantId, {
         key,
         name: area.name,
         description: area.beschreibung,
@@ -311,15 +306,12 @@ export const ProcessService = {
       const existingTasks = await db
         .select({ id: processTasks.id })
         .from(processTasks)
-        .where(and(
-          eq(processTasks.tenantId, tenantId),
-          eq(processTasks.taskKey, aufgabe.id),
-        ))
+        .where(eq(processTasks.taskKey, aufgabe.id))
         .limit(1)
 
       if (existingTasks.length > 0) continue
 
-      await this.createTask(tenantId, processId, {
+      await this.createTask(_tenantId, processId, {
         taskKey: aufgabe.id,
         subprocess: aufgabe.teilprozess,
         title: aufgabe.aufgabe,
@@ -351,11 +343,11 @@ export const ProcessService = {
 
       // Auto-create process area if not yet known (e.g. KP6, KP7 from new_sops)
       if (!processId) {
-        const existing = await this.getByKey(tenantId, processKey)
+        const existing = await this.getByKey(_tenantId, processKey)
         if (existing) {
           processId = existing.id
         } else {
-          const newProcess = await this.create(tenantId, {
+          const newProcess = await this.create(_tenantId, {
             key: processKey,
             name: sop.process || processKey,
             description: `Automatisch erstellt aus ${sop.process || processKey}`,
@@ -370,15 +362,12 @@ export const ProcessService = {
       const existingTasks = await db
         .select({ id: processTasks.id })
         .from(processTasks)
-        .where(and(
-          eq(processTasks.tenantId, tenantId),
-          eq(processTasks.taskKey, sop.id),
-        ))
+        .where(eq(processTasks.taskKey, sop.id))
         .limit(1)
 
       if (existingTasks.length > 0) continue
 
-      await this.createTask(tenantId, processId, {
+      await this.createTask(_tenantId, processId, {
         taskKey: sop.id,
         subprocess: sop.subprocess,
         title: sop.title,
