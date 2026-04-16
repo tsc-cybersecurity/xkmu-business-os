@@ -4,6 +4,7 @@ import { eq, and, ilike, count, desc, or, getTableColumns, inArray } from 'drizz
 import type { Lead, NewLead } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // Type for lead with related data
 export interface LeadWithRelations extends Lead {
@@ -53,13 +54,13 @@ function emptyToNull<T>(value: T): T | null {
 
 export const LeadService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreateLeadInput
   ): Promise<Lead> {
     const [lead] = await db
       .insert(leads)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         companyId: emptyToNull(data.companyId),
         personId: emptyToNull(data.personId),
         title: emptyToNull(data.title),
@@ -80,12 +81,12 @@ export const LeadService = {
       .returning()
 
     // Auto-Score: KI-basierte Qualifizierung im Hintergrund (non-blocking)
-    this.autoScore(tenantId, lead.id).catch(() => {})
+    this.autoScore(_tenantId, lead.id).catch(() => {})
 
     // Erstantwort-E-Mail in Task-Queue wenn E-Mail vorhanden
     if (lead.contactEmail) {
       import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-        TaskQueueService.create(tenantId, {
+        TaskQueueService.create(_tenantId, {
           type: 'email',
           priority: 1,
           payload: {
@@ -109,9 +110,9 @@ export const LeadService = {
   /**
    * Automatische KI-Qualifizierung: Bewertet Lead basierend auf verfuegbaren Daten
    */
-  async autoScore(tenantId: string, leadId: string): Promise<void> {
+  async autoScore(_tenantId: string, leadId: string): Promise<void> {
     try {
-      const lead = await this.getById(tenantId, leadId)
+      const lead = await this.getById(_tenantId, leadId)
       if (!lead || (lead.score ?? 0) > 0) return // Nur fuer neue Leads ohne Score
 
       let score = 20 // Basis-Score fuer jeden neuen Lead
@@ -143,7 +144,7 @@ export const LeadService = {
     }
   },
 
-  async getById(tenantId: string, leadId: string): Promise<LeadWithRelations | null> {
+  async getById(_tenantId: string, leadId: string): Promise<LeadWithRelations | null> {
     const rows = await db
       .select({
         ...getTableColumns(leads),
@@ -168,7 +169,7 @@ export const LeadService = {
       .leftJoin(companies, eq(leads.companyId, companies.id))
       .leftJoin(persons, eq(leads.personId, persons.id))
       .leftJoin(users, eq(leads.assignedTo, users.id))
-      .where(and(eq(leads.tenantId, tenantId), eq(leads.id, leadId)))
+      .where(eq(leads.id, leadId))
       .limit(1)
 
     if (rows.length === 0) return null
@@ -183,7 +184,7 @@ export const LeadService = {
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     leadId: string,
     data: UpdateLeadInput
   ): Promise<Lead | null> {
@@ -227,29 +228,29 @@ export const LeadService = {
     const [lead] = await db
       .update(leads)
       .set(updateData)
-      .where(and(eq(leads.tenantId, tenantId), eq(leads.id, leadId)))
+      .where(eq(leads.id, leadId))
       .returning()
 
     return lead ?? null
   },
 
-  async delete(tenantId: string, leadId: string): Promise<boolean> {
+  async delete(_tenantId: string, leadId: string): Promise<boolean> {
     const result = await db
       .delete(leads)
-      .where(and(eq(leads.tenantId, tenantId), eq(leads.id, leadId)))
+      .where(eq(leads.id, leadId))
       .returning({ id: leads.id })
 
     return result.length > 0
   },
 
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters: LeadFilters = {}
   ): Promise<PaginatedResult<LeadWithRelations>> {
     const { status, source, assignedTo, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(leads.tenantId, tenantId)]
+    const conditions = []
 
     if (status) {
       if (Array.isArray(status)) {
@@ -278,7 +279,17 @@ export const LeadService = {
       )
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
+
+    const countConditions = []
+    if (status) {
+      if (Array.isArray(status)) {
+        countConditions.push(inArray(leads.status, status))
+      } else {
+        countConditions.push(eq(leads.status, status))
+      }
+    }
+    const countWhere = countConditions.length > 0 ? and(...countConditions) : undefined
 
     const [rows, [{ count: total }]] = await Promise.all([
       db
@@ -309,7 +320,7 @@ export const LeadService = {
         .orderBy(desc(leads.createdAt))
         .limit(limit)
         .offset(offset),
-      db.select({ count: count() }).from(leads).where(and(eq(leads.tenantId, tenantId), status ? (Array.isArray(status) ? inArray(leads.status, status) : eq(leads.status, status)) : undefined)),
+      db.select({ count: count() }).from(leads).where(countWhere),
     ])
 
     // Transform rows to handle null relations
@@ -332,27 +343,27 @@ export const LeadService = {
   },
 
   async updateStatus(
-    tenantId: string,
+    _tenantId: string,
     leadId: string,
     status: string,
     oldStatus?: string
   ): Promise<Lead | null> {
-    const lead = await this.update(tenantId, leadId, { status })
+    const lead = await this.update(_tenantId, leadId, { status })
     if (lead) {
       // Webhook-Trigger asynchron feuern (blockiert nicht)
       import('@/lib/services/webhook.service').then(({ WebhookService }) => {
-        WebhookService.fire(tenantId, 'lead.status_changed', {
+        WebhookService.fire(_tenantId, 'lead.status_changed', {
           leadId,
           oldStatus: oldStatus || 'unknown',
           newStatus: status,
         }).catch(() => {})
 
         if (status === 'won') {
-          WebhookService.fire(tenantId, 'lead.won', { leadId }).catch(() => {})
+          WebhookService.fire(_tenantId, 'lead.won', { leadId }).catch(() => {})
           // Willkommens-E-Mail in Queue
           if (lead!.contactEmail) {
             import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-              TaskQueueService.create(tenantId, {
+              TaskQueueService.create(_tenantId, {
                 type: 'email',
                 priority: 1,
                 payload: {
@@ -370,7 +381,7 @@ export const LeadService = {
           }
         }
         if (status === 'lost') {
-          WebhookService.fire(tenantId, 'lead.lost', { leadId }).catch(() => {})
+          WebhookService.fire(_tenantId, 'lead.lost', { leadId }).catch(() => {})
         }
       }).catch(() => {})
     }
@@ -378,15 +389,15 @@ export const LeadService = {
   },
 
   async assignTo(
-    tenantId: string,
+    _tenantId: string,
     leadId: string,
     userId: string | null
   ): Promise<Lead | null> {
-    return this.update(tenantId, leadId, { assignedTo: userId })
+    return this.update(_tenantId, leadId, { assignedTo: userId })
   },
 
   async getStatusCounts(
-    tenantId: string
+    _tenantId: string
   ): Promise<{ status: string; count: number }[]> {
     const result = await db
       .select({
@@ -394,7 +405,6 @@ export const LeadService = {
         count: count(),
       })
       .from(leads)
-      .where(eq(leads.tenantId, tenantId))
       .groupBy(leads.status)
 
     return result.map((r) => ({
@@ -404,12 +414,12 @@ export const LeadService = {
   },
 
   async updateAIResearch(
-    tenantId: string,
+    _tenantId: string,
     leadId: string,
     status: string,
     result?: Record<string, unknown>
   ): Promise<Lead | null> {
-    return this.update(tenantId, leadId, {
+    return this.update(_tenantId, leadId, {
       aiResearchStatus: status,
       aiResearchResult: result,
     })
