@@ -116,7 +116,16 @@ export async function POST(request: NextRequest) {
           results.push({ name: file, success: true })
           logger.info(`Migration ${file} erfolgreich`, { module: 'MigrateAPI' })
         } catch (error) {
-          const msg = error instanceof Error ? error.message : String(error)
+          // Extract detailed PG error info
+          const e = error as { message?: string; code?: string; detail?: string; hint?: string; where?: string; position?: string }
+          const parts: string[] = []
+          if (e.code) parts.push(`[${e.code}]`)
+          if (e.message) parts.push(e.message.split('Failed query:')[0].trim())
+          if (e.detail) parts.push(`DETAIL: ${e.detail}`)
+          if (e.hint) parts.push(`HINT: ${e.hint}`)
+          if (e.where) parts.push(`WHERE: ${e.where}`)
+          if (e.position) parts.push(`POSITION: ${e.position}`)
+          const msg = parts.length > 0 ? parts.join(' | ') : (error instanceof Error ? error.message : String(error))
           results.push({ name: file, success: false, error: msg })
           logger.error(`Migration ${file} fehlgeschlagen`, error, { module: 'MigrateAPI' })
           // Abbrechen bei Fehler
