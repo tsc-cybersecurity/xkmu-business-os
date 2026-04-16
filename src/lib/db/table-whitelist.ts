@@ -61,6 +61,19 @@ export const TENANT_TABLES = [
   'deliverable_modules',
   'deliverables',
   'execution_logs',
+  // Management Framework (EOS)
+  'vto',
+  'rocks',
+  'scorecard_metrics',
+  'eos_issues',
+  'meeting_sessions',
+  // OKR
+  'okr_cycles',
+  'okr_objectives',
+  // SOPs (sop_documents mit tenant_id)
+  'sop_documents',
+  // Grundschutz Assets
+  'grundschutz_assets',
 ]
 
 // Tables without tenant_id that reference a tenant-scoped parent (exported via JOIN)
@@ -74,6 +87,19 @@ export const JOIN_TABLES: Array<{
   { table: 'chat_messages', parentTable: 'chat_conversations', foreignKey: 'conversation_id', parentForeignKey: 'id' },
   { table: 'cockpit_credentials', parentTable: 'cockpit_systems', foreignKey: 'system_id', parentForeignKey: 'id' },
   { table: 'feedback_responses', parentTable: 'feedback_forms', foreignKey: 'form_id', parentForeignKey: 'id' },
+  // Management Framework child tables
+  { table: 'rock_milestones', parentTable: 'rocks', foreignKey: 'rock_id', parentForeignKey: 'id' },
+  { table: 'scorecard_entries', parentTable: 'scorecard_metrics', foreignKey: 'metric_id', parentForeignKey: 'id' },
+  // OKR child tables
+  { table: 'okr_key_results', parentTable: 'okr_objectives', foreignKey: 'objective_id', parentForeignKey: 'id' },
+  { table: 'okr_checkins', parentTable: 'okr_key_results', foreignKey: 'key_result_id', parentForeignKey: 'id' },
+  // SOP child tables
+  { table: 'sop_steps', parentTable: 'sop_documents', foreignKey: 'sop_id', parentForeignKey: 'id' },
+  { table: 'sop_versions', parentTable: 'sop_documents', foreignKey: 'sop_id', parentForeignKey: 'id' },
+  // Grundschutz child tables
+  { table: 'grundschutz_asset_controls', parentTable: 'grundschutz_assets', foreignKey: 'asset_id', parentForeignKey: 'id' },
+  { table: 'grundschutz_asset_relations', parentTable: 'grundschutz_assets', foreignKey: 'source_asset_id', parentForeignKey: 'id' },
+  { table: 'grundschutz_control_links', parentTable: 'grundschutz_assets', foreignKey: 'asset_id', parentForeignKey: 'id' },
 ]
 
 // Tables with tenant_id column but globally accessible (no tenant filter in queries)
@@ -114,6 +140,8 @@ export const GLOBAL_TABLES = [
   'ir_references',
   // Cron Jobs
   'cron_jobs',
+  // Migration tracking
+  '_migrations',
 ]
 
 // All allowed tables (union of tenant + global + join)
