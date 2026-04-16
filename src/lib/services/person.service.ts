@@ -3,6 +3,7 @@ import { persons, companies } from '@/lib/db/schema'
 import { eq, and, ilike, count, arrayContains, sql, or, getTableColumns } from 'drizzle-orm'
 import type { Person, NewPerson } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // Type for person with company info
 export interface PersonWithCompany extends Person {
@@ -50,14 +51,14 @@ function emptyToNull<T>(value: T): T | null {
 
 export const PersonService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreatePersonInput,
     createdBy?: string
   ): Promise<Person> {
     const [person] = await db
       .insert(persons)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         companyId: emptyToNull(data.companyId),
         salutation: emptyToNull(data.salutation),
         firstName: data.firstName,
@@ -84,18 +85,18 @@ export const PersonService = {
     return person
   },
 
-  async getById(tenantId: string, personId: string): Promise<Person | null> {
+  async getById(_tenantId: string, personId: string): Promise<Person | null> {
     const [person] = await db
       .select()
       .from(persons)
-      .where(and(eq(persons.tenantId, tenantId), eq(persons.id, personId)))
+      .where(eq(persons.id, personId))
       .limit(1)
 
     return person ?? null
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     personId: string,
     data: UpdatePersonInput
   ): Promise<Person | null> {
@@ -107,29 +108,29 @@ export const PersonService = {
     const [person] = await db
       .update(persons)
       .set(updateData)
-      .where(and(eq(persons.tenantId, tenantId), eq(persons.id, personId)))
+      .where(eq(persons.id, personId))
       .returning()
 
     return person ?? null
   },
 
-  async delete(tenantId: string, personId: string): Promise<boolean> {
+  async delete(_tenantId: string, personId: string): Promise<boolean> {
     const result = await db
       .delete(persons)
-      .where(and(eq(persons.tenantId, tenantId), eq(persons.id, personId)))
+      .where(eq(persons.id, personId))
       .returning({ id: persons.id })
 
     return result.length > 0
   },
 
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters: PersonFilters = {}
   ): Promise<PaginatedResult<PersonWithCompany>> {
     const { companyId, status, tags, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(persons.tenantId, tenantId)]
+    const conditions = []
 
     if (companyId) {
       conditions.push(eq(persons.companyId, companyId))
@@ -153,7 +154,7 @@ export const PersonService = {
       )
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [rows, [{ count: total }]] = await Promise.all([
       db
@@ -190,7 +191,7 @@ export const PersonService = {
     }
   },
 
-  async search(tenantId: string, query: string, limit = 10): Promise<Person[]> {
+  async search(_tenantId: string, query: string, limit = 10): Promise<Person[]> {
     if (!query.trim()) {
       return []
     }
@@ -199,13 +200,10 @@ export const PersonService = {
       .select()
       .from(persons)
       .where(
-        and(
-          eq(persons.tenantId, tenantId),
-          or(
-            ilike(persons.firstName, `%${query}%`),
-            ilike(persons.lastName, `%${query}%`),
-            ilike(persons.email, `%${query}%`)
-          )
+        or(
+          ilike(persons.firstName, `%${query}%`),
+          ilike(persons.lastName, `%${query}%`),
+          ilike(persons.email, `%${query}%`)
         )
       )
       .limit(limit)
@@ -214,11 +212,11 @@ export const PersonService = {
   },
 
   async addTag(
-    tenantId: string,
+    _tenantId: string,
     personId: string,
     tag: string
   ): Promise<Person | null> {
-    const person = await this.getById(tenantId, personId)
+    const person = await this.getById(_tenantId, personId)
     if (!person) return null
 
     const currentTags = person.tags || []
@@ -226,28 +224,28 @@ export const PersonService = {
       return person
     }
 
-    return this.update(tenantId, personId, {
+    return this.update(_tenantId, personId, {
       tags: [...currentTags, tag],
     })
   },
 
   async removeTag(
-    tenantId: string,
+    _tenantId: string,
     personId: string,
     tag: string
   ): Promise<Person | null> {
-    const person = await this.getById(tenantId, personId)
+    const person = await this.getById(_tenantId, personId)
     if (!person) return null
 
     const currentTags = person.tags || []
 
-    return this.update(tenantId, personId, {
+    return this.update(_tenantId, personId, {
       tags: currentTags.filter((t) => t !== tag),
     })
   },
 
   async setPrimaryContact(
-    tenantId: string,
+    _tenantId: string,
     companyId: string,
     personId: string
   ): Promise<Person | null> {
@@ -257,13 +255,12 @@ export const PersonService = {
       .set({ isPrimaryContact: false })
       .where(
         and(
-          eq(persons.tenantId, tenantId),
           eq(persons.companyId, companyId),
           eq(persons.isPrimaryContact, true)
         )
       )
 
     // Then set the new primary contact
-    return this.update(tenantId, personId, { isPrimaryContact: true })
+    return this.update(_tenantId, personId, { isPrimaryContact: true })
   },
 }
