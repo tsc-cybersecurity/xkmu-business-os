@@ -1,11 +1,12 @@
 import { db } from '@/lib/db'
 import { sopDocuments, sopSteps, sopVersions, deliverables } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, asc, ilike, or, isNull } from 'drizzle-orm'
 
 export const SopService = {
   // ── Documents ────────────────────────────────────────────────────────
-  async list(tenantId: string, filters?: { category?: string; status?: string; search?: string }) {
-    const conditions = [eq(sopDocuments.tenantId, tenantId), isNull(sopDocuments.deletedAt)]
+  async list(_tenantId: string, filters?: { category?: string; status?: string; search?: string }) {
+    const conditions = [isNull(sopDocuments.deletedAt)]
     if (filters?.category) conditions.push(eq(sopDocuments.category, filters.category))
     if (filters?.status) conditions.push(eq(sopDocuments.status, filters.status))
     if (filters?.search) {
@@ -20,9 +21,9 @@ export const SopService = {
       .where(and(...conditions)).orderBy(desc(sopDocuments.updatedAt))
   },
 
-  async getById(tenantId: string, id: string) {
+  async getById(_tenantId: string, id: string) {
     const [doc] = await db.select().from(sopDocuments)
-      .where(and(eq(sopDocuments.tenantId, tenantId), eq(sopDocuments.id, id), isNull(sopDocuments.deletedAt)))
+      .where(and(eq(sopDocuments.id, id), isNull(sopDocuments.deletedAt)))
     if (!doc) return null
     const steps = await db.select().from(sopSteps)
       .where(eq(sopSteps.sopId, id)).orderBy(asc(sopSteps.sequence))
@@ -31,9 +32,9 @@ export const SopService = {
     return { ...doc, steps, versions }
   },
 
-  async getByIdWithDeliverable(tenantId: string, id: string) {
+  async getByIdWithDeliverable(_tenantId: string, id: string) {
     const [doc] = await db.select().from(sopDocuments)
-      .where(and(eq(sopDocuments.tenantId, tenantId), eq(sopDocuments.id, id), isNull(sopDocuments.deletedAt)))
+      .where(and(eq(sopDocuments.id, id), isNull(sopDocuments.deletedAt)))
     if (!doc) return null
     const steps = await db.select().from(sopSteps)
       .where(eq(sopSteps.sopId, id)).orderBy(asc(sopSteps.sequence))
@@ -49,9 +50,9 @@ export const SopService = {
     return { ...doc, steps, versions, producesDeliverable }
   },
 
-  async create(tenantId: string, data: Record<string, unknown>) {
+  async create(_tenantId: string, data: Record<string, unknown>) {
     const [doc] = await db.insert(sopDocuments).values({
-      tenantId,
+      tenantId: TENANT_ID,
       title: data.title as string,
       category: data.category as string,
       version: (data.version as string) || '1.0.0',
@@ -66,7 +67,7 @@ export const SopService = {
     return doc
   },
 
-  async update(tenantId: string, id: string, data: Record<string, unknown>) {
+  async update(_tenantId: string, id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.title !== undefined) updates.title = data.title
     if (data.category !== undefined) updates.category = data.category
@@ -78,19 +79,19 @@ export const SopService = {
     if (data.ownerId !== undefined) updates.ownerId = data.ownerId
     if (data.reviewDate !== undefined) updates.reviewDate = data.reviewDate ? new Date(data.reviewDate as string) : null
     const [doc] = await db.update(sopDocuments).set(updates)
-      .where(and(eq(sopDocuments.tenantId, tenantId), eq(sopDocuments.id, id))).returning()
+      .where(eq(sopDocuments.id, id)).returning()
     return doc ?? null
   },
 
-  async delete(tenantId: string, id: string) {
+  async delete(_tenantId: string, id: string) {
     const [doc] = await db.update(sopDocuments).set({ deletedAt: new Date() })
-      .where(and(eq(sopDocuments.tenantId, tenantId), eq(sopDocuments.id, id))).returning()
+      .where(eq(sopDocuments.id, id)).returning()
     return !!doc
   },
 
-  async publish(tenantId: string, id: string, userId?: string) {
+  async publish(_tenantId: string, id: string, userId?: string) {
     // Snapshot current state as version
-    const current = await this.getById(tenantId, id)
+    const current = await this.getById(_tenantId, id)
     if (!current) return null
     const nextVersion = incrementVersion(current.version || '1.0.0')
     await db.insert(sopVersions).values({

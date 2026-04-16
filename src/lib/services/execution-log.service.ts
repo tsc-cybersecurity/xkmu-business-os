@@ -1,12 +1,13 @@
 import { db } from '@/lib/db'
 import { executionLogs } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, count, avg } from 'drizzle-orm'
 
 export const ExecutionLogService = {
   // ── Create ───────────────────────────────────────────────────────────
-  async create(tenantId: string, data: Record<string, unknown>) {
+  async create(_tenantId: string, data: Record<string, unknown>) {
     const [log] = await db.insert(executionLogs).values({
-      tenantId,
+      tenantId: TENANT_ID,
       entityType: data.entityType as string,
       entityId: data.entityId as string,
       entityVersion: (data.entityVersion as string) || null,
@@ -30,7 +31,7 @@ export const ExecutionLogService = {
 
   // ── List by entity ────────────────────────────────────────────────────
   async listByEntity(
-    tenantId: string,
+    _tenantId: string,
     entityType: string,
     entityId: string,
     opts?: { limit?: number; offset?: number }
@@ -40,7 +41,6 @@ export const ExecutionLogService = {
     return db.select().from(executionLogs)
       .where(
         and(
-          eq(executionLogs.tenantId, tenantId),
           eq(executionLogs.entityType, entityType),
           eq(executionLogs.entityId, entityId),
         )
@@ -50,13 +50,13 @@ export const ExecutionLogService = {
       .offset(offset)
   },
 
-  // ── List all for tenant ───────────────────────────────────────────────
+  // ── List all ──────────────────────────────────────────────────────────
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters?: { entityType?: string; entityId?: string; status?: string },
     opts?: { limit?: number; offset?: number }
   ) {
-    const conditions = [eq(executionLogs.tenantId, tenantId)]
+    const conditions: ReturnType<typeof eq>[] = []
     if (filters?.entityType) conditions.push(eq(executionLogs.entityType, filters.entityType))
     if (filters?.entityId) conditions.push(eq(executionLogs.entityId, filters.entityId))
     if (filters?.status) conditions.push(eq(executionLogs.status, filters.status))
@@ -65,15 +65,15 @@ export const ExecutionLogService = {
     const offset = opts?.offset ?? 0
 
     return db.select().from(executionLogs)
-      .where(and(...conditions))
+      .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(desc(executionLogs.startedAt))
       .limit(limit)
       .offset(offset)
   },
 
   // ── Stats ─────────────────────────────────────────────────────────────
-  async getStats(tenantId: string, entityType?: string, entityId?: string) {
-    const conditions = [eq(executionLogs.tenantId, tenantId)]
+  async getStats(_tenantId: string, entityType?: string, entityId?: string) {
+    const conditions: ReturnType<typeof eq>[] = []
     if (entityType) conditions.push(eq(executionLogs.entityType, entityType))
     if (entityId) conditions.push(eq(executionLogs.entityId, entityId))
 
@@ -81,7 +81,7 @@ export const ExecutionLogService = {
       total: count(),
       avgQualityScore: avg(executionLogs.qualityScore),
       avgDurationMinutes: avg(executionLogs.durationMinutes),
-    }).from(executionLogs).where(and(...conditions))
+    }).from(executionLogs).where(conditions.length ? and(...conditions) : undefined)
 
     return {
       total: Number(result?.total ?? 0),

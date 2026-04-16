@@ -1,13 +1,14 @@
 import { db } from '@/lib/db'
 import { deliverables, deliverableModules, sopDocuments } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, sql, isNull } from 'drizzle-orm'
 
 export const DeliverableService = {
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters?: { moduleId?: string; categoryCode?: string; status?: string }
   ) {
-    const conditions = [eq(deliverables.tenantId, tenantId)]
+    const conditions: ReturnType<typeof eq>[] = []
     if (filters?.moduleId) conditions.push(eq(deliverables.moduleId, filters.moduleId))
     if (filters?.categoryCode) conditions.push(eq(deliverables.categoryCode, filters.categoryCode))
     if (filters?.status) conditions.push(eq(deliverables.status, filters.status))
@@ -30,7 +31,7 @@ export const DeliverableService = {
       moduleName: deliverableModules.name,
     }).from(deliverables)
       .leftJoin(deliverableModules, eq(deliverables.moduleId, deliverableModules.id))
-      .where(and(...conditions))
+      .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(deliverableModules.code, deliverables.name)
     return rows.map(r => ({
       ...r,
@@ -38,9 +39,9 @@ export const DeliverableService = {
     }))
   },
 
-  async getById(tenantId: string, id: string) {
+  async getById(_tenantId: string, id: string) {
     const [deliverable] = await db.select().from(deliverables)
-      .where(and(eq(deliverables.tenantId, tenantId), eq(deliverables.id, id)))
+      .where(eq(deliverables.id, id))
     if (!deliverable) return null
 
     const [module] = deliverable.moduleId
@@ -58,7 +59,6 @@ export const DeliverableService = {
       sourceTaskId: sopDocuments.sourceTaskId,
     }).from(sopDocuments).where(
       and(
-        eq(sopDocuments.tenantId, tenantId),
         eq(sopDocuments.producesDeliverableId, id),
         isNull(sopDocuments.deletedAt),
       )
@@ -67,9 +67,9 @@ export const DeliverableService = {
     return { ...deliverable, module: module ?? null, producingSops }
   },
 
-  async create(tenantId: string, data: Record<string, unknown>) {
+  async create(_tenantId: string, data: Record<string, unknown>) {
     const [doc] = await db.insert(deliverables).values({
-      tenantId,
+      tenantId: TENANT_ID,
       name: data.name as string,
       description: (data.description as string) || null,
       format: (data.format as string) || null,
@@ -84,7 +84,7 @@ export const DeliverableService = {
     return doc
   },
 
-  async update(tenantId: string, id: string, data: Record<string, unknown>) {
+  async update(_tenantId: string, id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.name !== undefined) updates.name = data.name
     if (data.description !== undefined) updates.description = data.description
@@ -96,27 +96,25 @@ export const DeliverableService = {
     if (data.moduleId !== undefined) updates.moduleId = data.moduleId
     if (data.status !== undefined) updates.status = data.status
     const [doc] = await db.update(deliverables).set(updates)
-      .where(and(eq(deliverables.tenantId, tenantId), eq(deliverables.id, id)))
+      .where(eq(deliverables.id, id))
       .returning()
     return doc ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const r = await db.delete(deliverables)
-      .where(and(eq(deliverables.tenantId, tenantId), eq(deliverables.id, id)))
+      .where(eq(deliverables.id, id))
       .returning({ id: deliverables.id })
     return r.length > 0
   },
 
-  async getModulesWithCount(tenantId: string) {
+  async getModulesWithCount(_tenantId: string) {
     const modules = await db.select().from(deliverableModules)
-      .where(eq(deliverableModules.tenantId, tenantId))
       .orderBy(deliverableModules.code)
     const counts = await db.select({
       moduleId: deliverables.moduleId,
       count: sql<number>`count(*)::int`,
     }).from(deliverables)
-      .where(eq(deliverables.tenantId, tenantId))
       .groupBy(deliverables.moduleId)
     const countMap = Object.fromEntries(counts.map((c) => [c.moduleId, c.count]))
     return modules.map((m) => ({ ...m, deliverableCount: countMap[m.id] ?? 0 }))
