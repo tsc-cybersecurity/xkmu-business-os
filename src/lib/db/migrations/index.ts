@@ -24,9 +24,8 @@ export const MIGRATIONS: Migration[] = [
     name: '001_framework_v2.sql',
     description: 'Deliverable-Module, Deliverables, Execution Logs + SOP-Erweiterungen',
   },
-  // Naechste Migration hier eintragen:
-  // {
-  //   name: '002_xxx.sql',
-  //   description: '...',
-  // },
+  {
+    name: '002_tenant_consolidation.sql',
+    description: 'Tenant-Konsolidierung: default -> xkmu (Option B: CRM-Seed verwerfen)',
+  },
 ]
