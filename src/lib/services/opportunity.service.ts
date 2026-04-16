@@ -5,6 +5,7 @@ import type { Opportunity, NewOpportunity } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 import { CompanyService } from './company.service'
 import { LeadService } from './lead.service'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 /** Extract street name and house number from address string */
 function parseStreetAndNumber(address: string | null): { street: string; houseNumber: string } {
@@ -72,13 +73,13 @@ function emptyToNull<T>(value: T): T | null {
 
 export const OpportunityService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreateOpportunityInput
   ): Promise<Opportunity> {
     const [opportunity] = await db
       .insert(opportunities)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         name: data.name,
         industry: emptyToNull(data.industry),
         address: emptyToNull(data.address),
@@ -104,13 +105,13 @@ export const OpportunityService = {
   },
 
   async createMany(
-    tenantId: string,
+    _tenantId: string,
     items: CreateOpportunityInput[]
   ): Promise<{ inserted: number; enriched: number; skipped: number }> {
     if (items.length === 0) return { inserted: 0, enriched: 0, skipped: 0 }
 
     const values = items.map((data) => ({
-      tenantId,
+      tenantId: TENANT_ID,
       name: data.name,
       industry: emptyToNull(data.industry),
       address: emptyToNull(data.address),
@@ -153,12 +154,7 @@ export const OpportunityService = {
           metadata: opportunities.metadata,
         })
         .from(opportunities)
-        .where(
-          and(
-            eq(opportunities.tenantId, tenantId),
-            inArray(opportunities.placeId, placeIds)
-          )
-        )
+        .where(inArray(opportunities.placeId, placeIds))
       for (const row of existing) {
         if (row.placeId) existingMap.set(row.placeId, { ...row, metadata: (row.metadata as Record<string, unknown>) || null })
       }
@@ -213,24 +209,24 @@ export const OpportunityService = {
     }
   },
 
-  async getById(tenantId: string, id: string): Promise<Opportunity | null> {
+  async getById(_tenantId: string, id: string): Promise<Opportunity | null> {
     const [opportunity] = await db
       .select()
       .from(opportunities)
-      .where(and(eq(opportunities.tenantId, tenantId), eq(opportunities.id, id)))
+      .where(eq(opportunities.id, id))
       .limit(1)
 
     return opportunity ?? null
   },
 
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters: OpportunityFilters = {}
   ): Promise<PaginatedResult<Opportunity>> {
     const { status, city, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(opportunities.tenantId, tenantId)]
+    const conditions = []
 
     if (status) {
       if (Array.isArray(status)) {
@@ -254,7 +250,7 @@ export const OpportunityService = {
       )
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ count: total }]] = await Promise.all([
       db
@@ -279,7 +275,7 @@ export const OpportunityService = {
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     id: string,
     data: UpdateOpportunityInput
   ): Promise<Opportunity | null> {
@@ -291,7 +287,7 @@ export const OpportunityService = {
     const [opportunity] = await db
       .update(opportunities)
       .set(updateData)
-      .where(and(eq(opportunities.tenantId, tenantId), eq(opportunities.id, id)))
+      .where(eq(opportunities.id, id))
       .returning()
 
     return opportunity ?? null
@@ -301,11 +297,10 @@ export const OpportunityService = {
    * Re-parse addresses for all opportunities that have data in address but
    * are missing city/postalCode. Uses metadata.fullAddress as source.
    */
-  async repairAddresses(tenantId: string): Promise<number> {
+  async repairAddresses(_tenantId: string): Promise<number> {
     const all = await db
       .select()
       .from(opportunities)
-      .where(eq(opportunities.tenantId, tenantId))
 
     let fixed = 0
     for (const opp of all) {
@@ -351,17 +346,17 @@ export const OpportunityService = {
     return fixed
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(opportunities)
-      .where(and(eq(opportunities.tenantId, tenantId), eq(opportunities.id, id)))
+      .where(eq(opportunities.id, id))
       .returning({ id: opportunities.id })
 
     return result.length > 0
   },
 
   async convert(
-    tenantId: string,
+    _tenantId: string,
     id: string,
     userId?: string
   ): Promise<{
@@ -370,7 +365,7 @@ export const OpportunityService = {
     opportunity: Opportunity
   }> {
     // 1. Load opportunity
-    const opportunity = await this.getById(tenantId, id)
+    const opportunity = await this.getById(_tenantId, id)
     if (!opportunity) {
       throw new Error('Opportunity nicht gefunden')
     }
@@ -401,7 +396,7 @@ export const OpportunityService = {
 
     // 3. Create company via CompanyService
     const company = await CompanyService.create(
-      tenantId,
+      _tenantId,
       {
         name: opportunity.name,
         industry: opportunity.industry || undefined,
@@ -420,7 +415,7 @@ export const OpportunityService = {
     )
 
     // 3. Create lead via LeadService
-    const lead = await LeadService.create(tenantId, {
+    const lead = await LeadService.create(_tenantId, {
       companyId: company.id,
       source: 'google_maps',
       sourceDetail: opportunity.searchQuery || 'Google Maps Prospecting',
@@ -430,7 +425,7 @@ export const OpportunityService = {
     })
 
     // 4. Update opportunity status
-    const updatedOpportunity = await this.update(tenantId, id, {
+    const updatedOpportunity = await this.update(_tenantId, id, {
       status: 'converted',
     })
 
@@ -438,7 +433,7 @@ export const OpportunityService = {
     await db
       .update(opportunities)
       .set({ convertedCompanyId: company.id })
-      .where(and(eq(opportunities.tenantId, tenantId), eq(opportunities.id, id)))
+      .where(eq(opportunities.id, id))
 
     return {
       company,
