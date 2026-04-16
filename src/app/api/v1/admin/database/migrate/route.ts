@@ -116,16 +116,24 @@ export async function POST(request: NextRequest) {
           results.push({ name: file, success: true })
           logger.info(`Migration ${file} erfolgreich`, { module: 'MigrateAPI' })
         } catch (error) {
-          // Extract detailed PG error info
-          const e = error as { message?: string; code?: string; detail?: string; hint?: string; where?: string; position?: string }
-          const parts: string[] = []
-          if (e.code) parts.push(`[${e.code}]`)
-          if (e.message) parts.push(e.message.split('Failed query:')[0].trim())
-          if (e.detail) parts.push(`DETAIL: ${e.detail}`)
-          if (e.hint) parts.push(`HINT: ${e.hint}`)
-          if (e.where) parts.push(`WHERE: ${e.where}`)
-          if (e.position) parts.push(`POSITION: ${e.position}`)
-          const msg = parts.length > 0 ? parts.join(' | ') : (error instanceof Error ? error.message : String(error))
+          // Dump entire error object for debugging
+          const e = error as Record<string, unknown>
+          const debugDump: Record<string, unknown> = {}
+          // Copy all own properties from error
+          for (const key of Object.getOwnPropertyNames(e)) {
+            const v = e[key]
+            if (key === 'message' && typeof v === 'string') {
+              // Keep just the part before "Failed query:"
+              debugDump[key] = v.split('Failed query:')[0].trim() || '(empty before Failed query)'
+            } else if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+              debugDump[key] = v
+            } else if (v && typeof v === 'object') {
+              debugDump[key] = JSON.stringify(v).slice(0, 200)
+            }
+          }
+          // Include prototype chain info
+          debugDump._constructor = (error as { constructor?: { name?: string } })?.constructor?.name || 'unknown'
+          const msg = JSON.stringify(debugDump)
           results.push({ name: file, success: false, error: msg })
           logger.error(`Migration ${file} fehlgeschlagen`, error, { module: 'MigrateAPI' })
           // Abbrechen bei Fehler
