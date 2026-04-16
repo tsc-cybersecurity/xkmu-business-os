@@ -23,9 +23,10 @@ if (!adminEmail || !adminPassword) {
 }
 
 const SEED_DATA = {
+  // First-run only: single-tenant app, slug + name reflect xKMU identity
   tenant: {
-    name: 'Default Organisation',
-    slug: 'default',
+    name: 'xKMU digital solutions',
+    slug: 'xkmu-digital-solutions',
     status: 'active',
   },
   user: {
@@ -773,19 +774,19 @@ async function seedCheck() {
   const client = postgres(connectionString, { ssl: getSslConfig() })
   const db = drizzle(client)
 
-  // Check if default tenant already exists
-  const existingTenant = await db
+  // Check if ANY tenant exists (post-tenant-removal: we don't care about slug)
+  // If any tenant exists, use it. Only seed a new tenant if DB is completely empty.
+  const existingTenants = await db
     .select()
     .from(tenants)
-    .where(eq(tenants.slug, 'default'))
     .limit(1)
 
   let tenantId: string
   let adminUserId: string | null = null
 
-  if (existingTenant.length > 0) {
+  if (existingTenants.length > 0) {
     logger.info('Tenant already exists, skipping tenant/user seed...')
-    tenantId = existingTenant[0].id
+    tenantId = existingTenants[0].id
 
     // Find admin user for blog authorship
     const [adminUser] = await db
@@ -797,7 +798,7 @@ async function seedCheck() {
   } else {
     logger.info('Seeding database...')
 
-    // 1. Create Tenant
+    // 1. Create Tenant (first-run only — empty DB)
     const [tenant] = await db
       .insert(tenants)
       .values(SEED_DATA.tenant)

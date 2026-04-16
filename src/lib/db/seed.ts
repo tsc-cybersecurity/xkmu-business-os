@@ -14,9 +14,10 @@ if (!adminEmail || !adminPassword) {
 }
 
 const SEED_DATA = {
+  // First-run only: single-tenant app
   tenant: {
-    name: 'Default Organisation',
-    slug: 'default',
+    name: 'xKMU digital solutions',
+    slug: 'xkmu-digital-solutions',
     status: 'active',
   },
   user: {
