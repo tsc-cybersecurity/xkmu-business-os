@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { productCategories } from '@/lib/db/schema'
 import { eq, and, count, isNull } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import type { ProductCategory, NewProductCategory } from '@/lib/db/schema'
 
 export interface CreateCategoryInput {
@@ -30,13 +31,13 @@ function generateSlug(name: string): string {
 
 export const ProductCategoryService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreateCategoryInput
   ): Promise<ProductCategory> {
     const [category] = await db
       .insert(productCategories)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         name: data.name,
         slug: generateSlug(data.name),
         description: emptyToNull(data.description),
@@ -48,18 +49,18 @@ export const ProductCategoryService = {
     return category
   },
 
-  async getById(tenantId: string, categoryId: string): Promise<ProductCategory | null> {
+  async getById(_tenantId: string, categoryId: string): Promise<ProductCategory | null> {
     const [category] = await db
       .select()
       .from(productCategories)
-      .where(and(eq(productCategories.tenantId, tenantId), eq(productCategories.id, categoryId)))
+      .where(eq(productCategories.id, categoryId))
       .limit(1)
 
     return category ?? null
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     categoryId: string,
     data: UpdateCategoryInput
   ): Promise<ProductCategory | null> {
@@ -78,33 +79,32 @@ export const ProductCategoryService = {
     const [category] = await db
       .update(productCategories)
       .set(updateData)
-      .where(and(eq(productCategories.tenantId, tenantId), eq(productCategories.id, categoryId)))
+      .where(eq(productCategories.id, categoryId))
       .returning()
 
     return category ?? null
   },
 
-  async delete(tenantId: string, categoryId: string): Promise<boolean> {
+  async delete(_tenantId: string, categoryId: string): Promise<boolean> {
     const result = await db
       .delete(productCategories)
-      .where(and(eq(productCategories.tenantId, tenantId), eq(productCategories.id, categoryId)))
+      .where(eq(productCategories.id, categoryId))
       .returning({ id: productCategories.id })
 
     return result.length > 0
   },
 
-  async list(tenantId: string): Promise<ProductCategory[]> {
+  async list(_tenantId: string): Promise<ProductCategory[]> {
     const items = await db
       .select()
       .from(productCategories)
-      .where(eq(productCategories.tenantId, tenantId))
       .orderBy(productCategories.sortOrder, productCategories.name)
 
     return items
   },
 
-  async getTree(tenantId: string): Promise<(ProductCategory & { level: number })[]> {
-    const allCategories = await this.list(tenantId)
+  async getTree(_tenantId: string): Promise<(ProductCategory & { level: number })[]> {
+    const allCategories = await this.list(_tenantId)
 
     // Build tree structure
     const result: (ProductCategory & { level: number })[] = []
@@ -124,24 +124,21 @@ export const ProductCategoryService = {
     return result
   },
 
-  async hasProducts(tenantId: string, categoryId: string): Promise<boolean> {
+  async hasProducts(_tenantId: string, categoryId: string): Promise<boolean> {
     const { products } = await import('@/lib/db/schema')
     const [{ count: total }] = await db
       .select({ count: count() })
       .from(products)
-      .where(and(eq(products.tenantId, tenantId), eq(products.categoryId, categoryId)))
+      .where(eq(products.categoryId, categoryId))
 
     return Number(total) > 0
   },
 
-  async hasChildren(tenantId: string, categoryId: string): Promise<boolean> {
+  async hasChildren(_tenantId: string, categoryId: string): Promise<boolean> {
     const [{ count: total }] = await db
       .select({ count: count() })
       .from(productCategories)
-      .where(and(
-        eq(productCategories.tenantId, tenantId),
-        eq(productCategories.parentId, categoryId)
-      ))
+      .where(eq(productCategories.parentId, categoryId))
 
     return Number(total) > 0
   },

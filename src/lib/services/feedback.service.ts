@@ -6,26 +6,26 @@ import { db } from '@/lib/db'
 import { feedbackForms, feedbackResponses } from '@/lib/db/schema'
 import type { FeedbackForm, FeedbackResponse } from '@/lib/db/schema'
 import { eq, and, count, desc } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { randomBytes } from 'crypto'
 
 export const FeedbackService = {
-  async list(tenantId: string): Promise<(FeedbackForm & { responseCount: number })[]> {
+  async list(_tenantId: string): Promise<(FeedbackForm & { responseCount: number })[]> {
     const forms = await db.select().from(feedbackForms)
-      .where(eq(feedbackForms.tenantId, tenantId)).orderBy(desc(feedbackForms.createdAt))
+      .orderBy(desc(feedbackForms.createdAt))
 
     const counts = await db.select({ formId: feedbackResponses.formId, count: count() })
       .from(feedbackResponses)
       .innerJoin(feedbackForms, eq(feedbackResponses.formId, feedbackForms.id))
-      .where(eq(feedbackForms.tenantId, tenantId))
       .groupBy(feedbackResponses.formId)
 
     const countMap = new Map(counts.map(c => [c.formId, Number(c.count)]))
     return forms.map(f => ({ ...f, responseCount: countMap.get(f.id) || 0 }))
   },
 
-  async getById(tenantId: string, id: string): Promise<FeedbackForm | null> {
+  async getById(_tenantId: string, id: string): Promise<FeedbackForm | null> {
     const [form] = await db.select().from(feedbackForms)
-      .where(and(eq(feedbackForms.tenantId, tenantId), eq(feedbackForms.id, id))).limit(1)
+      .where(eq(feedbackForms.id, id)).limit(1)
     return form ?? null
   },
 
@@ -35,20 +35,20 @@ export const FeedbackService = {
     return form ?? null
   },
 
-  async create(tenantId: string, data: {
+  async create(_tenantId: string, data: {
     name: string; questions?: unknown; companyId?: string
   }): Promise<FeedbackForm> {
     const token = randomBytes(16).toString('hex')
     const [form] = await db.insert(feedbackForms).values({
-      tenantId, name: data.name, questions: data.questions || [],
+      tenantId: TENANT_ID, name: data.name, questions: data.questions || [],
       companyId: data.companyId || null, token,
     }).returning()
     return form
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db.delete(feedbackForms)
-      .where(and(eq(feedbackForms.tenantId, tenantId), eq(feedbackForms.id, id)))
+      .where(eq(feedbackForms.id, id))
       .returning({ id: feedbackForms.id })
     return result.length > 0
   },

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { chatConversations, chatMessages } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CreateConversationData {
   providerId?: string | null
@@ -10,11 +11,11 @@ export interface CreateConversationData {
 }
 
 export const ChatService = {
-  async createConversation(tenantId: string, userId: string, data?: CreateConversationData) {
+  async createConversation(_tenantId: string, userId: string, data?: CreateConversationData) {
     const [conversation] = await db
       .insert(chatConversations)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         userId,
         title: data?.title || 'Neuer Chat',
         providerId: data?.providerId || null,
@@ -26,16 +27,11 @@ export const ChatService = {
     return conversation
   },
 
-  async getConversation(tenantId: string, conversationId: string) {
+  async getConversation(_tenantId: string, conversationId: string) {
     const [conversation] = await db
       .select()
       .from(chatConversations)
-      .where(
-        and(
-          eq(chatConversations.tenantId, tenantId),
-          eq(chatConversations.id, conversationId)
-        )
-      )
+      .where(eq(chatConversations.id, conversationId))
       .limit(1)
 
     if (!conversation) return null
@@ -49,16 +45,11 @@ export const ChatService = {
     return { ...conversation, messages }
   },
 
-  async listConversations(tenantId: string, userId: string, limit = 50) {
+  async listConversations(_tenantId: string, userId: string, limit = 50) {
     return db
       .select()
       .from(chatConversations)
-      .where(
-        and(
-          eq(chatConversations.tenantId, tenantId),
-          eq(chatConversations.userId, userId)
-        )
-      )
+      .where(eq(chatConversations.userId, userId))
       .orderBy(desc(chatConversations.updatedAt))
       .limit(limit)
   },
@@ -82,30 +73,20 @@ export const ChatService = {
     return message
   },
 
-  async deleteConversation(tenantId: string, conversationId: string) {
+  async deleteConversation(_tenantId: string, conversationId: string) {
     const [deleted] = await db
       .delete(chatConversations)
-      .where(
-        and(
-          eq(chatConversations.tenantId, tenantId),
-          eq(chatConversations.id, conversationId)
-        )
-      )
+      .where(eq(chatConversations.id, conversationId))
       .returning({ id: chatConversations.id })
 
     return !!deleted
   },
 
-  async updateTitle(tenantId: string, conversationId: string, title: string) {
+  async updateTitle(_tenantId: string, conversationId: string, title: string) {
     const [updated] = await db
       .update(chatConversations)
       .set({ title, updatedAt: new Date() })
-      .where(
-        and(
-          eq(chatConversations.tenantId, tenantId),
-          eq(chatConversations.id, conversationId)
-        )
-      )
+      .where(eq(chatConversations.id, conversationId))
       .returning()
 
     return updated || null

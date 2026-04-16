@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { socialMediaPosts, socialMediaTopics } from '@/lib/db/schema'
-import { eq, and, count, desc, asc } from 'drizzle-orm'
+import { eq, and, count, desc } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import type { SocialMediaPost, NewSocialMediaPost } from '@/lib/db/schema'
 
 export interface PostFilters {
@@ -26,16 +27,16 @@ export interface CreatePostInput {
 export type UpdatePostInput = Partial<CreatePostInput>
 
 export const SocialMediaPostService = {
-  async list(tenantId: string, filters: PostFilters = {}) {
+  async list(_tenantId: string, filters: PostFilters = {}) {
     const { platform, status, topicId, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(socialMediaPosts.tenantId, tenantId)]
+    const conditions = []
     if (platform) conditions.push(eq(socialMediaPosts.platform, platform))
     if (status) conditions.push(eq(socialMediaPosts.status, status))
     if (topicId) conditions.push(eq(socialMediaPosts.topicId, topicId))
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ total }]] = await Promise.all([
       db.select({
@@ -59,11 +60,11 @@ export const SocialMediaPostService = {
       })
         .from(socialMediaPosts)
         .leftJoin(socialMediaTopics, eq(socialMediaPosts.topicId, socialMediaTopics.id))
-        .where(whereClause!)
+        .where(whereClause)
         .orderBy(desc(socialMediaPosts.createdAt))
         .limit(limit)
         .offset(offset),
-      db.select({ total: count() }).from(socialMediaPosts).where(whereClause!),
+      db.select({ total: count() }).from(socialMediaPosts).where(whereClause),
     ])
 
     return {
@@ -72,20 +73,20 @@ export const SocialMediaPostService = {
     }
   },
 
-  async getById(tenantId: string, id: string): Promise<SocialMediaPost | null> {
+  async getById(_tenantId: string, id: string): Promise<SocialMediaPost | null> {
     const [post] = await db
       .select()
       .from(socialMediaPosts)
-      .where(and(eq(socialMediaPosts.tenantId, tenantId), eq(socialMediaPosts.id, id)))
+      .where(eq(socialMediaPosts.id, id))
       .limit(1)
     return post ?? null
   },
 
-  async create(tenantId: string, data: CreatePostInput, createdBy?: string): Promise<SocialMediaPost> {
+  async create(_tenantId: string, data: CreatePostInput, createdBy?: string): Promise<SocialMediaPost> {
     const [post] = await db
       .insert(socialMediaPosts)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         topicId: data.topicId || undefined,
         platform: data.platform,
         title: data.title || null,
@@ -101,10 +102,10 @@ export const SocialMediaPostService = {
     return post
   },
 
-  async bulkCreate(tenantId: string, posts: CreatePostInput[], createdBy?: string): Promise<SocialMediaPost[]> {
+  async bulkCreate(_tenantId: string, posts: CreatePostInput[], createdBy?: string): Promise<SocialMediaPost[]> {
     if (posts.length === 0) return []
     const values = posts.map(data => ({
-      tenantId,
+      tenantId: TENANT_ID,
       topicId: data.topicId || undefined,
       platform: data.platform,
       title: data.title || null,
@@ -119,7 +120,7 @@ export const SocialMediaPostService = {
     return db.insert(socialMediaPosts).values(values).returning()
   },
 
-  async update(tenantId: string, id: string, data: UpdatePostInput): Promise<SocialMediaPost | null> {
+  async update(_tenantId: string, id: string, data: UpdatePostInput): Promise<SocialMediaPost | null> {
     const updateData: Partial<NewSocialMediaPost> = { updatedAt: new Date() }
     if (data.topicId !== undefined) updateData.topicId = data.topicId || undefined
     if (data.platform !== undefined) updateData.platform = data.platform
@@ -133,15 +134,15 @@ export const SocialMediaPostService = {
     const [post] = await db
       .update(socialMediaPosts)
       .set(updateData)
-      .where(and(eq(socialMediaPosts.tenantId, tenantId), eq(socialMediaPosts.id, id)))
+      .where(eq(socialMediaPosts.id, id))
       .returning()
     return post ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(socialMediaPosts)
-      .where(and(eq(socialMediaPosts.tenantId, tenantId), eq(socialMediaPosts.id, id)))
+      .where(eq(socialMediaPosts.id, id))
       .returning({ id: socialMediaPosts.id })
     return result.length > 0
   },

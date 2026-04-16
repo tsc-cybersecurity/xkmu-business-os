@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { socialMediaTopics } from '@/lib/db/schema'
 import { eq, and, count } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import type { SocialMediaTopic, NewSocialMediaTopic } from '@/lib/db/schema'
 
 export interface CreateTopicInput {
@@ -12,22 +13,19 @@ export interface CreateTopicInput {
 export type UpdateTopicInput = Partial<CreateTopicInput>
 
 export const SocialMediaTopicService = {
-  async list(tenantId: string, pagination?: { page?: number; limit?: number }) {
+  async list(_tenantId: string, pagination?: { page?: number; limit?: number }) {
     const page = pagination?.page ?? 1
     const limit = pagination?.limit ?? 50
     const offset = (page - 1) * limit
-
-    const whereClause = eq(socialMediaTopics.tenantId, tenantId)
 
     const [items, [{ total }]] = await Promise.all([
       db
         .select()
         .from(socialMediaTopics)
-        .where(whereClause)
         .orderBy(socialMediaTopics.name)
         .limit(limit)
         .offset(offset),
-      db.select({ total: count() }).from(socialMediaTopics).where(whereClause),
+      db.select({ total: count() }).from(socialMediaTopics),
     ])
 
     return {
@@ -41,20 +39,20 @@ export const SocialMediaTopicService = {
     }
   },
 
-  async getById(tenantId: string, id: string): Promise<SocialMediaTopic | null> {
+  async getById(_tenantId: string, id: string): Promise<SocialMediaTopic | null> {
     const [topic] = await db
       .select()
       .from(socialMediaTopics)
-      .where(and(eq(socialMediaTopics.tenantId, tenantId), eq(socialMediaTopics.id, id)))
+      .where(eq(socialMediaTopics.id, id))
       .limit(1)
     return topic ?? null
   },
 
-  async create(tenantId: string, data: CreateTopicInput): Promise<SocialMediaTopic> {
+  async create(_tenantId: string, data: CreateTopicInput): Promise<SocialMediaTopic> {
     const [topic] = await db
       .insert(socialMediaTopics)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         name: data.name,
         description: data.description || null,
         color: data.color || '#3b82f6',
@@ -63,7 +61,7 @@ export const SocialMediaTopicService = {
     return topic
   },
 
-  async update(tenantId: string, id: string, data: UpdateTopicInput): Promise<SocialMediaTopic | null> {
+  async update(_tenantId: string, id: string, data: UpdateTopicInput): Promise<SocialMediaTopic | null> {
     const updateData: Partial<NewSocialMediaTopic> = { updatedAt: new Date() }
     if (data.name !== undefined) updateData.name = data.name
     if (data.description !== undefined) updateData.description = data.description || null
@@ -72,15 +70,15 @@ export const SocialMediaTopicService = {
     const [topic] = await db
       .update(socialMediaTopics)
       .set(updateData)
-      .where(and(eq(socialMediaTopics.tenantId, tenantId), eq(socialMediaTopics.id, id)))
+      .where(eq(socialMediaTopics.id, id))
       .returning()
     return topic ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(socialMediaTopics)
-      .where(and(eq(socialMediaTopics.tenantId, tenantId), eq(socialMediaTopics.id, id)))
+      .where(eq(socialMediaTopics.id, id))
       .returning({ id: socialMediaTopics.id })
     return result.length > 0
   },

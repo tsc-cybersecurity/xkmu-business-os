@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { marketingTasks } from '@/lib/db/schema'
 import { eq, and, count, desc } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import type { MarketingTask, NewMarketingTask } from '@/lib/db/schema'
 
 export interface TaskFilters {
@@ -28,20 +29,20 @@ export interface CreateTaskInput {
 export type UpdateTaskInput = Partial<Omit<CreateTaskInput, 'campaignId'>>
 
 export const MarketingTaskService = {
-  async list(tenantId: string, filters: TaskFilters = {}) {
+  async list(_tenantId: string, filters: TaskFilters = {}) {
     const { campaignId, status, type, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(marketingTasks.tenantId, tenantId)]
+    const conditions = []
     if (campaignId) conditions.push(eq(marketingTasks.campaignId, campaignId))
     if (status) conditions.push(eq(marketingTasks.status, status))
     if (type) conditions.push(eq(marketingTasks.type, type))
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ total }]] = await Promise.all([
-      db.select().from(marketingTasks).where(whereClause!).orderBy(desc(marketingTasks.createdAt)).limit(limit).offset(offset),
-      db.select({ total: count() }).from(marketingTasks).where(whereClause!),
+      db.select().from(marketingTasks).where(whereClause).orderBy(desc(marketingTasks.createdAt)).limit(limit).offset(offset),
+      db.select({ total: count() }).from(marketingTasks).where(whereClause),
     ])
 
     return {
@@ -50,28 +51,28 @@ export const MarketingTaskService = {
     }
   },
 
-  async listByCampaign(tenantId: string, campaignId: string) {
+  async listByCampaign(_tenantId: string, campaignId: string) {
     return db
       .select()
       .from(marketingTasks)
-      .where(and(eq(marketingTasks.tenantId, tenantId), eq(marketingTasks.campaignId, campaignId)))
+      .where(eq(marketingTasks.campaignId, campaignId))
       .orderBy(desc(marketingTasks.createdAt))
   },
 
-  async getById(tenantId: string, id: string): Promise<MarketingTask | null> {
+  async getById(_tenantId: string, id: string): Promise<MarketingTask | null> {
     const [task] = await db
       .select()
       .from(marketingTasks)
-      .where(and(eq(marketingTasks.tenantId, tenantId), eq(marketingTasks.id, id)))
+      .where(eq(marketingTasks.id, id))
       .limit(1)
     return task ?? null
   },
 
-  async create(tenantId: string, data: CreateTaskInput): Promise<MarketingTask> {
+  async create(_tenantId: string, data: CreateTaskInput): Promise<MarketingTask> {
     const [task] = await db
       .insert(marketingTasks)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         campaignId: data.campaignId,
         type: data.type,
         recipientEmail: data.recipientEmail || null,
@@ -88,7 +89,7 @@ export const MarketingTaskService = {
     return task
   },
 
-  async update(tenantId: string, id: string, data: UpdateTaskInput): Promise<MarketingTask | null> {
+  async update(_tenantId: string, id: string, data: UpdateTaskInput): Promise<MarketingTask | null> {
     const updateData: Partial<NewMarketingTask> = { updatedAt: new Date() }
     if (data.type !== undefined) updateData.type = data.type
     if (data.recipientEmail !== undefined) updateData.recipientEmail = data.recipientEmail || null
@@ -104,15 +105,15 @@ export const MarketingTaskService = {
     const [task] = await db
       .update(marketingTasks)
       .set(updateData)
-      .where(and(eq(marketingTasks.tenantId, tenantId), eq(marketingTasks.id, id)))
+      .where(eq(marketingTasks.id, id))
       .returning()
     return task ?? null
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     const result = await db
       .delete(marketingTasks)
-      .where(and(eq(marketingTasks.tenantId, tenantId), eq(marketingTasks.id, id)))
+      .where(eq(marketingTasks.id, id))
       .returning({ id: marketingTasks.id })
     return result.length > 0
   },

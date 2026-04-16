@@ -86,9 +86,9 @@ export const SocialPublishingService = {
    * Publish to LinkedIn using Posts API (modern endpoint)
    * Provider type='linkedin', apiKey='accessToken|authorUrn'
    */
-  async publishToLinkedIn(tenantId: string, post: PublishOptions): Promise<PublishResult> {
+  async publishToLinkedIn(_tenantId: string, post: PublishOptions): Promise<PublishResult> {
     try {
-      const providers = await AiProviderService.getActiveProviders(tenantId)
+      const providers = await AiProviderService.getActiveProviders(_tenantId)
       const provider = providers.find((p) => p.providerType === 'linkedin')
 
       if (!provider?.apiKey) {
@@ -163,9 +163,9 @@ export const SocialPublishingService = {
    * Publish to Twitter/X using Twitter API v2 with OAuth 1.0a
    * Provider type='twitter', apiKey='apiKey|apiSecret|accessToken|accessTokenSecret'
    */
-  async publishToTwitter(tenantId: string, post: PublishOptions): Promise<PublishResult> {
+  async publishToTwitter(_tenantId: string, post: PublishOptions): Promise<PublishResult> {
     try {
-      const providers = await AiProviderService.getActiveProviders(tenantId)
+      const providers = await AiProviderService.getActiveProviders(_tenantId)
       const provider = providers.find((p) => p.providerType === 'twitter')
 
       if (!provider?.apiKey) {
@@ -231,9 +231,9 @@ export const SocialPublishingService = {
    * Publish to Facebook Page using Graph API
    * Provider type='facebook', apiKey='pageAccessToken|pageId'
    */
-  async publishToFacebook(tenantId: string, post: PublishOptions): Promise<PublishResult> {
+  async publishToFacebook(_tenantId: string, post: PublishOptions): Promise<PublishResult> {
     try {
-      const providers = await AiProviderService.getActiveProviders(tenantId)
+      const providers = await AiProviderService.getActiveProviders(_tenantId)
       const provider = providers.find((p) => p.providerType === 'facebook')
 
       if (!provider?.apiKey) {
@@ -298,9 +298,9 @@ export const SocialPublishingService = {
    * Instagram erfordert IMMER ein Bild. Nur-Text-Posts sind nicht moeglich.
    * Ohne imageUrl wird der Post uebersprungen.
    */
-  async publishToInstagram(tenantId: string, post: PublishOptions): Promise<PublishResult> {
+  async publishToInstagram(_tenantId: string, post: PublishOptions): Promise<PublishResult> {
     try {
-      const providers = await AiProviderService.getActiveProviders(tenantId)
+      const providers = await AiProviderService.getActiveProviders(_tenantId)
       const provider = providers.find((p) => p.providerType === 'instagram')
 
       if (!provider?.apiKey) {
@@ -385,24 +385,24 @@ export const SocialPublishingService = {
   /**
    * Publish to one or more platforms
    */
-  async publish(tenantId: string, platforms: string[], content: string, options?: { imageUrl?: string; link?: string }): Promise<Record<string, PublishResult>> {
+  async publish(_tenantId: string, platforms: string[], content: string, options?: { imageUrl?: string; link?: string }): Promise<Record<string, PublishResult>> {
     const results: Record<string, PublishResult> = {}
     const post: PublishOptions = { content, imageUrl: options?.imageUrl, link: options?.link }
 
     for (const platform of platforms) {
       switch (platform.toLowerCase()) {
         case 'linkedin':
-          results.linkedin = await this.publishToLinkedIn(tenantId, post)
+          results.linkedin = await this.publishToLinkedIn(_tenantId, post)
           break
         case 'twitter':
         case 'x':
-          results.twitter = await this.publishToTwitter(tenantId, post)
+          results.twitter = await this.publishToTwitter(_tenantId, post)
           break
         case 'facebook':
-          results.facebook = await this.publishToFacebook(tenantId, post)
+          results.facebook = await this.publishToFacebook(_tenantId, post)
           break
         case 'instagram':
-          results.instagram = await this.publishToInstagram(tenantId, post)
+          results.instagram = await this.publishToInstagram(_tenantId, post)
           break
         default:
           results[platform] = { success: false, error: `Plattform '${platform}' nicht unterstuetzt` }
@@ -415,9 +415,9 @@ export const SocialPublishingService = {
   /**
    * Test connection to a platform
    */
-  async testConnection(tenantId: string, platform: string): Promise<PublishResult> {
+  async testConnection(_tenantId: string, platform: string): Promise<PublishResult> {
     try {
-      const providers = await AiProviderService.getActiveProviders(tenantId)
+      const providers = await AiProviderService.getActiveProviders(_tenantId)
 
       switch (platform.toLowerCase()) {
         case 'linkedin': {
