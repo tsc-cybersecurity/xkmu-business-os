@@ -3,19 +3,20 @@ import {
   vto, rocks, rockMilestones, scorecardMetrics, scorecardEntries,
   eosIssues, meetingSessions,
 } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, asc } from 'drizzle-orm'
 
 export const EosService = {
   // ── VTO ──────────────────────────────────────────────────────────────
-  async getVTO(tenantId: string) {
+  async getVTO(_tenantId: string) {
     const [row] = await db.select().from(vto)
-      .where(and(eq(vto.tenantId, tenantId), eq(vto.isActive, true)))
+      .where(eq(vto.isActive, true))
       .limit(1)
     return row ?? null
   },
 
-  async upsertVTO(tenantId: string, data: Record<string, unknown>, userId?: string) {
-    const existing = await this.getVTO(tenantId)
+  async upsertVTO(_tenantId: string, data: Record<string, unknown>, userId?: string) {
+    const existing = await this.getVTO(_tenantId)
     if (existing) {
       const [updated] = await db.update(vto).set({
         ...data, updatedBy: userId || null, updatedAt: new Date(),
@@ -23,32 +24,33 @@ export const EosService = {
       return updated
     }
     const [created] = await db.insert(vto).values({
-      tenantId, ...data, updatedBy: userId || null,
+      tenantId: TENANT_ID, ...data, updatedBy: userId || null,
     }).returning()
     return created
   },
 
   // ── Rocks ────────────────────────────────────────────────────────────
-  async listRocks(tenantId: string, quarter?: string) {
-    const conditions = [eq(rocks.tenantId, tenantId)]
+  async listRocks(_tenantId: string, quarter?: string) {
+    const conditions: ReturnType<typeof eq>[] = []
     if (quarter) conditions.push(eq(rocks.quarter, quarter))
     const rows = await db.select().from(rocks)
-      .where(and(...conditions)).orderBy(desc(rocks.createdAt))
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(rocks.createdAt))
     return rows
   },
 
-  async getRock(tenantId: string, id: string) {
+  async getRock(_tenantId: string, id: string) {
     const [rock] = await db.select().from(rocks)
-      .where(and(eq(rocks.tenantId, tenantId), eq(rocks.id, id)))
+      .where(eq(rocks.id, id))
     if (!rock) return null
     const milestones = await db.select().from(rockMilestones)
       .where(eq(rockMilestones.rockId, id)).orderBy(asc(rockMilestones.sequence))
     return { ...rock, milestones }
   },
 
-  async createRock(tenantId: string, data: Record<string, unknown>) {
+  async createRock(_tenantId: string, data: Record<string, unknown>) {
     const [rock] = await db.insert(rocks).values({
-      tenantId,
+      tenantId: TENANT_ID,
       title: data.title as string,
       description: (data.description as string) || null,
       ownerId: (data.ownerId as string) || null,
@@ -59,7 +61,7 @@ export const EosService = {
     return rock
   },
 
-  async updateRock(tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateRock(_tenantId: string, id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.description = data.description
@@ -67,14 +69,14 @@ export const EosService = {
     if (data.status !== undefined) updates.status = data.status
     if (data.dueDate !== undefined) updates.dueDate = data.dueDate ? new Date(data.dueDate as string) : null
     const [rock] = await db.update(rocks).set(updates)
-      .where(and(eq(rocks.tenantId, tenantId), eq(rocks.id, id))).returning()
+      .where(eq(rocks.id, id)).returning()
     return rock ?? null
   },
 
-  async deleteRock(tenantId: string, id: string) {
+  async deleteRock(_tenantId: string, id: string) {
     await db.delete(rockMilestones).where(eq(rockMilestones.rockId, id))
     const result = await db.delete(rocks)
-      .where(and(eq(rocks.tenantId, tenantId), eq(rocks.id, id))).returning({ id: rocks.id })
+      .where(eq(rocks.id, id)).returning({ id: rocks.id })
     return result.length > 0
   },
 
@@ -97,15 +99,15 @@ export const EosService = {
   },
 
   // ── Scorecard ────────────────────────────────────────────────────────
-  async listMetrics(tenantId: string) {
+  async listMetrics(_tenantId: string) {
     return db.select().from(scorecardMetrics)
-      .where(and(eq(scorecardMetrics.tenantId, tenantId), eq(scorecardMetrics.isActive, true)))
+      .where(eq(scorecardMetrics.isActive, true))
       .orderBy(asc(scorecardMetrics.sequence))
   },
 
-  async createMetric(tenantId: string, data: Record<string, unknown>) {
+  async createMetric(_tenantId: string, data: Record<string, unknown>) {
     const [metric] = await db.insert(scorecardMetrics).values({
-      tenantId,
+      tenantId: TENANT_ID,
       name: data.name as string,
       ownerId: (data.ownerId as string) || null,
       goal: data.goal != null ? String(data.goal) : null,
@@ -114,16 +116,16 @@ export const EosService = {
     return metric
   },
 
-  async updateMetric(tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateMetric(_tenantId: string, id: string, data: Record<string, unknown>) {
     const [metric] = await db.update(scorecardMetrics).set(data)
-      .where(and(eq(scorecardMetrics.tenantId, tenantId), eq(scorecardMetrics.id, id))).returning()
+      .where(eq(scorecardMetrics.id, id)).returning()
     return metric ?? null
   },
 
-  async deleteMetric(tenantId: string, id: string) {
+  async deleteMetric(_tenantId: string, id: string) {
     await db.delete(scorecardEntries).where(eq(scorecardEntries.metricId, id))
     const r = await db.delete(scorecardMetrics)
-      .where(and(eq(scorecardMetrics.tenantId, tenantId), eq(scorecardMetrics.id, id))).returning({ id: scorecardMetrics.id })
+      .where(eq(scorecardMetrics.id, id)).returning({ id: scorecardMetrics.id })
     return r.length > 0
   },
 
@@ -149,16 +151,17 @@ export const EosService = {
   },
 
   // ── Issues (IDS) ─────────────────────────────────────────────────────
-  async listIssues(tenantId: string, status?: string) {
-    const conditions = [eq(eosIssues.tenantId, tenantId)]
+  async listIssues(_tenantId: string, status?: string) {
+    const conditions: ReturnType<typeof eq>[] = []
     if (status) conditions.push(eq(eosIssues.status, status))
     return db.select().from(eosIssues)
-      .where(and(...conditions)).orderBy(desc(eosIssues.createdAt))
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(eosIssues.createdAt))
   },
 
-  async createIssue(tenantId: string, data: Record<string, unknown>) {
+  async createIssue(_tenantId: string, data: Record<string, unknown>) {
     const [issue] = await db.insert(eosIssues).values({
-      tenantId,
+      tenantId: TENANT_ID,
       title: data.title as string,
       description: (data.description as string) || null,
       priority: (data.priority as string) || 'medium',
@@ -167,7 +170,7 @@ export const EosService = {
     return issue
   },
 
-  async updateIssue(tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateIssue(_tenantId: string, id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.description = data.description
@@ -176,33 +179,32 @@ export const EosService = {
     if (data.solution !== undefined) updates.solution = data.solution
     if (data.status === 'solved') updates.solvedAt = new Date()
     const [issue] = await db.update(eosIssues).set(updates)
-      .where(and(eq(eosIssues.tenantId, tenantId), eq(eosIssues.id, id))).returning()
+      .where(eq(eosIssues.id, id)).returning()
     return issue ?? null
   },
 
-  async deleteIssue(tenantId: string, id: string) {
+  async deleteIssue(_tenantId: string, id: string) {
     const r = await db.delete(eosIssues)
-      .where(and(eq(eosIssues.tenantId, tenantId), eq(eosIssues.id, id))).returning({ id: eosIssues.id })
+      .where(eq(eosIssues.id, id)).returning({ id: eosIssues.id })
     return r.length > 0
   },
 
   // ── Meeting Sessions (L10) ───────────────────────────────────────────
-  async listMeetings(tenantId: string) {
+  async listMeetings(_tenantId: string) {
     return db.select().from(meetingSessions)
-      .where(eq(meetingSessions.tenantId, tenantId))
       .orderBy(desc(meetingSessions.meetingDate))
   },
 
-  async createMeeting(tenantId: string, data: Record<string, unknown>) {
+  async createMeeting(_tenantId: string, data: Record<string, unknown>) {
     const [meeting] = await db.insert(meetingSessions).values({
-      tenantId,
+      tenantId: TENANT_ID,
       title: (data.title as string) || 'L10 Meeting',
       attendees: (data.attendees as string[]) || [],
     }).returning()
     return meeting
   },
 
-  async updateMeeting(tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateMeeting(_tenantId: string, id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = {}
     if (data.title !== undefined) updates.title = data.title
     if (data.notes !== undefined) updates.notes = data.notes
@@ -211,7 +213,7 @@ export const EosService = {
     if (data.issuesDiscussed !== undefined) updates.issuesDiscussed = data.issuesDiscussed
     if (data.status === 'closed') { updates.status = 'closed'; updates.closedAt = new Date() }
     const [meeting] = await db.update(meetingSessions).set(updates)
-      .where(and(eq(meetingSessions.tenantId, tenantId), eq(meetingSessions.id, id))).returning()
+      .where(eq(meetingSessions.id, id)).returning()
     return meeting ?? null
   },
 }

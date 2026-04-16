@@ -1,25 +1,25 @@
 import { db } from '@/lib/db'
 import { okrCycles, okrObjectives, okrKeyResults, okrCheckins } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, asc } from 'drizzle-orm'
 
 export const OkrService = {
   // ── Cycles ───────────────────────────────────────────────────────────
-  async listCycles(tenantId: string) {
+  async listCycles(_tenantId: string) {
     return db.select().from(okrCycles)
-      .where(eq(okrCycles.tenantId, tenantId))
       .orderBy(desc(okrCycles.startDate))
   },
 
-  async getActiveCycle(tenantId: string) {
+  async getActiveCycle(_tenantId: string) {
     const [cycle] = await db.select().from(okrCycles)
-      .where(and(eq(okrCycles.tenantId, tenantId), eq(okrCycles.isActive, true)))
+      .where(eq(okrCycles.isActive, true))
       .limit(1)
     return cycle ?? null
   },
 
-  async createCycle(tenantId: string, data: Record<string, unknown>) {
+  async createCycle(_tenantId: string, data: Record<string, unknown>) {
     const [cycle] = await db.insert(okrCycles).values({
-      tenantId,
+      tenantId: TENANT_ID,
       name: data.name as string,
       type: (data.type as string) || 'quarterly',
       startDate: new Date(data.startDate as string),
@@ -29,34 +29,34 @@ export const OkrService = {
     return cycle
   },
 
-  async updateCycle(tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateCycle(_tenantId: string, id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = {}
     if (data.name !== undefined) updates.name = data.name
     if (data.isActive !== undefined) updates.isActive = data.isActive
     if (data.startDate !== undefined) updates.startDate = new Date(data.startDate as string)
     if (data.endDate !== undefined) updates.endDate = new Date(data.endDate as string)
-    // Deactivate other cycles when activating one
+    // Deactivate other cycles when activating one (Single-Tenant: deactivate all)
     if (data.isActive === true) {
       await db.update(okrCycles).set({ isActive: false })
-        .where(eq(okrCycles.tenantId, tenantId))
     }
     const [cycle] = await db.update(okrCycles).set(updates)
-      .where(and(eq(okrCycles.tenantId, tenantId), eq(okrCycles.id, id))).returning()
+      .where(eq(okrCycles.id, id)).returning()
     return cycle ?? null
   },
 
-  async deleteCycle(tenantId: string, id: string) {
+  async deleteCycle(_tenantId: string, id: string) {
     const r = await db.delete(okrCycles)
-      .where(and(eq(okrCycles.tenantId, tenantId), eq(okrCycles.id, id))).returning({ id: okrCycles.id })
+      .where(eq(okrCycles.id, id)).returning({ id: okrCycles.id })
     return r.length > 0
   },
 
   // ── Objectives ───────────────────────────────────────────────────────
-  async listObjectives(tenantId: string, cycleId?: string) {
-    const conditions = [eq(okrObjectives.tenantId, tenantId)]
+  async listObjectives(_tenantId: string, cycleId?: string) {
+    const conditions: ReturnType<typeof eq>[] = []
     if (cycleId) conditions.push(eq(okrObjectives.cycleId, cycleId))
     const objectives = await db.select().from(okrObjectives)
-      .where(and(...conditions)).orderBy(asc(okrObjectives.createdAt))
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(asc(okrObjectives.createdAt))
 
     const result = await Promise.all(objectives.map(async (obj) => {
       const krs = await db.select().from(okrKeyResults)
@@ -75,9 +75,9 @@ export const OkrService = {
     return result
   },
 
-  async createObjective(tenantId: string, data: Record<string, unknown>) {
+  async createObjective(_tenantId: string, data: Record<string, unknown>) {
     const [obj] = await db.insert(okrObjectives).values({
-      tenantId,
+      tenantId: TENANT_ID,
       cycleId: data.cycleId as string,
       title: data.title as string,
       description: (data.description as string) || null,
@@ -87,20 +87,20 @@ export const OkrService = {
     return obj
   },
 
-  async updateObjective(tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateObjective(_tenantId: string, id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.description = data.description
     if (data.ownerId !== undefined) updates.ownerId = data.ownerId
     if (data.status !== undefined) updates.status = data.status
     const [obj] = await db.update(okrObjectives).set(updates)
-      .where(and(eq(okrObjectives.tenantId, tenantId), eq(okrObjectives.id, id))).returning()
+      .where(eq(okrObjectives.id, id)).returning()
     return obj ?? null
   },
 
-  async deleteObjective(tenantId: string, id: string) {
+  async deleteObjective(_tenantId: string, id: string) {
     const r = await db.delete(okrObjectives)
-      .where(and(eq(okrObjectives.tenantId, tenantId), eq(okrObjectives.id, id))).returning({ id: okrObjectives.id })
+      .where(eq(okrObjectives.id, id)).returning({ id: okrObjectives.id })
     return r.length > 0
   },
 
@@ -161,10 +161,10 @@ export const OkrService = {
   },
 
   // ── Dashboard ────────────────────────────────────────────────────────
-  async getDashboard(tenantId: string) {
-    const activeCycle = await this.getActiveCycle(tenantId)
+  async getDashboard(_tenantId: string) {
+    const activeCycle = await this.getActiveCycle(_tenantId)
     if (!activeCycle) return { cycle: null, objectives: [], overallProgress: 0 }
-    const objectives = await this.listObjectives(tenantId, activeCycle.id)
+    const objectives = await this.listObjectives(_tenantId, activeCycle.id)
     const overallProgress = objectives.length > 0
       ? Math.round(objectives.reduce((s, o) => s + o.progress, 0) / objectives.length)
       : 0
