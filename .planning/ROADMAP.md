@@ -1,113 +1,160 @@
-# Roadmap: xKMU Framework v2 Integration
+# Roadmap: xKMU Tenant-Removal (v2)
 
-## Overview
+**Milestone:** v2 Single-Tenant Umbau
+**Core Value:** Ein Tenant, eine Instanz — Komplexitaet raus.
+**Total Phases:** 7
 
-Dieser Meilenstein baut das Deliverable-Modul von Grund auf, erweitert das SOP-Schema, seedet alle 15 Module mit 63 Deliverables und 93 operativen SOPs, verknuepft SOPs bidirektional mit ihren Deliverables und zeigt Statistiken im Management-Dashboard. Die SOP-Deliverable-Kette wird das Rueckgrat der Beratungsautomatisierung.
+## Execution Order
 
-## Phases
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
-**Phase Numbering:**
-- Integer phases (1, 2, 3): Planned milestone work
-- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+Each phase must be deployable and functional before moving to the next. Soft-removal phases (2-6) are reversible. Hard-removal (phase 7) is final.
 
-- [ ] **Phase 1: DB-Schema & Migrations** - Alle neuen und erweiterten Datenbanktabellen sowie gemeinsame Konstanten anlegen
-- [ ] **Phase 2: Services & API-Routen** - Vollstaendiges Backend fuer Deliverables, SOP-Deliverable-Verknuepfung und Execution Logs
-- [ ] **Phase 3: Seed-Daten** - Alle 15 Module, 63 Deliverables und 93 SOPs idempotent einspielen
-- [ ] **Phase 4: UI — Deliverables & SOP-Erweiterung** - Deliverable-Listen-/Detailseiten, SOP-Detail-Erweiterungen, bidirektionale Navigation und Execution-Verlauf
-- [ ] **Phase 5: Management Dashboard** - Deliverable-Statistiken und SOP-Maturity-Uebersicht auf der Management-Seite
+---
 
-## Phase Details
-
-### Phase 1: DB-Schema & Migrations
-**Goal**: Alle neuen und erweiterten Datenbanktabellen sowie gemeinsame TypeScript-Konstanten sind angelegt und migriert, sodass jede nachfolgende Phase darauf aufbauen kann.
+### Phase 1: Datenkonsolidierung
+**Goal**: Alle Daten aus Tenant `default` in `xkmu-digital-solutions` gemerged, Duplikate bereinigt, Default-Tenant geloescht. Pre-Migration-Backup gesichert.
 **Depends on**: Nothing (first phase)
-**Requirements**: DEL-01, DEL-02, ENUM-01, ENUM-02, ENUM-03, SOP-01, SOP-02, SOP-03, SOP-04, SOP-05, SOP-06, SOP-07, SOP-08, SOP-09, EXEC-01
+**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07
 **Success Criteria** (what must be TRUE):
-  1. Tabellen `deliverables` und `deliverable_modules` existieren in der DB mit allen definierten Spalten und korrekten tenant_id-FKs
-  2. Tabelle `execution_logs` existiert mit allen Spalten (entity_type, entity_id, started_at, executed_by, quality_score, cost_estimate_usd usw.)
-  3. sopDocuments hat alle neuen Felder (automation_level, ai_capable, maturity_level, estimated_duration_minutes, produces_deliverable_id, subprocess, source_task_id) — alle nullable
-  4. sopSteps hat das neue Feld `executor` (enum: agent, human, flex) — nullable
-  5. TypeScript-Konstanten fuer categories, status_enum, automation_level_enum, executor_enum und severity_enum sind definiert und werden konsistent exportiert
+  1. Pre-Migration-Backup liegt vor und ist >100KB (Integritaets-Check)
+  2. Kollisions-Analyse-Report existiert und wurde gereviewt
+  3. SQL-Migration wurde erfolgreich ausgefuehrt — nur noch 1 Tenant in DB
+  4. Alle Tabellen haben tenant_id = xkmu-digital-solutions (7b6c13c5)
+  5. Keine Foreign-Key-Orphans vorhanden
 **Plans**: 2 plans
 
 Plans:
-- [x] 01-01: Shared Enums & Konstanten — categories, status, automation_level, executor, severity als TypeScript-Konstanten und Drizzle-Enums
-- [x] 01-02: Drizzle-Schema fuer deliverable_modules, deliverables, execution_logs + ALTER TABLE fuer sopDocuments/sopSteps + Migration generieren und ausfuehren
+- [ ] 01-01: Kollisions-Analyse + Merge-Strategie-Dokument schreiben (dry-run)
+- [ ] 01-02: Migration-SQL implementieren + ausfuehren + validieren
 
-### Phase 2: Services & API-Routen
-**Goal**: Vollstaendiges Backend fuer Deliverables, SOP-Deliverable-Verknuepfung und Execution Logs ist verfuegbar und aufrufbar.
+---
+
+### Phase 2: Auth-Layer vereinfachen
+**Goal**: Login-Flow, Session und AuthContext arbeiten nicht mehr mit cross-tenant Suche. TENANT_ID-Konstante als Uebergangsloesung eingefuehrt.
 **Depends on**: Phase 1
-**Requirements**: DEL-03, DEL-04, DEL-05, LINK-01, LINK-02, LINK-03, EXEC-02, EXEC-03
-**Success Criteria** (what must be TRUE):
-  1. `GET /api/v1/deliverables` gibt paginierte Deliverable-Liste mit Filter nach Modul und Kategorie zurueck
-  2. `GET /api/v1/deliverables/[id]` gibt Deliverable-Detail inklusive verknuepfter SOPs zurueck
-  3. `GET /api/v1/deliverables/modules` gibt alle Module mit Deliverable-Count zurueck
-  4. SOP-Detail-API gibt das verknuepfte Deliverable (via produces_deliverable_id) zurueck
-  5. `GET /api/v1/execution-logs` gibt Ausfuehrungsprotokoll gefiltert nach entity_type/entity_id zurueck; `POST` legt neuen Eintrag an
-**Plans**: 2 plans
-
-Plans:
-- [x] 02-01: DeliverableService (CRUD, list/filter/pagination, getByModule) + API-Routen GET/POST /deliverables, GET/PATCH/DELETE /deliverables/[id], GET /deliverables/modules
-- [x] 02-02: ExecutionLogService (create, list by entity, getStats) + API-Routen GET/POST /execution-logs + SOP-Detail-API um produces_deliverable erweiternt
-
-### Phase 3: Seed-Daten
-**Goal**: Alle 15 Module, 63 Deliverables und 93 operative SOPs sind idempotent in der Datenbank vorhanden und korrekt miteinander verknuepft.
-**Depends on**: Phase 2
-**Requirements**: SEED-01, SEED-02, SEED-03, SSEED-01, SSEED-02, SSEED-03
-**Success Criteria** (what must be TRUE):
-  1. `GET /api/v1/deliverables/modules` liefert genau 15 Module (A1-A5, B1-B5, C1-C3, D1-D3)
-  2. `GET /api/v1/deliverables` liefert genau 63 Deliverables mit korrekter Modul-Zuordnung
-  3. SOPs-Endpoint liefert 93 operative SOPs (SOP-MK001 bis SOP-UP003) mit gesetztem source_task_id
-  4. SOPs mit definiertem produces_deliverable haben einen gueltigen produces_deliverable_id-FK
-  5. Seed-Skripte koennen mehrfach ausgefuehrt werden ohne Duplikate (check-before-insert)
-**Plans**: 2 plans
-
-Plans:
-- [x] 03-01: Deliverable-Seed — 15 Module aus xKMU_Deliverable_Katalog_v1 + 63 Deliverables mit Modul-Zuordnung, idempotent
-- [x] 03-02: SOP-Seed — 93 operative SOPs aus Framework v2 mit automation_level, ai_capable, maturity_level, executor, produces_deliverable_id wo definiert, idempotent by source_task_id
-
-### Phase 4: UI — Deliverables & SOP-Erweiterung
-**Goal**: Deliverable-Listen-/Detailseiten, erweiterte SOP-Detailseite und Execution-Verlauf sind fuer den Nutzer im Intern-Bereich erreichbar und navigierbar.
-**Depends on**: Phase 3
-**Requirements**: DEL-06, DEL-07, DEL-08, UI-01, UI-02, LINK-04, EXEC-04
-**Success Criteria** (what must be TRUE):
-  1. Nutzer kann unter /intern/management/deliverables eine gefilterte Deliverable-Liste nach Modul und Kategorie anzeigen
-  2. Nutzer kann ein Deliverable-Detail aufrufen und sieht dort die verknuepften SOPs mit Direktlink
-  3. Sidebar-Navigation zeigt "Deliverables" als Eintrag unter Management
-  4. SOP-Detailseite zeigt Maturity-Badge, Automation-Level, Dauer, Executor und das verknuepfte Deliverable mit Direktlink
-  5. SOP-Listenseite erlaubt Filter nach automation_level und maturity_level
-  6. Ausfuehrungshistorie (Execution Log) ist auf SOP- und Deliverable-Detailseiten sichtbar
-**Plans**: 3 plans
-**UI hint**: yes
-
-Plans:
-- [x] 04-01: Deliverable-Listenseite mit Modul-/Kategorie-Filter + Sidebar-Navigationseintrag
-- [ ] 04-02: Deliverable-Detailseite mit verknuepften SOPs + SOP-Detailseite mit neuen Feldern und Deliverable-Link (bidirektionale Navigation)
-- [x] 04-03: SOP-Listenseiten-Filter (automation_level, maturity_level) + Execution-Log-Anzeige auf Detail-Seiten
-
-### Phase 5: Management Dashboard
-**Goal**: Die Management-Uebersichtsseite zeigt Deliverable-Statistiken und SOP-Maturity-Verteilung, sodass der Stand des gesamten Frameworks auf einen Blick erkennbar ist.
-**Depends on**: Phase 4
-**Requirements**: UI-03, UI-04
-**Success Criteria** (what must be TRUE):
-  1. Management-Seite zeigt Anzahl der Deliverables pro Modul und pro Kategorie
-  2. Management-Seite zeigt SOP-Maturity-Verteilung als Balkendiagramm oder vergleichbare Visualisierung
-  3. Beide Statistik-Bereiche aktualisieren sich korrekt wenn neue Seed-Daten eingespielt werden
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05
+**Success Criteria**:
+  1. Login sucht User direkt per Email (keine cross-tenant Iteration)
+  2. SessionUser-Typ hat kein tenantId-Feld mehr (breaking change: Force-Logout erforderlich)
+  3. AuthContext.tenantId liefert immer die eine xKMU-Tenant-ID
+  4. Alte API-Keys mit tenantId funktionieren weiter (Feld wird ignoriert)
+  5. App laeuft nach Deploy ohne Fehler, Login funktioniert
 **Plans**: 1 plan
-**UI hint**: yes
 
 Plans:
-- [ ] 05-01: Management-Dashboard-Erweiterung — Deliverable-Statistiken (pro Modul/Kategorie) + SOP-Maturity-Balkendiagramm
+- [ ] 02-01: Auth-Layer umbauen — login route, session.ts, auth-context.ts, require-permission.ts
+
+---
+
+### Phase 3: Services entkoppeln (Batch 1 — Top 20)
+**Goal**: Die 20 Services mit den meisten tenantId-Referenzen arbeiten nicht mehr mit Tenant-Filterung. Services akzeptieren tenantId als optional (Rueckwaertskompat.) aber ignorieren es intern.
+**Depends on**: Phase 2
+**Requirements**: SVC-01, SVC-02, SVC-03, SVC-04, SVC-05, SVC-06, SVC-07, SVC-08, SVC-09, SVC-10, SVC-11, SVC-12, SVC-13, SVC-14, SVC-15, SVC-16, SVC-17, SVC-18, SVC-19, SVC-20
+**Success Criteria**:
+  1. Alle 20 Top-Services haben keine `eq(X.tenantId, tenantId)` Filter mehr in Queries
+  2. Methoden-Signaturen: tenantId Parameter bleibt, aber optional
+  3. Build bleibt gruen, Tests (falls vorhanden) laufen durch
+  4. Smoke-Test: Kern-Features funktionieren nach Deploy (Leads, Companies, SOPs, Deliverables, OKR)
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01: CRM-Block (Leads, Companies, Persons, Opportunities, Products) — 5 Services
+- [ ] 03-02: Management-Block (EOS, OKR, SOPs, Deliverables, ExecutionLog, Processes, Projects, Tasks) — 8 Services
+- [ ] 03-03: Rest-Block (Documents, N8N, AI-Provider, AI-Prompt, Role, Newsletter, Time-Entry) — 7 Services
+
+---
+
+### Phase 4: Services entkoppeln (Batch 2 — Rest 40)
+**Goal**: Die restlichen 40 Services (geringe Ref-Zahl) sind ebenfalls vom Tenant-Konzept entkoppelt.
+**Depends on**: Phase 3
+**Requirements**: SVC-21, SVC-22
+**Success Criteria**:
+  1. Alle 60 Services durchgearbeitet, keine Tenant-Filter mehr
+  2. Cross-Service-Aufrufe weiterhin funktional
+  3. App-weite Smoke-Tests gruen
+**Plans**: 2 plans
+
+Plans:
+- [ ] 04-01: Compliance/Audit-Services (DIN, WiBA, Grundschutz, Activities, Audit-Log) — 20 Services
+- [ ] 04-02: Marketing/Communication/Misc (Marketing, Social, Campaigns, Chat, Feedback, Cockpit, BI) — 20 Services
+
+---
+
+### Phase 5: API-Routen bereinigen
+**Goal**: Alle 193 API-Routen uebergeben kein tenantId mehr an Services oder filtern nicht mehr direkt nach tenant. Einheitliches Handler-Pattern ohne Tenant-Kontext.
+**Depends on**: Phase 4
+**Requirements**: API-01, API-02, API-03, API-04
+**Success Criteria**:
+  1. `grep -r "auth.tenantId"` in src/app/api/v1/ liefert nur noch Stellen, die es explizit konstant verwenden
+  2. Alle API-Routen ohne direkte tenantId-Query-Filter
+  3. Export/Import-Endpunkte liefern vollstaendige Daten (kein Tenant-Filter)
+  4. End-to-End-Test: CRUD fuer Haupt-Entitaeten funktioniert ueber API
+**Plans**: 2 plans
+
+Plans:
+- [ ] 05-01: Routen-Cleanup Batch 1 (100 Routen — Kern-CRUD)
+- [ ] 05-02: Routen-Cleanup Batch 2 (93 Routen — Rest + Export/Import)
+
+---
+
+### Phase 6: UI anpassen + Seeds konsolidieren
+**Goal**: Settings-Seite umbenannt, Sidebar bereinigt, Seeds laufen nur einmal ohne Tenant-Loop.
+**Depends on**: Phase 5
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, SEED-01, SEED-02, SEED-03
+**Success Criteria**:
+  1. /intern/settings/organization erreichbar (alte /tenant-Route redirected oder entfernt)
+  2. UI zeigt nirgends tenant-ID oder Tenant-Konzept
+  3. seed-check.ts: kein `for (tenant of allTenants)` Loop mehr
+  4. Smoke-Test: Alle UI-Seiten laden fehlerfrei
+**Plans**: 2 plans
+
+Plans:
+- [ ] 06-01: UI-Umbau — Settings-Route rename, Tenant-ID-Felder raus
+- [ ] 06-02: Seed-Konsolidierung — Loops entfernt, Tenant-Erstellung vereinfacht
+
+---
+
+### Phase 7: DB Hard Drop
+**Goal**: tenant_id-Spalten aus allen 67 Tabellen entfernt, FK-Cascades zu tenants-Tabelle weg, Schema-Datei aktualisiert. **IRREVERSIBEL — erst nach Stabilitaetsphase.**
+**Depends on**: Phase 6 (+ 1 Woche Stabilitaetsphase empfohlen)
+**Requirements**: DB-01, DB-02, DB-03, DB-04, DB-05, DB-06, DB-07, CC-01, CC-02, CC-03, CC-04
+**Success Criteria**:
+  1. Pre-Migration-Backup erstellt (zweites, finales Backup)
+  2. 67 `ALTER TABLE X DROP COLUMN tenant_id` erfolgreich
+  3. Alle tenant_id-Indizes entfernt (~80+ Indizes)
+  4. FK-Cascades zu tenants entfernt
+  5. Drizzle-Schema synchronisiert (schema.ts hat keine tenantId-Felder mehr)
+  6. Table-Whitelist aufgeloest — flache Liste
+  7. tenants-Tabelle bleibt fuer Organisations-Metadaten (Name, Adresse, Bank)
+  8. Build gruen, App laeuft, Kern-Flows funktionieren
+  9. Dokumentation aktualisiert
+**Plans**: 3 plans
+
+Plans:
+- [ ] 07-01: DB-Migration-SQL (DROP COLUMN + DROP INDEX + DROP FK) + Backup
+- [ ] 07-02: Drizzle schema.ts bereinigen + table-whitelist vereinfachen
+- [ ] 07-03: Deploy + Validation + Dokumentation
+
+---
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. DB-Schema & Migrations | 0/2 | Not started | - |
-| 2. Services & API-Routen | 0/2 | Not started | - |
-| 3. Seed-Daten | 0/2 | Not started | - |
-| 4. UI — Deliverables & SOP-Erweiterung | 0/3 | Not started | - |
-| 5. Management Dashboard | 0/1 | Not started | - |
+| 1. Datenkonsolidierung | 0/2 | Not started | - |
+| 2. Auth-Layer vereinfachen | 0/1 | Not started | - |
+| 3. Services entkoppeln (Batch 1) | 0/3 | Not started | - |
+| 4. Services entkoppeln (Batch 2) | 0/2 | Not started | - |
+| 5. API-Routen bereinigen | 0/2 | Not started | - |
+| 6. UI anpassen + Seeds | 0/2 | Not started | - |
+| 7. DB Hard Drop | 0/3 | Not started | - |
+
+**Total:** 15 plans across 7 phases
+
+---
+
+*Roadmap created: 2026-04-16*

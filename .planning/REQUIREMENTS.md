@@ -1,120 +1,131 @@
-# Requirements: xKMU Framework v2 Integration
+# Requirements: xKMU Tenant-Removal (v2)
 
-**Defined:** 2026-04-13
-**Core Value:** Jeder dokumentierte Prozess erzeugt ein definiertes Deliverable -- versioniert, mandantenfaehig und KI-generierbar.
+**Defined:** 2026-04-16
+**Core Value:** Ein Tenant, eine Instanz — Komplexitaet raus.
 
 ## v1 Requirements
 
-### Deliverable-Modul
+### Datenkonsolidierung
 
-- [ ] **DEL-01**: DB-Schema fuer deliverables (id, tenant_id, module_id, name, description, format, umfang, trigger, category, category_code, status, version, created_at, updated_at)
-- [ ] **DEL-02**: DB-Schema fuer deliverable_modules (id, code, name, category, category_code, ziel, preis)
-- [ ] **DEL-03**: Service-Schicht (DeliverableService) mit CRUD, list mit Filter/Pagination, getByModule
-- [ ] **DEL-04**: API-Routen: GET/POST /api/v1/deliverables, GET/PATCH/DELETE /api/v1/deliverables/[id]
-- [ ] **DEL-05**: API-Route: GET /api/v1/deliverables/modules (alle Module mit Deliverable-Count)
-- [ ] **DEL-06**: UI Listenseite /intern/management/deliverables mit Filter nach Modul und Kategorie
-- [ ] **DEL-07**: UI Detailseite /intern/management/deliverables/[id] mit verknuepften SOPs
-- [ ] **DEL-08**: Sidebar-Navigation um Deliverables-Eintrag unter Management erweitern
+- [ ] **DATA-01**: Pre-Migration-Backup der gesamten DB erstellen (pg_dump mit Timestamp)
+- [ ] **DATA-02**: Kollisions-Analyse-Skript — listet Duplikate zwischen beiden Tenants (nach email, slug, code, source_task_id, name)
+- [ ] **DATA-03**: Merge-Strategie pro Tabelle dokumentieren (welche Duplikate werden wie aufgeloest)
+- [ ] **DATA-04**: Migration-SQL schreiben — UPDATE tenant_id fuer alle 67 Tabellen von default zu xkmu-digital-solutions, DELETE Duplikate
+- [ ] **DATA-05**: Migration idempotent + mit SAVEPOINT fuer Rollback
+- [ ] **DATA-06**: Default-Tenant-Row nach Migration loeschen (CASCADE alles was noch referenziert)
+- [ ] **DATA-07**: Validation-Skript — prueft dass alle Daten im Ziel-Tenant sind und keine Waisen existieren
 
-### Deliverable-Seed
+### Auth vereinfachen
 
-- [ ] **SEED-01**: Seed-Skript fuer alle 15 Module (A1-A5, B1-B5, C1-C3, D1-D3) aus xKMU_Deliverable_Katalog_v1
-- [ ] **SEED-02**: Seed-Skript fuer alle 63 Deliverables mit korrekter Modul-Zuordnung
-- [ ] **SEED-03**: Seeds muessen idempotent sein (check-before-insert)
+- [ ] **AUTH-01**: Login-Route (src/app/api/v1/auth/login/route.ts) nicht mehr cross-tenant suchen — UserService.findByEmail() liefert User direkt
+- [ ] **AUTH-02**: SessionUser.tenantId aus Session-JWT entfernt (breaking change fuer bestehende Sessions — Force-Logout)
+- [ ] **AUTH-03**: AuthContext.tenantId durch statische Konstante TENANT_ID ersetzt (Uebergangsphase)
+- [ ] **AUTH-04**: ApiKeyPayload.tenantId bleibt im Schema, wird aber ignoriert
+- [ ] **AUTH-05**: Users-Tabelle behaelt tenantId-FK vorerst (fuer User-Organization-Zuordnung)
 
-### SOP-Schema-Erweiterung
+### Services entkoppeln (Batch 1 — Top 20)
 
-- [ ] **SOP-01**: Feld automation_level (enum: manual, semi, full) an sopDocuments
-- [ ] **SOP-02**: Feld ai_capable (boolean) an sopDocuments
-- [ ] **SOP-03**: Feld maturity_level (integer 1-5) an sopDocuments
-- [ ] **SOP-04**: Feld executor (enum: agent, human, flex) an sopSteps
-- [ ] **SOP-05**: Feld estimated_duration_minutes (integer) an sopDocuments
-- [ ] **SOP-06**: Feld produces_deliverable_id (FK -> deliverables) an sopDocuments
-- [ ] **SOP-07**: Feld subprocess (varchar) an sopDocuments
-- [ ] **SOP-08**: Feld source_task_id (varchar, z.B. KP1-01) an sopDocuments
-- [ ] **SOP-09**: Alle neuen Felder nullable (Abwaertskompatibilitaet)
+- [ ] **SVC-01**: eos.service.ts (37 refs) — tenantId optional, intern ignoriert
+- [ ] **SVC-02**: process.service.ts (36 refs)
+- [ ] **SVC-03**: document.service.ts (32 refs)
+- [ ] **SVC-04**: n8n.service.ts (31 refs)
+- [ ] **SVC-05**: task-queue.service.ts (28 refs)
+- [ ] **SVC-06**: lead.service.ts (27 refs)
+- [ ] **SVC-07**: role.service.ts (26 refs)
+- [ ] **SVC-08**: lead-pipeline.service.ts (24 refs)
+- [ ] **SVC-09**: ai-provider.service.ts (24 refs)
+- [ ] **SVC-10**: product.service.ts (23 refs)
+- [ ] **SVC-11**: newsletter.service.ts (23 refs)
+- [ ] **SVC-12**: company.service.ts (23 refs)
+- [ ] **SVC-13**: project.service.ts (22 refs)
+- [ ] **SVC-14**: okr.service.ts (22 refs)
+- [ ] **SVC-15**: grundschutz-asset.service.ts (22 refs)
+- [ ] **SVC-16**: time-entry.service.ts (21 refs)
+- [ ] **SVC-17**: person.service.ts (21 refs)
+- [ ] **SVC-18**: opportunity.service.ts (21 refs)
+- [ ] **SVC-19**: ai-prompt-template.service.ts (21 refs)
+- [ ] **SVC-20**: deliverable.service.ts, execution-log.service.ts, sop.service.ts — alle drei neu aus v1
 
-### SOP-Seed (93 Aufgaben)
+### Services entkoppeln (Batch 2 — Rest 40)
 
-- [ ] **SSEED-01**: Seed-Skript fuer alle 93 operativen SOPs aus Framework v2 (SOP-MK001 bis SOP-UP003)
-- [ ] **SSEED-02**: Korrekte Zuordnung von produces_deliverable wo definiert
-- [ ] **SSEED-03**: Seeds idempotent (by source_task_id oder sop_id check)
+- [ ] **SVC-21**: Alle restlichen 40 Services — batch-processing, da geringe Ref-Zahl
+- [ ] **SVC-22**: Test/Validation — jede Service-Methode einmal aufgerufen ohne Fehler
 
-### SOP-Deliverable-Verknuepfung
+### API-Routen bereinigen
 
-- [ ] **LINK-01**: FK produces_deliverable_id in sopDocuments -> deliverables
-- [ ] **LINK-02**: API gibt verknuepftes Deliverable bei SOP-Detail zurueck
-- [ ] **LINK-03**: API gibt verknuepfte SOPs bei Deliverable-Detail zurueck
-- [ ] **LINK-04**: UI zeigt bidirektionale Navigation (SOP -> Deliverable und umgekehrt)
+- [ ] **API-01**: Alle 193 Routen: auth.tenantId entweder nicht mehr an Services geben oder via TENANT_ID-Konstante liefern
+- [ ] **API-02**: Routen, die auth.tenantId direkt in Queries verwenden: umgestellt
+- [ ] **API-03**: API-Keys: Routen pruefen ob tenantId aus Payload noch gefiltert wird
+- [ ] **API-04**: Export/Import-Endpoints: Tenant-Filter entfernt
 
-### Execution Log
+### UI anpassen
 
-- [ ] **EXEC-01**: DB-Schema execution_logs (id, entity_type, entity_id, entity_version, started_at, completed_at, executed_by, status, abort_reason, quality_score, duration_minutes, cost_estimate_usd, linked_client_id, linked_project_id, human_approved, tenant_id)
-- [ ] **EXEC-02**: Service-Schicht (ExecutionLogService) mit create, list (by entity), getStats
-- [ ] **EXEC-03**: API-Routen: GET/POST /api/v1/execution-logs
-- [ ] **EXEC-04**: UI-Anzeige der Ausfuehrungshistorie auf SOP- und Deliverable-Detailseiten
+- [ ] **UI-01**: /intern/settings/tenant umbenennen in /intern/settings/organization (Route + Label)
+- [ ] **UI-02**: Tenant-ID-Feld aus UI entfernt (war read-only)
+- [ ] **UI-03**: Demo-Seed-Button weiter funktionsfaehig
+- [ ] **UI-04**: Sidebar-Check — keine Tenant-Referenzen mehr
+- [ ] **UI-05**: Login-UI unveraendert (Cross-Tenant-Suche fuer User war nicht sichtbar)
 
-### Shared Enums & Kategorien
+### Seeds konsolidieren
 
-- [ ] **ENUM-01**: TypeScript-Konstanten fuer categories (V, M, IT, P, C, F, HR, Q mit Labels)
-- [ ] **ENUM-02**: TypeScript-Konstanten fuer status_enum, automation_level_enum, executor_enum, severity_enum
-- [ ] **ENUM-03**: Enums in Schema, Service und UI konsistent verwenden
+- [ ] **SEED-01**: seed-check.ts: Tenant-Loop (forEach tenants) entfernt, Seeds laufen einmal
+- [ ] **SEED-02**: Seed-Services: tenantId-Parameter optional, intern nicht mehr verwendet
+- [ ] **SEED-03**: Default-Tenant-Erstellung in seed.ts: bleibt nur xkmu-digital-solutions
 
-### UI-Erweiterungen
+### DB Hard Drop
 
-- [ ] **UI-01**: SOP-Detailseite zeigt neue Felder (Maturity-Badge, Automation-Level, Duration, Executor, verknuepftes Deliverable)
-- [ ] **UI-02**: SOP-Listenseite erhaelt Filter fuer automation_level und maturity_level
-- [ ] **UI-03**: Management-Uebersichtsseite zeigt Deliverable-Statistiken (Anzahl pro Modul, Kategorie)
-- [ ] **UI-04**: Management-Uebersichtsseite zeigt SOP-Maturity-Verteilung (Balkendiagramm o.ae.)
+- [ ] **DB-01**: SQL-Migration fuer DROP COLUMN tenant_id an allen 67 Tabellen
+- [ ] **DB-02**: Indizes mit tenant_id entfernt (ca. 80+ Indizes)
+- [ ] **DB-03**: Foreign-Key-Constraints zu tenants-Tabelle entfernt
+- [ ] **DB-04**: Drizzle-Schema-Datei angepasst (schema.ts)
+- [ ] **DB-05**: Whitelist aufgeloest: TENANT_TABLES + GLOBAL_TABLES → ALL_TABLES (flach)
+- [ ] **DB-06**: Post-Migration-Validation — alle Services funktionieren, App startet
+- [ ] **DB-07**: tenants-Tabelle bleibt fuer Organisation-Metadaten (Name, Adresse, Bank) — nicht geloescht
+
+### Cross-Cutting
+
+- [ ] **CC-01**: Build gruen — keine TypeScript-Fehler
+- [ ] **CC-02**: App startet ohne Fehler nach Deploy
+- [ ] **CC-03**: Kern-UI-Flows funktionieren (Login, Deliverables, SOPs, Management)
+- [ ] **CC-04**: Dokumentation aktualisiert (CLAUDE.md if exists)
 
 ## v2 Requirements
 
-### KI-Agent-Ausfuehrung
+### Optional / spaeter
 
-- **AGENT-01**: SOP-Schritte mit executor=agent koennen via n8n-Workflow automatisch ausgefuehrt werden
-- **AGENT-02**: Agent-Config (persona, tools, constraints) als JSON in sopDocuments gespeichert
-- **AGENT-03**: Ausfuehrungs-Dashboard mit Live-Status
-
-### Mandanten-Deliverables
-
-- **CDEL-01**: Deliverable-Instanzen pro Mandant/Projekt generieren (_output/)
-- **CDEL-02**: PDF-Export fuer generierte Deliverables
-- **CDEL-03**: Deliverable-Templates mit Platzhaltern
+- **OPT-01**: tenants-Tabelle umbenennen in organizations (kosmetisch)
+- **OPT-02**: SessionUser.organizationId fuer zukuenftige Org-Level-Features (nicht Tenant)
+- **OPT-03**: Analytics-Dashboard: frueher tenant-basiert, jetzt system-weit
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| KI-Agent-Ausfuehrung von SOPs | Erfordert n8n/Agent-Integration, separater Meilenstein |
-| Mandanten-spezifische Deliverable-Generierung | Erst nach Basis-Modul stabil |
-| Client-Modul aus Framework | Existiert bereits als contacts/companies |
-| Workflow-Engine fuer SOP-Ketten | Geplant als separater Meilenstein |
-| SOP-Template-System (full/minimal/agent) | v2 Feature, Basis-SOPs reichen |
+| Multi-Tenant-Support wiederherstellen | Bewusst verworfen, waere neue Architektur |
+| Backup/Restore pro Tenant | Single-Tenant = einfaches DB-Backup reicht |
+| Tenant-Switching-UI | Nicht mehr noetig |
+| users.tenantId ganz entfernen | Bleibt fuer User-Org-Zuordnung |
+| API-Key ohne tenantId neu ausstellen | Alte Keys bleiben gueltig, tenantId wird nur ignoriert |
+| Tenants-Tabelle loeschen | Bleibt fuer xKMU-Metadaten (Name, Bank, Adresse) |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEL-01, DEL-02 | Phase 1 | Pending |
-| ENUM-01, ENUM-02, ENUM-03 | Phase 1 | Pending |
-| SOP-01 bis SOP-09 | Phase 1 | Pending |
-| EXEC-01 | Phase 1 | Pending |
-| DEL-03, DEL-04, DEL-05 | Phase 2 | Pending |
-| LINK-01, LINK-02, LINK-03 | Phase 2 | Pending |
-| EXEC-02, EXEC-03 | Phase 2 | Pending |
-| SEED-01, SEED-02, SEED-03 | Phase 3 | Pending |
-| SSEED-01, SSEED-02, SSEED-03 | Phase 3 | Pending |
-| DEL-06, DEL-07, DEL-08 | Phase 4 | Pending |
-| UI-01, UI-02 | Phase 4 | Pending |
-| LINK-04 | Phase 4 | Pending |
-| EXEC-04 | Phase 4 | Pending |
-| UI-03, UI-04 | Phase 5 | Pending |
+| DATA-01 to DATA-07 | Phase 1 | Pending |
+| AUTH-01 to AUTH-05 | Phase 2 | Pending |
+| SVC-01 to SVC-20 | Phase 3 | Pending |
+| SVC-21, SVC-22 | Phase 4 | Pending |
+| API-01 to API-04 | Phase 5 | Pending |
+| UI-01 to UI-05 | Phase 6 | Pending |
+| SEED-01 to SEED-03 | Phase 6 | Pending |
+| DB-01 to DB-07 | Phase 7 | Pending |
+| CC-01 to CC-04 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 37 total
-- Mapped to phases: 37
+- v1 requirements: 49 total
+- Mapped to phases: 49
 - Unmapped: 0
 
 ---
-*Requirements defined: 2026-04-13*
-*Last updated: 2026-04-13 after initial definition*
+*Requirements defined: 2026-04-16*
