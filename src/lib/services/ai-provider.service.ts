@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { aiProviders, aiLogs } from '@/lib/db/schema'
 import { eq, and, desc, asc, sql, count, like, or, ne } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // ============================================
 // AI Provider Service - DB-basierte Verwaltung
@@ -54,30 +55,28 @@ export const AiProviderService = {
   // Provider CRUD
   // ============================================
 
-  async list(tenantId: string) {
+  async list(_tenantId: string) {
     return db
       .select()
       .from(aiProviders)
-      .where(eq(aiProviders.tenantId, tenantId))
       .orderBy(asc(aiProviders.priority), asc(aiProviders.name))
   },
 
-  async getById(tenantId: string, id: string) {
+  async getById(_tenantId: string, id: string) {
     const [provider] = await db
       .select()
       .from(aiProviders)
-      .where(and(eq(aiProviders.tenantId, tenantId), eq(aiProviders.id, id)))
+      .where(eq(aiProviders.id, id))
       .limit(1)
     return provider || null
   },
 
-  async getActiveProviders(tenantId: string) {
+  async getActiveProviders(_tenantId: string) {
     return db
       .select()
       .from(aiProviders)
       .where(
         and(
-          eq(aiProviders.tenantId, tenantId),
           eq(aiProviders.isActive, true),
           ne(aiProviders.providerType, 'firecrawl'),
           ne(aiProviders.providerType, 'kie'),
@@ -87,13 +86,12 @@ export const AiProviderService = {
       .orderBy(asc(aiProviders.priority))
   },
 
-  async getDefaultProvider(tenantId: string) {
+  async getDefaultProvider(_tenantId: string) {
     const [provider] = await db
       .select()
       .from(aiProviders)
       .where(
         and(
-          eq(aiProviders.tenantId, tenantId),
           eq(aiProviders.isDefault, true),
           eq(aiProviders.isActive, true)
         )
@@ -102,19 +100,19 @@ export const AiProviderService = {
     return provider || null
   },
 
-  async create(tenantId: string, data: AiProviderData) {
+  async create(_tenantId: string, data: AiProviderData) {
     // Wenn neuer Provider als Default gesetzt wird, alte Defaults aufheben
     if (data.isDefault) {
       await db
         .update(aiProviders)
         .set({ isDefault: false, updatedAt: new Date() })
-        .where(and(eq(aiProviders.tenantId, tenantId), eq(aiProviders.isDefault, true)))
+        .where(eq(aiProviders.isDefault, true))
     }
 
     const [provider] = await db
       .insert(aiProviders)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         providerType: data.providerType,
         name: data.name,
         apiKey: data.apiKey || null,
@@ -131,18 +129,13 @@ export const AiProviderService = {
     return provider
   },
 
-  async update(tenantId: string, id: string, data: Partial<AiProviderData>) {
+  async update(_tenantId: string, id: string, data: Partial<AiProviderData>) {
     // Wenn auf Default gesetzt, alte Defaults aufheben
     if (data.isDefault) {
       await db
         .update(aiProviders)
         .set({ isDefault: false, updatedAt: new Date() })
-        .where(
-          and(
-            eq(aiProviders.tenantId, tenantId),
-            eq(aiProviders.isDefault, true)
-          )
-        )
+        .where(eq(aiProviders.isDefault, true))
     }
 
     const updateData: Record<string, unknown> = { updatedAt: new Date() }
@@ -160,16 +153,16 @@ export const AiProviderService = {
     const [provider] = await db
       .update(aiProviders)
       .set(updateData)
-      .where(and(eq(aiProviders.tenantId, tenantId), eq(aiProviders.id, id)))
+      .where(eq(aiProviders.id, id))
       .returning()
 
     return provider || null
   },
 
-  async delete(tenantId: string, id: string) {
+  async delete(_tenantId: string, id: string) {
     const [deleted] = await db
       .delete(aiProviders)
-      .where(and(eq(aiProviders.tenantId, tenantId), eq(aiProviders.id, id)))
+      .where(eq(aiProviders.id, id))
       .returning({ id: aiProviders.id })
 
     return !!deleted
@@ -205,12 +198,12 @@ export const AiProviderService = {
     return log
   },
 
-  async listLogs(tenantId: string, filters: AiLogFilters = {}) {
+  async listLogs(_tenantId: string, filters: AiLogFilters = {}) {
     const page = filters.page || 1
     const limit = filters.limit || 50
     const offset = (page - 1) * limit
 
-    const conditions = [eq(aiLogs.tenantId, tenantId)]
+    const conditions = []
 
     if (filters.providerType) {
       conditions.push(eq(aiLogs.providerType, filters.providerType))
@@ -236,7 +229,7 @@ export const AiProviderService = {
       conditions.push(sql`${aiLogs.createdAt} <= ${filters.dateTo}::timestamptz`)
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, totalResult] = await Promise.all([
       db
@@ -265,16 +258,16 @@ export const AiProviderService = {
     }
   },
 
-  async getLogById(tenantId: string, id: string) {
+  async getLogById(_tenantId: string, id: string) {
     const [log] = await db
       .select()
       .from(aiLogs)
-      .where(and(eq(aiLogs.tenantId, tenantId), eq(aiLogs.id, id)))
+      .where(eq(aiLogs.id, id))
       .limit(1)
     return log || null
   },
 
-  async getLogStats(tenantId: string) {
+  async getLogStats(_tenantId: string) {
     const [stats] = await db
       .select({
         totalLogs: count(),
@@ -283,7 +276,6 @@ export const AiProviderService = {
         errorCount: sql<number>`COUNT(*) FILTER (WHERE ${aiLogs.status} = 'error')`,
       })
       .from(aiLogs)
-      .where(eq(aiLogs.tenantId, tenantId))
 
     return stats || { totalLogs: 0, totalTokens: 0, avgDuration: 0, errorCount: 0 }
   },
