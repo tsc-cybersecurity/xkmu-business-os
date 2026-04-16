@@ -1,9 +1,61 @@
 /**
- * Shared table whitelist for admin database operations and exports.
- * Single source of truth - used by both admin/database routes and export route.
+ * Dynamic table whitelist — alle Tabellen aus information_schema zulassen.
+ *
+ * Hintergrund: Seit dem Tenant-Removal Meilenstein (v2) gibt es keine
+ * Tenant-Isolation mehr. Die App ist single-tenant (xkmu-digital-solutions).
+ * Daher ist eine hardcoded Tabellen-Whitelist nicht mehr noetig — jede
+ * existierende Tabelle in `public` darf vom Admin eingesehen werden.
+ *
+ * Die TENANT_TABLES/GLOBAL_TABLES-Klassifikation bleibt vorerst (fuer
+ * Uebergang-Features wie Export/Import), wird aber nur noch als
+ * Referenz genutzt — nicht mehr als Sicherheitsgrenze.
  */
+import { db } from '@/lib/db'
+import { sql } from 'drizzle-orm'
 
-// Tables that have a tenant_id column (filtered by tenant)
+// ============================================================
+// Dynamic whitelist: alle Public-Tabellen
+// ============================================================
+
+let _tableCache: Set<string> | null = null
+let _tableCacheExpiry = 0
+const CACHE_TTL_MS = 60_000 // 1 Minute
+
+/**
+ * Gibt alle Tabellen in schema `public` zurueck. Ergebnis ist gecached
+ * fuer 1 Minute um DB-Queries bei haeufigen Admin-Zugriffen zu reduzieren.
+ */
+export async function getAllTables(): Promise<Set<string>> {
+  if (_tableCache && Date.now() < _tableCacheExpiry) {
+    return _tableCache
+  }
+  const rows = await db.execute(sql`
+    SELECT table_name FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+  `) as unknown as { table_name: string }[]
+  _tableCache = new Set(rows.map((r) => r.table_name))
+  _tableCacheExpiry = Date.now() + CACHE_TTL_MS
+  return _tableCache
+}
+
+/** Prueft ob eine Tabelle existiert (via Cache). */
+export async function isValidTable(tableName: string): Promise<boolean> {
+  const all = await getAllTables()
+  return all.has(tableName)
+}
+
+/** Cache invalidieren (nach DDL-Aenderungen). */
+export function invalidateTableCache() {
+  _tableCache = null
+  _tableCacheExpiry = 0
+}
+
+// ============================================================
+// Legacy: statische Klassifikation (wird in spaeteren Phasen entfernt)
+// ============================================================
+
+// Tables that have a tenant_id column (used for Import/Export workflows)
+// Nach Tenant-Removal (v2 Phase 7) wird diese Liste leer sein.
 export const TENANT_TABLES = [
   'roles',
   'users',
@@ -61,18 +113,14 @@ export const TENANT_TABLES = [
   'deliverable_modules',
   'deliverables',
   'execution_logs',
-  // Management Framework (EOS)
   'vto',
   'rocks',
   'scorecard_metrics',
   'eos_issues',
   'meeting_sessions',
-  // OKR
   'okr_cycles',
   'okr_objectives',
-  // SOPs (sop_documents mit tenant_id)
   'sop_documents',
-  // Grundschutz Assets
   'grundschutz_assets',
 ]
 
@@ -87,28 +135,22 @@ export const JOIN_TABLES: Array<{
   { table: 'chat_messages', parentTable: 'chat_conversations', foreignKey: 'conversation_id', parentForeignKey: 'id' },
   { table: 'cockpit_credentials', parentTable: 'cockpit_systems', foreignKey: 'system_id', parentForeignKey: 'id' },
   { table: 'feedback_responses', parentTable: 'feedback_forms', foreignKey: 'form_id', parentForeignKey: 'id' },
-  // Management Framework child tables
   { table: 'rock_milestones', parentTable: 'rocks', foreignKey: 'rock_id', parentForeignKey: 'id' },
   { table: 'scorecard_entries', parentTable: 'scorecard_metrics', foreignKey: 'metric_id', parentForeignKey: 'id' },
-  // OKR child tables
   { table: 'okr_key_results', parentTable: 'okr_objectives', foreignKey: 'objective_id', parentForeignKey: 'id' },
   { table: 'okr_checkins', parentTable: 'okr_key_results', foreignKey: 'key_result_id', parentForeignKey: 'id' },
-  // SOP child tables
   { table: 'sop_steps', parentTable: 'sop_documents', foreignKey: 'sop_id', parentForeignKey: 'id' },
   { table: 'sop_versions', parentTable: 'sop_documents', foreignKey: 'sop_id', parentForeignKey: 'id' },
-  // Grundschutz child tables
   { table: 'grundschutz_asset_controls', parentTable: 'grundschutz_assets', foreignKey: 'asset_id', parentForeignKey: 'id' },
   { table: 'grundschutz_asset_relations', parentTable: 'grundschutz_assets', foreignKey: 'source_asset_id', parentForeignKey: 'id' },
   { table: 'grundschutz_control_links', parentTable: 'grundschutz_assets', foreignKey: 'asset_id', parentForeignKey: 'id' },
 ]
 
 // Tables with tenant_id column but globally accessible (no tenant filter in queries)
-// These were made global so all users (e.g. Designer role) can access them
 export const GLOBAL_WITH_TENANT_ID = new Set<string>([])
 
 // Global tables (no tenant_id column at all, exported completely)
 export const GLOBAL_TABLES = [
-  // CMS (kein tenant_id)
   'cms_pages',
   'cms_blocks',
   'cms_block_templates',
@@ -116,13 +158,10 @@ export const GLOBAL_TABLES = [
   'cms_settings',
   'cms_block_type_definitions',
   'blog_posts',
-  // Email (kein tenant_id)
   'email_accounts',
   'emails',
-  // Workflows
   'workflows',
   'workflow_runs',
-  // Audit / Standards
   'din_requirements',
   'din_grants',
   'wiba_requirements',
@@ -138,13 +177,12 @@ export const GLOBAL_TABLES = [
   'ir_checklist_items',
   'ir_lessons_learned',
   'ir_references',
-  // Cron Jobs
   'cron_jobs',
-  // Migration tracking
   '_migrations',
 ]
 
-// All allowed tables (union of tenant + global + join)
+// Legacy: ALLOWED_TABLES bleibt fuer Abwaertskompatibilitaet, wird aber
+// durch die dynamische Pruefung (isValidTable) in den Routen ersetzt.
 export const ALLOWED_TABLES = new Set([
   'tenants',
   ...TENANT_TABLES,
@@ -152,12 +190,12 @@ export const ALLOWED_TABLES = new Set([
   ...GLOBAL_TABLES,
 ])
 
-// Tables that only owners can modify (no tenant_id)
+// Tables that only owners can modify (safety net)
 export const OWNER_ONLY_TABLES = new Set([
   'tenants',
+  '_migrations',
   ...JOIN_TABLES.map((j) => j.table),
   ...GLOBAL_TABLES,
 ])
 
-// Set version for quick lookups
 export const TENANT_TABLES_SET = new Set(TENANT_TABLES)

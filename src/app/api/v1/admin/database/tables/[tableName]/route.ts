@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiServerError, parsePaginationParams } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
-import { ALLOWED_TABLES, TENANT_TABLES_SET, OWNER_ONLY_TABLES, GLOBAL_WITH_TENANT_ID } from '@/lib/db/table-whitelist'
+import { isValidTable, TENANT_TABLES_SET, OWNER_ONLY_TABLES, GLOBAL_WITH_TENANT_ID } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
@@ -21,8 +21,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
   return withPermission(request, 'database', 'read', async (auth) => {
     const { tableName } = await context.params
 
-    if (!ALLOWED_TABLES.has(tableName)) {
-      return apiError('INVALID_TABLE', `Tabelle "${tableName}" ist nicht erlaubt`, 400)
+    if (!(await isValidTable(tableName))) {
+      return apiError('INVALID_TABLE', `Tabelle "${tableName}" existiert nicht`, 400)
     }
 
     try {
@@ -103,8 +103,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   return withPermission(request, 'database', 'update', async (auth) => {
     const { tableName } = await context.params
 
-    if (!ALLOWED_TABLES.has(tableName)) {
-      return apiError('INVALID_TABLE', `Tabelle "${tableName}" ist nicht erlaubt`, 400)
+    if (!(await isValidTable(tableName))) {
+      return apiError('INVALID_TABLE', `Tabelle "${tableName}" existiert nicht`, 400)
     }
 
     // Global tables can only be modified by owners
@@ -183,8 +183,8 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   return withPermission(request, 'database', 'delete', async (auth) => {
     const { tableName } = await context.params
 
-    if (!ALLOWED_TABLES.has(tableName)) {
-      return apiError('INVALID_TABLE', `Tabelle "${tableName}" ist nicht erlaubt`, 400)
+    if (!(await isValidTable(tableName))) {
+      return apiError('INVALID_TABLE', `Tabelle "${tableName}" existiert nicht`, 400)
     }
 
     // Global tables can only be modified by owners
