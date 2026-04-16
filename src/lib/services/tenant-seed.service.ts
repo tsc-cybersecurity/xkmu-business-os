@@ -17,6 +17,7 @@ import {
   activities,
 } from '@/lib/db/schema'
 import { eq, and, count } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { requirementsSeedData } from '@/lib/db/seeds/din-requirements.seed'
 import { grantsSeedData } from '@/lib/db/seeds/din-grants.seed'
 import { RoleService } from '@/lib/services/role.service'
@@ -359,10 +360,10 @@ export class TenantSeedService {
    * Seeds structural data needed for a functioning tenant.
    * Called automatically during registration.
    */
-  static async seedStructuralData(tenantId: string): Promise<void> {
-    await RoleService.seedDefaultRoles(tenantId)
-    await this.seedAiPromptTemplates(tenantId)
-    await this.seedProductCategories(tenantId)
+  static async seedStructuralData(_tenantId: string): Promise<void> {
+    await RoleService.seedDefaultRoles(_tenantId)
+    await this.seedAiPromptTemplates(_tenantId)
+    await this.seedProductCategories(_tenantId)
     await this.seedCmsBlockTemplates()
     await this.seedCmsBlockTypeDefinitions()
     await this.seedDinData()
@@ -375,7 +376,7 @@ export class TenantSeedService {
    * Seeds demo/example data for exploring the system.
    * Called via the "Demo-Daten importieren" button.
    */
-  static async seedDemoData(tenantId: string, userId: string): Promise<{
+  static async seedDemoData(_tenantId: string, userId: string): Promise<{
     cmsPages: number
     navigation: number
     blogPosts: number
@@ -386,12 +387,12 @@ export class TenantSeedService {
     activities: number
   }> {
     // Strukturelle Daten (Rollen, AI Prompts, Kategorien etc.) sicherstellen
-    await this.seedStructuralData(tenantId)
+    await this.seedStructuralData(_tenantId)
 
     const cmsCount = await this.seedCmsPages()
     const navCount = await this.seedNavigation()
     const blogCount = await this.seedBlogPosts(userId)
-    const bizCounts = await this.seedExampleBusinessData(tenantId, userId)
+    const bizCounts = await this.seedExampleBusinessData(_tenantId, userId)
 
     return {
       cmsPages: cmsCount,
@@ -403,14 +404,14 @@ export class TenantSeedService {
 
   // ---- Structural seed functions ----
 
-  private static async seedAiPromptTemplates(tenantId: string): Promise<number> {
-    const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates).where(eq(aiPromptTemplates.tenantId, tenantId))
+  private static async seedAiPromptTemplates(_tenantId: string): Promise<number> {
+    const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates).where(eq(aiPromptTemplates.tenantId, TENANT_ID))
     if (Number(total) > 0) return 0
 
     for (const slug of AI_PROMPT_TEMPLATE_SLUGS) {
       const defaults = DEFAULT_TEMPLATES[slug]
       await db.insert(aiPromptTemplates).values({
-        tenantId,
+        tenantId: TENANT_ID,
         slug,
         name: defaults.name,
         description: defaults.description,
@@ -423,12 +424,12 @@ export class TenantSeedService {
     return AI_PROMPT_TEMPLATE_SLUGS.length
   }
 
-  private static async seedProductCategories(tenantId: string): Promise<number> {
-    const [{ total }] = await db.select({ total: count() }).from(productCategories).where(eq(productCategories.tenantId, tenantId))
+  private static async seedProductCategories(_tenantId: string): Promise<number> {
+    const [{ total }] = await db.select({ total: count() }).from(productCategories).where(eq(productCategories.tenantId, TENANT_ID))
     if (Number(total) > 0) return 0
 
     for (const cat of PRODUCT_CATEGORIES) {
-      await db.insert(productCategories).values({ tenantId, ...cat })
+      await db.insert(productCategories).values({ tenantId: TENANT_ID, ...cat })
     }
     return PRODUCT_CATEGORIES.length
   }
@@ -544,14 +545,14 @@ export class TenantSeedService {
     return BLOG_POSTS.length
   }
 
-  private static async seedExampleBusinessData(tenantId: string, adminUserId: string): Promise<{
+  private static async seedExampleBusinessData(_tenantId: string, adminUserId: string): Promise<{
     companies: number
     persons: number
     leads: number
     products: number
     activities: number
   }> {
-    const [{ total }] = await db.select({ total: count() }).from(companies).where(eq(companies.tenantId, tenantId))
+    const [{ total }] = await db.select({ total: count() }).from(companies).where(eq(companies.tenantId, TENANT_ID))
     if (Number(total) > 0) return { companies: 0, persons: 0, leads: 0, products: 0, activities: 0 }
 
     // --- 1. Companies ---
@@ -565,7 +566,7 @@ export class TenantSeedService {
 
     const createdCompanies = []
     for (const c of companyData) {
-      const [company] = await db.insert(companies).values({ tenantId, ...c, country: 'DE', createdBy: adminUserId }).returning()
+      const [company] = await db.insert(companies).values({ tenantId: TENANT_ID, ...c, country: 'DE', createdBy: adminUserId }).returning()
       createdCompanies.push(company)
     }
 
@@ -585,7 +586,7 @@ export class TenantSeedService {
 
     const createdPersons = []
     for (const p of personData) {
-      const [person] = await db.insert(persons).values({ tenantId, ...p, status: 'active', createdBy: adminUserId }).returning()
+      const [person] = await db.insert(persons).values({ tenantId: TENANT_ID, ...p, status: 'active', createdBy: adminUserId }).returning()
       createdPersons.push(person)
     }
 
@@ -602,12 +603,12 @@ export class TenantSeedService {
 
     const createdLeads = []
     for (const l of leadData) {
-      const [lead] = await db.insert(leads).values({ tenantId, ...l, assignedTo: adminUserId }).returning()
+      const [lead] = await db.insert(leads).values({ tenantId: TENANT_ID, ...l, assignedTo: adminUserId }).returning()
       createdLeads.push(lead)
     }
 
     // --- 4. Products ---
-    const existingCategories = await db.select().from(productCategories).where(eq(productCategories.tenantId, tenantId))
+    const existingCategories = await db.select().from(productCategories).where(eq(productCategories.tenantId, TENANT_ID))
     const catMap = Object.fromEntries(existingCategories.map(c => [c.slug, c.id]))
 
     const productData = [
@@ -620,7 +621,7 @@ export class TenantSeedService {
     ]
 
     for (const p of productData) {
-      await db.insert(products).values({ tenantId, ...p, status: 'active', vatRate: '19.00', createdBy: adminUserId })
+      await db.insert(products).values({ tenantId: TENANT_ID, ...p, status: 'active', vatRate: '19.00', createdBy: adminUserId })
     }
 
     // --- 5. Activities ---
@@ -633,7 +634,7 @@ export class TenantSeedService {
     ]
 
     for (const a of activityData) {
-      await db.insert(activities).values({ tenantId, ...a, userId: adminUserId })
+      await db.insert(activities).values({ tenantId: TENANT_ID, ...a, userId: adminUserId })
     }
 
     return {

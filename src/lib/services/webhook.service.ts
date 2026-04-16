@@ -4,6 +4,7 @@ import { eq, and, count, desc } from 'drizzle-orm'
 import type { Webhook, NewWebhook } from '@/lib/db/schema'
 import crypto from 'crypto'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface WebhookFilters {
   isActive?: boolean
@@ -22,11 +23,11 @@ export interface CreateWebhookInput {
 export type UpdateWebhookInput = Partial<CreateWebhookInput>
 
 export const WebhookService = {
-  async create(tenantId: string, data: CreateWebhookInput): Promise<Webhook> {
+  async create(_tenantId: string, data: CreateWebhookInput): Promise<Webhook> {
     const [webhook] = await db
       .insert(webhooks)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         name: data.name,
         url: data.url,
         events: data.events,
@@ -37,16 +38,16 @@ export const WebhookService = {
     return webhook
   },
 
-  async getById(tenantId: string, webhookId: string): Promise<Webhook | null> {
+  async getById(_tenantId: string, webhookId: string): Promise<Webhook | null> {
     const [webhook] = await db
       .select()
       .from(webhooks)
-      .where(and(eq(webhooks.tenantId, tenantId), eq(webhooks.id, webhookId)))
+      .where(eq(webhooks.id, webhookId))
       .limit(1)
     return webhook ?? null
   },
 
-  async update(tenantId: string, webhookId: string, data: UpdateWebhookInput): Promise<Webhook | null> {
+  async update(_tenantId: string, webhookId: string, data: UpdateWebhookInput): Promise<Webhook | null> {
     const updateData: Partial<NewWebhook> = { updatedAt: new Date() }
     if (data.name !== undefined) updateData.name = data.name
     if (data.url !== undefined) updateData.url = data.url
@@ -57,29 +58,29 @@ export const WebhookService = {
     const [webhook] = await db
       .update(webhooks)
       .set(updateData)
-      .where(and(eq(webhooks.tenantId, tenantId), eq(webhooks.id, webhookId)))
+      .where(eq(webhooks.id, webhookId))
       .returning()
     return webhook ?? null
   },
 
-  async delete(tenantId: string, webhookId: string): Promise<boolean> {
+  async delete(_tenantId: string, webhookId: string): Promise<boolean> {
     const result = await db
       .delete(webhooks)
-      .where(and(eq(webhooks.tenantId, tenantId), eq(webhooks.id, webhookId)))
+      .where(eq(webhooks.id, webhookId))
       .returning({ id: webhooks.id })
     return result.length > 0
   },
 
-  async list(tenantId: string, filters: WebhookFilters = {}) {
+  async list(_tenantId: string, filters: WebhookFilters = {}) {
     const { page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(webhooks.tenantId, tenantId)]
+    const conditions = []
     if (filters.isActive !== undefined) {
       conditions.push(eq(webhooks.isActive, filters.isActive))
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ total }]] = await Promise.all([
       db.select().from(webhooks).where(whereClause).orderBy(desc(webhooks.createdAt)).limit(limit).offset(offset),
@@ -92,12 +93,12 @@ export const WebhookService = {
     }
   },
 
-  async getByEvent(tenantId: string, event: string): Promise<Webhook[]> {
-    // Get all active webhooks for this tenant, then filter by event
+  async getByEvent(_tenantId: string, event: string): Promise<Webhook[]> {
+    // Get all active webhooks, then filter by event
     const allActive = await db
       .select()
       .from(webhooks)
-      .where(and(eq(webhooks.tenantId, tenantId), eq(webhooks.isActive, true)))
+      .where(eq(webhooks.isActive, true))
 
     return allActive.filter((wh) => wh.events.includes(event))
   },
@@ -106,8 +107,8 @@ export const WebhookService = {
    * Fires webhooks for a specific event.
    * Runs asynchronously – does not block the caller.
    */
-  async fire(tenantId: string, event: string, payload: Record<string, unknown>): Promise<void> {
-    const matchingWebhooks = await this.getByEvent(tenantId, event)
+  async fire(_tenantId: string, event: string, payload: Record<string, unknown>): Promise<void> {
+    const matchingWebhooks = await this.getByEvent(_tenantId, event)
     if (matchingWebhooks.length === 0) return
 
     // Fire all webhooks in parallel, don't await

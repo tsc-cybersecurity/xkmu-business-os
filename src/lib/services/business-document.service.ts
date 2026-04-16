@@ -4,6 +4,7 @@ import { eq, and, count, desc } from 'drizzle-orm'
 import { unlink } from 'fs/promises'
 import path from 'path'
 import type { BusinessDocument } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const UPLOAD_DIR = process.env.BI_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads', 'bi')
 
@@ -14,18 +15,18 @@ export interface BusinessDocumentFilters {
 }
 
 export const BusinessDocumentService = {
-  async list(tenantId: string, filters: BusinessDocumentFilters = {}) {
+  async list(_tenantId: string, filters: BusinessDocumentFilters = {}) {
     const { status, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(businessDocuments.tenantId, tenantId)]
+    const conditions = []
     if (status) conditions.push(eq(businessDocuments.extractionStatus, status))
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ total }]] = await Promise.all([
-      db.select().from(businessDocuments).where(whereClause!).orderBy(desc(businessDocuments.createdAt)).limit(limit).offset(offset),
-      db.select({ total: count() }).from(businessDocuments).where(whereClause!),
+      db.select().from(businessDocuments).where(whereClause).orderBy(desc(businessDocuments.createdAt)).limit(limit).offset(offset),
+      db.select({ total: count() }).from(businessDocuments).where(whereClause),
     ])
 
     return {
@@ -34,16 +35,16 @@ export const BusinessDocumentService = {
     }
   },
 
-  async getById(tenantId: string, id: string): Promise<BusinessDocument | null> {
+  async getById(_tenantId: string, id: string): Promise<BusinessDocument | null> {
     const [doc] = await db
       .select()
       .from(businessDocuments)
-      .where(and(eq(businessDocuments.tenantId, tenantId), eq(businessDocuments.id, id)))
+      .where(eq(businessDocuments.id, id))
       .limit(1)
     return doc ?? null
   },
 
-  async create(tenantId: string, data: {
+  async create(_tenantId: string, data: {
     filename: string
     originalName: string
     mimeType: string
@@ -52,7 +53,7 @@ export const BusinessDocumentService = {
     const [doc] = await db
       .insert(businessDocuments)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         filename: data.filename,
         originalName: data.originalName,
         mimeType: data.mimeType,
@@ -64,14 +65,14 @@ export const BusinessDocumentService = {
     return doc
   },
 
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(_tenantId: string, id: string): Promise<boolean> {
     // Get document record to find filename
-    const doc = await this.getById(tenantId, id)
+    const doc = await this.getById(_tenantId, id)
     if (!doc) return false
 
     const result = await db
       .delete(businessDocuments)
-      .where(and(eq(businessDocuments.tenantId, tenantId), eq(businessDocuments.id, id)))
+      .where(eq(businessDocuments.id, id))
       .returning({ id: businessDocuments.id })
 
     if (result.length > 0) {
@@ -86,26 +87,23 @@ export const BusinessDocumentService = {
     return false
   },
 
-  async updateExtraction(tenantId: string, id: string, extractedText: string | null, status: 'processing' | 'completed' | 'failed'): Promise<BusinessDocument | null> {
+  async updateExtraction(_tenantId: string, id: string, extractedText: string | null, status: 'processing' | 'completed' | 'failed'): Promise<BusinessDocument | null> {
     const [doc] = await db
       .update(businessDocuments)
       .set({
         extractedText,
         extractionStatus: status,
       })
-      .where(and(eq(businessDocuments.tenantId, tenantId), eq(businessDocuments.id, id)))
+      .where(eq(businessDocuments.id, id))
       .returning()
     return doc ?? null
   },
 
-  async getExtractedDocuments(tenantId: string): Promise<BusinessDocument[]> {
+  async getExtractedDocuments(_tenantId: string): Promise<BusinessDocument[]> {
     return db
       .select()
       .from(businessDocuments)
-      .where(and(
-        eq(businessDocuments.tenantId, tenantId),
-        eq(businessDocuments.extractionStatus, 'completed')
-      ))
+      .where(eq(businessDocuments.extractionStatus, 'completed'))
       .orderBy(desc(businessDocuments.createdAt))
   },
 }

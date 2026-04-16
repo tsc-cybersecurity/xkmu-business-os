@@ -2,10 +2,11 @@ import { db } from '@/lib/db'
 import { firecrawlResearches } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import type { FirecrawlResearch } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const FirecrawlResearchService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     companyId: string,
     data: {
       url: string
@@ -18,7 +19,7 @@ export const FirecrawlResearchService = {
     const [research] = await db
       .insert(firecrawlResearches)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         companyId,
         url: data.url,
         status: data.status || 'crawling',
@@ -31,36 +32,30 @@ export const FirecrawlResearchService = {
     return research
   },
 
-  async getById(tenantId: string, id: string): Promise<FirecrawlResearch | null> {
+  async getById(_tenantId: string, id: string): Promise<FirecrawlResearch | null> {
     const [research] = await db
       .select()
       .from(firecrawlResearches)
-      .where(and(eq(firecrawlResearches.tenantId, tenantId), eq(firecrawlResearches.id, id)))
+      .where(eq(firecrawlResearches.id, id))
       .limit(1)
 
     return research ?? null
   },
 
-  async listByCompany(tenantId: string, companyId: string): Promise<FirecrawlResearch[]> {
+  async listByCompany(_tenantId: string, companyId: string): Promise<FirecrawlResearch[]> {
     return db
       .select()
       .from(firecrawlResearches)
-      .where(
-        and(
-          eq(firecrawlResearches.tenantId, tenantId),
-          eq(firecrawlResearches.companyId, companyId)
-        )
-      )
+      .where(eq(firecrawlResearches.companyId, companyId))
       .orderBy(desc(firecrawlResearches.createdAt))
   },
 
-  async getLatest(tenantId: string, companyId: string): Promise<FirecrawlResearch | null> {
+  async getLatest(_tenantId: string, companyId: string): Promise<FirecrawlResearch | null> {
     const [research] = await db
       .select()
       .from(firecrawlResearches)
       .where(
         and(
-          eq(firecrawlResearches.tenantId, tenantId),
           eq(firecrawlResearches.companyId, companyId),
           eq(firecrawlResearches.status, 'completed')
         )
@@ -72,7 +67,7 @@ export const FirecrawlResearchService = {
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     id: string,
     data: {
       status?: string
@@ -84,7 +79,7 @@ export const FirecrawlResearchService = {
     const [updated] = await db
       .update(firecrawlResearches)
       .set(data)
-      .where(and(eq(firecrawlResearches.tenantId, tenantId), eq(firecrawlResearches.id, id)))
+      .where(eq(firecrawlResearches.id, id))
       .returning()
 
     return updated ?? null

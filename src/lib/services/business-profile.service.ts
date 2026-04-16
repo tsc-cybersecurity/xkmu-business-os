@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { businessProfiles } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import type { BusinessProfile } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface BusinessAnalysisResult {
   companyName?: string
@@ -21,17 +22,17 @@ export interface BusinessAnalysisResult {
 }
 
 export const BusinessProfileService = {
-  async getByTenant(tenantId: string): Promise<BusinessProfile | null> {
+  async getByTenant(_tenantId: string): Promise<BusinessProfile | null> {
     const [profile] = await db
       .select()
       .from(businessProfiles)
-      .where(eq(businessProfiles.tenantId, tenantId))
+      .where(eq(businessProfiles.tenantId, TENANT_ID))
       .limit(1)
     return profile ?? null
   },
 
-  async upsert(tenantId: string, data: BusinessAnalysisResult, documentIds: string[]): Promise<BusinessProfile> {
-    const existing = await this.getByTenant(tenantId)
+  async upsert(_tenantId: string, data: BusinessAnalysisResult, documentIds: string[]): Promise<BusinessProfile> {
+    const existing = await this.getByTenant(_tenantId)
 
     if (existing) {
       const [updated] = await db
@@ -50,7 +51,7 @@ export const BusinessProfileService = {
           lastAnalyzedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(and(eq(businessProfiles.tenantId, tenantId), eq(businessProfiles.id, existing.id)))
+        .where(eq(businessProfiles.id, existing.id))
         .returning()
       return updated
     }
@@ -58,7 +59,7 @@ export const BusinessProfileService = {
     const [created] = await db
       .insert(businessProfiles)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         companyName: data.companyName || null,
         industry: data.industry || null,
         businessModel: data.businessModel || null,

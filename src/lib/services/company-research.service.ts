@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { companyResearches } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import type { CompanyResearch } from '@/lib/db/schema'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CreateCompanyResearchInput {
   companyId: string
@@ -12,14 +13,14 @@ export interface CreateCompanyResearchInput {
 
 export const CompanyResearchService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     companyId: string,
     data: CreateCompanyResearchInput
   ): Promise<CompanyResearch> {
     const [research] = await db
       .insert(companyResearches)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         companyId,
         status: 'completed',
         researchData: data.researchData,
@@ -31,31 +32,26 @@ export const CompanyResearchService = {
     return research
   },
 
-  async getById(tenantId: string, id: string): Promise<CompanyResearch | null> {
+  async getById(_tenantId: string, id: string): Promise<CompanyResearch | null> {
     const [research] = await db
       .select()
       .from(companyResearches)
-      .where(and(eq(companyResearches.tenantId, tenantId), eq(companyResearches.id, id)))
+      .where(eq(companyResearches.id, id))
       .limit(1)
 
     return research ?? null
   },
 
-  async listByCompany(tenantId: string, companyId: string): Promise<CompanyResearch[]> {
+  async listByCompany(_tenantId: string, companyId: string): Promise<CompanyResearch[]> {
     return db
       .select()
       .from(companyResearches)
-      .where(
-        and(
-          eq(companyResearches.tenantId, tenantId),
-          eq(companyResearches.companyId, companyId)
-        )
-      )
+      .where(eq(companyResearches.companyId, companyId))
       .orderBy(desc(companyResearches.createdAt))
   },
 
   async updateStatus(
-    tenantId: string,
+    _tenantId: string,
     id: string,
     status: 'applied' | 'rejected',
     appliedAt?: Date
@@ -66,7 +62,7 @@ export const CompanyResearchService = {
         status,
         ...(appliedAt ? { appliedAt } : {}),
       })
-      .where(and(eq(companyResearches.tenantId, tenantId), eq(companyResearches.id, id)))
+      .where(eq(companyResearches.id, id))
       .returning()
 
     return updated ?? null
