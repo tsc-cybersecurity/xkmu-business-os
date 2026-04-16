@@ -3,6 +3,7 @@ import { companies, persons } from '@/lib/db/schema'
 import { eq, and, ilike, count, arrayContains, sql } from 'drizzle-orm'
 import type { Company, NewCompany, Person } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CompanyFilters {
   status?: string | string[]
@@ -45,14 +46,14 @@ function emptyToNull<T>(value: T): T | null {
 
 export const CompanyService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreateCompanyInput,
     createdBy?: string
   ): Promise<Company> {
     const [company] = await db
       .insert(companies)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         name: data.name,
         legalForm: emptyToNull(data.legalForm),
         street: emptyToNull(data.street),
@@ -78,18 +79,18 @@ export const CompanyService = {
     return company
   },
 
-  async getById(tenantId: string, companyId: string): Promise<Company | null> {
+  async getById(_tenantId: string, companyId: string): Promise<Company | null> {
     const [company] = await db
       .select()
       .from(companies)
-      .where(and(eq(companies.tenantId, tenantId), eq(companies.id, companyId)))
+      .where(eq(companies.id, companyId))
       .limit(1)
 
     return company ?? null
   },
 
   async update(
-    tenantId: string,
+    _tenantId: string,
     companyId: string,
     data: UpdateCompanyInput
   ): Promise<Company | null> {
@@ -113,29 +114,29 @@ export const CompanyService = {
     const [company] = await db
       .update(companies)
       .set(updateData)
-      .where(and(eq(companies.tenantId, tenantId), eq(companies.id, companyId)))
+      .where(eq(companies.id, companyId))
       .returning()
 
     return company ?? null
   },
 
-  async delete(tenantId: string, companyId: string): Promise<boolean> {
+  async delete(_tenantId: string, companyId: string): Promise<boolean> {
     const result = await db
       .delete(companies)
-      .where(and(eq(companies.tenantId, tenantId), eq(companies.id, companyId)))
+      .where(eq(companies.id, companyId))
       .returning({ id: companies.id })
 
     return result.length > 0
   },
 
   async list(
-    tenantId: string,
+    _tenantId: string,
     filters: CompanyFilters = {}
   ): Promise<PaginatedResult<Company>> {
     const { status, tags, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    const conditions = [eq(companies.tenantId, tenantId)]
+    const conditions = []
 
     if (status) {
       if (Array.isArray(status)) {
@@ -153,7 +154,7 @@ export const CompanyService = {
       conditions.push(ilike(companies.name, `%${search}%`))
     }
 
-    const whereClause = and(...conditions)
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
     const [items, [{ count: total }]] = await Promise.all([
       db
@@ -177,7 +178,7 @@ export const CompanyService = {
     }
   },
 
-  async search(tenantId: string, query: string, limit = 10): Promise<Company[]> {
+  async search(_tenantId: string, query: string, limit = 10): Promise<Company[]> {
     if (!query.trim()) {
       return []
     }
@@ -185,20 +186,18 @@ export const CompanyService = {
     const items = await db
       .select()
       .from(companies)
-      .where(
-        and(eq(companies.tenantId, tenantId), ilike(companies.name, `%${query}%`))
-      )
+      .where(ilike(companies.name, `%${query}%`))
       .limit(limit)
 
     return items
   },
 
   async addTag(
-    tenantId: string,
+    _tenantId: string,
     companyId: string,
     tag: string
   ): Promise<Company | null> {
-    const company = await this.getById(tenantId, companyId)
+    const company = await this.getById(_tenantId, companyId)
     if (!company) return null
 
     const currentTags = company.tags || []
@@ -206,33 +205,31 @@ export const CompanyService = {
       return company
     }
 
-    return this.update(tenantId, companyId, {
+    return this.update(_tenantId, companyId, {
       tags: [...currentTags, tag],
     })
   },
 
   async removeTag(
-    tenantId: string,
+    _tenantId: string,
     companyId: string,
     tag: string
   ): Promise<Company | null> {
-    const company = await this.getById(tenantId, companyId)
+    const company = await this.getById(_tenantId, companyId)
     if (!company) return null
 
     const currentTags = company.tags || []
 
-    return this.update(tenantId, companyId, {
+    return this.update(_tenantId, companyId, {
       tags: currentTags.filter((t) => t !== tag),
     })
   },
 
-  async getPersons(tenantId: string, companyId: string): Promise<Person[]> {
+  async getPersons(_tenantId: string, companyId: string): Promise<Person[]> {
     const items = await db
       .select()
       .from(persons)
-      .where(
-        and(eq(persons.tenantId, tenantId), eq(persons.companyId, companyId))
-      )
+      .where(eq(persons.companyId, companyId))
       .orderBy(persons.lastName, persons.firstName)
 
     return items
@@ -242,7 +239,7 @@ export const CompanyService = {
    * Prüft ob eine Firma mit gleichem Namen oder Website-Domain bereits existiert.
    */
   async checkDuplicate(
-    tenantId: string,
+    _tenantId: string,
     name: string,
     website?: string
   ): Promise<Company | null> {
@@ -250,7 +247,7 @@ export const CompanyService = {
     const [byName] = await db
       .select()
       .from(companies)
-      .where(and(eq(companies.tenantId, tenantId), ilike(companies.name, name)))
+      .where(ilike(companies.name, name))
       .limit(1)
 
     if (byName) return byName
@@ -264,12 +261,7 @@ export const CompanyService = {
         const [byDomain] = await db
           .select()
           .from(companies)
-          .where(
-            and(
-              eq(companies.tenantId, tenantId),
-              ilike(companies.website, `%${domain}%`)
-            )
-          )
+          .where(ilike(companies.website, `%${domain}%`))
           .limit(1)
 
         if (byDomain) return byDomain
