@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { activities } from '@/lib/db/schema'
 import nodemailer from 'nodemailer'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface EmailConfig {
   provider: 'smtp' | 'gmail'
@@ -92,7 +93,7 @@ export const EmailService = {
    * Send email
    */
   async send(
-    tenantId: string,
+    _tenantId: string,
     input: SendEmailInput,
     userId?: string | null
   ): Promise<SendEmailResult> {
@@ -125,7 +126,7 @@ export const EmailService = {
 
       // Log activity
       await db.insert(activities).values({
-        tenantId,
+        tenantId: TENANT_ID,
         leadId: input.leadId || undefined,
         companyId: input.companyId || undefined,
         personId: input.personId || undefined,
@@ -164,7 +165,7 @@ export const EmailService = {
    * Send email using a template
    */
   async sendWithTemplate(
-    tenantId: string,
+    _tenantId: string,
     templateSlug: string,
     to: string,
     placeholders: Record<string, string>,
@@ -178,7 +179,7 @@ export const EmailService = {
     userId?: string | null
   ): Promise<SendEmailResult> {
     const { EmailTemplateService } = await import('./email-template.service')
-    const template = await EmailTemplateService.getBySlug(tenantId, templateSlug)
+    const template = await EmailTemplateService.getBySlug(_tenantId, templateSlug)
     if (!template) {
       return { success: false, error: `E-Mail-Template '${templateSlug}' nicht gefunden` }
     }
@@ -187,7 +188,7 @@ export const EmailService = {
     const html = EmailTemplateService.applyPlaceholders(template.bodyHtml, placeholders)
     const body = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
-    return this.send(tenantId, {
+    return this.send(_tenantId, {
       to,
       subject,
       body,

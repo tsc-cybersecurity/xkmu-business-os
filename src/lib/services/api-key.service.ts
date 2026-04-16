@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { apiKeys } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { generateApiKey, hashApiKey } from '@/lib/auth/api-key'
 import type { InferSelectModel } from 'drizzle-orm'
 
@@ -18,7 +19,7 @@ export interface ApiKeyWithRawKey extends ApiKey {
 
 export const ApiKeyService = {
   async create(
-    tenantId: string,
+    _tenantId: string,
     data: CreateApiKeyInput,
     userId?: string
   ): Promise<ApiKeyWithRawKey> {
@@ -28,7 +29,7 @@ export const ApiKeyService = {
     const [apiKey] = await db
       .insert(apiKeys)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         userId,
         name: data.name,
         keyHash,
@@ -44,30 +45,29 @@ export const ApiKeyService = {
     }
   },
 
-  async getById(tenantId: string, keyId: string): Promise<ApiKey | null> {
+  async getById(_tenantId: string, keyId: string): Promise<ApiKey | null> {
     const [apiKey] = await db
       .select()
       .from(apiKeys)
-      .where(and(eq(apiKeys.tenantId, tenantId), eq(apiKeys.id, keyId)))
+      .where(eq(apiKeys.id, keyId))
       .limit(1)
 
     return apiKey ?? null
   },
 
-  async list(tenantId: string): Promise<ApiKey[]> {
+  async list(_tenantId: string): Promise<ApiKey[]> {
     const items = await db
       .select()
       .from(apiKeys)
-      .where(eq(apiKeys.tenantId, tenantId))
       .orderBy(desc(apiKeys.createdAt))
 
     return items
   },
 
-  async delete(tenantId: string, keyId: string): Promise<boolean> {
+  async delete(_tenantId: string, keyId: string): Promise<boolean> {
     const result = await db
       .delete(apiKeys)
-      .where(and(eq(apiKeys.tenantId, tenantId), eq(apiKeys.id, keyId)))
+      .where(eq(apiKeys.id, keyId))
       .returning({ id: apiKeys.id })
 
     return result.length > 0

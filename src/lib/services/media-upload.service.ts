@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { mediaUploads } from '@/lib/db/schema'
 import { eq, and, desc, count } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import type { MediaUpload } from '@/lib/db/schema'
 import path from 'path'
 import { logger } from '@/lib/utils/logger'
@@ -43,7 +44,7 @@ export function resolveMediaPath(relativePath: string): string {
 
 export const MediaUploadService = {
   async upload(
-    tenantId: string,
+    _tenantId: string,
     file: File,
     uploadedBy?: string
   ): Promise<MediaUpload> {
@@ -55,12 +56,12 @@ export const MediaUploadService = {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
-    const result = await ImageOptimizerService.optimize(buffer, tenantId)
+    const result = await ImageOptimizerService.optimize(buffer, TENANT_ID)
 
     const [upload] = await db
       .insert(mediaUploads)
       .values({
-        tenantId,
+        tenantId: TENANT_ID,
         filename: result.filename,
         originalName: file.name,
         mimeType: result.mimeType,
@@ -73,22 +74,19 @@ export const MediaUploadService = {
     return upload
   },
 
-  async list(tenantId: string, pagination?: { page?: number; limit?: number }) {
+  async list(_tenantId: string, pagination?: { page?: number; limit?: number }) {
     const page = pagination?.page ?? 1
     const limit = pagination?.limit ?? 50
     const offset = (page - 1) * limit
-
-    const whereClause = eq(mediaUploads.tenantId, tenantId)
 
     const [items, [{ total }]] = await Promise.all([
       db
         .select()
         .from(mediaUploads)
-        .where(whereClause)
         .orderBy(desc(mediaUploads.createdAt))
         .limit(limit)
         .offset(offset),
-      db.select({ total: count() }).from(mediaUploads).where(whereClause),
+      db.select({ total: count() }).from(mediaUploads),
     ])
 
     return {
@@ -102,11 +100,11 @@ export const MediaUploadService = {
     }
   },
 
-  async delete(tenantId: string, uploadId: string): Promise<boolean> {
+  async delete(_tenantId: string, uploadId: string): Promise<boolean> {
     const [upload] = await db
       .select()
       .from(mediaUploads)
-      .where(and(eq(mediaUploads.tenantId, tenantId), eq(mediaUploads.id, uploadId)))
+      .where(eq(mediaUploads.id, uploadId))
       .limit(1)
 
     if (!upload) return false
@@ -115,7 +113,7 @@ export const MediaUploadService = {
 
     const result = await db
       .delete(mediaUploads)
-      .where(and(eq(mediaUploads.tenantId, tenantId), eq(mediaUploads.id, uploadId)))
+      .where(eq(mediaUploads.id, uploadId))
       .returning({ id: mediaUploads.id })
 
     return result.length > 0
