@@ -53,7 +53,7 @@ export async function validateApiKey(key: string): Promise<ApiKeyPayload | null>
         .where(eq(apiKeys.id, apiKey.id))
 
       return {
-        tenantId: apiKey.tenantId,
+        tenantId: 'legacy', // tenant_id column dropped — AUTH-04 backward compat
         keyId: apiKey.id,
         permissions: apiKey.permissions as string[] || ['read', 'write'],
       }
