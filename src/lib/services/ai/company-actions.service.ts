@@ -250,7 +250,7 @@ export const CompanyActionsService = {
         if (meta.summary) continue // already has summary
         if (!activity.content || activity.content.length < 300) continue // too short
 
-        const summary = await generateSummary('', activity.content, userId)
+        const summary = await generateSummary(activity.content, userId)
         if (!summary) continue
 
         // Update activity metadata with summary

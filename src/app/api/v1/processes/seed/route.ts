@@ -33,8 +33,10 @@ export async function POST(request: NextRequest) {
         newSopsJson = JSON.parse(newSopsRaw)
       }
 
-      const result = await ProcessService.seed(mainJson as Parameters<typeof ProcessService.seed>[1],
-        newSopsJson as Parameters<typeof ProcessService.seed>[2])
+      const result = await ProcessService.seed(
+        mainJson as Parameters<typeof ProcessService.seed>[0],
+        newSopsJson as Parameters<typeof ProcessService.seed>[1]
+      )
 
       logger.info(`Process seed complete: ${result.processCount} processes, ${result.taskCount} tasks`, { module: 'ProcessSeedAPI' })
 

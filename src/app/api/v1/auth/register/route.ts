@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiValidationError } from '@/lib/utils/api-response'
 import { registerSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { UserService } from '@/lib/services/user.service'
-import { TenantService } from '@/lib/services/tenant.service'
 import { logger } from '@/lib/utils/logger'
 import { RoleService } from '@/lib/services/role.service'
 import { TenantSeedService } from '@/lib/services/tenant-seed.service'
@@ -10,20 +9,8 @@ import { createSession } from '@/lib/auth/session'
 import { rateLimit } from '@/lib/utils/rate-limit'
 import type { SessionUser } from '@/lib/types/auth.types'
 
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[äÄ]/g, 'ae')
-    .replace(/[öÖ]/g, 'oe')
-    .replace(/[üÜ]/g, 'ue')
-    .replace(/ß/g, 'ss')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
 export async function POST(request: NextRequest) {
   try {
-    // Rate limit: max 5 registrations per minute per IP
     const limited = await rateLimit(request, 'auth-register', 5, 60_000)
     if (limited) return limited
 
@@ -34,34 +21,13 @@ export async function POST(request: NextRequest) {
       return apiValidationError(formatZodErrors(validation.errors))
     }
 
-    const { email, password, firstName, lastName, companyName } = validation.data
+    const { email, password, firstName, lastName } = validation.data
 
-    // Slug generieren und Kollision pruefen
-    let slug = generateSlug(companyName)
-    let slugExists = await TenantService.slugExists(slug)
-    let attempt = 0
-    while (slugExists) {
-      attempt++
-      slug = `${generateSlug(companyName)}-${attempt}`
-      slugExists = await TenantService.slugExists(slug)
-    }
+    await RoleService.seedDefaultRoles()
+    await TenantSeedService.seedStructuralData()
 
-    // Tenant erstellen
-    const tenant = await TenantService.create({
-      name: companyName,
-      slug,
-    })
+    const adminRole = await RoleService.getByName('admin')
 
-    // Default-Rollen seeden
-    await RoleService.seedDefaultRoles(tenant.id)
-
-    // Strukturelle Daten seeden (AI Prompts, Kategorien, Block Templates, DIN-Daten etc.)
-    await TenantSeedService.seedStructuralData(tenant.id)
-
-    // Admin-Rolle nachschlagen (temporaer: registrierte Benutzer bekommen Admin-Rechte)
-    const adminRole = await RoleService.getByName(tenant.id, 'admin')
-
-    // Benutzer erstellen
     const user = await UserService.create({
       email,
       password,
@@ -71,7 +37,6 @@ export async function POST(request: NextRequest) {
       roleId: adminRole?.id,
     })
 
-    // Session erstellen
     const sessionUser: SessionUser = {
       id: user.id,
       email: user.email,
@@ -83,18 +48,7 @@ export async function POST(request: NextRequest) {
 
     await createSession(sessionUser)
 
-    return apiSuccess(
-      {
-        user: sessionUser,
-        tenant: {
-          id: tenant.id,
-          name: tenant.name,
-          slug: tenant.slug,
-        },
-      },
-      undefined,
-      201
-    )
+    return apiSuccess({ user: sessionUser }, undefined, 201)
   } catch (error) {
     logger.error('Registration failed', error, { module: 'AuthRegister' })
     return apiError('REGISTRATION_FAILED', 'Registrierung fehlgeschlagen', 500)

@@ -7,7 +7,7 @@ import { TenantService } from '@/lib/services/tenant.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { logger } from '@/lib/utils/logger'
-const optStr = z.string().max(255).optional().or(z.literal())
+const optStr = z.string().max(255).optional().or(z.literal(''))
 
 const updateTenantSchema = z.object({
   name: z.string().min(1).max(255).optional(),
@@ -18,24 +18,24 @@ const updateTenantSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with dashes')
     .optional(),
   street: optStr,
-  houseNumber: z.string().max(20).optional().or(z.literal()),
-  postalCode: z.string().max(20).optional().or(z.literal()),
+  houseNumber: z.string().max(20).optional().or(z.literal('')),
+  postalCode: z.string().max(20).optional().or(z.literal('')),
   city: optStr,
-  country: z.string().max(10).optional().or(z.literal()),
-  legalForm: z.string().max(100).optional().or(z.literal()),
+  country: z.string().max(10).optional().or(z.literal('')),
+  legalForm: z.string().max(100).optional().or(z.literal('')),
   managingDirector: optStr,
   tradeRegister: optStr,
-  vatId: z.string().max(50).optional().or(z.literal()),
-  taxNumber: z.string().max(50).optional().or(z.literal()),
+  vatId: z.string().max(50).optional().or(z.literal('')),
+  taxNumber: z.string().max(50).optional().or(z.literal('')),
   bankName1: optStr,
-  bankIban1: z.string().max(40).optional().or(z.literal()),
-  bankBic1: z.string().max(20).optional().or(z.literal()),
+  bankIban1: z.string().max(40).optional().or(z.literal('')),
+  bankBic1: z.string().max(20).optional().or(z.literal('')),
   bankName2: optStr,
-  bankIban2: z.string().max(40).optional().or(z.literal()),
-  bankBic2: z.string().max(20).optional().or(z.literal()),
-  phone: z.string().max(100).optional().or(z.literal()),
-  email: z.string().max(255).optional().or(z.literal()),
-  website: z.string().max(500).optional().or(z.literal()),
+  bankIban2: z.string().max(40).optional().or(z.literal('')),
+  bankBic2: z.string().max(20).optional().or(z.literal('')),
+  phone: z.string().max(100).optional().or(z.literal('')),
+  email: z.string().max(255).optional().or(z.literal('')),
+  website: z.string().max(500).optional().or(z.literal('')),
   settings: z.record(z.string(), z.unknown()).optional(),
 })
 
@@ -68,17 +68,13 @@ export async function PUT(request: NextRequest) {
 
       // Check if slug is unique (if being changed)
       if (validation.data.slug) {
-        const slugExists = await TenantService.slugExists(
-          validation.data.slug,
-          TENANT_ID
-        )
+        const slugExists = await TenantService.slugExists(validation.data.slug)
         if (slugExists) {
           return apiError('SLUG_EXISTS', 'This slug is already in use', 400)
         }
       }
 
-      const tenant = await TenantService.update(validation.data
-      )
+      const tenant = await TenantService.update(validation.data)
 
       if (!tenant) {
         return apiError('NOT_FOUND', 'Tenant not found', 404)

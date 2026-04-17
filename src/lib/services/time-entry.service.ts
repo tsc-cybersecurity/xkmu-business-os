@@ -151,13 +151,13 @@ export const TimeEntryService = {
     hourlyRate?: string
   }): Promise<TimeEntry> {
     // Stop any running timer first
-    const running = await this.getRunningTimer(_userId)
+    const running = await this.getRunningTimer(userId)
     if (running) {
-      await this.stopTimer(_userId)
+      await this.stopTimer(userId)
     }
 
     const now = new Date()
-    return this.create(_userId, {
+    return this.create(userId, {
       companyId: data.companyId,
       description: data.description,
       date: now,
@@ -168,13 +168,13 @@ export const TimeEntryService = {
   },
 
   async stopTimer(userId: string): Promise<TimeEntry | null> {
-    const running = await this.getRunningTimer(_userId)
+    const running = await this.getRunningTimer(userId)
     if (!running) return null
 
     const endTime = new Date()
     const duration = Math.round((endTime.getTime() - (running.startTime?.getTime() || endTime.getTime())) / 60000)
 
-    return this.update(_running.id, {
+    return this.update(running.id, {
       endTime,
       durationMinutes: duration,
     })

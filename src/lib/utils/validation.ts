@@ -77,7 +77,7 @@ export const createRoleSchema = z.object({
     .max(50)
     .regex(/^[a-z0-9_]+$/, 'Nur Kleinbuchstaben, Zahlen und Unterstriche'),
   displayName: z.string().min(1, 'Anzeigename ist erforderlich').max(100),
-  description: z.string().max(500).optional().or(z.literal()),
+  description: z.string().max(500).optional().or(z.literal("")),
   permissions: z.array(
     z.object({
       module: z.string(),
@@ -91,7 +91,7 @@ export const createRoleSchema = z.object({
 
 export const updateRoleSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
-  description: z.string().max(500).optional().or(z.literal()),
+  description: z.string().max(500).optional().or(z.literal("")),
   permissions: z
     .array(
       z.object({
@@ -119,22 +119,22 @@ export const companyStatusSchema = z.enum([
 
 export const createCompanySchema = z.object({
   name: z.string().min(1).max(255),
-  legalForm: z.string().max(50).optional().or(z.literal()),
-  street: z.string().max(255).optional().or(z.literal()),
-  houseNumber: z.string().max(20).optional().or(z.literal()),
-  postalCode: z.string().max(20).optional().or(z.literal()),
-  city: z.string().max(100).optional().or(z.literal()),
+  legalForm: z.string().max(50).optional().or(z.literal("")),
+  street: z.string().max(255).optional().or(z.literal("")),
+  houseNumber: z.string().max(20).optional().or(z.literal("")),
+  postalCode: z.string().max(20).optional().or(z.literal("")),
+  city: z.string().max(100).optional().or(z.literal("")),
   country: z.string().max(2).default('DE'),
-  phone: z.string().max(50).optional().or(z.literal()),
-  email: z.string().email().optional().or(z.literal()),
-  website: z.string().url().max(255).optional().or(z.literal()),
-  industry: z.string().max(100).optional().or(z.literal()),
+  phone: z.string().max(50).optional().or(z.literal("")),
+  email: z.string().email().optional().or(z.literal("")),
+  website: z.string().url().max(255).optional().or(z.literal("")),
+  industry: z.string().max(100).optional().or(z.literal("")),
   employeeCount: z.number().int().min(0).nullable().optional(),
   annualRevenue: z.number().min(0).nullable().optional(),
-  vatId: z.string().max(50).optional().or(z.literal()),
+  vatId: z.string().max(50).optional().or(z.literal("")),
   status: companyStatusSchema.default('prospect'),
   tags: z.array(z.string()).default([]),
-  notes: z.string().optional().or(z.literal()),
+  notes: z.string().optional().or(z.literal("")),
   customFields: z.record(z.string(), z.unknown()).default({}),
 })
 
@@ -147,23 +147,23 @@ export const personStatusSchema = z.enum(['active', 'inactive', 'do_not_contact'
 
 export const createPersonSchema = z.object({
   companyId: uuidSchema.nullable().optional(),
-  salutation: z.string().max(20).optional().or(z.literal()),
+  salutation: z.string().max(20).optional().or(z.literal("")),
   firstName: z.string().min(1).max(100),
   lastName: z.string().min(1).max(100),
-  email: z.string().email().optional().or(z.literal()),
-  phone: z.string().max(50).optional().or(z.literal()),
-  mobile: z.string().max(50).optional().or(z.literal()),
-  jobTitle: z.string().max(100).optional().or(z.literal()),
-  department: z.string().max(100).optional().or(z.literal()),
-  street: z.string().max(255).optional().or(z.literal()),
-  houseNumber: z.string().max(20).optional().or(z.literal()),
-  postalCode: z.string().max(20).optional().or(z.literal()),
-  city: z.string().max(100).optional().or(z.literal()),
+  email: z.string().email().optional().or(z.literal("")),
+  phone: z.string().max(50).optional().or(z.literal("")),
+  mobile: z.string().max(50).optional().or(z.literal("")),
+  jobTitle: z.string().max(100).optional().or(z.literal("")),
+  department: z.string().max(100).optional().or(z.literal("")),
+  street: z.string().max(255).optional().or(z.literal("")),
+  houseNumber: z.string().max(20).optional().or(z.literal("")),
+  postalCode: z.string().max(20).optional().or(z.literal("")),
+  city: z.string().max(100).optional().or(z.literal("")),
   country: z.string().max(2).default('DE'),
   status: personStatusSchema.default('active'),
   isPrimaryContact: z.boolean().default(false),
   tags: z.array(z.string()).default([]),
-  notes: z.string().optional().or(z.literal()),
+  notes: z.string().optional().or(z.literal("")),
   customFields: z.record(z.string(), z.unknown()).default({}),
 })
 
@@ -188,14 +188,14 @@ export const leadSourceSchema = z.enum(['api', 'form', 'import', 'manual', 'idea
 export const createLeadSchema = z.object({
   companyId: uuidSchema.nullable().optional(),
   personId: uuidSchema.nullable().optional(),
-  title: z.string().max(255).optional().or(z.literal()),
+  title: z.string().max(255).optional().or(z.literal("")),
   source: leadSourceSchema,
-  sourceDetail: z.string().max(255).optional().or(z.literal()),
+  sourceDetail: z.string().max(255).optional().or(z.literal("")),
   status: leadStatusSchema.default('new'),
   score: z.number().int().min(0).max(100).optional(),
   assignedTo: uuidSchema.nullable().optional(),
   tags: z.array(z.string()).default([]),
-  notes: z.string().optional().or(z.literal()),
+  notes: z.string().optional().or(z.literal("")),
   rawData: z.record(z.string(), z.unknown()).optional(),
 })
 
@@ -207,8 +207,8 @@ export const updateLeadSchema = createLeadSchema.partial()
 export const contactFormSchema = z.object({
   firstName: z.string().min(1, 'Vorname ist erforderlich'),
   lastName: z.string().min(1, 'Nachname ist erforderlich'),
-  company: z.string().optional().or(z.literal()),
-  phone: z.string().optional().or(z.literal()),
+  company: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
   email: z.string().email('Gültige E-Mail-Adresse erforderlich'),
   interests: z.array(z.string()).min(1, 'Bitte wählen Sie mindestens ein Interesse'),
   message: z.string().min(1, 'Nachricht ist erforderlich'),
@@ -220,7 +220,7 @@ export const contactFormSchema = z.object({
 // ============================================
 export const createProductCategorySchema = z.object({
   name: z.string().min(1).max(100),
-  description: z.string().optional().or(z.literal()),
+  description: z.string().optional().or(z.literal("")),
   parentId: uuidSchema.nullable().optional(),
   sortOrder: z.number().int().min(0).default(0),
 })
@@ -235,7 +235,7 @@ export const productStatusSchema = z.enum(['active', 'inactive', 'draft'])
 
 const productImageSchema = z.object({
   url: z.string().max(500),
-  alt: z.string().max(255).optional().or(z.literal()),
+  alt: z.string().max(255).optional().or(z.literal("")),
   sortOrder: z.number().int().min(0).optional(),
 })
 
@@ -249,32 +249,32 @@ const productDimensionsSchema = z.object({
 export const createProductSchema = z.object({
   type: productTypeSchema,
   name: z.string().min(1).max(255),
-  description: z.string().optional().or(z.literal()),
-  sku: z.string().max(50).optional().or(z.literal()),
+  description: z.string().optional().or(z.literal("")),
+  sku: z.string().max(50).optional().or(z.literal("")),
   categoryId: uuidSchema.nullable().optional(),
   priceNet: z.number().min(0).nullable().optional(),
   vatRate: z.number().min(0).max(100).default(19),
   unit: z.string().max(30).default('Stück'),
   status: productStatusSchema.default('active'),
   tags: z.array(z.string()).default([]),
-  notes: z.string().optional().or(z.literal()),
+  notes: z.string().optional().or(z.literal("")),
   customFields: z.record(z.string(), z.unknown()).default({}),
   // Web & SEO
   isPublic: z.boolean().default(false),
   isHighlight: z.boolean().default(false),
-  shortDescription: z.string().optional().or(z.literal()),
-  slug: z.string().max(255).optional().or(z.literal()),
-  seoTitle: z.string().max(70).optional().or(z.literal()),
-  seoDescription: z.string().max(160).optional().or(z.literal()),
+  shortDescription: z.string().optional().or(z.literal("")),
+  slug: z.string().max(255).optional().or(z.literal("")),
+  seoTitle: z.string().max(70).optional().or(z.literal("")),
+  seoDescription: z.string().max(160).optional().or(z.literal("")),
   // Media
   images: z.array(productImageSchema).default([]),
   // Logistics
   weight: z.number().min(0).nullable().optional(),
   dimensions: productDimensionsSchema.nullable().optional(),
-  manufacturer: z.string().max(255).optional().or(z.literal()),
-  ean: z.string().max(13).optional().or(z.literal()),
+  manufacturer: z.string().max(255).optional().or(z.literal("")),
+  ean: z.string().max(13).optional().or(z.literal("")),
   minOrderQuantity: z.number().int().min(1).default(1),
-  deliveryTime: z.string().max(100).optional().or(z.literal()),
+  deliveryTime: z.string().max(100).optional().or(z.literal("")),
 })
 
 export const updateProductSchema = createProductSchema.partial()
@@ -315,8 +315,8 @@ export const createActivitySchema = z.object({
   companyId: uuidSchema.nullable().optional(),
   personId: uuidSchema.nullable().optional(),
   type: activityTypeSchema,
-  subject: z.string().max(255).optional().or(z.literal()),
-  content: z.string().optional().or(z.literal()),
+  subject: z.string().max(255).optional().or(z.literal("")),
+  content: z.string().optional().or(z.literal("")),
   metadata: z.record(z.string(), z.unknown()).default({}),
 })
 
@@ -344,7 +344,7 @@ export const createWebhookSchema = z.object({
     return v
   }).pipe(z.string().url('Ungültige URL')),
   events: z.array(webhookEventSchema).min(1, 'Mindestens ein Event erforderlich'),
-  secret: z.string().max(255).optional().or(z.literal()).transform(v => v || undefined),
+  secret: z.string().max(255).optional().or(z.literal("")).transform(v => v || undefined),
   isActive: z.boolean().default(true),
 })
 
@@ -361,24 +361,24 @@ export const discountTypeSchema = z.enum(['percent', 'fixed'])
 
 export const createDocumentSchema = z.object({
   type: documentTypeSchema,
-  number: z.string().max(50).optional().or(z.literal()),
+  number: z.string().max(50).optional().or(z.literal("")),
   companyId: uuidSchema.nullable().optional(),
   contactPersonId: uuidSchema.nullable().optional(),
   issueDate: z.string().optional(),
-  dueDate: z.string().optional().or(z.literal()),
-  validUntil: z.string().optional().or(z.literal()),
-  notes: z.string().optional().or(z.literal()),
-  paymentTerms: z.string().max(255).optional().or(z.literal()),
+  dueDate: z.string().optional().or(z.literal("")),
+  validUntil: z.string().optional().or(z.literal("")),
+  notes: z.string().optional().or(z.literal("")),
+  paymentTerms: z.string().max(255).optional().or(z.literal("")),
   discount: z.number().min(0).nullable().optional(),
   discountType: discountTypeSchema.nullable().optional(),
   // Customer address snapshot (auto-filled from company, but can be overridden)
-  customerName: z.string().max(255).optional().or(z.literal()),
-  customerStreet: z.string().max(255).optional().or(z.literal()),
-  customerHouseNumber: z.string().max(20).optional().or(z.literal()),
-  customerPostalCode: z.string().max(20).optional().or(z.literal()),
-  customerCity: z.string().max(100).optional().or(z.literal()),
-  customerCountry: z.string().max(2).optional().or(z.literal()),
-  customerVatId: z.string().max(50).optional().or(z.literal()),
+  customerName: z.string().max(255).optional().or(z.literal("")),
+  customerStreet: z.string().max(255).optional().or(z.literal("")),
+  customerHouseNumber: z.string().max(20).optional().or(z.literal("")),
+  customerPostalCode: z.string().max(20).optional().or(z.literal("")),
+  customerCity: z.string().max(100).optional().or(z.literal("")),
+  customerCountry: z.string().max(2).optional().or(z.literal("")),
+  customerVatId: z.string().max(50).optional().or(z.literal("")),
 })
 
 export const updateDocumentSchema = createDocumentSchema.partial()
@@ -386,7 +386,7 @@ export const updateDocumentSchema = createDocumentSchema.partial()
 export const createDocumentItemSchema = z.object({
   productId: uuidSchema.nullable().optional(),
   name: z.string().min(1, 'Name ist erforderlich').max(255),
-  description: z.string().optional().or(z.literal()),
+  description: z.string().optional().or(z.literal("")),
   quantity: z.number().min(0).default(1),
   unit: z.string().max(30).default('Stück'),
   unitPrice: z.number().min(0).default(0),
@@ -404,13 +404,13 @@ export const updateDocumentStatusSchema = z.object({
 export const createContractSchema = createDocumentSchema.extend({
   type: z.literal('contract'),
   contractStartDate: z.string().optional(),
-  contractEndDate: z.string().optional().or(z.literal()),
+  contractEndDate: z.string().optional().or(z.literal("")),
   contractRenewalType: z.enum(['none', 'manual', 'auto']).default('none'),
   contractRenewalPeriod: z.enum(['monthly', 'quarterly', 'yearly']).optional(),
   contractNoticePeriodDays: z.number().min(0).optional(),
   contractTemplateId: uuidSchema.nullable().optional(),
   projectId: uuidSchema.nullable().optional(),
-  contractBodyHtml: z.string().optional().or(z.literal()),
+  contractBodyHtml: z.string().optional().or(z.literal("")),
 })
 
 export const updateContractSchema = createContractSchema.partial()
@@ -423,10 +423,10 @@ export const cmsPageStatusSchema = z.enum(['draft', 'published'])
 export const createCmsPageSchema = z.object({
   slug: z.string().min(1, 'Slug ist erforderlich').max(255).regex(/^\/[a-z0-9\-\/]*$/, 'Slug muss mit / beginnen und darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten'),
   title: z.string().min(1, 'Titel ist erforderlich').max(255),
-  seoTitle: z.string().max(70).optional().or(z.literal()),
-  seoDescription: z.string().max(160).optional().or(z.literal()),
-  seoKeywords: z.string().max(255).optional().or(z.literal()),
-  ogImage: z.string().max(500).optional().or(z.literal()),
+  seoTitle: z.string().max(70).optional().or(z.literal("")),
+  seoDescription: z.string().max(160).optional().or(z.literal("")),
+  seoKeywords: z.string().max(255).optional().or(z.literal("")),
+  ogImage: z.string().max(500).optional().or(z.literal("")),
   status: cmsPageStatusSchema.default('draft'),
 })
 
@@ -486,16 +486,16 @@ export const blogPostSourceSchema = z.enum(['manual', 'ai', 'api'])
 
 export const createBlogPostSchema = z.object({
   title: z.string().min(1, 'Titel ist erforderlich').max(255),
-  slug: z.string().max(255).optional().or(z.literal()),
-  excerpt: z.string().optional().or(z.literal()),
-  content: z.string().optional().or(z.literal()),
-  featuredImage: z.string().max(500).optional().or(z.literal()),
-  featuredImageAlt: z.string().max(255).optional().or(z.literal()),
-  seoTitle: z.string().max(70).optional().or(z.literal()),
-  seoDescription: z.string().max(160).optional().or(z.literal()),
-  seoKeywords: z.string().max(255).optional().or(z.literal()),
+  slug: z.string().max(255).optional().or(z.literal("")),
+  excerpt: z.string().optional().or(z.literal("")),
+  content: z.string().optional().or(z.literal("")),
+  featuredImage: z.string().max(500).optional().or(z.literal("")),
+  featuredImageAlt: z.string().max(255).optional().or(z.literal("")),
+  seoTitle: z.string().max(70).optional().or(z.literal("")),
+  seoDescription: z.string().max(160).optional().or(z.literal("")),
+  seoKeywords: z.string().max(255).optional().or(z.literal("")),
   tags: z.array(z.string()).default([]),
-  category: z.string().max(100).optional().or(z.literal()),
+  category: z.string().max(100).optional().or(z.literal("")),
   status: blogPostStatusSchema.default('draft'),
   source: blogPostSourceSchema.default('manual'),
 })
@@ -527,12 +527,12 @@ export const campaignStatusSchema = z.enum(['draft', 'active', 'paused', 'comple
 
 export const createMarketingCampaignSchema = z.object({
   name: z.string().min(1, 'Name ist erforderlich').max(255),
-  description: z.string().optional().or(z.literal()),
+  description: z.string().optional().or(z.literal("")),
   type: campaignTypeSchema,
   status: campaignStatusSchema.default('draft'),
-  targetAudience: z.string().optional().or(z.literal()),
-  startDate: z.string().optional().or(z.literal()),
-  endDate: z.string().optional().or(z.literal()),
+  targetAudience: z.string().optional().or(z.literal("")),
+  startDate: z.string().optional().or(z.literal("")),
+  endDate: z.string().optional().or(z.literal("")),
   settings: z.record(z.string(), z.unknown()).default({}),
 })
 
@@ -543,14 +543,14 @@ export const marketingTaskStatusSchema = z.enum(['draft', 'scheduled', 'sent', '
 
 export const createMarketingTaskSchema = z.object({
   type: marketingTaskTypeSchema,
-  recipientEmail: z.string().email().optional().or(z.literal()),
-  recipientName: z.string().max(255).optional().or(z.literal()),
-  recipientCompany: z.string().max(255).optional().or(z.literal()),
+  recipientEmail: z.string().email().optional().or(z.literal("")),
+  recipientName: z.string().max(255).optional().or(z.literal("")),
+  recipientCompany: z.string().max(255).optional().or(z.literal("")),
   personId: uuidSchema.nullable().optional(),
   companyId: uuidSchema.nullable().optional(),
-  subject: z.string().max(255).optional().or(z.literal()),
-  content: z.string().optional().or(z.literal()),
-  scheduledAt: z.string().optional().or(z.literal()),
+  subject: z.string().max(255).optional().or(z.literal("")),
+  content: z.string().optional().or(z.literal("")),
+  scheduledAt: z.string().optional().or(z.literal("")),
   status: marketingTaskStatusSchema.default('draft'),
 })
 
@@ -559,7 +559,7 @@ export const updateMarketingTaskSchema = createMarketingTaskSchema.partial()
 export const createMarketingTemplateSchema = z.object({
   name: z.string().min(1, 'Name ist erforderlich').max(255),
   type: marketingTaskTypeSchema,
-  subject: z.string().max(255).optional().or(z.literal()),
+  subject: z.string().max(255).optional().or(z.literal("")),
   content: z.string().min(1, 'Inhalt ist erforderlich'),
   isDefault: z.boolean().default(false),
 })
@@ -571,7 +571,7 @@ export const generateMarketingContentSchema = z.object({
   recipientIds: z.array(uuidSchema).optional(),
   tone: z.enum(['professional', 'casual', 'persuasive']).default('professional'),
   language: z.enum(['de', 'en']).default('de'),
-  context: z.string().optional().or(z.literal()),
+  context: z.string().optional().or(z.literal("")),
 })
 
 // ============================================
@@ -582,7 +582,7 @@ export const socialPostStatusSchema = z.enum(['draft', 'scheduled', 'posted', 'f
 
 export const createSocialMediaTopicSchema = z.object({
   name: z.string().min(1, 'Name ist erforderlich').max(100),
-  description: z.string().optional().or(z.literal()),
+  description: z.string().optional().or(z.literal("")),
   color: z.string().max(7).default('#3b82f6'),
 })
 
@@ -591,11 +591,11 @@ export const updateSocialMediaTopicSchema = createSocialMediaTopicSchema.partial
 export const createSocialMediaPostSchema = z.object({
   topicId: uuidSchema.nullable().optional(),
   platform: socialPlatformSchema,
-  title: z.string().max(255).optional().or(z.literal()),
+  title: z.string().max(255).optional().or(z.literal("")),
   content: z.string().min(1, 'Inhalt ist erforderlich'),
   hashtags: z.array(z.string()).default([]),
-  imageUrl: z.string().max(500).optional().or(z.literal()),
-  scheduledAt: z.string().optional().or(z.literal()),
+  imageUrl: z.string().max(500).optional().or(z.literal("")),
+  scheduledAt: z.string().optional().or(z.literal("")),
   status: socialPostStatusSchema.default('draft'),
 })
 
@@ -642,16 +642,16 @@ export const searchOpportunitiesSchema = z.object({
 
 export const updateOpportunitySchema = z.object({
   name: z.string().min(1).max(255).optional(),
-  industry: z.string().max(255).optional().or(z.literal()),
-  address: z.string().max(500).optional().or(z.literal()),
-  city: z.string().max(255).optional().or(z.literal()),
-  postalCode: z.string().max(20).optional().or(z.literal()),
-  country: z.string().max(10).optional().or(z.literal()),
-  phone: z.string().max(100).optional().or(z.literal()),
-  email: z.string().max(255).optional().or(z.literal()),
-  website: z.string().max(500).optional().or(z.literal()),
+  industry: z.string().max(255).optional().or(z.literal("")),
+  address: z.string().max(500).optional().or(z.literal("")),
+  city: z.string().max(255).optional().or(z.literal("")),
+  postalCode: z.string().max(20).optional().or(z.literal("")),
+  country: z.string().max(10).optional().or(z.literal("")),
+  phone: z.string().max(100).optional().or(z.literal("")),
+  email: z.string().max(255).optional().or(z.literal("")),
+  website: z.string().max(500).optional().or(z.literal("")),
   status: opportunityStatusSchema.optional(),
-  notes: z.string().optional().or(z.literal()),
+  notes: z.string().optional().or(z.literal("")),
 })
 
 // ============================================
@@ -659,17 +659,17 @@ export const updateOpportunitySchema = z.object({
 // ============================================
 export const cockpitSystemSchema = z.object({
   name: z.string().min(1).max(255),
-  hostname: z.string().max(500).optional().or(z.literal()),
-  url: z.string().max(500).optional().or(z.literal()),
-  category: z.string().max(100).optional().or(z.literal()),
-  function: z.string().max(255).optional().or(z.literal()),
-  description: z.string().optional().or(z.literal()),
-  ipAddress: z.string().max(45).optional().or(z.literal()),
+  hostname: z.string().max(500).optional().or(z.literal("")),
+  url: z.string().max(500).optional().or(z.literal("")),
+  category: z.string().max(100).optional().or(z.literal("")),
+  function: z.string().max(255).optional().or(z.literal("")),
+  description: z.string().optional().or(z.literal("")),
+  ipAddress: z.string().max(45).optional().or(z.literal("")),
   port: z.coerce.number().min(1).max(65535).optional().nullable(),
-  protocol: z.string().max(20).optional().or(z.literal()),
+  protocol: z.string().max(20).optional().or(z.literal("")),
   status: z.enum(['active', 'inactive', 'maintenance']).default('active'),
   tags: z.array(z.string()).optional().default([]),
-  notes: z.string().optional().or(z.literal()),
+  notes: z.string().optional().or(z.literal("")),
 })
 
 export const updateCockpitSystemSchema = cockpitSystemSchema.partial()
@@ -677,9 +677,9 @@ export const updateCockpitSystemSchema = cockpitSystemSchema.partial()
 export const cockpitCredentialSchema = z.object({
   type: z.enum(['login', 'api_key', 'ssh_key', 'certificate', 'token', 'database', 'ftp', 'other']),
   label: z.string().min(1).max(255),
-  username: z.string().max(255).optional().or(z.literal()),
-  password: z.string().optional().or(z.literal()),
-  notes: z.string().optional().or(z.literal()),
+  username: z.string().max(255).optional().or(z.literal("")),
+  password: z.string().optional().or(z.literal("")),
+  notes: z.string().optional().or(z.literal("")),
 })
 
 export const updateCockpitCredentialSchema = cockpitCredentialSchema.partial()
@@ -704,7 +704,7 @@ export function validateAndParse<T>(
 export const createProcessSchema = z.object({
   key: z.string().min(1).max(20),
   name: z.string().min(1).max(255),
-  description: z.string().optional().or(z.literal()),
+  description: z.string().optional().or(z.literal("")),
   sortOrder: z.number().int().optional(),
 })
 
@@ -712,11 +712,11 @@ export const updateProcessSchema = createProcessSchema.partial()
 
 export const createProcessTaskSchema = z.object({
   taskKey: z.string().min(1).max(20),
-  subprocess: z.string().max(255).optional().or(z.literal()),
+  subprocess: z.string().max(255).optional().or(z.literal("")),
   title: z.string().min(1).max(255),
-  purpose: z.string().optional().or(z.literal()),
-  trigger: z.string().optional().or(z.literal()),
-  timeEstimate: z.string().max(50).optional().or(z.literal()),
+  purpose: z.string().optional().or(z.literal("")),
+  trigger: z.string().optional().or(z.literal("")),
+  timeEstimate: z.string().max(50).optional().or(z.literal("")),
   automationPotential: z.enum(['Hoch', 'Mittel', 'Niedrig']).optional(),
   tools: z.array(z.string()).default([]),
   prerequisites: z.array(z.string()).default([]),
@@ -727,12 +727,12 @@ export const createProcessTaskSchema = z.object({
     hint: z.string().optional(),
   })).default([]),
   checklist: z.array(z.string()).default([]),
-  expectedOutput: z.string().optional().or(z.literal()),
-  errorEscalation: z.string().optional().or(z.literal()),
-  solution: z.string().optional().or(z.literal()),
+  expectedOutput: z.string().optional().or(z.literal("")),
+  errorEscalation: z.string().optional().or(z.literal("")),
+  solution: z.string().optional().or(z.literal("")),
   sortOrder: z.number().int().optional(),
   appStatus: z.enum(['none', 'partial', 'full']).optional(),
-  appNotes: z.string().optional().or(z.literal()),
+  appNotes: z.string().optional().or(z.literal("")),
   appModule: z.string().max(100).optional().nullable(),
   devRequirements: z.array(z.object({
     tool: z.string(),
