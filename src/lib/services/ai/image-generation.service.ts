@@ -364,7 +364,7 @@ export const ImageGenerationService = {
       const [image] = await db
         .insert(generatedImages)
         .values({
-          tenantId,
+
           prompt: meta?.prompt || taskId,
           provider: 'kie',
           model: meta?.model || 'nano-banana-2',
