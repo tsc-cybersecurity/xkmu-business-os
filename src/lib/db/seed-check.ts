@@ -853,7 +853,7 @@ async function seedCheck() {
 
   // 11. Seed example business data (companies, persons, leads, products, activities)
   if (adminUserId) {
-    await seedExampleBusinessData(db, adminUserId)
+    await seedExampleBusinessData(db, tenantId, adminUserId)
   }
 
   // 12. Seed CMS block type definitions (global, no tenant)
