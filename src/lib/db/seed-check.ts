@@ -12,6 +12,7 @@ import { seedManagementFramework } from './seeds/management-framework.seed'
 import { seedDeliverableCatalog } from './seeds/deliverable-catalog.seed'
 import { seedSopCatalog } from './seeds/sop-catalog.seed'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const adminEmail = process.env.SEED_ADMIN_EMAIL
 const adminPassword = process.env.SEED_ADMIN_PASSWORD
@@ -870,16 +871,11 @@ async function seedCheck() {
   // 14. Seed Management Framework (VTO, Rocks, Scorecard, Issues, OKRs, SOPs)
   await seedManagementFramework(tenantId)
 
-  // 15. Seed Deliverable Catalog (16 Module + 70 Deliverables) — fuer alle Tenants
-  const allTenants = await db.select({ id: tenants.id }).from(tenants)
-  for (const t of allTenants) {
-    await seedDeliverableCatalog(t.id)
-  }
+  // 15. Seed Deliverable Catalog (16 Module + 70 Deliverables)
+  await seedDeliverableCatalog(TENANT_ID)
 
-  // 16. Seed SOP Catalog (alle SOPs aus Framework v2) — fuer alle Tenants
-  for (const t of allTenants) {
-    await seedSopCatalog(t.id)
-  }
+  // 16. Seed SOP Catalog (alle SOPs aus Framework v2)
+  await seedSopCatalog(TENANT_ID)
 
   logger.info('Seed check completed!', { module: 'SeedCheck' })
   logger.info(`Login: ${SEED_DATA.user.email} / ${SEED_DATA.user.password}`, { module: 'SeedCheck' })
