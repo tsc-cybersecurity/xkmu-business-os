@@ -1,27 +1,23 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiValidationError,
   apiServerError,
 } from '@/lib/utils/api-response'
-import {
-  updateMarketingTaskSchema,
+import { updateMarketingTaskSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { MarketingTaskService } from '@/lib/services/marketing-task.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
     const { id } = await params
-    const task = await MarketingTaskService.getById(TENANT_ID, id)
+    const task = await MarketingTaskService.getById(id)
     if (!task) return apiNotFound('Task nicht gefunden')
     return apiSuccess(task)
   })
@@ -40,7 +36,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const task = await MarketingTaskService.update(TENANT_ID, id, validation.data)
+      const task = await MarketingTaskService.update(id, validation.data)
       if (!task) return apiNotFound('Task nicht gefunden')
       return apiSuccess(task)
     } catch (error) {
@@ -56,7 +52,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'marketing', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await MarketingTaskService.delete(TENANT_ID, id)
+    const deleted = await MarketingTaskService.delete(id)
     if (!deleted) return apiNotFound('Task nicht gefunden')
     return apiSuccess({ deleted: true })
   })

@@ -57,9 +57,7 @@ function emptyToNull<T>(value: T): T | null {
 }
 
 export const ProductService = {
-  async create(
-    _tenantId: string,
-    data: CreateProductInput,
+  async create(data: CreateProductInput,
     createdBy?: string
   ): Promise<Product> {
     const slug = emptyToNull(data.slug)
@@ -103,7 +101,7 @@ export const ProductService = {
     return product
   },
 
-  async getById(_tenantId: string, productId: string): Promise<ProductWithCategory | null> {
+  async getById(productId: string): Promise<ProductWithCategory | null> {
     const [row] = await db
       .select({
         ...getTableColumns(products),
@@ -125,9 +123,7 @@ export const ProductService = {
     }
   },
 
-  async update(
-    _tenantId: string,
-    productId: string,
+  async update(productId: string,
     data: UpdateProductInput
   ): Promise<Product | null> {
     const { priceNet, vatRate, weight, dimensions, images, ...rest } = data
@@ -176,7 +172,7 @@ export const ProductService = {
     return product ?? null
   },
 
-  async delete(_tenantId: string, productId: string): Promise<boolean> {
+  async delete(productId: string): Promise<boolean> {
     const result = await db
       .delete(products)
       .where(eq(products.id, productId))
@@ -185,9 +181,7 @@ export const ProductService = {
     return result.length > 0
   },
 
-  async list(
-    _tenantId: string,
-    filters: ProductFilters = {}
+  async list(filters: ProductFilters = {}
   ): Promise<PaginatedResult<ProductWithCategory>> {
     const { type, status, categoryId, tags, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
@@ -284,9 +278,7 @@ export const ProductService = {
     }
   },
 
-  async listPublic(
-    _tenantId: string,
-    filters: { categoryId?: string; search?: string; page?: number; limit?: number } = {}
+  async listPublic(filters: { categoryId?: string; search?: string; page?: number; limit?: number } = {}
   ): Promise<PaginatedResult<ProductWithCategory>> {
     const { categoryId, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
@@ -332,7 +324,7 @@ export const ProductService = {
     }
   },
 
-  async search(_tenantId: string, query: string, limit = 10): Promise<Product[]> {
+  async search(query: string, limit = 10): Promise<Product[]> {
     if (!query.trim()) return []
 
     const items = await db
@@ -349,9 +341,7 @@ export const ProductService = {
     return items
   },
 
-  async addTag(
-    _tenantId: string,
-    productId: string,
+  async addTag(productId: string,
     tag: string
   ): Promise<Product | null> {
     const product = await db
@@ -365,12 +355,10 @@ export const ProductService = {
     const currentTags = product.tags || []
     if (currentTags.includes(tag)) return product
 
-    return this.update(_productId, { tags: [...currentTags, tag] })
+    return this.update(productId, { tags: [...currentTags, tag] })
   },
 
-  async removeTag(
-    _tenantId: string,
-    productId: string,
+  async removeTag(productId: string,
     tag: string
   ): Promise<Product | null> {
     const product = await db
@@ -383,6 +371,6 @@ export const ProductService = {
     if (!product) return null
     const currentTags = product.tags || []
 
-    return this.update(_productId, { tags: currentTags.filter(t => t !== tag) })
+    return this.update(productId, { tags: currentTags.filter(t => t !== tag) })
   },
 }

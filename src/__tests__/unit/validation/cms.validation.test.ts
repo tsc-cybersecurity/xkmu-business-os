@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  createCmsPageSchema,
+import { createCmsPageSchema,
   updateCmsPageSchema,
   createCmsBlockSchema,
   updateCmsBlockSchema,

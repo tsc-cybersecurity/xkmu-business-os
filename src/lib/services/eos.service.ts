@@ -1,22 +1,20 @@
 import { db } from '@/lib/db'
-import {
-  vto, rocks, rockMilestones, scorecardMetrics, scorecardEntries,
+import { vto, rocks, rockMilestones, scorecardMetrics, scorecardEntries,
   eosIssues, meetingSessions,
 } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, asc } from 'drizzle-orm'
 
 export const EosService = {
   // ── VTO ──────────────────────────────────────────────────────────────
-  async getVTO(_tenantId: string) {
+  async getVTO() {
     const [row] = await db.select().from(vto)
       .where(eq(vto.isActive, true))
       .limit(1)
     return row ?? null
   },
 
-  async upsertVTO(_tenantId: string, data: Record<string, unknown>, userId?: string) {
-    const existing = await this.getVTO(_tenantId)
+  async upsertVTO(data: Record<string, unknown>, userId?: string) {
+    const existing = await this.getVTO()
     if (existing) {
       const [updated] = await db.update(vto).set({
         ...data, updatedBy: userId || null, updatedAt: new Date(),
@@ -24,13 +22,13 @@ export const EosService = {
       return updated
     }
     const [created] = await db.insert(vto).values({
-      tenantId: TENANT_ID, ...data, updatedBy: userId || null,
+      ...data, updatedBy: userId || null,
     }).returning()
     return created
   },
 
   // ── Rocks ────────────────────────────────────────────────────────────
-  async listRocks(_tenantId: string, quarter?: string) {
+  async listRocks(quarter?: string) {
     const conditions: ReturnType<typeof eq>[] = []
     if (quarter) conditions.push(eq(rocks.quarter, quarter))
     const rows = await db.select().from(rocks)
@@ -39,7 +37,7 @@ export const EosService = {
     return rows
   },
 
-  async getRock(_tenantId: string, id: string) {
+  async getRock(id: string) {
     const [rock] = await db.select().from(rocks)
       .where(eq(rocks.id, id))
     if (!rock) return null
@@ -48,7 +46,7 @@ export const EosService = {
     return { ...rock, milestones }
   },
 
-  async createRock(_tenantId: string, data: Record<string, unknown>) {
+  async createRock(data: Record<string, unknown>) {
     const [rock] = await db.insert(rocks).values({
       title: data.title as string,
       description: (data.description as string) || null,
@@ -60,7 +58,7 @@ export const EosService = {
     return rock
   },
 
-  async updateRock(_tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateRock(id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.description = data.description
@@ -72,7 +70,7 @@ export const EosService = {
     return rock ?? null
   },
 
-  async deleteRock(_tenantId: string, id: string) {
+  async deleteRock(id: string) {
     await db.delete(rockMilestones).where(eq(rockMilestones.rockId, id))
     const result = await db.delete(rocks)
       .where(eq(rocks.id, id)).returning({ id: rocks.id })
@@ -98,13 +96,13 @@ export const EosService = {
   },
 
   // ── Scorecard ────────────────────────────────────────────────────────
-  async listMetrics(_tenantId: string) {
+  async listMetrics() {
     return db.select().from(scorecardMetrics)
       .where(eq(scorecardMetrics.isActive, true))
       .orderBy(asc(scorecardMetrics.sequence))
   },
 
-  async createMetric(_tenantId: string, data: Record<string, unknown>) {
+  async createMetric(data: Record<string, unknown>) {
     const [metric] = await db.insert(scorecardMetrics).values({
       name: data.name as string,
       ownerId: (data.ownerId as string) || null,
@@ -114,13 +112,13 @@ export const EosService = {
     return metric
   },
 
-  async updateMetric(_tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateMetric(id: string, data: Record<string, unknown>) {
     const [metric] = await db.update(scorecardMetrics).set(data)
       .where(eq(scorecardMetrics.id, id)).returning()
     return metric ?? null
   },
 
-  async deleteMetric(_tenantId: string, id: string) {
+  async deleteMetric(id: string) {
     await db.delete(scorecardEntries).where(eq(scorecardEntries.metricId, id))
     const r = await db.delete(scorecardMetrics)
       .where(eq(scorecardMetrics.id, id)).returning({ id: scorecardMetrics.id })
@@ -149,7 +147,7 @@ export const EosService = {
   },
 
   // ── Issues (IDS) ─────────────────────────────────────────────────────
-  async listIssues(_tenantId: string, status?: string) {
+  async listIssues(status?: string) {
     const conditions: ReturnType<typeof eq>[] = []
     if (status) conditions.push(eq(eosIssues.status, status))
     return db.select().from(eosIssues)
@@ -157,7 +155,7 @@ export const EosService = {
       .orderBy(desc(eosIssues.createdAt))
   },
 
-  async createIssue(_tenantId: string, data: Record<string, unknown>) {
+  async createIssue(data: Record<string, unknown>) {
     const [issue] = await db.insert(eosIssues).values({
       title: data.title as string,
       description: (data.description as string) || null,
@@ -167,7 +165,7 @@ export const EosService = {
     return issue
   },
 
-  async updateIssue(_tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateIssue(id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.description = data.description
@@ -180,19 +178,19 @@ export const EosService = {
     return issue ?? null
   },
 
-  async deleteIssue(_tenantId: string, id: string) {
+  async deleteIssue(id: string) {
     const r = await db.delete(eosIssues)
       .where(eq(eosIssues.id, id)).returning({ id: eosIssues.id })
     return r.length > 0
   },
 
   // ── Meeting Sessions (L10) ───────────────────────────────────────────
-  async listMeetings(_tenantId: string) {
+  async listMeetings() {
     return db.select().from(meetingSessions)
       .orderBy(desc(meetingSessions.meetingDate))
   },
 
-  async createMeeting(_tenantId: string, data: Record<string, unknown>) {
+  async createMeeting(data: Record<string, unknown>) {
     const [meeting] = await db.insert(meetingSessions).values({
       title: (data.title as string) || 'L10 Meeting',
       attendees: (data.attendees as string[]) || [],
@@ -200,7 +198,7 @@ export const EosService = {
     return meeting
   },
 
-  async updateMeeting(_tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateMeeting(id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = {}
     if (data.title !== undefined) updates.title = data.title
     if (data.notes !== undefined) updates.notes = data.notes

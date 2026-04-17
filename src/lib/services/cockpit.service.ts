@@ -45,9 +45,7 @@ function emptyToNull<T>(value: T): T | null {
 }
 
 export const CockpitService = {
-  async create(
-    _tenantId: string,
-    data: CreateCockpitSystemInput,
+  async create(data: CreateCockpitSystemInput,
     userId?: string
   ): Promise<CockpitSystem> {
     const [system] = await db
@@ -72,7 +70,7 @@ export const CockpitService = {
     return system
   },
 
-  async getById(_tenantId: string, id: string): Promise<(CockpitSystem & { credentials: CockpitCredential[] }) | null> {
+  async getById(id: string): Promise<(CockpitSystem & { credentials: CockpitCredential[] }) | null> {
     const [system] = await db
       .select()
       .from(cockpitSystems)
@@ -90,9 +88,7 @@ export const CockpitService = {
     return { ...system, credentials }
   },
 
-  async update(
-    _tenantId: string,
-    id: string,
+  async update(id: string,
     data: UpdateCockpitSystemInput
   ): Promise<CockpitSystem | null> {
     const updateData: Partial<NewCockpitSystem> = {
@@ -109,7 +105,7 @@ export const CockpitService = {
     return system ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(cockpitSystems)
       .where(eq(cockpitSystems.id, id))
@@ -118,9 +114,7 @@ export const CockpitService = {
     return result.length > 0
   },
 
-  async list(
-    _tenantId: string,
-    filters: CockpitSystemFilters = {}
+  async list(filters: CockpitSystemFilters = {}
   ): Promise<PaginatedResult<CockpitSystem & { credentialCount: number }>> {
     const { category, status, search, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
@@ -196,7 +190,7 @@ export const CockpitService = {
     }
   },
 
-  async getCategories(_tenantId: string): Promise<string[]> {
+  async getCategories(): Promise<string[]> {
     const result = await db
       .selectDistinct({ category: cockpitSystems.category })
       .from(cockpitSystems)
@@ -208,7 +202,7 @@ export const CockpitService = {
     return result.map((r) => r.category!).filter(Boolean)
   },
 
-  async getStats(_tenantId: string): Promise<{
+  async getStats(): Promise<{
     total: number
     byStatus: Record<string, number>
     byCategory: Record<string, number>
@@ -304,7 +298,7 @@ export const CockpitService = {
   },
 
   /** Verify a credential belongs to a system owned by the tenant */
-  async verifyCredentialOwnership(_tenantId: string, systemId: string, credentialId: string): Promise<boolean> {
+  async verifyCredentialOwnership(systemId: string, credentialId: string): Promise<boolean> {
     const rows = await db
       .select({ id: cockpitCredentials.id })
       .from(cockpitCredentials)

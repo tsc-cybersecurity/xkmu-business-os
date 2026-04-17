@@ -10,7 +10,7 @@ const updateGrantSchema = z.object({
   name: z.string().min(1).optional(),
   provider: z.string().min(1).optional(),
   purpose: z.string().optional().nullable(),
-  url: z.string().url('Ungültige URL').optional().nullable().or(z.literal('')),
+  url: z.string().url('Ungültige URL').optional().nullable().or(z.literal()),
   region: z.string().min(1).optional(),
   minEmployees: z.number().int().min(0).optional().nullable(),
   maxEmployees: z.number().int().min(0).optional().nullable(),

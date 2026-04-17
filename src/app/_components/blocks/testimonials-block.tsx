@@ -84,7 +84,7 @@ export function TestimonialsBlock({
                     {item.name
                       .split(' ')
                       .map((w) => w[0])
-                      .join('')
+                      .join()
                       .slice(0, 2)}
                   </div>
                 )}

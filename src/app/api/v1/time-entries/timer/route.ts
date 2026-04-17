@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { TimeEntryService } from '@/lib/services/time-entry.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // POST /api/v1/time-entries/timer - Start or stop timer
 export async function POST(request: NextRequest) {
   return withPermission(request, 'time_entries', 'create', async (auth) => {
@@ -13,7 +11,7 @@ export async function POST(request: NextRequest) {
       const { action } = body as { action: 'start' | 'stop' }
 
       if (action === 'start') {
-        const entry = await TimeEntryService.startTimer(TENANT_ID, auth.userId, {
+        const entry = await TimeEntryService.startTimer(auth.userId, {
           companyId: body.companyId,
           description: body.description,
           hourlyRate: body.hourlyRate,
@@ -22,7 +20,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (action === 'stop') {
-        const entry = await TimeEntryService.stopTimer(TENANT_ID, auth.userId)
+        const entry = await TimeEntryService.stopTimer(auth.userId)
         if (!entry) return apiError('NO_TIMER', 'Kein laufender Timer', 400)
         return apiSuccess(entry)
       }
@@ -38,7 +36,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   return withPermission(request, 'time_entries', 'read', async (auth) => {
     if (!auth.userId) return apiSuccess(null)
-    const running = await TimeEntryService.getRunningTimer(TENANT_ID, auth.userId)
+    const running = await TimeEntryService.getRunningTimer(auth.userId)
     return apiSuccess(running)
   })
 }

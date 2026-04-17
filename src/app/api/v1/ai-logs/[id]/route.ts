@@ -1,12 +1,9 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
 } from '@/lib/utils/api-response'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/ai-logs/[id] - Einzelnes Log mit vollem Prompt/Response
@@ -16,7 +13,7 @@ export async function GET(
 ) {
   return withPermission(request, 'ai_logs', 'read', async (auth) => {
     const { id } = await params
-    const log = await AiProviderService.getLogById(TENANT_ID, id)
+    const log = await AiProviderService.getLogById(id)
 
     if (!log) {
       return apiNotFound('Log-Eintrag nicht gefunden')

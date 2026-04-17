@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
   apiServerError,
 } from '@/lib/utils/api-response'
-import {
-  generateTopicsSchema,
+import { generateTopicsSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
@@ -16,8 +14,6 @@ import { db } from '@/lib/db'
 import { socialMediaTopics } from '@/lib/db/schema'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function POST(request: NextRequest) {
   return withPermission(request, 'social_media', 'create', async (auth) => {
     try {
@@ -28,7 +24,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Business-Profil laden
-      const profile = await BusinessProfileService.getByTenant(TENANT_ID)
+      const profile = await BusinessProfileService.getByTenant()
 
       // SWOT-Staerken extrahieren
       let strengths: string | undefined

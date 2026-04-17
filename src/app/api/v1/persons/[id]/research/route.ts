@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
@@ -9,8 +8,6 @@ import { CompanyService } from '@/lib/services/company.service'
 import { LeadResearchService } from '@/lib/services/ai'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // POST /api/v1/persons/[id]/research - Start AI research for a person
@@ -22,7 +19,7 @@ export async function POST(
   const { id } = await params
 
   try {
-    const person = await PersonService.getById(TENANT_ID, id)
+    const person = await PersonService.getById(id)
     if (!person) {
       return apiNotFound('Person not found')
     }
@@ -30,7 +27,7 @@ export async function POST(
     // If person has a linked company, fetch the company name
     let companyName: string | undefined
     if (person.companyId) {
-      const company = await CompanyService.getById(TENANT_ID, person.companyId)
+      const company = await CompanyService.getById(person.companyId)
       if (company) {
         companyName = company.name
       }
@@ -60,7 +57,7 @@ export async function POST(
       },
     }
 
-    await PersonService.update(TENANT_ID, id, {
+    await PersonService.update(id, {
       customFields: updatedCustomFields,
     })
 
@@ -89,7 +86,7 @@ export async function GET(
   return withPermission(request, 'persons', 'update', async (auth) => {
   const { id } = await params
 
-  const person = await PersonService.getById(TENANT_ID, id)
+  const person = await PersonService.getById(id)
   if (!person) {
     return apiNotFound('Person not found')
   }

@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-  GripVertical, Trash2, Plus, ChevronDown, ChevronRight, Settings,
+import { GripVertical, Trash2, Plus, ChevronDown, ChevronRight, Settings,
   Building, User, Link as LinkIcon, Bot, BarChart3, FileText, Mail,
   Bell, Clock, Zap, ArrowDown,
 } from 'lucide-react'

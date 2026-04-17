@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { FormField, ConfirmDialog, EmptyState } from '@/components/shared'
 import { toast } from 'sonner'
-import {
-  ArrowLeft,
+import { ArrowLeft,
   Edit,
   Trash2,
   RotateCcw,

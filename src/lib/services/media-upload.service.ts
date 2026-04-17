@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { mediaUploads } from '@/lib/db/schema'
 import { eq, and, desc, count } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import type { MediaUpload } from '@/lib/db/schema'
 import path from 'path'
 import { logger } from '@/lib/utils/logger'
@@ -43,9 +42,7 @@ export function resolveMediaPath(relativePath: string): string {
 }
 
 export const MediaUploadService = {
-  async upload(
-    _tenantId: string,
-    file: File,
+  async upload(file: File,
     uploadedBy?: string
   ): Promise<MediaUpload> {
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
@@ -73,7 +70,7 @@ export const MediaUploadService = {
     return upload
   },
 
-  async list(_tenantId: string, pagination?: { page?: number; limit?: number }) {
+  async list(pagination?: { page?: number; limit?: number }) {
     const page = pagination?.page ?? 1
     const limit = pagination?.limit ?? 50
     const offset = (page - 1) * limit
@@ -99,7 +96,7 @@ export const MediaUploadService = {
     }
   },
 
-  async delete(_tenantId: string, uploadId: string): Promise<boolean> {
+  async delete(uploadId: string): Promise<boolean> {
     const [upload] = await db
       .select()
       .from(mediaUploads)

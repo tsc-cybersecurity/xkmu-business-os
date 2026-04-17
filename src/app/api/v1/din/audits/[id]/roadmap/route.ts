@@ -6,8 +6,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { dinAuditSessions, dinAnswers, dinRequirements } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // POST /api/v1/din/audits/[id]/roadmap - KI-Security-Roadmap aus Audit-Ergebnissen
@@ -40,11 +38,11 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         `- ${a.reqNumber}: ${a.reqText} (${a.reqPoints} Punkte)${a.justification ? ` — ${a.justification}` : ''}`
       ).join('\n')
 
-      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'security_roadmap')
+      const template = await AiPromptTemplateService.getOrDefault('security_roadmap')
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { requirements: context })
 
       const response = await AIService.completeWithContext(userPrompt,
-        { tenantId: TENANT_ID, feature: 'security_roadmap' },
+        { feature: 'security_roadmap' },
         { maxTokens: 3000, temperature: 0.3, systemPrompt: template.systemPrompt })
 
       return apiSuccess({

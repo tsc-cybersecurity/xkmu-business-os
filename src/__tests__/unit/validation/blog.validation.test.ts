@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  createBlogPostSchema,
+import { createBlogPostSchema,
   updateBlogPostSchema,
   generateBlogPostSchema,
 } from '@/lib/utils/validation'

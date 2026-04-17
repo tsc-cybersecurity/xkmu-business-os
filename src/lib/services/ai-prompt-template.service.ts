@@ -32,14 +32,14 @@ export const AiPromptTemplateService = {
   // CRUD
   // ============================================
 
-  async list(_tenantId: string) {
+  async list() {
     return db
       .select()
       .from(aiPromptTemplates)
       .orderBy(asc(aiPromptTemplates.slug))
   },
 
-  async getById(_tenantId: string, id: string) {
+  async getById(id: string) {
     const [template] = await db
       .select()
       .from(aiPromptTemplates)
@@ -48,7 +48,7 @@ export const AiPromptTemplateService = {
     return template || null
   },
 
-  async getBySlug(_tenantId: string, slug: string) {
+  async getBySlug(slug: string) {
     const [template] = await db
       .select()
       .from(aiPromptTemplates)
@@ -62,7 +62,7 @@ export const AiPromptTemplateService = {
     return template || null
   },
 
-  async create(_tenantId: string, data: AiPromptTemplateData) {
+  async create(data: AiPromptTemplateData) {
     const [template] = await db
       .insert(aiPromptTemplates)
       .values({
@@ -81,7 +81,7 @@ export const AiPromptTemplateService = {
     return template
   },
 
-  async update(_tenantId: string, id: string, data: Partial<AiPromptTemplateData>) {
+  async update(id: string, data: Partial<AiPromptTemplateData>) {
     const updateData: Record<string, unknown> = { updatedAt: new Date() }
 
     if (data.name !== undefined) updateData.name = data.name
@@ -101,9 +101,9 @@ export const AiPromptTemplateService = {
     return template || null
   },
 
-  async delete(_tenantId: string, id: string) {
+  async delete(id: string) {
     // Don't allow deleting default templates
-    const existing = await this.getById(_id)
+    const existing = await this.getById(id)
     if (!existing || existing.isDefault) {
       return false
     }
@@ -120,7 +120,7 @@ export const AiPromptTemplateService = {
   // Seed-Defaults
   // ============================================
 
-  async seedDefaults(_tenantId: string) {
+  async seedDefaults() {
     const existing = await db
       .select({ slug: aiPromptTemplates.slug })
       .from(aiPromptTemplates)
@@ -142,14 +142,14 @@ export const AiPromptTemplateService = {
     }
   },
 
-  async resetToDefault(_tenantId: string, id: string) {
-    const existing = await this.getById(_id)
+  async resetToDefault(id: string) {
+    const existing = await this.getById(id)
     if (!existing) return null
 
     const defaults = DEFAULT_TEMPLATES[existing.slug]
     if (!defaults) return null
 
-    return this.update(_id, {
+    return this.update(id, {
       systemPrompt: defaults.systemPrompt,
       userPrompt: defaults.userPrompt,
       outputFormat: defaults.outputFormat,
@@ -165,13 +165,13 @@ export const AiPromptTemplateService = {
   /**
    * Lädt Template aus DB oder verwendet hart codierte Defaults als Fallback
    */
-  async getOrDefault(_tenantId: string, slug: string): Promise<{
+  async getOrDefault(slug: string): Promise<{
     systemPrompt: string
     userPrompt: string
     outputFormat: string
   }> {
     // Versuche aus DB zu laden (nur wenn systemPrompt befüllt ist)
-    const template = await this.getBySlug(_slug)
+    const template = await this.getBySlug(slug)
     if (template && template.systemPrompt) {
       return {
         systemPrompt: template.systemPrompt,

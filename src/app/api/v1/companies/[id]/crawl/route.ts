@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
@@ -13,8 +12,6 @@ import { db } from '@/lib/db'
 import { aiProviders } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // POST /api/v1/companies/[id]/crawl - Start a full website crawl
@@ -26,7 +23,7 @@ export async function POST(
   const { id } = await params
 
   try {
-    const company = await CompanyService.getById(TENANT_ID, id)
+    const company = await CompanyService.getById(id)
     if (!company) {
       return apiNotFound('Company not found')
     }
@@ -57,7 +54,7 @@ export async function POST(
     logger.info(`Starting crawl for: ${company.website}`, { module: 'CompaniesCrawlAPI' })
 
     // Create initial record with status 'crawling'
-    const crawlRecord = await FirecrawlResearchService.create(TENANT_ID, id, {
+    const crawlRecord = await FirecrawlResearchService.create(id, {
       url: company.website,
       status: 'crawling',
     })
@@ -73,7 +70,7 @@ export async function POST(
 
     if (result.success) {
       // Update record with results
-      const updated = await FirecrawlResearchService.update(TENANT_ID, crawlRecord.id, {
+      const updated = await FirecrawlResearchService.update(crawlRecord.id, {
         status: 'completed',
         pageCount: result.pages.length,
         pages: result.pages,
@@ -87,7 +84,7 @@ export async function POST(
       })
     } else {
       // Update record with error
-      await FirecrawlResearchService.update(TENANT_ID, crawlRecord.id, {
+      await FirecrawlResearchService.update(crawlRecord.id, {
         status: 'failed',
         error: result.error,
       })
@@ -113,12 +110,12 @@ export async function GET(
   return withPermission(request, 'companies', 'update', async (auth) => {
   const { id } = await params
 
-  const company = await CompanyService.getById(TENANT_ID, id)
+  const company = await CompanyService.getById(id)
   if (!company) {
     return apiNotFound('Company not found')
   }
 
-  const crawls = await FirecrawlResearchService.listByCompany(TENANT_ID, id)
+  const crawls = await FirecrawlResearchService.listByCompany(id)
 
   return apiSuccess({
     crawls,

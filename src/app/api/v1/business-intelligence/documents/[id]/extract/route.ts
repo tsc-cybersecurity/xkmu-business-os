@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
 import { readFile } from 'fs/promises'
 import path from 'path'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
   apiServerError,
@@ -10,8 +9,6 @@ import {
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const UPLOAD_DIR = process.env.BI_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads', 'bi')
 
 export async function POST(
@@ -21,11 +18,11 @@ export async function POST(
   return withPermission(request, 'business_intelligence', 'update', async (auth) => {
     try {
       const { id } = await params
-      const doc = await BusinessDocumentService.getById(TENANT_ID, id)
+      const doc = await BusinessDocumentService.getById(id)
       if (!doc) return apiNotFound('Dokument nicht gefunden')
 
       // Mark as processing
-      await BusinessDocumentService.updateExtraction(TENANT_ID, id, null, 'processing')
+      await BusinessDocumentService.updateExtraction(id, null, 'processing')
 
       let extractedText = ''
 
@@ -63,15 +60,15 @@ export async function POST(
         } else if (doc.mimeType === 'text/plain') {
           extractedText = buffer.toString('utf-8')
         } else {
-          await BusinessDocumentService.updateExtraction(TENANT_ID, id, null, 'failed')
+          await BusinessDocumentService.updateExtraction(id, null, 'failed')
           return apiError('VALIDATION_ERROR', 'Dateityp wird fuer Textextraktion nicht unterstuetzt', 400)
         }
 
-        const updated = await BusinessDocumentService.updateExtraction(TENANT_ID, id, extractedText, 'completed')
+        const updated = await BusinessDocumentService.updateExtraction(id, extractedText, 'completed')
         return apiSuccess(updated)
       } catch (extractError) {
         logger.error('Text extraction failed', extractError, { module: 'BusinessIntelligenceDocumentsExtractAPI' })
-        await BusinessDocumentService.updateExtraction(TENANT_ID, id, null, 'failed')
+        await BusinessDocumentService.updateExtraction(id, null, 'failed')
         return apiError('EXTRACTION_FAILED', 'Textextraktion fehlgeschlagen', 500)
       }
     } catch (error) {

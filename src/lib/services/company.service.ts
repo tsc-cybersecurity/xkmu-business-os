@@ -44,9 +44,7 @@ function emptyToNull<T>(value: T): T | null {
 }
 
 export const CompanyService = {
-  async create(
-    _tenantId: string,
-    data: CreateCompanyInput,
+  async create(data: CreateCompanyInput,
     createdBy?: string
   ): Promise<Company> {
     const [company] = await db
@@ -77,7 +75,7 @@ export const CompanyService = {
     return company
   },
 
-  async getById(_tenantId: string, companyId: string): Promise<Company | null> {
+  async getById(companyId: string): Promise<Company | null> {
     const [company] = await db
       .select()
       .from(companies)
@@ -87,9 +85,7 @@ export const CompanyService = {
     return company ?? null
   },
 
-  async update(
-    _tenantId: string,
-    companyId: string,
+  async update(companyId: string,
     data: UpdateCompanyInput
   ): Promise<Company | null> {
     // Build update data excluding fields that need transformation
@@ -118,7 +114,7 @@ export const CompanyService = {
     return company ?? null
   },
 
-  async delete(_tenantId: string, companyId: string): Promise<boolean> {
+  async delete(companyId: string): Promise<boolean> {
     const result = await db
       .delete(companies)
       .where(eq(companies.id, companyId))
@@ -127,9 +123,7 @@ export const CompanyService = {
     return result.length > 0
   },
 
-  async list(
-    _tenantId: string,
-    filters: CompanyFilters = {}
+  async list(filters: CompanyFilters = {}
   ): Promise<PaginatedResult<Company>> {
     const { status, tags, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
@@ -176,7 +170,7 @@ export const CompanyService = {
     }
   },
 
-  async search(_tenantId: string, query: string, limit = 10): Promise<Company[]> {
+  async search(query: string, limit = 10): Promise<Company[]> {
     if (!query.trim()) {
       return []
     }
@@ -190,12 +184,10 @@ export const CompanyService = {
     return items
   },
 
-  async addTag(
-    _tenantId: string,
-    companyId: string,
+  async addTag(companyId: string,
     tag: string
   ): Promise<Company | null> {
-    const company = await this.getById(_companyId)
+    const company = await this.getById(companyId)
     if (!company) return null
 
     const currentTags = company.tags || []
@@ -203,27 +195,25 @@ export const CompanyService = {
       return company
     }
 
-    return this.update(_companyId, {
+    return this.update(companyId, {
       tags: [...currentTags, tag],
     })
   },
 
-  async removeTag(
-    _tenantId: string,
-    companyId: string,
+  async removeTag(companyId: string,
     tag: string
   ): Promise<Company | null> {
-    const company = await this.getById(_companyId)
+    const company = await this.getById(companyId)
     if (!company) return null
 
     const currentTags = company.tags || []
 
-    return this.update(_companyId, {
+    return this.update(companyId, {
       tags: currentTags.filter((t) => t !== tag),
     })
   },
 
-  async getPersons(_tenantId: string, companyId: string): Promise<Person[]> {
+  async getPersons(companyId: string): Promise<Person[]> {
     const items = await db
       .select()
       .from(persons)
@@ -236,9 +226,7 @@ export const CompanyService = {
   /**
    * Prüft ob eine Firma mit gleichem Namen oder Website-Domain bereits existiert.
    */
-  async checkDuplicate(
-    _tenantId: string,
-    name: string,
+  async checkDuplicate(name: string,
     website?: string
   ): Promise<Company | null> {
     // Name-Check (case-insensitive)

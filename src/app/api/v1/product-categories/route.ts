@@ -1,27 +1,23 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  createProductCategorySchema,
+import { createProductCategorySchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { ProductCategoryService } from '@/lib/services/product-category.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/product-categories - List all categories
 export async function GET(request: NextRequest) {
   return withPermission(request, 'product_categories', 'read', async (auth) => {
     try {
       const tree = request.nextUrl.searchParams.get('tree') === 'true'
       const items = tree
-        ? await ProductCategoryService.getTree(TENANT_ID)
-        : await ProductCategoryService.list(TENANT_ID)
+        ? await ProductCategoryService.getTree()
+        : await ProductCategoryService.list()
 
       return apiSuccess(items)
     } catch (error) {
@@ -42,7 +38,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const category = await ProductCategoryService.create(TENANT_ID, validation.data)
+      const category = await ProductCategoryService.create(validation.data)
       return apiSuccess(category, undefined, 201)
     } catch (error) {
       logger.error('Failed to create category', error, { module: 'ProductCategoriesAPI' })

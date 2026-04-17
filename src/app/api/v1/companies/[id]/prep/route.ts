@@ -7,8 +7,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { activities, leads, opportunities } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/companies/[id]/prep - KI-Gespraechsvorbereitung
@@ -16,7 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
   return withPermission(request, 'companies', 'read', async (auth) => {
     try {
       const { id } = await params
-      const company = await CompanyService.getById(TENANT_ID, id)
+      const company = await CompanyService.getById(id)
       if (!company) return apiNotFound('Firma nicht gefunden')
 
       // Letzte Aktivitaeten
@@ -61,11 +59,11 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
           : 'Keine offenen Chancen',
       ].filter(Boolean).join('\n')
 
-      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'meeting_prep')
+      const template = await AiPromptTemplateService.getOrDefault('meeting_prep')
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { context })
 
       const response = await AIService.completeWithContext(userPrompt,
-        { tenantId: TENANT_ID, feature: 'meeting_prep' },
+        { feature: 'meeting_prep' },
         { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt })
 
       return apiSuccess({

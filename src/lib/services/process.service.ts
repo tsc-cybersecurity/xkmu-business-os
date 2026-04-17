@@ -15,7 +15,7 @@ import { eq, and, asc, count } from 'drizzle-orm'
 export const ProcessService = {
   // --- Processes ---
 
-  async list(_tenantId: string): Promise<(Process & { taskCount: number })[]> {
+  async list(): Promise<(Process & { taskCount: number })[]> {
     const items = await db
       .select()
       .from(processes)
@@ -38,7 +38,7 @@ export const ProcessService = {
     }))
   },
 
-  async getById(_tenantId: string, id: string): Promise<Process | null> {
+  async getById(id: string): Promise<Process | null> {
     const [process] = await db
       .select()
       .from(processes)
@@ -47,7 +47,7 @@ export const ProcessService = {
     return process ?? null
   },
 
-  async getByKey(_tenantId: string, key: string): Promise<Process | null> {
+  async getByKey(key: string): Promise<Process | null> {
     const [process] = await db
       .select()
       .from(processes)
@@ -56,7 +56,7 @@ export const ProcessService = {
     return process ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     key: string
     name: string
     description?: string
@@ -74,7 +74,7 @@ export const ProcessService = {
     return process
   },
 
-  async update(_tenantId: string, id: string, data: Partial<{
+  async update(id: string, data: Partial<{
     key: string
     name: string
     description: string
@@ -94,7 +94,7 @@ export const ProcessService = {
     return process ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(processes)
       .where(eq(processes.id, id))
@@ -104,7 +104,7 @@ export const ProcessService = {
 
   // --- Dev Tasks (all tasks with devRequirements across processes) ---
 
-  async listDevTasks(_tenantId: string): Promise<(ProcessTask & { processKey: string; processName: string })[]> {
+  async listDevTasks(): Promise<(ProcessTask & { processKey: string; processName: string })[]> {
     const rows = await db
       .select({
         task: processTasks,
@@ -126,7 +126,7 @@ export const ProcessService = {
 
   // --- Process Tasks ---
 
-  async listTasks(_tenantId: string, processId: string): Promise<ProcessTask[]> {
+  async listTasks(processId: string): Promise<ProcessTask[]> {
     return db
       .select()
       .from(processTasks)
@@ -134,7 +134,7 @@ export const ProcessService = {
       .orderBy(asc(processTasks.sortOrder), asc(processTasks.taskKey))
   },
 
-  async getTaskById(_tenantId: string, taskId: string): Promise<ProcessTask | null> {
+  async getTaskById(taskId: string): Promise<ProcessTask | null> {
     const [task] = await db
       .select()
       .from(processTasks)
@@ -143,7 +143,7 @@ export const ProcessService = {
     return task ?? null
   },
 
-  async createTask(_tenantId: string, processId: string, data: {
+  async createTask(processId: string, data: {
     taskKey: string
     subprocess?: string
     title: string
@@ -184,7 +184,7 @@ export const ProcessService = {
     return task
   },
 
-  async updateTask(_tenantId: string, taskId: string, data: Partial<{
+  async updateTask(taskId: string, data: Partial<{
     taskKey: string
     subprocess: string
     title: string
@@ -234,7 +234,7 @@ export const ProcessService = {
     return task ?? null
   },
 
-  async updateTaskByKey(_tenantId: string, taskKey: string, data: {
+  async updateTaskByKey(taskKey: string, data: {
     appStatus?: string
     appNotes?: string
     appModule?: string | null
@@ -254,7 +254,7 @@ export const ProcessService = {
     return result.length > 0
   },
 
-  async deleteTask(_tenantId: string, taskId: string): Promise<boolean> {
+  async deleteTask(taskId: string): Promise<boolean> {
     const result = await db
       .delete(processTasks)
       .where(eq(processTasks.id, taskId))
@@ -264,7 +264,7 @@ export const ProcessService = {
 
   // --- Seed from JSON ---
 
-  async seed(_tenantId: string, mainJson: MainJsonData, newSopsJson: NewSopItem[]): Promise<{
+  async seed(mainJson: MainJsonData, newSopsJson: NewSopItem[]): Promise<{
     processCount: number
     taskCount: number
   }> {
@@ -277,13 +277,13 @@ export const ProcessService = {
 
     for (const [key, area] of Object.entries(mainJson.prozessbereiche)) {
       // Check if already exists
-      const existing = await this.getByKey(_key)
+      const existing = await this.getByKey(key)
       if (existing) {
         processMap.set(key, existing.id)
         continue
       }
 
-      const process = await this.create('', {
+      const process = await this.create({
         key,
         name: area.name,
         description: area.beschreibung,
@@ -308,7 +308,7 @@ export const ProcessService = {
 
       if (existingTasks.length > 0) continue
 
-      await this.createTask(_processId, {
+      await this.createTask(processId, {
         taskKey: aufgabe.id,
         subprocess: aufgabe.teilprozess,
         title: aufgabe.aufgabe,
@@ -340,11 +340,11 @@ export const ProcessService = {
 
       // Auto-create process area if not yet known (e.g. KP6, KP7 from new_sops)
       if (!processId) {
-        const existing = await this.getByKey(_processKey)
+        const existing = await this.getByKey(processKey)
         if (existing) {
           processId = existing.id
         } else {
-          const newProcess = await this.create('', {
+          const newProcess = await this.create({
             key: processKey,
             name: sop.process || processKey,
             description: `Automatisch erstellt aus ${sop.process || processKey}`,
@@ -364,7 +364,7 @@ export const ProcessService = {
 
       if (existingTasks.length > 0) continue
 
-      await this.createTask(_processId, {
+      await this.createTask(processId, {
         taskKey: sop.id,
         subprocess: sop.subprocess,
         title: sop.title,

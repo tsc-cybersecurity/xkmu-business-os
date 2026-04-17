@@ -5,8 +5,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { documents } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // POST /api/v1/documents/[id]/send - Dokument per E-Mail versenden
@@ -36,9 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       const docType = doc.type === 'offer' ? 'Angebot' : 'Rechnung'
       const emailSubject = subject || `${docType} ${doc.number || ''} von ${doc.customerName || ''}`
 
-      const result = await EmailService.sendWithTemplate(
-        TENANT_ID,
-        doc.type === 'offer' ? 'offer_send' : 'reminder_7d',
+      const result = await EmailService.sendWithTemplate(doc.type === 'offer' ? 'offer_send' : 'reminder_7d',
         to,
         {
           name: doc.customerName || 'Kunde',

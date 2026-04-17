@@ -1,7 +1,6 @@
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Select,
+import { Select,
   SelectContent,
   SelectItem,
   SelectTrigger,

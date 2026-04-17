@@ -40,18 +40,16 @@ export interface GeneratedImageResult {
 }
 
 async function downloadAndSave(
-  imageUrl: string,
-  tenantId: string
+  imageUrl: string
 ): Promise<{ localPath: string; servePath: string; sizeBytes: number }> {
-  const result = await ImageOptimizerService.optimizeFromUrl(imageUrl, `generated/${tenantId}`)
+  const result = await ImageOptimizerService.optimizeFromUrl(imageUrl, 'generated')
   return { localPath: result.localPath, servePath: result.servePath, sizeBytes: result.sizeBytes }
 }
 
 async function saveBase64(
-  b64: string,
-  tenantId: string
+  b64: string
 ): Promise<{ localPath: string; servePath: string; sizeBytes: number }> {
-  const result = await ImageOptimizerService.optimizeFromBase64(b64, `generated/${tenantId}`)
+  const result = await ImageOptimizerService.optimizeFromBase64(b64, 'generated')
   return { localPath: result.localPath, servePath: result.servePath, sizeBytes: result.sizeBytes }
 }
 
@@ -166,7 +164,7 @@ async function generateWithGemini(
 // Provider: kie.ai (Nano Banana, FLUX, etc.)
 // ============================================
 
-async function getKieApiKey(tenantId: string): Promise<string> {
+async function getKieApiKey(): Promise<string> {
   const [kieConfig] = await db
     .select()
     .from(aiProviders)
@@ -212,14 +210,13 @@ export const ImageGenerationService = {
    * Generate an image and save to gallery
    */
   async generate(
-    tenantId: string,
     userId: string | null,
     params: ImageGenerationParams
   ): Promise<GeneratedImageResult> {
     const startTime = Date.now()
 
     // Get API key for chosen provider
-    const providers = await AiProviderService.getActiveProviders(tenantId)
+    const providers = await AiProviderService.getActiveProviders()
 
     let servePath: string
     let sizeBytes = 0
@@ -236,7 +233,7 @@ export const ImageGenerationService = {
       actualModel = result.model
       actualSize = result.size
 
-      const saved = await saveBase64(result.b64, tenantId)
+      const saved = await saveBase64(result.b64)
       servePath = saved.servePath
       sizeBytes = saved.sizeBytes
     } else if (params.provider === 'openai') {
@@ -250,11 +247,11 @@ export const ImageGenerationService = {
       revisedPrompt = result.revisedPrompt
 
       if (result.b64) {
-        const saved = await saveBase64(result.b64, tenantId)
+        const saved = await saveBase64(result.b64)
         servePath = saved.servePath
         sizeBytes = saved.sizeBytes
       } else if (result.imageUrl) {
-        const saved = await downloadAndSave(result.imageUrl, tenantId)
+        const saved = await downloadAndSave(result.imageUrl)
         servePath = saved.servePath
         sizeBytes = saved.sizeBytes
       } else {
@@ -262,7 +259,7 @@ export const ImageGenerationService = {
       }
     } else {
       // kie.ai — async: start task, return taskId, frontend polls
-      const apiKey = await getKieApiKey(tenantId)
+      const apiKey = await getKieApiKey()
       const task = await startKieTask(params, apiKey)
 
       // Return immediately with taskId — frontend will poll /api/v1/images/status
@@ -338,7 +335,6 @@ export const ImageGenerationService = {
    * Check kie.ai task status and finalize if complete
    */
   async checkTaskStatus(
-    tenantId: string,
     taskId: string,
     meta?: { prompt?: string; model?: string; category?: string }
   ): Promise<{
@@ -349,7 +345,7 @@ export const ImageGenerationService = {
     error?: string
     debug?: unknown
   }> {
-    const apiKey = await getKieApiKey(tenantId)
+    const apiKey = await getKieApiKey()
     const status = await pollKieTask(taskId, apiKey)
     logger.info(`checkTaskStatus raw: ${JSON.stringify(status)}`, { module: 'ImageGeneration' })
 
@@ -359,7 +355,7 @@ export const ImageGenerationService = {
       }
 
       // Download and save
-      const saved = await downloadAndSave(status.resultUrl, tenantId)
+      const saved = await downloadAndSave(status.resultUrl)
 
       const [image] = await db
         .insert(generatedImages)
@@ -390,7 +386,7 @@ export const ImageGenerationService = {
   /**
    * List gallery images
    */
-  async list(tenantId: string, filters?: {
+  async list(filters?: {
     category?: string
     search?: string
     page?: number
@@ -429,7 +425,7 @@ export const ImageGenerationService = {
   /**
    * Get single image
    */
-  async getById(tenantId: string, id: string) {
+  async getById(id: string) {
     const [image] = await db
       .select()
       .from(generatedImages)
@@ -441,7 +437,7 @@ export const ImageGenerationService = {
   /**
    * Delete image (DB + file)
    */
-  async delete(tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const image = await this.getById(id)
     if (!image) return false
 
@@ -467,7 +463,7 @@ export const ImageGenerationService = {
   /**
    * Bulk delete
    */
-  async bulkDelete(tenantId: string, ids: string[]): Promise<number> {
+  async bulkDelete(ids: string[]): Promise<number> {
     if (ids.length === 0) return 0
     const result = await db
       .delete(generatedImages)

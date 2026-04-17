@@ -10,8 +10,7 @@ import { DocumentForm } from '../../_components/document-form'
 import { DocumentStatusBadge } from '../../_components/status-badge'
 import { LineItemsEditor } from '../../_components/line-items-editor'
 import { toast } from 'sonner'
-import {
-  ArrowLeft,
+import { ArrowLeft,
   Edit,
   Trash2,
   Send,

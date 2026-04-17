@@ -5,8 +5,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { socialMediaPosts } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // POST /api/v1/social-media/posts/[id]/publish - Post auf Plattform(en) veroeffentlichen
@@ -30,9 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       if (!post) return apiNotFound('Post nicht gefunden')
 
       const targetPlatforms = platforms || [post.platform]
-      const results = await SocialPublishingService.publish(
-        TENANT_ID,
-        targetPlatforms,
+      const results = await SocialPublishingService.publish(targetPlatforms,
         post.content || '',
         { imageUrl: imageUrl || (post.imageUrl ?? undefined), link }
       )

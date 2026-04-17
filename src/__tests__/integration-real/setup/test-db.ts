@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import { eq } from 'drizzle-orm'
+import { eq, ilike } from 'drizzle-orm'
 import * as schema from '@/lib/db/schema'
 
 // Reserved UUID namespace for integration tests — 'ffff' in segment 2
@@ -43,36 +43,49 @@ export async function seedTestTenants(db: TestDb): Promise<void> {
 export async function cleanupTestTenants(db: TestDb): Promise<void> {
   const tenantIds = [TEST_INTEGRATION_TENANT_A, TEST_INTEGRATION_TENANT_B]
 
-  // Delete in FK-correct order (children before parents)
-  // Verified from schema.ts: activities → apiKeys → leads → companies → users → tenants
-  for (const tenantId of tenantIds) {
-    try {
-      // Delete activities (references tenants, leads, companies, persons, users)
-      if (schema.activities) {
-        await db.delete(schema.activities).where(eq(schema.activities.tenantId, tenantId))
+  // Delete test data by known test-email pattern (*.test-ffff.invalid)
+  // FK-correct order: children before parents
+  try {
+    // Find test user IDs first
+    const testUsers = await db.select({ id: schema.users.id }).from(schema.users)
+      .where(ilike(schema.users.email, '%@test-ffff.invalid'))
+    const testUserIds = testUsers.map(u => u.id)
+
+    // Delete activities created by test users
+    if (schema.activities && testUserIds.length > 0) {
+      for (const uid of testUserIds) {
+        await db.delete(schema.activities).where(eq(schema.activities.userId, uid))
       }
-      // Delete api keys
-      if (schema.apiKeys) {
-        await db.delete(schema.apiKeys).where(eq(schema.apiKeys.tenantId, tenantId))
-      }
-      // Delete leads (before companies due to FK)
-      if (schema.leads) {
-        await db.delete(schema.leads).where(eq(schema.leads.tenantId, tenantId))
-      }
-      // Delete companies
-      if (schema.companies) {
-        await db.delete(schema.companies).where(eq(schema.companies.tenantId, tenantId))
-      }
-      // Delete users
-      if (schema.users) {
-        await db.delete(schema.users).where(eq(schema.users.tenantId, tenantId))
-      }
-      // Delete tenant itself
-      await db.delete(schema.tenants).where(eq(schema.tenants.id, tenantId))
-    } catch (err) {
-      // Log but do not rethrow — cleanup must not fail silently hiding test results
-      console.warn(`[test-db] Cleanup warning for tenant ${tenantId}:`, err)
     }
+    // Delete api keys owned by test users
+    if (schema.apiKeys && testUserIds.length > 0) {
+      for (const uid of testUserIds) {
+        await db.delete(schema.apiKeys).where(eq(schema.apiKeys.userId, uid))
+      }
+    }
+    // Delete leads created by test users
+    if (schema.leads && testUserIds.length > 0) {
+      for (const uid of testUserIds) {
+        await db.delete(schema.leads).where(eq(schema.leads.assignedTo, uid))
+      }
+    }
+    // Delete companies created by test users
+    if (schema.companies && testUserIds.length > 0) {
+      for (const uid of testUserIds) {
+        await db.delete(schema.companies).where(eq(schema.companies.createdBy, uid))
+      }
+    }
+    // Delete test users by email pattern
+    if (testUserIds.length > 0) {
+      await db.delete(schema.users).where(ilike(schema.users.email, '%@test-ffff.invalid'))
+    }
+    // Delete test tenants
+    for (const tenantId of tenantIds) {
+      await db.delete(schema.tenants).where(eq(schema.tenants.id, tenantId))
+    }
+  } catch (err) {
+    // Log but do not rethrow — cleanup must not fail silently hiding test results
+    console.warn(`[test-db] Cleanup warning:`, err)
   }
 }
 

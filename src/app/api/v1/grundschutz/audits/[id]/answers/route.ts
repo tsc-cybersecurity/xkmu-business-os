@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { GrundschutzAuditService } from '@/lib/services/grundschutz-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET — Alle Answers einer Session (optional groupId-Filter)
@@ -28,11 +26,11 @@ export async function POST(request: NextRequest, { params }: { params: Params })
 
       // Einzeln oder Batch
       if (Array.isArray(body.answers)) {
-        const saved = await GrundschutzAuditService.saveAnswersBatch(TENANT_ID, id, body.answers)
+        const saved = await GrundschutzAuditService.saveAnswersBatch(id, body.answers)
         return apiSuccess({ saved })
       }
 
-      const answer = await GrundschutzAuditService.saveAnswer(TENANT_ID, id, body)
+      const answer = await GrundschutzAuditService.saveAnswer(id, body)
       return apiSuccess(answer)
     } catch { return apiServerError() }
   })

@@ -4,9 +4,7 @@ import { eq, and, desc } from 'drizzle-orm'
 import type { FirecrawlResearch } from '@/lib/db/schema'
 
 export const FirecrawlResearchService = {
-  async create(
-    _tenantId: string,
-    companyId: string,
+  async create(companyId: string,
     data: {
       url: string
       status?: string
@@ -30,7 +28,7 @@ export const FirecrawlResearchService = {
     return research
   },
 
-  async getById(_tenantId: string, id: string): Promise<FirecrawlResearch | null> {
+  async getById(id: string): Promise<FirecrawlResearch | null> {
     const [research] = await db
       .select()
       .from(firecrawlResearches)
@@ -40,7 +38,7 @@ export const FirecrawlResearchService = {
     return research ?? null
   },
 
-  async listByCompany(_tenantId: string, companyId: string): Promise<FirecrawlResearch[]> {
+  async listByCompany(companyId: string): Promise<FirecrawlResearch[]> {
     return db
       .select()
       .from(firecrawlResearches)
@@ -48,7 +46,7 @@ export const FirecrawlResearchService = {
       .orderBy(desc(firecrawlResearches.createdAt))
   },
 
-  async getLatest(_tenantId: string, companyId: string): Promise<FirecrawlResearch | null> {
+  async getLatest(companyId: string): Promise<FirecrawlResearch | null> {
     const [research] = await db
       .select()
       .from(firecrawlResearches)
@@ -64,9 +62,7 @@ export const FirecrawlResearchService = {
     return research ?? null
   },
 
-  async update(
-    _tenantId: string,
-    id: string,
+  async update(id: string,
     data: {
       status?: string
       pageCount?: number

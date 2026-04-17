@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiServerError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createMarketingTaskSchema,
+import { createMarketingTaskSchema,
   validateAndParse,
   formatZodErrors,
   uuidSchema,
@@ -14,8 +12,6 @@ import {
 import { MarketingTaskService } from '@/lib/services/marketing-task.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -24,7 +20,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined
     const type = searchParams.get('type') || undefined
 
-    const result = await MarketingTaskService.list(TENANT_ID, {
+    const result = await MarketingTaskService.list({
       ...pagination,
       campaignId,
       status,
@@ -50,7 +46,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const task = await MarketingTaskService.create(TENANT_ID, {
+      const task = await MarketingTaskService.create({
         ...validation.data,
         campaignId: body.campaignId,
       })

@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react'
 import { Brain, Plus, Send, X, Building2, User, FileText, Target, Lightbulb, Loader2 } from 'lucide-react'
-import {
-  Sheet,
+import { Sheet,
   SheetContent,
   SheetTitle,
   SheetDescription,

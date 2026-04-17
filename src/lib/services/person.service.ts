@@ -49,9 +49,7 @@ function emptyToNull<T>(value: T): T | null {
 }
 
 export const PersonService = {
-  async create(
-    _tenantId: string,
-    data: CreatePersonInput,
+  async create(data: CreatePersonInput,
     createdBy?: string
   ): Promise<Person> {
     const [person] = await db
@@ -83,7 +81,7 @@ export const PersonService = {
     return person
   },
 
-  async getById(_tenantId: string, personId: string): Promise<Person | null> {
+  async getById(personId: string): Promise<Person | null> {
     const [person] = await db
       .select()
       .from(persons)
@@ -93,9 +91,7 @@ export const PersonService = {
     return person ?? null
   },
 
-  async update(
-    _tenantId: string,
-    personId: string,
+  async update(personId: string,
     data: UpdatePersonInput
   ): Promise<Person | null> {
     const updateData: Partial<NewPerson> = {
@@ -112,7 +108,7 @@ export const PersonService = {
     return person ?? null
   },
 
-  async delete(_tenantId: string, personId: string): Promise<boolean> {
+  async delete(personId: string): Promise<boolean> {
     const result = await db
       .delete(persons)
       .where(eq(persons.id, personId))
@@ -121,9 +117,7 @@ export const PersonService = {
     return result.length > 0
   },
 
-  async list(
-    _tenantId: string,
-    filters: PersonFilters = {}
+  async list(filters: PersonFilters = {}
   ): Promise<PaginatedResult<PersonWithCompany>> {
     const { companyId, status, tags, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
@@ -189,7 +183,7 @@ export const PersonService = {
     }
   },
 
-  async search(_tenantId: string, query: string, limit = 10): Promise<Person[]> {
+  async search(query: string, limit = 10): Promise<Person[]> {
     if (!query.trim()) {
       return []
     }
@@ -209,12 +203,10 @@ export const PersonService = {
     return items
   },
 
-  async addTag(
-    _tenantId: string,
-    personId: string,
+  async addTag(personId: string,
     tag: string
   ): Promise<Person | null> {
-    const person = await this.getById(_personId)
+    const person = await this.getById(personId)
     if (!person) return null
 
     const currentTags = person.tags || []
@@ -222,29 +214,25 @@ export const PersonService = {
       return person
     }
 
-    return this.update(_personId, {
+    return this.update(personId, {
       tags: [...currentTags, tag],
     })
   },
 
-  async removeTag(
-    _tenantId: string,
-    personId: string,
+  async removeTag(personId: string,
     tag: string
   ): Promise<Person | null> {
-    const person = await this.getById(_personId)
+    const person = await this.getById(personId)
     if (!person) return null
 
     const currentTags = person.tags || []
 
-    return this.update(_personId, {
+    return this.update(personId, {
       tags: currentTags.filter((t) => t !== tag),
     })
   },
 
-  async setPrimaryContact(
-    _tenantId: string,
-    companyId: string,
+  async setPrimaryContact(companyId: string,
     personId: string
   ): Promise<Person | null> {
     // First, unset any existing primary contact for this company
@@ -259,6 +247,6 @@ export const PersonService = {
       )
 
     // Then set the new primary contact
-    return this.update(_personId, { isPrimaryContact: true })
+    return this.update(personId, { isPrimaryContact: true })
   },
 }

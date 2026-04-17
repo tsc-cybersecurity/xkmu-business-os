@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updatePersonSchema,
+import { updatePersonSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { PersonService } from '@/lib/services/person.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 export async function GET(
@@ -23,7 +19,7 @@ export async function GET(
 ) {
   return withPermission(request, 'persons', 'read', async (auth) => {
     const { id } = await params
-    const person = await PersonService.getById(TENANT_ID, id)
+    const person = await PersonService.getById(id)
 
     if (!person) {
       return apiNotFound('Person not found')
@@ -48,7 +44,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const person = await PersonService.update(TENANT_ID, id, validation.data)
+      const person = await PersonService.update(id, validation.data)
 
       if (!person) {
         return apiNotFound('Person not found')
@@ -68,7 +64,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'persons', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await PersonService.delete(TENANT_ID, id)
+    const deleted = await PersonService.delete(id)
 
     if (!deleted) {
       return apiNotFound('Person not found')

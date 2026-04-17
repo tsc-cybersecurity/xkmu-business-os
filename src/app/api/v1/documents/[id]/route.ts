@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updateDocumentSchema,
+import { updateDocumentSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/documents/[id]
@@ -24,7 +20,7 @@ export async function GET(
 ) {
   return withPermission(request, 'documents', 'read', async (auth) => {
     const { id } = await params
-    const document = await DocumentService.getById(TENANT_ID, id)
+    const document = await DocumentService.getById(id)
 
     if (!document) {
       return apiNotFound('Dokument nicht gefunden')
@@ -50,7 +46,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const document = await DocumentService.update(TENANT_ID, id, validation.data)
+      const document = await DocumentService.update(id, validation.data)
 
       if (!document) {
         return apiNotFound('Dokument nicht gefunden')
@@ -74,7 +70,7 @@ export async function DELETE(
     const { id } = await params
 
     try {
-      const deleted = await DocumentService.delete(TENANT_ID, id)
+      const deleted = await DocumentService.delete(id)
 
       if (!deleted) {
         return apiNotFound('Dokument nicht gefunden')

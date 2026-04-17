@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { ConfirmDialog } from '@/components/shared'
 import { ProductForm } from '../../_components/product-form'
 import { toast } from 'sonner'
-import {
-  ArrowLeft,
+import { ArrowLeft,
   Edit,
   Trash2,
   Wrench,

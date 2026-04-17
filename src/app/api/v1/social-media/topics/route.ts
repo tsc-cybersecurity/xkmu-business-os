@@ -1,25 +1,21 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiServerError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createSocialMediaTopicSchema,
+import { createSocialMediaTopicSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { SocialMediaTopicService } from '@/lib/services/social-media-topic.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'social_media', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
     const { page, limit } = parsePaginationParams(searchParams)
-    const result = await SocialMediaTopicService.list(TENANT_ID, { page, limit })
+    const result = await SocialMediaTopicService.list({ page, limit })
     return apiSuccess(result.items, result.meta)
   })
 }
@@ -33,7 +29,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const topic = await SocialMediaTopicService.create(TENANT_ID, validation.data)
+      const topic = await SocialMediaTopicService.create(validation.data)
       return apiSuccess(topic, undefined, 201)
     } catch (error) {
       logger.error('Error creating social media topic', error, { module: 'SocialMediaTopicsAPI' })

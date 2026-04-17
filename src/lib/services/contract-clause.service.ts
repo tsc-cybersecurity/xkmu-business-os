@@ -3,7 +3,7 @@ import { contractClauses } from '@/lib/db/schema'
 import { eq, and, or, isNull, asc } from 'drizzle-orm'
 
 export const ContractClauseService = {
-  async list(_tenantId: string, category?: string) {
+  async list(category?: string) {
     const conditions: ReturnType<typeof eq>[] = []
     if (category) conditions.push(eq(contractClauses.category, category))
 
@@ -14,7 +14,7 @@ export const ContractClauseService = {
       .orderBy(contractClauses.sortOrder, asc(contractClauses.name))
   },
 
-  async getById(_tenantId: string, id: string) {
+  async getById(id: string) {
     const [row] = await db
       .select()
       .from(contractClauses)
@@ -23,7 +23,7 @@ export const ContractClauseService = {
     return row ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     name: string
     category: string
     bodyHtml?: string
@@ -42,13 +42,13 @@ export const ContractClauseService = {
     return row
   },
 
-  async update(_tenantId: string, id: string, data: Partial<{
+  async update(id: string, data: Partial<{
     name: string
     category: string
     bodyHtml: string
     sortOrder: number
   }>) {
-    const existing = await this.getById(_id)
+    const existing = await this.getById(id)
     if (!existing) return null
     if (existing.isSystem) throw new Error('System-Bausteine koennen nicht bearbeitet werden')
 
@@ -60,8 +60,8 @@ export const ContractClauseService = {
     return row ?? null
   },
 
-  async delete(_tenantId: string, id: string) {
-    const existing = await this.getById(_id)
+  async delete(id: string) {
+    const existing = await this.getById(id)
     if (!existing) return false
     if (existing.isSystem) throw new Error('System-Bausteine koennen nicht geloescht werden')
 

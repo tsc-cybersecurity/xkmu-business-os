@@ -82,7 +82,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         location: 'header',
         label: 'Home',
         href: '/',
@@ -97,7 +97,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         location: 'footer',
         label: 'Contact',
         href: '/contact',
@@ -111,7 +111,7 @@ describe('CmsNavigationService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         location: 'header',
         label: 'About',
         href: '/about',

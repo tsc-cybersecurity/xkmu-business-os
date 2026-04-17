@@ -1,14 +1,11 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/ai-providers/[id]
@@ -18,7 +15,7 @@ export async function GET(
 ) {
   return withPermission(request, 'ai_providers', 'read', async (auth) => {
     const { id } = await params
-    const provider = await AiProviderService.getById(TENANT_ID, id)
+    const provider = await AiProviderService.getById(id)
 
     if (!provider) {
       return apiNotFound('KI-Anbieter nicht gefunden')
@@ -57,7 +54,7 @@ export async function PUT(
       if (body.isActive !== undefined) updateData.isActive = body.isActive
       if (body.isDefault !== undefined) updateData.isDefault = body.isDefault
 
-      const provider = await AiProviderService.update(TENANT_ID, id, updateData)
+      const provider = await AiProviderService.update(id, updateData)
 
       if (!provider) {
         return apiNotFound('KI-Anbieter nicht gefunden')
@@ -81,7 +78,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'ai_providers', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await AiProviderService.delete(TENANT_ID, id)
+    const deleted = await AiProviderService.delete(id)
 
     if (!deleted) {
       return apiNotFound('KI-Anbieter nicht gefunden')

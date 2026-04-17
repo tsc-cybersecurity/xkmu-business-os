@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiError,
   apiValidationError,
 } from '@/lib/utils/api-response'
@@ -8,8 +7,6 @@ import { ApiKeyService } from '@/lib/services/api-key.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const createApiKeySchema = z.object({
   name: z.string().min(1).max(100),
   permissions: z.array(z.string()).optional(),
@@ -18,7 +15,7 @@ const createApiKeySchema = z.object({
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'api_keys', 'read', async (auth) => {
-    const apiKeys = await ApiKeyService.list(TENANT_ID)
+    const apiKeys = await ApiKeyService.list()
 
     // Never return the key hash
     const safeApiKeys = apiKeys.map(({ keyHash, ...rest }) => rest)
@@ -42,9 +39,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const apiKey = await ApiKeyService.create(
-        TENANT_ID,
-        {
+      const apiKey = await ApiKeyService.create({
           name: validation.data.name,
           permissions: validation.data.permissions,
           expiresAt: validation.data.expiresAt

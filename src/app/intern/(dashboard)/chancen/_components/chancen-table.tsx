@@ -1,15 +1,12 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import {
-  Telescope, Search, ExternalLink, Phone, Trash2, ArrowRightLeft,
+import { Telescope, Search, ExternalLink, Phone, Trash2, ArrowRightLeft,
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
 

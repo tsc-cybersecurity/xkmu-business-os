@@ -3,9 +3,7 @@ import { deliverables, deliverableModules, sopDocuments } from '@/lib/db/schema'
 import { eq, and, desc, sql, isNull } from 'drizzle-orm'
 
 export const DeliverableService = {
-  async list(
-    _tenantId: string,
-    filters?: { moduleId?: string; categoryCode?: string; status?: string }
+  async list(filters?: { moduleId?: string; categoryCode?: string; status?: string }
   ) {
     const conditions: ReturnType<typeof eq>[] = []
     if (filters?.moduleId) conditions.push(eq(deliverables.moduleId, filters.moduleId))
@@ -37,7 +35,7 @@ export const DeliverableService = {
     }))
   },
 
-  async getById(_tenantId: string, id: string) {
+  async getById(id: string) {
     const [deliverable] = await db.select().from(deliverables)
       .where(eq(deliverables.id, id))
     if (!deliverable) return null
@@ -64,7 +62,7 @@ export const DeliverableService = {
     return { ...deliverable, module: module ?? null, producingSops }
   },
 
-  async create(_tenantId: string, data: Record<string, unknown>) {
+  async create(data: Record<string, unknown>) {
     const [doc] = await db.insert(deliverables).values({
       name: data.name as string,
       description: (data.description as string) || null,
@@ -80,7 +78,7 @@ export const DeliverableService = {
     return doc
   },
 
-  async update(_tenantId: string, id: string, data: Record<string, unknown>) {
+  async update(id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.name !== undefined) updates.name = data.name
     if (data.description !== undefined) updates.description = data.description
@@ -97,14 +95,14 @@ export const DeliverableService = {
     return doc ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const r = await db.delete(deliverables)
       .where(eq(deliverables.id, id))
       .returning({ id: deliverables.id })
     return r.length > 0
   },
 
-  async getModulesWithCount(_tenantId: string) {
+  async getModulesWithCount() {
     const modules = await db.select().from(deliverableModules)
       .orderBy(deliverableModules.code)
     const counts = await db.select({

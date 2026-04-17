@@ -35,7 +35,7 @@ export const SocialMediaAIService = {
     },
     context: AIRequestContext
   ): Promise<GeneratedPost> {
-    const template = await AiPromptTemplateService.getOrDefault('', 'social_media_post')
+    const template = await AiPromptTemplateService.getOrDefault('social_media_post')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       platform: params.platform,
@@ -82,7 +82,7 @@ export const SocialMediaAIService = {
     },
     context: AIRequestContext
   ): Promise<ContentPlanItem[]> {
-    const template = await AiPromptTemplateService.getOrDefault('', 'social_media_content_plan')
+    const template = await AiPromptTemplateService.getOrDefault('social_media_content_plan')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       platforms: params.platforms.join(', '),
@@ -132,7 +132,7 @@ export const SocialMediaAIService = {
     },
     context: AIRequestContext
   ): Promise<Array<{ name: string; description: string }>> {
-    const template = await AiPromptTemplateService.getOrDefault('', 'social_media_topic_generation')
+    const template = await AiPromptTemplateService.getOrDefault('social_media_topic_generation')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       count: String(params.count),
@@ -178,7 +178,7 @@ export const SocialMediaAIService = {
     },
     context: AIRequestContext
   ): Promise<{ content: string; hashtags: string[] }> {
-    const template = await AiPromptTemplateService.getOrDefault('', 'social_media_improve')
+    const template = await AiPromptTemplateService.getOrDefault('social_media_improve')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       currentContent: params.currentContent,

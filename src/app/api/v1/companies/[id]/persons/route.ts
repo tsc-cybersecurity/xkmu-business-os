@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound } from '@/lib/utils/api-response'
 import { CompanyService } from '@/lib/services/company.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 export async function GET(
@@ -14,12 +12,12 @@ export async function GET(
   const { id } = await params
 
   // Verify company exists
-  const company = await CompanyService.getById(TENANT_ID, id)
+  const company = await CompanyService.getById(id)
   if (!company) {
     return apiNotFound('Company not found')
   }
 
-  const persons = await CompanyService.getPersons(TENANT_ID, id)
+  const persons = await CompanyService.getPersons(id)
 
   return apiSuccess(persons)
   })

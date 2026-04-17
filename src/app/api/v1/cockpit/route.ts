@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  cockpitSystemSchema,
+import { cockpitSystemSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { CockpitService } from '@/lib/services/cockpit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'cockpit', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -23,7 +19,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined
     const search = searchParams.get('search') || undefined
 
-    const result = await CockpitService.list(TENANT_ID, {
+    const result = await CockpitService.list({
       ...pagination,
       category,
       status,
@@ -44,9 +40,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const system = await CockpitService.create(
-        TENANT_ID,
-        validation.data,
+      const system = await CockpitService.create(validation.data,
         auth.userId || undefined
       )
 

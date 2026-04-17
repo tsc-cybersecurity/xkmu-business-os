@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
@@ -8,8 +7,6 @@ import { CompanyService } from '@/lib/services/company.service'
 import { CompanyResearchService } from '@/lib/services/company-research.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string; researchId: string }>
 
 // POST /api/v1/companies/[id]/research/[researchId]/apply - Apply research changes to company
@@ -21,7 +18,7 @@ export async function POST(
   const { id, researchId } = await params
 
   try {
-    const research = await CompanyResearchService.getById(TENANT_ID, researchId)
+    const research = await CompanyResearchService.getById(researchId)
     if (!research || research.companyId !== id) {
       return apiNotFound('Research not found')
     }
@@ -30,7 +27,7 @@ export async function POST(
       return apiError('ALREADY_APPLIED', 'Recherche wurde bereits übernommen', 400)
     }
 
-    const company = await CompanyService.getById(TENANT_ID, id)
+    const company = await CompanyService.getById(id)
     if (!company) {
       return apiNotFound('Company not found')
     }
@@ -39,13 +36,11 @@ export async function POST(
     const proposedChanges = (research.proposedChanges || {}) as Record<string, unknown>
 
     if (Object.keys(proposedChanges).length > 0) {
-      await CompanyService.update(TENANT_ID, id, proposedChanges)
+      await CompanyService.update(id, proposedChanges)
     }
 
     // Update research status
-    const updated = await CompanyResearchService.updateStatus(
-      TENANT_ID,
-      researchId,
+    const updated = await CompanyResearchService.updateStatus(researchId,
       'applied',
       new Date()
     )

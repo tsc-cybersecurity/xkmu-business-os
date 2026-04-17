@@ -243,8 +243,7 @@ function extractInternalLinks(html: string, baseUrl: string): string[] {
  * Use AI to select the most relevant paths for business crawling
  */
 async function getSmartIncludePaths(
-  url: string,
-  tenantId: string
+  url: string
 ): Promise<string[] | undefined> {
   try {
     // 1. Fetch homepage HTML natively (free)
@@ -395,13 +394,13 @@ export const WebsiteScraperService = {
     if (mainPage.title) parts.push(`Titel: ${mainPage.title}`)
     if (mainPage.metaDescription) parts.push(`Beschreibung: ${mainPage.metaDescription}`)
     parts.push(mainPage.text)
-    parts.push('')
+    parts.push()
 
     for (const sub of subPages) {
       parts.push(`=== UNTERSEITE: ${sub.url} ===`)
       if (sub.title) parts.push(`Titel: ${sub.title}`)
       parts.push(sub.text)
-      parts.push('')
+      parts.push()
     }
 
     // Limit total combined text to ~30k chars for AI context

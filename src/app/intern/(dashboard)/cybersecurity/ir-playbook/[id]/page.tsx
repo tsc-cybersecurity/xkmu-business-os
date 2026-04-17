@@ -2,16 +2,14 @@
 
 import { useState, useEffect, useCallback, use } from 'react'
 import { useRouter } from 'next/navigation'
-import {
-  Shield, AlertTriangle, ArrowLeft, Trash2, Scale, Zap,
+import { Shield, AlertTriangle, ArrowLeft, Trash2, Scale, Zap,
   Monitor, Users, Eye, Globe, Clock, Info, CheckCircle2, FileDown,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Dialog,
+import { Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,

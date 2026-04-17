@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  documentTypeSchema,
+import { documentTypeSchema,
   invoiceStatusSchema,
   offerStatusSchema,
   discountTypeSchema,

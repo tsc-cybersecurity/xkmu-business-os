@@ -4,8 +4,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/opportunities/debug - Check if table and SerpAPI are configured
 export async function GET(request: NextRequest) {
   return withPermission(request, 'opportunities', 'read', async (auth) => {
@@ -28,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     // 2. Check if SerpAPI key is configured (DB)
     try {
-      const providers = await AiProviderService.list(TENANT_ID)
+      const providers = await AiProviderService.list()
       const serpapi = providers.find((p) => p.providerType === 'serpapi' && p.isActive)
       checks.serpApiProvider = serpapi ? { id: serpapi.id, name: serpapi.name, hasKey: !!serpapi.apiKey } : null
     } catch (e) {
@@ -60,7 +58,7 @@ export async function GET(request: NextRequest) {
 
       if (results.length > 0) {
         try {
-          const saveResult = await OpportunityService.createMany(TENANT_ID, results.map(r => ({
+          const saveResult = await OpportunityService.createMany(results.map(r => ({
             ...r,
             phone: r.phone ?? undefined,
             email: r.email ?? undefined,
@@ -99,7 +97,7 @@ export async function POST(request: NextRequest) {
   return withPermission(request, 'opportunities', 'update', async (auth) => {
     try {
       const { OpportunityService } = await import('@/lib/services/opportunity.service')
-      const fixed = await OpportunityService.repairAddresses(TENANT_ID)
+      const fixed = await OpportunityService.repairAddresses()
       return apiSuccess({ repaired: fixed })
     } catch (e) {
       return apiError('REPAIR_FAILED', e instanceof Error ? e.message : 'Fehler', 500)

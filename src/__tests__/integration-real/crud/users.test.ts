@@ -29,7 +29,6 @@ describe.skipIf(!hasTestDb)('CRUD: Users — real DB', () => {
     const bcrypt = await import('bcryptjs')
     const passwordHash = await bcrypt.default.hash('TestPassword123!', 4) // lower rounds for speed
     const [user] = await db.insert(users).values({
-      tenantId: TEST_INTEGRATION_TENANT_A,
       email: 'crud-user-test@test-ffff.invalid',
       passwordHash,
       // Adaptation: schema uses firstName/lastName not name
@@ -47,24 +46,15 @@ describe.skipIf(!hasTestDb)('CRUD: Users — real DB', () => {
     const { eq } = await import('drizzle-orm')
     const [found] = await db.select().from(users).where(eq(users.id, createdId)).limit(1)
     expect(found).toBeDefined()
-    expect(found.tenantId).toBe(TEST_INTEGRATION_TENANT_A)
     expect(found.role).toBe('member')
   })
 
-  it('select users by tenantId includes created user', async () => {
+  it('select users by email includes created user', async () => {
     const { users } = await import('@/lib/db/schema')
     const { eq } = await import('drizzle-orm')
-    const all = await db.select().from(users).where(eq(users.tenantId, TEST_INTEGRATION_TENANT_A))
+    const all = await db.select().from(users).where(eq(users.email, 'crud-user-test@test-ffff.invalid'))
     const found = all.find(u => u.id === createdId)
     expect(found).toBeDefined()
-  })
-
-  it('select user by different tenantId does not return created user (isolation)', async () => {
-    const { users } = await import('@/lib/db/schema')
-    const { eq } = await import('drizzle-orm')
-    const all = await db.select().from(users).where(eq(users.tenantId, '00000000-0000-0000-0000-000000000099'))
-    const leaked = all.find(u => u.id === createdId)
-    expect(leaked).toBeUndefined()
   })
 
   it('update user role via db.update', async () => {

@@ -2,14 +2,12 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
 import { EmailTemplateService } from '@/lib/services/email-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'settings', 'read', async (auth) => {
     const { id } = await params
-    const template = await EmailTemplateService.getById(TENANT_ID, id)
+    const template = await EmailTemplateService.getById(id)
     if (!template) return apiNotFound('Template nicht gefunden')
     return apiSuccess(template)
   })
@@ -20,7 +18,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     try {
       const { id } = await params
       const body = await request.json()
-      const template = await EmailTemplateService.update(TENANT_ID, id, body)
+      const template = await EmailTemplateService.update(id, body)
       if (!template) return apiNotFound('Template nicht gefunden')
       return apiSuccess(template)
     } catch {
@@ -32,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'settings', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await EmailTemplateService.delete(TENANT_ID, id)
+    const deleted = await EmailTemplateService.delete(id)
     if (!deleted) return apiNotFound('Template nicht gefunden')
     return apiSuccess({ deleted: true })
   })

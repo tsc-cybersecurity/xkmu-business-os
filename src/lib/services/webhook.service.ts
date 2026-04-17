@@ -22,7 +22,7 @@ export interface CreateWebhookInput {
 export type UpdateWebhookInput = Partial<CreateWebhookInput>
 
 export const WebhookService = {
-  async create(_tenantId: string, data: CreateWebhookInput): Promise<Webhook> {
+  async create(data: CreateWebhookInput): Promise<Webhook> {
     const [webhook] = await db
       .insert(webhooks)
       .values({
@@ -36,7 +36,7 @@ export const WebhookService = {
     return webhook
   },
 
-  async getById(_tenantId: string, webhookId: string): Promise<Webhook | null> {
+  async getById(webhookId: string): Promise<Webhook | null> {
     const [webhook] = await db
       .select()
       .from(webhooks)
@@ -45,7 +45,7 @@ export const WebhookService = {
     return webhook ?? null
   },
 
-  async update(_tenantId: string, webhookId: string, data: UpdateWebhookInput): Promise<Webhook | null> {
+  async update(webhookId: string, data: UpdateWebhookInput): Promise<Webhook | null> {
     const updateData: Partial<NewWebhook> = { updatedAt: new Date() }
     if (data.name !== undefined) updateData.name = data.name
     if (data.url !== undefined) updateData.url = data.url
@@ -61,7 +61,7 @@ export const WebhookService = {
     return webhook ?? null
   },
 
-  async delete(_tenantId: string, webhookId: string): Promise<boolean> {
+  async delete(webhookId: string): Promise<boolean> {
     const result = await db
       .delete(webhooks)
       .where(eq(webhooks.id, webhookId))
@@ -69,7 +69,7 @@ export const WebhookService = {
     return result.length > 0
   },
 
-  async list(_tenantId: string, filters: WebhookFilters = {}) {
+  async list(filters: WebhookFilters = {}) {
     const { page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -91,7 +91,7 @@ export const WebhookService = {
     }
   },
 
-  async getByEvent(_tenantId: string, event: string): Promise<Webhook[]> {
+  async getByEvent(event: string): Promise<Webhook[]> {
     // Get all active webhooks, then filter by event
     const allActive = await db
       .select()
@@ -105,8 +105,8 @@ export const WebhookService = {
    * Fires webhooks for a specific event.
    * Runs asynchronously – does not block the caller.
    */
-  async fire(_tenantId: string, event: string, payload: Record<string, unknown>): Promise<void> {
-    const matchingWebhooks = await this.getByEvent(_event)
+  async fire(event: string, payload: Record<string, unknown>): Promise<void> {
+    const matchingWebhooks = await this.getByEvent(event)
     if (matchingWebhooks.length === 0) return
 
     // Fire all webhooks in parallel, don't await

@@ -4,8 +4,7 @@
  */
 
 import { db } from '@/lib/db'
-import {
-  grundschutzAssets, grundschutzAssetRelationsTable, grundschutzAssetControls,
+import { grundschutzAssets, grundschutzAssetRelationsTable, grundschutzAssetControls,
   companies, users,
 } from '@/lib/db/schema'
 import type { GrundschutzAsset, GrundschutzAssetRelation, GrundschutzAssetControl } from '@/lib/db/schema'
@@ -54,7 +53,7 @@ export interface AssetListFilters {
 
 export const GrundschutzAssetService = {
   /** Assets eines Unternehmens auflisten mit optionalen Filtern */
-  async list(_tenantId: string, companyId: string, filters?: AssetListFilters) {
+  async list(companyId: string, filters?: AssetListFilters) {
     const conditions = [
       eq(grundschutzAssets.companyId, companyId),
     ]
@@ -100,7 +99,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Einzelnes Asset mit Details, Relationen und Control-Mappings */
-  async getById(_tenantId: string, assetId: string) {
+  async getById(assetId: string) {
     const [row] = await db.select({
       asset: grundschutzAssets,
       companyName: companies.name,
@@ -178,7 +177,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Asset erstellen */
-  async create(_tenantId: string, data: CreateAssetInput): Promise<GrundschutzAsset> {
+  async create(data: CreateAssetInput): Promise<GrundschutzAsset> {
     const [asset] = await db.insert(grundschutzAssets).values({
       companyId: data.companyId,
       name: data.name,
@@ -201,7 +200,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Asset aktualisieren */
-  async update(_tenantId: string, assetId: string, data: UpdateAssetInput): Promise<GrundschutzAsset | null> {
+  async update(assetId: string, data: UpdateAssetInput): Promise<GrundschutzAsset | null> {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
 
     if (data.name !== undefined) updates.name = data.name
@@ -227,7 +226,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Asset loeschen */
-  async delete(_tenantId: string, assetId: string): Promise<boolean> {
+  async delete(assetId: string): Promise<boolean> {
     const result = await db.delete(grundschutzAssets)
       .where(eq(grundschutzAssets.id, assetId))
       .returning({ id: grundschutzAssets.id })
@@ -235,7 +234,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Relation zwischen Assets erstellen */
-  async createRelation(_tenantId: string, data: CreateAssetRelationInput): Promise<GrundschutzAssetRelation> {
+  async createRelation(data: CreateAssetRelationInput): Promise<GrundschutzAssetRelation> {
     const [relation] = await db.insert(grundschutzAssetRelationsTable).values({
       sourceAssetId: data.sourceAssetId,
       targetAssetId: data.targetAssetId,
@@ -247,7 +246,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Relation loeschen */
-  async deleteRelation(_tenantId: string, relationId: string): Promise<boolean> {
+  async deleteRelation(relationId: string): Promise<boolean> {
     const result = await db.delete(grundschutzAssetRelationsTable)
       .where(eq(grundschutzAssetRelationsTable.id, relationId))
       .returning({ id: grundschutzAssetRelationsTable.id })
@@ -255,7 +254,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Control-Mapping erstellen oder aktualisieren (Upsert) */
-  async upsertControlMapping(_tenantId: string, assetId: string, data: AssetControlMappingInput): Promise<GrundschutzAssetControl> {
+  async upsertControlMapping(assetId: string, data: AssetControlMappingInput): Promise<GrundschutzAssetControl> {
     // Pruefen ob Mapping existiert
     const [existing] = await db.select().from(grundschutzAssetControls)
       .where(and(
@@ -286,7 +285,7 @@ export const GrundschutzAssetService = {
   },
 
   /** Schutzbedarf-Uebersicht: Aggregate pro Kategorie */
-  async getSchutzbedarfOverview(_tenantId: string, companyId: string) {
+  async getSchutzbedarfOverview(companyId: string) {
     const assets = await db.select({
       categoryType: grundschutzAssets.categoryType,
       vertraulichkeit: grundschutzAssets.vertraulichkeit,

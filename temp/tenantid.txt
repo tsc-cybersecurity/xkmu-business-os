@@ -1,0 +1,347 @@
+88 results - 34 files
+
+src\app\api\v1\admin\database\tables\[tableName]\route.ts:
+  109        delete updates.tenant_id
+  110:       delete updates.tenantId
+  111  
+
+src\app\api\v1\auth\register\route.ts:
+  76        id: user.id,
+  77:       // tenantId entfernt — AUTH-02
+  78        email: user.email,
+
+src\app\api\v1\chat\route.ts:
+  58          messages.map((m) => `${m.role}: ${m.content}`).join('\n'),
+  59:         { tenantId: userId: auth.userId, feature: 'chat' },
+  60          {
+
+src\app\api\v1\companies\[id]\prep\route.ts:
+  35  
+  36:       // Offene Chancen (opportunities hat kein companyId — nur tenantId-Filter)
+  37        const openOpps = await db
+
+  65        const response = await AIService.completeWithContext(userPrompt,
+  66:         { tenantId: feature: 'meeting_prep' },
+  67          { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt })
+
+src\app\api\v1\contact\route.ts:
+  23      }
+  24:     tenantId = real.id
+  25    } catch (error) {
+
+src\app\api\v1\din\audits\[id]\roadmap\route.ts:
+  44        const response = await AIService.completeWithContext(userPrompt,
+  45:         { tenantId: feature: 'security_roadmap' },
+  46          { maxTokens: 3000, temperature: 0.3, systemPrompt: template.systemPrompt })
+
+src\app\api\v1\import\database\route.ts:
+  298              // Strip tenant_id column from imports (column no longer exists)
+  299:             const tenantIdIdx = insert.columns.indexOf('tenant_id')
+  300:             if (tenantIdIdx !== -1) {
+  301:               insert.columns.splice(tenantIdIdx, 1)
+  302:               insert.values.splice(tenantIdIdx, 1)
+  303              }
+
+src\app\api\v1\seo\keywords\route.ts:
+  42        const response = await AIService.completeWithContext(userPrompt,
+  43:         { tenantId: feature: 'seo_keywords' },
+  44          { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt })
+
+src\app\intern\(dashboard)\settings\database\_components\database-admin.tsx:
+  44    rows: Record<string, unknown>[]
+  45:   hasTenantId: boolean
+  46  }
+
+src\lib\api-docs\services\admin.ts:
+  30          rows: [{ id: 'uuid', name: 'Max' }],
+  31:         hasTenantId: true,
+  32          meta: { page: 1, limit: 20, total: 42, totalPages: 3 },
+
+src\lib\auth\api-key.ts:
+  55        return {
+  56:         tenantId: 'legacy', // tenant_id column dropped — AUTH-04 backward compat
+  57          keyId: apiKey.id,
+
+src\lib\auth\auth-context.ts:
+  17      return {
+  18:       tenantId: // AUTH-03: statische Konstante, nicht aus JWT
+  19        userId: session.user.id,
+
+  31        return {
+  32:         tenantId: // AUTH-04: payload.tenantId ignoriert, TENANT_ID stattdessen
+  33          userId: null,
+
+src\lib\db\seed-check.ts:
+  782      logger.info('Tenant already exists, skipping tenant/user seed...')
+  783:     tenantId = existingTenants[0].id
+  784  
+
+  800  
+  801:     tenantId = tenant.id
+  802      logger.info(`Created tenant: ${tenant.name} (${tenant.slug})`)
+
+src\lib\services\cms-block-template.service.ts:
+  13  
+  14: // CMS Templates sind global — kein tenantId-Filter bei Queries.
+  15  
+
+src\lib\services\cms-block.service.ts:
+  21  
+  22: // CMS ist global — kein tenantId-Filter bei Queries.
+  23  
+
+src\lib\services\cms-navigation.service.ts:
+  35  
+  36: // CMS Navigation ist global — kein tenantId-Filter bei Queries.
+  37  
+
+src\lib\services\firecrawl.service.ts:
+   60     */
+   61:   async scrape(url: string, apiKey: string, tenantId?: string): Promise<FirecrawlResult> {
+   62      const startTime = Date.now()
+
+  112        // Log success
+  113:       if (tenantId) {
+  114          const durationMs = Date.now() - startTime
+
+  124        // Log error
+  125:       if (tenantId) {
+  126          const durationMs = Date.now() - startTime
+
+src\lib\services\image-optimizer.service.ts:
+  42     * Optimiert einen Buffer und speichert als WebP.
+  43:    * subDir: z.B. 'tenantId' oder 'generated/tenantId'
+  44     */
+
+src\lib\services\n8n.service.ts:
+  43  ): Promise<unknown> {
+  44:   const conn = await getConnection(_tenantId)
+  45    const baseUrl = conn.apiUrl.replace(/\/$/, '')
+
+src\lib\services\product.service.ts:
+   63      const slug = emptyToNull(data.slug)
+   64:       || await this.generateSlug(data.name, _tenantId)
+   65  
+
+  255  
+  256:   async generateSlug(name: string, _tenantId: string): Promise<string> {
+  257      let base = name
+
+src\lib\services\serpapi.service.ts:
+    8  
+    9: async function getProviderId(tenantId?: string): Promise<string | null> {
+   10:   if (!tenantId) return null
+   11    try {
+   12:     const providers = await AiProviderService.list(tenantId)
+   13      return providers.find((p) => p.providerType === 'serpapi' && p.isActive)?.id || null
+
+   60  
+   61: async function getApiKey(tenantId?: string): Promise<string> {
+   62    // 1. Try DB (AI Provider with type 'serpapi')
+   63:   if (tenantId) {
+   64      try {
+   65:       const providers = await AiProviderService.list(tenantId)
+   66        const serpapi = providers.find((p) => p.providerType === 'serpapi' && p.isActive && p.apiKey)
+
+  141  export const SerpApiService = {
+  142:   async searchPlaces(query: string, location: string, radius: number = 25, maxResults: number = 20, tenantId?: string): Promise<OpportunityResult[]> {
+  143:     const apiKey = await getApiKey(tenantId)
+  144      const startTime = Date.now()
+  145      const prompt = `${query} in ${location}`
+  146:     const providerId = await getProviderId(tenantId)
+  147  
+
+  163        const durationMs = Date.now() - startTime
+  164:       if (tenantId) {
+  165          AiProviderService.createLog({
+
+  176        const durationMs = Date.now() - startTime
+  177:       if (tenantId) {
+  178          AiProviderService.createLog({
+
+  190        const durationMs = Date.now() - startTime
+  191:       if (tenantId) {
+  192          AiProviderService.createLog({
+
+  234      const durationMs = Date.now() - startTime
+  235:     if (tenantId) {
+  236        AiProviderService.createLog({
+
+  250      maxPerLocation: number = 20,
+  251:     tenantId?: string
+  252    ): Promise<{ results: OpportunityResult[]; totalSearches: number; errors: string[] }> {
+
+  266  
+  267:           const results = await this.searchPlaces(query.trim(), location.trim(), radius, maxPerLocation, tenantId)
+  268  
+
+src\lib\services\user.service.ts:
+   36  export const UserService = {
+   37:   async create(tenantId: string, data: CreateUserInput): Promise<User> {
+   38      const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS)
+
+   83        id: user.id,
+   84:       // tenantId entfernt — AUTH-02
+   85        email: user.email,
+
+   94  
+   95:   async getById(tenantId: string, userId: string): Promise<User | null> {
+   96      const [user] = await db
+
+  104  
+  105:   async getByEmail(tenantId: string, email: string): Promise<User | null> {
+  106      const [user] = await db
+
+  117    async update(
+  118:     tenantId: string,
+  119      userId: string,
+
+  140    async updatePassword(
+  141:     tenantId: string,
+  142      userId: string,
+
+  158  
+  159:   async delete(tenantId: string, userId: string): Promise<boolean> {
+  160      const result = await db
+
+  168    async list(
+  169:     tenantId: string,
+  170      filters: UserFilters = {}
+
+  231    async emailExists(
+  232:     tenantId: string,
+  233      email: string,
+
+src\lib\services\ai\ai.service.ts:
+   51  export interface AIRequestContext {
+   52:   tenantId?: string  // legacy — no longer required, kept for backward compat
+   53    userId?: string | null
+
+  359     */
+  360:   async getAvailableProvidersForTenant(tenantId: string): Promise<Array<{
+  361      id: string
+
+  367      // Text-AI-Provider (getActiveProviders filtert firecrawl/kie raus)
+  368:     const dbProviders = await AiProviderService.getActiveProviders(tenantId)
+  369      const result = []
+
+  395      // Spezial-Provider (firecrawl, kie, serpapi) separat prüfen - haben API-Key = verfügbar
+  396:     const allProviders = await AiProviderService.list(tenantId)
+  397      const specialProviders = allProviders.filter(
+
+src\lib\services\ai\company-actions.service.ts:
+  125  /** Generate a 4-5 line German summary of activity content */
+  126: async function generateSummary(tenantId: string, content: string, userId?: string | null): Promise<string> {
+  127    try {
+
+  140  export const CompanyActionsService = {
+  141:   async generate(tenantId: string, companyId: string, actionSlug: string, userId?: string | null) {
+  142      // 1. Load company data
+
+  241     */
+  242:   async enrichMissingSummaries(tenantId: string, companyId: string, userId?: string | null): Promise<number> {
+  243      try {
+
+src\lib\services\ai\kie.service.ts:
+   26     */
+   27:   async getProvider(tenantId: string): Promise<KieProvider> {
+   28:     const providers = await AiProviderService.getActiveProviders(tenantId)
+   29      const kieConfig = providers.find((p) => p.providerType === 'kie')
+
+   41    async createVideoTask(
+   42:     tenantId: string,
+   43      userId: string | null,
+
+   46      const startTime = Date.now()
+   47:     const provider = await this.getProvider(tenantId)
+   48  
+
+  106     */
+  107:   async getTaskStatus(tenantId: string, taskId: string): Promise<VideoTaskResult> {
+  108:     const provider = await this.getProvider(tenantId)
+  109      const status = await provider.getTaskStatus(taskId)
+
+  120    async waitForCompletion(
+  121:     tenantId: string,
+  122      taskId: string,
+
+src\lib\services\ai\lead-research.service.ts:
+  472  
+  473:     if (ctx?.tenantId) {
+  474        const template = await AiPromptTemplateService.getOrDefault('lead_research')
+
+  526      let firecrawlApiKey: string | undefined
+  527:     if (context?.tenantId) {
+  528        try {
+
+  557        try {
+  558:         const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(input.website, firecrawlApiKey, context?.tenantId)
+  559          if (scrapeResult.success && scrapeResult.combinedText) {
+
+  594  
+  595:     if (ctx?.tenantId) {
+  596        const template = await AiPromptTemplateService.getOrDefault('company_research')
+
+  672  
+  673:     if (ctx?.tenantId) {
+  674        const template = await AiPromptTemplateService.getOrDefault('person_research')
+
+  729  
+  730:     if (ctx?.tenantId) {
+  731        const template = await AiPromptTemplateService.getOrDefault('quick_score')
+
+src\lib\services\ai\marketing-agent.service.ts:
+  107    try {
+  108:     const providers = await AiProviderService.getActiveProviders(tenantId)
+  109      const firecrawlProvider = providers.find(p => p.providerType === 'firecrawl')
+
+  116  
+  117:   const result = await WebsiteScraperService.scrapeCompanyWebsite(url, firecrawlKey, tenantId)
+  118  
+
+src\lib\services\ai\n8n-workflow-builder.service.ts:
+  10    async generateWorkflow(
+  11:     tenantId: string,
+  12      userId: string | null,
+
+  81    async generateAndDeploy(
+  82:     tenantId: string,
+  83      userId: string | null,
+
+src\lib\services\ai\outreach.service.ts:
+  17    async generateOutreach(
+  18:     tenantId: string,
+  19      leadId: string,
+
+src\lib\services\ai\website-scraper.service.ts:
+  327     */
+  328:   async scrapeCompanyWebsite(url: string, firecrawlApiKey?: string, tenantId?: string): Promise<{
+  329      mainPage: ScrapedWebsite
+
+  338          logger.info(`Using Firecrawl for: ${url}`, { module: 'WebsiteScraperService' })
+  339:         const result = await FirecrawlService.scrape(url, firecrawlApiKey, tenantId)
+  340  
+
+src\lib\services\task-queue-handlers\dunning.handler.ts:
+  20  export async function handleDunning(
+  21:   tenantId: string,
+  22    payload: DunningPayload
+
+src\lib\services\workflow\action-registry.ts:
+  52        const companyName = (ctx.triggerData.company as string)?.trim()
+  53:       const tenantId = ctx.tenantId
+  54        const fallback = (config.fallbackName as string) || NO_COMPANY_NAME
+
+src\lib\types\auth.types.ts:
+   5    id: string
+   6:   // tenantId entfernt — AUTH-02
+   7    email: string
+
+  31  export interface ApiKeyPayload {
+  32:   tenantId: string   // bleibt — AUTH-04 (API-Keys bleiben kompatibel)
+  33    keyId: string
+
+src\lib\utils\logger.ts:
+  4    module?: string
+  5:   tenantId?: string
+  6    userId?: string

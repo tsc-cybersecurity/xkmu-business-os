@@ -2,8 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
 import { mockAuthContext, mockAuthForbidden } from '../../helpers/mock-auth'
 import { createTestRequest, createTestParams } from '../../helpers/mock-request'
-import {
-  authFixture,
+import { authFixture,
   companyFixture,
   createCompanyInput,
   TEST_TENANT_ID,

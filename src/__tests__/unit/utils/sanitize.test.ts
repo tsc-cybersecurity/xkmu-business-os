@@ -3,7 +3,7 @@ import { sanitizeHtml, sanitizeEmailHtml } from '@/lib/utils/sanitize'
 
 describe('sanitizeHtml', () => {
   it('strips script tags', () => {
-    expect(sanitizeHtml('<script>alert(1)</script>')).toBe('')
+    expect(sanitizeHtml('<script>alert(1)</script>')).toBe()
   })
 
   it('strips event handlers from img tags but keeps safe attributes', () => {
@@ -23,7 +23,7 @@ describe('sanitizeHtml', () => {
   })
 
   it('returns empty string for empty input', () => {
-    expect(sanitizeHtml('')).toBe('')
+    expect(sanitizeHtml('')).toBe()
   })
 })
 

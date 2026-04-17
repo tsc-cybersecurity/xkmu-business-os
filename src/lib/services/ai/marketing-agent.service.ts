@@ -100,8 +100,7 @@ function parseJsonSafe<T>(text: string, fallback: T): T {
 // ============================================
 
 async function stepScrape(
-  url: string,
-  tenantId: string
+  url: string
 ): Promise<{ combinedText: string; pagesCount: number; success: boolean }> {
   // Try to get Firecrawl API key
   let firecrawlKey: string | undefined
@@ -129,7 +128,7 @@ async function stepResearch(
   context: AIRequestContext,
   language: string
 ): Promise<MarketingResearch> {
-  const template = await AiPromptTemplateService.getOrDefault('', 'marketing_agent_research')
+  const template = await AiPromptTemplateService.getOrDefault('marketing_agent_research')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
     template.userPrompt,
@@ -163,7 +162,7 @@ async function stepSeoAnalysis(
   context: AIRequestContext,
   language: string
 ): Promise<SeoAnalysis> {
-  const template = await AiPromptTemplateService.getOrDefault('', 'marketing_agent_seo')
+  const template = await AiPromptTemplateService.getOrDefault('marketing_agent_seo')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
     template.userPrompt,
@@ -208,7 +207,7 @@ async function stepContentGeneration(
   tone: string,
   language: string
 ): Promise<SocialMediaDraft[]> {
-  const template = await AiPromptTemplateService.getOrDefault('', 'marketing_agent_content')
+  const template = await AiPromptTemplateService.getOrDefault('marketing_agent_content')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
     template.userPrompt,

@@ -3,8 +3,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -12,7 +10,7 @@ export async function GET(
   return withPermission(request, 'basisabsicherung', 'read', async (auth) => {
     try {
       const { id } = await params
-      const asset = await GrundschutzAssetService.getById(TENANT_ID, id)
+      const asset = await GrundschutzAssetService.getById(id)
 
       if (!asset) {
         return apiError('NOT_FOUND', 'Asset nicht gefunden', 404)
@@ -35,7 +33,7 @@ export async function PUT(
       const { id } = await params
       const body = await request.json()
 
-      const asset = await GrundschutzAssetService.update(TENANT_ID, id, body)
+      const asset = await GrundschutzAssetService.update(id, body)
 
       if (!asset) {
         return apiError('NOT_FOUND', 'Asset nicht gefunden', 404)
@@ -56,7 +54,7 @@ export async function DELETE(
   return withPermission(request, 'basisabsicherung', 'delete', async (auth) => {
     try {
       const { id } = await params
-      const deleted = await GrundschutzAssetService.delete(TENANT_ID, id)
+      const deleted = await GrundschutzAssetService.delete(id)
 
       if (!deleted) {
         return apiError('NOT_FOUND', 'Asset nicht gefunden', 404)

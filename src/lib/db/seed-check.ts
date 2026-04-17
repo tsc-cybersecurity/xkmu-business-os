@@ -12,8 +12,6 @@ import { seedManagementFramework } from './seeds/management-framework.seed'
 import { seedDeliverableCatalog } from './seeds/deliverable-catalog.seed'
 import { seedSopCatalog } from './seeds/sop-catalog.seed'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const adminEmail = process.env.SEED_ADMIN_EMAIL
 const adminPassword = process.env.SEED_ADMIN_PASSWORD
 if (!adminEmail || !adminPassword) {
@@ -223,7 +221,7 @@ async function seedWibaData(db: ReturnType<typeof drizzle>) {
   }
 }
 
-async function seedAuditorRole(db: ReturnType<typeof drizzle>, tenantId: string) {
+async function seedAuditorRole(db: ReturnType<typeof drizzle>) {
   const auditorConfig = DEFAULT_ROLE_PERMISSIONS['auditor']
   if (!auditorConfig) return
 
@@ -460,7 +458,7 @@ async function seedBlogPosts(db: ReturnType<typeof drizzle>, authorId: string) {
 // ============================================
 const AI_PROMPT_TEMPLATE_SLUGS = Object.keys(DEFAULT_TEMPLATES)
 
-async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>, tenantId: string) {
+async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>) {
   const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates)
   if (Number(total) > 0) {
     logger.info('AI prompt templates already exist, skipping...')
@@ -495,7 +493,7 @@ const PRODUCT_CATEGORIES = [
   { name: 'Hardware', slug: 'hardware', description: 'IT-Hardware und Zubehoer' },
 ]
 
-async function seedProductCategories(db: ReturnType<typeof drizzle>, tenantId: string) {
+async function seedProductCategories(db: ReturnType<typeof drizzle>) {
   const [{ total }] = await db.select({ total: count() }).from(productCategories)
   if (Number(total) > 0) {
     logger.info('Product categories already exist, skipping...')
@@ -664,7 +662,7 @@ async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>) {
 // ============================================
 // Example Business Data
 // ============================================
-async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId: string, adminUserId: string) {
+async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, adminUserId: string) {
   // Check if companies already exist for this tenant
   const [{ total }] = await db.select({ total: count() }).from(companies)
   if (Number(total) > 0) {
@@ -777,7 +775,7 @@ async function seedCheck() {
     .from(tenants)
     .limit(1)
 
-  let tenantId: string
+  let
   let adminUserId: string | null = null
 
   if (existingTenants.length > 0) {
@@ -837,10 +835,10 @@ async function seedCheck() {
   }
 
   // 6. Seed AI prompt templates
-  await seedAiPromptTemplates(db, tenantId)
+  await seedAiPromptTemplates(db)
 
   // 7. Seed product categories
-  await seedProductCategories(db, tenantId)
+  await seedProductCategories(db)
 
   // 8. Seed DIN SPEC 27076 data (requirements + grants)
   await seedDinData(db)
@@ -849,11 +847,11 @@ async function seedCheck() {
   await seedWibaData(db)
 
   // 10. Seed auditor role
-  await seedAuditorRole(db, tenantId)
+  await seedAuditorRole(db)
 
   // 11. Seed example business data (companies, persons, leads, products, activities)
   if (adminUserId) {
-    await seedExampleBusinessData(db, tenantId, adminUserId)
+    await seedExampleBusinessData(db, adminUserId)
   }
 
   // 12. Seed CMS block type definitions (global, no tenant)
@@ -863,7 +861,7 @@ async function seedCheck() {
   await seedCmsBlockTemplates(db)
 
   // 14. Seed Management Framework (VTO, Rocks, Scorecard, Issues, OKRs, SOPs)
-  await seedManagementFramework(tenantId)
+  await seedManagementFramework()
 
   // 15. Seed Deliverable Catalog (16 Module + 70 Deliverables)
   await seedDeliverableCatalog(TENANT_ID)

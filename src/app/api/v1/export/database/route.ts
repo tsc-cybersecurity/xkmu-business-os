@@ -4,8 +4,6 @@ import { db } from '@/lib/db'
 import { TENANT_TABLES, GLOBAL_TABLES, JOIN_TABLES } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export const dynamic = 'force-dynamic'
 
 // JOIN-Tabellen werden dynamisch aus table-whitelist geladen

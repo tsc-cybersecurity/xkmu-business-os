@@ -2,15 +2,13 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
 import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/task-queue/[id]
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'settings', 'read', async (auth) => {
     const { id } = await params
-    const item = await TaskQueueService.getById(TENANT_ID, id)
+    const item = await TaskQueueService.getById(id)
     if (!item) return apiNotFound('Task nicht gefunden')
     return apiSuccess(item)
   })
@@ -20,7 +18,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'settings', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await TaskQueueService.delete(TENANT_ID, id)
+    const deleted = await TaskQueueService.delete(id)
     if (!deleted) return apiNotFound('Task nicht gefunden')
     return apiSuccess({ deleted: true })
   })
@@ -32,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     const { id } = await params
     const body = await request.json()
     if (body.action === 'cancel') {
-      const cancelled = await TaskQueueService.cancel(TENANT_ID, id)
+      const cancelled = await TaskQueueService.cancel(id)
       if (!cancelled) return apiNotFound('Task nicht gefunden oder nicht stornierbar')
       return apiSuccess({ cancelled: true })
     }

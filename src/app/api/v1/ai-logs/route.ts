@@ -1,20 +1,17 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiError,
 } from '@/lib/utils/api-response'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/ai-logs - Logs mit Filtern auflisten
 export async function GET(request: NextRequest) {
   return withPermission(request, 'ai_logs', 'read', async (auth) => {
     try {
       const { searchParams } = new URL(request.url)
 
-      const result = await AiProviderService.listLogs(TENANT_ID, {
+      const result = await AiProviderService.listLogs({
         providerType: searchParams.get('providerType') || undefined,
         status: searchParams.get('status') || undefined,
         feature: searchParams.get('feature') || undefined,

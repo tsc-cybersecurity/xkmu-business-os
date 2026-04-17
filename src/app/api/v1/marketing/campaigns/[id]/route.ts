@@ -1,27 +1,23 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiValidationError,
   apiServerError,
 } from '@/lib/utils/api-response'
-import {
-  updateMarketingCampaignSchema,
+import { updateMarketingCampaignSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { MarketingCampaignService } from '@/lib/services/marketing-campaign.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
     const { id } = await params
-    const campaign = await MarketingCampaignService.getById(TENANT_ID, id)
+    const campaign = await MarketingCampaignService.getById(id)
     if (!campaign) return apiNotFound('Kampagne nicht gefunden')
     return apiSuccess(campaign)
   })
@@ -40,7 +36,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const campaign = await MarketingCampaignService.update(TENANT_ID, id, validation.data)
+      const campaign = await MarketingCampaignService.update(id, validation.data)
       if (!campaign) return apiNotFound('Kampagne nicht gefunden')
       return apiSuccess(campaign)
     } catch (error) {
@@ -56,7 +52,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'marketing', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await MarketingCampaignService.delete(TENANT_ID, id)
+    const deleted = await MarketingCampaignService.delete(id)
     if (!deleted) return apiNotFound('Kampagne nicht gefunden')
     return apiSuccess({ deleted: true })
   })

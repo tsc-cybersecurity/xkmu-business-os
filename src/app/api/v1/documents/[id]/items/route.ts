@@ -1,19 +1,15 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  createDocumentItemSchema,
+import { createDocumentItemSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/documents/[id]/items
@@ -25,7 +21,7 @@ export async function GET(
     const { id } = await params
 
     try {
-      const items = await DocumentService.getItems(TENANT_ID, id)
+      const items = await DocumentService.getItems(id)
       return apiSuccess(items)
     } catch (error) {
       logger.error('Failed to get document items', error, { module: 'DocumentsItemsAPI' })
@@ -50,7 +46,7 @@ export async function POST(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const item = await DocumentService.addItem(TENANT_ID, id, validation.data)
+      const item = await DocumentService.addItem(id, validation.data)
       return apiSuccess(item, undefined, 201)
     } catch (error) {
       logger.error('Failed to add document item', error, { module: 'DocumentsItemsAPI' })

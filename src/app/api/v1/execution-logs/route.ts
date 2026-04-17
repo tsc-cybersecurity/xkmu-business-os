@@ -3,8 +3,6 @@ import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { ExecutionLogService } from '@/lib/services/execution-log.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { ENTITY_TYPE_ENUM, EXECUTED_BY_ENUM, EXECUTION_STATUS_ENUM } from '@/lib/constants/framework'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'processes', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -14,9 +12,7 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100)
     const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0)
 
-    const logs = await ExecutionLogService.list(
-      TENANT_ID,
-      { entityType, entityId, status },
+    const logs = await ExecutionLogService.list({ entityType, entityId, status },
       { limit, offset })
     return apiSuccess(logs)
   })
@@ -41,7 +37,7 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', `status muss einer der folgenden Werte sein: ${EXECUTION_STATUS_ENUM.join(', ')}`, 400)
       }
 
-      const log = await ExecutionLogService.create(TENANT_ID, body)
+      const log = await ExecutionLogService.create(body)
       return apiSuccess(log, undefined, 201)
     } catch { return apiServerError() }
   })

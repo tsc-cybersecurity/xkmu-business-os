@@ -1,21 +1,17 @@
 import { NextRequest } from 'next/server'
 import { logger } from '@/lib/utils/logger'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiError,
   apiUnauthorized,
   apiValidationError,
 } from '@/lib/utils/api-response'
-import {
-  changePasswordSchema,
+import { changePasswordSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { getSession } from '@/lib/auth/session'
 import { UserService } from '@/lib/services/user.service'
 import bcrypt from 'bcryptjs'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function POST(request: NextRequest) {
   const session = await getSession()
 
@@ -34,9 +30,7 @@ export async function POST(request: NextRequest) {
     const { currentPassword, newPassword } = validation.data
 
     // Get user with password hash
-    const user = await UserService.getById(
-      TENANT_ID,
-      session.user.id
+    const user = await UserService.getById(session.user.id
     )
 
     if (!user) {
@@ -54,9 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update password
-    await UserService.updatePassword(
-      TENANT_ID,
-      session.user.id,
+    await UserService.updatePassword(session.user.id,
       newPassword
     )
 

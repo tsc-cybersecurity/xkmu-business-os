@@ -11,9 +11,7 @@ export interface CreateCompanyResearchInput {
 }
 
 export const CompanyResearchService = {
-  async create(
-    _tenantId: string,
-    companyId: string,
+  async create(companyId: string,
     data: CreateCompanyResearchInput
   ): Promise<CompanyResearch> {
     const [research] = await db
@@ -30,7 +28,7 @@ export const CompanyResearchService = {
     return research
   },
 
-  async getById(_tenantId: string, id: string): Promise<CompanyResearch | null> {
+  async getById(id: string): Promise<CompanyResearch | null> {
     const [research] = await db
       .select()
       .from(companyResearches)
@@ -40,7 +38,7 @@ export const CompanyResearchService = {
     return research ?? null
   },
 
-  async listByCompany(_tenantId: string, companyId: string): Promise<CompanyResearch[]> {
+  async listByCompany(companyId: string): Promise<CompanyResearch[]> {
     return db
       .select()
       .from(companyResearches)
@@ -48,9 +46,7 @@ export const CompanyResearchService = {
       .orderBy(desc(companyResearches.createdAt))
   },
 
-  async updateStatus(
-    _tenantId: string,
-    id: string,
+  async updateStatus(id: string,
     status: 'applied' | 'rejected',
     appliedAt?: Date
   ): Promise<CompanyResearch | null> {

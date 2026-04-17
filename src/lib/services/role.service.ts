@@ -34,7 +34,7 @@ export interface UpdateRoleInput {
 }
 
 export const RoleService = {
-  async seedDefaultRoles(_tenantId: string): Promise<void> {
+  async seedDefaultRoles(): Promise<void> {
     for (const [roleName, config] of Object.entries(DEFAULT_ROLE_PERMISSIONS)) {
       // Pruefen ob Rolle bereits existiert
       const [existing] = await db
@@ -68,7 +68,7 @@ export const RoleService = {
     }
   },
 
-  async getByName(_tenantId: string, name: string): Promise<Role | null> {
+  async getByName(name: string): Promise<Role | null> {
     const [role] = await db
       .select()
       .from(roles)
@@ -78,7 +78,7 @@ export const RoleService = {
     return role ?? null
   },
 
-  async getById(_tenantId: string, roleId: string): Promise<Role | null> {
+  async getById(roleId: string): Promise<Role | null> {
     const [role] = await db
       .select()
       .from(roles)
@@ -88,11 +88,9 @@ export const RoleService = {
     return role ?? null
   },
 
-  async getWithPermissions(
-    _tenantId: string,
-    roleId: string
+  async getWithPermissions(roleId: string
   ): Promise<RoleWithPermissions | null> {
-    const role = await this.getById(_roleId)
+    const role = await this.getById(roleId)
     if (!role) return null
 
     const perms = await db
@@ -103,15 +101,15 @@ export const RoleService = {
     return { ...role, permissions: perms }
   },
 
-  async list(_tenantId: string): Promise<Role[]> {
+  async list(): Promise<Role[]> {
     return db
       .select()
       .from(roles)
       .orderBy(roles.createdAt)
   },
 
-  async listWithPermissions(_tenantId: string): Promise<RoleWithPermissions[]> {
-    const allRoles = await this.list(_tenantId)
+  async listWithPermissions(): Promise<RoleWithPermissions[]> {
+    const allRoles = await this.list()
     const result: RoleWithPermissions[] = []
 
     for (const role of allRoles) {
@@ -126,7 +124,7 @@ export const RoleService = {
     return result
   },
 
-  async create(_tenantId: string, data: CreateRoleInput): Promise<RoleWithPermissions> {
+  async create(data: CreateRoleInput): Promise<RoleWithPermissions> {
     const [role] = await db
       .insert(roles)
       .values({
@@ -158,17 +156,15 @@ export const RoleService = {
     return { ...role, permissions: perms }
   },
 
-  async update(
-    _tenantId: string,
-    roleId: string,
+  async update(roleId: string,
     data: UpdateRoleInput
   ): Promise<RoleWithPermissions | null> {
-    const existing = await this.getById(_roleId)
+    const existing = await this.getById(roleId)
     if (!existing) return null
 
     // Owner-Rolle darf nicht geaendert werden
     if (existing.name === 'owner' && existing.isSystem) {
-      return this.getWithPermissions(_roleId)
+      return this.getWithPermissions(roleId)
     }
 
     const updateData: Partial<NewRole> = {
@@ -186,11 +182,11 @@ export const RoleService = {
       await this.setPermissions(roleId, data.permissions)
     }
 
-    return this.getWithPermissions(_roleId)
+    return this.getWithPermissions(roleId)
   },
 
-  async delete(_tenantId: string, roleId: string): Promise<boolean> {
-    const role = await this.getById(_roleId)
+  async delete(roleId: string): Promise<boolean> {
+    const role = await this.getById(roleId)
     if (!role) return false
 
     // System-Rollen können nicht gelöscht werden
@@ -252,11 +248,9 @@ export const RoleService = {
     return map
   },
 
-  async countUsersPerRole(
-    _tenantId: string
-  ): Promise<Record<string, number>> {
+  async countUsersPerRole(): Promise<Record<string, number>> {
     const { users } = await import('@/lib/db/schema')
-    const allRoles = await this.list(_tenantId)
+    const allRoles = await this.list()
     const result: Record<string, number> = {}
 
     for (const role of allRoles) {

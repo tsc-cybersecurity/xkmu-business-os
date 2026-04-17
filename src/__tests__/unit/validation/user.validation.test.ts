@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  createUserSchema,
+import { createUserSchema,
   updateUserSchema,
   loginSchema,
   registerSchema,

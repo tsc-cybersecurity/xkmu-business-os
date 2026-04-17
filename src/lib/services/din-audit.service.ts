@@ -21,7 +21,7 @@ export interface SaveAnswerInput {
 }
 
 export const DinAuditService = {
-  async create(_tenantId: string, consultantId: string, data: CreateAuditInput): Promise<DinAuditSession> {
+  async create(consultantId: string, data: CreateAuditInput): Promise<DinAuditSession> {
     const [session] = await db
       .insert(dinAuditSessions)
       .values({
@@ -34,7 +34,7 @@ export const DinAuditService = {
     return session
   },
 
-  async getById(_tenantId: string, sessionId: string) {
+  async getById(sessionId: string) {
     const [session] = await db
       .select()
       .from(dinAuditSessions)
@@ -60,7 +60,7 @@ export const DinAuditService = {
     return { ...session, clientCompany: company, consultant, answers }
   },
 
-  async update(_tenantId: string, sessionId: string, data: Partial<NewDinAuditSession>): Promise<DinAuditSession | null> {
+  async update(sessionId: string, data: Partial<NewDinAuditSession>): Promise<DinAuditSession | null> {
     const [session] = await db
       .update(dinAuditSessions)
       .set({ ...data, updatedAt: new Date() })
@@ -69,7 +69,7 @@ export const DinAuditService = {
     return session ?? null
   },
 
-  async delete(_tenantId: string, sessionId: string): Promise<boolean> {
+  async delete(sessionId: string): Promise<boolean> {
     const result = await db
       .delete(dinAuditSessions)
       .where(eq(dinAuditSessions.id, sessionId))
@@ -77,7 +77,7 @@ export const DinAuditService = {
     return result.length > 0
   },
 
-  async list(_tenantId: string, filters: DinAuditFilters = {}) {
+  async list(filters: DinAuditFilters = {}) {
     const { status, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -158,7 +158,7 @@ export const DinAuditService = {
     }
   },
 
-  async saveAnswer(_tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<DinAnswer> {
+  async saveAnswer(sessionId: string, data: SaveAnswerInput): Promise<DinAnswer> {
     // Check if answer already exists for this session+requirement
     const [existing] = await db
       .select()
@@ -196,11 +196,11 @@ export const DinAuditService = {
     return answer
   },
 
-  async saveBulkAnswers(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<DinAnswer[]> {
-    return Promise.all(answers.map(a => this.saveAnswer(_sessionId, a)))
+  async saveBulkAnswers(sessionId: string, answers: SaveAnswerInput[]): Promise<DinAnswer[]> {
+    return Promise.all(answers.map(a => this.saveAnswer(sessionId, a)))
   },
 
-  async getAnswers(_tenantId: string, sessionId: string): Promise<DinAnswer[]> {
+  async getAnswers(sessionId: string): Promise<DinAnswer[]> {
     return db
       .select()
       .from(dinAnswers)

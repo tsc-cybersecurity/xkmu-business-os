@@ -27,7 +27,6 @@ describe('Permission Checks — withPermission() role matrix', () => {
 
   function makeAuth(role: string, apiKeyPermissions: string[] | null = null): AuthContext {
     return {
-      tenantId: '00000000-ffff-0000-0000-000000000001',
       userId: role === 'api' ? null : '00000000-0000-0000-0000-000000000002',
       role,
       roleId: null, // null = use inline role logic, not DB lookup

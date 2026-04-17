@@ -9,8 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import {
-  Loader2, Plus, Search, FileText, Clock, Bot, User, Shuffle,
+import { Loader2, Plus, Search, FileText, Clock, Bot, User, Shuffle,
   PanelLeftClose, PanelLeft, Package, ExternalLink,
 } from 'lucide-react'
 import { toast } from 'sonner'

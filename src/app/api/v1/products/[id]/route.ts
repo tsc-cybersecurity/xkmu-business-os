@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updateProductSchema,
+import { updateProductSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { ProductService } from '@/lib/services/product.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/products/[id]
@@ -24,7 +20,7 @@ export async function GET(
 ) {
   return withPermission(request, 'products', 'read', async (auth) => {
     const { id } = await params
-    const product = await ProductService.getById(TENANT_ID, id)
+    const product = await ProductService.getById(id)
 
     if (!product) {
       return apiNotFound('Produkt nicht gefunden')
@@ -50,7 +46,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const product = await ProductService.update(TENANT_ID, id, validation.data)
+      const product = await ProductService.update(id, validation.data)
 
       if (!product) {
         return apiNotFound('Produkt nicht gefunden')
@@ -71,7 +67,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'products', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await ProductService.delete(TENANT_ID, id)
+    const deleted = await ProductService.delete(id)
 
     if (!deleted) {
       return apiNotFound('Produkt nicht gefunden')

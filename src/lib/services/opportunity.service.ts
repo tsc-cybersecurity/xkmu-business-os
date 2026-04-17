@@ -71,9 +71,7 @@ function emptyToNull<T>(value: T): T | null {
 }
 
 export const OpportunityService = {
-  async create(
-    _tenantId: string,
-    data: CreateOpportunityInput
+  async create(data: CreateOpportunityInput
   ): Promise<Opportunity> {
     const [opportunity] = await db
       .insert(opportunities)
@@ -102,9 +100,7 @@ export const OpportunityService = {
     return opportunity
   },
 
-  async createMany(
-    _tenantId: string,
-    items: CreateOpportunityInput[]
+  async createMany(items: CreateOpportunityInput[]
   ): Promise<{ inserted: number; enriched: number; skipped: number }> {
     if (items.length === 0) return { inserted: 0, enriched: 0, skipped: 0 }
 
@@ -206,7 +202,7 @@ export const OpportunityService = {
     }
   },
 
-  async getById(_tenantId: string, id: string): Promise<Opportunity | null> {
+  async getById(id: string): Promise<Opportunity | null> {
     const [opportunity] = await db
       .select()
       .from(opportunities)
@@ -216,9 +212,7 @@ export const OpportunityService = {
     return opportunity ?? null
   },
 
-  async list(
-    _tenantId: string,
-    filters: OpportunityFilters = {}
+  async list(filters: OpportunityFilters = {}
   ): Promise<PaginatedResult<Opportunity>> {
     const { status, city, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
@@ -271,9 +265,7 @@ export const OpportunityService = {
     }
   },
 
-  async update(
-    _tenantId: string,
-    id: string,
+  async update(id: string,
     data: UpdateOpportunityInput
   ): Promise<Opportunity | null> {
     const updateData: Partial<NewOpportunity> = {
@@ -294,7 +286,7 @@ export const OpportunityService = {
    * Re-parse addresses for all opportunities that have data in address but
    * are missing city/postalCode. Uses metadata.fullAddress as source.
    */
-  async repairAddresses(_tenantId: string): Promise<number> {
+  async repairAddresses(): Promise<number> {
     const all = await db
       .select()
       .from(opportunities)
@@ -343,7 +335,7 @@ export const OpportunityService = {
     return fixed
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(opportunities)
       .where(eq(opportunities.id, id))
@@ -352,9 +344,7 @@ export const OpportunityService = {
     return result.length > 0
   },
 
-  async convert(
-    _tenantId: string,
-    id: string,
+  async convert(id: string,
     userId?: string
   ): Promise<{
     company: typeof companies.$inferSelect
@@ -362,7 +352,7 @@ export const OpportunityService = {
     opportunity: Opportunity
   }> {
     // 1. Load opportunity
-    const opportunity = await this.getById(_id)
+    const opportunity = await this.getById(id)
     if (!opportunity) {
       throw new Error('Opportunity nicht gefunden')
     }
@@ -392,8 +382,7 @@ export const OpportunityService = {
     }
 
     // 3. Create company via CompanyService
-    const company = await CompanyService.create(
-      '', {
+    const company = await CompanyService.create({
         name: opportunity.name,
         industry: opportunity.industry || undefined,
         street: street || undefined,
@@ -411,7 +400,7 @@ export const OpportunityService = {
     )
 
     // 3. Create lead via LeadService
-    const lead = await LeadService.create('', {
+    const lead = await LeadService.create({
       companyId: company.id,
       source: 'google_maps',
       sourceDetail: opportunity.searchQuery || 'Google Maps Prospecting',
@@ -421,7 +410,7 @@ export const OpportunityService = {
     })
 
     // 4. Update opportunity status
-    const updatedOpportunity = await this.update(_id, {
+    const updatedOpportunity = await this.update(id, {
       status: 'converted',
     })
 

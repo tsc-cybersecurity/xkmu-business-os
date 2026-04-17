@@ -35,7 +35,6 @@ describe.skipIf(!hasTestDb)('CRUD: Leads — real DB', () => {
     })
     expect(lead.id).toBeTruthy()
     expect(lead.source).toBe('manual')
-    expect(lead.tenantId).toBe(TEST_INTEGRATION_TENANT_A)
     createdId = lead.id
   })
 

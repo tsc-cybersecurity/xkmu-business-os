@@ -8,33 +8,31 @@ import type { DocumentTemplate } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { AIService } from '@/lib/services/ai/ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export const DocumentTemplateService = {
-  async list(_tenantId: string, category?: string): Promise<DocumentTemplate[]> {
+  async list(category?: string): Promise<DocumentTemplate[]> {
     const conditions = []
     if (category) conditions.push(eq(documentTemplates.category, category))
     return db.select().from(documentTemplates).where(conditions.length > 0 ? and(...conditions) : undefined).orderBy(documentTemplates.name)
   },
 
-  async getById(_tenantId: string, id: string): Promise<DocumentTemplate | null> {
+  async getById(id: string): Promise<DocumentTemplate | null> {
     const [tpl] = await db.select().from(documentTemplates)
       .where(eq(documentTemplates.id, id)).limit(1)
     return tpl ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     name: string; category?: string; bodyHtml?: string; placeholders?: unknown; headerHtml?: string; footerHtml?: string
   }): Promise<DocumentTemplate> {
     const [tpl] = await db.insert(documentTemplates).values({
-      tenantId: TENANT_ID, name: data.name, category: data.category || null,
+      name: data.name, category: data.category || null,
       bodyHtml: data.bodyHtml || '', placeholders: data.placeholders || [],
       headerHtml: data.headerHtml || null, footerHtml: data.footerHtml || null,
     }).returning()
     return tpl
   },
 
-  async update(_tenantId: string, id: string, data: Partial<{
+  async update(id: string, data: Partial<{
     name: string; category: string; bodyHtml: string; placeholders: unknown; headerHtml: string; footerHtml: string
   }>): Promise<DocumentTemplate | null> {
     const [tpl] = await db.update(documentTemplates).set({ ...data, updatedAt: new Date() })
@@ -42,7 +40,7 @@ export const DocumentTemplateService = {
     return tpl ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db.delete(documentTemplates)
       .where(eq(documentTemplates.id, id))
       .returning({ id: documentTemplates.id })
@@ -57,11 +55,11 @@ export const DocumentTemplateService = {
     return result
   },
 
-  async generateWithAI(_tenantId: string, templateId: string, context: string): Promise<string> {
-    const tpl = await this.getById(_templateId)
+  async generateWithAI(templateId: string, context: string): Promise<string> {
+    const tpl = await this.getById(templateId)
     if (!tpl) throw new Error('Template nicht gefunden')
 
-    const promptTemplate = await AiPromptTemplateService.getOrDefault('', 'document_template_fill')
+    const promptTemplate = await AiPromptTemplateService.getOrDefault('document_template_fill')
     const userPrompt = AiPromptTemplateService.applyPlaceholders(promptTemplate.userPrompt, {
       context, template: tpl.bodyHtml || '',
     })
@@ -73,13 +71,13 @@ export const DocumentTemplateService = {
     return response.text
   },
 
-  async seed(_tenantId: string): Promise<number> {
+  async seed(): Promise<number> {
     let created = 0
     for (const tpl of DEFAULT_DOC_TEMPLATES) {
       const existing = await db.select({ id: documentTemplates.id }).from(documentTemplates)
         .where(eq(documentTemplates.name, tpl.name)).limit(1)
       if (existing.length > 0) continue
-      await this.create(_tpl)
+      await this.create(tpl)
       created++
     }
     return created

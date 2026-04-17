@@ -5,11 +5,9 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Tabs, TabsContent, TabsList, TabsTrigger,
+import { Tabs, TabsContent, TabsList, TabsTrigger,
 } from '@/components/ui/tabs'
-import {
-  Shield, Loader2, ArrowLeft,
+import { Shield, Loader2, ArrowLeft,
   Server, Monitor, Globe, Building2, Users, FolderOpen,
 } from 'lucide-react'
 import { toast } from 'sonner'

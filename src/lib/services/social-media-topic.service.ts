@@ -12,7 +12,7 @@ export interface CreateTopicInput {
 export type UpdateTopicInput = Partial<CreateTopicInput>
 
 export const SocialMediaTopicService = {
-  async list(_tenantId: string, pagination?: { page?: number; limit?: number }) {
+  async list(pagination?: { page?: number; limit?: number }) {
     const page = pagination?.page ?? 1
     const limit = pagination?.limit ?? 50
     const offset = (page - 1) * limit
@@ -38,7 +38,7 @@ export const SocialMediaTopicService = {
     }
   },
 
-  async getById(_tenantId: string, id: string): Promise<SocialMediaTopic | null> {
+  async getById(id: string): Promise<SocialMediaTopic | null> {
     const [topic] = await db
       .select()
       .from(socialMediaTopics)
@@ -47,7 +47,7 @@ export const SocialMediaTopicService = {
     return topic ?? null
   },
 
-  async create(_tenantId: string, data: CreateTopicInput): Promise<SocialMediaTopic> {
+  async create(data: CreateTopicInput): Promise<SocialMediaTopic> {
     const [topic] = await db
       .insert(socialMediaTopics)
       .values({
@@ -59,7 +59,7 @@ export const SocialMediaTopicService = {
     return topic
   },
 
-  async update(_tenantId: string, id: string, data: UpdateTopicInput): Promise<SocialMediaTopic | null> {
+  async update(id: string, data: UpdateTopicInput): Promise<SocialMediaTopic | null> {
     const updateData: Partial<NewSocialMediaTopic> = { updatedAt: new Date() }
     if (data.name !== undefined) updateData.name = data.name
     if (data.description !== undefined) updateData.description = data.description || null
@@ -73,7 +73,7 @@ export const SocialMediaTopicService = {
     return topic ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(socialMediaTopics)
       .where(eq(socialMediaTopics.id, id))

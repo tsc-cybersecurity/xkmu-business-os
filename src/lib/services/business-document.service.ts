@@ -14,7 +14,7 @@ export interface BusinessDocumentFilters {
 }
 
 export const BusinessDocumentService = {
-  async list(_tenantId: string, filters: BusinessDocumentFilters = {}) {
+  async list(filters: BusinessDocumentFilters = {}) {
     const { status, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
@@ -34,7 +34,7 @@ export const BusinessDocumentService = {
     }
   },
 
-  async getById(_tenantId: string, id: string): Promise<BusinessDocument | null> {
+  async getById(id: string): Promise<BusinessDocument | null> {
     const [doc] = await db
       .select()
       .from(businessDocuments)
@@ -43,7 +43,7 @@ export const BusinessDocumentService = {
     return doc ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     filename: string
     originalName: string
     mimeType: string
@@ -63,9 +63,9 @@ export const BusinessDocumentService = {
     return doc
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     // Get document record to find filename
-    const doc = await this.getById(_id)
+    const doc = await this.getById(id)
     if (!doc) return false
 
     const result = await db
@@ -85,7 +85,7 @@ export const BusinessDocumentService = {
     return false
   },
 
-  async updateExtraction(_tenantId: string, id: string, extractedText: string | null, status: 'processing' | 'completed' | 'failed'): Promise<BusinessDocument | null> {
+  async updateExtraction(id: string, extractedText: string | null, status: 'processing' | 'completed' | 'failed'): Promise<BusinessDocument | null> {
     const [doc] = await db
       .update(businessDocuments)
       .set({
@@ -97,7 +97,7 @@ export const BusinessDocumentService = {
     return doc ?? null
   },
 
-  async getExtractedDocuments(_tenantId: string): Promise<BusinessDocument[]> {
+  async getExtractedDocuments(): Promise<BusinessDocument[]> {
     return db
       .select()
       .from(businessDocuments)

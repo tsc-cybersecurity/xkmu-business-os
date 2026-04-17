@@ -1,6 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 vi.mock('@/lib/auth/session', () => ({ getSession: vi.fn() }))
 vi.mock('@/lib/auth/api-key', () => ({
   getApiKeyFromRequest: vi.fn(),
@@ -22,7 +20,7 @@ describe('getAuthContext()', () => {
     const req = new Request('http://localhost/') as unknown as import('next/server').NextRequest
     const ctx = await getAuthContext(req)
 
-    expect(ctx?.tenantId).toBe(TENANT_ID)
+    expect(ctx?.tenantId).toBe()
     expect(ctx?.userId).toBe('user-1')
   })
 
@@ -42,7 +40,7 @@ describe('getAuthContext()', () => {
     const req = new Request('http://localhost/') as unknown as import('next/server').NextRequest
     const ctx = await getAuthContext(req)
 
-    expect(ctx?.tenantId).toBe(TENANT_ID)   // TENANT_ID, nicht 'different-tenant-id'
+    expect(ctx?.tenantId).toBe()   // nicht 'different-tenant-id'
   })
 
   it('gibt null zurueck wenn weder Session noch API-Key vorhanden', async () => {

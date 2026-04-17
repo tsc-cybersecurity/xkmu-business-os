@@ -6,11 +6,10 @@ import { db } from '@/lib/db'
 import { feedbackForms, feedbackResponses } from '@/lib/db/schema'
 import type { FeedbackForm, FeedbackResponse } from '@/lib/db/schema'
 import { eq, and, count, desc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { randomBytes } from 'crypto'
 
 export const FeedbackService = {
-  async list(_tenantId: string): Promise<(FeedbackForm & { responseCount: number })[]> {
+  async list(): Promise<(FeedbackForm & { responseCount: number })[]> {
     const forms = await db.select().from(feedbackForms)
       .orderBy(desc(feedbackForms.createdAt))
 
@@ -23,7 +22,7 @@ export const FeedbackService = {
     return forms.map(f => ({ ...f, responseCount: countMap.get(f.id) || 0 }))
   },
 
-  async getById(_tenantId: string, id: string): Promise<FeedbackForm | null> {
+  async getById(id: string): Promise<FeedbackForm | null> {
     const [form] = await db.select().from(feedbackForms)
       .where(eq(feedbackForms.id, id)).limit(1)
     return form ?? null
@@ -35,18 +34,18 @@ export const FeedbackService = {
     return form ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     name: string; questions?: unknown; companyId?: string
   }): Promise<FeedbackForm> {
     const token = randomBytes(16).toString('hex')
     const [form] = await db.insert(feedbackForms).values({
-      tenantId: TENANT_ID, name: data.name, questions: data.questions || [],
+      name: data.name, questions: data.questions || [],
       companyId: data.companyId || null, token,
     }).returning()
     return form
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db.delete(feedbackForms)
       .where(eq(feedbackForms.id, id))
       .returning({ id: feedbackForms.id })

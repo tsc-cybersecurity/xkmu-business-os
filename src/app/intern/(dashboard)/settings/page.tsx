@@ -1,7 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getSession } from '@/lib/auth/session'
-import {
-  UserCog,
+import { UserCog,
   Building,
   Users,
   Shield,

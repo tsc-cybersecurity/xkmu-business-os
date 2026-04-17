@@ -30,7 +30,6 @@ describe.skipIf(!hasTestDb)('CRUD: Companies — real DB', () => {
     })
     expect(company.id).toBeTruthy()
     expect(company.name).toBe('CRUD Test GmbH')
-    expect(company.tenantId).toBe(TEST_INTEGRATION_TENANT_A)
     createdId = company.id
   })
 

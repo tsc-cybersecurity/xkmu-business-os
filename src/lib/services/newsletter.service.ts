@@ -9,11 +9,10 @@ import type { NewsletterSubscriber, NewsletterCampaign } from '@/lib/db/schema'
 import { eq, and, count, desc, ilike } from 'drizzle-orm'
 import { EmailService } from '@/lib/services/email.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const NewsletterService = {
   // --- Subscribers ---
-  async listSubscribers(_tenantId: string, filters: { status?: string; search?: string; page?: number; limit?: number } = {}) {
+  async listSubscribers(filters: { status?: string; search?: string; page?: number; limit?: number } = {}) {
     const { status, search, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
     const conditions = []
@@ -29,61 +28,61 @@ export const NewsletterService = {
     return { items, meta: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) } }
   },
 
-  async createSubscriber(_tenantId: string, data: { email: string; name?: string; tags?: string[] }): Promise<NewsletterSubscriber> {
+  async createSubscriber(data: { email: string; name?: string; tags?: string[] }): Promise<NewsletterSubscriber> {
     const [sub] = await db.insert(newsletterSubscribers).values({
-      tenantId: TENANT_ID, email: data.email, name: data.name || null, tags: data.tags || [],
+      email: data.email, name: data.name || null, tags: data.tags || [],
     }).returning()
     return sub
   },
 
-  async deleteSubscriber(_tenantId: string, id: string): Promise<boolean> {
+  async deleteSubscriber(id: string): Promise<boolean> {
     const result = await db.delete(newsletterSubscribers).where(eq(newsletterSubscribers.id, id)).returning({ id: newsletterSubscribers.id })
     return result.length > 0
   },
 
-  async importSubscribers(_tenantId: string, entries: Array<{ email: string; name?: string; tags?: string[] }>): Promise<number> {
+  async importSubscribers(entries: Array<{ email: string; name?: string; tags?: string[] }>): Promise<number> {
     let created = 0
     for (const entry of entries) {
       const [existing] = await db.select({ id: newsletterSubscribers.id }).from(newsletterSubscribers)
         .where(eq(newsletterSubscribers.email, entry.email)).limit(1)
       if (existing) continue
-      await this.createSubscriber(_entry)
+      await this.createSubscriber(entry)
       created++
     }
     return created
   },
 
   // --- Campaigns ---
-  async listCampaigns(_tenantId: string) {
+  async listCampaigns() {
     return db.select().from(newsletterCampaigns).orderBy(desc(newsletterCampaigns.createdAt))
   },
 
-  async getCampaign(_tenantId: string, id: string): Promise<NewsletterCampaign | null> {
+  async getCampaign(id: string): Promise<NewsletterCampaign | null> {
     const [campaign] = await db.select().from(newsletterCampaigns).where(eq(newsletterCampaigns.id, id)).limit(1)
     return campaign ?? null
   },
 
-  async createCampaign(_tenantId: string, data: { name: string; subject?: string; bodyHtml?: string; segmentTags?: string[] }): Promise<NewsletterCampaign> {
+  async createCampaign(data: { name: string; subject?: string; bodyHtml?: string; segmentTags?: string[] }): Promise<NewsletterCampaign> {
     const [campaign] = await db.insert(newsletterCampaigns).values({
-      tenantId: TENANT_ID, name: data.name, subject: data.subject || '', bodyHtml: data.bodyHtml || '', segmentTags: data.segmentTags || [],
+      name: data.name, subject: data.subject || '', bodyHtml: data.bodyHtml || '', segmentTags: data.segmentTags || [],
     }).returning()
     return campaign
   },
 
-  async updateCampaign(_tenantId: string, id: string, data: Partial<{ name: string; subject: string; bodyHtml: string; segmentTags: string[] }>): Promise<NewsletterCampaign | null> {
+  async updateCampaign(id: string, data: Partial<{ name: string; subject: string; bodyHtml: string; segmentTags: string[] }>): Promise<NewsletterCampaign | null> {
     const [campaign] = await db.update(newsletterCampaigns).set({ ...data, updatedAt: new Date() })
       .where(eq(newsletterCampaigns.id, id)).returning()
     return campaign ?? null
   },
 
-  async deleteCampaign(_tenantId: string, id: string): Promise<boolean> {
+  async deleteCampaign(id: string): Promise<boolean> {
     const result = await db.delete(newsletterCampaigns).where(eq(newsletterCampaigns.id, id)).returning({ id: newsletterCampaigns.id })
     return result.length > 0
   },
 
   // --- Send Campaign ---
-  async sendCampaign(_tenantId: string, campaignId: string): Promise<{ sent: number; failed: number }> {
-    const campaign = await this.getCampaign(_campaignId)
+  async sendCampaign(campaignId: string): Promise<{ sent: number; failed: number }> {
+    const campaign = await this.getCampaign(campaignId)
     if (!campaign) throw new Error('Kampagne nicht gefunden')
     if (!campaign.subject || !campaign.bodyHtml) throw new Error('Betreff oder Inhalt fehlt')
 
@@ -107,7 +106,7 @@ export const NewsletterService = {
         const html = campaign.bodyHtml!.replace(/\{\{name\}\}/g, subscriber.name || subscriber.email)
         const subject = campaign.subject!.replace(/\{\{name\}\}/g, subscriber.name || subscriber.email)
 
-        const result = await EmailService.send('', {
+        const result = await EmailService.send({
           to: subscriber.email,
           subject,
           body: html.replace(/<[^>]+>/g, ' ').trim(),

@@ -20,7 +20,7 @@ export interface CreateTemplateInput {
 export type UpdateTemplateInput = Partial<CreateTemplateInput>
 
 export const MarketingTemplateService = {
-  async list(_tenantId: string, filters: TemplateFilters = {}) {
+  async list(filters: TemplateFilters = {}) {
     const { type, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
@@ -40,7 +40,7 @@ export const MarketingTemplateService = {
     }
   },
 
-  async getById(_tenantId: string, id: string): Promise<MarketingTemplate | null> {
+  async getById(id: string): Promise<MarketingTemplate | null> {
     const [template] = await db
       .select()
       .from(marketingTemplates)
@@ -49,7 +49,7 @@ export const MarketingTemplateService = {
     return template ?? null
   },
 
-  async getDefault(_tenantId: string, type: string): Promise<MarketingTemplate | null> {
+  async getDefault(type: string): Promise<MarketingTemplate | null> {
     const [template] = await db
       .select()
       .from(marketingTemplates)
@@ -61,7 +61,7 @@ export const MarketingTemplateService = {
     return template ?? null
   },
 
-  async create(_tenantId: string, data: CreateTemplateInput): Promise<MarketingTemplate> {
+  async create(data: CreateTemplateInput): Promise<MarketingTemplate> {
     const [template] = await db
       .insert(marketingTemplates)
       .values({
@@ -75,7 +75,7 @@ export const MarketingTemplateService = {
     return template
   },
 
-  async update(_tenantId: string, id: string, data: UpdateTemplateInput): Promise<MarketingTemplate | null> {
+  async update(id: string, data: UpdateTemplateInput): Promise<MarketingTemplate | null> {
     const updateData: Partial<NewMarketingTemplate> = { updatedAt: new Date() }
     if (data.name !== undefined) updateData.name = data.name
     if (data.type !== undefined) updateData.type = data.type
@@ -91,7 +91,7 @@ export const MarketingTemplateService = {
     return template ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(marketingTemplates)
       .where(eq(marketingTemplates.id, id))

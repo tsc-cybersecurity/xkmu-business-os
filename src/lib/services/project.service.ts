@@ -5,12 +5,11 @@
 import { db } from '@/lib/db'
 import { projects, projectTasks, companies, users } from '@/lib/db/schema'
 import type { Project, ProjectTask, NewProject, NewProjectTask } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, asc, count, desc } from 'drizzle-orm'
 
 export const ProjectService = {
   // --- Projects ---
-  async list(_tenantId: string, status?: string) {
+  async list(status?: string) {
     const conditions: ReturnType<typeof eq>[] = []
     if (status) conditions.push(eq(projects.status, status))
 
@@ -36,19 +35,19 @@ export const ProjectService = {
     }))
   },
 
-  async getById(_tenantId: string, id: string): Promise<Project | null> {
+  async getById(id: string): Promise<Project | null> {
     const [project] = await db.select().from(projects)
       .where(eq(projects.id, id)).limit(1)
     return project ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     name: string; description?: string; companyId?: string; ownerId?: string
     projectType?: string; priority?: string; startDate?: Date; endDate?: Date
     budget?: string; color?: string; columns?: unknown; tags?: string[]
   }): Promise<Project> {
     const [project] = await db.insert(projects).values({
-      tenantId: TENANT_ID, name: data.name, description: data.description || null,
+      name: data.name, description: data.description || null,
       companyId: data.companyId || null, ownerId: data.ownerId || null,
       projectType: data.projectType || 'kanban', priority: data.priority || 'mittel',
       startDate: data.startDate || null, endDate: data.endDate || null,
@@ -58,7 +57,7 @@ export const ProjectService = {
     return project
   },
 
-  async update(_tenantId: string, id: string, data: Partial<{
+  async update(id: string, data: Partial<{
     name: string; description: string; companyId: string | null; ownerId: string | null
     status: string; priority: string; startDate: Date | null; endDate: Date | null
     budget: string | null; color: string | null; columns: unknown; tags: string[]
@@ -82,7 +81,7 @@ export const ProjectService = {
     return project ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db.delete(projects)
       .where(eq(projects.id, id))
       .returning({ id: projects.id })
@@ -90,7 +89,7 @@ export const ProjectService = {
   },
 
   // --- Tasks ---
-  async listTasks(_tenantId: string, projectId: string): Promise<(ProjectTask & { assigneeName?: string })[]> {
+  async listTasks(projectId: string): Promise<(ProjectTask & { assigneeName?: string })[]> {
     const rows = await db
       .select({ task: projectTasks, assigneeEmail: users.email, assigneeFirstName: users.firstName, assigneeLastName: users.lastName })
       .from(projectTasks)
@@ -104,7 +103,7 @@ export const ProjectService = {
     }))
   },
 
-  async createTask(_tenantId: string, projectId: string, data: {
+  async createTask(projectId: string, data: {
     title: string; description?: string; columnId?: string; priority?: string
     assignedTo?: string; startDate?: Date; dueDate?: Date; estimatedMinutes?: number
     labels?: string[]; referenceType?: string; referenceId?: string
@@ -117,7 +116,7 @@ export const ProjectService = {
     const nextPosition = (existing[0]?.position || 0) + 1
 
     const [task] = await db.insert(projectTasks).values({
-      tenantId: TENANT_ID, projectId, title: data.title, description: data.description || null,
+      projectId, title: data.title, description: data.description || null,
       columnId: data.columnId || 'backlog', position: nextPosition,
       priority: data.priority || 'mittel',
       assignedTo: data.assignedTo || null, startDate: data.startDate || null,
@@ -130,7 +129,7 @@ export const ProjectService = {
     return task
   },
 
-  async updateTask(_tenantId: string, taskId: string, data: Partial<{
+  async updateTask(taskId: string, data: Partial<{
     title: string; description: string; columnId: string; position: number; priority: string
     assignedTo: string | null; startDate: Date | null; dueDate: Date | null
     completedAt: Date | null; estimatedMinutes: number | null
@@ -164,7 +163,7 @@ export const ProjectService = {
     return task ?? null
   },
 
-  async deleteTask(_tenantId: string, taskId: string): Promise<boolean> {
+  async deleteTask(taskId: string): Promise<boolean> {
     // Delete child tasks first (subtasks)
     await db.delete(projectTasks)
       .where(eq(projectTasks.parentTaskId, taskId))
@@ -174,7 +173,7 @@ export const ProjectService = {
     return result.length > 0
   },
 
-  async moveTask(_tenantId: string, taskId: string, columnId: string, position: number): Promise<ProjectTask | null> {
-    return this.updateTask(_taskId, { columnId, position })
+  async moveTask(taskId: string, columnId: string, position: number): Promise<ProjectTask | null> {
+    return this.updateTask(taskId, { columnId, position })
   },
 }

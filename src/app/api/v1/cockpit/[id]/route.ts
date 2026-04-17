@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updateCockpitSystemSchema,
+import { updateCockpitSystemSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { CockpitService } from '@/lib/services/cockpit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 export async function GET(
@@ -23,7 +19,7 @@ export async function GET(
 ) {
   return withPermission(request, 'cockpit', 'read', async (auth) => {
     const { id } = await params
-    const system = await CockpitService.getById(TENANT_ID, id)
+    const system = await CockpitService.getById(id)
 
     if (!system) {
       return apiNotFound('System not found')
@@ -48,7 +44,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const system = await CockpitService.update(TENANT_ID, id, validation.data)
+      const system = await CockpitService.update(id, validation.data)
 
       if (!system) {
         return apiNotFound('System not found')
@@ -68,7 +64,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'cockpit', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await CockpitService.delete(TENANT_ID, id)
+    const deleted = await CockpitService.delete(id)
 
     if (!deleted) {
       return apiNotFound('System not found')

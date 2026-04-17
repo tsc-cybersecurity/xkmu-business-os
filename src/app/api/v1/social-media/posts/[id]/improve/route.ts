@@ -1,13 +1,11 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiValidationError,
   apiError,
   apiServerError,
 } from '@/lib/utils/api-response'
-import {
-  improveSocialPostSchema,
+import { improveSocialPostSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
@@ -15,8 +13,6 @@ import { SocialMediaPostService } from '@/lib/services/social-media-post.service
 import { SocialMediaAIService } from '@/lib/services/ai/social-media-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,7 +20,7 @@ export async function POST(
   return withPermission(request, 'social_media', 'update', async (auth) => {
     try {
       const { id } = await params
-      const post = await SocialMediaPostService.getById(TENANT_ID, id)
+      const post = await SocialMediaPostService.getById(id)
       if (!post) return apiNotFound('Beitrag nicht gefunden')
 
       const body = await request.json()

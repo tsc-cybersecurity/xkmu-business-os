@@ -8,7 +8,7 @@ import type { TimeEntry, NewTimeEntry } from '@/lib/db/schema'
 import { eq, and, gte, lte, desc, count, sum, isNull } from 'drizzle-orm'
 
 export const TimeEntryService = {
-  async list(_tenantId: string, filters: {
+  async list(filters: {
     userId?: string
     companyId?: string
     from?: Date
@@ -49,7 +49,7 @@ export const TimeEntryService = {
     }
   },
 
-  async getById(_tenantId: string, id: string): Promise<TimeEntry | null> {
+  async getById(id: string): Promise<TimeEntry | null> {
     const [entry] = await db
       .select()
       .from(timeEntries)
@@ -58,7 +58,7 @@ export const TimeEntryService = {
     return entry ?? null
   },
 
-  async create(_tenantId: string, userId: string, data: {
+  async create(userId: string, data: {
     companyId?: string
     description?: string
     date: Date
@@ -91,7 +91,7 @@ export const TimeEntryService = {
     return entry
   },
 
-  async update(_tenantId: string, id: string, data: Partial<{
+  async update(id: string, data: Partial<{
     companyId: string | null
     description: string
     date: Date
@@ -124,7 +124,7 @@ export const TimeEntryService = {
     return entry ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(timeEntries)
       .where(eq(timeEntries.id, id))
@@ -133,7 +133,7 @@ export const TimeEntryService = {
   },
 
   // Running timer: entry with startTime but no endTime
-  async getRunningTimer(_tenantId: string, userId: string): Promise<TimeEntry | null> {
+  async getRunningTimer(userId: string): Promise<TimeEntry | null> {
     const [entry] = await db
       .select()
       .from(timeEntries)
@@ -145,7 +145,7 @@ export const TimeEntryService = {
     return entry ?? null
   },
 
-  async startTimer(_tenantId: string, userId: string, data: {
+  async startTimer(userId: string, data: {
     companyId?: string
     description?: string
     hourlyRate?: string
@@ -167,7 +167,7 @@ export const TimeEntryService = {
     })
   },
 
-  async stopTimer(_tenantId: string, userId: string): Promise<TimeEntry | null> {
+  async stopTimer(userId: string): Promise<TimeEntry | null> {
     const running = await this.getRunningTimer(_userId)
     if (!running) return null
 
@@ -180,7 +180,7 @@ export const TimeEntryService = {
     })
   },
 
-  async sumByCompany(_tenantId: string, companyId: string, from?: Date, to?: Date) {
+  async sumByCompany(companyId: string, from?: Date, to?: Date) {
     const conditions = [
       eq(timeEntries.companyId, companyId),
     ]

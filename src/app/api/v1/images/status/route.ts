@@ -4,8 +4,6 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { ImageGenerationService } from '@/lib/services/ai/image-generation.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const statusSchema = z.object({
   taskId: z.string().min(1),
   prompt: z.string().optional(),
@@ -19,9 +17,7 @@ export async function POST(request: NextRequest) {
       const body = await request.json()
       const { taskId, prompt, model, category } = statusSchema.parse(body)
 
-      const result = await ImageGenerationService.checkTaskStatus(
-        TENANT_ID,
-        taskId,
+      const result = await ImageGenerationService.checkTaskStatus(taskId,
         { prompt, model, category }
       )
       return apiSuccess(result)

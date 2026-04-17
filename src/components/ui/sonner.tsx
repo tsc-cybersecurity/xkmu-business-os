@@ -1,7 +1,6 @@
 "use client"
 
-import {
-  CircleCheckIcon,
+import { CircleCheckIcon,
   InfoIcon,
   Loader2Icon,
   OctagonXIcon,

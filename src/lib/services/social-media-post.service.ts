@@ -26,7 +26,7 @@ export interface CreatePostInput {
 export type UpdatePostInput = Partial<CreatePostInput>
 
 export const SocialMediaPostService = {
-  async list(_tenantId: string, filters: PostFilters = {}) {
+  async list(filters: PostFilters = {}) {
     const { platform, status, topicId, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
@@ -71,7 +71,7 @@ export const SocialMediaPostService = {
     }
   },
 
-  async getById(_tenantId: string, id: string): Promise<SocialMediaPost | null> {
+  async getById(id: string): Promise<SocialMediaPost | null> {
     const [post] = await db
       .select()
       .from(socialMediaPosts)
@@ -80,7 +80,7 @@ export const SocialMediaPostService = {
     return post ?? null
   },
 
-  async create(_tenantId: string, data: CreatePostInput, createdBy?: string): Promise<SocialMediaPost> {
+  async create(data: CreatePostInput, createdBy?: string): Promise<SocialMediaPost> {
     const [post] = await db
       .insert(socialMediaPosts)
       .values({
@@ -99,7 +99,7 @@ export const SocialMediaPostService = {
     return post
   },
 
-  async bulkCreate(_tenantId: string, posts: CreatePostInput[], createdBy?: string): Promise<SocialMediaPost[]> {
+  async bulkCreate(posts: CreatePostInput[], createdBy?: string): Promise<SocialMediaPost[]> {
     if (posts.length === 0) return []
     const values = posts.map(data => ({
       topicId: data.topicId || undefined,
@@ -116,7 +116,7 @@ export const SocialMediaPostService = {
     return db.insert(socialMediaPosts).values(values).returning()
   },
 
-  async update(_tenantId: string, id: string, data: UpdatePostInput): Promise<SocialMediaPost | null> {
+  async update(id: string, data: UpdatePostInput): Promise<SocialMediaPost | null> {
     const updateData: Partial<NewSocialMediaPost> = { updatedAt: new Date() }
     if (data.topicId !== undefined) updateData.topicId = data.topicId || undefined
     if (data.platform !== undefined) updateData.platform = data.platform
@@ -135,7 +135,7 @@ export const SocialMediaPostService = {
     return post ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(socialMediaPosts)
       .where(eq(socialMediaPosts.id, id))

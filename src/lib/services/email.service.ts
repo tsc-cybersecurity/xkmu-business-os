@@ -91,9 +91,7 @@ export const EmailService = {
   /**
    * Send email
    */
-  async send(
-    _tenantId: string,
-    input: SendEmailInput,
+  async send(input: SendEmailInput,
     userId?: string | null
   ): Promise<SendEmailResult> {
     const config = this.getConfig()
@@ -162,9 +160,7 @@ export const EmailService = {
   /**
    * Send email using a template
    */
-  async sendWithTemplate(
-    _tenantId: string,
-    templateSlug: string,
+  async sendWithTemplate(templateSlug: string,
     to: string,
     placeholders: Record<string, string>,
     options?: {
@@ -177,7 +173,7 @@ export const EmailService = {
     userId?: string | null
   ): Promise<SendEmailResult> {
     const { EmailTemplateService } = await import('./email-template.service')
-    const template = await EmailTemplateService.getBySlug(_templateSlug)
+    const template = await EmailTemplateService.getBySlug(templateSlug)
     if (!template) {
       return { success: false, error: `E-Mail-Template '${templateSlug}' nicht gefunden` }
     }
@@ -186,7 +182,7 @@ export const EmailService = {
     const html = EmailTemplateService.applyPlaceholders(template.bodyHtml, placeholders)
     const body = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
-    return this.send('', {
+    return this.send({
       to,
       subject,
       body,

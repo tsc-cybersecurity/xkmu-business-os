@@ -8,14 +8,12 @@ import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.servi
 import { AIService } from '@/lib/services/ai/ai.service'
 import { TenantService } from '@/lib/services/tenant.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function POST(request: NextRequest) {
   return withPermission(request, 'settings', 'update', async (_auth) => {
     try {
 
       // 1. Load tenant info
-      const tenant = await TenantService.getById(TENANT_ID)
+      const tenant = await TenantService.getById()
       if (!tenant) return apiError('NOT_FOUND', 'Tenant nicht gefunden', 404)
 
       const tenantSettings = (tenant.settings ?? {}) as Record<string, unknown>
@@ -78,7 +76,7 @@ export async function POST(request: NextRequest) {
         : 'Keine Business-Intelligence-Analyse vorhanden'
 
       // 6. Get prompt template
-      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'company_knowledge_analysis')
+      const template = await AiPromptTemplateService.getOrDefault('company_knowledge_analysis')
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
         companyName: tenant.name,
@@ -104,7 +102,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 8. Save result to tenant settings
-      await TenantService.update(TENANT_ID, {
+      await TenantService.update({
         settings: {
           ...tenantSettings,
           companyKnowledge: aiResult.text,

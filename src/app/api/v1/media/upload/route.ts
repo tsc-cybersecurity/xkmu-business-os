@@ -3,8 +3,6 @@ import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { MediaUploadService } from '@/lib/services/media-upload.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function POST(request: NextRequest) {
   return withPermission(request, 'blog', 'create', async (auth) => {
     try {
@@ -15,7 +13,7 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'Keine Datei hochgeladen', 400)
       }
 
-      const upload = await MediaUploadService.upload(TENANT_ID, file, auth.userId ?? undefined)
+      const upload = await MediaUploadService.upload(file, auth.userId ?? undefined)
       return apiSuccess(upload, undefined, 201)
     } catch (error) {
       if (error instanceof Error) {

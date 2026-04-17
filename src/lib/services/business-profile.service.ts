@@ -21,7 +21,7 @@ export interface BusinessAnalysisResult {
 }
 
 export const BusinessProfileService = {
-  async getByTenant(_tenantId: string): Promise<BusinessProfile | null> {
+  async getByTenant(): Promise<BusinessProfile | null> {
     const [profile] = await db
       .select()
       .from(businessProfiles)
@@ -29,8 +29,8 @@ export const BusinessProfileService = {
     return profile ?? null
   },
 
-  async upsert(_tenantId: string, data: BusinessAnalysisResult, documentIds: string[]): Promise<BusinessProfile> {
-    const existing = await this.getByTenant(_tenantId)
+  async upsert(data: BusinessAnalysisResult, documentIds: string[]): Promise<BusinessProfile> {
+    const existing = await this.getByTenant()
 
     if (existing) {
       const [updated] = await db

@@ -3,13 +3,11 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { N8nService } from '@/lib/services/n8n.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/n8n/connection - Verbindung anzeigen
 export async function GET(request: NextRequest) {
   return withPermission(request, 'n8n_workflows', 'read', async (auth) => {
     try {
-      const conn = await N8nService.getConnection(TENANT_ID)
+      const conn = await N8nService.getConnection()
 
       if (!conn) {
         return apiSuccess(null)
@@ -36,7 +34,7 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'apiUrl und apiKey sind erforderlich', 400)
       }
 
-      const conn = await N8nService.upsertConnection(TENANT_ID, {
+      const conn = await N8nService.upsertConnection({
         name: body.name || 'n8n Cloud',
         apiUrl: body.apiUrl,
         apiKey: body.apiKey,

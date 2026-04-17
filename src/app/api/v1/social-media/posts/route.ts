@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiServerError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createSocialMediaPostSchema,
+import { createSocialMediaPostSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { SocialMediaPostService } from '@/lib/services/social-media-post.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'social_media', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -23,7 +19,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined
     const topicId = searchParams.get('topicId') || undefined
 
-    const result = await SocialMediaPostService.list(TENANT_ID, {
+    const result = await SocialMediaPostService.list({
       ...pagination,
       platform,
       status,
@@ -42,7 +38,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const post = await SocialMediaPostService.create(TENANT_ID, validation.data, auth.userId ?? undefined)
+      const post = await SocialMediaPostService.create(validation.data, auth.userId ?? undefined)
       return apiSuccess(post, undefined, 201)
     } catch (error) {
       logger.error('Error creating social media post', error, { module: 'SocialMediaPostsAPI' })

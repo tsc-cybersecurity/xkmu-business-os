@@ -7,8 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import {
-  Loader2, Search, Package, PanelLeftClose, PanelLeft,
+import { Loader2, Search, Package, PanelLeftClose, PanelLeft,
   FileText, ExternalLink, Clock, Bot, User, Shuffle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'

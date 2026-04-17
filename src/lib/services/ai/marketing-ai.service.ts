@@ -36,7 +36,7 @@ export const MarketingAIService = {
     context: AIRequestContext
   ): Promise<GeneratedMarketingContent> {
     const slug = slugMap[params.type] || 'marketing_email'
-    const template = await AiPromptTemplateService.getOrDefault('', slug)
+    const template = await AiPromptTemplateService.getOrDefault(slug)
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       recipientName: params.recipientName || '',

@@ -4,8 +4,7 @@
  */
 
 import { db } from '@/lib/db'
-import {
-  grundschutzAuditSessions, grundschutzAnswers,
+import { grundschutzAuditSessions, grundschutzAnswers,
   grundschutzControls, grundschutzGroups,
   companies, users,
 } from '@/lib/db/schema'
@@ -45,7 +44,7 @@ export interface AuditScoring {
 
 export const GrundschutzAuditService = {
   /** Audit-Session erstellen */
-  async create(_tenantId: string, consultantId: string, data: CreateAuditInput): Promise<GrundschutzAuditSession> {
+  async create(consultantId: string, data: CreateAuditInput): Promise<GrundschutzAuditSession> {
     const [session] = await db.insert(grundschutzAuditSessions).values({
       consultantId,
       clientCompanyId: data.clientCompanyId,
@@ -100,7 +99,7 @@ export const GrundschutzAuditService = {
   },
 
   /** Session abrufen mit Statistiken */
-  async getById(_tenantId: string, sessionId: string) {
+  async getById(sessionId: string) {
     const [session] = await db.select({
       session: grundschutzAuditSessions,
       companyName: companies.name,
@@ -135,7 +134,7 @@ export const GrundschutzAuditService = {
   },
 
   /** Alle Sessions eines Tenants */
-  async list(_tenantId: string) {
+  async list() {
     const sessions = await db.select({
       session: grundschutzAuditSessions,
       companyName: companies.name,
@@ -168,7 +167,7 @@ export const GrundschutzAuditService = {
   },
 
   /** Session loeschen */
-  async delete(_tenantId: string, sessionId: string): Promise<boolean> {
+  async delete(sessionId: string): Promise<boolean> {
     const result = await db.delete(grundschutzAuditSessions)
       .where(eq(grundschutzAuditSessions.id, sessionId))
       .returning({ id: grundschutzAuditSessions.id })
@@ -176,7 +175,7 @@ export const GrundschutzAuditService = {
   },
 
   /** Session-Status aktualisieren */
-  async updateStatus(_tenantId: string, sessionId: string, status: string): Promise<GrundschutzAuditSession | null> {
+  async updateStatus(sessionId: string, status: string): Promise<GrundschutzAuditSession | null> {
     const updates: Record<string, unknown> = { status, updatedAt: new Date() }
     if (status === 'in_progress' && !updates.startedAt) updates.startedAt = new Date()
     if (status === 'completed') updates.completedAt = new Date()
@@ -219,7 +218,7 @@ export const GrundschutzAuditService = {
   },
 
   /** Einzelne Antwort speichern */
-  async saveAnswer(_tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<GrundschutzAnswer> {
+  async saveAnswer(sessionId: string, data: SaveAnswerInput): Promise<GrundschutzAnswer> {
     // Prüfe ob Answer existiert
     const [existing] = await db.select().from(grundschutzAnswers)
       .where(and(
@@ -247,10 +246,10 @@ export const GrundschutzAuditService = {
   },
 
   /** Batch-Answers speichern */
-  async saveAnswersBatch(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<number> {
+  async saveAnswersBatch(sessionId: string, answers: SaveAnswerInput[]): Promise<number> {
     let saved = 0
     for (const a of answers) {
-      await this.saveAnswer(_sessionId, a)
+      await this.saveAnswer(sessionId, a)
       saved++
     }
     return saved

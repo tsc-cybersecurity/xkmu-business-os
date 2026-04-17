@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
 import { EosService } from '@/lib/services/eos.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 export async function PUT(request: NextRequest, { params }: { params: Params }) {
@@ -11,7 +9,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     try {
       const { id } = await params
       const body = await request.json()
-      const meeting = await EosService.updateMeeting(TENANT_ID, id, body)
+      const meeting = await EosService.updateMeeting(id, body)
       if (!meeting) return apiNotFound('Meeting nicht gefunden')
       return apiSuccess(meeting)
     } catch { return apiServerError() }

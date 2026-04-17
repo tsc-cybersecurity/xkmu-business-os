@@ -4,8 +4,6 @@ import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { GrundschutzAuditService } from '@/lib/services/grundschutz-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const createAuditSchema = z.object({
   clientCompanyId: z.string().uuid(),
   title: z.string().max(255).optional(),
@@ -16,7 +14,7 @@ const createAuditSchema = z.object({
 export async function GET(request: NextRequest) {
   return withPermission(request, 'basisabsicherung', 'read', async (auth) => {
     try {
-      const sessions = await GrundschutzAuditService.list(TENANT_ID)
+      const sessions = await GrundschutzAuditService.list()
       return apiSuccess(sessions)
     } catch { return apiServerError() }
   })
@@ -30,7 +28,7 @@ export async function POST(request: NextRequest) {
       if (!parsed.success) {
         return apiError('VALIDATION_ERROR', 'clientCompanyId ist erforderlich', 400)
       }
-      const session = await GrundschutzAuditService.create(TENANT_ID, auth.userId!, parsed.data)
+      const session = await GrundschutzAuditService.create(auth.userId!, parsed.data)
       return apiSuccess(session, undefined, 201)
     } catch { return apiServerError() }
   })

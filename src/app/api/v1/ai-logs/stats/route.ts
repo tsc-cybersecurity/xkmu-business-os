@@ -1,18 +1,15 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiError,
 } from '@/lib/utils/api-response'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/ai-logs/stats - Aggregierte Statistiken
 export async function GET(request: NextRequest) {
   return withPermission(request, 'ai_logs', 'read', async (auth) => {
     try {
-      const stats = await AiProviderService.getLogStats(TENANT_ID)
+      const stats = await AiProviderService.getLogStats()
       return apiSuccess(stats)
     } catch (error) {
       logger.error('Failed to get AI log stats', error, { module: 'AiLogsStatsAPI' })

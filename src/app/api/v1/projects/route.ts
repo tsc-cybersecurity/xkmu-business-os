@@ -2,13 +2,11 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { ProjectService } from '@/lib/services/project.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'processes', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || undefined
-    const items = await ProjectService.list(TENANT_ID, status)
+    const items = await ProjectService.list(status)
     return apiSuccess(items)
   })
 }
@@ -18,7 +16,7 @@ export async function POST(request: NextRequest) {
     try {
       const body = await request.json()
 
-      const project = await ProjectService.create(TENANT_ID, {
+      const project = await ProjectService.create({
         ...body,
         startDate: body.startDate ? new Date(body.startDate) : undefined,
         endDate: body.endDate ? new Date(body.endDate) : undefined,

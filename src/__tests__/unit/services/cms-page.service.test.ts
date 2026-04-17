@@ -67,7 +67,7 @@ describe('CmsPageService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         slug: 'test-page',
         title: 'Test Page',
       })
@@ -81,7 +81,7 @@ describe('CmsPageService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         slug: 'test-page',
         title: 'Test Page',
       })
@@ -94,7 +94,7 @@ describe('CmsPageService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         slug: 'test-page',
         title: 'Test Page',
       }, 'user-1')

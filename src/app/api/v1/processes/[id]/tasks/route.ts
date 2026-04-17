@@ -3,8 +3,6 @@ import { apiSuccess, apiNotFound, apiServerError, apiValidationError } from '@/l
 import { ProcessService } from '@/lib/services/process.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { validateAndParse, formatZodErrors, createProcessTaskSchema } from '@/lib/utils/validation'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/processes/[id]/tasks - List tasks for a process
@@ -14,10 +12,10 @@ export async function GET(
 ) {
   return withPermission(request, 'processes', 'read', async (auth) => {
     const { id } = await params
-    const process = await ProcessService.getById(TENANT_ID, id)
+    const process = await ProcessService.getById(id)
     if (!process) return apiNotFound('Prozess nicht gefunden')
 
-    const tasks = await ProcessService.listTasks(TENANT_ID, id)
+    const tasks = await ProcessService.listTasks(id)
     return apiSuccess(tasks)
   })
 }
@@ -30,7 +28,7 @@ export async function POST(
   return withPermission(request, 'processes', 'create', async (auth) => {
     try {
       const { id } = await params
-      const process = await ProcessService.getById(TENANT_ID, id)
+      const process = await ProcessService.getById(id)
       if (!process) return apiNotFound('Prozess nicht gefunden')
 
       const body = await request.json()
@@ -38,7 +36,7 @@ export async function POST(
       if (!validation.success) {
         return apiValidationError(formatZodErrors(validation.errors!))
       }
-      const task = await ProcessService.createTask(TENANT_ID, id, validation.data!)
+      const task = await ProcessService.createTask(id, validation.data!)
       return apiSuccess(task, undefined, 201)
     } catch {
       return apiServerError()

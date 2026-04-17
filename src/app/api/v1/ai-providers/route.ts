@@ -1,18 +1,15 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiError,
 } from '@/lib/utils/api-response'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/ai-providers - Alle Provider auflisten
 export async function GET(request: NextRequest) {
   return withPermission(request, 'ai_providers', 'read', async (auth) => {
     try {
-      const providers = await AiProviderService.list(TENANT_ID)
+      const providers = await AiProviderService.list()
 
       // API Keys maskieren (nur letzte 4 Zeichen zeigen)
       const safeProviders = providers.map((p) => ({
@@ -54,7 +51,7 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'API-Schlüssel ist für diesen Anbieter erforderlich', 400)
       }
 
-      const provider = await AiProviderService.create(TENANT_ID, {
+      const provider = await AiProviderService.create({
         providerType: body.providerType,
         name: body.name,
         apiKey: body.apiKey || null,

@@ -4,8 +4,6 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { WordPressService } from '@/lib/services/wordpress.service'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // POST /api/v1/blog/posts/[id]/publish-wp
@@ -17,7 +15,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       if (!post) return apiNotFound('Beitrag nicht gefunden')
 
       // Get WordPress credentials from AI providers
-      const providers = await AiProviderService.getActiveProviders(TENANT_ID)
+      const providers = await AiProviderService.getActiveProviders()
       const wpProvider = providers.find(p => p.providerType === 'wordpress')
       if (!wpProvider?.apiKey) {
         return apiError('NO_WP_CONFIG', 'WordPress nicht konfiguriert. Bitte unter Einstellungen > KI-Provider einen WordPress-Provider mit URL|User|AppPassword anlegen.', 400)

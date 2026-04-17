@@ -10,7 +10,7 @@ const createGrantSchema = z.object({
   name: z.string().min(1, 'Name ist erforderlich'),
   provider: z.string().min(1, 'Anbieter ist erforderlich'),
   purpose: z.string().optional().nullable(),
-  url: z.string().url('Ungültige URL').optional().nullable().or(z.literal('')),
+  url: z.string().url('Ungültige URL').optional().nullable().or(z.literal()),
   region: z.string().min(1, 'Region ist erforderlich'),
   minEmployees: z.number().int().min(0).optional().nullable(),
   maxEmployees: z.number().int().min(0).optional().nullable(),

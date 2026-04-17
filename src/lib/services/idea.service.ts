@@ -21,7 +21,7 @@ export interface CreateIdeaInput {
 export type UpdateIdeaInput = Partial<CreateIdeaInput>
 
 export const IdeaService = {
-  async create(_tenantId: string, data: CreateIdeaInput, createdBy?: string): Promise<Idea> {
+  async create(data: CreateIdeaInput, createdBy?: string): Promise<Idea> {
     const [idea] = await db
       .insert(ideas)
       .values({
@@ -36,7 +36,7 @@ export const IdeaService = {
     return idea
   },
 
-  async getById(_tenantId: string, ideaId: string): Promise<Idea | null> {
+  async getById(ideaId: string): Promise<Idea | null> {
     const [idea] = await db
       .select()
       .from(ideas)
@@ -45,7 +45,7 @@ export const IdeaService = {
     return idea ?? null
   },
 
-  async update(_tenantId: string, ideaId: string, data: UpdateIdeaInput): Promise<Idea | null> {
+  async update(ideaId: string, data: UpdateIdeaInput): Promise<Idea | null> {
     const updateData: Partial<NewIdea> = { updatedAt: new Date() }
     if (data.rawContent !== undefined) updateData.rawContent = data.rawContent
     if (data.type !== undefined) updateData.type = data.type
@@ -61,7 +61,7 @@ export const IdeaService = {
     return idea ?? null
   },
 
-  async delete(_tenantId: string, ideaId: string): Promise<boolean> {
+  async delete(ideaId: string): Promise<boolean> {
     const result = await db
       .delete(ideas)
       .where(eq(ideas.id, ideaId))
@@ -69,7 +69,7 @@ export const IdeaService = {
     return result.length > 0
   },
 
-  async list(_tenantId: string, filters: IdeaFilters = {}) {
+  async list(filters: IdeaFilters = {}) {
     const { status, type, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -95,7 +95,7 @@ export const IdeaService = {
     }
   },
 
-  async listGroupedByStatus(_tenantId: string, maxPerGroup = 100): Promise<Record<string, Idea[]>> {
+  async listGroupedByStatus(maxPerGroup = 100): Promise<Record<string, Idea[]>> {
     // Limit total rows fetched to prevent unbounded memory usage
     const allIdeas = await db
       .select()

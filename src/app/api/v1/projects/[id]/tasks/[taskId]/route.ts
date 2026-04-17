@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
 import { ProjectService } from '@/lib/services/project.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string; taskId: string }>
 
 export async function PUT(request: NextRequest, { params }: { params: Params }) {
@@ -11,7 +9,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     try {
       const { taskId } = await params
       const body = await request.json()
-      const task = await ProjectService.updateTask(TENANT_ID, taskId, {
+      const task = await ProjectService.updateTask(taskId, {
         ...body,
         startDate: body.startDate ? new Date(body.startDate) : body.startDate,
         dueDate: body.dueDate ? new Date(body.dueDate) : body.dueDate,
@@ -27,7 +25,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'processes', 'delete', async (auth) => {
     const { taskId } = await params
-    const deleted = await ProjectService.deleteTask(TENANT_ID, taskId)
+    const deleted = await ProjectService.deleteTask(taskId)
     if (!deleted) return apiNotFound('Aufgabe nicht gefunden')
     return apiSuccess({ deleted: true })
   })

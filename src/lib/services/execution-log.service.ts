@@ -4,7 +4,7 @@ import { eq, and, desc, count, avg } from 'drizzle-orm'
 
 export const ExecutionLogService = {
   // ── Create ───────────────────────────────────────────────────────────
-  async create(_tenantId: string, data: Record<string, unknown>) {
+  async create(data: Record<string, unknown>) {
     const [log] = await db.insert(executionLogs).values({
       entityType: data.entityType as string,
       entityId: data.entityId as string,
@@ -28,9 +28,7 @@ export const ExecutionLogService = {
   },
 
   // ── List by entity ────────────────────────────────────────────────────
-  async listByEntity(
-    _tenantId: string,
-    entityType: string,
+  async listByEntity(entityType: string,
     entityId: string,
     opts?: { limit?: number; offset?: number }
   ) {
@@ -48,9 +46,7 @@ export const ExecutionLogService = {
   },
 
   // ── List all ──────────────────────────────────────────────────────────
-  async list(
-    _tenantId: string,
-    filters?: { entityType?: string; entityId?: string; status?: string },
+  async list(filters?: { entityType?: string; entityId?: string; status?: string },
     opts?: { limit?: number; offset?: number }
   ) {
     const conditions: ReturnType<typeof eq>[] = []
@@ -69,7 +65,7 @@ export const ExecutionLogService = {
   },
 
   // ── Stats ─────────────────────────────────────────────────────────────
-  async getStats(_tenantId: string, entityType?: string, entityId?: string) {
+  async getStats(entityType?: string, entityId?: string) {
     const conditions: ReturnType<typeof eq>[] = []
     if (entityType) conditions.push(eq(executionLogs.entityType, entityType))
     if (entityId) conditions.push(eq(executionLogs.entityId, entityId))

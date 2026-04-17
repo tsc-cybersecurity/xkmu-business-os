@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import {
-  Shield, Search, Upload, Loader2, AlertTriangle, Scale, Zap,
+import { Shield, Search, Upload, Loader2, AlertTriangle, Scale, Zap,
   PanelLeftClose, PanelLeft,
   Monitor, Users, Eye, Globe, Clock, Info, CheckCircle2,
   Trash2, FileDown,
@@ -12,15 +11,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Select,
+import { Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog,
+import { Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,

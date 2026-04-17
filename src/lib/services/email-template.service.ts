@@ -9,14 +9,14 @@ import type { EmailTemplate, NewEmailTemplate } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 
 export const EmailTemplateService = {
-  async list(_tenantId: string): Promise<EmailTemplate[]> {
+  async list(): Promise<EmailTemplate[]> {
     return db
       .select()
       .from(emailTemplates)
       .orderBy(emailTemplates.slug)
   },
 
-  async getBySlug(_tenantId: string, slug: string): Promise<EmailTemplate | null> {
+  async getBySlug(slug: string): Promise<EmailTemplate | null> {
     const [template] = await db
       .select()
       .from(emailTemplates)
@@ -25,7 +25,7 @@ export const EmailTemplateService = {
     return template ?? null
   },
 
-  async getById(_tenantId: string, id: string): Promise<EmailTemplate | null> {
+  async getById(id: string): Promise<EmailTemplate | null> {
     const [template] = await db
       .select()
       .from(emailTemplates)
@@ -34,7 +34,7 @@ export const EmailTemplateService = {
     return template ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     slug: string
     name: string
     subject: string
@@ -54,7 +54,7 @@ export const EmailTemplateService = {
     return template
   },
 
-  async update(_tenantId: string, id: string, data: Partial<{
+  async update(id: string, data: Partial<{
     slug: string
     name: string
     subject: string
@@ -78,7 +78,7 @@ export const EmailTemplateService = {
     return template ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(emailTemplates)
       .where(eq(emailTemplates.id, id))
@@ -94,12 +94,12 @@ export const EmailTemplateService = {
     return result
   },
 
-  async seed(_tenantId: string): Promise<number> {
+  async seed(): Promise<number> {
     let created = 0
     for (const tpl of DEFAULT_EMAIL_TEMPLATES) {
-      const existing = await this.getBySlug(_tpl.slug)
+      const existing = await this.getBySlug(tpl.slug)
       if (existing) continue
-      await this.create(_tpl)
+      await this.create(tpl)
       created++
     }
     return created

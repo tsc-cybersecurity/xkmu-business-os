@@ -7,8 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Brain, CheckCircle2, Globe, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
-import {
-  crmFieldLabels,
+import { crmFieldLabels,
   CrawlResultsDisplay,
   ProposedChangesPanel,
   ResearchResultDisplay,

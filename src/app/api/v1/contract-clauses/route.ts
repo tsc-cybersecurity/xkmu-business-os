@@ -2,12 +2,10 @@ import { NextRequest } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { ContractClauseService } from '@/lib/services/contract-clause.service'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'documents', 'read', async (auth) => {
     const category = request.nextUrl.searchParams.get('category') || undefined
-    const clauses = await ContractClauseService.list(TENANT_ID, category)
+    const clauses = await ContractClauseService.list(category)
     return apiSuccess(clauses)
   })
 }
@@ -18,7 +16,7 @@ export async function POST(request: NextRequest) {
     if (!body.name || !body.category) {
       return apiError('VALIDATION_ERROR', 'Name und Kategorie sind erforderlich', 400)
     }
-    const clause = await ContractClauseService.create(TENANT_ID, body)
+    const clause = await ContractClauseService.create(body)
     return apiSuccess(clause, undefined, 201)
   })
 }

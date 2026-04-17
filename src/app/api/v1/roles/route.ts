@@ -1,23 +1,19 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  createRoleSchema,
+import { createRoleSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { RoleService } from '@/lib/services/role.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'roles', 'read', async (auth) => {
-    const roles = await RoleService.list(TENANT_ID)
-    const userCounts = await RoleService.countUsersPerRole(TENANT_ID)
+    const roles = await RoleService.list()
+    const userCounts = await RoleService.countUsersPerRole()
 
     const rolesWithCounts = roles.map((role) => ({
       ...role,
@@ -39,9 +35,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Pruefen ob Name bereits existiert
-      const existing = await RoleService.getByName(
-        TENANT_ID,
-        validation.data.name
+      const existing = await RoleService.getByName(validation.data.name
       )
       if (existing) {
         return apiError(
@@ -51,7 +45,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const role = await RoleService.create(TENANT_ID, validation.data)
+      const role = await RoleService.create(validation.data)
 
       return apiSuccess(role, undefined, 201)
     } catch (error) {

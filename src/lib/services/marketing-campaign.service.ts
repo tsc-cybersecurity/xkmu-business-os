@@ -25,7 +25,7 @@ export interface CreateCampaignInput {
 export type UpdateCampaignInput = Partial<CreateCampaignInput>
 
 export const MarketingCampaignService = {
-  async list(_tenantId: string, filters: CampaignFilters = {}) {
+  async list(filters: CampaignFilters = {}) {
     const { status, type, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
@@ -47,7 +47,7 @@ export const MarketingCampaignService = {
     }
   },
 
-  async getById(_tenantId: string, id: string): Promise<MarketingCampaign | null> {
+  async getById(id: string): Promise<MarketingCampaign | null> {
     const [campaign] = await db
       .select()
       .from(marketingCampaigns)
@@ -56,7 +56,7 @@ export const MarketingCampaignService = {
     return campaign ?? null
   },
 
-  async create(_tenantId: string, data: CreateCampaignInput, createdBy?: string): Promise<MarketingCampaign> {
+  async create(data: CreateCampaignInput, createdBy?: string): Promise<MarketingCampaign> {
     const [campaign] = await db
       .insert(marketingCampaigns)
       .values({
@@ -74,7 +74,7 @@ export const MarketingCampaignService = {
     return campaign
   },
 
-  async update(_tenantId: string, id: string, data: UpdateCampaignInput): Promise<MarketingCampaign | null> {
+  async update(id: string, data: UpdateCampaignInput): Promise<MarketingCampaign | null> {
     const updateData: Partial<NewMarketingCampaign> = { updatedAt: new Date() }
     if (data.name !== undefined) updateData.name = data.name
     if (data.description !== undefined) updateData.description = data.description || null
@@ -93,7 +93,7 @@ export const MarketingCampaignService = {
     return campaign ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(marketingCampaigns)
       .where(eq(marketingCampaigns.id, id))

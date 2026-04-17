@@ -1,6 +1,5 @@
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Globe,
+import { Globe,
   Palette,
   LayoutTemplate,
   Navigation,

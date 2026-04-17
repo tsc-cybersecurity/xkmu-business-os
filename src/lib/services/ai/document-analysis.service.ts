@@ -37,7 +37,7 @@ export const DocumentAnalysisService = {
     }
 
     // 2. Template laden
-    const template = await AiPromptTemplateService.getOrDefault('', 'document_analysis')
+    const template = await AiPromptTemplateService.getOrDefault('document_analysis')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       companyName,

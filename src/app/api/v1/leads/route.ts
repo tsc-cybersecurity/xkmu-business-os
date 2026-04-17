@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createLeadSchema,
+import { createLeadSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'leads', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -27,7 +23,7 @@ export async function GET(request: NextRequest) {
     // Handle multiple status values (comma-separated)
     const statusFilter = status?.includes(',') ? status.split(',') : status
 
-    const result = await LeadService.list(TENANT_ID, {
+    const result = await LeadService.list({
       ...pagination,
       status: statusFilter,
       source,
@@ -49,7 +45,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const lead = await LeadService.create(TENANT_ID, validation.data)
+      const lead = await LeadService.create(validation.data)
 
       return apiSuccess(lead, undefined, 201)
     } catch (error) {

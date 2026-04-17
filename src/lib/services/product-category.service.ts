@@ -29,9 +29,7 @@ function generateSlug(name: string): string {
 }
 
 export const ProductCategoryService = {
-  async create(
-    _tenantId: string,
-    data: CreateCategoryInput
+  async create(data: CreateCategoryInput
   ): Promise<ProductCategory> {
     const [category] = await db
       .insert(productCategories)
@@ -47,7 +45,7 @@ export const ProductCategoryService = {
     return category
   },
 
-  async getById(_tenantId: string, categoryId: string): Promise<ProductCategory | null> {
+  async getById(categoryId: string): Promise<ProductCategory | null> {
     const [category] = await db
       .select()
       .from(productCategories)
@@ -57,9 +55,7 @@ export const ProductCategoryService = {
     return category ?? null
   },
 
-  async update(
-    _tenantId: string,
-    categoryId: string,
+  async update(categoryId: string,
     data: UpdateCategoryInput
   ): Promise<ProductCategory | null> {
     const updateData: Partial<NewProductCategory> = {
@@ -83,7 +79,7 @@ export const ProductCategoryService = {
     return category ?? null
   },
 
-  async delete(_tenantId: string, categoryId: string): Promise<boolean> {
+  async delete(categoryId: string): Promise<boolean> {
     const result = await db
       .delete(productCategories)
       .where(eq(productCategories.id, categoryId))
@@ -92,7 +88,7 @@ export const ProductCategoryService = {
     return result.length > 0
   },
 
-  async list(_tenantId: string): Promise<ProductCategory[]> {
+  async list(): Promise<ProductCategory[]> {
     const items = await db
       .select()
       .from(productCategories)
@@ -101,8 +97,8 @@ export const ProductCategoryService = {
     return items
   },
 
-  async getTree(_tenantId: string): Promise<(ProductCategory & { level: number })[]> {
-    const allCategories = await this.list(_tenantId)
+  async getTree(): Promise<(ProductCategory & { level: number })[]> {
+    const allCategories = await this.list()
 
     // Build tree structure
     const result: (ProductCategory & { level: number })[] = []
@@ -122,7 +118,7 @@ export const ProductCategoryService = {
     return result
   },
 
-  async hasProducts(_tenantId: string, categoryId: string): Promise<boolean> {
+  async hasProducts(categoryId: string): Promise<boolean> {
     const { products } = await import('@/lib/db/schema')
     const [{ count: total }] = await db
       .select({ count: count() })
@@ -132,7 +128,7 @@ export const ProductCategoryService = {
     return Number(total) > 0
   },
 
-  async hasChildren(_tenantId: string, categoryId: string): Promise<boolean> {
+  async hasChildren(categoryId: string): Promise<boolean> {
     const [{ count: total }] = await db
       .select({ count: count() })
       .from(productCategories)

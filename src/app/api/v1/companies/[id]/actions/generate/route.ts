@@ -5,8 +5,6 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { CompanyActionsService } from '@/lib/services/ai/company-actions.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 const generateActionSchema = z.object({
@@ -31,9 +29,7 @@ export async function POST(
 
       const { actionSlug } = validation.data
 
-      const result = await CompanyActionsService.generate(
-        TENANT_ID,
-        id,
+      const result = await CompanyActionsService.generate(id,
         actionSlug,
         auth.userId
       )

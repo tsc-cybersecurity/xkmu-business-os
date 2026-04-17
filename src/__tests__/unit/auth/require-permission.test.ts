@@ -18,7 +18,6 @@ function makeRequest(): NextRequest {
 
 function makeAuthContext(overrides: Partial<AuthContext> = {}): AuthContext {
   return {
-    tenantId: '00000000-0000-0000-0000-000000000001',
     userId: null,
     role: 'api',
     roleId: null,
@@ -99,7 +98,6 @@ describe('withPermission() — API key scope enforcement', () => {
   it('Session user (role: "owner", apiKeyPermissions: null) is not affected by scope check', async () => {
     const { withPermission } = await import('@/lib/auth/require-permission')
     const auth: AuthContext = {
-      tenantId: '00000000-0000-0000-0000-000000000001',
       userId: '00000000-0000-0000-0000-000000000002',
       role: 'owner',
       roleId: null,

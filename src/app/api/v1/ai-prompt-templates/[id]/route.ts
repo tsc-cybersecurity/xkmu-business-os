@@ -1,14 +1,11 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/ai-prompt-templates/[id]
@@ -20,7 +17,7 @@ export async function GET(
     const { id } = await params
 
     try {
-      const template = await AiPromptTemplateService.getById(TENANT_ID, id)
+      const template = await AiPromptTemplateService.getById(id)
       if (!template) {
         return apiNotFound('Prompt-Vorlage nicht gefunden')
       }
@@ -43,7 +40,7 @@ export async function PUT(
     try {
       const body = await request.json()
 
-      const template = await AiPromptTemplateService.update(TENANT_ID, id, {
+      const template = await AiPromptTemplateService.update(id, {
         name: body.name,
         description: body.description,
         systemPrompt: body.systemPrompt,
@@ -73,7 +70,7 @@ export async function PATCH(
     const { id } = await params
 
     try {
-      const template = await AiPromptTemplateService.resetToDefault(TENANT_ID, id)
+      const template = await AiPromptTemplateService.resetToDefault(id)
       if (!template) {
         return apiError('RESET_FAILED', 'Vorlage konnte nicht zurückgesetzt werden. Kein Standard vorhanden.', 400)
       }
@@ -94,7 +91,7 @@ export async function DELETE(
     const { id } = await params
 
     try {
-      const deleted = await AiPromptTemplateService.delete(TENANT_ID, id)
+      const deleted = await AiPromptTemplateService.delete(id)
       if (!deleted) {
         return apiError('DELETE_FAILED', 'Vorlage konnte nicht gelöscht werden. Standard-Vorlagen können nicht gelöscht werden.', 400)
       }

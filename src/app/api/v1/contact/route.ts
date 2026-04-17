@@ -3,32 +3,10 @@ import { apiSuccess, apiValidationError, apiError } from '@/lib/utils/api-respon
 import { contactFormSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
 import { WorkflowEngine } from '@/lib/services/workflow'
-import { db } from '@/lib/db'
-import { tenants } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
 export async function POST(request: NextRequest) {
-  // Step 1: Find the real tenant (not "Default Organisation")
-  let tenantId: string
-  try {
-    const allTenants = await db
-      .select({ id: tenants.id, name: tenants.name })
-      .from(tenants)
-      .where(eq(tenants.status, 'active'))
-
-    const real = allTenants.find((t) => t.name !== 'Default Organisation') || allTenants[0]
-    if (!real) {
-      return apiError('CONFIGURATION_ERROR', 'Kein aktiver Mandant gefunden', 500)
-    }
-    tenantId = real.id
-  } catch (error) {
-    logger.error('Contact form - tenant lookup failed', error, { module: 'ContactAPI' })
-    const msg = error instanceof Error ? error.message : 'Unknown'
-    return apiError('DATABASE_ERROR', `Datenbankfehler beim Mandanten-Lookup: ${msg}`, 500)
-  }
-
-  // Step 2: Validate input
+  // Validate input
   let body: unknown
   try {
     body = await request.json()
@@ -45,7 +23,7 @@ export async function POST(request: NextRequest) {
   try {
     const { firstName, lastName, company, phone, email, interests, message } = validation.data
 
-    const lead = await LeadService.create('', {
+    const lead = await LeadService.create({
       source: 'website',
       sourceDetail: 'Kontaktformular',
       title: `${firstName} ${lastName} – ${company || 'Privat'}`,

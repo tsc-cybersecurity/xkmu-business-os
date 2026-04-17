@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createDocumentSchema,
+import { createDocumentSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/documents - List documents with filters
 export async function GET(request: NextRequest) {
   return withPermission(request, 'documents', 'read', async (auth) => {
@@ -31,7 +27,7 @@ export async function GET(request: NextRequest) {
         search: searchParams.get('search') || undefined,
       }
 
-      const result = await DocumentService.list(TENANT_ID, filters)
+      const result = await DocumentService.list(filters)
       return apiSuccess(result.items, result.meta)
     } catch (error) {
       logger.error('Failed to list documents', error, { module: 'DocumentsAPI' })
@@ -51,9 +47,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const document = await DocumentService.create(
-        TENANT_ID,
-        validation.data,
+      const document = await DocumentService.create(validation.data,
         auth.userId || undefined
       )
       return apiSuccess(document, undefined, 201)

@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updateCompanySchema,
+import { updateCompanySchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
@@ -14,8 +12,6 @@ import { CompanyService } from '@/lib/services/company.service'
 import { CompanyActionsService } from '@/lib/services/ai/company-actions.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 export async function GET(
@@ -24,7 +20,7 @@ export async function GET(
 ) {
   return withPermission(request, 'companies', 'read', async (auth) => {
     const { id } = await params
-    const company = await CompanyService.getById(TENANT_ID, id)
+    const company = await CompanyService.getById(id)
 
     if (!company) {
       return apiNotFound('Company not found')
@@ -49,14 +45,14 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const company = await CompanyService.update(TENANT_ID, id, validation.data)
+      const company = await CompanyService.update(id, validation.data)
 
       if (!company) {
         return apiNotFound('Company not found')
       }
 
       // Fire-and-forget: enrich activities without summaries
-      CompanyActionsService.enrichMissingSummaries(TENANT_ID, id, auth.userId).catch((err) => {
+      CompanyActionsService.enrichMissingSummaries(id, auth.userId).catch((err) => {
         logger.error('Background summary enrichment failed', err, { module: 'CompaniesAPI' })
       })
 
@@ -74,7 +70,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'companies', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await CompanyService.delete(TENANT_ID, id)
+    const deleted = await CompanyService.delete(id)
 
     if (!deleted) {
       return apiNotFound('Company not found')

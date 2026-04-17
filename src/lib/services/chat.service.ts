@@ -10,7 +10,7 @@ export interface CreateConversationData {
 }
 
 export const ChatService = {
-  async createConversation(_tenantId: string, userId: string, data?: CreateConversationData) {
+  async createConversation(userId: string, data?: CreateConversationData) {
     const [conversation] = await db
       .insert(chatConversations)
       .values({
@@ -25,7 +25,7 @@ export const ChatService = {
     return conversation
   },
 
-  async getConversation(_tenantId: string, conversationId: string) {
+  async getConversation(conversationId: string) {
     const [conversation] = await db
       .select()
       .from(chatConversations)
@@ -43,7 +43,7 @@ export const ChatService = {
     return { ...conversation, messages }
   },
 
-  async listConversations(_tenantId: string, userId: string, limit = 50) {
+  async listConversations(userId: string, limit = 50) {
     return db
       .select()
       .from(chatConversations)
@@ -71,7 +71,7 @@ export const ChatService = {
     return message
   },
 
-  async deleteConversation(_tenantId: string, conversationId: string) {
+  async deleteConversation(conversationId: string) {
     const [deleted] = await db
       .delete(chatConversations)
       .where(eq(chatConversations.id, conversationId))
@@ -80,7 +80,7 @@ export const ChatService = {
     return !!deleted
   },
 
-  async updateTitle(_tenantId: string, conversationId: string, title: string) {
+  async updateTitle(conversationId: string, title: string) {
     const [updated] = await db
       .update(chatConversations)
       .set({ title, updatedAt: new Date() })

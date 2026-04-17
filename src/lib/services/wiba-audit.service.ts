@@ -20,7 +20,7 @@ export interface SaveAnswerInput {
 }
 
 export const WibaAuditService = {
-  async create(_tenantId: string, consultantId: string, data: CreateAuditInput): Promise<WibaAuditSession> {
+  async create(consultantId: string, data: CreateAuditInput): Promise<WibaAuditSession> {
     const [session] = await db
       .insert(wibaAuditSessions)
       .values({
@@ -32,7 +32,7 @@ export const WibaAuditService = {
     return session
   },
 
-  async getById(_tenantId: string, sessionId: string) {
+  async getById(sessionId: string) {
     const [session] = await db
       .select()
       .from(wibaAuditSessions)
@@ -71,7 +71,7 @@ export const WibaAuditService = {
     return { ...session, clientCompany: company, consultant, answers }
   },
 
-  async update(_tenantId: string, sessionId: string, data: Partial<NewWibaAuditSession>): Promise<WibaAuditSession | null> {
+  async update(sessionId: string, data: Partial<NewWibaAuditSession>): Promise<WibaAuditSession | null> {
     const updateData: Record<string, unknown> = { updatedAt: new Date() }
     if (data.status !== undefined) updateData.status = data.status
     if (data.startedAt !== undefined) updateData.startedAt = data.startedAt ? new Date(data.startedAt as unknown as string) : null
@@ -85,7 +85,7 @@ export const WibaAuditService = {
     return session ?? null
   },
 
-  async delete(_tenantId: string, sessionId: string): Promise<boolean> {
+  async delete(sessionId: string): Promise<boolean> {
     const result = await db
       .delete(wibaAuditSessions)
       .where(eq(wibaAuditSessions.id, sessionId))
@@ -93,7 +93,7 @@ export const WibaAuditService = {
     return result.length > 0
   },
 
-  async list(_tenantId: string, filters: WibaAuditFilters = {}) {
+  async list(filters: WibaAuditFilters = {}) {
     const { status, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -170,7 +170,7 @@ export const WibaAuditService = {
     }
   },
 
-  async saveAnswer(_tenantId: string, sessionId: string, data: SaveAnswerInput): Promise<WibaAnswer> {
+  async saveAnswer(sessionId: string, data: SaveAnswerInput): Promise<WibaAnswer> {
     const [existing] = await db
       .select()
       .from(wibaAnswers)
@@ -207,16 +207,16 @@ export const WibaAuditService = {
     return answer
   },
 
-  async saveBulkAnswers(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<WibaAnswer[]> {
+  async saveBulkAnswers(sessionId: string, answers: SaveAnswerInput[]): Promise<WibaAnswer[]> {
     const results: WibaAnswer[] = []
     for (const answer of answers) {
-      const saved = await this.saveAnswer(_sessionId, answer)
+      const saved = await this.saveAnswer(sessionId, answer)
       results.push(saved)
     }
     return results
   },
 
-  async getAnswers(_tenantId: string, sessionId: string): Promise<WibaAnswer[]> {
+  async getAnswers(sessionId: string): Promise<WibaAnswer[]> {
     return db
       .select()
       .from(wibaAnswers)

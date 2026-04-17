@@ -11,7 +11,7 @@ import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.servi
 import { logger } from '@/lib/utils/logger'
 
 export const ReceiptService = {
-  async list(_tenantId: string, filters: { status?: string; page?: number; limit?: number } = {}) {
+  async list(filters: { status?: string; page?: number; limit?: number } = {}) {
     const { status, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -28,13 +28,13 @@ export const ReceiptService = {
     return { items, meta: { page, limit, total: Number(total), totalPages: Math.ceil(Number(total) / limit) } }
   },
 
-  async getById(_tenantId: string, id: string): Promise<Receipt | null> {
+  async getById(id: string): Promise<Receipt | null> {
     const [receipt] = await db.select().from(receipts)
       .where(eq(receipts.id, id)).limit(1)
     return receipt ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     fileName?: string
     fileUrl?: string
     amount?: string
@@ -57,7 +57,7 @@ export const ReceiptService = {
     return receipt
   },
 
-  async update(_tenantId: string, id: string, data: Partial<{
+  async update(id: string, data: Partial<{
     amount: string
     date: Date
     vendor: string
@@ -70,21 +70,21 @@ export const ReceiptService = {
     return receipt ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db.delete(receipts)
       .where(eq(receipts.id, id))
       .returning({ id: receipts.id })
     return result.length > 0
   },
 
-  async extractWithAI(_tenantId: string, imageBase64: string): Promise<{
+  async extractWithAI(imageBase64: string): Promise<{
     amount?: string
     date?: string
     vendor?: string
     category?: string
   }> {
     try {
-      const template = await AiPromptTemplateService.getOrDefault('', 'receipt_ocr')
+      const template = await AiPromptTemplateService.getOrDefault('receipt_ocr')
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { imageDescription: imageBase64.substring(0, 500) })
 
       const response = await AIService.completeWithContext(userPrompt,

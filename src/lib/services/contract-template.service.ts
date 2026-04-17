@@ -3,7 +3,7 @@ import { contractTemplates } from '@/lib/db/schema'
 import { eq, and, or, isNull, desc } from 'drizzle-orm'
 
 export const ContractTemplateService = {
-  async list(_tenantId: string, category?: string) {
+  async list(category?: string) {
     const conditions: ReturnType<typeof eq>[] = []
     if (category) conditions.push(eq(contractTemplates.category, category))
 
@@ -14,7 +14,7 @@ export const ContractTemplateService = {
       .orderBy(desc(contractTemplates.isSystem), desc(contractTemplates.updatedAt))
   },
 
-  async getById(_tenantId: string, id: string) {
+  async getById(id: string) {
     const [row] = await db
       .select()
       .from(contractTemplates)
@@ -23,7 +23,7 @@ export const ContractTemplateService = {
     return row ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     name: string
     category: string
     description?: string
@@ -46,7 +46,7 @@ export const ContractTemplateService = {
     return row
   },
 
-  async update(_tenantId: string, id: string, data: Partial<{
+  async update(id: string, data: Partial<{
     name: string
     category: string
     description: string
@@ -54,7 +54,7 @@ export const ContractTemplateService = {
     placeholders: unknown[]
     clauses: unknown[]
   }>) {
-    const existing = await this.getById(_id)
+    const existing = await this.getById(id)
     if (!existing) return null
     if (existing.isSystem) throw new Error('System-Templates koennen nicht bearbeitet werden')
 
@@ -66,8 +66,8 @@ export const ContractTemplateService = {
     return row ?? null
   },
 
-  async delete(_tenantId: string, id: string) {
-    const existing = await this.getById(_id)
+  async delete(id: string) {
+    const existing = await this.getById(id)
     if (!existing) return false
     if (existing.isSystem) throw new Error('System-Templates koennen nicht geloescht werden')
 
@@ -78,11 +78,11 @@ export const ContractTemplateService = {
     return result.length > 0
   },
 
-  async duplicate(_tenantId: string, id: string) {
-    const original = await this.getById(_id)
+  async duplicate(id: string) {
+    const original = await this.getById(id)
     if (!original) return null
 
-    return this.create('', {
+    return this.create({
       name: `${original.name} (Kopie)`,
       category: original.category,
       description: original.description || undefined,

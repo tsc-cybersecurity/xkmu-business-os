@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
   apiServerError,
@@ -10,14 +9,12 @@ import { DocumentAnalysisService } from '@/lib/services/ai/document-analysis.ser
 import { ActivityService } from '@/lib/services/activity.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withPermission(request, 'companies', 'update', async (auth) => {
 
   try {
     const { id } = await params
-    const company = await CompanyService.getById(TENANT_ID, id)
+    const company = await CompanyService.getById(id)
     if (!company) return apiNotFound('Firma nicht gefunden')
 
     // FormData lesen
@@ -50,7 +47,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // KPIs in Company custom fields speichern
     const currentCustomFields = (company.customFields || {}) as Record<string, unknown>
-    await CompanyService.update(TENANT_ID, id, {
+    await CompanyService.update(id, {
       customFields: {
         ...currentCustomFields,
         documentAnalysis: {
@@ -61,7 +58,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     // Activity-Log erstellen
-    await ActivityService.create(TENANT_ID, {
+    await ActivityService.create({
       companyId: id,
       type: 'note',
       subject: `Dokumentanalyse: ${file.name}`,

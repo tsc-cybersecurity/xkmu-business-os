@@ -4,15 +4,13 @@ import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Upload, Loader2, FileUp } from 'lucide-react'
 import { toast } from 'sonner'
-import {
-  Select,
+import { Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog,
+import { Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,

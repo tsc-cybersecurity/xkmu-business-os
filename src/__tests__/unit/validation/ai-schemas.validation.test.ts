@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  generateMarketingContentSchema,
+import { generateMarketingContentSchema,
   improveSocialPostSchema,
   generateSocialPostSchema,
   generateContentPlanSchema,

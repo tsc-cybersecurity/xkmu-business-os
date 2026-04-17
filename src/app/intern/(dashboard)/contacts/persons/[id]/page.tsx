@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmDialog, AIResearchCard } from '@/components/shared'
 import { toast } from 'sonner'
-import {
-  ArrowLeft,
+import { ArrowLeft,
   Building2,
   Brain,
   Edit,

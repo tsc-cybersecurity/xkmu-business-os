@@ -249,19 +249,19 @@ const buildLeadResearchPrompt = (input: LeadResearchInput): string => {
   if (input.website) parts.push(`- Website: ${input.website}`)
 
   if (input.additionalContext) {
-    parts.push('')
+    parts.push()
     parts.push(input.additionalContext)
   }
 
   // Add scraped website content if available
   if (input.websiteContent) {
-    parts.push('')
+    parts.push()
     parts.push('=== GESCRAPTE WEBSITE-INHALTE (ECHTE DATEN - als Primärquelle nutzen!) ===')
     parts.push(input.websiteContent)
     parts.push('=== ENDE DER WEBSITE-INHALTE ===')
   }
 
-  parts.push('')
+  parts.push()
   parts.push('Erstelle einen Bericht im folgenden JSON-Format (antworte NUR mit dem JSON, keine weiteren Erklärungen):')
   parts.push(`{
   "company": {
@@ -288,7 +288,7 @@ const buildLeadResearchPrompt = (input: LeadResearchInput): string => {
     "Konkrete Handlungsempfehlung 3"
   ]
 }`)
-  parts.push('')
+  parts.push()
   parts.push('Wichtige Hinweise:')
   parts.push('- Score 0-100 (0 = ungeeignet, 100 = perfekter Lead)')
   parts.push('- KONSERVATIV bewerten: wenig Daten = niedriger Score')
@@ -324,16 +324,16 @@ const buildCompanyResearchPrompt = (input: CompanyResearchInput): string => {
 
   // Add scraped website content if available
   if (input.websiteContent) {
-    parts.push('')
+    parts.push()
     parts.push('=== GESCRAPTE WEBSITE-INHALTE (ECHTE DATEN - als Primärquelle nutzen!) ===')
     parts.push(input.websiteContent)
     parts.push('=== ENDE DER WEBSITE-INHALTE ===')
   }
 
-  parts.push('')
+  parts.push()
   parts.push('Extrahiere ALLE Adressen/Standorte die in den bereitgestellten Daten gefunden werden.')
   parts.push('Erstelle außerdem ein ausführliches Firmenprofil (companyProfile) basierend auf den TATSÄCHLICH verfügbaren Daten.')
-  parts.push('')
+  parts.push()
   parts.push('Erstelle einen Bericht im folgenden JSON-Format (antworte NUR mit dem JSON):')
   parts.push(`{
   "description": "Beschreibung basierend auf den bereitgestellten Daten (3-5 Sätze)",
@@ -377,7 +377,7 @@ const buildCompanyResearchPrompt = (input: CompanyResearchInput): string => {
   "companyProfile": "Firmenprofil basierend NUR auf den tatsächlich bereitgestellten Daten (5-10 Sätze). Dieses Profil wird als Notiz im CRM gespeichert.",
   "summary": "Executive Summary in 2-3 Sätzen"
 }`)
-  parts.push('')
+  parts.push()
   parts.push('Wichtig:')
   parts.push('- Alle Texte auf Deutsch')
   parts.push('- KEINE erfundenen Informationen! Verwende "Nicht ermittelbar" oder leere Arrays []')
@@ -409,7 +409,7 @@ const buildPersonResearchPrompt = (input: PersonResearchInput): string => {
   if (input.city) parts.push(`- Stadt: ${input.city}`)
   if (input.notes) parts.push(`- Notizen: ${input.notes}`)
 
-  parts.push('')
+  parts.push()
   parts.push('Erstelle einen Bericht im folgenden JSON-Format (antworte NUR mit dem JSON):')
   parts.push(`{
   "fullName": "Vollständiger Name",
@@ -432,7 +432,7 @@ const buildPersonResearchPrompt = (input: PersonResearchInput): string => {
   "recommendedApproach": "Ansprache-Empfehlung basierend auf den bekannten Fakten",
   "summary": "Zusammenfassung der BEKANNTEN Fakten in 2-3 Sätzen"
 }`)
-  parts.push('')
+  parts.push()
   parts.push('Wichtig:')
   parts.push('- Alle Texte auf Deutsch')
   parts.push('- KEINE erfundenen Profile, Karriereverläufe oder Social-Media-Links!')
@@ -471,7 +471,7 @@ export const LeadResearchService = {
     let systemPrompt: string | undefined
 
     if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault('', 'lead_research')
+      const template = await AiPromptTemplateService.getOrDefault('lead_research')
       systemPrompt = template.systemPrompt || undefined
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
@@ -593,7 +593,7 @@ export const LeadResearchService = {
     let systemPrompt: string | undefined
 
     if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault('', 'company_research')
+      const template = await AiPromptTemplateService.getOrDefault('company_research')
       systemPrompt = template.systemPrompt || undefined
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
@@ -671,7 +671,7 @@ export const LeadResearchService = {
     let systemPrompt: string | undefined
 
     if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault('', 'person_research')
+      const template = await AiPromptTemplateService.getOrDefault('person_research')
       systemPrompt = template.systemPrompt || undefined
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
@@ -728,7 +728,7 @@ export const LeadResearchService = {
     let systemPrompt: string | undefined
 
     if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault('', 'quick_score')
+      const template = await AiPromptTemplateService.getOrDefault('quick_score')
       systemPrompt = template.systemPrompt || undefined
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {

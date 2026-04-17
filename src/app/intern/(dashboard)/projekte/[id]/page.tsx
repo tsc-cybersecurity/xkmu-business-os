@@ -9,23 +9,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
-import {
-  Tabs, TabsContent, TabsList, TabsTrigger,
+import { Tabs, TabsContent, TabsList, TabsTrigger,
 } from '@/components/ui/tabs'
-import {
-  DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable,
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable,
 } from '@dnd-kit/core'
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import {
-  ArrowLeft, Loader2, Plus, Calendar, User, GripVertical, Save, Trash2,
+import { ArrowLeft, Loader2, Plus, Calendar, User, GripVertical, Save, Trash2,
   Clock, GanttChart, CheckCircle2, Settings2, Building2, List, ChevronRight, ChevronDown as ChevronDownIcon,
 } from 'lucide-react'
 import { toast } from 'sonner'

@@ -12,7 +12,6 @@ import { eq, and, ilike } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
 export interface ActionContext {
-  tenantId: string
   triggerData: Record<string, unknown>
   stepResults: Record<string, unknown> // results from previous steps, keyed by action name
 }

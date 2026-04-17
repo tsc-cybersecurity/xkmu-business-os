@@ -1,6 +1,5 @@
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Building2,
+import { Building2,
   Users,
   Package,
   Briefcase,

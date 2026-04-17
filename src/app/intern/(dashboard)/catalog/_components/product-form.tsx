@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Loader2, Save } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
-import {
-  ProductGrunddaten,
+import { ProductGrunddaten,
   ProductPreisgestaltung,
   ProductWebSeo,
   ProductBilder,

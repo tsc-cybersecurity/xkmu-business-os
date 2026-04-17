@@ -53,14 +53,14 @@ export const AiProviderService = {
   // Provider CRUD
   // ============================================
 
-  async list(_tenantId: string) {
+  async list() {
     return db
       .select()
       .from(aiProviders)
       .orderBy(asc(aiProviders.priority), asc(aiProviders.name))
   },
 
-  async getById(_tenantId: string, id: string) {
+  async getById(id: string) {
     const [provider] = await db
       .select()
       .from(aiProviders)
@@ -69,7 +69,7 @@ export const AiProviderService = {
     return provider || null
   },
 
-  async getActiveProviders(_tenantId: string) {
+  async getActiveProviders() {
     return db
       .select()
       .from(aiProviders)
@@ -84,7 +84,7 @@ export const AiProviderService = {
       .orderBy(asc(aiProviders.priority))
   },
 
-  async getDefaultProvider(_tenantId: string) {
+  async getDefaultProvider() {
     const [provider] = await db
       .select()
       .from(aiProviders)
@@ -98,7 +98,7 @@ export const AiProviderService = {
     return provider || null
   },
 
-  async create(_tenantId: string, data: AiProviderData) {
+  async create(data: AiProviderData) {
     // Wenn neuer Provider als Default gesetzt wird, alte Defaults aufheben
     if (data.isDefault) {
       await db
@@ -126,7 +126,7 @@ export const AiProviderService = {
     return provider
   },
 
-  async update(_tenantId: string, id: string, data: Partial<AiProviderData>) {
+  async update(id: string, data: Partial<AiProviderData>) {
     // Wenn auf Default gesetzt, alte Defaults aufheben
     if (data.isDefault) {
       await db
@@ -156,7 +156,7 @@ export const AiProviderService = {
     return provider || null
   },
 
-  async delete(_tenantId: string, id: string) {
+  async delete(id: string) {
     const [deleted] = await db
       .delete(aiProviders)
       .where(eq(aiProviders.id, id))
@@ -194,7 +194,7 @@ export const AiProviderService = {
     return log
   },
 
-  async listLogs(_tenantId: string, filters: AiLogFilters = {}) {
+  async listLogs(filters: AiLogFilters = {}) {
     const page = filters.page || 1
     const limit = filters.limit || 50
     const offset = (page - 1) * limit
@@ -254,7 +254,7 @@ export const AiProviderService = {
     }
   },
 
-  async getLogById(_tenantId: string, id: string) {
+  async getLogById(id: string) {
     const [log] = await db
       .select()
       .from(aiLogs)
@@ -263,7 +263,7 @@ export const AiProviderService = {
     return log || null
   },
 
-  async getLogStats(_tenantId: string) {
+  async getLogStats() {
     const [stats] = await db
       .select({
         totalLogs: count(),

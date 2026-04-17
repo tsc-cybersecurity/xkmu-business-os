@@ -1459,7 +1459,7 @@ const OPERATIVE_SOPS: SopEntry[] = [
 // All SOPs combined
 const SOPS: SopEntry[] = [...GENERAL_SOPS, ...OPERATIVE_SOPS]
 
-export async function seedSopCatalog(_tenantId: string) {
+export async function seedSopCatalog() {
   logger.info('Seeding SOP Catalog...', { module: MOD })
 
   // 1. Deliverable-Lookup-Map aufbauen

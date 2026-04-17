@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  CheckCircle2, ChevronDown, ChevronRight, ExternalLink,
+import { CheckCircle2, ChevronDown, ChevronRight, ExternalLink,
   Loader2, MapPin, Sparkles, XCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'

@@ -65,7 +65,7 @@ export function TeamBlock({
                     {member.name
                       .split(' ')
                       .map((w) => w[0])
-                      .join('')
+                      .join()
                       .slice(0, 2)}
                   </div>
                 )}

@@ -1,7 +1,6 @@
 'use client'
 
-import {
-  Radar,
+import { Radar,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,

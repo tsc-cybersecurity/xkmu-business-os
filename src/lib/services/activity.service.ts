@@ -23,7 +23,7 @@ export interface CreateActivityInput {
 }
 
 export const ActivityService = {
-  async create(_tenantId: string, data: CreateActivityInput, userId?: string | null): Promise<Activity> {
+  async create(data: CreateActivityInput, userId?: string | null): Promise<Activity> {
     const [activity] = await db
       .insert(activities)
       .values({
@@ -40,7 +40,7 @@ export const ActivityService = {
     return activity
   },
 
-  async getById(_tenantId: string, activityId: string): Promise<Activity | null> {
+  async getById(activityId: string): Promise<Activity | null> {
     const [activity] = await db
       .select()
       .from(activities)
@@ -49,7 +49,7 @@ export const ActivityService = {
     return activity ?? null
   },
 
-  async update(_tenantId: string, activityId: string, data: { subject?: string | null; content?: string | null; metadata?: Record<string, unknown> }) {
+  async update(activityId: string, data: { subject?: string | null; content?: string | null; metadata?: Record<string, unknown> }) {
     const result = await db
       .update(activities)
       .set(data)
@@ -58,7 +58,7 @@ export const ActivityService = {
     return result[0] || null
   },
 
-  async delete(_tenantId: string, activityId: string): Promise<boolean> {
+  async delete(activityId: string): Promise<boolean> {
     const result = await db
       .delete(activities)
       .where(eq(activities.id, activityId))
@@ -66,7 +66,7 @@ export const ActivityService = {
     return result.length > 0
   },
 
-  async listByLead(_tenantId: string, leadId: string, filters: Pick<ActivityFilters, 'page' | 'limit'> = {}) {
+  async listByLead(leadId: string, filters: Pick<ActivityFilters, 'page' | 'limit'> = {}) {
     const { page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -101,7 +101,7 @@ export const ActivityService = {
     }
   },
 
-  async listByCompany(_tenantId: string, companyId: string, filters: Pick<ActivityFilters, 'page' | 'limit'> = {}) {
+  async listByCompany(companyId: string, filters: Pick<ActivityFilters, 'page' | 'limit'> = {}) {
     const { page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -136,7 +136,7 @@ export const ActivityService = {
     }
   },
 
-  async list(_tenantId: string, filters: ActivityFilters = {}) {
+  async list(filters: ActivityFilters = {}) {
     const { leadId, companyId, personId, type, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 

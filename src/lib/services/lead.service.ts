@@ -52,9 +52,7 @@ function emptyToNull<T>(value: T): T | null {
 }
 
 export const LeadService = {
-  async create(
-    _tenantId: string,
-    data: CreateLeadInput
+  async create(data: CreateLeadInput
   ): Promise<Lead> {
     const [lead] = await db
       .insert(leads)
@@ -79,12 +77,12 @@ export const LeadService = {
       .returning()
 
     // Auto-Score: KI-basierte Qualifizierung im Hintergrund (non-blocking)
-    this.autoScore(_lead.id).catch(() => {})
+    this.autoScore(lead.id).catch(() => {})
 
     // Erstantwort-E-Mail in Task-Queue wenn E-Mail vorhanden
     if (lead.contactEmail) {
       import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-        TaskQueueService.create('', {
+        TaskQueueService.create({
           type: 'email',
           priority: 1,
           payload: {
@@ -108,9 +106,9 @@ export const LeadService = {
   /**
    * Automatische KI-Qualifizierung: Bewertet Lead basierend auf verfuegbaren Daten
    */
-  async autoScore(_tenantId: string, leadId: string): Promise<void> {
+  async autoScore(leadId: string): Promise<void> {
     try {
-      const lead = await this.getById(_leadId)
+      const lead = await this.getById(leadId)
       if (!lead || (lead.score ?? 0) > 0) return // Nur fuer neue Leads ohne Score
 
       let score = 20 // Basis-Score fuer jeden neuen Lead
@@ -142,7 +140,7 @@ export const LeadService = {
     }
   },
 
-  async getById(_tenantId: string, leadId: string): Promise<LeadWithRelations | null> {
+  async getById(leadId: string): Promise<LeadWithRelations | null> {
     const rows = await db
       .select({
         ...getTableColumns(leads),
@@ -181,9 +179,7 @@ export const LeadService = {
     }
   },
 
-  async update(
-    _tenantId: string,
-    leadId: string,
+  async update(leadId: string,
     data: UpdateLeadInput
   ): Promise<Lead | null> {
     // Build update object with proper null handling
@@ -232,7 +228,7 @@ export const LeadService = {
     return lead ?? null
   },
 
-  async delete(_tenantId: string, leadId: string): Promise<boolean> {
+  async delete(leadId: string): Promise<boolean> {
     const result = await db
       .delete(leads)
       .where(eq(leads.id, leadId))
@@ -241,9 +237,7 @@ export const LeadService = {
     return result.length > 0
   },
 
-  async list(
-    _tenantId: string,
-    filters: LeadFilters = {}
+  async list(filters: LeadFilters = {}
   ): Promise<PaginatedResult<LeadWithRelations>> {
     const { status, source, assignedTo, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
@@ -340,28 +334,26 @@ export const LeadService = {
     }
   },
 
-  async updateStatus(
-    _tenantId: string,
-    leadId: string,
+  async updateStatus(leadId: string,
     status: string,
     oldStatus?: string
   ): Promise<Lead | null> {
-    const lead = await this.update(_leadId, { status })
+    const lead = await this.update(leadId, { status })
     if (lead) {
       // Webhook-Trigger asynchron feuern (blockiert nicht)
       import('@/lib/services/webhook.service').then(({ WebhookService }) => {
-        WebhookService.fire('', 'lead.status_changed', {
+        WebhookService.fire('lead.status_changed', {
           leadId,
           oldStatus: oldStatus || 'unknown',
           newStatus: status,
         }).catch(() => {})
 
         if (status === 'won') {
-          WebhookService.fire('', 'lead.won', { leadId }).catch(() => {})
+          WebhookService.fire('lead.won', { leadId }).catch(() => {})
           // Willkommens-E-Mail in Queue
           if (lead!.contactEmail) {
             import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-              TaskQueueService.create('', {
+              TaskQueueService.create({
                 type: 'email',
                 priority: 1,
                 payload: {
@@ -379,24 +371,20 @@ export const LeadService = {
           }
         }
         if (status === 'lost') {
-          WebhookService.fire('', 'lead.lost', { leadId }).catch(() => {})
+          WebhookService.fire('lead.lost', { leadId }).catch(() => {})
         }
       }).catch(() => {})
     }
     return lead
   },
 
-  async assignTo(
-    _tenantId: string,
-    leadId: string,
+  async assignTo(leadId: string,
     userId: string | null
   ): Promise<Lead | null> {
-    return this.update(_leadId, { assignedTo: userId })
+    return this.update(leadId, { assignedTo: userId })
   },
 
-  async getStatusCounts(
-    _tenantId: string
-  ): Promise<{ status: string; count: number }[]> {
+  async getStatusCounts(): Promise<{ status: string; count: number }[]> {
     const result = await db
       .select({
         status: leads.status,
@@ -411,13 +399,11 @@ export const LeadService = {
     }))
   },
 
-  async updateAIResearch(
-    _tenantId: string,
-    leadId: string,
+  async updateAIResearch(leadId: string,
     status: string,
     result?: Record<string, unknown>
   ): Promise<Lead | null> {
-    return this.update(_leadId, {
+    return this.update(leadId, {
       aiResearchStatus: status,
       aiResearchResult: result,
     })

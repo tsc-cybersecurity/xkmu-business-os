@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import {
-  createTestDb,
+import { createTestDb,
   seedTestTenants,
   cleanupTestTenants,
   TEST_INTEGRATION_TENANT_A,

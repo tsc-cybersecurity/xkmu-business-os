@@ -4,19 +4,19 @@ import { eq, and, desc, asc } from 'drizzle-orm'
 
 export const OkrService = {
   // ── Cycles ───────────────────────────────────────────────────────────
-  async listCycles(_tenantId: string) {
+  async listCycles() {
     return db.select().from(okrCycles)
       .orderBy(desc(okrCycles.startDate))
   },
 
-  async getActiveCycle(_tenantId: string) {
+  async getActiveCycle() {
     const [cycle] = await db.select().from(okrCycles)
       .where(eq(okrCycles.isActive, true))
       .limit(1)
     return cycle ?? null
   },
 
-  async createCycle(_tenantId: string, data: Record<string, unknown>) {
+  async createCycle(data: Record<string, unknown>) {
     const [cycle] = await db.insert(okrCycles).values({
       name: data.name as string,
       type: (data.type as string) || 'quarterly',
@@ -27,7 +27,7 @@ export const OkrService = {
     return cycle
   },
 
-  async updateCycle(_tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateCycle(id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = {}
     if (data.name !== undefined) updates.name = data.name
     if (data.isActive !== undefined) updates.isActive = data.isActive
@@ -42,14 +42,14 @@ export const OkrService = {
     return cycle ?? null
   },
 
-  async deleteCycle(_tenantId: string, id: string) {
+  async deleteCycle(id: string) {
     const r = await db.delete(okrCycles)
       .where(eq(okrCycles.id, id)).returning({ id: okrCycles.id })
     return r.length > 0
   },
 
   // ── Objectives ───────────────────────────────────────────────────────
-  async listObjectives(_tenantId: string, cycleId?: string) {
+  async listObjectives(cycleId?: string) {
     const conditions: ReturnType<typeof eq>[] = []
     if (cycleId) conditions.push(eq(okrObjectives.cycleId, cycleId))
     const objectives = await db.select().from(okrObjectives)
@@ -73,7 +73,7 @@ export const OkrService = {
     return result
   },
 
-  async createObjective(_tenantId: string, data: Record<string, unknown>) {
+  async createObjective(data: Record<string, unknown>) {
     const [obj] = await db.insert(okrObjectives).values({
       cycleId: data.cycleId as string,
       title: data.title as string,
@@ -84,7 +84,7 @@ export const OkrService = {
     return obj
   },
 
-  async updateObjective(_tenantId: string, id: string, data: Record<string, unknown>) {
+  async updateObjective(id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.description = data.description
@@ -95,7 +95,7 @@ export const OkrService = {
     return obj ?? null
   },
 
-  async deleteObjective(_tenantId: string, id: string) {
+  async deleteObjective(id: string) {
     const r = await db.delete(okrObjectives)
       .where(eq(okrObjectives.id, id)).returning({ id: okrObjectives.id })
     return r.length > 0
@@ -158,10 +158,10 @@ export const OkrService = {
   },
 
   // ── Dashboard ────────────────────────────────────────────────────────
-  async getDashboard(_tenantId: string) {
-    const activeCycle = await this.getActiveCycle(_tenantId)
+  async getDashboard() {
+    const activeCycle = await this.getActiveCycle()
     if (!activeCycle) return { cycle: null, objectives: [], overallProgress: 0 }
-    const objectives = await this.listObjectives(_activeCycle.id)
+    const objectives = await this.listObjectives(activeCycle.id)
     const overallProgress = objectives.length > 0
       ? Math.round(objectives.reduce((s, o) => s + o.progress, 0) / objectives.length)
       : 0

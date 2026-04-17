@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError, apiError } from '@/lib/utils/api-response'
 import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/task-queue - List tasks with filters
 //
 // Note: this endpoint uses its own pagination parsing instead of the global
@@ -21,7 +19,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined
     const type = searchParams.get('type') || undefined
 
-    const result = await TaskQueueService.list(TENANT_ID, {
+    const result = await TaskQueueService.list({
       page,
       limit,
       status,
@@ -36,7 +34,7 @@ export async function POST(request: NextRequest) {
   return withPermission(request, 'settings', 'create', async (auth) => {
     try {
       const body = await request.json()
-      const item = await TaskQueueService.create(TENANT_ID, {
+      const item = await TaskQueueService.create({
         type: body.type,
         priority: body.priority,
         payload: body.payload,
@@ -76,7 +74,7 @@ export async function DELETE(request: NextRequest) {
       const maxAgeHours = parseInt(searchParams.get('maxAgeHours') || '24', 10) || 24
       const maxAgeMs = Math.max(1, maxAgeHours) * 60 * 60 * 1000
 
-      const deleted = await TaskQueueService.deleteBulk(TENANT_ID, scope, { maxAgeMs })
+      const deleted = await TaskQueueService.deleteBulk(scope, { maxAgeMs })
       return apiSuccess({ deleted })
     } catch {
       return apiServerError()

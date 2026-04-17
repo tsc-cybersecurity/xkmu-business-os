@@ -220,7 +220,7 @@ export const CompanyActionsService = {
 
       // Generate 4-5 line summary for preview
       const summary = textContent.length > 300
-        ? await generateSummary(textContent, userId)
+        ? await generateSummary('', textContent, userId)
         : ''
 
       return { subject, content: textContent, summary, actionSlug }
@@ -230,7 +230,7 @@ export const CompanyActionsService = {
 
     // Fallback: use raw text
     const fallbackSummary = response.text.length > 300
-      ? await generateSummary(response.text, userId)
+      ? await generateSummary('', response.text, userId)
       : ''
     return { subject: '', content: response.text, summary: fallbackSummary, actionSlug }
   },
@@ -250,7 +250,7 @@ export const CompanyActionsService = {
         if (meta.summary) continue // already has summary
         if (!activity.content || activity.content.length < 300) continue // too short
 
-        const summary = await generateSummary(activity.content, userId)
+        const summary = await generateSummary('', activity.content, userId)
         if (!summary) continue
 
         // Update activity metadata with summary

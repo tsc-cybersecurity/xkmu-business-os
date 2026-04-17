@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createCompanySchema,
+import { createCompanySchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
@@ -14,8 +12,6 @@ import { CompanyService } from '@/lib/services/company.service'
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'companies', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -24,7 +20,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || undefined
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || undefined
 
-    const result = await CompanyService.list(TENANT_ID, {
+    const result = await CompanyService.list({
       ...pagination,
       status,
       search,
@@ -46,9 +42,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Dublettenprüfung
-      const duplicate = await CompanyService.checkDuplicate(
-        TENANT_ID,
-        validation.data.name,
+      const duplicate = await CompanyService.checkDuplicate(validation.data.name,
         validation.data.website
       )
       if (duplicate) {
@@ -59,14 +53,12 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const company = await CompanyService.create(
-        TENANT_ID,
-        validation.data,
+      const company = await CompanyService.create(validation.data,
         auth.userId || undefined
       )
 
       // Webhook feuern
-      WebhookService.fire(TENANT_ID, 'company.created', {
+      WebhookService.fire('company.created', {
         companyId: company.id,
         companyName: company.name,
       }).catch(() => {})

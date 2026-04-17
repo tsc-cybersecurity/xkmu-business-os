@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updateLeadSchema,
+import { updateLeadSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { LeadService } from '@/lib/services/lead.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 export async function GET(
@@ -23,7 +19,7 @@ export async function GET(
 ) {
   return withPermission(request, 'leads', 'read', async (auth) => {
     const { id } = await params
-    const lead = await LeadService.getById(TENANT_ID, id)
+    const lead = await LeadService.getById(id)
 
     if (!lead) {
       return apiNotFound('Lead not found')
@@ -48,7 +44,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const lead = await LeadService.update(TENANT_ID, id, validation.data)
+      const lead = await LeadService.update(id, validation.data)
 
       if (!lead) {
         return apiNotFound('Lead not found')
@@ -68,7 +64,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'leads', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await LeadService.delete(TENANT_ID, id)
+    const deleted = await LeadService.delete(id)
 
     if (!deleted) {
       return apiNotFound('Lead not found')

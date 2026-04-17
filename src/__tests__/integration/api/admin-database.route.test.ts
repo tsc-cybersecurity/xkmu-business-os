@@ -167,7 +167,6 @@ describe('PUT /api/v1/admin/database/tables/[tableName]', () => {
       id: 'row-1',
       name: 'Test',
       tenant_id: 'other-tenant',
-      tenantId: 'other-tenant',
     })
     const res = await handler(req, createTableParams('companies'))
     const body = await res.json()

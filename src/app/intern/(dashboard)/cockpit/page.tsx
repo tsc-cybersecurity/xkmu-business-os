@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import {
-  Tabs,
+import { Tabs,
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs'

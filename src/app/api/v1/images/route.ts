@@ -3,8 +3,6 @@ import { apiSuccess, apiServerError, parsePaginationParams } from '@/lib/utils/a
 import { withPermission } from '@/lib/auth/require-permission'
 import { ImageGenerationService } from '@/lib/services/ai/image-generation.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'media', 'read', async (auth) => {
     try {
@@ -13,7 +11,7 @@ export async function GET(request: NextRequest) {
       const category = searchParams.get('category') || undefined
       const search = searchParams.get('search') || undefined
 
-      const result = await ImageGenerationService.list(TENANT_ID, {
+      const result = await ImageGenerationService.list({
         ...pagination,
         category,
         search,

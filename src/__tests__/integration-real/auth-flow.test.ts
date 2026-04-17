@@ -36,7 +36,6 @@ describe.skipIf(!hasTestDb)('Auth Flow — real DB', () => {
     const existing = await db.select().from(users).where(eq(users.email, testEmail)).limit(1)
     if (existing.length === 0) {
       const [user] = await db.insert(users).values({
-        tenantId: TEST_INTEGRATION_TENANT_A,
         email: testEmail,
         passwordHash,
         firstName: 'Integration',

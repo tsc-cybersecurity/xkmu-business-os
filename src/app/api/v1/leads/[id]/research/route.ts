@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
@@ -11,8 +10,6 @@ import { LeadResearchService, WebsiteScraperService } from '@/lib/services/ai'
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // POST /api/v1/leads/[id]/research - Start AI research for a lead
@@ -25,13 +22,13 @@ export async function POST(
 
   try {
     // Get the lead with relations
-    const lead = await LeadService.getById(TENANT_ID, id)
+    const lead = await LeadService.getById(id)
     if (!lead) {
       return apiNotFound('Lead not found')
     }
 
     // Update status to "processing" (DB constraint: pending, processing, completed, failed)
-    await LeadService.updateAIResearch(TENANT_ID, id, 'processing')
+    await LeadService.updateAIResearch(id, 'processing')
 
     // Gather information for research
     let companyName: string | undefined
@@ -43,7 +40,7 @@ export async function POST(
 
     // Get company info if linked
     if (lead.companyId) {
-      const company = await CompanyService.getById(TENANT_ID, lead.companyId)
+      const company = await CompanyService.getById(lead.companyId)
       if (company) {
         companyName = company.name
         website = company.website || undefined
@@ -88,7 +85,7 @@ export async function POST(
 
     // Get person info if linked
     if (lead.personId) {
-      const person = await PersonService.getById(TENANT_ID, lead.personId)
+      const person = await PersonService.getById(lead.personId)
       if (person) {
         personName = `${person.firstName} ${person.lastName}`
         if (!email) email = person.email || undefined
@@ -112,7 +109,7 @@ export async function POST(
 
     // Validate we have enough info
     if (!companyName && !personName && !email) {
-      await LeadService.updateAIResearch(TENANT_ID, id, 'failed', {
+      await LeadService.updateAIResearch(id, 'failed', {
         error: 'Nicht genügend Informationen für die Recherche. Bitte verknüpfen Sie eine Firma oder Person.',
       })
       return apiError(
@@ -137,22 +134,20 @@ export async function POST(
     })
 
     // Update lead with research results
-    const updatedLead = await LeadService.updateAIResearch(
-      TENANT_ID,
-      id,
+    const updatedLead = await LeadService.updateAIResearch(id,
       'completed',
       researchResult as unknown as Record<string, unknown>
     )
 
     // Also update the lead score if we got one
     if (researchResult.score !== undefined) {
-      await LeadService.update(TENANT_ID, id, {
+      await LeadService.update(id, {
         score: researchResult.score,
       })
     }
 
     // Webhook feuern
-    WebhookService.fire(TENANT_ID, 'research.completed', {
+    WebhookService.fire('research.completed', {
       leadId: id,
       score: researchResult.score,
     }).catch(() => {})
@@ -165,7 +160,7 @@ export async function POST(
     logger.error('Lead research error', error, { module: 'LeadsResearchAPI' })
 
     // Update status to "failed"
-    await LeadService.updateAIResearch(TENANT_ID, id, 'failed', {
+    await LeadService.updateAIResearch(id, 'failed', {
       error: error instanceof Error ? error.message : 'Unbekannter Fehler',
     })
 
@@ -186,7 +181,7 @@ export async function GET(
   return withPermission(request, 'leads', 'update', async (auth) => {
   const { id } = await params
 
-  const lead = await LeadService.getById(TENANT_ID, id)
+  const lead = await LeadService.getById(id)
   if (!lead) {
     return apiNotFound('Lead not found')
   }

@@ -23,7 +23,6 @@ export const authService: ApiService = {
         data: {
           user: {
             id: 'b3f1a2c4-5d6e-7f8a-9b0c-1d2e3f4a5b6c',
-            tenantId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
             email: 'max@mustermann-gmbh.de',
             firstName: 'Max',
             lastName: 'Mustermann',
@@ -55,7 +54,6 @@ export const authService: ApiService = {
         data: {
           user: {
             id: 'u1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
-            tenantId: 't1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
             email: 'lisa@weber-consulting.de',
             firstName: 'Lisa',
             lastName: 'Weber',
@@ -97,7 +95,6 @@ export const authService: ApiService = {
         data: {
           user: {
             id: 'b3f1a2c4-5d6e-7f8a-9b0c-1d2e3f4a5b6c',
-            tenantId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
             email: 'max@mustermann-gmbh.de',
             firstName: 'Max',
             lastName: 'Mustermann',

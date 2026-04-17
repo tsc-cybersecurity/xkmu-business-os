@@ -5,8 +5,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { ImageGenerationService } from '@/lib/services/ai/image-generation.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const generateSchema = z.object({
   prompt: z.string().min(1, 'Prompt ist erforderlich').max(4000),
   provider: z.enum(['gemini', 'openai', 'kie']).default('gemini'),
@@ -29,9 +27,7 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'Validierungsfehler', 400, formatZodErrors(validation.errors))
       }
 
-      const result = await ImageGenerationService.generate(
-        TENANT_ID,
-        auth.userId,
+      const result = await ImageGenerationService.generate(auth.userId,
         validation.data
       )
 

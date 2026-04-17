@@ -54,7 +54,7 @@ describe('BlogPostService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, { title: 'Test Post' }, TEST_USER_ID)
+      const result = await service.create({ title: 'Test Post' }, TEST_USER_ID)
 
       expect(result).toEqual(fixture)
       expect(dbMock.db.insert).toHaveBeenCalled()
@@ -65,7 +65,7 @@ describe('BlogPostService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, { title: 'Test', slug: 'custom-slug' })
+      const result = await service.create({ title: 'Test', slug: 'custom-slug' })
 
       expect(result.slug).toBe('custom-slug')
       // generateSlug should NOT be called (no select for slug check)
@@ -78,7 +78,7 @@ describe('BlogPostService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, { title: 'Test Post' })
+      const result = await service.create({ title: 'Test Post' })
 
       expect(result.status).toBe('draft')
     })
@@ -89,7 +89,7 @@ describe('BlogPostService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, { title: 'Test Post' })
+      const result = await service.create({ title: 'Test Post' })
 
       expect(result.source).toBe('manual')
     })

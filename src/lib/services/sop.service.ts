@@ -4,7 +4,7 @@ import { eq, and, desc, asc, ilike, or, isNull } from 'drizzle-orm'
 
 export const SopService = {
   // ── Documents ────────────────────────────────────────────────────────
-  async list(_tenantId: string, filters?: { category?: string; status?: string; search?: string }) {
+  async list(filters?: { category?: string; status?: string; search?: string }) {
     const conditions = [isNull(sopDocuments.deletedAt)]
     if (filters?.category) conditions.push(eq(sopDocuments.category, filters.category))
     if (filters?.status) conditions.push(eq(sopDocuments.status, filters.status))
@@ -19,7 +19,7 @@ export const SopService = {
       .where(and(...conditions)).orderBy(desc(sopDocuments.updatedAt))
   },
 
-  async getById(_tenantId: string, id: string) {
+  async getById(id: string) {
     const [doc] = await db.select().from(sopDocuments)
       .where(and(eq(sopDocuments.id, id), isNull(sopDocuments.deletedAt)))
     if (!doc) return null
@@ -30,7 +30,7 @@ export const SopService = {
     return { ...doc, steps, versions }
   },
 
-  async getByIdWithDeliverable(_tenantId: string, id: string) {
+  async getByIdWithDeliverable(id: string) {
     const [doc] = await db.select().from(sopDocuments)
       .where(and(eq(sopDocuments.id, id), isNull(sopDocuments.deletedAt)))
     if (!doc) return null
@@ -48,7 +48,7 @@ export const SopService = {
     return { ...doc, steps, versions, producesDeliverable }
   },
 
-  async create(_tenantId: string, data: Record<string, unknown>) {
+  async create(data: Record<string, unknown>) {
     const [doc] = await db.insert(sopDocuments).values({
       title: data.title as string,
       category: data.category as string,
@@ -64,7 +64,7 @@ export const SopService = {
     return doc
   },
 
-  async update(_tenantId: string, id: string, data: Record<string, unknown>) {
+  async update(id: string, data: Record<string, unknown>) {
     const updates: Record<string, unknown> = { updatedAt: new Date() }
     if (data.title !== undefined) updates.title = data.title
     if (data.category !== undefined) updates.category = data.category
@@ -80,15 +80,15 @@ export const SopService = {
     return doc ?? null
   },
 
-  async delete(_tenantId: string, id: string) {
+  async delete(id: string) {
     const [doc] = await db.update(sopDocuments).set({ deletedAt: new Date() })
       .where(eq(sopDocuments.id, id)).returning()
     return !!doc
   },
 
-  async publish(_tenantId: string, id: string, userId?: string) {
+  async publish(id: string, userId?: string) {
     // Snapshot current state as version
-    const current = await this.getById(_id)
+    const current = await this.getById(id)
     if (!current) return null
     const nextVersion = incrementVersion(current.version || '1.0.0')
     await db.insert(sopVersions).values({

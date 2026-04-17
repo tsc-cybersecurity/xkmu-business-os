@@ -28,7 +28,7 @@ export interface CreateTaskInput {
 export type UpdateTaskInput = Partial<Omit<CreateTaskInput, 'campaignId'>>
 
 export const MarketingTaskService = {
-  async list(_tenantId: string, filters: TaskFilters = {}) {
+  async list(filters: TaskFilters = {}) {
     const { campaignId, status, type, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
@@ -50,7 +50,7 @@ export const MarketingTaskService = {
     }
   },
 
-  async listByCampaign(_tenantId: string, campaignId: string) {
+  async listByCampaign(campaignId: string) {
     return db
       .select()
       .from(marketingTasks)
@@ -58,7 +58,7 @@ export const MarketingTaskService = {
       .orderBy(desc(marketingTasks.createdAt))
   },
 
-  async getById(_tenantId: string, id: string): Promise<MarketingTask | null> {
+  async getById(id: string): Promise<MarketingTask | null> {
     const [task] = await db
       .select()
       .from(marketingTasks)
@@ -67,7 +67,7 @@ export const MarketingTaskService = {
     return task ?? null
   },
 
-  async create(_tenantId: string, data: CreateTaskInput): Promise<MarketingTask> {
+  async create(data: CreateTaskInput): Promise<MarketingTask> {
     const [task] = await db
       .insert(marketingTasks)
       .values({
@@ -87,7 +87,7 @@ export const MarketingTaskService = {
     return task
   },
 
-  async update(_tenantId: string, id: string, data: UpdateTaskInput): Promise<MarketingTask | null> {
+  async update(id: string, data: UpdateTaskInput): Promise<MarketingTask | null> {
     const updateData: Partial<NewMarketingTask> = { updatedAt: new Date() }
     if (data.type !== undefined) updateData.type = data.type
     if (data.recipientEmail !== undefined) updateData.recipientEmail = data.recipientEmail || null
@@ -108,7 +108,7 @@ export const MarketingTaskService = {
     return task ?? null
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(marketingTasks)
       .where(eq(marketingTasks.id, id))

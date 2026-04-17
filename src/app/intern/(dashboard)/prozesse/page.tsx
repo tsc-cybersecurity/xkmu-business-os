@@ -5,14 +5,12 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import {
-  Accordion,
+import { Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import {
-  BookOpen,
+import { BookOpen,
   Loader2,
   Upload,
   PanelLeftClose,

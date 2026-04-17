@@ -1,5 +1,4 @@
-import {
-  Activity, AlertTriangle, Archive, ArrowRight, Award,
+import { Activity, AlertTriangle, Archive, ArrowRight, Award,
   BarChart, BarChart3, Bell, Bolt, Book, BookOpen, Bot, Box, Briefcase, Bug, Building, Building2,
   Calendar, Camera, CheckCircle, CheckCircle2, ChevronRight, Clipboard, ClipboardCheck, Clock, Cloud, Code, Code2, Cog, Cpu, CreditCard,
   Database, DollarSign, Download,

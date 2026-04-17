@@ -87,7 +87,7 @@ export const WorkflowEngine = {
   /**
    * Fire a trigger — finds all active workflows for this trigger and runs them
    */
-  async fire(trigger: string, tenantId: string, triggerData: Record<string, unknown>): Promise<void> {
+  async fire(trigger: string, triggerData: Record<string, unknown>): Promise<void> {
     const activeWorkflows = await db
       .select()
       .from(workflows)
@@ -111,7 +111,6 @@ export const WorkflowEngine = {
     workflowId: string,
     workflowName: string,
     steps: WorkflowStep[],
-    tenantId: string,
     trigger: string,
     triggerData: Record<string, unknown>
   ): Promise<void> {

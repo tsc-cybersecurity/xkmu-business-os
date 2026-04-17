@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiServerError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createMarketingCampaignSchema,
+import { createMarketingCampaignSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { MarketingCampaignService } from '@/lib/services/marketing-campaign.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -23,7 +19,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || undefined
     const search = searchParams.get('search') || undefined
 
-    const result = await MarketingCampaignService.list(TENANT_ID, {
+    const result = await MarketingCampaignService.list({
       ...pagination,
       status,
       type,
@@ -42,7 +38,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const campaign = await MarketingCampaignService.create(TENANT_ID, validation.data, auth.userId ?? undefined)
+      const campaign = await MarketingCampaignService.create(validation.data, auth.userId ?? undefined)
       return apiSuccess(campaign, undefined, 201)
     } catch (error) {
       logger.error('Error creating marketing campaign', error, { module: 'MarketingCampaignsAPI' })

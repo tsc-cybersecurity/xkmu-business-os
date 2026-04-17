@@ -1,21 +1,17 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiError,
   apiValidationError,
   apiForbidden,
   apiNotFound,
 } from '@/lib/utils/api-response'
-import {
-  updateUserSchema,
+import { updateUserSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { UserService } from '@/lib/services/user.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 export async function GET(
@@ -24,7 +20,7 @@ export async function GET(
 ) {
   return withPermission(request, 'users', 'read', async (auth) => {
     const { id } = await params
-    const user = await UserService.getById(TENANT_ID, id)
+    const user = await UserService.getById(id)
 
     if (!user) {
       return apiNotFound('User not found')
@@ -67,9 +63,7 @@ export async function PUT(
 
       // Check if email already exists
       if (validation.data.email) {
-        const emailExists = await UserService.emailExists(
-          TENANT_ID,
-          validation.data.email,
+        const emailExists = await UserService.emailExists(validation.data.email,
           id
         )
         if (emailExists) {
@@ -77,9 +71,7 @@ export async function PUT(
         }
       }
 
-      const user = await UserService.update(
-        TENANT_ID,
-        id,
+      const user = await UserService.update(id,
         validation.data
       )
 
@@ -110,7 +102,7 @@ export async function DELETE(
       return apiError('CANNOT_DELETE_SELF', 'Cannot delete your own account', 400)
     }
 
-    const deleted = await UserService.delete(TENANT_ID, id)
+    const deleted = await UserService.delete(id)
 
     if (!deleted) {
       return apiNotFound('User not found')

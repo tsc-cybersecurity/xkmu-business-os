@@ -5,8 +5,6 @@ import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const upsertControlMappingSchema = z.object({
   controlId: z.string().min(1),
   applicability: z.enum(['applicable', 'not_applicable']).optional(),
@@ -29,7 +27,7 @@ export async function POST(
         return apiError('VALIDATION_ERROR', parsed.errors.issues.map(i => i.message).join(', '), 400)
       }
 
-      const mapping = await GrundschutzAssetService.upsertControlMapping(TENANT_ID, id, parsed.data)
+      const mapping = await GrundschutzAssetService.upsertControlMapping(id, parsed.data)
       return apiSuccess(mapping)
     } catch (error) {
       logger.error('Error upserting Grundschutz control mapping', error, { module: 'GrundschutzControlsAPI' })

@@ -4,8 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Dialog,
+import { Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -15,8 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import {
-  Mail,
+import { Mail,
   Plus,
   Loader2,
   Trash2,

@@ -47,7 +47,7 @@ const CONTRACT_TRANSITIONS: Record<string, string[]> = {
 }
 
 export const DocumentService = {
-  async generateNumber(_tenantId: string, type: string, year?: number): Promise<string> {
+  async generateNumber(type: string, year?: number): Promise<string> {
     const currentYear = year || new Date().getFullYear()
     const prefix = type === 'invoice' ? 'RE' : type === 'contract' ? 'VT' : 'AN'
     const pattern = `${prefix}-${currentYear}-%`
@@ -66,17 +66,15 @@ export const DocumentService = {
     return `${prefix}-${currentYear}-${String(nextNum).padStart(4, '0')}`
   },
 
-  async getNextNumber(_tenantId: string, type: string): Promise<string> {
-    return this.generateNumber(_type)
+  async getNextNumber(type: string): Promise<string> {
+    return this.generateNumber(type)
   },
 
-  async create(
-    _tenantId: string,
-    data: CreateDocumentInput,
+  async create(data: CreateDocumentInput,
     createdBy?: string
   ): Promise<Document> {
     // Auto-generate number if not provided
-    const number = data.number || await this.generateNumber(_data.type)
+    const number = data.number || await this.generateNumber(data.type)
 
     // Snapshot company address if companyId provided and no customer address given
     let customerSnapshot: Partial<NewDocument> = {}
@@ -138,7 +136,7 @@ export const DocumentService = {
     return doc
   },
 
-  async getById(_tenantId: string, docId: string): Promise<DocumentWithDetails | null> {
+  async getById(docId: string): Promise<DocumentWithDetails | null> {
     const [row] = await db
       .select({
         ...getTableColumns(documents),
@@ -174,9 +172,7 @@ export const DocumentService = {
     }
   },
 
-  async update(
-    _tenantId: string,
-    docId: string,
+  async update(docId: string,
     data: UpdateDocumentInput
   ): Promise<Document | null> {
     // Check document exists and is in draft status
@@ -232,7 +228,7 @@ export const DocumentService = {
     return doc ?? null
   },
 
-  async delete(_tenantId: string, docId: string): Promise<boolean> {
+  async delete(docId: string): Promise<boolean> {
     // Only draft documents can be deleted
     const existing = await db
       .select({ status: documents.status })
@@ -254,9 +250,7 @@ export const DocumentService = {
     return result.length > 0
   },
 
-  async list(
-    _tenantId: string,
-    filters: DocumentFilters = {}
+  async list(filters: DocumentFilters = {}
   ): Promise<PaginatedResult<DocumentListItem>> {
     const { type, status, companyId, dateFrom, dateTo, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
@@ -330,7 +324,7 @@ export const DocumentService = {
     }
   },
 
-  async updateStatus(_tenantId: string, docId: string, newStatus: string): Promise<Document | null> {
+  async updateStatus(docId: string, newStatus: string): Promise<Document | null> {
     const existing = await db
       .select({ status: documents.status, type: documents.type })
       .from(documents)
@@ -360,15 +354,15 @@ export const DocumentService = {
     return doc ?? null
   },
 
-  async convertOfferToInvoice(_tenantId: string, offerId: string, createdBy?: string): Promise<Document | null> {
-    const offer = await this.getById(_offerId)
+  async convertOfferToInvoice(offerId: string, createdBy?: string): Promise<Document | null> {
+    const offer = await this.getById(offerId)
     if (!offer) return null
     if (offer.type !== 'offer') throw new Error('Nur Angebote können umgewandelt werden')
     if (offer.status !== 'accepted' && offer.status !== 'sent') {
       throw new Error('Nur versendete oder angenommene Angebote können umgewandelt werden')
     }
 
-    const number = await this.generateNumber('', 'invoice')
+    const number = await this.generateNumber('invoice')
 
     const [invoice] = await db
       .insert(documents)
@@ -421,17 +415,15 @@ export const DocumentService = {
     return invoice
   },
 
-  async convertContractToDocument(
-    _tenantId: string,
-    contractId: string,
+  async convertContractToDocument(contractId: string,
     targetType: 'offer' | 'invoice',
     createdBy?: string
   ): Promise<Document | null> {
-    const contract = await this.getById(_contractId)
+    const contract = await this.getById(contractId)
     if (!contract) return null
     if (contract.type !== 'contract') throw new Error('Nur Vertraege koennen umgewandelt werden')
 
-    const number = await this.generateNumber(_targetType)
+    const number = await this.generateNumber(targetType)
 
     const [newDoc] = await db
       .insert(documents)

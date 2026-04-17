@@ -35,7 +35,7 @@ const MUTATION_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH'])
 function generateCsrfToken(): string {
   const bytes = new Uint8Array(32)
   crypto.getRandomValues(bytes)
-  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('')
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join()
 }
 
 function csrfCheck(request: NextRequest): NextResponse | null {

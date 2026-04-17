@@ -16,7 +16,7 @@ export const BusinessIntelligenceAIService = {
     extractedTexts: string[],
     context: AIRequestContext
   ): Promise<BusinessAnalysisResult> {
-    const template = await AiPromptTemplateService.getOrDefault('', 'business_profile_analysis')
+    const template = await AiPromptTemplateService.getOrDefault('business_profile_analysis')
 
     const combinedText = extractedTexts.join('\n\n---DOKUMENT-TRENNUNG---\n\n')
 

@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Shield, ArrowRight, ArrowLeft as ArrowLeftIcon, FolderOpen, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'

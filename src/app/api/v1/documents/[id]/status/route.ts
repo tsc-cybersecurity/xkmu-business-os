@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updateDocumentStatusSchema,
+import { updateDocumentStatusSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // PUT /api/v1/documents/[id]/status
@@ -33,7 +29,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const document = await DocumentService.updateStatus(TENANT_ID, id, validation.data.status)
+      const document = await DocumentService.updateStatus(id, validation.data.status)
 
       if (!document) {
         return apiNotFound('Dokument nicht gefunden')

@@ -2,8 +2,6 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError, parsePaginationParams } from '@/lib/utils/api-response'
 import { DeliverableService } from '@/lib/services/deliverable.service'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'processes', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -19,12 +17,12 @@ export async function GET(request: NextRequest) {
     // If module code given, resolve to moduleId
     let resolvedModuleId = moduleId
     if (!resolvedModuleId && moduleCode) {
-      const modules = await DeliverableService.getModulesWithCount(TENANT_ID)
+      const modules = await DeliverableService.getModulesWithCount()
       const found = modules.find(m => m.code === moduleCode)
       resolvedModuleId = found?.id
     }
 
-    const all = await DeliverableService.list(TENANT_ID, { moduleId: resolvedModuleId, categoryCode, status })
+    const all = await DeliverableService.list({ moduleId: resolvedModuleId, categoryCode, status })
     const total = all.length
     const items = all.slice((pageNum - 1) * limitNum, pageNum * limitNum)
     return apiSuccess(items, { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) })
@@ -35,7 +33,7 @@ export async function POST(request: NextRequest) {
   return withPermission(request, 'processes', 'create', async (auth) => {
     try {
       const body = await request.json()
-      const deliverable = await DeliverableService.create(TENANT_ID, body)
+      const deliverable = await DeliverableService.create(body)
       return apiSuccess(deliverable, undefined, 201)
     } catch { return apiServerError() }
   })

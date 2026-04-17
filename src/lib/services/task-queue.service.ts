@@ -18,7 +18,7 @@ export interface TaskQueueFilters {
 }
 
 export const TaskQueueService = {
-  async list(_tenantId: string, filters: TaskQueueFilters = {}) {
+  async list(filters: TaskQueueFilters = {}) {
     const { status, type, scheduledBefore, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
@@ -65,7 +65,7 @@ export const TaskQueueService = {
     }
   },
 
-  async getById(_tenantId: string, id: string): Promise<TaskQueueItem | null> {
+  async getById(id: string): Promise<TaskQueueItem | null> {
     const [item] = await db
       .select()
       .from(taskQueue)
@@ -74,7 +74,7 @@ export const TaskQueueService = {
     return item ?? null
   },
 
-  async create(_tenantId: string, data: {
+  async create(data: {
     type: string
     priority?: number
     payload?: unknown
@@ -96,7 +96,7 @@ export const TaskQueueService = {
     return item
   },
 
-  async cancel(_tenantId: string, id: string): Promise<boolean> {
+  async cancel(id: string): Promise<boolean> {
     const [item] = await db
       .update(taskQueue)
       .set({ status: 'cancelled', updatedAt: new Date() })
@@ -105,7 +105,7 @@ export const TaskQueueService = {
     return !!item
   },
 
-  async delete(_tenantId: string, id: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(taskQueue)
       .where(eq(taskQueue.id, id))
@@ -124,9 +124,7 @@ export const TaskQueueService = {
    *                       Useful for clearing successful runs while keeping
    *                       failures around for debugging.
    */
-  async deleteBulk(
-    _tenantId: string,
-    scope: 'all' | 'older-than' | 'without-error',
+  async deleteBulk(scope: 'all' | 'older-than' | 'without-error',
     options: { maxAgeMs?: number } = {}
   ): Promise<number> {
     const conditions: ReturnType<typeof eq>[] = []
@@ -152,7 +150,7 @@ export const TaskQueueService = {
     return result.length
   },
 
-  async execute(_tenantId: string, id: string): Promise<TaskQueueItem | null> {
+  async execute(id: string): Promise<TaskQueueItem | null> {
     // Mark as running
     const [item] = await db
       .update(taskQueue)
@@ -196,12 +194,12 @@ export const TaskQueueService = {
     }
   },
 
-  async executeBatch(_tenantId: string, ids: string[]): Promise<{ completed: number; failed: number }> {
+  async executeBatch(ids: string[]): Promise<{ completed: number; failed: number }> {
     let completed = 0
     let failed = 0
 
     for (const id of ids) {
-      const result = await this.execute(_id)
+      const result = await this.execute(id)
       if (result?.status === 'completed') completed++
       else if (result?.status === 'failed') failed++
     }
@@ -209,7 +207,7 @@ export const TaskQueueService = {
     return { completed, failed }
   },
 
-  async executeAllPending(_tenantId: string): Promise<{ completed: number; failed: number }> {
+  async executeAllPending(): Promise<{ completed: number; failed: number }> {
     const pending = await db
       .select({ id: taskQueue.id })
       .from(taskQueue)
@@ -218,10 +216,10 @@ export const TaskQueueService = {
         lte(taskQueue.scheduledFor, new Date())))
       .orderBy(asc(taskQueue.priority), asc(taskQueue.scheduledFor))
 
-    return this.executeBatch(_pending.map(p => p.id))
+    return this.executeBatch(pending.map(p => p.id))
   },
 
-  async getStats(_tenantId: string) {
+  async getStats() {
     const rows = await db
       .select({ status: taskQueue.status, count: count() })
       .from(taskQueue)
@@ -262,7 +260,7 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
         return { sent: true, to: payload.to, template: payload.templateSlug, messageId: result.messageId }
       }
       // Direkter Versand
-      const result = await EmailService.send('', {
+      const result = await EmailService.send({
         to: String(payload.to || ''),
         subject: String(payload.subject || ''),
         body: String(payload.body || ''),
@@ -274,7 +272,7 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
 
     case 'dunning': {
       const { handleDunning } = await import('@/lib/services/task-queue-handlers/dunning.handler')
-      return handleDunning('', payload as unknown as Parameters<typeof handleDunning>[1])
+      return handleDunning(payload as unknown as Parameters<typeof handleDunning>[1])
     }
 
     case 'follow_up':

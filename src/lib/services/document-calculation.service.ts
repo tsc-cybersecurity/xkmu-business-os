@@ -27,7 +27,7 @@ export function calculateLineTotal(
 }
 
 export const DocumentCalculationService = {
-  async recalculateTotals(_tenantId: string, docId: string): Promise<Document | null> {
+  async recalculateTotals(docId: string): Promise<Document | null> {
     const items = await db
       .select()
       .from(documentItems)
@@ -80,7 +80,7 @@ export const DocumentCalculationService = {
 
   // === Item Methods ===
 
-  async addItem(_tenantId: string, docId: string, data: CreateDocumentItemInput): Promise<DocumentItem> {
+  async addItem(docId: string, data: CreateDocumentItemInput): Promise<DocumentItem> {
     // Get next position
     const [maxPos] = await db
       .select({ max: sql<number>`COALESCE(MAX(${documentItems.position}), -1)` })
@@ -110,13 +110,11 @@ export const DocumentCalculationService = {
       })
       .returning()
 
-    await this.recalculateTotals(_docId)
+    await this.recalculateTotals(docId)
     return item
   },
 
-  async updateItem(
-    _tenantId: string,
-    docId: string,
+  async updateItem(docId: string,
     itemId: string,
     data: UpdateDocumentItemInput
   ): Promise<DocumentItem | null> {
@@ -165,11 +163,11 @@ export const DocumentCalculationService = {
       )
       .returning()
 
-    await this.recalculateTotals(_docId)
+    await this.recalculateTotals(docId)
     return item ?? null
   },
 
-  async removeItem(_tenantId: string, docId: string, itemId: string): Promise<boolean> {
+  async removeItem(docId: string, itemId: string): Promise<boolean> {
     const result = await db
       .delete(documentItems)
       .where(
@@ -181,12 +179,12 @@ export const DocumentCalculationService = {
       .returning({ id: documentItems.id })
 
     if (result.length > 0) {
-      await this.recalculateTotals(_docId)
+      await this.recalculateTotals(docId)
     }
     return result.length > 0
   },
 
-  async reorderItems(_tenantId: string, docId: string, itemIds: string[]): Promise<void> {
+  async reorderItems(docId: string, itemIds: string[]): Promise<void> {
     if (itemIds.length === 0) return
     const caseExpr = sql`CASE id ${sql.join(
       itemIds.map((id, i) => sql`WHEN ${id}::uuid THEN ${i}`),
@@ -203,7 +201,7 @@ export const DocumentCalculationService = {
       )
   },
 
-  async getItems(_tenantId: string, docId: string): Promise<DocumentItem[]> {
+  async getItems(docId: string): Promise<DocumentItem[]> {
     return db
       .select()
       .from(documentItems)

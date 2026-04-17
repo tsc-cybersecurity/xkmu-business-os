@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
 } from '@/lib/utils/api-response'
@@ -8,8 +7,6 @@ import { EmailService } from '@/lib/services/email.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const sendEmailSchema = z.object({
   to: z.string().email(),
   subject: z.string().min(1).max(500),
@@ -48,9 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email
-    const result = await EmailService.send(
-      TENANT_ID,
-      {
+    const result = await EmailService.send({
         to,
         subject,
         body: emailBody,

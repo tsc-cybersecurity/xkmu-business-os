@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
@@ -11,8 +10,6 @@ import { LeadResearchService } from '@/lib/services/ai'
 import type { CompanyResearchResult, CompanyAddress } from '@/lib/services/ai'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 /**
@@ -26,16 +23,16 @@ function buildCompanyProfileText(
 
   lines.push(`=== FIRMENPROFIL: ${companyName} ===`)
   lines.push(`Erstellt am: ${new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`)
-  lines.push('')
+  lines.push()
 
   if (research.companyProfile && !research.companyProfile.trim().startsWith('{')) {
     lines.push(research.companyProfile)
-    lines.push('')
+    lines.push()
   }
 
   if (research.description && research.description !== 'Nicht ermittelbar') {
     lines.push(`Beschreibung: ${research.description}`)
-    lines.push('')
+    lines.push()
   }
 
   if (research.addresses && research.addresses.length > 0) {
@@ -50,7 +47,7 @@ function buildCompanyProfileText(
       if (addr.phone) lines.push(`  Telefon: ${addr.phone}`)
       if (addr.email) lines.push(`  E-Mail: ${addr.email}`)
     })
-    lines.push('')
+    lines.push()
   }
 
   const keyData: [string, string][] = []
@@ -63,22 +60,22 @@ function buildCompanyProfileText(
   if (keyData.length > 0) {
     lines.push('--- KERNDATEN ---')
     keyData.forEach(([label, value]) => lines.push(`${label}: ${value}`))
-    lines.push('')
+    lines.push()
   }
 
   if (research.products?.length > 0) lines.push(`Produkte: ${research.products.join(', ')}`)
   if (research.services?.length > 0) lines.push(`Dienstleistungen: ${research.services.join(', ')}`)
-  if (research.products?.length > 0 || research.services?.length > 0) lines.push('')
+  if (research.products?.length > 0 || research.services?.length > 0) lines.push()
 
   if (research.strengths?.length > 0) {
     lines.push('--- STÄRKEN/USP ---')
     research.strengths.forEach(s => lines.push(`• ${s}`))
-    lines.push('')
+    lines.push()
   }
 
   if (research.competitors?.length > 0) {
     lines.push(`Wettbewerber: ${research.competitors.join(', ')}`)
-    lines.push('')
+    lines.push()
   }
 
   if (research.technologies?.length > 0) lines.push(`Technologien: ${research.technologies.join(', ')}`)
@@ -91,7 +88,7 @@ function buildCompanyProfileText(
     if (fin.growthTrend && fin.growthTrend !== 'Nicht ermittelbar') finParts.push(`Wachstum: ${fin.growthTrend}`)
     if (fin.fundingStatus && fin.fundingStatus !== 'Nicht ermittelbar') finParts.push(`Finanzierung: ${fin.fundingStatus}`)
     if (finParts.length > 0) {
-      lines.push('')
+      lines.push()
       lines.push('--- FINANZEN ---')
       finParts.forEach(p => lines.push(p))
     }
@@ -106,7 +103,7 @@ function buildCompanyProfileText(
     if (sm.facebook && sm.facebook !== 'null') smParts.push(`Facebook: ${sm.facebook}`)
     if (sm.instagram && sm.instagram !== 'null') smParts.push(`Instagram: ${sm.instagram}`)
     if (smParts.length > 0) {
-      lines.push('')
+      lines.push()
       lines.push('--- SOCIAL MEDIA ---')
       smParts.forEach(p => lines.push(p))
     }
@@ -180,7 +177,7 @@ export async function POST(
   const { id } = await params
 
   try {
-    const company = await CompanyService.getById(TENANT_ID, id)
+    const company = await CompanyService.getById(id)
     if (!company) {
       return apiNotFound('Company not found')
     }
@@ -191,7 +188,7 @@ export async function POST(
     let firecrawlContent: string | undefined
     if (company.website) {
       try {
-        const latestCrawl = await FirecrawlResearchService.getLatest(TENANT_ID, id)
+        const latestCrawl = await FirecrawlResearchService.getLatest(id)
         if (latestCrawl?.pages && Array.isArray(latestCrawl.pages)) {
           const pages = latestCrawl.pages as Array<{ url: string; title: string; markdown: string }>
           const parts = pages.map((page, i) => {
@@ -237,7 +234,7 @@ export async function POST(
     }
 
     // Save research result to DB (but do NOT apply to company yet)
-    const savedResearch = await CompanyResearchService.create(TENANT_ID, id, {
+    const savedResearch = await CompanyResearchService.create(id, {
       companyId: id,
       researchData: {
         ...researchResult,
@@ -270,7 +267,7 @@ export async function POST(
       },
     }
 
-    await CompanyService.update(TENANT_ID, id, {
+    await CompanyService.update(id, {
       customFields: updatedCustomFields,
     })
 
@@ -300,12 +297,12 @@ export async function GET(
   return withPermission(request, 'companies', 'update', async (auth) => {
   const { id } = await params
 
-  const company = await CompanyService.getById(TENANT_ID, id)
+  const company = await CompanyService.getById(id)
   if (!company) {
     return apiNotFound('Company not found')
   }
 
-  const researches = await CompanyResearchService.listByCompany(TENANT_ID, id)
+  const researches = await CompanyResearchService.listByCompany(id)
 
   // Backward compat: also include customFields research data
   const customFields = (company.customFields || {}) as Record<string, unknown>

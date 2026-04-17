@@ -3,14 +3,12 @@ import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { ReceiptService } from '@/lib/services/receipt.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { parsePaginationParams } from '@/lib/utils/api-response'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'documents', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
     const pagination = parsePaginationParams(searchParams)
     const status = searchParams.get('status') || undefined
-    const result = await ReceiptService.list(TENANT_ID, { ...pagination, status })
+    const result = await ReceiptService.list({ ...pagination, status })
     return apiSuccess(result.items, result.meta)
   })
 }
@@ -19,7 +17,7 @@ export async function POST(request: NextRequest) {
   return withPermission(request, 'documents', 'create', async (auth) => {
     try {
       const body = await request.json()
-      const receipt = await ReceiptService.create(TENANT_ID, {
+      const receipt = await ReceiptService.create({
         fileName: body.fileName,
         fileUrl: body.fileUrl,
         amount: body.amount,

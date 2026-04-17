@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updateProductCategorySchema,
+import { updateProductCategorySchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { ProductCategoryService } from '@/lib/services/product-category.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string }>
 
 // GET /api/v1/product-categories/[id]
@@ -24,7 +20,7 @@ export async function GET(
 ) {
   return withPermission(request, 'product_categories', 'read', async (auth) => {
     const { id } = await params
-    const category = await ProductCategoryService.getById(TENANT_ID, id)
+    const category = await ProductCategoryService.getById(id)
 
     if (!category) {
       return apiNotFound('Kategorie nicht gefunden')
@@ -50,7 +46,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const category = await ProductCategoryService.update(TENANT_ID, id, validation.data)
+      const category = await ProductCategoryService.update(id, validation.data)
 
       if (!category) {
         return apiNotFound('Kategorie nicht gefunden')
@@ -74,7 +70,7 @@ export async function DELETE(
 
     try {
       // Check for child categories
-      const hasChildren = await ProductCategoryService.hasChildren(TENANT_ID, id)
+      const hasChildren = await ProductCategoryService.hasChildren(id)
       if (hasChildren) {
         return apiError(
           'HAS_CHILDREN',
@@ -84,7 +80,7 @@ export async function DELETE(
       }
 
       // Check for linked products
-      const hasProducts = await ProductCategoryService.hasProducts(TENANT_ID, id)
+      const hasProducts = await ProductCategoryService.hasProducts(id)
       if (hasProducts) {
         return apiError(
           'HAS_PRODUCTS',
@@ -93,7 +89,7 @@ export async function DELETE(
         )
       }
 
-      const deleted = await ProductCategoryService.delete(TENANT_ID, id)
+      const deleted = await ProductCategoryService.delete(id)
 
       if (!deleted) {
         return apiNotFound('Kategorie nicht gefunden')

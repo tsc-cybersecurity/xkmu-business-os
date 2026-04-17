@@ -1,6 +1,5 @@
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  BarChart3,
+import { BarChart3,
   Workflow,
   MessageSquare,
   Kanban,

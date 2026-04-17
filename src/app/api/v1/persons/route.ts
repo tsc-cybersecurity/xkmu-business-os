@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createPersonSchema,
+import { createPersonSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { PersonService } from '@/lib/services/person.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'persons', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
@@ -24,7 +20,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || undefined
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || undefined
 
-    const result = await PersonService.list(TENANT_ID, {
+    const result = await PersonService.list({
       ...pagination,
       companyId,
       status,
@@ -46,9 +42,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const person = await PersonService.create(
-        TENANT_ID,
-        validation.data,
+      const person = await PersonService.create(validation.data,
         auth.userId || undefined
       )
 

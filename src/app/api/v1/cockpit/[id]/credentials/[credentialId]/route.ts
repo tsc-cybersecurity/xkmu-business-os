@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  updateCockpitCredentialSchema,
+import { updateCockpitCredentialSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { CockpitService } from '@/lib/services/cockpit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 type Params = Promise<{ id: string; credentialId: string }>
 
 export async function PUT(
@@ -25,7 +21,7 @@ export async function PUT(
     const { id, credentialId } = await params
 
     try {
-      const owns = await CockpitService.verifyCredentialOwnership(TENANT_ID, id, credentialId)
+      const owns = await CockpitService.verifyCredentialOwnership(id, credentialId)
       if (!owns) {
         return apiNotFound('Credential not found')
       }
@@ -58,7 +54,7 @@ export async function DELETE(
   return withPermission(request, 'cockpit', 'delete', async (auth) => {
     const { id, credentialId } = await params
 
-    const owns = await CockpitService.verifyCredentialOwnership(TENANT_ID, id, credentialId)
+    const owns = await CockpitService.verifyCredentialOwnership(id, credentialId)
     if (!owns) {
       return apiNotFound('Credential not found')
     }

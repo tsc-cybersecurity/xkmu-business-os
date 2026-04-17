@@ -1,7 +1,6 @@
 'use client'
 
-import {
-  createContext,
+import { createContext,
   useContext,
   useEffect,
   useState,

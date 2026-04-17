@@ -2,12 +2,10 @@ import { NextRequest } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiNotFound, apiError } from '@/lib/utils/api-response'
 import { ContractClauseService } from '@/lib/services/contract-clause.service'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withPermission(request, 'documents', 'read', async (auth) => {
     const { id } = await params
-    const clause = await ContractClauseService.getById(TENANT_ID, id)
+    const clause = await ContractClauseService.getById(id)
     if (!clause) return apiNotFound('Baustein nicht gefunden')
     return apiSuccess(clause)
   })
@@ -18,7 +16,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { id } = await params
     const body = await request.json()
     try {
-      const clause = await ContractClauseService.update(TENANT_ID, id, body)
+      const clause = await ContractClauseService.update(id, body)
       if (!clause) return apiNotFound('Baustein nicht gefunden')
       return apiSuccess(clause)
     } catch (err) {
@@ -31,7 +29,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   return withPermission(request, 'documents', 'delete', async (auth) => {
     const { id } = await params
     try {
-      const deleted = await ContractClauseService.delete(TENANT_ID, id)
+      const deleted = await ContractClauseService.delete(id)
       if (!deleted) return apiNotFound('Baustein nicht gefunden')
       return apiSuccess({ deleted: true })
     } catch (err) {

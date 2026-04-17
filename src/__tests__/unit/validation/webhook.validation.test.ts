@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-  webhookEventSchema,
+import { webhookEventSchema,
   createWebhookSchema,
   updateWebhookSchema,
 } from '@/lib/utils/validation'
@@ -27,7 +26,7 @@ describe('webhookEventSchema', () => {
   })
 
   it('rejects empty string event', () => {
-    expect(webhookEventSchema.safeParse('').success).toBe(false)
+    expect(webhookEventSchema.safeParse().success).toBe(false)
   })
 })
 

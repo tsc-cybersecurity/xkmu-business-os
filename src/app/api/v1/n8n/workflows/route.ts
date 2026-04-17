@@ -3,13 +3,11 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { N8nService } from '@/lib/services/n8n.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/n8n/workflows - Workflows auflisten
 export async function GET(request: NextRequest) {
   return withPermission(request, 'n8n_workflows', 'read', async (auth) => {
     try {
-      const workflows = await N8nService.listWorkflows(TENANT_ID)
+      const workflows = await N8nService.listWorkflows()
       return apiSuccess(workflows)
     } catch (error) {
       logger.error('Failed to list n8n workflows', error, { module: 'N8nWorkflowsAPI' })
@@ -29,10 +27,10 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'Workflow-JSON mit name und nodes erforderlich', 400)
       }
 
-      const workflow = await N8nService.createWorkflow(TENANT_ID, body)
+      const workflow = await N8nService.createWorkflow(body)
 
       // Log erstellen
-      N8nService.createWorkflowLog(TENANT_ID, {
+      N8nService.createWorkflowLog({
         n8nWorkflowId: workflow.id,
         n8nWorkflowName: workflow.name,
         generatedJson: body,

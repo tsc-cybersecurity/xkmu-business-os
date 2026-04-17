@@ -1,11 +1,9 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
 } from '@/lib/utils/api-response'
-import {
-  searchOpportunitiesSchema,
+import { searchOpportunitiesSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
@@ -13,8 +11,6 @@ import { OpportunityService } from '@/lib/services/opportunity.service'
 import { SerpApiService } from '@/lib/services/serpapi.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function POST(request: NextRequest) {
   return withPermission(request, 'opportunities', 'create', async (auth) => {
     try {
@@ -64,13 +60,11 @@ export async function POST(request: NextRequest) {
           searchLocation: locationList.join(', '),
         }))
 
-        const saveResult = await OpportunityService.createMany(
-          TENANT_ID,
-          items
+        const saveResult = await OpportunityService.createMany(items
         )
 
         // Repair addresses for all opportunities (including just-inserted ones)
-        await OpportunityService.repairAddresses(TENANT_ID).catch(() => {})
+        await OpportunityService.repairAddresses().catch(() => {})
 
         return apiSuccess({
           saved: saveResult.inserted,

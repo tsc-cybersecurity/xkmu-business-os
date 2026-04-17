@@ -1,12 +1,10 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
   apiServerError,
 } from '@/lib/utils/api-response'
-import {
-  generateSocialPostSchema,
+import { generateSocialPostSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'

@@ -17,9 +17,7 @@ export interface ApiKeyWithRawKey extends ApiKey {
 }
 
 export const ApiKeyService = {
-  async create(
-    _tenantId: string,
-    data: CreateApiKeyInput,
+  async create(data: CreateApiKeyInput,
     userId?: string
   ): Promise<ApiKeyWithRawKey> {
     const { key, prefix } = generateApiKey()
@@ -43,7 +41,7 @@ export const ApiKeyService = {
     }
   },
 
-  async getById(_tenantId: string, keyId: string): Promise<ApiKey | null> {
+  async getById(keyId: string): Promise<ApiKey | null> {
     const [apiKey] = await db
       .select()
       .from(apiKeys)
@@ -53,7 +51,7 @@ export const ApiKeyService = {
     return apiKey ?? null
   },
 
-  async list(_tenantId: string): Promise<ApiKey[]> {
+  async list(): Promise<ApiKey[]> {
     const items = await db
       .select()
       .from(apiKeys)
@@ -62,7 +60,7 @@ export const ApiKeyService = {
     return items
   },
 
-  async delete(_tenantId: string, keyId: string): Promise<boolean> {
+  async delete(keyId: string): Promise<boolean> {
     const result = await db
       .delete(apiKeys)
       .where(eq(apiKeys.id, keyId))

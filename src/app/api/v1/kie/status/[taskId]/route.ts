@@ -3,8 +3,6 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { KieService } from '@/lib/services/ai/kie.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/kie/status/[taskId] - Video-Generierung Status abfragen
 export async function GET(
   request: NextRequest,
@@ -18,7 +16,7 @@ export async function GET(
         return apiError('VALIDATION_ERROR', 'taskId ist erforderlich', 400)
       }
 
-      const result = await KieService.getTaskStatus(TENANT_ID, taskId)
+      const result = await KieService.getTaskStatus(taskId)
 
       return apiSuccess(result)
     } catch (error) {

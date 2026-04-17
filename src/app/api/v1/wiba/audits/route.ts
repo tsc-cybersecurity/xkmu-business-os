@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiServerError,
   parsePaginationParams,
@@ -10,8 +9,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 const createAuditSchema = z.object({
   clientCompanyId: z.string().uuid(),
 })
@@ -21,7 +18,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const pagination = parsePaginationParams(searchParams)
     const status = searchParams.get('status') || undefined
-    const result = await WibaAuditService.list(TENANT_ID, { ...pagination, status })
+    const result = await WibaAuditService.list({ ...pagination, status })
     return apiSuccess(result.items, result.meta)
   })
 }
@@ -35,9 +32,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const session = await WibaAuditService.create(
-        TENANT_ID,
-        auth.userId!,
+      const session = await WibaAuditService.create(auth.userId!,
         validation.data
       )
       return apiSuccess(session, undefined, 201)

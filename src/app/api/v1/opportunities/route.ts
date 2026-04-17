@@ -1,14 +1,11 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
 import { OpportunityService } from '@/lib/services/opportunity.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 export async function GET(request: NextRequest) {
   return withPermission(request, 'opportunities', 'read', async (auth) => {
     try {
@@ -18,7 +15,7 @@ export async function GET(request: NextRequest) {
       const city = searchParams.get('city') || undefined
       const search = searchParams.get('search') || undefined
 
-      const result = await OpportunityService.list(TENANT_ID, {
+      const result = await OpportunityService.list({
         ...pagination,
         status,
         city,

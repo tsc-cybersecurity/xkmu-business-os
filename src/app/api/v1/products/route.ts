@@ -1,20 +1,16 @@
 import { NextRequest } from 'next/server'
-import {
-  apiSuccess,
+import { apiSuccess,
   apiValidationError,
   apiError,
   parsePaginationParams,
 } from '@/lib/utils/api-response'
-import {
-  createProductSchema,
+import { createProductSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
 import { ProductService } from '@/lib/services/product.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
-
 // GET /api/v1/products - List products with filters
 export async function GET(request: NextRequest) {
   return withPermission(request, 'products', 'read', async (auth) => {
@@ -30,7 +26,7 @@ export async function GET(request: NextRequest) {
         search: searchParams.get('search') || undefined,
       }
 
-      const result = await ProductService.list(TENANT_ID, filters)
+      const result = await ProductService.list(filters)
       return apiSuccess(result.items, result.meta)
     } catch (error) {
       logger.error('Failed to list products', error, { module: 'ProductsAPI' })
@@ -50,9 +46,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const product = await ProductService.create(
-        TENANT_ID,
-        validation.data,
+      const product = await ProductService.create(validation.data,
         auth.userId || undefined
       )
       return apiSuccess(product, undefined, 201)
