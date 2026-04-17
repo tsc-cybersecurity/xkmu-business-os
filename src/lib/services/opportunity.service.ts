@@ -5,7 +5,6 @@ import type { Opportunity, NewOpportunity } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 import { CompanyService } from './company.service'
 import { LeadService } from './lead.service'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 /** Extract street name and house number from address string */
 function parseStreetAndNumber(address: string | null): { street: string; houseNumber: string } {

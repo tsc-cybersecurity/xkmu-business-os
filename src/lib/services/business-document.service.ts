@@ -4,7 +4,6 @@ import { eq, and, count, desc } from 'drizzle-orm'
 import { unlink } from 'fs/promises'
 import path from 'path'
 import type { BusinessDocument } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 const UPLOAD_DIR = process.env.BI_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads', 'bi')
 

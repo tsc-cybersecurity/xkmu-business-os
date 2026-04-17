@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { productCategories } from '@/lib/db/schema'
 import { eq, and, count, isNull } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import type { ProductCategory, NewProductCategory } from '@/lib/db/schema'
 
 export interface CreateCategoryInput {

@@ -361,8 +361,7 @@ export default function SopsPage() {
                     onClick={() => setSelectedId(s.id)}
                     className={cn(
                       'w-full flex items-center gap-2 px-4 py-2 text-left text-xs hover:bg-accent transition-colors border-b border-border/40',
-                      selectedId === s.id && 'bg-accent font-medium',
-                    )}
+                      selectedId === s.id && 'bg-accent font-medium')}
                   >
                     <span className="shrink-0 text-muted-foreground font-mono w-14 text-[10px]">
                       {s.source_task_id || s.sourceTaskId || '—'}

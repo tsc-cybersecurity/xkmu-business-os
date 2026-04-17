@@ -15,7 +15,7 @@ export const IdeaAIService = {
     rawContent: string,
     context: AIRequestContext
   ): Promise<IdeaProcessingResult> {
-    const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'idea_processing')
+    const template = await AiPromptTemplateService.getOrDefault('', 'idea_processing')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       rawContent,

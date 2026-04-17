@@ -10,7 +10,6 @@ import {
 } from '@/lib/db/schema'
 import type { GrundschutzAsset, GrundschutzAssetRelation, GrundschutzAssetControl } from '@/lib/db/schema'
 import { eq, and, asc, desc, count, ilike, or, sql } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CreateAssetInput {
   companyId: string

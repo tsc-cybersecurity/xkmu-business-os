@@ -6,7 +6,6 @@ import { db } from '@/lib/db'
 import { timeEntries, companies, users } from '@/lib/db/schema'
 import type { TimeEntry, NewTimeEntry } from '@/lib/db/schema'
 import { eq, and, gte, lte, desc, count, sum, isNull } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const TimeEntryService = {
   async list(_tenantId: string, filters: {

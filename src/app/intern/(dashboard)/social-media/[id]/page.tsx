@@ -115,8 +115,7 @@ export default function EditSocialMediaPostPage() {
                 content: data.data.content,
                 hashtags: data.data.hashtags,
               }
-            : p,
-        );
+            : p);
         toast.success('Beitrag verbessert');
         setShowImproveDialog(false);
         setImproveInstructions('');
@@ -280,8 +279,7 @@ export default function EditSocialMediaPostPage() {
                           .map((h) => h.trim())
                           .filter(Boolean),
                       }
-                    : p,
-                )
+                    : p)
               }
               placeholder="#hashtag1, #hashtag2"
             />

@@ -4,7 +4,6 @@ import { eq, and, count, desc } from 'drizzle-orm'
 import type { Webhook, NewWebhook } from '@/lib/db/schema'
 import crypto from 'crypto'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface WebhookFilters {
   isActive?: boolean

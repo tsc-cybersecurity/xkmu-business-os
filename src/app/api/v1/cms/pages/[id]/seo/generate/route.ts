@@ -4,7 +4,6 @@ import { CmsPageService } from '@/lib/services/cms-page.service'
 import { CmsAIService } from '@/lib/services/ai/cms-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(
   request: NextRequest,

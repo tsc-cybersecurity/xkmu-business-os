@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { apiKeys } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { generateApiKey, hashApiKey } from '@/lib/auth/api-key'
 import type { InferSelectModel } from 'drizzle-orm'
 

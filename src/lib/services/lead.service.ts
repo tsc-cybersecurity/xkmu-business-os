@@ -4,7 +4,6 @@ import { eq, and, ilike, count, desc, or, getTableColumns, inArray } from 'drizz
 import type { Lead, NewLead } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 // Type for lead with related data
 export interface LeadWithRelations extends Lead {

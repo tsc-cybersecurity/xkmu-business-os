@@ -3,7 +3,6 @@ import { persons, companies } from '@/lib/db/schema'
 import { eq, and, ilike, count, arrayContains, sql, or, getTableColumns } from 'drizzle-orm'
 import type { Person, NewPerson } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 // Type for person with company info
 export interface PersonWithCompany extends Person {

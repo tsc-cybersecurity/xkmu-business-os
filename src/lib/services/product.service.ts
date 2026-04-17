@@ -3,7 +3,6 @@ import { products, productCategories } from '@/lib/db/schema'
 import { eq, and, ilike, count, arrayContains, sql, or, getTableColumns } from 'drizzle-orm'
 import type { Product, NewProduct } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface ProductWithCategory extends Product {
   category: { id: string; name: string } | null

@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { activities } from '@/lib/db/schema'
 import nodemailer from 'nodemailer'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface EmailConfig {
   provider: 'smtp' | 'gmail'

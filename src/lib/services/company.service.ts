@@ -3,7 +3,6 @@ import { companies, persons } from '@/lib/db/schema'
 import { eq, and, ilike, count, arrayContains, sql } from 'drizzle-orm'
 import type { Company, NewCompany, Person } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CompanyFilters {
   status?: string | string[]

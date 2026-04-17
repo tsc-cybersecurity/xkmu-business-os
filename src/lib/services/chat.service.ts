@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { chatConversations, chatMessages } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CreateConversationData {
   providerId?: string | null

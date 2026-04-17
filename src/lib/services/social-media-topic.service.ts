@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { socialMediaTopics } from '@/lib/db/schema'
 import { eq, and, count } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import type { SocialMediaTopic, NewSocialMediaTopic } from '@/lib/db/schema'
 
 export interface CreateTopicInput {

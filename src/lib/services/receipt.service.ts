@@ -9,7 +9,6 @@ import { eq, and, desc, count } from 'drizzle-orm'
 import { AIService } from '@/lib/services/ai/ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const ReceiptService = {
   async list(_tenantId: string, filters: { status?: string; page?: number; limit?: number } = {}) {

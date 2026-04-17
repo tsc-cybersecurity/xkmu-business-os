@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { ideas } from '@/lib/db/schema'
 import { eq, and, count, desc } from 'drizzle-orm'
 import type { Idea, NewIdea } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface IdeaFilters {
   status?: string

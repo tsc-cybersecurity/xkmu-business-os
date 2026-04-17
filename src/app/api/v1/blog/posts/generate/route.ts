@@ -6,7 +6,6 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { UnsplashService } from '@/lib/services/unsplash.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'blog', 'create', async (auth) => {

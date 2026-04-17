@@ -11,7 +11,6 @@ import {
 } from '@/lib/db/schema'
 import type { GrundschutzAuditSession, GrundschutzAnswer } from '@/lib/db/schema'
 import { eq, and, asc, desc, count, sql } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CreateAuditInput {
   title?: string

@@ -457,8 +457,7 @@ export default function ProzessePage() {
                   onClick={() => toggleProcess(process.id)}
                   className={cn(
                     'w-full flex items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-accent transition-colors',
-                    selectedProcessId === process.id && !selectedTaskId && 'bg-accent',
-                  )}
+                    selectedProcessId === process.id && !selectedTaskId && 'bg-accent')}
                 >
                   {expandedProcesses.has(process.id)
                     ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -497,8 +496,7 @@ export default function ProzessePage() {
                               onClick={() => selectTask(process.id, task.id)}
                               className={cn(
                                 'w-full flex items-center gap-2 pl-14 pr-4 py-1.5 text-left text-xs hover:bg-accent transition-colors',
-                                selectedTaskId === task.id && 'bg-accent font-medium',
-                              )}
+                                selectedTaskId === task.id && 'bg-accent font-medium')}
                             >
                               <span className="font-mono text-muted-foreground shrink-0">{task.taskKey}</span>
                               <span className="truncate">{task.title}</span>

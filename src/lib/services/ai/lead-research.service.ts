@@ -471,7 +471,7 @@ export const LeadResearchService = {
     let systemPrompt: string | undefined
 
     if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault(ctx.tenantId, 'lead_research')
+      const template = await AiPromptTemplateService.getOrDefault('', 'lead_research')
       systemPrompt = template.systemPrompt || undefined
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
@@ -593,7 +593,7 @@ export const LeadResearchService = {
     let systemPrompt: string | undefined
 
     if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault(ctx.tenantId, 'company_research')
+      const template = await AiPromptTemplateService.getOrDefault('', 'company_research')
       systemPrompt = template.systemPrompt || undefined
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
@@ -671,7 +671,7 @@ export const LeadResearchService = {
     let systemPrompt: string | undefined
 
     if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault(ctx.tenantId, 'person_research')
+      const template = await AiPromptTemplateService.getOrDefault('', 'person_research')
       systemPrompt = template.systemPrompt || undefined
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
@@ -728,7 +728,7 @@ export const LeadResearchService = {
     let systemPrompt: string | undefined
 
     if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault(ctx.tenantId, 'quick_score')
+      const template = await AiPromptTemplateService.getOrDefault('', 'quick_score')
       systemPrompt = template.systemPrompt || undefined
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {

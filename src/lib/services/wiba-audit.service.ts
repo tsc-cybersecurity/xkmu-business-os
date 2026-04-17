@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { wibaAuditSessions, wibaAnswers, wibaRequirements, companies, users } from '@/lib/db/schema'
 import { eq, and, count, desc, sql } from 'drizzle-orm'
 import type { WibaAuditSession, WibaAnswer, NewWibaAuditSession } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface WibaAuditFilters {
   status?: string
@@ -107,7 +106,6 @@ export const WibaAuditService = {
       db
         .select({
           id: wibaAuditSessions.id,
-          tenantId: wibaAuditSessions.tenantId,
           clientCompanyId: wibaAuditSessions.clientCompanyId,
           consultantId: wibaAuditSessions.consultantId,
           status: wibaAuditSessions.status,

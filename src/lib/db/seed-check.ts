@@ -231,7 +231,7 @@ async function seedAuditorRole(db: ReturnType<typeof drizzle>, tenantId: string)
   const [existing] = await db
     .select()
     .from(roles)
-    .where(and(eq(roles.tenantId, tenantId), eq(roles.name, 'auditor')))
+    .where(and(eq(roles.name, 'auditor')))
     .limit(1)
 
   if (existing) {
@@ -242,7 +242,6 @@ async function seedAuditorRole(db: ReturnType<typeof drizzle>, tenantId: string)
   const [role] = await db
     .insert(roles)
     .values({
-      tenantId,
       name: 'auditor',
       displayName: auditorConfig.displayName,
       description: auditorConfig.description,
@@ -462,7 +461,7 @@ async function seedBlogPosts(db: ReturnType<typeof drizzle>, authorId: string) {
 const AI_PROMPT_TEMPLATE_SLUGS = Object.keys(DEFAULT_TEMPLATES)
 
 async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>, tenantId: string) {
-  const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates).where(eq(aiPromptTemplates.tenantId, tenantId))
+  const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates)
   if (Number(total) > 0) {
     logger.info('AI prompt templates already exist, skipping...')
     return 0
@@ -471,9 +470,7 @@ async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>, tenantId: s
   let created = 0
   for (const slug of AI_PROMPT_TEMPLATE_SLUGS) {
     const defaults = DEFAULT_TEMPLATES[slug]
-    await db.insert(aiPromptTemplates).values({
-      tenantId,
-      slug,
+    await db.insert(aiPromptTemplates).values({ slug,
       name: defaults.name,
       description: defaults.description,
       systemPrompt: defaults.systemPrompt,
@@ -499,7 +496,7 @@ const PRODUCT_CATEGORIES = [
 ]
 
 async function seedProductCategories(db: ReturnType<typeof drizzle>, tenantId: string) {
-  const [{ total }] = await db.select({ total: count() }).from(productCategories).where(eq(productCategories.tenantId, tenantId))
+  const [{ total }] = await db.select({ total: count() }).from(productCategories)
   if (Number(total) > 0) {
     logger.info('Product categories already exist, skipping...')
     return 0
@@ -507,9 +504,7 @@ async function seedProductCategories(db: ReturnType<typeof drizzle>, tenantId: s
 
   let created = 0
   for (const cat of PRODUCT_CATEGORIES) {
-    await db.insert(productCategories).values({
-      tenantId,
-      name: cat.name,
+    await db.insert(productCategories).values({ name: cat.name,
       slug: cat.slug,
       description: cat.description,
     })
@@ -671,7 +666,7 @@ async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>) {
 // ============================================
 async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId: string, adminUserId: string) {
   // Check if companies already exist for this tenant
-  const [{ total }] = await db.select({ total: count() }).from(companies).where(eq(companies.tenantId, tenantId))
+  const [{ total }] = await db.select({ total: count() }).from(companies)
   if (Number(total) > 0) {
     logger.info('Business data already exists, skipping...')
     return
@@ -688,7 +683,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
 
   const createdCompanies = []
   for (const c of companyData) {
-    const [company] = await db.insert(companies).values({ tenantId, ...c, country: 'DE', createdBy: adminUserId }).returning()
+    const [company] = await db.insert(companies).values({ ...c, country: 'DE', createdBy: adminUserId }).returning()
     createdCompanies.push(company)
   }
   logger.info(`Created ${createdCompanies.length} example companies`)
@@ -709,7 +704,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
 
   const createdPersons = []
   for (const p of personData) {
-    const [person] = await db.insert(persons).values({ tenantId, ...p, status: 'active', createdBy: adminUserId }).returning()
+    const [person] = await db.insert(persons).values({ ...p, status: 'active', createdBy: adminUserId }).returning()
     createdPersons.push(person)
   }
   logger.info(`Created ${createdPersons.length} example persons`)
@@ -727,14 +722,14 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
 
   const createdLeads = []
   for (const l of leadData) {
-    const [lead] = await db.insert(leads).values({ tenantId, ...l, assignedTo: adminUserId }).returning()
+    const [lead] = await db.insert(leads).values({ ...l, assignedTo: adminUserId }).returning()
     createdLeads.push(lead)
   }
   logger.info(`Created ${createdLeads.length} example leads`)
 
   // --- 4. Products ---
   // Look up existing categories
-  const existingCategories = await db.select().from(productCategories).where(eq(productCategories.tenantId, tenantId))
+  const existingCategories = await db.select().from(productCategories)
   const catMap = Object.fromEntries(existingCategories.map(c => [c.slug, c.id]))
 
   const productData = [
@@ -747,7 +742,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
   ]
 
   for (const p of productData) {
-    await db.insert(products).values({ tenantId, ...p, status: 'active', vatRate: '19.00', createdBy: adminUserId })
+    await db.insert(products).values({ ...p, status: 'active', vatRate: '19.00', createdBy: adminUserId })
   }
   logger.info(`Created ${productData.length} example products`)
 
@@ -761,7 +756,7 @@ async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, tenantId:
   ]
 
   for (const a of activityData) {
-    await db.insert(activities).values({ tenantId, ...a, userId: adminUserId })
+    await db.insert(activities).values({ ...a, userId: adminUserId })
   }
   logger.info(`Created ${activityData.length} example activities`)
 }
@@ -793,7 +788,7 @@ async function seedCheck() {
     const [adminUser] = await db
       .select()
       .from(users)
-      .where(and(eq(users.tenantId, tenantId), eq(users.email, SEED_DATA.user.email)))
+      .where(and(eq(users.email, SEED_DATA.user.email)))
       .limit(1)
     adminUserId = adminUser?.id ?? null
   } else {
@@ -813,7 +808,6 @@ async function seedCheck() {
     const [user] = await db
       .insert(users)
       .values({
-        tenantId: tenant.id,
         email: SEED_DATA.user.email,
         passwordHash,
         firstName: SEED_DATA.user.firstName,

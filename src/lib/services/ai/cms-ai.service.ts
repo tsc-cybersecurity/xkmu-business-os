@@ -14,7 +14,7 @@ export const CmsAIService = {
     pageSlug: string,
     context: AIRequestContext
   ): Promise<SEOResult> {
-    const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'cms_seo_generation')
+    const template = await AiPromptTemplateService.getOrDefault('', 'cms_seo_generation')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       pageSlug,

@@ -5,7 +5,6 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { MarketingAgentService } from '@/lib/services/ai/marketing-agent.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 const analyzeSchema = z.object({
   url: z.string().min(1, 'URL ist erforderlich').max(2000),

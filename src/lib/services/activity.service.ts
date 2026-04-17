@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { activities, leads, companies, persons, users } from '@/lib/db/schema'
 import { eq, and, count, desc, getTableColumns } from 'drizzle-orm'
 import type { Activity, NewActivity } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface ActivityFilters {
   leadId?: string

@@ -3,7 +3,6 @@ import { roles, rolePermissions } from '@/lib/db/schema'
 import { eq, and, count } from 'drizzle-orm'
 import type { Role, NewRole, RolePermission } from '@/lib/db/schema'
 import { DEFAULT_ROLE_PERMISSIONS, MODULES, type Module, type Action } from '@/lib/types/permissions'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface RoleWithPermissions extends Role {
   permissions: RolePermission[]

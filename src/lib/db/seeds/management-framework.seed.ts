@@ -14,7 +14,7 @@ export async function seedManagementFramework(_tenantId: string) {
 
   // Grab first user for owner references
   const [firstUser] = await db.select().from(users)
-    .where(eq(users.tenantId, TENANT_ID)).limit(1)
+    .limit(1)
   const ownerId = firstUser?.id ?? null
 
   // ── VTO ──────────────────────────────────────────────────────────────

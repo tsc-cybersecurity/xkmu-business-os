@@ -38,7 +38,7 @@ async function seedAuditorRole() {
     const [existing] = await db
       .select()
       .from(roles)
-      .where(and(eq(roles.tenantId, tenant.id), eq(roles.name, 'auditor')))
+      .where(and(eq(roles.name, 'auditor')))
       .limit(1)
 
     if (existing) {
@@ -50,7 +50,6 @@ async function seedAuditorRole() {
     const [role] = await db
       .insert(roles)
       .values({
-        tenantId: tenant.id,
         name: 'auditor',
         displayName: auditorConfig.displayName,
         description: auditorConfig.description,

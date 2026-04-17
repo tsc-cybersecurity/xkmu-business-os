@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { firecrawlResearches } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import type { FirecrawlResearch } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const FirecrawlResearchService = {
   async create(

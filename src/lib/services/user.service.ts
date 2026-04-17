@@ -191,7 +191,6 @@ export const UserService = {
       db
         .select({
           id: users.id,
-          tenantId: users.tenantId,
           email: users.email,
           firstName: users.firstName,
           lastName: users.lastName,

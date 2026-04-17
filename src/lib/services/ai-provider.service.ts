@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { aiProviders, aiLogs } from '@/lib/db/schema'
 import { eq, and, desc, asc, sql, count, like, or, ne } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 // ============================================
 // AI Provider Service - DB-basierte Verwaltung
@@ -32,7 +31,6 @@ export interface AiLogFilters {
 }
 
 export interface AiLogData {
-  tenantId: string
   providerId?: string | null
   userId?: string | null
   providerType: string
@@ -175,7 +173,6 @@ export const AiProviderService = {
     const [log] = await db
       .insert(aiLogs)
       .values({
-        tenantId: data.tenantId,
         providerId: data.providerId || null,
         userId: data.userId || null,
         providerType: data.providerType,

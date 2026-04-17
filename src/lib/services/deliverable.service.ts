@@ -1,6 +1,5 @@
 import { db } from '@/lib/db'
 import { deliverables, deliverableModules, sopDocuments } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, sql, isNull } from 'drizzle-orm'
 
 export const DeliverableService = {
@@ -14,7 +13,6 @@ export const DeliverableService = {
     if (filters?.status) conditions.push(eq(deliverables.status, filters.status))
     const rows = await db.select({
       id: deliverables.id,
-      tenantId: deliverables.tenantId,
       moduleId: deliverables.moduleId,
       name: deliverables.name,
       description: deliverables.description,

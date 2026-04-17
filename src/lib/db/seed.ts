@@ -62,7 +62,6 @@ async function seed() {
   const [user] = await db
     .insert(users)
     .values({
-      tenantId: tenant.id,
       email: SEED_DATA.user.email,
       passwordHash,
       firstName: SEED_DATA.user.firstName,

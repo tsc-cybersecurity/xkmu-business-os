@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { marketingTemplates } from '@/lib/db/schema'
 import { eq, and, count, desc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import type { MarketingTemplate, NewMarketingTemplate } from '@/lib/db/schema'
 
 export interface TemplateFilters {

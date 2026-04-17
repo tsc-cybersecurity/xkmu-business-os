@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { marketingCampaigns } from '@/lib/db/schema'
 import { eq, and, count, desc, ilike } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import type { MarketingCampaign, NewMarketingCampaign } from '@/lib/db/schema'
 
 export interface CampaignFilters {

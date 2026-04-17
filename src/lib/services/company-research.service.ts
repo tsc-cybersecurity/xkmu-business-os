@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { companyResearches } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
 import type { CompanyResearch } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CreateCompanyResearchInput {
   companyId: string

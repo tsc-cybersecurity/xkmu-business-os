@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { dinAuditSessions, dinAnswers, dinRequirements, companies, users } from '@/lib/db/schema'
 import { eq, and, count, desc, sql } from 'drizzle-orm'
 import type { DinAuditSession, DinAnswer, NewDinAuditSession } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface DinAuditFilters {
   status?: string
@@ -91,7 +90,6 @@ export const DinAuditService = {
       db
         .select({
           id: dinAuditSessions.id,
-          tenantId: dinAuditSessions.tenantId,
           clientCompanyId: dinAuditSessions.clientCompanyId,
           consultantId: dinAuditSessions.consultantId,
           reviewerId: dinAuditSessions.reviewerId,

@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { contractClauses } from '@/lib/db/schema'
 import { eq, and, or, isNull, asc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const ContractClauseService = {
   async list(_tenantId: string, category?: string) {

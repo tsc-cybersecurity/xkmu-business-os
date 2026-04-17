@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { sopDocuments, deliverables } from '@/lib/db/schema'
 import { eq, and, isNull } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 const MOD = 'SopSeed'
 
@@ -1467,7 +1466,7 @@ export async function seedSopCatalog(_tenantId: string) {
   const allDeliverables = await db
     .select({ id: deliverables.id, name: deliverables.name })
     .from(deliverables)
-    .where(eq(deliverables.tenantId, TENANT_ID))
+    
 
   const deliverableByName = new Map(allDeliverables.map(d => [d.name, d.id]))
   logger.info(`${allDeliverables.length} Deliverables geladen fuer Lookup`, { module: MOD })
@@ -1483,12 +1482,8 @@ export async function seedSopCatalog(_tenantId: string) {
         .select({ id: sopDocuments.id })
         .from(sopDocuments)
         .where(
-          and(
-            eq(sopDocuments.tenantId, TENANT_ID),
-            eq(sopDocuments.sourceTaskId, sop.source_task_id),
-            isNull(sopDocuments.deletedAt),
-          ),
-        )
+          and(eq(sopDocuments.sourceTaskId, sop.source_task_id),
+            isNull(sopDocuments.deletedAt)))
       if (existing) {
         skipped++
         continue
@@ -1498,12 +1493,8 @@ export async function seedSopCatalog(_tenantId: string) {
         .select({ id: sopDocuments.id })
         .from(sopDocuments)
         .where(
-          and(
-            eq(sopDocuments.tenantId, TENANT_ID),
-            eq(sopDocuments.title, sop.title),
-            isNull(sopDocuments.deletedAt),
-          ),
-        )
+          and(eq(sopDocuments.title, sop.title),
+            isNull(sopDocuments.deletedAt)))
       if (existing) {
         skipped++
         continue
@@ -1528,7 +1519,6 @@ export async function seedSopCatalog(_tenantId: string) {
 
     // 4. SOP direkt einfuegen (db.insert, NICHT SopService.create)
     await db.insert(sopDocuments).values({
-      tenantId: TENANT_ID,
       title: sop.title,
       category: sop.category,
       status: sop.status ?? 'draft',
@@ -1550,6 +1540,5 @@ export async function seedSopCatalog(_tenantId: string) {
 
   logger.info(
     `SOP Catalog seeded: ${created} erstellt, ${skipped} bereits vorhanden, ${warnCount} Deliverable-Lookup-Warnungen`,
-    { module: MOD },
-  )
+    { module: MOD })
 }

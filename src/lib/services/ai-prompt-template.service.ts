@@ -3,7 +3,6 @@ import { aiPromptTemplates } from '@/lib/db/schema'
 import { eq, and, asc } from 'drizzle-orm'
 import { TEMPLATE_PLACEHOLDERS, DEFAULT_TEMPLATES } from '@/lib/services/ai-prompt-template.defaults'
 import { applyPlaceholders } from '@/lib/services/ai-prompt-template.renderer'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 // Re-export for backward compatibility
 export { TEMPLATE_PLACEHOLDERS, DEFAULT_TEMPLATES } from '@/lib/services/ai-prompt-template.defaults'

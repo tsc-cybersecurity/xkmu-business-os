@@ -3,7 +3,6 @@ import { cockpitSystems, cockpitCredentials } from '@/lib/db/schema'
 import { eq, and, ilike, count, sql } from 'drizzle-orm'
 import type { CockpitSystem, NewCockpitSystem, CockpitCredential } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface CockpitSystemFilters {
   category?: string
@@ -157,7 +156,6 @@ export const CockpitService = {
       db
         .select({
           id: cockpitSystems.id,
-          tenantId: cockpitSystems.tenantId,
           name: cockpitSystems.name,
           hostname: cockpitSystems.hostname,
           url: cockpitSystems.url,

@@ -918,8 +918,7 @@ export default function IrPlaybookPage() {
                 onClick={() => setSelectedScenarioId(s.id)}
                 className={cn(
                   'w-full flex items-center gap-2 px-4 py-2 text-left text-xs hover:bg-accent transition-colors border-b border-border/40',
-                  selectedScenarioId === s.id && 'bg-accent font-medium',
-                )}
+                  selectedScenarioId === s.id && 'bg-accent font-medium')}
               >
                 <span className="shrink-0 text-muted-foreground font-mono w-8">{s.id}</span>
                 {s.emoji && <span className="shrink-0">{s.emoji}</span>}

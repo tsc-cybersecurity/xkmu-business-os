@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { AIService } from '@/lib/services/ai/ai.service'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'documents', 'create', async (auth) => {

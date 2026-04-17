@@ -1,6 +1,5 @@
 import { db } from '@/lib/db'
 import { executionLogs } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, count, avg } from 'drizzle-orm'
 
 export const ExecutionLogService = {

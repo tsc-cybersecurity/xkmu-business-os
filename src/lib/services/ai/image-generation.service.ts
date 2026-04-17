@@ -282,7 +282,6 @@ export const ImageGenerationService = {
     const [image] = await db
       .insert(generatedImages)
       .values({
-        tenantId,
         prompt: params.prompt,
         revisedPrompt,
         provider: params.provider,

@@ -7,7 +7,6 @@ import { db } from '@/lib/db'
 import { emailTemplates } from '@/lib/db/schema'
 import type { EmailTemplate, NewEmailTemplate } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const EmailTemplateService = {
   async list(_tenantId: string): Promise<EmailTemplate[]> {

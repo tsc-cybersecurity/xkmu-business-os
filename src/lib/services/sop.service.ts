@@ -1,6 +1,5 @@
 import { db } from '@/lib/db'
 import { sopDocuments, sopSteps, sopVersions, deliverables } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, asc, ilike, or, isNull } from 'drizzle-orm'
 
 export const SopService = {

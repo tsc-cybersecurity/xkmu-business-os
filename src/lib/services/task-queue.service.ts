@@ -6,7 +6,6 @@
 import { db } from '@/lib/db'
 import { taskQueue } from '@/lib/db/schema'
 import type { TaskQueueItem, NewTaskQueueItem } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, ne, and, asc, desc, count, lte, inArray } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
@@ -249,7 +248,6 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
       // Template-basierter Versand wenn templateSlug vorhanden
       if (payload.templateSlug) {
         const result = await EmailService.sendWithTemplate(
-          item.tenantId,
           String(payload.templateSlug),
           String(payload.to || ''),
           (payload.placeholders || {}) as Record<string, string>,
@@ -264,7 +262,7 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
         return { sent: true, to: payload.to, template: payload.templateSlug, messageId: result.messageId }
       }
       // Direkter Versand
-      const result = await EmailService.send(item.tenantId, {
+      const result = await EmailService.send('', {
         to: String(payload.to || ''),
         subject: String(payload.subject || ''),
         body: String(payload.body || ''),
@@ -276,7 +274,7 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
 
     case 'dunning': {
       const { handleDunning } = await import('@/lib/services/task-queue-handlers/dunning.handler')
-      return handleDunning(item.tenantId, payload as unknown as Parameters<typeof handleDunning>[1])
+      return handleDunning('', payload as unknown as Parameters<typeof handleDunning>[1])
     }
 
     case 'follow_up':
@@ -285,7 +283,6 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
       if (payload.templateSlug && payload.to) {
         const { EmailService } = await import('@/lib/services/email.service')
         const result = await EmailService.sendWithTemplate(
-          item.tenantId,
           String(payload.templateSlug),
           String(payload.to),
           (payload.placeholders || {}) as Record<string, string>,

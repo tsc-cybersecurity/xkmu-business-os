@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { socialMediaPosts, socialMediaTopics } from '@/lib/db/schema'
 import { eq, and, count, desc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import type { SocialMediaPost, NewSocialMediaPost } from '@/lib/db/schema'
 
 export interface PostFilters {
@@ -41,7 +40,6 @@ export const SocialMediaPostService = {
     const [items, [{ total }]] = await Promise.all([
       db.select({
         id: socialMediaPosts.id,
-        tenantId: socialMediaPosts.tenantId,
         topicId: socialMediaPosts.topicId,
         platform: socialMediaPosts.platform,
         title: socialMediaPosts.title,

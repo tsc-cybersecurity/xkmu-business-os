@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { n8nConnections, n8nWorkflowLogs } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 interface N8nWorkflow {
   id: string

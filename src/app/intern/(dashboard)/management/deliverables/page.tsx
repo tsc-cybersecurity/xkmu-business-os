@@ -284,8 +284,7 @@ export default function DeliverablesPage() {
                     onClick={() => setSelectedId(d.id)}
                     className={cn(
                       'w-full flex items-center gap-2 px-4 py-2 text-left text-xs hover:bg-accent transition-colors border-b border-border/40',
-                      selectedId === d.id && 'bg-accent font-medium',
-                    )}
+                      selectedId === d.id && 'bg-accent font-medium')}
                   >
                     <span className="truncate flex-1">{d.name}</span>
                     <span className="shrink-0 flex items-center gap-1">

@@ -4,7 +4,6 @@ import { eq, and, ilike, count, sql, or, desc, getTableColumns } from 'drizzle-o
 import type { Document, NewDocument, DocumentItem } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 import { DocumentCalculationService, emptyToNull } from './document-calculation.service'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 // Re-export types so existing imports continue to work
 export type {

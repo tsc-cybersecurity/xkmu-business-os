@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { businessProfiles } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import type { BusinessProfile } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export interface BusinessAnalysisResult {
   companyName?: string

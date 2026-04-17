@@ -1,7 +1,6 @@
 import { db } from '@/lib/db'
 import { marketingTasks } from '@/lib/db/schema'
 import { eq, and, count, desc } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import type { MarketingTask, NewMarketingTask } from '@/lib/db/schema'
 
 export interface TaskFilters {

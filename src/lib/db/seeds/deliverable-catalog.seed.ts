@@ -685,11 +685,7 @@ export async function seedDeliverableCatalog(_tenantId: string) {
       .select()
       .from(deliverableModules)
       .where(
-        and(
-          eq(deliverableModules.tenantId, TENANT_ID),
-          eq(deliverableModules.code, m.code),
-        ),
-      )
+        and(eq(deliverableModules.code, m.code)))
 
     let moduleId: string
     if (existing) {
@@ -699,7 +695,6 @@ export async function seedDeliverableCatalog(_tenantId: string) {
       const [created] = await db
         .insert(deliverableModules)
         .values({
-          tenantId: TENANT_ID,
           code: m.code,
           name: m.name,
           category: m.categoryCode, // 'A' | 'B' | 'C' | 'D'
@@ -740,6 +735,5 @@ export async function seedDeliverableCatalog(_tenantId: string) {
 
   logger.info(
     `Deliverable Catalog seeded: ${moduleCount} Module, ${deliverableCount} Deliverables`,
-    { module: MOD },
-  )
+    { module: MOD })
 }

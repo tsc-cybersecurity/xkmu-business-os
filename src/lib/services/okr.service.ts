@@ -1,6 +1,5 @@
 import { db } from '@/lib/db'
 import { okrCycles, okrObjectives, okrKeyResults, okrCheckins } from '@/lib/db/schema'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { eq, and, desc, asc } from 'drizzle-orm'
 
 export const OkrService = {

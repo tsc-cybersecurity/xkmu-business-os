@@ -127,7 +127,7 @@ class AIServiceClass {
     const startTime = Date.now()
 
     // Provider aus DB laden
-    const allProviders = await AiProviderService.getActiveProviders(context.tenantId)
+    const allProviders = await AiProviderService.getActiveProviders('')
 
     if (allProviders.length === 0) {
       // Fallback auf statische Provider

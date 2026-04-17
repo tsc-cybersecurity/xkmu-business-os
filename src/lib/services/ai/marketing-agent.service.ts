@@ -129,7 +129,7 @@ async function stepResearch(
   context: AIRequestContext,
   language: string
 ): Promise<MarketingResearch> {
-  const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'marketing_agent_research')
+  const template = await AiPromptTemplateService.getOrDefault('', 'marketing_agent_research')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
     template.userPrompt,
@@ -163,7 +163,7 @@ async function stepSeoAnalysis(
   context: AIRequestContext,
   language: string
 ): Promise<SeoAnalysis> {
-  const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'marketing_agent_seo')
+  const template = await AiPromptTemplateService.getOrDefault('', 'marketing_agent_seo')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
     template.userPrompt,
@@ -208,7 +208,7 @@ async function stepContentGeneration(
   tone: string,
   language: string
 ): Promise<SocialMediaDraft[]> {
-  const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'marketing_agent_content')
+  const template = await AiPromptTemplateService.getOrDefault('', 'marketing_agent_content')
 
   const userPrompt = AiPromptTemplateService.applyPlaceholders(
     template.userPrompt,
@@ -266,7 +266,7 @@ export const MarketingAgentService = {
     logger.info(`Marketing Agent: Starting analysis for ${input.url}`, { module: 'MarketingAgent' })
 
     // Step 1: Scrape
-    const scrapeResult = await stepScrape(input.url, context.tenantId)
+    const scrapeResult = await stepScrape(input.url, '')
     if (!scrapeResult.success || !scrapeResult.combinedText) {
       throw new Error('Website konnte nicht gescraped werden. Bitte pruefen Sie die URL.')
     }

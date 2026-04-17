@@ -150,7 +150,7 @@ Antworte NUR als JSON:
     content: string,
     context: AIRequestContext
   ): Promise<{ seoTitle: string; seoDescription: string; seoKeywords: string }> {
-    const template = await AiPromptTemplateService.getOrDefault(context.tenantId, 'blog_seo_generation')
+    const template = await AiPromptTemplateService.getOrDefault('', 'blog_seo_generation')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       title,

@@ -3,7 +3,6 @@ import { documents, documentItems } from '@/lib/db/schema'
 import { eq, and, sql, inArray } from 'drizzle-orm'
 import type { Document, DocumentItem, NewDocumentItem } from '@/lib/db/schema'
 import type { CreateDocumentItemInput, UpdateDocumentItemInput } from './document.types'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export function emptyToNull<T>(value: T): T | null {
   if (value === '' || value === undefined) return null

@@ -13,7 +13,6 @@ import {
 import { SocialMediaAIService } from '@/lib/services/ai/social-media-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'social_media', 'create', async (auth) => {

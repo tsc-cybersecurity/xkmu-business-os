@@ -185,7 +185,6 @@ export const CronService = {
       if (tenant) {
         try {
           await db.insert(taskQueue).values({
-            tenantId: tenant.id,
             type: 'cron',
             status: 'completed',
             priority: 3,
@@ -220,7 +219,6 @@ export const CronService = {
       if (tenant) {
         try {
           await db.insert(taskQueue).values({
-            tenantId: tenant.id,
             type: 'cron',
             status: 'failed',
             priority: 3,

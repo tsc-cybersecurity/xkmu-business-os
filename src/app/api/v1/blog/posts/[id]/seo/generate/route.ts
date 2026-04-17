@@ -4,7 +4,6 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { BlogAIService } from '@/lib/services/ai/blog-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(
   request: NextRequest,
