@@ -60,7 +60,6 @@ export const LeadService = {
     const [lead] = await db
       .insert(leads)
       .values({
-        tenantId: TENANT_ID,
         companyId: emptyToNull(data.companyId),
         personId: emptyToNull(data.personId),
         title: emptyToNull(data.title),

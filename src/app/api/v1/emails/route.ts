@@ -47,8 +47,7 @@ export async function GET(request: NextRequest) {
             ilike(emails.subject, `%${search}%`),
             ilike(emails.fromAddress, `%${search}%`),
             ilike(emails.fromName, `%${search}%`),
-            ilike(emails.snippet, `%${search}%`),
-          )!
+            ilike(emails.snippet, `%${search}%`))!
         )
       }
 

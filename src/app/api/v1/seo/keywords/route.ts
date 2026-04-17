@@ -43,8 +43,7 @@ export async function POST(request: NextRequest) {
 
       const response = await AIService.completeWithContext(userPrompt,
         { tenantId: TENANT_ID, feature: 'seo_keywords' },
-        { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt },
-      )
+        { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt })
 
       const jsonMatch = response.text.match(/\{[\s\S]*\}/)
       let analysis = null

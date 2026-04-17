@@ -6,7 +6,7 @@ import { TENANT_ID } from '@/lib/constants/tenant'
 export const ContractClauseService = {
   async list(_tenantId: string, category?: string) {
     const conditions = [
-      or(eq(contractClauses.tenantId, TENANT_ID), isNull(contractClauses.tenantId)),
+      or(, isNull(contractClauses.tenantId)),
     ]
     if (category) conditions.push(eq(contractClauses.category, category))
 
@@ -24,7 +24,7 @@ export const ContractClauseService = {
       .where(
         and(
           eq(contractClauses.id, id),
-          or(eq(contractClauses.tenantId, TENANT_ID), isNull(contractClauses.tenantId))
+          or(, isNull(contractClauses.tenantId))
         )
       )
       .limit(1)
@@ -40,7 +40,6 @@ export const ContractClauseService = {
     const [row] = await db
       .insert(contractClauses)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         category: data.category,
         bodyHtml: data.bodyHtml || null,
@@ -64,7 +63,7 @@ export const ContractClauseService = {
     const [row] = await db
       .update(contractClauses)
       .set({ ...data, updatedAt: new Date() })
-      .where(and(eq(contractClauses.id, id), eq(contractClauses.tenantId, TENANT_ID)))
+      .where(and(eq(contractClauses.id, id)))
       .returning()
     return row ?? null
   },
@@ -76,7 +75,7 @@ export const ContractClauseService = {
 
     const result = await db
       .delete(contractClauses)
-      .where(and(eq(contractClauses.id, id), eq(contractClauses.tenantId, TENANT_ID)))
+      .where(and(eq(contractClauses.id, id)))
       .returning({ id: contractClauses.id })
     return result.length > 0
   },

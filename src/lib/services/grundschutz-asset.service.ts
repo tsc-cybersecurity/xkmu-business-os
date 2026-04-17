@@ -70,9 +70,7 @@ export const GrundschutzAssetService = {
       conditions.push(
         or(
           ilike(grundschutzAssets.name, `%${filters.search}%`),
-          ilike(grundschutzAssets.description, `%${filters.search}%`),
-        )!,
-      )
+          ilike(grundschutzAssets.description, `%${filters.search}%`))!)
     }
 
     const assets = await db.select({
@@ -125,9 +123,7 @@ export const GrundschutzAssetService = {
       .where(
         or(
           eq(grundschutzAssetRelationsTable.sourceAssetId, assetId),
-          eq(grundschutzAssetRelationsTable.targetAssetId, assetId),
-        ),
-      )
+          eq(grundschutzAssetRelationsTable.targetAssetId, assetId)))
 
     // Zugehoerige Asset-IDs sammeln
     const relatedIds = new Set<string>()
@@ -146,8 +142,7 @@ export const GrundschutzAssetService = {
         })
           .from(grundschutzAssets)
           .where(
-            or(...Array.from(relatedIds).map(id => eq(grundschutzAssets.id, id)))!,
-          )
+            or(...Array.from(relatedIds).map(id => eq(grundschutzAssets.id, id)))!)
       : []
 
     const assetMap = new Map(relatedAssets.map(a => [a.id, a]))
@@ -186,7 +181,6 @@ export const GrundschutzAssetService = {
   /** Asset erstellen */
   async create(_tenantId: string, data: CreateAssetInput): Promise<GrundschutzAsset> {
     const [asset] = await db.insert(grundschutzAssets).values({
-      tenantId: TENANT_ID,
       companyId: data.companyId,
       name: data.name,
       description: data.description || null,
@@ -244,7 +238,6 @@ export const GrundschutzAssetService = {
   /** Relation zwischen Assets erstellen */
   async createRelation(_tenantId: string, data: CreateAssetRelationInput): Promise<GrundschutzAssetRelation> {
     const [relation] = await db.insert(grundschutzAssetRelationsTable).values({
-      tenantId: TENANT_ID,
       sourceAssetId: data.sourceAssetId,
       targetAssetId: data.targetAssetId,
       relationType: data.relationType,
@@ -268,8 +261,7 @@ export const GrundschutzAssetService = {
     const [existing] = await db.select().from(grundschutzAssetControls)
       .where(and(
         eq(grundschutzAssetControls.assetId, assetId),
-        eq(grundschutzAssetControls.controlId, data.controlId),
-      )).limit(1)
+        eq(grundschutzAssetControls.controlId, data.controlId))).limit(1)
 
     if (existing) {
       const [updated] = await db.update(grundschutzAssetControls).set({
@@ -283,7 +275,6 @@ export const GrundschutzAssetService = {
     }
 
     const [mapping] = await db.insert(grundschutzAssetControls).values({
-      tenantId: TENANT_ID,
       assetId,
       controlId: data.controlId,
       applicability: data.applicability || 'applicable',

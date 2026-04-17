@@ -56,7 +56,7 @@ const ACTIONS: Record<string, ActionDefinition> = {
 
       if (!companyName) {
         const [existing] = await db.select({ id: companies.id }).from(companies)
-          .where(and(eq(companies.tenantId, tenantId), eq(companies.name, fallback))).limit(1)
+          .where(and(eq(companies.name, fallback))).limit(1)
         if (existing) return { success: true, data: { companyId: existing.id, created: false } }
         const [created] = await db.insert(companies)
           .values({ tenantId, name: fallback, status: 'active', country: 'DE' })
@@ -65,7 +65,7 @@ const ACTIONS: Record<string, ActionDefinition> = {
       }
 
       const [existing] = await db.select({ id: companies.id }).from(companies)
-        .where(and(eq(companies.tenantId, tenantId), ilike(companies.name, companyName))).limit(1)
+        .where(and(ilike(companies.name, companyName))).limit(1)
       if (existing) return { success: true, data: { companyId: existing.id, created: false } }
 
       const [created] = await db.insert(companies)
@@ -89,7 +89,7 @@ const ACTIONS: Record<string, ActionDefinition> = {
       if (!email) return { success: false, error: 'Keine E-Mail angegeben' }
 
       const [existing] = await db.select({ id: persons.id }).from(persons)
-        .where(and(eq(persons.tenantId, tenantId), ilike(persons.email, email))).limit(1)
+        .where(and(ilike(persons.email, email))).limit(1)
 
       if (existing) {
         if (companyId) {

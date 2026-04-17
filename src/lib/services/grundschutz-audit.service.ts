@@ -48,7 +48,6 @@ export const GrundschutzAuditService = {
   /** Audit-Session erstellen */
   async create(_tenantId: string, consultantId: string, data: CreateAuditInput): Promise<GrundschutzAuditSession> {
     const [session] = await db.insert(grundschutzAuditSessions).values({
-      tenantId: TENANT_ID,
       consultantId,
       clientCompanyId: data.clientCompanyId,
       title: data.title || 'Grundschutz++ Audit',
@@ -89,7 +88,6 @@ export const GrundschutzAuditService = {
     // Batch-Insert der Answers
     if (filteredControls.length > 0) {
       const answerRows = filteredControls.map(c => ({
-        tenantId: TENANT_ID,
         sessionId: session.id,
         controlId: c.id,
         status: 'offen' as const,
@@ -227,8 +225,7 @@ export const GrundschutzAuditService = {
     const [existing] = await db.select().from(grundschutzAnswers)
       .where(and(
         eq(grundschutzAnswers.sessionId, sessionId),
-        eq(grundschutzAnswers.controlId, data.controlId),
-      )).limit(1)
+        eq(grundschutzAnswers.controlId, data.controlId))).limit(1)
 
     if (existing) {
       const [updated] = await db.update(grundschutzAnswers).set({
@@ -241,7 +238,6 @@ export const GrundschutzAuditService = {
 
     // Neu anlegen
     const [answer] = await db.insert(grundschutzAnswers).values({
-      tenantId: TENANT_ID,
       sessionId,
       controlId: data.controlId,
       status: data.status,

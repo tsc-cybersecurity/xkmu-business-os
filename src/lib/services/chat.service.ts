@@ -15,7 +15,6 @@ export const ChatService = {
     const [conversation] = await db
       .insert(chatConversations)
       .values({
-        tenantId: TENANT_ID,
         userId,
         title: data?.title || 'Neuer Chat',
         providerId: data?.providerId || null,

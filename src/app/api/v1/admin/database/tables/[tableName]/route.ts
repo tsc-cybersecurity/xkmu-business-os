@@ -5,7 +5,6 @@ import { db } from '@/lib/db'
 import { isValidTable, OWNER_ONLY_TABLES } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Row = Record<string, unknown>
 

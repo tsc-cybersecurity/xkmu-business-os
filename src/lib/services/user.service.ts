@@ -97,7 +97,7 @@ export const UserService = {
     const [user] = await db
       .select()
       .from(users)
-      .where(and(eq(users.tenantId, tenantId), eq(users.id, userId)))
+      .where(and(eq(users.id, userId)))
       .limit(1)
 
     return user ?? null
@@ -108,7 +108,7 @@ export const UserService = {
       .select()
       .from(users)
       .where(
-        and(eq(users.tenantId, tenantId), eq(users.email, email.toLowerCase()))
+        and(eq(users.email, email.toLowerCase()))
       )
       .limit(1)
 
@@ -132,7 +132,7 @@ export const UserService = {
     const [user] = await db
       .update(users)
       .set(updateData)
-      .where(and(eq(users.tenantId, tenantId), eq(users.id, userId)))
+      .where(and(eq(users.id, userId)))
       .returning()
 
     return user ?? null
@@ -151,7 +151,7 @@ export const UserService = {
         passwordHash,
         updatedAt: new Date(),
       })
-      .where(and(eq(users.tenantId, tenantId), eq(users.id, userId)))
+      .where(and(eq(users.id, userId)))
       .returning({ id: users.id })
 
     return result.length > 0
@@ -160,7 +160,7 @@ export const UserService = {
   async delete(tenantId: string, userId: string): Promise<boolean> {
     const result = await db
       .delete(users)
-      .where(and(eq(users.tenantId, tenantId), eq(users.id, userId)))
+      .where(and(eq(users.id, userId)))
       .returning({ id: users.id })
 
     return result.length > 0
@@ -173,7 +173,7 @@ export const UserService = {
     const { role, status, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    let baseWhere = eq(users.tenantId, tenantId)
+    let baseWhere =
     const conditions = [baseWhere]
 
     if (role) {
@@ -240,7 +240,7 @@ export const UserService = {
       .select({ id: users.id })
       .from(users)
       .where(
-        and(eq(users.tenantId, tenantId), eq(users.email, email.toLowerCase()))
+        and(eq(users.email, email.toLowerCase()))
       )
       .limit(1)
 

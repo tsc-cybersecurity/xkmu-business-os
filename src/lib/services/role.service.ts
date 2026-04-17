@@ -49,7 +49,6 @@ export const RoleService = {
       const [role] = await db
         .insert(roles)
         .values({
-          tenantId: TENANT_ID,
           name: roleName,
           displayName: config.displayName,
           description: config.description,
@@ -132,7 +131,6 @@ export const RoleService = {
     const [role] = await db
       .insert(roles)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         displayName: data.displayName,
         description: data.description,

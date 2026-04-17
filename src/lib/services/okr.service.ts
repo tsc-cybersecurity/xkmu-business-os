@@ -19,7 +19,6 @@ export const OkrService = {
 
   async createCycle(_tenantId: string, data: Record<string, unknown>) {
     const [cycle] = await db.insert(okrCycles).values({
-      tenantId: TENANT_ID,
       name: data.name as string,
       type: (data.type as string) || 'quarterly',
       startDate: new Date(data.startDate as string),
@@ -77,7 +76,6 @@ export const OkrService = {
 
   async createObjective(_tenantId: string, data: Record<string, unknown>) {
     const [obj] = await db.insert(okrObjectives).values({
-      tenantId: TENANT_ID,
       cycleId: data.cycleId as string,
       title: data.title as string,
       description: (data.description as string) || null,

@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
       const analysisResult = await BusinessIntelligenceAIService.analyzeDocuments(
         extractedTexts,
         {
-          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'business_intelligence',
           entityType: 'business_profile',

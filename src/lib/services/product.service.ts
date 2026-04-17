@@ -69,7 +69,6 @@ export const ProductService = {
     const [product] = await db
       .insert(products)
       .values({
-        tenantId: TENANT_ID,
         type: data.type,
         name: data.name,
         description: emptyToNull(data.description),

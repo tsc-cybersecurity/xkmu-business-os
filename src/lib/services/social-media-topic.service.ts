@@ -52,7 +52,6 @@ export const SocialMediaTopicService = {
     const [topic] = await db
       .insert(socialMediaTopics)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         description: data.description || null,
         color: data.color || '#3b82f6',

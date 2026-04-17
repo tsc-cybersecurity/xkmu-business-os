@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
-import { TENANT_ID } from '@/lib/constants/tenant'
 import { db } from '@/lib/db'
 import { products, productCategories, leads, businessProfiles } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
@@ -13,7 +12,6 @@ import { logger } from '@/lib/utils/logger'
 export async function POST(request: NextRequest) {
   return withPermission(request, 'settings', 'update', async (_auth) => {
     try {
-      const tenantId = TENANT_ID
 
       // 1. Load tenant info
       const tenant = await TenantService.getById(tenantId)
@@ -26,7 +24,7 @@ export async function POST(request: NextRequest) {
       const allProducts = await db
         .select({ name: products.name, description: products.description, type: products.type, price: products.priceNet })
         .from(products)
-        .where(eq(products.tenantId, tenantId))
+        .where()
 
       const productList = allProducts
         .filter(p => p.type === 'product' || !p.type)
@@ -42,7 +40,7 @@ export async function POST(request: NextRequest) {
       const allCategories = await db
         .select({ name: productCategories.name, description: productCategories.description })
         .from(productCategories)
-        .where(eq(productCategories.tenantId, tenantId))
+        .where()
 
       const categoryList = allCategories.map(c => `- ${c.name}${c.description ? ': ' + c.description : ''}`).join('\n') || 'Keine Kategorien vorhanden'
 
@@ -50,7 +48,7 @@ export async function POST(request: NextRequest) {
       const recentLeads = await db
         .select({ title: leads.title, tags: leads.tags, contactCompany: leads.contactCompany, score: leads.score })
         .from(leads)
-        .where(eq(leads.tenantId, tenantId))
+        .where()
         .orderBy(desc(leads.createdAt))
         .limit(50)
 
@@ -76,7 +74,7 @@ export async function POST(request: NextRequest) {
       const [latestProfile] = await db
         .select({ analysis: businessProfiles.rawAnalysis })
         .from(businessProfiles)
-        .where(eq(businessProfiles.tenantId, tenantId))
+        .where()
         .orderBy(desc(businessProfiles.createdAt))
         .limit(1)
 

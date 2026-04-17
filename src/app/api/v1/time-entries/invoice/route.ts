@@ -23,8 +23,7 @@ export async function POST(request: NextRequest) {
       if (!companyId) return apiError('MISSING_COMPANY', 'Firma muss angegeben werden', 400)
 
       // Get time entries for company in date range
-      const conditions = [
-        eq(timeEntries.tenantId, TENANT_ID),
+      const conditions = [,
         eq(timeEntries.companyId, companyId),
       ]
       if (from) conditions.push(gte(timeEntries.date, new Date(from)))

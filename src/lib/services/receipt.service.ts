@@ -46,7 +46,6 @@ export const ReceiptService = {
     ocrData?: unknown
   }): Promise<Receipt> {
     const [receipt] = await db.insert(receipts).values({
-      tenantId: TENANT_ID,
       fileName: data.fileName || null,
       fileUrl: data.fileUrl || null,
       amount: data.amount || null,
@@ -91,8 +90,7 @@ export const ReceiptService = {
 
       const response = await AIService.completeWithContext(userPrompt,
         { tenantId: _tenantId, feature: 'receipt_ocr' },
-        { maxTokens: 500, temperature: 0.1, systemPrompt: template.systemPrompt },
-      )
+        { maxTokens: 500, temperature: 0.1, systemPrompt: template.systemPrompt })
 
       const jsonMatch = response.text.match(/\{[\s\S]*\}/)
       if (jsonMatch) {

@@ -104,7 +104,6 @@ export const DocumentService = {
     const [doc] = await db
       .insert(documents)
       .values({
-        tenantId: TENANT_ID,
         type: data.type,
         number,
         companyId: emptyToNull(data.companyId),
@@ -375,7 +374,6 @@ export const DocumentService = {
     const [invoice] = await db
       .insert(documents)
       .values({
-        tenantId: TENANT_ID,
         type: 'invoice',
         number,
         companyId: offer.companyId,
@@ -406,7 +404,6 @@ export const DocumentService = {
       await db.insert(documentItems).values(
         offer.items.map((item) => ({
           documentId: invoice.id,
-          tenantId: TENANT_ID,
           position: item.position,
           productId: item.productId,
           name: item.name,
@@ -440,7 +437,6 @@ export const DocumentService = {
     const [newDoc] = await db
       .insert(documents)
       .values({
-        tenantId: TENANT_ID,
         type: targetType,
         number,
         companyId: contract.companyId,
@@ -471,7 +467,6 @@ export const DocumentService = {
       await db.insert(documentItems).values(
         contract.items.map((item) => ({
           documentId: newDoc.id,
-          tenantId: TENANT_ID,
           position: item.position,
           productId: item.productId,
           name: item.name,

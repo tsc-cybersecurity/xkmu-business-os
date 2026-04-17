@@ -25,7 +25,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const outreach = await OutreachService.generateOutreach(TENANT_ID, id, {
-      tenantId: TENANT_ID,
       userId: auth.userId,
       feature: 'outreach',
       entityType: 'lead',

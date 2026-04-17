@@ -17,7 +17,6 @@ export async function POST(
       if (!post) return apiNotFound('Beitrag nicht gefunden')
 
       const seo = await BlogAIService.generateSEO(post.title, post.content || '', {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'blog_seo_generate',
       })

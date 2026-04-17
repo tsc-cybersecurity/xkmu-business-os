@@ -31,7 +31,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     let entities: { companies?: string[]; people?: string[]; emails?: string[] } = {}
     try {
       entities = await AIService.extractEntities(idea.rawContent, {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'idea_conversion',
       })

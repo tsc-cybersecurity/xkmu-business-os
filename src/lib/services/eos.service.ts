@@ -50,7 +50,6 @@ export const EosService = {
 
   async createRock(_tenantId: string, data: Record<string, unknown>) {
     const [rock] = await db.insert(rocks).values({
-      tenantId: TENANT_ID,
       title: data.title as string,
       description: (data.description as string) || null,
       ownerId: (data.ownerId as string) || null,
@@ -107,7 +106,6 @@ export const EosService = {
 
   async createMetric(_tenantId: string, data: Record<string, unknown>) {
     const [metric] = await db.insert(scorecardMetrics).values({
-      tenantId: TENANT_ID,
       name: data.name as string,
       ownerId: (data.ownerId as string) || null,
       goal: data.goal != null ? String(data.goal) : null,
@@ -161,7 +159,6 @@ export const EosService = {
 
   async createIssue(_tenantId: string, data: Record<string, unknown>) {
     const [issue] = await db.insert(eosIssues).values({
-      tenantId: TENANT_ID,
       title: data.title as string,
       description: (data.description as string) || null,
       priority: (data.priority as string) || 'medium',
@@ -197,7 +194,6 @@ export const EosService = {
 
   async createMeeting(_tenantId: string, data: Record<string, unknown>) {
     const [meeting] = await db.insert(meetingSessions).values({
-      tenantId: TENANT_ID,
       title: (data.title as string) || 'L10 Meeting',
       attendees: (data.attendees as string[]) || [],
     }).returning()

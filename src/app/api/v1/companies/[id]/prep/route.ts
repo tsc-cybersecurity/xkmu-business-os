@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       const recentActivities = await db
         .select()
         .from(activities)
-        .where(and(eq(activities.tenantId, TENANT_ID), eq(activities.companyId, id)))
+        .where(and(eq(activities.companyId, id)))
         .orderBy(desc(activities.createdAt))
         .limit(5)
 
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       const openLeads = await db
         .select()
         .from(leads)
-        .where(and(eq(leads.tenantId, TENANT_ID), eq(leads.companyId, id)))
+        .where(and(eq(leads.companyId, id)))
         .orderBy(desc(leads.createdAt))
         .limit(5)
 
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       const openOpps = await db
         .select()
         .from(opportunities)
-        .where(eq(opportunities.tenantId, TENANT_ID))
+        .where()
         .orderBy(desc(opportunities.createdAt))
         .limit(5)
 
@@ -67,8 +67,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
 
       const response = await AIService.completeWithContext(userPrompt,
         { tenantId: TENANT_ID, feature: 'meeting_prep' },
-        { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt },
-      )
+        { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt })
 
       return apiSuccess({
         company: { id: company.id, name: company.name, industry: company.industry },

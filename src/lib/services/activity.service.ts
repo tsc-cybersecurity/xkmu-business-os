@@ -28,7 +28,6 @@ export const ActivityService = {
     const [activity] = await db
       .insert(activities)
       .values({
-        tenantId: TENANT_ID,
         leadId: data.leadId || undefined,
         companyId: data.companyId || undefined,
         personId: data.personId || undefined,

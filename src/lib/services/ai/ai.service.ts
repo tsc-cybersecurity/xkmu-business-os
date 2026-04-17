@@ -166,7 +166,6 @@ class AIServiceClass {
 
         // Erfolg loggen (fire-and-forget, blockiert nicht den Response)
         AiProviderService.createLog({
-          tenantId: context.tenantId,
           providerId: config.id,
           userId: context.userId || null,
           providerType: config.providerType,
@@ -192,7 +191,6 @@ class AIServiceClass {
 
         // Fehler loggen (fire-and-forget)
         AiProviderService.createLog({
-          tenantId: context.tenantId,
           providerId: config.id,
           userId: context.userId || null,
           providerType: config.providerType,

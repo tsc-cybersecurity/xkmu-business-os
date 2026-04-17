@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
       logger.info('Step 1: Validated input, calling AI...', { module: 'BlogPostsGenerateAPI' })
 
       const generated = await BlogAIService.generatePost(topic, { language, tone, length }, {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'blog_generate',
       })

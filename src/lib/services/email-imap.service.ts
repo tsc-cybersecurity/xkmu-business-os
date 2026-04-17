@@ -149,8 +149,7 @@ export const EmailImapService = {
       .where(
         and(
           eq(emailAccounts.isActive, true),
-          eq(emailAccounts.syncEnabled, true),
-        )
+          eq(emailAccounts.syncEnabled, true))
       )
 
     logger.info(`Starting sync for ${activeAccounts.length} accounts`, { module: 'email-imap' })
@@ -233,8 +232,7 @@ export const EmailImapService = {
     client: ImapFlow,
     account: EmailAccount,
     uid: number,
-    folder: string,
-  ): Promise<boolean> {
+    folder: string): Promise<boolean> {
     // Fetch the message envelope and full source
     const message = await client.fetchOne(String(uid), {
       uid: true,
@@ -255,8 +253,7 @@ export const EmailImapService = {
         .where(
           and(
             eq(emails.accountId, account.id),
-            eq(emails.messageId, parsed.messageId),
-          )
+            eq(emails.messageId, parsed.messageId))
         )
         .limit(1)
 
@@ -270,8 +267,7 @@ export const EmailImapService = {
       .where(
         and(
           eq(emails.accountId, account.id),
-          eq(emails.uid, uid),
-        )
+          eq(emails.uid, uid))
       )
       .limit(1)
 
@@ -388,8 +384,7 @@ export const EmailImapService = {
    * Extract attachment metadata from IMAP bodyStructure.
    */
   _extractAttachments(
-    bodyStructure: MessageStructureObject | undefined,
-  ): Array<{ filename?: string; size?: number; contentType?: string }> {
+    bodyStructure: MessageStructureObject | undefined): Array<{ filename?: string; size?: number; contentType?: string }> {
     if (!bodyStructure) return []
 
     const attachments: Array<{ filename?: string; size?: number; contentType?: string }> = []
@@ -419,8 +414,7 @@ export const EmailImapService = {
    * Auto-link an email address to a person and their company.
    */
   async _autoLink(
-    fromAddress: string | null,
-  ): Promise<{ personId: string | null; companyId: string | null }> {
+    fromAddress: string | null): Promise<{ personId: string | null; companyId: string | null }> {
     if (!fromAddress) return { personId: null, companyId: null }
 
     try {

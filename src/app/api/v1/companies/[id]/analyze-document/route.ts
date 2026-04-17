@@ -41,7 +41,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       buffer,
       company.name,
       {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'document_analysis',
         entityType: 'company',

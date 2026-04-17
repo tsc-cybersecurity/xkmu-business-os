@@ -13,8 +13,7 @@ export const SopService = {
       conditions.push(
         or(
           ilike(sopDocuments.title, `%${filters.search}%`),
-          ilike(sopDocuments.purpose, `%${filters.search}%`),
-        )!
+          ilike(sopDocuments.purpose, `%${filters.search}%`))!
       )
     }
     return db.select().from(sopDocuments)
@@ -52,7 +51,6 @@ export const SopService = {
 
   async create(_tenantId: string, data: Record<string, unknown>) {
     const [doc] = await db.insert(sopDocuments).values({
-      tenantId: TENANT_ID,
       title: data.title as string,
       category: data.category as string,
       version: (data.version as string) || '1.0.0',

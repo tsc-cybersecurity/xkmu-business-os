@@ -45,7 +45,6 @@ export const EmailTemplateService = {
     const [template] = await db
       .insert(emailTemplates)
       .values({
-        tenantId: TENANT_ID,
         slug: data.slug,
         name: data.name,
         subject: data.subject,

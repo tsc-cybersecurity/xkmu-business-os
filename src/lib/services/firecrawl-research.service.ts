@@ -19,7 +19,6 @@ export const FirecrawlResearchService = {
     const [research] = await db
       .insert(firecrawlResearches)
       .values({
-        tenantId: TENANT_ID,
         companyId,
         url: data.url,
         status: data.status || 'crawling',

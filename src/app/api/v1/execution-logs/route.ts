@@ -17,8 +17,7 @@ export async function GET(request: NextRequest) {
     const logs = await ExecutionLogService.list(
       TENANT_ID,
       { entityType, entityId, status },
-      { limit, offset },
-    )
+      { limit, offset })
     return apiSuccess(logs)
   })
 }

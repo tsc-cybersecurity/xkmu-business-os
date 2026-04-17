@@ -112,7 +112,6 @@ export const AiProviderService = {
     const [provider] = await db
       .insert(aiProviders)
       .values({
-        tenantId: TENANT_ID,
         providerType: data.providerType,
         name: data.name,
         apiKey: data.apiKey || null,

@@ -131,7 +131,6 @@ export async function POST(
       additionalContext,
       websiteContent,
     }, {
-      tenantId: TENANT_ID,
       userId: auth.userId,
       entityType: 'lead',
       entityId: id,

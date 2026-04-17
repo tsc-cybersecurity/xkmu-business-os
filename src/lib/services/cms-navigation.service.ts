@@ -53,8 +53,7 @@ export const CmsNavigationService = {
       .where(
         and(
           eq(cmsNavigationItems.location, location),
-          eq(cmsNavigationItems.isVisible, true),
-        )
+          eq(cmsNavigationItems.isVisible, true))
       )
       .orderBy(asc(cmsNavigationItems.sortOrder))
   },

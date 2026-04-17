@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
 
       // KI-Verarbeitung asynchron starten
       IdeaAIService.processIdea(idea.rawContent, {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'idea_processing',
       }).then(async (result) => {

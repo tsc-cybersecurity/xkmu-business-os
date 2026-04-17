@@ -22,7 +22,6 @@ export async function POST(request: NextRequest) {
 
       // Nutze DB-basierte Provider mit Logging
       const response = await AIService.completeWithContext(prompt, {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'completion',
       }, {

@@ -534,9 +534,7 @@ export const LeadResearchService = {
           .select({ apiKey: aiProviders.apiKey })
           .from(aiProviders)
           .where(
-            and(
-              eq(aiProviders.tenantId, context.tenantId),
-              eq(aiProviders.providerType, 'firecrawl'),
+            and(eq(aiProviders.providerType, 'firecrawl'),
               eq(aiProviders.isActive, true)
             )
           )

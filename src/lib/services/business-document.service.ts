@@ -53,7 +53,6 @@ export const BusinessDocumentService = {
     const [doc] = await db
       .insert(businessDocuments)
       .values({
-        tenantId: TENANT_ID,
         filename: data.filename,
         originalName: data.originalName,
         mimeType: data.mimeType,

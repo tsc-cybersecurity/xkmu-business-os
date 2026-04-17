@@ -79,7 +79,6 @@ export const OpportunityService = {
     const [opportunity] = await db
       .insert(opportunities)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         industry: emptyToNull(data.industry),
         address: emptyToNull(data.address),
@@ -111,7 +110,6 @@ export const OpportunityService = {
     if (items.length === 0) return { inserted: 0, enriched: 0, skipped: 0 }
 
     const values = items.map((data) => ({
-      tenantId: TENANT_ID,
       name: data.name,
       industry: emptyToNull(data.industry),
       address: emptyToNull(data.address),

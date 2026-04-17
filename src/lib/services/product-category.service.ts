@@ -37,7 +37,6 @@ export const ProductCategoryService = {
     const [category] = await db
       .insert(productCategories)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         slug: generateSlug(data.name),
         description: emptyToNull(data.description),

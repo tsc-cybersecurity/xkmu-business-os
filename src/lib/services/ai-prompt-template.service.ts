@@ -67,7 +67,6 @@ export const AiPromptTemplateService = {
     const [template] = await db
       .insert(aiPromptTemplates)
       .values({
-        tenantId: TENANT_ID,
         slug: data.slug,
         name: data.name,
         description: data.description || null,
@@ -131,7 +130,6 @@ export const AiPromptTemplateService = {
     if (toCreate.length > 0) {
       await db.insert(aiPromptTemplates).values(
         toCreate.map(([slug, d]) => ({
-          tenantId: TENANT_ID,
           slug,
           name: d.name,
           description: d.description,

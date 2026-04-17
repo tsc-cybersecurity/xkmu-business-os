@@ -26,7 +26,7 @@ export const BusinessProfileService = {
     const [profile] = await db
       .select()
       .from(businessProfiles)
-      .where(eq(businessProfiles.tenantId, TENANT_ID))
+      .where()
       .limit(1)
     return profile ?? null
   },
@@ -59,7 +59,6 @@ export const BusinessProfileService = {
     const [created] = await db
       .insert(businessProfiles)
       .values({
-        tenantId: TENANT_ID,
         companyName: data.companyName || null,
         industry: data.industry || null,
         businessModel: data.businessModel || null,

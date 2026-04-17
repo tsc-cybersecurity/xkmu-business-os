@@ -54,7 +54,6 @@ export const CockpitService = {
     const [system] = await db
       .insert(cockpitSystems)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         hostname: emptyToNull(data.hostname),
         url: emptyToNull(data.url),
@@ -315,8 +314,7 @@ export const CockpitService = {
       .where(
         and(
           eq(cockpitCredentials.id, credentialId),
-          eq(cockpitCredentials.systemId, systemId),
-        )
+          eq(cockpitCredentials.systemId, systemId))
       )
       .limit(1)
 

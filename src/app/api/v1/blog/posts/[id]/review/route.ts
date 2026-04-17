@@ -29,7 +29,6 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       )
 
       const response = await AIService.completeWithContext(userPrompt, {
-        tenantId: TENANT_ID,
         feature: 'blog_review',
       }, {
         maxTokens: 2000,

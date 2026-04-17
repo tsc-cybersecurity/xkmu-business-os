@@ -4,7 +4,6 @@ import { eq, desc, sql, and, gte } from 'drizzle-orm'
 import { getSession } from '@/lib/auth/session'
 import { apiSuccess, apiUnauthorized, apiServerError } from '@/lib/utils/api-response'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET() {
   try {
@@ -13,26 +12,22 @@ export async function GET() {
       return apiUnauthorized('Nicht autorisiert')
     }
 
-    const tenantId = TENANT_ID
-
     // Get counts
     const [companiesCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(companies)
-      .where(eq(companies.tenantId, tenantId))
+      .where()
 
     const [personsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(persons)
-      .where(eq(persons.tenantId, tenantId))
+      .where()
 
     const [leadsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(leads)
       .where(
-        and(
-          eq(leads.tenantId, tenantId),
-          sql`${leads.status} NOT IN ('won', 'lost')`
+        and(sql`${leads.status} NOT IN ('won', 'lost')`
         )
       )
 
@@ -44,9 +39,7 @@ export async function GET() {
       .select({ count: sql<number>`count(*)` })
       .from(auditLog)
       .where(
-        and(
-          eq(auditLog.tenantId, tenantId),
-          gte(auditLog.createdAt, sevenDaysAgo)
+        and(gte(auditLog.createdAt, sevenDaysAgo)
         )
       )
 
@@ -59,7 +52,7 @@ export async function GET() {
         createdAt: companies.createdAt,
       })
       .from(companies)
-      .where(eq(companies.tenantId, tenantId))
+      .where()
       .orderBy(desc(companies.createdAt))
       .limit(5)
 
@@ -73,7 +66,7 @@ export async function GET() {
         createdAt: persons.createdAt,
       })
       .from(persons)
-      .where(eq(persons.tenantId, tenantId))
+      .where()
       .orderBy(desc(persons.createdAt))
       .limit(5)
 
@@ -91,9 +84,7 @@ export async function GET() {
       .from(leads)
       .leftJoin(companies, eq(leads.companyId, companies.id))
       .where(
-        and(
-          eq(leads.tenantId, tenantId),
-          sql`${leads.status} NOT IN ('won', 'lost')`
+        and(sql`${leads.status} NOT IN ('won', 'lost')`
         )
       )
       .orderBy(desc(leads.createdAt))
@@ -111,19 +102,19 @@ export async function GET() {
         count: sql<number>`count(*)`,
       })
       .from(companies)
-      .where(eq(companies.tenantId, tenantId))
+      .where()
       .groupBy(companies.status)
 
     // Konversionsrate: Won / Total Leads
     const [totalLeadsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(leads)
-      .where(eq(leads.tenantId, tenantId))
+      .where()
 
     const [wonLeadsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(leads)
-      .where(and(eq(leads.tenantId, tenantId), eq(leads.status, 'won')))
+      .where(and(eq(leads.status, 'won')))
 
     const totalLeads = Number(totalLeadsCount?.count || 0)
     const wonLeads = Number(wonLeadsCount?.count || 0)
@@ -140,9 +131,7 @@ export async function GET() {
       })
       .from(leads)
       .where(
-        and(
-          eq(leads.tenantId, tenantId),
-          gte(leads.createdAt, thirtyDaysAgo)
+        and(gte(leads.createdAt, thirtyDaysAgo)
         )
       )
       .groupBy(sql`to_char(${leads.createdAt}, 'YYYY-MM-DD')`)
@@ -155,9 +144,7 @@ export async function GET() {
       })
       .from(companies)
       .where(
-        and(
-          eq(companies.tenantId, tenantId),
-          gte(companies.createdAt, thirtyDaysAgo)
+        and(gte(companies.createdAt, thirtyDaysAgo)
         )
       )
       .groupBy(sql`to_char(${companies.createdAt}, 'YYYY-MM-DD')`)

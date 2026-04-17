@@ -66,7 +66,6 @@ export const ProcessService = {
     const [process] = await db
       .insert(processes)
       .values({
-        tenantId: TENANT_ID,
         key: data.key,
         name: data.name,
         description: data.description || null,
@@ -165,7 +164,6 @@ export const ProcessService = {
     const [task] = await db
       .insert(processTasks)
       .values({
-        tenantId: TENANT_ID,
         processId,
         taskKey: data.taskKey,
         subprocess: data.subprocess || null,

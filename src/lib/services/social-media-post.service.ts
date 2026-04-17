@@ -86,7 +86,6 @@ export const SocialMediaPostService = {
     const [post] = await db
       .insert(socialMediaPosts)
       .values({
-        tenantId: TENANT_ID,
         topicId: data.topicId || undefined,
         platform: data.platform,
         title: data.title || null,
@@ -105,7 +104,6 @@ export const SocialMediaPostService = {
   async bulkCreate(_tenantId: string, posts: CreatePostInput[], createdBy?: string): Promise<SocialMediaPost[]> {
     if (posts.length === 0) return []
     const values = posts.map(data => ({
-      tenantId: TENANT_ID,
       topicId: data.topicId || undefined,
       platform: data.platform,
       title: data.title || null,

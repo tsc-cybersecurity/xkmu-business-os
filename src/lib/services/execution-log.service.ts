@@ -7,7 +7,6 @@ export const ExecutionLogService = {
   // ── Create ───────────────────────────────────────────────────────────
   async create(_tenantId: string, data: Record<string, unknown>) {
     const [log] = await db.insert(executionLogs).values({
-      tenantId: TENANT_ID,
       entityType: data.entityType as string,
       entityId: data.entityId as string,
       entityVersion: (data.entityVersion as string) || null,
@@ -42,8 +41,7 @@ export const ExecutionLogService = {
       .where(
         and(
           eq(executionLogs.entityType, entityType),
-          eq(executionLogs.entityId, entityId),
-        )
+          eq(executionLogs.entityId, entityId))
       )
       .orderBy(desc(executionLogs.startedAt))
       .limit(limit)

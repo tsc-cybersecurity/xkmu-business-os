@@ -25,7 +25,6 @@ export const WibaAuditService = {
     const [session] = await db
       .insert(wibaAuditSessions)
       .values({
-        tenantId: TENANT_ID,
         clientCompanyId: data.clientCompanyId,
         consultantId,
         status: 'draft',
@@ -201,7 +200,6 @@ export const WibaAuditService = {
     const [answer] = await db
       .insert(wibaAnswers)
       .values({
-        tenantId: TENANT_ID,
         sessionId,
         requirementId: data.requirementId,
         status: data.status,

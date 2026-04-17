@@ -68,8 +68,7 @@ export const DocumentTemplateService = {
 
     const response = await AIService.completeWithContext(userPrompt,
       { tenantId: _tenantId, feature: 'document_template_generate' },
-      { maxTokens: 4000, temperature: 0.3, systemPrompt: promptTemplate.systemPrompt },
-    )
+      { maxTokens: 4000, temperature: 0.3, systemPrompt: promptTemplate.systemPrompt })
 
     return response.text
   },

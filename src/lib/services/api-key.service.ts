@@ -29,7 +29,6 @@ export const ApiKeyService = {
     const [apiKey] = await db
       .insert(apiKeys)
       .values({
-        tenantId: TENANT_ID,
         userId,
         name: data.name,
         keyHash,

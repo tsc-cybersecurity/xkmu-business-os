@@ -219,7 +219,6 @@ export async function POST(
       notes: company.notes || undefined,
       websiteContent: firecrawlContent,
     }, {
-      tenantId: TENANT_ID,
       userId: auth.userId,
       entityType: 'company',
       entityId: id,

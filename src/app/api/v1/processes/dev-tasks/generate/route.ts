@@ -163,7 +163,6 @@ export async function POST(request: NextRequest) {
               )
 
           const response = await AIService.completeWithContext(userPrompt, {
-            tenantId: TENANT_ID,
             feature: 'process_dev_analysis',
           }, {
             maxTokens: 3000,

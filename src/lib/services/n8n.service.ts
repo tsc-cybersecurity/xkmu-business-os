@@ -99,7 +99,6 @@ export const N8nService = {
     const [created] = await db
       .insert(n8nConnections)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         apiUrl: data.apiUrl,
         apiKey: data.apiKey,
@@ -193,7 +192,6 @@ export const N8nService = {
     const [log] = await db
       .insert(n8nWorkflowLogs)
       .values({
-        tenantId: TENANT_ID,
         n8nWorkflowId: data.n8nWorkflowId || null,
         n8nWorkflowName: data.n8nWorkflowName || null,
         prompt: data.prompt || null,

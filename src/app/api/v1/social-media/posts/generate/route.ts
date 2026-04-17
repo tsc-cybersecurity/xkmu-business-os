@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
       const result = await SocialMediaAIService.generatePost(
         validation.data,
         {
-          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'social_media',
           entityType: 'social_media_post',

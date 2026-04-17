@@ -22,7 +22,6 @@ export async function POST(
       }).join('\n')
 
       const seo = await CmsAIService.generateSEO(blockContents, page.slug, {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'cms_seo_generate',
       })

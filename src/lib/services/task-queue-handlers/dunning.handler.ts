@@ -27,7 +27,7 @@ export async function handleDunning(
   const [doc] = await db
     .select()
     .from(documents)
-    .where(and(eq(documents.tenantId, tenantId), eq(documents.id, documentId)))
+    .where(and(eq(documents.id, documentId)))
     .limit(1)
 
   if (!doc) {
@@ -63,8 +63,7 @@ export async function handleDunning(
       absender: '',
       telefon: '',
     },
-    { companyId: doc.companyId || undefined },
-  )
+    { companyId: doc.companyId || undefined })
 
   if (!result.success) {
     throw new Error(result.error || 'E-Mail-Versand fehlgeschlagen')

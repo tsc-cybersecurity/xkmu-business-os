@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await MarketingAgentService.analyze(validation.data, {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'marketing_agent',
       })

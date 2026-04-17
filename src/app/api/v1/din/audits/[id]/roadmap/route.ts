@@ -17,7 +17,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       const { id } = await params
 
       const [session] = await db.select().from(dinAuditSessions)
-        .where(and(eq(dinAuditSessions.tenantId, TENANT_ID), eq(dinAuditSessions.id, id))).limit(1)
+        .where(and(eq(dinAuditSessions.id, id))).limit(1)
       if (!session) return apiNotFound('Audit nicht gefunden')
 
       // Get all not-fulfilled answers
@@ -45,8 +45,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
 
       const response = await AIService.completeWithContext(userPrompt,
         { tenantId: TENANT_ID, feature: 'security_roadmap' },
-        { maxTokens: 3000, temperature: 0.3, systemPrompt: template.systemPrompt },
-      )
+        { maxTokens: 3000, temperature: 0.3, systemPrompt: template.systemPrompt })
 
       return apiSuccess({
         roadmap: response.text,

@@ -126,7 +126,6 @@ export const EmailService = {
 
       // Log activity
       await db.insert(activities).values({
-        tenantId: TENANT_ID,
         leadId: input.leadId || undefined,
         companyId: input.companyId || undefined,
         personId: input.personId || undefined,

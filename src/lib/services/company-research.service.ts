@@ -20,7 +20,6 @@ export const CompanyResearchService = {
     const [research] = await db
       .insert(companyResearches)
       .values({
-        tenantId: TENANT_ID,
         companyId,
         status: 'completed',
         researchData: data.researchData,

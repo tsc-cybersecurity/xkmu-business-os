@@ -60,8 +60,7 @@ export const DeliverableService = {
     }).from(sopDocuments).where(
       and(
         eq(sopDocuments.producesDeliverableId, id),
-        isNull(sopDocuments.deletedAt),
-      )
+        isNull(sopDocuments.deletedAt))
     ).orderBy(sopDocuments.title)
 
     return { ...deliverable, module: module ?? null, producingSops }
@@ -69,7 +68,6 @@ export const DeliverableService = {
 
   async create(_tenantId: string, data: Record<string, unknown>) {
     const [doc] = await db.insert(deliverables).values({
-      tenantId: TENANT_ID,
       name: data.name as string,
       description: (data.description as string) || null,
       format: (data.format as string) || null,

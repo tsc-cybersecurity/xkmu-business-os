@@ -61,7 +61,6 @@ export const MediaUploadService = {
     const [upload] = await db
       .insert(mediaUploads)
       .values({
-        tenantId: TENANT_ID,
         filename: result.filename,
         originalName: file.name,
         mimeType: result.mimeType,

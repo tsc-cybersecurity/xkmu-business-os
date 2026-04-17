@@ -248,8 +248,7 @@ export const GrundschutzCatalogService = {
             ? eq(grundschutzControls.groupId, groupId)
             : undefined, // Drizzle hat kein einfaches IN — Workaround unten
           filters?.secLevel ? eq(grundschutzControls.secLevel, filters.secLevel) : undefined,
-          filters?.search ? ilike(grundschutzControls.title, `%${filters.search}%`) : undefined,
-        )
+          filters?.search ? ilike(grundschutzControls.title, `%${filters.search}%`) : undefined)
       )
       .orderBy(asc(grundschutzControls.sortOrder))
 
@@ -272,8 +271,7 @@ export const GrundschutzCatalogService = {
     const links = await db.select().from(grundschutzControlLinks)
       .where(or(
         eq(grundschutzControlLinks.sourceControlId, controlId),
-        eq(grundschutzControlLinks.targetControlId, controlId),
-      ))
+        eq(grundschutzControlLinks.targetControlId, controlId)))
 
     // Alle referenzierten Control-IDs sammeln
     const linkedIds = new Set<string>()

@@ -66,7 +66,6 @@ export const MarketingTemplateService = {
     const [template] = await db
       .insert(marketingTemplates)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         type: data.type,
         subject: data.subject || null,

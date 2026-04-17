@@ -28,7 +28,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       const [doc] = await db
         .select()
         .from(documents)
-        .where(and(eq(documents.tenantId, TENANT_ID), eq(documents.id, id)))
+        .where(and(eq(documents.id, id)))
         .limit(1)
 
       if (!doc) return apiNotFound('Dokument nicht gefunden')

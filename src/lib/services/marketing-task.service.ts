@@ -72,7 +72,6 @@ export const MarketingTaskService = {
     const [task] = await db
       .insert(marketingTasks)
       .values({
-        tenantId: TENANT_ID,
         campaignId: data.campaignId,
         type: data.type,
         recipientEmail: data.recipientEmail || null,

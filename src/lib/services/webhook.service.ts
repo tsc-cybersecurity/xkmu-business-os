@@ -27,7 +27,6 @@ export const WebhookService = {
     const [webhook] = await db
       .insert(webhooks)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         url: data.url,
         events: data.events,

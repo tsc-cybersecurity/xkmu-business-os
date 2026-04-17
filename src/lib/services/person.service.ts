@@ -58,7 +58,6 @@ export const PersonService = {
     const [person] = await db
       .insert(persons)
       .values({
-        tenantId: TENANT_ID,
         companyId: emptyToNull(data.companyId),
         salutation: emptyToNull(data.salutation),
         firstName: data.firstName,

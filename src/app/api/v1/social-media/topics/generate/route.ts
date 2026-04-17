@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
           strengths,
         },
         {
-          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'social_media',
           entityType: 'social_media_topic',
@@ -59,7 +58,6 @@ export async function POST(request: NextRequest) {
       // Generierte Themen direkt als Topics speichern (batch INSERT)
       const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
       const topicsToInsert = generated.map((t, i) => ({
-        tenantId: TENANT_ID,
         name: t.name,
         description: t.description || null,
         color: colors[i % colors.length],

@@ -26,7 +26,6 @@ export const DinAuditService = {
     const [session] = await db
       .insert(dinAuditSessions)
       .values({
-        tenantId: TENANT_ID,
         clientCompanyId: data.clientCompanyId,
         consultantId,
         reviewerId: data.reviewerId || undefined,
@@ -190,7 +189,6 @@ export const DinAuditService = {
     const [answer] = await db
       .insert(dinAnswers)
       .values({
-        tenantId: TENANT_ID,
         sessionId,
         requirementId: data.requirementId,
         status: data.status,

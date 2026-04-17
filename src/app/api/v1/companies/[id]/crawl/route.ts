@@ -40,9 +40,7 @@ export async function POST(
       .select()
       .from(aiProviders)
       .where(
-        and(
-          eq(aiProviders.tenantId, TENANT_ID),
-          eq(aiProviders.providerType, 'firecrawl'),
+        and(eq(aiProviders.providerType, 'firecrawl'),
           eq(aiProviders.isActive, true)
         )
       )

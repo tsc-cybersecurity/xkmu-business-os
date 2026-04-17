@@ -24,7 +24,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       const [post] = await db
         .select()
         .from(socialMediaPosts)
-        .where(and(eq(socialMediaPosts.tenantId, TENANT_ID), eq(socialMediaPosts.id, id)))
+        .where(and(eq(socialMediaPosts.id, id)))
         .limit(1)
 
       if (!post) return apiNotFound('Post nicht gefunden')

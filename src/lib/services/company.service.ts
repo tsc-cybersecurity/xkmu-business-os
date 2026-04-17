@@ -53,7 +53,6 @@ export const CompanyService = {
     const [company] = await db
       .insert(companies)
       .values({
-        tenantId: TENANT_ID,
         name: data.name,
         legalForm: emptyToNull(data.legalForm),
         street: emptyToNull(data.street),

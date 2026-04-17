@@ -45,7 +45,6 @@ export async function POST(
       city: person.city || undefined,
       notes: person.notes || undefined,
     }, {
-      tenantId: TENANT_ID,
       userId: auth.userId,
       entityType: 'person',
       entityId: id,

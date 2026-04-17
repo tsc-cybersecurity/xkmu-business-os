@@ -78,7 +78,6 @@ export const TimeEntryService = {
     const [entry] = await db
       .insert(timeEntries)
       .values({
-        tenantId: TENANT_ID,
         userId,
         companyId: data.companyId || null,
         description: data.description || null,
@@ -141,8 +140,7 @@ export const TimeEntryService = {
       .from(timeEntries)
       .where(and(
         eq(timeEntries.userId, userId),
-        isNull(timeEntries.endTime),
-      ))
+        isNull(timeEntries.endTime)))
       .orderBy(desc(timeEntries.startTime))
       .limit(1)
     return entry ?? null

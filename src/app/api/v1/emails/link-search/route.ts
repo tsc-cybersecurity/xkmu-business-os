@@ -5,7 +5,6 @@ import { logger } from '@/lib/utils/logger'
 import { db } from '@/lib/db'
 import { leads, companies, persons } from '@/lib/db/schema'
 import { and, eq, or, ilike, sql } from 'drizzle-orm'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 /**
  * GET /api/v1/emails/link-search?q=...
@@ -41,19 +40,14 @@ export async function GET(request: NextRequest) {
           })
           .from(leads)
           .where(
-            and(
-              eq(leads.tenantId, TENANT_ID),
-              or(
+            and(or(
                 ilike(leads.title, needle),
                 ilike(leads.contactFirstName, needle),
                 ilike(leads.contactLastName, needle),
                 ilike(leads.contactCompany, needle),
                 ilike(leads.contactEmail, needle),
                 // Allow matching "Vorname Nachname" as a single string
-                sql`(${leads.contactFirstName} || ' ' || ${leads.contactLastName}) ILIKE ${needle}`,
-              ),
-            ),
-          )
+                sql`(${leads.contactFirstName} || ' ' || ${leads.contactLastName}) ILIKE ${needle}`)))
           .limit(PER_TYPE_LIMIT),
 
         db
@@ -65,15 +59,10 @@ export async function GET(request: NextRequest) {
           })
           .from(companies)
           .where(
-            and(
-              eq(companies.tenantId, TENANT_ID),
-              or(
+            and(or(
                 ilike(companies.name, needle),
                 ilike(companies.email, needle),
-                ilike(companies.city, needle),
-              ),
-            ),
-          )
+                ilike(companies.city, needle))))
           .limit(PER_TYPE_LIMIT),
 
         db
@@ -86,16 +75,11 @@ export async function GET(request: NextRequest) {
           })
           .from(persons)
           .where(
-            and(
-              eq(persons.tenantId, TENANT_ID),
-              or(
+            and(or(
                 ilike(persons.firstName, needle),
                 ilike(persons.lastName, needle),
                 ilike(persons.email, needle),
-                sql`(${persons.firstName} || ' ' || ${persons.lastName}) ILIKE ${needle}`,
-              ),
-            ),
-          )
+                sql`(${persons.firstName} || ' ' || ${persons.lastName}) ILIKE ${needle}`)))
           .limit(PER_TYPE_LIMIT),
       ])
 

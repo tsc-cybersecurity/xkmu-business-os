@@ -258,8 +258,7 @@ export const CronService = {
       .from(cronJobs)
       .where(and(
         eq(cronJobs.isActive, true),
-        lte(cronJobs.nextRunAt, now),
-      ))
+        lte(cronJobs.nextRunAt, now)))
       .orderBy(asc(cronJobs.nextRunAt))
 
     let executed = 0

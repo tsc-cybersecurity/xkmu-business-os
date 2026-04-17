@@ -86,7 +86,6 @@ export const TaskQueueService = {
     const [item] = await db
       .insert(taskQueue)
       .values({
-        tenantId: TENANT_ID,
         type: data.type,
         priority: data.priority ?? 2,
         payload: data.payload ?? {},
@@ -217,8 +216,7 @@ export const TaskQueueService = {
       .from(taskQueue)
       .where(and(
         eq(taskQueue.status, 'pending'),
-        lte(taskQueue.scheduledFor, new Date()),
-      ))
+        lte(taskQueue.scheduledFor, new Date())))
       .orderBy(asc(taskQueue.priority), asc(taskQueue.scheduledFor))
 
     return this.executeBatch(_tenantId, pending.map(p => p.id))

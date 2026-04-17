@@ -170,11 +170,8 @@ async function getKieApiKey(tenantId: string): Promise<string> {
   const [kieConfig] = await db
     .select()
     .from(aiProviders)
-    .where(and(
-      eq(aiProviders.tenantId, tenantId),
-      eq(aiProviders.providerType, 'kie'),
-      eq(aiProviders.isActive, true),
-    ))
+    .where(and(eq(aiProviders.providerType, 'kie'),
+      eq(aiProviders.isActive, true)))
     .limit(1)
   if (!kieConfig?.apiKey) throw new Error('Kein kie.ai API-Key konfiguriert. Bitte unter Einstellungen → KI-Provider anlegen.')
   return kieConfig.apiKey
@@ -405,7 +402,7 @@ export const ImageGenerationService = {
     const limit = filters?.limit ?? 30
     const offset = (page - 1) * limit
 
-    const conditions = [eq(generatedImages.tenantId, tenantId)]
+    const conditions = []
     if (filters?.category && filters.category !== 'all') {
       conditions.push(eq(generatedImages.category, filters.category))
     }
@@ -438,7 +435,7 @@ export const ImageGenerationService = {
     const [image] = await db
       .select()
       .from(generatedImages)
-      .where(and(eq(generatedImages.tenantId, tenantId), eq(generatedImages.id, id)))
+      .where(and(eq(generatedImages.id, id)))
       .limit(1)
     return image || null
   },
@@ -463,7 +460,7 @@ export const ImageGenerationService = {
 
     const result = await db
       .delete(generatedImages)
-      .where(and(eq(generatedImages.tenantId, tenantId), eq(generatedImages.id, id)))
+      .where(and(eq(generatedImages.id, id)))
       .returning({ id: generatedImages.id })
 
     return result.length > 0
@@ -476,7 +473,7 @@ export const ImageGenerationService = {
     if (ids.length === 0) return 0
     const result = await db
       .delete(generatedImages)
-      .where(and(eq(generatedImages.tenantId, tenantId), inArray(generatedImages.id, ids)))
+      .where(and(inArray(generatedImages.id, ids)))
       .returning({ id: generatedImages.id })
     return result.length
   },

@@ -26,7 +26,6 @@ export const IdeaService = {
     const [idea] = await db
       .insert(ideas)
       .values({
-        tenantId: TENANT_ID,
         rawContent: data.rawContent,
         type: data.type || 'text',
         status: data.status || 'backlog',

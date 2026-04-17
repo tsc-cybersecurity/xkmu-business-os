@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
           context,
         },
         {
-          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'marketing',
           entityType: 'marketing_task',

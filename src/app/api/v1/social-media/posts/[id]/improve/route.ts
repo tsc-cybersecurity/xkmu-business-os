@@ -40,7 +40,6 @@ export async function POST(
           instructions: validation.data.instructions,
         },
         {
-          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'social_media',
           entityType: 'social_media_post',

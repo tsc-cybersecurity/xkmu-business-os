@@ -156,7 +156,6 @@ export const LeadPipelineService = {
     const [created] = await db
       .insert(persons)
       .values({
-        tenantId: TENANT_ID,
         companyId: data.companyId,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -250,7 +249,6 @@ export const LeadPipelineService = {
   ): Promise<void> {
     try {
       await db.insert(activities).values({
-        tenantId: TENANT_ID,
         leadId,
         companyId,
         personId,

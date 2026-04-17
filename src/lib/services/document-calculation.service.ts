@@ -97,7 +97,6 @@ export const DocumentCalculationService = {
       .insert(documentItems)
       .values({
         documentId: docId,
-        tenantId: TENANT_ID,
         position,
         productId: emptyToNull(data.productId),
         name: data.name,

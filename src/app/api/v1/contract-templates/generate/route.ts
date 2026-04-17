@@ -37,7 +37,6 @@ Antworte als JSON:
 
     try {
       const response = await AIService.completeWithContext(userPrompt, {
-        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'contract_template_generation',
       }, { systemPrompt })
