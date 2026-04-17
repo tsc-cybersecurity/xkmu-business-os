@@ -516,6 +516,41 @@ export const aiPromptTemplatesRelations = relations(aiPromptTemplates, ({ one })
 }))
 
 // ============================================
+// Custom AI Prompts (user-defined prompts, executable per company / callable from workflows)
+// ============================================
+export const customAiPrompts = pgTable('custom_ai_prompts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 200 }).notNull(),
+  description: text('description'),
+  category: varchar('category', { length: 50 }).default('custom'), // communication | sales | analysis | marketing | internal | custom
+  icon: varchar('icon', { length: 50 }).default('Sparkles'),
+  color: varchar('color', { length: 20 }).default('indigo'), // blue | green | purple | amber | gray | indigo
+  systemPrompt: text('system_prompt'),
+  userPrompt: text('user_prompt').notNull(),
+  // contextConfig: which entities should be auto-injected as context when executing
+  // { includeCompany, includePersons, includeProducts, includeOrganization, includeRecentActivities, includeResearch, includeCms, includeProcesses }
+  contextConfig: jsonb('context_config').default({}),
+  activityType: varchar('activity_type', { length: 20 }).default('note'), // email | note | call | meeting
+  isActive: boolean('is_active').default(true),
+  createdBy: uuid('created_by').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_custom_ai_prompts_active').on(table.isActive),
+  index('idx_custom_ai_prompts_category').on(table.category),
+])
+
+export const customAiPromptsRelations = relations(customAiPrompts, ({ one }) => ({
+  createdByUser: one(users, {
+    fields: [customAiPrompts.createdBy],
+    references: [users.id],
+  }),
+}))
+
+export type CustomAiPrompt = typeof customAiPrompts.$inferSelect
+export type NewCustomAiPrompt = typeof customAiPrompts.$inferInsert
+
+// ============================================
 // Ideas (Ideen-Labor)
 // ============================================
 export const ideas = pgTable('ideas', {

@@ -36,4 +36,8 @@ export const MIGRATIONS: Migration[] = [
     name: '004_rename_tenants_to_organization.sql',
     description: 'Tabelle tenants → organization inkl. Indexes und Constraints',
   },
+  {
+    name: '005_custom_ai_prompts.sql',
+    description: 'Neue Tabelle custom_ai_prompts für user-defined KI-Prompts',
+  },
 ]

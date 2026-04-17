@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -37,6 +37,7 @@ import { Mail,
   ShieldAlert,
   Megaphone,
   Building,
+  Sparkles,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -64,6 +65,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   ShieldAlert,
   Megaphone,
   Building,
+  Sparkles,
 }
 
 // Action definitions (mirrors server-side COMPANY_ACTIONS)
@@ -114,6 +116,7 @@ const COLOR_HOVER: Record<string, string> = {
   purple: 'hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30',
   amber: 'hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30',
   gray: 'hover:border-gray-400 hover:bg-gray-50 dark:hover:bg-gray-950/30',
+  indigo: 'hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30',
 }
 
 const COLOR_BORDER: Record<string, string> = {
@@ -122,6 +125,7 @@ const COLOR_BORDER: Record<string, string> = {
   purple: 'border-l-purple-500',
   amber: 'border-l-amber-500',
   gray: 'border-l-gray-500',
+  indigo: 'border-l-indigo-500',
 }
 
 const COLOR_ICON: Record<string, string> = {
@@ -130,35 +134,74 @@ const COLOR_ICON: Record<string, string> = {
   purple: 'text-purple-500',
   amber: 'text-amber-500',
   gray: 'text-gray-500',
+  indigo: 'text-indigo-500',
 }
 
 interface CompanyActionsGridProps {
   companyId: string
 }
 
+interface CustomPrompt {
+  id: string
+  name: string
+  description: string | null
+  icon: string | null
+  color: string | null
+  activityType: string | null
+  isActive: boolean | null
+}
+
+interface ActiveActionState {
+  key: string        // slug for builtin, 'custom:<id>' for custom
+  name: string
+  activityType: string
+  source: 'builtin' | 'custom'
+  slug?: string      // builtin only
+  promptId?: string  // custom only
+}
+
 export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
-  const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
+  const [loadingKey, setLoadingKey] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [activeAction, setActiveAction] = useState<ActionDef | null>(null)
+  const [activeAction, setActiveAction] = useState<ActiveActionState | null>(null)
   const [subject, setSubject] = useState('')
   const [content, setContent] = useState('')
   const [summary, setSummary] = useState('')
   const [saving, setSaving] = useState(false)
+  const [customPrompts, setCustomPrompts] = useState<CustomPrompt[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/v1/custom-prompts?active=true')
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled) return
+        if (data?.success && Array.isArray(data.data?.prompts)) {
+          setCustomPrompts(data.data.prompts)
+        }
+      })
+      .catch(() => { /* silent: custom prompts are optional */ })
+    return () => { cancelled = true }
+  }, [])
 
   const handleGenerate = async (action: ActionDef) => {
-    setLoadingSlug(action.slug)
-
+    const key = action.slug
+    setLoadingKey(key)
     try {
       const response = await fetch(`/api/v1/companies/${companyId}/actions/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actionSlug: action.slug }),
       })
-
       const data = await response.json()
-
       if (data.success && data.data) {
-        setActiveAction(action)
+        setActiveAction({
+          key,
+          name: action.name,
+          activityType: action.activityType,
+          source: 'builtin',
+          slug: action.slug,
+        })
         setSubject(String(data.data.subject || ''))
         setContent(String(data.data.content || ''))
         setSummary(String(data.data.summary || ''))
@@ -169,7 +212,39 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
     } catch (error) {
       toast.error('Fehler bei der KI-Aktion: ' + (error instanceof Error ? error.message : 'Unbekannt'))
     } finally {
-      setLoadingSlug(null)
+      setLoadingKey(null)
+    }
+  }
+
+  const handleGenerateCustom = async (prompt: CustomPrompt) => {
+    const key = `custom:${prompt.id}`
+    setLoadingKey(key)
+    try {
+      const response = await fetch(`/api/v1/custom-prompts/${prompt.id}/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ companyId }),
+      })
+      const data = await response.json()
+      if (data.success && data.data) {
+        setActiveAction({
+          key,
+          name: prompt.name,
+          activityType: prompt.activityType || 'note',
+          source: 'custom',
+          promptId: prompt.id,
+        })
+        setSubject(String(data.data.subject || prompt.name))
+        setContent(String(data.data.content || ''))
+        setSummary('')
+        setDialogOpen(true)
+      } else {
+        toast.error(data.error?.message || 'Prompt-Ausführung fehlgeschlagen')
+      }
+    } catch (error) {
+      toast.error('Fehler: ' + (error instanceof Error ? error.message : 'Unbekannt'))
+    } finally {
+      setLoadingKey(null)
     }
   }
 
@@ -178,6 +253,10 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
 
     setSaving(true)
     try {
+      const metadata: Record<string, unknown> = activeAction.source === 'builtin'
+        ? { source: 'company_action', actionSlug: activeAction.slug, ...(summary ? { summary } : {}) }
+        : { source: 'custom_prompt', promptId: activeAction.promptId, ...(summary ? { summary } : {}) }
+
       const response = await fetch('/api/v1/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,7 +265,7 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
           type: activeAction.activityType,
           subject: subject || activeAction.name,
           content,
-          metadata: { source: 'company_action', actionSlug: activeAction.slug, ...(summary ? { summary } : {}) },
+          metadata,
         }),
       })
 
@@ -230,7 +309,7 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
                   {actions.map(action => {
                     const ActionIcon = ICON_MAP[action.icon] || Mail
-                    const isLoading = loadingSlug === action.slug
+                    const isLoading = loadingKey === action.slug
 
                     return (
                       <Button
@@ -239,7 +318,7 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
                         size="sm"
                         className={`justify-start border-l-4 ${COLOR_BORDER[action.color]} ${COLOR_HOVER[action.color]} transition-colors`}
                         onClick={() => handleGenerate(action)}
-                        disabled={loadingSlug !== null}
+                        disabled={loadingKey !== null}
                       >
                         {isLoading ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -255,6 +334,45 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
             </Card>
           )
         })}
+
+        {customPrompts.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Sparkles className="h-5 w-5 text-indigo-500" />
+                Eigene Prompts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+                {customPrompts.map(prompt => {
+                  const key = `custom:${prompt.id}`
+                  const color = prompt.color || 'indigo'
+                  const ActionIcon = ICON_MAP[prompt.icon || 'Sparkles'] || Sparkles
+                  const isLoading = loadingKey === key
+                  return (
+                    <Button
+                      key={prompt.id}
+                      variant="outline"
+                      size="sm"
+                      title={prompt.description || undefined}
+                      className={`justify-start border-l-4 ${COLOR_BORDER[color] || COLOR_BORDER.indigo} ${COLOR_HOVER[color] || COLOR_HOVER.indigo} transition-colors`}
+                      onClick={() => handleGenerateCustom(prompt)}
+                      disabled={loadingKey !== null}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <ActionIcon className={`mr-2 h-4 w-4 ${COLOR_ICON[color] || COLOR_ICON.indigo}`} />
+                      )}
+                      {prompt.name}
+                    </Button>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Result Dialog */}

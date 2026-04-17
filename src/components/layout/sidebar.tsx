@@ -146,6 +146,7 @@ const navigation: NavItem[] = [
       { name: 'Rollen', href: '/intern/settings/roles', requiredModule: 'roles' },
       { name: 'KI-Provider', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
       { name: 'KI-Prompts', href: '/intern/settings/ai-prompts', requiredModule: 'ai_prompts' },
+      { name: 'Eigene Prompts', href: '/intern/settings/custom-prompts', requiredModule: 'ai_prompts' },
       { name: 'KI-Logging', href: '/intern/settings/ai-logs', requiredModule: 'ai_logs' },
       { name: 'E-Mail (IMAP)', href: '/intern/settings/email-imap', requiredModule: 'settings' },
       { name: 'Cron-Jobs', href: '/intern/settings/cron-jobs', requiredModule: 'settings' },
