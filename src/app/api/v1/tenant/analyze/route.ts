@@ -9,7 +9,6 @@ import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.servi
 import { AIService } from '@/lib/services/ai/ai.service'
 import { TenantService } from '@/lib/services/tenant.service'
 import { logger } from '@/lib/utils/logger'
-import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'settings', 'update', async (_auth) => {
