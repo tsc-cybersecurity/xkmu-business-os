@@ -274,6 +274,40 @@ EOSQL
 echo "Pre-Drizzle migrations complete!"
 
 # ------------------------------------
+# Migration 004: rename tenants → organization (must run BEFORE drizzle-kit push,
+# otherwise drizzle-kit sees the name mismatch and prompts interactively)
+# ------------------------------------
+echo "Running migration 004 (rename tenants → organization)..."
+PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 <<'EOSQL'
+DO $$
+BEGIN
+  IF to_regclass('public.tenants') IS NOT NULL AND to_regclass('public.organization') IS NULL THEN
+    ALTER TABLE tenants RENAME TO organization;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='idx_tenants_slug') THEN
+    ALTER INDEX idx_tenants_slug RENAME TO idx_organization_slug;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='idx_tenants_status') THEN
+    ALTER INDEX idx_tenants_status RENAME TO idx_organization_status;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='tenants_pkey') THEN
+    ALTER INDEX tenants_pkey RENAME TO organization_pkey;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='tenants_slug_unique') THEN
+    ALTER INDEX tenants_slug_unique RENAME TO organization_slug_unique;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_indexes WHERE schemaname='public' AND indexname='tenants_slug_key') THEN
+    ALTER INDEX tenants_slug_key RENAME TO organization_slug_key;
+  END IF;
+END $$;
+EOSQL
+echo "Migration 004 complete!"
+
+# ------------------------------------
 # Sync database schema via Drizzle
 # ------------------------------------
 echo "Syncing database schema..."
