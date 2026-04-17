@@ -116,7 +116,7 @@ class AIServiceClass {
   }
 
   /**
-   * Tenant-aware completion mit DB-basierten Providern und Logging
+   * Completion mit DB-basierten Providern und Logging
    */
   async completeWithContext(
     prompt: string,

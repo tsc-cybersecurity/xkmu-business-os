@@ -270,13 +270,13 @@ export async function POST(request: NextRequest): Promise<Response> {
       await db.transaction(async (tx) => {
         if (mode === 'replace') {
           // Bei Replace-Modus: bestehende Daten löschen
-          // Tabellen ohne tenant_id (referenziert ueber Parent)
-          const noTenantTables = new Set(['tenants', 'role_permissions', 'chat_messages', 'cockpit_credentials', 'feedback_responses', 'din_requirements', 'din_grants', 'wiba_requirements', 'cms_block_type_definitions'])
+          // Join-Tabellen (referenziert ueber Parent)
+          const skipDeleteTables = new Set(['tenants', 'role_permissions', 'chat_messages', 'cockpit_credentials', 'feedback_responses', 'din_requirements', 'din_grants', 'wiba_requirements', 'cms_block_type_definitions'])
           for (const table of DELETE_ORDER) {
             try {
               if (table === 'tenants') continue
-              if (noTenantTables.has(table)) continue // Globale/Join-Tabellen nicht loeschen
-              // Single-tenant: delete all rows (no tenant_id filter)
+              if (skipDeleteTables.has(table)) continue // Globale/Join-Tabellen nicht loeschen
+              // delete all rows
               await tx.execute(
                 sql`DELETE FROM ${sql.identifier(table)}`
               )
@@ -295,7 +295,7 @@ export async function POST(request: NextRequest): Promise<Response> {
 
         for (const insert of sortedInserts) {
           try {
-            // Strip tenant_id column from imports (column no longer exists)
+            // Strip legacy tenant_id column from old exports (column no longer exists)
             const tenantIdIdx = insert.columns.indexOf('tenant_id')
             if (tenantIdIdx !== -1) {
               insert.columns.splice(tenantIdIdx, 1)

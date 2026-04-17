@@ -74,7 +74,7 @@ export default async function AppDocsPage() {
         <Card>
           <CardHeader className="pb-2">
             <BarChart3 className="h-6 w-6 text-teal-500" />
-            <CardTitle className="mt-2 text-sm">Single-Tenant</CardTitle>
+            <CardTitle className="mt-2 text-sm">Single-Org</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-xs text-muted-foreground">Eine Organisation pro Instanz</p>

@@ -297,7 +297,7 @@ export const CockpitService = {
     return result.length > 0
   },
 
-  /** Verify a credential belongs to a system owned by the tenant */
+  /** Verify a credential belongs to a system in the organization */
   async verifyCredentialOwnership(systemId: string, credentialId: string): Promise<boolean> {
     const rows = await db
       .select({ id: cockpitCredentials.id })

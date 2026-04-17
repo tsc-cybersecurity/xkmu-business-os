@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { cmsSettings } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { TenantService } from '@/lib/services/tenant.service'
+import { OrganizationService } from '@/lib/services/organization.service'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,7 +25,7 @@ export async function GET() {
     let logoAlt = (s.logoAlt as string) || ''
 
     if (!logoUrl) {
-      const org = await TenantService.getById()
+      const org = await OrganizationService.getById()
       const ts = (org?.settings ?? {}) as Record<string, unknown>
       logoUrl = (ts.logoUrl as string) || ''
       if (!logoAlt) logoAlt = (ts.logoAlt as string) || ''

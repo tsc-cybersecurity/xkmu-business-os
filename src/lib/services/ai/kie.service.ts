@@ -22,7 +22,7 @@ interface VideoTaskResult {
 
 export const KieService = {
   /**
-   * Findet den kie.ai Provider für einen Tenant
+   * Findet den kie.ai Provider
    */
   async getProvider(): Promise<KieProvider> {
     const providers = await AiProviderService.getActiveProviders()

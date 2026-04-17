@@ -32,7 +32,7 @@ export const mediaService: ApiService = {
       },
       response: {
         success: true,
-        data: { id: 'uuid', filename: 'banner.jpg', url: '/api/v1/media/serve/tenant-id/banner.jpg', mimeType: 'image/jpeg', size: 102400 },
+        data: { id: 'uuid', filename: 'banner.jpg', url: '/api/v1/media/serve/org-id/banner.jpg', mimeType: 'image/jpeg', size: 102400 },
       },
       curl: `curl -X POST https://example.com/api/v1/media/upload \\
   -b cookies.txt \\
@@ -45,10 +45,10 @@ export const mediaService: ApiService = {
       description:
         'Liefert eine hochgeladene Datei anhand ihres Pfads aus. Oeffentlich cachebar (max-age=1 Jahr). Pfad-Traversal wird verhindert.',
       params: [
-        { name: 'path', in: 'path', required: true, type: 'string', description: 'Dateipfad (tenant-id/dateiname)', example: 'tenant-id/banner.jpg' },
+        { name: 'path', in: 'path', required: true, type: 'string', description: 'Dateipfad (org-id/dateiname)', example: 'org-id/banner.jpg' },
       ],
       response: { note: 'Binary-Datei mit entsprechendem Content-Type' },
-      curl: `curl -X GET https://example.com/api/v1/media/serve/TENANT_ID/banner.jpg \\
+      curl: `curl -X GET https://example.com/api/v1/media/serve/ORG_ID/banner.jpg \\
   -o banner.jpg`,
     },
     {

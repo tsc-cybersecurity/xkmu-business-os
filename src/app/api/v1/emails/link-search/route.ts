@@ -9,7 +9,7 @@ import { and, eq, or, ilike, sql } from 'drizzle-orm'
 /**
  * GET /api/v1/emails/link-search?q=...
  *
- * Searches leads, companies and persons within the user's tenant for
+ * Searches leads, companies and persons within the organization for
  * candidates to link an email to. Used by the email inbox link dropdown.
  *
  * Returns: [{ id, label, type: 'lead' | 'company' | 'person' }]

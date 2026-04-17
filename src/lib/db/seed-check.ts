@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
-import { tenants, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates, wibaRequirements } from './schema'
+import { organization, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates, wibaRequirements } from './schema'
 import { eq, and, count } from 'drizzle-orm'
 import { requirementsSeedData } from './seeds/din-requirements.seed'
 import { grantsSeedData } from './seeds/din-grants.seed'
@@ -22,8 +22,8 @@ if (!adminEmail || !adminPassword) {
 }
 
 const SEED_DATA = {
-  // First-run only: single-tenant app, slug + name reflect xKMU identity
-  tenant: {
+  // First-run only: single-organization app, slug + name reflect xKMU identity
+  organization: {
     name: 'xKMU digital solutions',
     slug: 'xkmu-digital-solutions',
     status: 'active',
@@ -52,14 +52,14 @@ const CMS_PAGES = [
           badge: { icon: 'Building2', text: 'Professionelles Business Operating System' },
           headline: 'Ihr Unternehmen.',
           headlineHighlight: 'Eine Plattform.',
-          subheadline: 'XKMU Business OS vereint CRM, Lead-Management, Produktkatalog und KI-gestuetzte Prozesse in einer modernen, mandantenfaehigen Loesung.',
+          subheadline: 'XKMU Business OS vereint CRM, Lead-Management, Produktkatalog und KI-gestuetzte Prozesse in einer modernen, Loesung.',
           buttons: [
             { label: 'Zum Login', href: '/intern/login', variant: 'default' },
             { label: 'Kostenlos registrieren', href: '/intern/register', variant: 'outline' },
           ],
           stats: [
             { value: '100%', label: 'Open Source' },
-            { value: 'Multi', label: 'Tenant' },
+            { value: 'Self', label: 'Hosted' },
             { value: 'KI', label: 'Powered' },
           ],
         },
@@ -225,7 +225,7 @@ async function seedAuditorRole(db: ReturnType<typeof drizzle>) {
   const auditorConfig = DEFAULT_ROLE_PERMISSIONS['auditor']
   if (!auditorConfig) return
 
-  // Check if role already exists for this tenant
+  // Check if role already exists
   const [existing] = await db
     .select()
     .from(roles)
@@ -663,7 +663,7 @@ async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>) {
 // Example Business Data
 // ============================================
 async function seedExampleBusinessData(db: ReturnType<typeof drizzle>, adminUserId: string) {
-  // Check if companies already exist for this tenant
+  // Check if companies already exist
   const [{ total }] = await db.select({ total: count() }).from(companies)
   if (Number(total) > 0) {
     logger.info('Business data already exists, skipping...')
@@ -768,17 +768,17 @@ async function seedCheck() {
   const client = postgres(connectionString, { ssl: getSslConfig() })
   const db = drizzle(client)
 
-  // Check if ANY tenant exists (post-tenant-removal: we don't care about slug)
-  // If any tenant exists, use it. Only seed a new tenant if DB is completely empty.
-  const existingTenants = await db
+  // Check if an organization exists (single-organization app, we don't care about slug)
+  // If an organization exists, use it. Only seed a new one if DB is completely empty.
+  const existingOrganizations = await db
     .select()
-    .from(tenants)
+    .from(organization)
     .limit(1)
 
   let adminUserId: string | null = null
 
-  if (existingTenants.length > 0) {
-    logger.info('Tenant already exists, skipping tenant/user seed...')
+  if (existingOrganizations.length > 0) {
+    logger.info('Organization already exists, skipping organization/user seed...')
 
     // Find admin user for blog authorship
     const [adminUser] = await db
@@ -790,13 +790,13 @@ async function seedCheck() {
   } else {
     logger.info('Seeding database...')
 
-    // 1. Create Tenant (first-run only — empty DB)
-    const [tenant] = await db
-      .insert(tenants)
-      .values(SEED_DATA.tenant)
+    // 1. Create Organization (first-run only — empty DB)
+    const [org] = await db
+      .insert(organization)
+      .values(SEED_DATA.organization)
       .returning()
 
-    logger.info(`Created tenant: ${tenant.name} (${tenant.slug})`)
+    logger.info(`Created organization: ${org.name} (${org.slug})`)
 
     // 2. Create Admin User
     const passwordHash = await bcrypt.hash(SEED_DATA.user.password, 10)
@@ -815,7 +815,7 @@ async function seedCheck() {
     logger.info(`Created user: ${user.email} (${user.role})`)
   }
 
-  // 3. Seed CMS pages (always check, even for existing tenants)
+  // 3. Seed CMS pages (always check, even for existing organization)
   const cmsCreated = await seedCmsPages(db)
   if (cmsCreated > 0) {
     logger.info(`Created ${cmsCreated} CMS pages`)
@@ -851,7 +851,7 @@ async function seedCheck() {
     await seedExampleBusinessData(db, adminUserId)
   }
 
-  // 12. Seed CMS block type definitions (global, no tenant)
+  // 12. Seed CMS block type definitions (global)
   await seedCmsBlockTypeDefinitions(db)
 
   // 13. Seed CMS block templates (global)

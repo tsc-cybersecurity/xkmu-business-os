@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
-import { tenants, users } from './schema'
+import { organization, users } from './schema'
 import { logger } from '@/lib/utils/logger'
 
 const adminEmail = process.env.SEED_ADMIN_EMAIL
@@ -14,8 +14,8 @@ if (!adminEmail || !adminPassword) {
 }
 
 const SEED_DATA = {
-  // First-run only: single-tenant app
-  tenant: {
+  // First-run only: single-organization app
+  organization: {
     name: 'xKMU digital solutions',
     slug: 'xkmu-digital-solutions',
     status: 'active',
@@ -49,13 +49,13 @@ async function seed() {
 
   logger.info('Seeding database...', { module: 'Seed' })
 
-  // 1. Create Tenant
-  const [tenant] = await db
-    .insert(tenants)
-    .values(SEED_DATA.tenant)
+  // 1. Create Organization
+  const [org] = await db
+    .insert(organization)
+    .values(SEED_DATA.organization)
     .returning()
 
-  logger.info(`Created tenant: ${tenant.name} (${tenant.slug})`, { module: 'Seed' })
+  logger.info(`Created organization: ${org.name} (${org.slug})`, { module: 'Seed' })
 
   // 2. Create Admin User
   const passwordHash = await bcrypt.hash(SEED_DATA.user.password, 10)

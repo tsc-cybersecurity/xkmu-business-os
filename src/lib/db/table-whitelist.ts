@@ -1,14 +1,13 @@
 /**
  * Dynamic table whitelist — alle Tabellen aus information_schema zulassen.
  *
- * Hintergrund: Seit dem Tenant-Removal Meilenstein (v2) gibt es keine
- * Tenant-Isolation mehr. Die App ist single-tenant (xkmu-digital-solutions).
- * Daher ist eine hardcoded Tabellen-Whitelist nicht mehr noetig — jede
- * existierende Tabelle in `public` darf vom Admin eingesehen werden.
+ * Die App laeuft als Single-Organization-Instanz. Eine hardcoded Tabellen-
+ * Whitelist ist nicht mehr noetig — jede existierende Tabelle in `public`
+ * darf vom Admin eingesehen werden.
  *
- * Die TENANT_TABLES/GLOBAL_TABLES-Klassifikation bleibt vorerst (fuer
- * Uebergang-Features wie Export/Import), wird aber nur noch als
- * Referenz genutzt — nicht mehr als Sicherheitsgrenze.
+ * Die DATA_TABLES/GLOBAL_TABLES-Klassifikation bleibt vorerst fuer
+ * Export/Import, wird aber nur noch als Referenz genutzt — nicht mehr
+ * als Sicherheitsgrenze.
  */
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
@@ -54,8 +53,8 @@ export function invalidateTableCache() {
 // Legacy: statische Klassifikation (wird in spaeteren Phasen entfernt)
 // ============================================================
 
-// Tables that have a tenant_id column (used for Import/Export workflows)
-// Nach Tenant-Removal (v2 Phase 7) wird diese Liste leer sein.
+// Data tables — contain organization-specific rows (used for Import/Export workflows)
+// Legacy name; all tables listed here just carry organization data now.
 export const TENANT_TABLES = [
   'roles',
   'users',
@@ -124,7 +123,7 @@ export const TENANT_TABLES = [
   'grundschutz_assets',
 ]
 
-// Tables without tenant_id that reference a tenant-scoped parent (exported via JOIN)
+// Join/child tables that reference a parent (exported via JOIN)
 export const JOIN_TABLES: Array<{
   table: string
   parentTable: string
@@ -146,10 +145,10 @@ export const JOIN_TABLES: Array<{
   { table: 'grundschutz_control_links', parentTable: 'grundschutz_assets', foreignKey: 'asset_id', parentForeignKey: 'id' },
 ]
 
-// Tables with tenant_id column but globally accessible (no tenant filter in queries)
+// Legacy bucket — unused now
 export const GLOBAL_WITH_TENANT_ID = new Set<string>([])
 
-// Global tables (no tenant_id column at all, exported completely)
+// Global reference tables (exported completely)
 export const GLOBAL_TABLES = [
   'cms_pages',
   'cms_blocks',

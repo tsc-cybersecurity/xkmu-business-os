@@ -40,7 +40,7 @@ export interface SendEmailResult {
  */
 export const EmailService = {
   /**
-   * Get email config from environment or tenant settings
+   * Get email config from environment or organization settings
    */
   getConfig(): EmailConfig | null {
     // Check environment variables

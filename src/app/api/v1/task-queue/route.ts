@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 // DELETE /api/v1/task-queue?scope=all|older-than|without-error
 //
 // Bulk delete. The scope query param controls which tasks are removed:
-//   - all           → every task in the tenant
+//   - all           → every task in the system
 //   - older-than    → tasks created more than 24h ago (override via maxAgeHours)
 //   - without-error → every task whose status is not 'failed'
 //

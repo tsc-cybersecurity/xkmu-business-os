@@ -579,7 +579,7 @@ export default function TaskQueuePage() {
             <DialogDescription>
               {bulkDeleteScope === 'all' && (
                 <>
-                  Möchtest du <strong>alle {stats.total} Tasks</strong> dieses Tenants
+                  Möchtest du <strong>alle {stats.total} Tasks</strong> der Organisation
                   unwiderruflich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
                 </>
               )}

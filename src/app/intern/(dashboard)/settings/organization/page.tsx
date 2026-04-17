@@ -13,7 +13,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, Save, Building, Database, Loader2, ImageIcon, Trash2, Upload, Bot, Sparkles } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
 
-interface Tenant {
+interface Organization {
   id: string
   name: string
   slug: string
@@ -58,7 +58,7 @@ const statusColors: Record<string, string> = {
 }
 
 export default function OrganizationSettingsPage() {
-  const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [org, setOrg] = useState<Organization | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [seedingDemo, setSeedingDemo] = useState(false)
@@ -95,16 +95,16 @@ export default function OrganizationSettingsPage() {
   })
 
   useEffect(() => {
-    fetchTenant()
+    fetchOrg()
   }, [])
 
-  const fetchTenant = async () => {
+  const fetchOrg = async () => {
     try {
-      const response = await fetch('/api/v1/tenant')
+      const response = await fetch('/api/v1/organization')
       const data = await response.json()
 
       if (data.success) {
-        setTenant(data.data)
+        setOrg(data.data)
         setFormData({
           name: data.data.name || '',
           slug: data.data.slug || '',
@@ -133,7 +133,7 @@ export default function OrganizationSettingsPage() {
         setCompanyKnowledge((data.data.settings?.companyKnowledge as string) || '')
       }
     } catch (error) {
-      logger.error('Failed to fetch tenant', error, { module: 'SettingsOrganizationPage' })
+      logger.error('Failed to fetch organization', error, { module: 'SettingsOrganizationPage' })
       toast.error('Fehler beim Laden der Organisation')
     } finally {
       setLoading(false)
@@ -158,13 +158,13 @@ export default function OrganizationSettingsPage() {
 
     setSaving(true)
     try {
-      const response = await fetch('/api/v1/tenant', {
+      const response = await fetch('/api/v1/organization', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
           settings: {
-            ...tenant?.settings,
+            ...org?.settings,
             companyDescription,
             companyKnowledge,
           },
@@ -175,7 +175,7 @@ export default function OrganizationSettingsPage() {
 
       if (response.ok) {
         toast.success('Einstellungen erfolgreich gespeichert')
-        setTenant(data.data)
+        setOrg(data.data)
       } else {
         throw new Error(data.error?.message || 'Speichern fehlgeschlagen')
       }
@@ -205,11 +205,11 @@ export default function OrganizationSettingsPage() {
       }
 
       const newLogoUrl = uploadData.data.path as string
-      const settingsRes = await fetch('/api/v1/tenant', {
+      const settingsRes = await fetch('/api/v1/organization', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          settings: { ...tenant?.settings, logoUrl: newLogoUrl },
+          settings: { ...org?.settings, logoUrl: newLogoUrl },
         }),
       })
       const settingsData = await settingsRes.json()
@@ -219,7 +219,7 @@ export default function OrganizationSettingsPage() {
       }
 
       setLogoUrl(newLogoUrl)
-      setTenant(settingsData.data)
+      setOrg(settingsData.data)
       toast.success('Logo erfolgreich hochgeladen')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Fehler beim Logo-Upload')
@@ -232,9 +232,9 @@ export default function OrganizationSettingsPage() {
   const handleLogoRemove = async () => {
     setSaving(true)
     try {
-      const { logoUrl: _removed, ...restSettings } = (tenant?.settings ?? {}) as Record<string, unknown>
+      const { logoUrl: _removed, ...restSettings } = (org?.settings ?? {}) as Record<string, unknown>
       void _removed
-      const res = await fetch('/api/v1/tenant', {
+      const res = await fetch('/api/v1/organization', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings: restSettings }),
@@ -246,7 +246,7 @@ export default function OrganizationSettingsPage() {
       }
 
       setLogoUrl(null)
-      setTenant(data.data)
+      setOrg(data.data)
       toast.success('Logo entfernt – Standard-Logo wird verwendet')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Fehler beim Entfernen')
@@ -259,7 +259,7 @@ export default function OrganizationSettingsPage() {
     setAnalyzingAi(true)
     toast.info('KI-Analyse wird gestartet – das kann bis zu 30 Sekunden dauern...')
     try {
-      const res = await fetch('/api/v1/tenant/analyze', { method: 'POST' })
+      const res = await fetch('/api/v1/organization/analyze', { method: 'POST' })
       const data = await res.json()
       if (data.success && data.data?.knowledge) {
         setCompanyKnowledge(data.data.knowledge)
@@ -282,7 +282,7 @@ export default function OrganizationSettingsPage() {
 
     setSeedingDemo(true)
     try {
-      const response = await fetch('/api/v1/tenant/seed-demo', {
+      const response = await fetch('/api/v1/organization/seed-demo', {
         method: 'POST',
       })
 
@@ -539,19 +539,19 @@ export default function OrganizationSettingsPage() {
           <CardContent className="pt-0 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Status</span>
-              <Badge className={statusColors[tenant?.status || 'active']}>
-                {statusLabels[tenant?.status || 'active'] || tenant?.status}
+              <Badge className={statusColors[org?.status || 'active']}>
+                {statusLabels[org?.status || 'active'] || org?.status}
               </Badge>
             </div>
-            {tenant?.trialEndsAt && (
+            {org?.trialEndsAt && (
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Trial-Ende</span>
-                <span className="text-sm font-medium">{formatDate(tenant.trialEndsAt)}</span>
+                <span className="text-sm font-medium">{formatDate(org.trialEndsAt)}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Erstellt am</span>
-              <span className="text-sm font-medium">{formatDate(tenant?.createdAt || null)}</span>
+              <span className="text-sm font-medium">{formatDate(org?.createdAt || null)}</span>
             </div>
           </CardContent>
         </Card>

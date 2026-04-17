@@ -18,9 +18,10 @@ import { pgTable,
 import { relations } from 'drizzle-orm'
 
 // ============================================
-// Tenants
+// Organization (singleton — this app serves one organization)
+// Table name "tenants" preserved for DB compatibility; will rename in a follow-up migration.
 // ============================================
-export const tenants = pgTable('tenants', {
+export const organization = pgTable('tenants', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 100 }).unique().notNull(),
@@ -58,7 +59,7 @@ export const tenants = pgTable('tenants', {
   index('idx_tenants_status').on(table.status),
 ])
 
-export const tenantsRelations = relations(tenants, ({ many }) => ({
+export const organizationRelations = relations(organization, ({ many }) => ({
   users: many(users),
   roles: many(roles),
   companies: many(companies),
@@ -1683,8 +1684,8 @@ export const socialMediaPostsRelations = relations(socialMediaPosts, ({ one }) =
 // ============================================
 // Type Exports
 // ============================================
-export type Tenant = typeof tenants.$inferSelect
-export type NewTenant = typeof tenants.$inferInsert
+export type Organization = typeof organization.$inferSelect
+export type NewOrganization = typeof organization.$inferInsert
 
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert

@@ -3,21 +3,21 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { products, productCategories, leads, businessProfiles } from '@/lib/db/schema'
-import { eq, desc } from 'drizzle-orm'
+import { desc } from 'drizzle-orm'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { AIService } from '@/lib/services/ai/ai.service'
-import { TenantService } from '@/lib/services/tenant.service'
+import { OrganizationService } from '@/lib/services/organization.service'
 import { logger } from '@/lib/utils/logger'
 export async function POST(request: NextRequest) {
   return withPermission(request, 'settings', 'update', async (_auth) => {
     try {
 
-      // 1. Load tenant info
-      const tenant = await TenantService.getById()
-      if (!tenant) return apiError('NOT_FOUND', 'Tenant nicht gefunden', 404)
+      // 1. Load organization info
+      const org = await OrganizationService.getById()
+      if (!org) return apiError('NOT_FOUND', 'Organisation nicht gefunden', 404)
 
-      const tenantSettings = (tenant.settings ?? {}) as Record<string, unknown>
-      const companyDescription = (tenantSettings.companyDescription as string) || ''
+      const orgSettings = (org.settings ?? {}) as Record<string, unknown>
+      const companyDescription = (orgSettings.companyDescription as string) || ''
 
       // 2. Load products
       const allProducts = await db
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       const template = await AiPromptTemplateService.getOrDefault('company_knowledge_analysis')
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
-        companyName: tenant.name,
+        companyName: org.name,
         companyDescription: companyDescription || 'Keine Beschreibung vorhanden',
         products: productList,
         services: serviceList,
@@ -101,16 +101,16 @@ export async function POST(request: NextRequest) {
         return apiError('AI_ERROR', 'KI-Analyse fehlgeschlagen – keine Antwort', 500)
       }
 
-      // 8. Save result to tenant settings
-      await TenantService.update({
+      // 8. Save result to organization settings
+      await OrganizationService.update({
         settings: {
-          ...tenantSettings,
+          ...orgSettings,
           companyKnowledge: aiResult.text,
           companyKnowledgeUpdatedAt: new Date().toISOString(),
         },
       })
 
-      logger.info(`Company knowledge analysis completed for ${tenant.name}`, { module: 'TenantAnalyze' })
+      logger.info(`Company knowledge analysis completed for ${org.name}`, { module: 'OrganizationAnalyze' })
 
       return apiSuccess({
         knowledge: aiResult.text,
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         },
       })
     } catch (error) {
-      logger.error('Company knowledge analysis failed', error, { module: 'TenantAnalyze' })
+      logger.error('Company knowledge analysis failed', error, { module: 'OrganizationAnalyze' })
       return apiError('ANALYSIS_FAILED', `Analyse fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`, 500)
     }
   })

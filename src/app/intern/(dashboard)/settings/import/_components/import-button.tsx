@@ -175,7 +175,7 @@ export function ImportButton() {
             <DialogTitle>Bestehende Daten ersetzen?</DialogTitle>
             <DialogDescription>
               Im Modus &quot;Ersetzen&quot; werden alle bestehenden Daten Ihres
-              Tenants gelöscht und durch die Daten aus der Import-Datei
+              Organisationsdaten gelöscht und durch die Daten aus der Import-Datei
               ersetzt. Diese Aktion kann nicht rückgängig gemacht werden.
             </DialogDescription>
           </DialogHeader>

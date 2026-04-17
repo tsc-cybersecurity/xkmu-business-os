@@ -306,7 +306,7 @@ export const companiesService: ApiService = {
       path: '/api/v1/companies/:id/actions/generate',
       summary: 'KI-Aktion generieren',
       description:
-        'Generiert eine KI-gestuetzte Aktion fuer die Firma anhand eines Action-Slugs (z.B. Email-Entwurf, Zusammenfassung). Die verfuegbaren Aktionen sind per Tenant konfigurierbar.',
+        'Generiert eine KI-gestuetzte Aktion fuer die Firma anhand eines Action-Slugs (z.B. Email-Entwurf, Zusammenfassung). Die verfuegbaren Aktionen sind konfigurierbar.',
       params: [
         { name: 'id', in: 'path', required: true, type: 'string', description: 'UUID der Firma' },
       ],

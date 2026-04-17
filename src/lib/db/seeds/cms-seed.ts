@@ -55,7 +55,7 @@ async function seed() {
             ],
             stats: [
               { value: '100%', label: 'Open Source' },
-              { value: 'Multi', label: 'Tenant' },
+              { value: 'Self', label: 'Hosted' },
               { value: 'KI', label: 'Powered' },
             ],
           },

@@ -20,7 +20,7 @@ export async function GET(
   return withPermission(request, 'cockpit', 'read', async (auth) => {
     const { id } = await params
 
-    // Verify the system belongs to this tenant
+    // Verify the system belongs to this organization
     const system = await CockpitService.getById(id)
     if (!system) {
       return apiNotFound('System not found')
@@ -39,7 +39,7 @@ export async function POST(
     const { id } = await params
 
     try {
-      // Verify the system belongs to this tenant
+      // Verify the system belongs to this organization
       const system = await CockpitService.getById(id)
       if (!system) {
         return apiNotFound('System not found')

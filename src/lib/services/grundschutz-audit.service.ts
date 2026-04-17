@@ -133,7 +133,7 @@ export const GrundschutzAuditService = {
     }
   },
 
-  /** Alle Sessions eines Tenants */
+  /** Alle Sessions */
   async list() {
     const sessions = await db.select({
       session: grundschutzAuditSessions,

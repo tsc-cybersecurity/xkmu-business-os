@@ -80,7 +80,7 @@ export default async function ImportPage() {
               <div className="text-sm">
                 <p className="font-medium">Ersetzen</p>
                 <p className="text-muted-foreground mt-1">
-                  Alle bestehenden Tenant-Daten werden gelöscht und durch die Import-Daten
+                  Alle bestehenden Organisationsdaten werden gelöscht und durch die Import-Daten
                   ersetzt. Nutzen Sie diesen Modus, um einen vollständigen Backup wiederherzustellen.
                 </p>
               </div>

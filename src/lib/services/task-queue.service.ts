@@ -114,7 +114,7 @@ export const TaskQueueService = {
   },
 
   /**
-   * Bulk-delete tasks for the given tenant.
+   * Bulk-delete tasks.
    *
    * scope:
    *  - 'all'           → every task (use with care)

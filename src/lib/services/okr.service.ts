@@ -33,7 +33,7 @@ export const OkrService = {
     if (data.isActive !== undefined) updates.isActive = data.isActive
     if (data.startDate !== undefined) updates.startDate = new Date(data.startDate as string)
     if (data.endDate !== undefined) updates.endDate = new Date(data.endDate as string)
-    // Deactivate other cycles when activating one (Single-Tenant: deactivate all)
+    // Deactivate other cycles when activating one (single-org: deactivate all)
     if (data.isActive === true) {
       await db.update(okrCycles).set({ isActive: false })
     }

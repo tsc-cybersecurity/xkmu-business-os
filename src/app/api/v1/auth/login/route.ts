@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validation.data
 
-    // AUTH-01: direkte Email-Suche, kein cross-tenant Iterieren
+    // AUTH-01: direkte Email-Suche, kein Iterieren aller Mandanten
     const result = await UserService.authenticate(email, password)
 
     if (!result.success || !result.user) {

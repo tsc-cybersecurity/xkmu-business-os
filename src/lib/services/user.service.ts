@@ -56,7 +56,7 @@ export const UserService = {
     email: string,
     password: string
   ): Promise<AuthResult> {
-    // AUTH-01: direkte Email-Suche, kein cross-tenant Iterieren
+    // AUTH-01: direkte Email-Suche, kein Iterieren aller Mandanten
     const user = await this.findByEmail(email)
 
     if (!user) {

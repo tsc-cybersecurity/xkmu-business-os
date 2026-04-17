@@ -81,10 +81,10 @@ export function AppDocsContent() {
               ]} />
             </SectionBlock>
 
-            <SectionBlock title="Single-Tenant-Architektur">
+            <SectionBlock title="Single-Organization-Architektur">
               <p className="text-sm text-muted-foreground mb-3">
-                Die App laeuft als Single-Tenant-Instanz. Alle Daten gehoeren zur xKMU-Organisation.
-                Die Zugriffskontrolle erfolgt ueber rollenbasierte Berechtigungen (RBAC), nicht ueber Tenant-Isolation.
+                Die App laeuft als Single-Organization-Instanz. Alle Daten gehoeren zur xKMU-Organisation.
+                Die Zugriffskontrolle erfolgt ueber rollenbasierte Berechtigungen (RBAC), nicht ueber Organisation-Isolation.
               </p>
               <CodeBlock code={`// Beispiel: Middleware-Pattern
 withPermission(request, 'companies', 'read', async (auth) => {
@@ -1325,7 +1325,7 @@ withPermission(request, 'companies', 'read', async (auth) => {
                 { url: '/intern/settings/ai-logs', name: 'KI-Logging', desc: 'Protokolle aller KI-Aufrufe mit Token-Verbrauch und Kosten.' },
                 { url: '/intern/settings/webhooks', name: 'Webhooks', desc: 'Webhook-Endpunkte konfigurieren fuer Event-Benachrichtigungen.' },
                 { url: '/intern/settings/api-docs', name: 'API-Dokumentation', desc: 'Interaktive API-Referenz mit curl-Beispielen.' },
-                { url: '/intern/settings/export', name: 'Datenexport', desc: 'Kompletten SQL-Datenbankexport aller Tenant-Daten herunterladen.' },
+                { url: '/intern/settings/export', name: 'Datenexport', desc: 'Kompletten SQL-Datenbankexport aller Organisationsdaten herunterladen.' },
                 { url: '/intern/settings/import', name: 'Datenimport', desc: 'SQL-Datei importieren und Daten wiederherstellen.' },
                 { url: '/intern/settings/app-docs', name: 'App-Dokumentation', desc: 'Vollstaendige Dokumentation aller Module, Seiten und Funktionen.' },
                 { url: '/intern/settings/database', name: 'Datenbank-Struktur', desc: 'Datenbank-Tabellen und Spalten einsehen (Admin).' },
@@ -1357,11 +1357,11 @@ withPermission(request, 'companies', 'read', async (auth) => {
             </SectionBlock>
 
             <SectionBlock title="API-Endpunkte - Sonstiges">
-              <EndpointDoc method="GET" path="/api/v1/tenant" description="Organisations-Informationen abrufen." responseExample={{ id: 'uuid', name: 'xKMU digital solutions', address: { street: 'Hauptstr. 1' } }} />
+              <EndpointDoc method="GET" path="/api/v1/organization" description="Organisations-Informationen abrufen." responseExample={{ id: 'uuid', name: 'xKMU digital solutions', address: { street: 'Hauptstr. 1' } }} />
               <EndpointDoc method="POST" path="/api/v1/email/send" description="E-Mail versenden." requestBody={{ to: 'empfaenger@example.com', subject: 'Betreff', body: '<p>HTML-Inhalt</p>' }} responseExample={{ message: 'E-Mail gesendet' }} />
               <EndpointDoc method="GET" path="/api/v1/export/database" description="SQL-Dump aller Instanz-Daten herunterladen." responseExample="-- SQL Export der xKMU-Instanz\nINSERT INTO companies (...) VALUES (...);\n..." />
               <EndpointDoc method="POST" path="/api/v1/import/database" description="SQL-Datei importieren (multipart/form-data)." requestBody={{ file: '(SQL-Datei als FormData)', mode: 'merge | replace' }} responseExample={{ totalStatements: 150, totalInserted: 148, tablesAffected: 12 }} />
-              <EndpointDoc method="POST" path="/api/v1/tenant/seed-demo" description="Demo-Daten importieren (CMS-Seiten, Blog, Firmen, Personen, Leads, Produkte)." responseExample={{ message: 'Demo-Daten erfolgreich importiert', cmsPages: 7, companies: 5 }} />
+              <EndpointDoc method="POST" path="/api/v1/organization/seed-demo" description="Demo-Daten importieren (CMS-Seiten, Blog, Firmen, Personen, Leads, Produkte)." responseExample={{ message: 'Demo-Daten erfolgreich importiert', cmsPages: 7, companies: 5 }} />
               <EndpointDoc method="GET" path="/api/v1/admin/database/tables" description="Datenbank-Tabellen und Spalten anzeigen." responseExample={{ data: [{ tableName: 'companies', columns: [{ name: 'id', type: 'uuid' }] }] }} />
             </SectionBlock>
 

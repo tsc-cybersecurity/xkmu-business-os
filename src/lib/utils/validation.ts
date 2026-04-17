@@ -18,16 +18,6 @@ export const paginationSchema = z.object({
 })
 
 // ============================================
-// Tenant Schemas
-// ============================================
-export const createTenantSchema = z.object({
-  name: z.string().min(1).max(255),
-  slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with dashes'),
-})
-
-export const updateTenantSchema = createTenantSchema.partial()
-
-// ============================================
 // User Schemas
 // ============================================
 export const userRoleSchema = z.enum(['owner', 'admin', 'member', 'viewer'])

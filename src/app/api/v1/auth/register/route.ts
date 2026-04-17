@@ -4,7 +4,7 @@ import { registerSchema, validateAndParse, formatZodErrors } from '@/lib/utils/v
 import { UserService } from '@/lib/services/user.service'
 import { logger } from '@/lib/utils/logger'
 import { RoleService } from '@/lib/services/role.service'
-import { TenantSeedService } from '@/lib/services/tenant-seed.service'
+import { OrganizationSeedService } from '@/lib/services/organization-seed.service'
 import { createSession } from '@/lib/auth/session'
 import { rateLimit } from '@/lib/utils/rate-limit'
 import type { SessionUser } from '@/lib/types/auth.types'
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const { email, password, firstName, lastName } = validation.data
 
     await RoleService.seedDefaultRoles()
-    await TenantSeedService.seedStructuralData()
+    await OrganizationSeedService.seedStructuralData()
 
     const adminRole = await RoleService.getByName('admin')
 

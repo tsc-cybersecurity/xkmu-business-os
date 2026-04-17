@@ -64,7 +64,7 @@ const BLOCK_TYPE_DEFAULTS = [
 ]
 
 // ============================================
-// CMS Block Templates (per tenant)
+// CMS Block Templates
 // ============================================
 const BLOCK_TEMPLATES = [
   { name: 'Hero Standard', blockType: 'hero', content: { backgroundImage: '', overlayGradient: 'linear-gradient(to bottom, rgba(0,0,0,0.7), rgba(0,0,0,0.6), rgba(0,0,0,0.7))', badge: { icon: 'Building2', text: 'Willkommen' }, headline: 'Ihr Unternehmen.', headlineHighlight: 'Unsere Loesung.', subheadline: 'Professionelle Dienstleistungen fuer Ihren Erfolg.', buttons: [{ label: 'Mehr erfahren', href: '#', variant: 'default' }, { label: 'Kontakt', href: '/kontakt', variant: 'outline' }], stats: [{ value: '10+', label: 'Jahre Erfahrung' }, { value: '100+', label: 'Kunden' }, { value: '24/7', label: 'Support' }] }, settings: {}, isSystem: true },
@@ -132,14 +132,14 @@ const CMS_PAGES = [
           badge: { icon: 'Building2', text: 'Professionelles Business Operating System' },
           headline: 'Ihr Unternehmen.',
           headlineHighlight: 'Eine Plattform.',
-          subheadline: 'XKMU Business OS vereint CRM, Lead-Management, Produktkatalog und KI-gestuetzte Prozesse in einer modernen, mandantenfaehigen Loesung.',
+          subheadline: 'XKMU Business OS vereint CRM, Lead-Management, Produktkatalog und KI-gestuetzte Prozesse in einer modernen Loesung.',
           buttons: [
             { label: 'Zum Login', href: '/intern/login', variant: 'default' },
             { label: 'Kostenlos registrieren', href: '/intern/register', variant: 'outline' },
           ],
           stats: [
             { value: '100%', label: 'Open Source' },
-            { value: 'Multi', label: 'Tenant' },
+            { value: 'Self', label: 'Hosted' },
             { value: 'KI', label: 'Powered' },
           ],
         },
@@ -353,9 +353,9 @@ Mit XKMU Business OS können Sie direkt loslegen. Die Plattform integriert versc
 // ============================================
 // Service
 // ============================================
-export class TenantSeedService {
+export class OrganizationSeedService {
   /**
-   * Seeds structural data needed for a functioning tenant.
+   * Seeds structural data needed for a functioning organization.
    * Called automatically during registration.
    */
   static async seedStructuralData(): Promise<void> {

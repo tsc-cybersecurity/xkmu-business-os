@@ -276,7 +276,7 @@ export const LeadPipelineService = {
         priority: 1,
         payload: {
           templateSlug: 'lead_admin_notification',
-          to: '__ADMIN__', // Email-Service resolves to tenant admin email
+          to: '__ADMIN__', // Email-Service resolves to admin email
           placeholders: {
             name: `${input.firstName} ${input.lastName}`,
             firma: input.company || '–',

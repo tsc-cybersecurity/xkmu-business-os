@@ -40,7 +40,7 @@ export default async function ExportPage() {
               <div className="text-sm">
                 <p className="font-medium">Wichtige Hinweise:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
-                  <li>Der Export enthält alle Daten Ihres Tenants</li>
+                  <li>Der Export enthält alle Daten Ihrer Organisation</li>
                   <li>Sensible Daten wie Passwörter werden mit exportiert</li>
                   <li>Die Datei sollte sicher gespeichert werden</li>
                   <li>Der Export kann je nach Datenmenge einige Sekunden dauern</li>
@@ -64,7 +64,7 @@ export default async function ExportPage() {
           <div className="grid gap-2 text-sm">
             <div className="flex items-center justify-between py-2 border-b">
               <span className="font-medium">Tabellen</span>
-              <span className="text-muted-foreground">Alle Tenant-spezifischen Tabellen</span>
+              <span className="text-muted-foreground">Alle Datentabellen der Organisation</span>
             </div>
             <div className="flex items-center justify-between py-2 border-b">
               <span className="font-medium">Benutzer & Rollen</span>

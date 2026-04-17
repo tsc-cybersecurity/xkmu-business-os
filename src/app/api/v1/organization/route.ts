@@ -3,13 +3,13 @@ import { apiSuccess,
   apiError,
   apiValidationError,
 } from '@/lib/utils/api-response'
-import { TenantService } from '@/lib/services/tenant.service'
+import { OrganizationService } from '@/lib/services/organization.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { logger } from '@/lib/utils/logger'
 const optStr = z.string().max(255).optional().or(z.literal(''))
 
-const updateTenantSchema = z.object({
+const updateOrganizationSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   slug: z
     .string()
@@ -41,13 +41,13 @@ const updateTenantSchema = z.object({
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'settings', 'read', async (auth) => {
-    const tenant = await TenantService.getById()
+    const org = await OrganizationService.getById()
 
-    if (!tenant) {
-      return apiError('NOT_FOUND', 'Tenant not found', 404)
+    if (!org) {
+      return apiError('NOT_FOUND', 'Organization not found', 404)
     }
 
-    return apiSuccess(tenant)
+    return apiSuccess(org)
   })
 }
 
@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest) {
   return withPermission(request, 'settings', 'update', async (_auth) => {
     try {
       const body = await request.json()
-      const validation = updateTenantSchema.safeParse(body)
+      const validation = updateOrganizationSchema.safeParse(body)
 
       if (!validation.success) {
         return apiValidationError(
@@ -68,22 +68,22 @@ export async function PUT(request: NextRequest) {
 
       // Check if slug is unique (if being changed)
       if (validation.data.slug) {
-        const slugExists = await TenantService.slugExists(validation.data.slug)
+        const slugExists = await OrganizationService.slugExists(validation.data.slug)
         if (slugExists) {
           return apiError('SLUG_EXISTS', 'This slug is already in use', 400)
         }
       }
 
-      const tenant = await TenantService.update(validation.data)
+      const org = await OrganizationService.update(validation.data)
 
-      if (!tenant) {
-        return apiError('NOT_FOUND', 'Tenant not found', 404)
+      if (!org) {
+        return apiError('NOT_FOUND', 'Organization not found', 404)
       }
 
-      return apiSuccess(tenant)
+      return apiSuccess(org)
     } catch (error) {
-      logger.error('Update tenant error', error, { module: 'TenantAPI' })
-      return apiError('UPDATE_FAILED', 'Failed to update tenant', 500)
+      logger.error('Update organization error', error, { module: 'OrganizationAPI' })
+      return apiError('UPDATE_FAILED', 'Failed to update organization', 500)
     }
   })
 }

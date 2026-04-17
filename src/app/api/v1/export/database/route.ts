@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       write(`-- =============================================\n\n`)
 
       try {
-        // 1. Tenants (alle aktiven Tenants)
+        // 1. Organization (singleton)
         try {
           const rows = await db.execute<Record<string, unknown>>(
             sql`SELECT * FROM tenants`
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
           logger.error('Fehler beim Export der Tabelle tenants', error, { module: 'ExportDatabaseAPI' })
         }
 
-        // 2. Tenant-spezifische Tabellen (alle Zeilen, kein Tenant-Filter)
+        // 2. Datentabellen der Organisation (alle Zeilen)
         for (const table of TENANT_TABLES) {
           try {
             const rows = await db.execute<Record<string, unknown>>(
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // 3. JOIN-Tabellen (alle Zeilen, kein Tenant-Filter)
+        // 3. JOIN-Tabellen (alle Zeilen)
         for (const jt of JOIN_TABLES) {
           try {
             const rows = await db.execute<Record<string, unknown>>(
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // 4. Globale Tabellen (komplett, ohne Filter)
+        // 4. Globale Tabellen
         for (const table of GLOBAL_TABLES) {
           try {
             const rows = await db.execute<Record<string, unknown>>(
