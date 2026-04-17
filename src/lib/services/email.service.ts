@@ -186,7 +186,7 @@ export const EmailService = {
     const html = EmailTemplateService.applyPlaceholders(template.bodyHtml, placeholders)
     const body = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
-    return this.send(_{
+    return this.send('', {
       to,
       subject,
       body,

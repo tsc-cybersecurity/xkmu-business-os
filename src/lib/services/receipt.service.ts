@@ -84,7 +84,7 @@ export const ReceiptService = {
     category?: string
   }> {
     try {
-      const template = await AiPromptTemplateService.getOrDefault(_'receipt_ocr')
+      const template = await AiPromptTemplateService.getOrDefault('', 'receipt_ocr')
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { imageDescription: imageBase64.substring(0, 500) })
 
       const response = await AIService.completeWithContext(userPrompt,

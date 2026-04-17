@@ -61,7 +61,7 @@ export const DocumentTemplateService = {
     const tpl = await this.getById(_templateId)
     if (!tpl) throw new Error('Template nicht gefunden')
 
-    const promptTemplate = await AiPromptTemplateService.getOrDefault(_'document_template_fill')
+    const promptTemplate = await AiPromptTemplateService.getOrDefault('', 'document_template_fill')
     const userPrompt = AiPromptTemplateService.applyPlaceholders(promptTemplate.userPrompt, {
       context, template: tpl.bodyHtml || '',
     })

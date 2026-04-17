@@ -45,7 +45,7 @@ function htmlToText(html: string): string {
   text = text.replace(/&Ouml;/g, 'Ö')
   text = text.replace(/&Uuml;/g, 'Ü')
   text = text.replace(/&szlig;/g, 'ß')
-  text = text.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code)))
+  text = text.replace(/&#(\d+);/g, ('', code) => String.fromCharCode(parseInt(code)))
 
   // Replace block-level elements with newlines
   text = text.replace(/<(br|p|div|h[1-6]|li|tr|section|article)[^>]*>/gi, '\n')

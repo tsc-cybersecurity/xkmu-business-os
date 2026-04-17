@@ -109,7 +109,7 @@ export const N8nService = {
 
   async testConnection(_tenantId: string): Promise<{ success: boolean; message: string }> {
     try {
-      await n8nFetch(_'/workflows?limit=1')
+      await n8nFetch('', '/workflows?limit=1')
       return { success: true, message: 'Verbindung erfolgreich' }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Verbindungsfehler'
@@ -122,7 +122,7 @@ export const N8nService = {
   // ==========================================
 
   async listWorkflows(_tenantId: string): Promise<N8nWorkflow[]> {
-    const data = await n8nFetch(_'/workflows') as { data?: N8nWorkflow[] }
+    const data = await n8nFetch('', '/workflows') as { data?: N8nWorkflow[] }
     return data.data || []
   },
 
@@ -132,7 +132,7 @@ export const N8nService = {
   },
 
   async createWorkflow(_tenantId: string, workflowJson: Record<string, unknown>): Promise<N8nWorkflow> {
-    const data = await n8nFetch(_'/workflows', {
+    const data = await n8nFetch('', '/workflows', {
       method: 'POST',
       body: JSON.stringify(workflowJson),
     }) as N8nWorkflow

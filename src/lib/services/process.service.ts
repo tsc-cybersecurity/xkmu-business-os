@@ -283,7 +283,7 @@ export const ProcessService = {
         continue
       }
 
-      const process = await this.create(_{
+      const process = await this.create('', {
         key,
         name: area.name,
         description: area.beschreibung,
@@ -344,7 +344,7 @@ export const ProcessService = {
         if (existing) {
           processId = existing.id
         } else {
-          const newProcess = await this.create(_{
+          const newProcess = await this.create('', {
             key: processKey,
             name: sop.process || processKey,
             description: `Automatisch erstellt aus ${sop.process || processKey}`,

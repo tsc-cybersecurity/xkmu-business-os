@@ -368,7 +368,7 @@ export const DocumentService = {
       throw new Error('Nur versendete oder angenommene Angebote können umgewandelt werden')
     }
 
-    const number = await this.generateNumber(_'invoice')
+    const number = await this.generateNumber('', 'invoice')
 
     const [invoice] = await db
       .insert(documents)

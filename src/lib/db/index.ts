@@ -56,7 +56,7 @@ export function getDb() {
 
 // For backward compatibility - uses lazy loading
 export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
-  get(_, prop) {
+  get('', prop) {
     return getDb()[prop as keyof typeof _db]
   },
 })

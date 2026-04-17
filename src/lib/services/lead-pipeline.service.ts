@@ -175,7 +175,7 @@ export const LeadPipelineService = {
   async triggerCompanyResearch(_tenantId: string, companyId: string, companyName: string): Promise<void> {
     try {
       const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-      await TaskQueueService.create(_{
+      await TaskQueueService.create('', {
         type: 'ai',
         priority: 2,
         payload: {
@@ -276,7 +276,7 @@ export const LeadPipelineService = {
   async notifyAdmin(_tenantId: string, leadId: string, input: LeadPipelineInput): Promise<void> {
     try {
       const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-      await TaskQueueService.create(_{
+      await TaskQueueService.create('', {
         type: 'email',
         priority: 1,
         payload: {

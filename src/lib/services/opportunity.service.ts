@@ -411,7 +411,7 @@ export const OpportunityService = {
     )
 
     // 3. Create lead via LeadService
-    const lead = await LeadService.create(_{
+    const lead = await LeadService.create('', {
       companyId: company.id,
       source: 'google_maps',
       sourceDetail: opportunity.searchQuery || 'Google Maps Prospecting',

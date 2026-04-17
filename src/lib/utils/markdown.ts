@@ -113,13 +113,13 @@ function processInline(text: string): string {
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>')
 
   // Images inline
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) => {
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, ('', alt, src) => {
     const safeSrc = /^https?:\/\//.test(src) ? src : ''
     return safeSrc ? `<img src="${safeSrc}" alt="${alt}" class="rounded-lg inline" loading="lazy" />` : ''
   })
 
   // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, href) => {
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, ('', t, href) => {
     const safeHref = /^(https?:\/\/|\/|#|mailto:)/.test(href) ? href : ''
     return safeHref ? `<a href="${safeHref}" class="text-primary hover:underline" target="_blank" rel="noopener noreferrer">${t}</a>` : t
   })

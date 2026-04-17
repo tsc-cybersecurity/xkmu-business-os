@@ -84,7 +84,7 @@ export const LeadService = {
     // Erstantwort-E-Mail in Task-Queue wenn E-Mail vorhanden
     if (lead.contactEmail) {
       import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-        TaskQueueService.create(_{
+        TaskQueueService.create('', {
           type: 'email',
           priority: 1,
           payload: {
@@ -350,18 +350,18 @@ export const LeadService = {
     if (lead) {
       // Webhook-Trigger asynchron feuern (blockiert nicht)
       import('@/lib/services/webhook.service').then(({ WebhookService }) => {
-        WebhookService.fire(_'lead.status_changed', {
+        WebhookService.fire('', 'lead.status_changed', {
           leadId,
           oldStatus: oldStatus || 'unknown',
           newStatus: status,
         }).catch(() => {})
 
         if (status === 'won') {
-          WebhookService.fire(_'lead.won', { leadId }).catch(() => {})
+          WebhookService.fire('', 'lead.won', { leadId }).catch(() => {})
           // Willkommens-E-Mail in Queue
           if (lead!.contactEmail) {
             import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-              TaskQueueService.create(_{
+              TaskQueueService.create('', {
                 type: 'email',
                 priority: 1,
                 payload: {
@@ -379,7 +379,7 @@ export const LeadService = {
           }
         }
         if (status === 'lost') {
-          WebhookService.fire(_'lead.lost', { leadId }).catch(() => {})
+          WebhookService.fire('', 'lead.lost', { leadId }).catch(() => {})
         }
       }).catch(() => {})
     }

@@ -82,7 +82,7 @@ export const ContractTemplateService = {
     const original = await this.getById(_id)
     if (!original) return null
 
-    return this.create(_{
+    return this.create('', {
       name: `${original.name} (Kopie)`,
       category: original.category,
       description: original.description || undefined,

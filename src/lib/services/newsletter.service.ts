@@ -107,7 +107,7 @@ export const NewsletterService = {
         const html = campaign.bodyHtml!.replace(/\{\{name\}\}/g, subscriber.name || subscriber.email)
         const subject = campaign.subject!.replace(/\{\{name\}\}/g, subscriber.name || subscriber.email)
 
-        const result = await EmailService.send(_{
+        const result = await EmailService.send('', {
           to: subscriber.email,
           subject,
           body: html.replace(/<[^>]+>/g, ' ').trim(),
