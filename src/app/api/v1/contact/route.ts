@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Step 4: Fire workflow trigger (async, non-blocking)
-    WorkflowEngine.fire('contact.submitted', {
+    WorkflowEngine.fire('contact.submitted', '', {
       leadId: lead.id,
       firstName,
       lastName,
