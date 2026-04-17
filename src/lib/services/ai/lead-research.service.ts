@@ -67,7 +67,7 @@ export interface CompanyAddress {
 export interface CompanyResearchResult {
   description: string
   industry: string
-  employeeCount: string
+  employeeCount: string | number
   foundedYear: string
   headquarters: string
   website: string

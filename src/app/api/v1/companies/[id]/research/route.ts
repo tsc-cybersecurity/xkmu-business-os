@@ -52,7 +52,7 @@ function buildCompanyProfileText(
 
   const keyData: [string, string][] = []
   if (research.industry && research.industry !== 'Nicht ermittelbar') keyData.push(['Branche', research.industry])
-  if (research.employeeCount && research.employeeCount !== 'Nicht ermittelbar') keyData.push(['Mitarbeiter', research.employeeCount])
+  if (research.employeeCount && research.employeeCount !== 'Nicht ermittelbar') keyData.push(['Mitarbeiter', String(research.employeeCount)])
   if (research.foundedYear && research.foundedYear !== 'Nicht ermittelbar') keyData.push(['Gründungsjahr', research.foundedYear])
   if (research.headquarters && research.headquarters !== 'Nicht ermittelbar') keyData.push(['Hauptsitz', research.headquarters])
   if (research.targetMarket && research.targetMarket !== 'Nicht ermittelbar') keyData.push(['Zielmarkt', research.targetMarket])
@@ -161,7 +161,7 @@ function extractCrmUpdateData(
   }
 
   if (!existingCompany.employeeCount && research.employeeCount && research.employeeCount !== 'Nicht ermittelbar') {
-    const match = research.employeeCount.match(/\d+/)
+    const match = String(research.employeeCount).match(/\d+/)
     if (match) updates.employeeCount = parseInt(match[0])
   }
 
