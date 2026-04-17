@@ -276,9 +276,9 @@ export async function POST(request: NextRequest): Promise<Response> {
             try {
               if (table === 'tenants') continue
               if (noTenantTables.has(table)) continue // Globale/Join-Tabellen nicht loeschen
-              // Parameterized DELETE — safe against SQL injection
+              // Single-tenant: delete all rows (no tenant_id filter)
               await tx.execute(
-                sql`DELETE FROM ${sql.identifier(table)} WHERE tenant_id = ${tenantId}`
+                sql`DELETE FROM ${sql.identifier(table)}`
               )
             } catch {
               // Tabelle existiert evtl. nicht
@@ -295,10 +295,11 @@ export async function POST(request: NextRequest): Promise<Response> {
 
         for (const insert of sortedInserts) {
           try {
-            // Enforce tenant isolation: overwrite tenant_id with the authenticated tenant
+            // Strip tenant_id column from imports (column no longer exists)
             const tenantIdIdx = insert.columns.indexOf('tenant_id')
             if (tenantIdIdx !== -1) {
-              insert.values[tenantIdIdx] = tenantId
+              insert.columns.splice(tenantIdIdx, 1)
+              insert.values.splice(tenantIdIdx, 1)
             }
 
             const columnsSql = sql.join(

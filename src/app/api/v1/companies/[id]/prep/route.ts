@@ -39,7 +39,6 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       const openOpps = await db
         .select()
         .from(opportunities)
-        .where()
         .orderBy(desc(opportunities.createdAt))
         .limit(5)
 

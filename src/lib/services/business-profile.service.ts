@@ -26,7 +26,6 @@ export const BusinessProfileService = {
     const [profile] = await db
       .select()
       .from(businessProfiles)
-      .where()
       .limit(1)
     return profile ?? null
   },

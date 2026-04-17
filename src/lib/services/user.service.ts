@@ -173,8 +173,7 @@ export const UserService = {
     const { role, status, search, page = 1, limit = 20 } = filters
     const offset = (page - 1) * limit
 
-    let baseWhere =
-    const conditions = [baseWhere]
+    const conditions: ReturnType<typeof eq>[] = []
 
     if (role) {
       conditions.push(eq(users.role, role))

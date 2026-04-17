@@ -16,13 +16,9 @@ export async function GET() {
     const [companiesCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(companies)
-      .where()
-
     const [personsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(persons)
-      .where()
-
     const [leadsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(leads)
@@ -52,7 +48,6 @@ export async function GET() {
         createdAt: companies.createdAt,
       })
       .from(companies)
-      .where()
       .orderBy(desc(companies.createdAt))
       .limit(5)
 
@@ -66,7 +61,6 @@ export async function GET() {
         createdAt: persons.createdAt,
       })
       .from(persons)
-      .where()
       .orderBy(desc(persons.createdAt))
       .limit(5)
 
@@ -102,15 +96,12 @@ export async function GET() {
         count: sql<number>`count(*)`,
       })
       .from(companies)
-      .where()
       .groupBy(companies.status)
 
     // Konversionsrate: Won / Total Leads
     const [totalLeadsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(leads)
-      .where()
-
     const [wonLeadsCount] = await db
       .select({ count: sql<number>`count(*)` })
       .from(leads)

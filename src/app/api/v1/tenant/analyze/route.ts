@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     try {
 
       // 1. Load tenant info
-      const tenant = await TenantService.getById(tenantId)
+      const tenant = await TenantService.getById(TENANT_ID)
       if (!tenant) return apiError('NOT_FOUND', 'Tenant nicht gefunden', 404)
 
       const tenantSettings = (tenant.settings ?? {}) as Record<string, unknown>
@@ -24,8 +24,6 @@ export async function POST(request: NextRequest) {
       const allProducts = await db
         .select({ name: products.name, description: products.description, type: products.type, price: products.priceNet })
         .from(products)
-        .where()
-
       const productList = allProducts
         .filter(p => p.type === 'product' || !p.type)
         .map(p => `- ${p.name}${p.description ? ': ' + p.description : ''}${p.price ? ' (' + p.price + ' EUR)' : ''}`)
@@ -40,15 +38,12 @@ export async function POST(request: NextRequest) {
       const allCategories = await db
         .select({ name: productCategories.name, description: productCategories.description })
         .from(productCategories)
-        .where()
-
       const categoryList = allCategories.map(c => `- ${c.name}${c.description ? ': ' + c.description : ''}`).join('\n') || 'Keine Kategorien vorhanden'
 
       // 4. Load lead interests summary
       const recentLeads = await db
         .select({ title: leads.title, tags: leads.tags, contactCompany: leads.contactCompany, score: leads.score })
         .from(leads)
-        .where()
         .orderBy(desc(leads.createdAt))
         .limit(50)
 
@@ -74,7 +69,6 @@ export async function POST(request: NextRequest) {
       const [latestProfile] = await db
         .select({ analysis: businessProfiles.rawAnalysis })
         .from(businessProfiles)
-        .where()
         .orderBy(desc(businessProfiles.createdAt))
         .limit(1)
 

@@ -5,15 +5,13 @@ import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const ContractClauseService = {
   async list(_tenantId: string, category?: string) {
-    const conditions = [
-      or(, isNull(contractClauses.tenantId)),
-    ]
+    const conditions: ReturnType<typeof eq>[] = []
     if (category) conditions.push(eq(contractClauses.category, category))
 
     return db
       .select()
       .from(contractClauses)
-      .where(and(...conditions))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(contractClauses.sortOrder, asc(contractClauses.name))
   },
 
@@ -21,12 +19,7 @@ export const ContractClauseService = {
     const [row] = await db
       .select()
       .from(contractClauses)
-      .where(
-        and(
-          eq(contractClauses.id, id),
-          or(, isNull(contractClauses.tenantId))
-        )
-      )
+      .where(eq(contractClauses.id, id))
       .limit(1)
     return row ?? null
   },

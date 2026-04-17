@@ -49,7 +49,7 @@ export interface CompanyResearchResult {
 
 // Kontext für Logging
 export interface AIRequestContext {
-  tenantId: string
+  tenantId?: string  // legacy — no longer required, kept for backward compat
   userId?: string | null
   feature?: string
   entityType?: string

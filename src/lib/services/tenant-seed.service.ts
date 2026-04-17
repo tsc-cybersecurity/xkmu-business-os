@@ -405,7 +405,7 @@ export class TenantSeedService {
   // ---- Structural seed functions ----
 
   private static async seedAiPromptTemplates(_tenantId: string): Promise<number> {
-    const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates).where()
+    const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates)
     if (Number(total) > 0) return 0
 
     for (const slug of AI_PROMPT_TEMPLATE_SLUGS) {
@@ -424,7 +424,7 @@ export class TenantSeedService {
   }
 
   private static async seedProductCategories(_tenantId: string): Promise<number> {
-    const [{ total }] = await db.select({ total: count() }).from(productCategories).where()
+    const [{ total }] = await db.select({ total: count() }).from(productCategories)
     if (Number(total) > 0) return 0
 
     for (const cat of PRODUCT_CATEGORIES) {
@@ -551,7 +551,7 @@ export class TenantSeedService {
     products: number
     activities: number
   }> {
-    const [{ total }] = await db.select({ total: count() }).from(companies).where()
+    const [{ total }] = await db.select({ total: count() }).from(companies)
     if (Number(total) > 0) return { companies: 0, persons: 0, leads: 0, products: 0, activities: 0 }
 
     // --- 1. Companies ---
@@ -607,7 +607,7 @@ export class TenantSeedService {
     }
 
     // --- 4. Products ---
-    const existingCategories = await db.select().from(productCategories).where()
+    const existingCategories = await db.select().from(productCategories)
     const catMap = Object.fromEntries(existingCategories.map(c => [c.slug, c.id]))
 
     const productData = [
