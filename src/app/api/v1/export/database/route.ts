@@ -62,11 +62,11 @@ export async function GET(request: NextRequest) {
         // 1. Organization (singleton)
         try {
           const rows = await db.execute<Record<string, unknown>>(
-            sql`SELECT * FROM tenants`
+            sql`SELECT * FROM organization`
           )
-          write(exportRows(rows as unknown as Record<string, unknown>[], 'tenants'))
+          write(exportRows(rows as unknown as Record<string, unknown>[], 'organization'))
         } catch (error) {
-          logger.error('Fehler beim Export der Tabelle tenants', error, { module: 'ExportDatabaseAPI' })
+          logger.error('Fehler beim Export der Tabelle organization', error, { module: 'ExportDatabaseAPI' })
         }
 
         // 2. Datentabellen der Organisation (alle Zeilen)

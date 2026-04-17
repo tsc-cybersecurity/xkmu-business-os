@@ -32,4 +32,8 @@ export const MIGRATIONS: Migration[] = [
     name: '003_drop_tenant_id.sql',
     description: 'IRREVERSIBEL: DROP tenant_id aus 67 Tabellen, FKs + Indexes entfernt',
   },
+  {
+    name: '004_rename_tenants_to_organization.sql',
+    description: 'Tabelle tenants → organization inkl. Indexes und Constraints',
+  },
 ]

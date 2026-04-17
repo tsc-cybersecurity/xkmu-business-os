@@ -183,7 +183,7 @@ export const GLOBAL_TABLES = [
 // Legacy: ALLOWED_TABLES bleibt fuer Abwaertskompatibilitaet, wird aber
 // durch die dynamische Pruefung (isValidTable) in den Routen ersetzt.
 export const ALLOWED_TABLES = new Set([
-  'tenants',
+  'organization',
   ...TENANT_TABLES,
   ...JOIN_TABLES.map((j) => j.table),
   ...GLOBAL_TABLES,
@@ -191,7 +191,7 @@ export const ALLOWED_TABLES = new Set([
 
 // Tables that only owners can modify (safety net)
 export const OWNER_ONLY_TABLES = new Set([
-  'tenants',
+  'organization',
   '_migrations',
   ...JOIN_TABLES.map((j) => j.table),
   ...GLOBAL_TABLES,

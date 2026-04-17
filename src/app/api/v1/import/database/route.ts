@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 // Import-Reihenfolge (Parents vor Children wegen Foreign Keys)
 const IMPORT_ORDER = [
   // Grundstruktur
-  'tenants', 'roles', 'role_permissions', 'users', 'api_keys',
+  'organization', 'roles', 'role_permissions', 'users', 'api_keys',
   // Kontakte & Katalog
   'companies', 'persons', 'leads', 'opportunities', 'product_categories', 'products',
   // KI & Integrationen
@@ -175,7 +175,9 @@ function parseInsertStatements(sqlContent: string): ParsedInsert[] {
       )
 
       if (insertMatch) {
-        const table = insertMatch[1].toLowerCase()
+        const rawTable = insertMatch[1].toLowerCase()
+        // Backward-compat: alte Exports haben "tenants" statt "organization"
+        const table = rawTable === 'tenants' ? 'organization' : rawTable
 
         if (WHITELIST.has(table)) {
           // Reject multi-row INSERT (multiple VALUES clauses)
@@ -296,7 +298,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           // skipDeleteTables = Singleton (tenants), Join-Tabellen (werden via CASCADE geloescht)
           // und read-only Katalog-Tabellen (DIN/WiBA/IR/Grundschutz/CMS definitions).
           const skipDeleteTables = new Set([
-            'tenants',
+            'organization',
             // Join/child tables — removed via parent CASCADE
             'role_permissions', 'chat_messages', 'cockpit_credentials', 'feedback_responses',
             // Read-only catalogs

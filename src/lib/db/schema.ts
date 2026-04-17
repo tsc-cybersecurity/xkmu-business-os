@@ -19,9 +19,8 @@ import { relations } from 'drizzle-orm'
 
 // ============================================
 // Organization (singleton — this app serves one organization)
-// Table name "tenants" preserved for DB compatibility; will rename in a follow-up migration.
 // ============================================
-export const organization = pgTable('tenants', {
+export const organization = pgTable('organization', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 100 }).unique().notNull(),
@@ -55,8 +54,8 @@ export const organization = pgTable('tenants', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
-  index('idx_tenants_slug').on(table.slug),
-  index('idx_tenants_status').on(table.status),
+  index('idx_organization_slug').on(table.slug),
+  index('idx_organization_status').on(table.status),
 ])
 
 export const organizationRelations = relations(organization, ({ many }) => ({
