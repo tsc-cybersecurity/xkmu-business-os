@@ -67,7 +67,7 @@ export interface CompanyAddress {
 export interface CompanyResearchResult {
   description: string
   industry: string
-  employeeCount: string | number
+  employeeCount: string
   foundedYear: string
   headquarters: string
   website: string
@@ -458,6 +458,75 @@ async function aiComplete(
   return AIService.complete(prompt, options)
 }
 
+// LLMs (esp. Gemini) don't always honor declared schema types: a field
+// declared as "string" may arrive as number, and "array" as comma-separated
+// string. Coerce defensively so downstream consumers can trust the types.
+function toStr(v: unknown, fallback = 'Nicht ermittelbar'): string {
+  if (v === null || v === undefined || v === '') return fallback
+  if (typeof v === 'string') return v
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  return fallback
+}
+
+function toStrArray(v: unknown): string[] {
+  if (Array.isArray(v)) return v.filter(x => x !== null && x !== undefined).map(x => String(x))
+  if (typeof v === 'string' && v.trim()) return v.split(',').map(s => s.trim()).filter(Boolean)
+  return []
+}
+
+function normalizeCompanyResearchResult(
+  raw: Partial<CompanyResearchResult> & Record<string, unknown>,
+  fallbackWebsite?: string
+): Omit<CompanyResearchResult, 'researchedAt'> {
+  const sm = (raw.socialMedia ?? {}) as Record<string, unknown>
+  const fin = (raw.financials ?? {}) as Record<string, unknown>
+  const addresses = Array.isArray(raw.addresses) ? raw.addresses : []
+
+  return {
+    description: toStr(raw.description),
+    industry: toStr(raw.industry),
+    employeeCount: toStr(raw.employeeCount),
+    foundedYear: toStr(raw.foundedYear),
+    headquarters: toStr(raw.headquarters),
+    website: toStr(raw.website, fallbackWebsite ?? ''),
+    products: toStrArray(raw.products),
+    services: toStrArray(raw.services),
+    targetMarket: toStr(raw.targetMarket),
+    competitors: toStrArray(raw.competitors),
+    strengths: toStrArray(raw.strengths),
+    recentDevelopments: toStrArray(raw.recentDevelopments),
+    socialMedia: {
+      linkedin: toStr(sm.linkedin, '') || undefined,
+      xing: toStr(sm.xing, '') || undefined,
+      twitter: toStr(sm.twitter, '') || undefined,
+      facebook: toStr(sm.facebook, '') || undefined,
+      instagram: toStr(sm.instagram, '') || undefined,
+    },
+    financials: {
+      estimatedRevenue: toStr(fin.estimatedRevenue, '') || undefined,
+      growthTrend: toStr(fin.growthTrend, '') || undefined,
+      fundingStatus: toStr(fin.fundingStatus, '') || undefined,
+    },
+    technologies: toStrArray(raw.technologies),
+    certifications: toStrArray(raw.certifications),
+    addresses: (addresses as unknown[]).map((a) => {
+      const addr = (a ?? {}) as Record<string, unknown>
+      return {
+        label: toStr(addr.label, 'Standort'),
+        street: toStr(addr.street, '') || undefined,
+        houseNumber: toStr(addr.houseNumber, '') || undefined,
+        postalCode: toStr(addr.postalCode, '') || undefined,
+        city: toStr(addr.city, '') || undefined,
+        country: toStr(addr.country, '') || undefined,
+        phone: toStr(addr.phone, '') || undefined,
+        email: toStr(addr.email, '') || undefined,
+      }
+    }),
+    companyProfile: toStr(raw.companyProfile, ''),
+    summary: toStr(raw.summary, ''),
+  }
+}
+
 export const LeadResearchService = {
   async research(input: LeadResearchInput, context?: AIRequestContext): Promise<LeadResearchResult> {
     if (!input.companyName && !input.personName && !input.email) {
@@ -607,43 +676,21 @@ export const LeadResearchService = {
 
     let result: Omit<CompanyResearchResult, 'researchedAt'>
     try {
-      result = parseJsonFromResponse(response.text)
-      // Ensure addresses array exists
-      if (!result.addresses) result.addresses = []
-      if (!result.companyProfile) result.companyProfile = result.summary || ''
-      // Validate that text fields don't contain raw JSON
-      if (result.summary && result.summary.trim().startsWith('{')) {
-        result.summary = 'KI-Recherche wurde durchgeführt.'
-      }
-      if (result.companyProfile && result.companyProfile.trim().startsWith('{')) {
-        result.companyProfile = result.description || 'KI-Recherche wurde durchgeführt.'
-      }
-      if (result.description && result.description.trim().startsWith('{')) {
-        result.description = 'Beschreibung konnte nicht vollständig erstellt werden.'
-      }
+      const raw = parseJsonFromResponse(response.text) as Record<string, unknown>
+      result = normalizeCompanyResearchResult(raw, input.website)
+      // Guard: text fields that accidentally contain raw JSON (truncated responses)
+      if (result.summary.trim().startsWith('{')) result.summary = 'KI-Recherche wurde durchgeführt.'
+      if (result.companyProfile.trim().startsWith('{')) result.companyProfile = result.description || 'KI-Recherche wurde durchgeführt.'
+      if (result.description.trim().startsWith('{')) result.description = 'Beschreibung konnte nicht vollständig erstellt werden.'
+      if (!result.companyProfile) result.companyProfile = result.summary
     } catch (parseError) {
       logger.error('Company research parse error', parseError, { module: 'LeadResearchService' })
-      result = {
+      result = normalizeCompanyResearchResult({
         description: response.text.substring(0, 500),
-        industry: 'Nicht ermittelbar',
-        employeeCount: 'Nicht ermittelbar',
-        foundedYear: 'Nicht ermittelbar',
-        headquarters: 'Nicht ermittelbar',
         website: input.website || '',
-        products: [],
-        services: [],
-        targetMarket: 'Nicht ermittelbar',
-        competitors: [],
-        strengths: [],
-        recentDevelopments: [],
-        socialMedia: {},
-        financials: {},
-        technologies: [],
-        certifications: [],
-        addresses: [],
         companyProfile: 'KI-Recherche konnte nicht vollständig durchgeführt werden.',
         summary: 'KI-Recherche konnte nicht vollständig durchgeführt werden.',
-      }
+      }, input.website)
     }
 
     return {
