@@ -303,7 +303,6 @@ export const ImageGenerationService = {
 
     // Log AI usage (fire-and-forget)
     AiProviderService.createLog({
-      tenantId,
       providerId: null,
       userId,
       providerType: params.provider,
