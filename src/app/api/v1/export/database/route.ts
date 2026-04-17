@@ -48,13 +48,9 @@ function exportRows(rows: Record<string, unknown>[], table: string): string {
 }
 
 export async function GET(request: NextRequest) {
-<<<<<<< HEAD
   return withPermission(request, 'database', 'read', async (auth) => {
   const tenantId = TENANT_ID
 
-=======
-  return withPermission(request, 'database', 'read', async (_auth) => {
->>>>>>> 9e30423 (feat(05-02): handle special cases — export, import, tenant routes)
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder()
