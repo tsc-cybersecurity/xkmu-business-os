@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { sopDocuments, deliverables } from '@/lib/db/schema'
 import { eq, and, isNull } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const MOD = 'SopSeed'
 
@@ -1459,14 +1460,14 @@ const OPERATIVE_SOPS: SopEntry[] = [
 // All SOPs combined
 const SOPS: SopEntry[] = [...GENERAL_SOPS, ...OPERATIVE_SOPS]
 
-export async function seedSopCatalog(tenantId: string) {
+export async function seedSopCatalog(_tenantId: string) {
   logger.info('Seeding SOP Catalog...', { module: MOD })
 
   // 1. Deliverable-Lookup-Map aufbauen
   const allDeliverables = await db
     .select({ id: deliverables.id, name: deliverables.name })
     .from(deliverables)
-    .where(eq(deliverables.tenantId, tenantId))
+    .where(eq(deliverables.tenantId, TENANT_ID))
 
   const deliverableByName = new Map(allDeliverables.map(d => [d.name, d.id]))
   logger.info(`${allDeliverables.length} Deliverables geladen fuer Lookup`, { module: MOD })
@@ -1483,7 +1484,7 @@ export async function seedSopCatalog(tenantId: string) {
         .from(sopDocuments)
         .where(
           and(
-            eq(sopDocuments.tenantId, tenantId),
+            eq(sopDocuments.tenantId, TENANT_ID),
             eq(sopDocuments.sourceTaskId, sop.source_task_id),
             isNull(sopDocuments.deletedAt),
           ),
@@ -1498,7 +1499,7 @@ export async function seedSopCatalog(tenantId: string) {
         .from(sopDocuments)
         .where(
           and(
-            eq(sopDocuments.tenantId, tenantId),
+            eq(sopDocuments.tenantId, TENANT_ID),
             eq(sopDocuments.title, sop.title),
             isNull(sopDocuments.deletedAt),
           ),
@@ -1527,7 +1528,7 @@ export async function seedSopCatalog(tenantId: string) {
 
     // 4. SOP direkt einfuegen (db.insert, NICHT SopService.create)
     await db.insert(sopDocuments).values({
-      tenantId,
+      tenantId: TENANT_ID,
       title: sop.title,
       category: sop.category,
       status: sop.status ?? 'draft',

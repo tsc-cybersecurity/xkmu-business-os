@@ -3,6 +3,7 @@ import { deliverableModules } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { DeliverableService } from '@/lib/services/deliverable.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const MOD = 'DeliverableSeed'
 
@@ -673,7 +674,7 @@ const MODULES = [
   },
 ]
 
-export async function seedDeliverableCatalog(tenantId: string) {
+export async function seedDeliverableCatalog(_tenantId: string) {
   logger.info('Seeding Deliverable Catalog...', { module: MOD })
   let moduleCount = 0
   let deliverableCount = 0
@@ -685,7 +686,7 @@ export async function seedDeliverableCatalog(tenantId: string) {
       .from(deliverableModules)
       .where(
         and(
-          eq(deliverableModules.tenantId, tenantId),
+          eq(deliverableModules.tenantId, TENANT_ID),
           eq(deliverableModules.code, m.code),
         ),
       )
@@ -698,7 +699,7 @@ export async function seedDeliverableCatalog(tenantId: string) {
       const [created] = await db
         .insert(deliverableModules)
         .values({
-          tenantId,
+          tenantId: TENANT_ID,
           code: m.code,
           name: m.name,
           category: m.categoryCode, // 'A' | 'B' | 'C' | 'D'
@@ -712,14 +713,14 @@ export async function seedDeliverableCatalog(tenantId: string) {
     }
 
     // 2. Deliverables fuer dieses Modul idempotent anlegen
-    const existingDels = await DeliverableService.list(tenantId, { moduleId })
+    const existingDels = await DeliverableService.list(TENANT_ID, { moduleId })
     if (existingDels.length > 0) {
       logger.info(`Deliverables fuer ${m.code} existieren bereits (${existingDels.length}), skip`, { module: MOD })
       continue
     }
 
     for (const d of m.deliverables) {
-      await DeliverableService.create(tenantId, {
+      await DeliverableService.create(TENANT_ID, {
         moduleId,
         name: d.name,
         description: d.description,

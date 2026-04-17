@@ -5,21 +5,22 @@ import { EosService } from '@/lib/services/eos.service'
 import { OkrService } from '@/lib/services/okr.service'
 import { SopService } from '@/lib/services/sop.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const MOD = 'ManagementSeed'
 
-export async function seedManagementFramework(tenantId: string) {
+export async function seedManagementFramework(_tenantId: string) {
   logger.info('Seeding Management Framework...', { module: MOD })
 
   // Grab first user for owner references
   const [firstUser] = await db.select().from(users)
-    .where(eq(users.tenantId, tenantId)).limit(1)
+    .where(eq(users.tenantId, TENANT_ID)).limit(1)
   const ownerId = firstUser?.id ?? null
 
   // ── VTO ──────────────────────────────────────────────────────────────
-  const existingVto = await EosService.getVTO(tenantId)
+  const existingVto = await EosService.getVTO(TENANT_ID)
   if (!existingVto) {
-    await EosService.upsertVTO(tenantId, {
+    await EosService.upsertVTO(TENANT_ID, {
       coreValues: ['Sicherheit', 'Pragmatismus', 'Kundenfokus', 'Innovation', 'Transparenz'],
       coreFocus: {
         purpose: 'KMU vor Cyberbedrohungen schuetzen und digital befaehigen',
@@ -48,9 +49,9 @@ export async function seedManagementFramework(tenantId: string) {
   }
 
   // ── Rocks (Q2-2026) ─────────────────────────────────────────────────
-  const existingRocks = await EosService.listRocks(tenantId, 'Q2-2026')
+  const existingRocks = await EosService.listRocks(TENANT_ID, 'Q2-2026')
   if (existingRocks.length === 0) {
-    const rock1 = await EosService.createRock(tenantId, {
+    const rock1 = await EosService.createRock(TENANT_ID, {
       title: 'Website-Relaunch xkmu.de',
       ownerId,
       quarter: 'Q2-2026',
@@ -60,7 +61,7 @@ export async function seedManagementFramework(tenantId: string) {
     await EosService.addMilestone(rock1.id, { title: 'Design-Entwurf abgenommen', dueDate: '2026-05-15', sequence: 1 })
     await EosService.addMilestone(rock1.id, { title: 'Go-Live Termin eingehalten', dueDate: '2026-06-30', sequence: 2 })
 
-    const rock2 = await EosService.createRock(tenantId, {
+    const rock2 = await EosService.createRock(TENANT_ID, {
       title: '5 Neukunden DIN SPEC 27076',
       ownerId,
       quarter: 'Q2-2026',
@@ -71,7 +72,7 @@ export async function seedManagementFramework(tenantId: string) {
     await EosService.addMilestone(rock2.id, { title: '3 Audits abgeschlossen', dueDate: '2026-05-31', sequence: 2 })
     await EosService.addMilestone(rock2.id, { title: '5 Audits abgeschlossen', dueDate: '2026-06-30', sequence: 3 })
 
-    const rock3 = await EosService.createRock(tenantId, {
+    const rock3 = await EosService.createRock(TENANT_ID, {
       title: 'BusinessOS SOP-Modul live',
       ownerId,
       quarter: 'Q2-2026',
@@ -89,7 +90,7 @@ export async function seedManagementFramework(tenantId: string) {
   }
 
   // ── Scorecard Metrics + 4 weeks sample data ─────────────────────────
-  const existingMetrics = await EosService.listMetrics(tenantId)
+  const existingMetrics = await EosService.listMetrics(TENANT_ID)
   if (existingMetrics.length === 0) {
     const metricsData = [
       { name: 'Neue Leads', goal: 10, unit: 'Stk', weeks: [8, 12, 9, 11] },
@@ -101,7 +102,7 @@ export async function seedManagementFramework(tenantId: string) {
     const weekLabels = ['2026-W14', '2026-W13', '2026-W12', '2026-W11']
 
     for (const m of metricsData) {
-      const metric = await EosService.createMetric(tenantId, { name: m.name, goal: m.goal, unit: m.unit, ownerId })
+      const metric = await EosService.createMetric(TENANT_ID, { name: m.name, goal: m.goal, unit: m.unit, ownerId })
       for (let i = 0; i < weekLabels.length; i++) {
         await EosService.upsertEntry(metric.id, weekLabels[i], m.weeks[i])
       }
@@ -112,27 +113,27 @@ export async function seedManagementFramework(tenantId: string) {
   }
 
   // ── Issues (IDS) ────────────────────────────────────────────────────
-  const existingIssues = await EosService.listIssues(tenantId)
+  const existingIssues = await EosService.listIssues(TENANT_ID)
   if (existingIssues.length === 0) {
-    await EosService.createIssue(tenantId, {
+    await EosService.createIssue(TENANT_ID, {
       title: 'Onboarding-Prozess zu langsam',
       description: 'Neue Kunden warten teilweise 2 Wochen auf vollstaendiges Setup. Ziel: unter 3 Werktage.',
       priority: 'high',
       createdBy: ownerId,
     })
-    await EosService.createIssue(tenantId, {
+    await EosService.createIssue(TENANT_ID, {
       title: 'Backup-Monitoring fehlt bei 3 Kunden',
       description: 'Bei drei Managed-Security-Kunden ist kein automatisches Backup-Monitoring eingerichtet.',
       priority: 'high',
       createdBy: ownerId,
     })
-    const newsletter = await EosService.createIssue(tenantId, {
+    const newsletter = await EosService.createIssue(TENANT_ID, {
       title: 'Newsletter-Tool evaluieren',
       description: 'Aktuell kein professionelles Newsletter-Tool im Einsatz. Optionen pruefen.',
       priority: 'low',
       createdBy: ownerId,
     })
-    await EosService.updateIssue(tenantId, newsletter.id, {
+    await EosService.updateIssue(TENANT_ID, newsletter.id, {
       status: 'solved',
       solution: 'Entscheidung fuer Brevo',
     })
@@ -142,9 +143,9 @@ export async function seedManagementFramework(tenantId: string) {
   }
 
   // ── OKR Cycle + Objectives + Key Results ────────────────────────────
-  const existingCycle = await OkrService.getActiveCycle(tenantId)
+  const existingCycle = await OkrService.getActiveCycle(TENANT_ID)
   if (!existingCycle) {
-    const cycle = await OkrService.createCycle(tenantId, {
+    const cycle = await OkrService.createCycle(TENANT_ID, {
       name: 'Q2 2026',
       type: 'quarterly',
       startDate: '2026-04-01',
@@ -153,7 +154,7 @@ export async function seedManagementFramework(tenantId: string) {
     })
 
     // Objective 1
-    const obj1 = await OkrService.createObjective(tenantId, {
+    const obj1 = await OkrService.createObjective(TENANT_ID, {
       cycleId: cycle.id,
       title: 'Marktposition in Thueringen ausbauen',
       ownerId,
@@ -163,7 +164,7 @@ export async function seedManagementFramework(tenantId: string) {
     await OkrService.addKeyResult(obj1.id, { title: '3 Kooperationspartner gewonnen', startValue: 0, targetValue: 3, currentValue: 1, unit: 'Partner' })
 
     // Objective 2
-    const obj2 = await OkrService.createObjective(tenantId, {
+    const obj2 = await OkrService.createObjective(TENANT_ID, {
       cycleId: cycle.id,
       title: 'Produktqualitaet BusinessOS steigern',
       ownerId,
@@ -178,10 +179,10 @@ export async function seedManagementFramework(tenantId: string) {
   }
 
   // ── SOPs ─────────────────────────────────────────────────────────────
-  const existingSops = await SopService.list(tenantId)
+  const existingSops = await SopService.list(TENANT_ID)
   if (existingSops.length === 0) {
     // SOP 1: Onboarding neuer Kunde
-    const sop1 = await SopService.create(tenantId, {
+    const sop1 = await SopService.create(TENANT_ID, {
       title: 'Onboarding neuer Kunde',
       category: 'Vertrieb',
       status: 'approved',
@@ -199,7 +200,7 @@ export async function seedManagementFramework(tenantId: string) {
     ])
 
     // SOP 2: Incident Response Ablauf
-    const sop2 = await SopService.create(tenantId, {
+    const sop2 = await SopService.create(TENANT_ID, {
       title: 'Incident Response Ablauf',
       category: 'IT & Cybersicherheit',
       status: 'approved',
@@ -218,7 +219,7 @@ export async function seedManagementFramework(tenantId: string) {
     ])
 
     // SOP 3: Angebotserstellung
-    const sop3 = await SopService.create(tenantId, {
+    const sop3 = await SopService.create(TENANT_ID, {
       title: 'Angebotserstellung',
       category: 'Vertrieb',
       status: 'approved',
@@ -235,7 +236,7 @@ export async function seedManagementFramework(tenantId: string) {
     ])
 
     // SOP 4: Blogpost-Workflow
-    const sop4 = await SopService.create(tenantId, {
+    const sop4 = await SopService.create(TENANT_ID, {
       title: 'Blogpost-Workflow',
       category: 'Marketing',
       status: 'draft',
@@ -251,7 +252,7 @@ export async function seedManagementFramework(tenantId: string) {
     ])
 
     // SOP 5: IT-Security Quick-Check Durchfuehrung
-    const sop5 = await SopService.create(tenantId, {
+    const sop5 = await SopService.create(TENANT_ID, {
       title: 'IT-Security Quick-Check Durchfuehrung',
       category: 'IT & Cybersicherheit',
       status: 'approved',
