@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
       }
 
       const needle = `%${q}%`
-      const tenantId = TENANT_ID
       const PER_TYPE_LIMIT = 5
 
       // Run the three searches in parallel — no dependencies between them.
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
           .from(leads)
           .where(
             and(
-              eq(leads.tenantId, tenantId),
+              eq(leads.tenantId, TENANT_ID),
               or(
                 ilike(leads.title, needle),
                 ilike(leads.contactFirstName, needle),
@@ -67,7 +66,7 @@ export async function GET(request: NextRequest) {
           .from(companies)
           .where(
             and(
-              eq(companies.tenantId, tenantId),
+              eq(companies.tenantId, TENANT_ID),
               or(
                 ilike(companies.name, needle),
                 ilike(companies.email, needle),
@@ -88,7 +87,7 @@ export async function GET(request: NextRequest) {
           .from(persons)
           .where(
             and(
-              eq(persons.tenantId, tenantId),
+              eq(persons.tenantId, TENANT_ID),
               or(
                 ilike(persons.firstName, needle),
                 ilike(persons.lastName, needle),
