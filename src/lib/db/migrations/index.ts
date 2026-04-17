@@ -28,4 +28,8 @@ export const MIGRATIONS: Migration[] = [
     name: '002_tenant_consolidation.sql',
     description: 'Tenant-Konsolidierung: default -> xkmu (Option B: CRM-Seed verwerfen)',
   },
+  {
+    name: '003_drop_tenant_id.sql',
+    description: 'IRREVERSIBEL: DROP tenant_id aus 67 Tabellen, FKs + Indexes entfernt',
+  },
 ]
