@@ -93,7 +93,6 @@ export async function POST(request: NextRequest) {
       // 7. Call AI
       const fullPrompt = `${template.systemPrompt}\n\n${userPrompt}`
       const aiResult = await AIService.completeWithContext(fullPrompt, {
-        TENANT_ID,
         feature: 'company_knowledge',
       }, {
         maxTokens: 4000,
