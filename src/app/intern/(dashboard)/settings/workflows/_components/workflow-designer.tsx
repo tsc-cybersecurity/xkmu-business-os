@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { GripVertical, Trash2, Plus, ChevronDown, ChevronRight, Settings,
   Building, User, Link as LinkIcon, Bot, BarChart3, FileText, Mail,
-  Bell, Clock, Zap, ArrowDown,
+  Bell, Clock, Zap, ArrowDown, Sparkles,
 } from 'lucide-react'
 
 interface WorkflowStep {
@@ -44,6 +45,7 @@ const ICONS: Record<string, React.ReactNode> = {
   Bell: <Bell className="h-4 w-4" />,
   Settings: <Settings className="h-4 w-4" />,
   Clock: <Clock className="h-4 w-4" />,
+  Sparkles: <Sparkles className="h-4 w-4" />,
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -64,7 +66,22 @@ export function WorkflowDesigner({ steps, actions, onChange }: WorkflowDesignerP
   const [expandedStep, setExpandedStep] = useState<number | null>(null)
   const [dragIdx, setDragIdx] = useState<number | null>(null)
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null)
+  const [customPrompts, setCustomPrompts] = useState<Array<{ id: string; name: string }>>([])
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Only fetch if any action references the custom_prompt type
+    const needsPrompts = actions.some(a => a.configFields.some(f => f.type === 'custom_prompt'))
+    if (!needsPrompts) return
+    fetch('/api/v1/custom-prompts?active=true')
+      .then(r => r.json())
+      .then(data => {
+        if (data?.success && Array.isArray(data.data?.prompts)) {
+          setCustomPrompts(data.data.prompts.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
+        }
+      })
+      .catch(() => { /* silent */ })
+  }, [actions])
 
   const addStep = (actionName: string) => {
     const def = actions.find(a => a.name === actionName)
@@ -218,29 +235,48 @@ export function WorkflowDesigner({ steps, actions, onChange }: WorkflowDesignerP
                   {def?.configFields && def.configFields.length > 0 && (
                     <div className="space-y-2 pt-1">
                       <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Konfiguration</div>
-                      {def.configFields.map(field => (
-                        <div key={field.key} className="space-y-1">
-                          <Label className="text-xs">{field.label}</Label>
-                          {field.type === 'select' && field.options ? (
-                            <Select
-                              value={String((step.config || {})[field.key] || '')}
-                              onValueChange={v => updateStep(idx, { config: { ...(step.config || {}), [field.key]: v } })}
-                            >
-                              <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                {field.options.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          ) : (
-                            <Input
-                              className="h-8 text-sm"
-                              type={field.type === 'number' ? 'number' : 'text'}
-                              value={String((step.config || {})[field.key] || '')}
-                              onChange={e => updateStep(idx, { config: { ...(step.config || {}), [field.key]: field.type === 'number' ? Number(e.target.value) : e.target.value } })}
-                            />
-                          )}
-                        </div>
-                      ))}
+                      {def.configFields.map(field => {
+                        const currentVal = (step.config || {})[field.key]
+                        const setVal = (v: unknown) => updateStep(idx, { config: { ...(step.config || {}), [field.key]: v } })
+
+                        return (
+                          <div key={field.key} className="space-y-1">
+                            {field.type !== 'boolean' && <Label className="text-xs">{field.label}</Label>}
+                            {field.type === 'select' && field.options ? (
+                              <Select value={String(currentVal || '')} onValueChange={setVal}>
+                                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {field.options.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            ) : field.type === 'custom_prompt' ? (
+                              <Select value={String(currentVal || '')} onValueChange={setVal}>
+                                <SelectTrigger className="h-8 text-sm">
+                                  <SelectValue placeholder={customPrompts.length === 0 ? 'Noch keine eigenen Prompts angelegt' : 'Prompt auswählen...'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {customPrompts.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            ) : field.type === 'boolean' ? (
+                              <label className="flex items-center gap-2 text-xs cursor-pointer">
+                                <Checkbox
+                                  checked={currentVal !== false}
+                                  onCheckedChange={v => setVal(!!v)}
+                                />
+                                {field.label}
+                              </label>
+                            ) : (
+                              <Input
+                                className="h-8 text-sm"
+                                type={field.type === 'number' ? 'number' : 'text'}
+                                value={String(currentVal || '')}
+                                onChange={e => setVal(field.type === 'number' ? Number(e.target.value) : e.target.value)}
+                              />
+                            )}
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
                 </div>

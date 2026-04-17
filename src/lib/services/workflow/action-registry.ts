@@ -32,7 +32,7 @@ export interface ActionDefinition {
   description: string
   category: 'data' | 'ai' | 'communication' | 'logic'
   icon: string
-  configFields?: Array<{ key: string; label: string; type: 'string' | 'number' | 'boolean' | 'select' | 'json'; options?: string[] }>
+  configFields?: Array<{ key: string; label: string; type: 'string' | 'number' | 'boolean' | 'select' | 'json' | 'custom_prompt'; options?: string[] }>
   execute: ActionFn
 }
 
@@ -356,6 +356,60 @@ const ACTIONS: Record<string, ActionDefinition> = {
       const seconds = (config.seconds as number) || 5
       await new Promise(resolve => setTimeout(resolve, seconds * 1000))
       return { success: true, data: { waited: seconds } }
+    },
+  },
+
+  run_custom_prompt: {
+    name: 'run_custom_prompt',
+    label: 'Eigenen KI-Prompt ausführen',
+    description: 'Führt einen eigenen KI-Prompt mit Firmenkontext aus. Optional wird das Ergebnis als Aktivität gespeichert.',
+    category: 'ai',
+    icon: 'Sparkles',
+    configFields: [
+      { key: 'promptId', label: 'Prompt', type: 'custom_prompt' },
+      { key: 'saveAsActivity', label: 'Ergebnis als Aktivität speichern', type: 'boolean' },
+    ],
+    execute: async (ctx, config) => {
+      const promptId = (config.promptId as string)?.trim()
+      if (!promptId) return { success: false, error: 'promptId fehlt' }
+
+      const companyId =
+        (ctx.triggerData.companyId as string | undefined) ||
+        ((ctx.stepResults.find_or_create_company as Record<string, unknown>)?.companyId as string | undefined) ||
+        null
+
+      try {
+        const { CustomAiPromptService } = await import('@/lib/services/ai/custom-prompt.service')
+        const result = await CustomAiPromptService.execute({ promptId, companyId })
+
+        const saveAsActivity = config.saveAsActivity !== false // default true
+        let activityId: string | undefined
+        if (saveAsActivity && companyId) {
+          const personId = (ctx.stepResults.find_or_create_person as Record<string, unknown>)?.personId as string | undefined
+          const [row] = await db.insert(activities).values({
+            companyId,
+            personId: personId || null,
+            type: result.activityType || 'note',
+            subject: result.subject,
+            content: result.content,
+            metadata: { source: 'workflow', workflowAction: 'run_custom_prompt', promptId },
+          }).returning({ id: activities.id })
+          activityId = row?.id
+        }
+
+        return {
+          success: true,
+          data: {
+            promptId,
+            companyId,
+            subject: result.subject,
+            content: result.content,
+            activityId,
+          },
+        }
+      } catch (err) {
+        return { success: false, error: `Prompt-Ausführung fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}` }
+      }
     },
   },
 }
