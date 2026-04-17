@@ -54,9 +54,9 @@ export default async function ApiDocsPage() {
         <Card>
           <CardHeader>
             <Shield className="h-8 w-8 text-muted-foreground" />
-            <CardTitle className="mt-4">Tenant-Isolation</CardTitle>
+            <CardTitle className="mt-4">RBAC</CardTitle>
             <CardDescription>
-              Automatische Datentrennung pro Tenant
+              Rollenbasierte Zugriffskontrolle pro Modul
             </CardDescription>
           </CardHeader>
           <CardContent>

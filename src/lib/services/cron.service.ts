@@ -6,7 +6,7 @@
  */
 
 import { db } from '@/lib/db'
-import { cronJobs, taskQueue, tenants } from '@/lib/db/schema'
+import { cronJobs, taskQueue } from '@/lib/db/schema'
 import { eq, and, lte, asc } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 import type { CronJob } from '@/lib/db/schema'
@@ -132,10 +132,6 @@ export const CronService = {
   async executeJob(job: CronJob): Promise<{ success: boolean; error?: string }> {
     const startTime = Date.now()
 
-    // Get tenant for task-queue logging
-    const allTenants = await db.select({ id: tenants.id, name: tenants.name }).from(tenants).where(eq(tenants.status, 'active'))
-    const tenant = allTenants.find(t => t.name !== 'Default Organisation') || allTenants[0]
-
     // Mark as running
     await db.update(cronJobs).set({
       lastRunStatus: 'running',
@@ -156,12 +152,8 @@ export const CronService = {
           const config = (job.actionConfig || {}) as Record<string, unknown>
           const trigger = (config.trigger as string) || 'cron.triggered'
           const { WorkflowEngine } = await import('./workflow')
-          if (tenant) {
-            await WorkflowEngine.fire(trigger, { cronJobId: job.id, cronJobName: job.name })
-            msg = `Workflow trigger "${trigger}" fired`
-          } else {
-            msg = 'No active tenant found'
-          }
+          await WorkflowEngine.fire(trigger, { cronJobId: job.id, cronJobName: job.name })
+          msg = `Workflow trigger "${trigger}" fired`
           break
         }
         case 'api_call': {
@@ -182,21 +174,19 @@ export const CronService = {
       const durationMs = Date.now() - startTime
 
       // Log to task_queue
-      if (tenant) {
-        try {
-          await db.insert(taskQueue).values({
-            type: 'cron',
-            status: 'completed',
-            priority: 3,
-            payload: { cronJobId: job.id, cronJobName: job.name, actionType: job.actionType, message: msg },
-            result: { success: true, durationMs, message: msg },
-            executedAt: new Date(),
-            referenceType: 'cron_job',
-            referenceId: job.id,
-          })
-        } catch (logErr) {
-          logger.warn(`Failed to log cron result to task_queue: ${logErr}`, { module: 'CronService' })
-        }
+      try {
+        await db.insert(taskQueue).values({
+          type: 'cron',
+          status: 'completed',
+          priority: 3,
+          payload: { cronJobId: job.id, cronJobName: job.name, actionType: job.actionType, message: msg },
+          result: { success: true, durationMs, message: msg },
+          executedAt: new Date(),
+          referenceType: 'cron_job',
+          referenceId: job.id,
+        })
+      } catch (logErr) {
+        logger.warn(`Failed to log cron result to task_queue: ${logErr}`, { module: 'CronService' })
       }
 
       // Update job status + next run
@@ -216,21 +206,19 @@ export const CronService = {
       const durationMs = Date.now() - startTime
 
       // Log failure to task_queue
-      if (tenant) {
-        try {
-          await db.insert(taskQueue).values({
-            type: 'cron',
-            status: 'failed',
-            priority: 3,
-            payload: { cronJobId: job.id, cronJobName: job.name, actionType: job.actionType },
-            error: errorMsg,
-            executedAt: new Date(),
-            referenceType: 'cron_job',
-            referenceId: job.id,
-          })
-        } catch (logErr) {
-          logger.warn(`Failed to log cron error to task_queue: ${logErr}`, { module: 'CronService' })
-        }
+      try {
+        await db.insert(taskQueue).values({
+          type: 'cron',
+          status: 'failed',
+          priority: 3,
+          payload: { cronJobId: job.id, cronJobName: job.name, actionType: job.actionType },
+          error: errorMsg,
+          executedAt: new Date(),
+          referenceType: 'cron_job',
+          referenceId: job.id,
+        })
+      } catch (logErr) {
+        logger.warn(`Failed to log cron error to task_queue: ${logErr}`, { module: 'CronService' })
       }
 
       await db.update(cronJobs).set({

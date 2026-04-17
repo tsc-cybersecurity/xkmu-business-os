@@ -775,12 +775,10 @@ async function seedCheck() {
     .from(tenants)
     .limit(1)
 
-  let tenantId: string
   let adminUserId: string | null = null
 
   if (existingTenants.length > 0) {
     logger.info('Tenant already exists, skipping tenant/user seed...')
-    tenantId = existingTenants[0].id
 
     // Find admin user for blog authorship
     const [adminUser] = await db
@@ -798,7 +796,6 @@ async function seedCheck() {
       .values(SEED_DATA.tenant)
       .returning()
 
-    tenantId = tenant.id
     logger.info(`Created tenant: ${tenant.name} (${tenant.slug})`)
 
     // 2. Create Admin User

@@ -4,8 +4,8 @@ import { AIService } from '@/lib/services/ai'
 import { withPermission } from '@/lib/auth/require-permission'
 export async function GET(request: NextRequest) {
   return withPermission(request, 'ai_providers', 'read', async (auth) => {
-    // Tenant-aware Provider-Status
-    const dbProviders = await AIService.getAvailableProvidersForTenant()
+    // DB-configured Provider-Status
+    const dbProviders = await AIService.getAvailableDbProviders()
 
     // Legacy Fallback
     const staticProviders = await AIService.getAvailableProviders()

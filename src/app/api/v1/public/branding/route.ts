@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { cmsSettings, tenants } from '@/lib/db/schema'
+import { cmsSettings } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { TenantService } from '@/lib/services/tenant.service'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,18 +20,13 @@ export async function GET() {
 
     const s = (row?.value ?? {}) as Record<string, unknown>
 
-    // 2. Fallback: check tenant settings for logo (uploaded via Organisation page)
+    // 2. Fallback: check organization settings for logo (uploaded via Organisation page)
     let logoUrl = (s.logoUrl as string) || ''
     let logoAlt = (s.logoAlt as string) || ''
 
     if (!logoUrl) {
-      const allTenants = await db
-        .select({ settings: tenants.settings, name: tenants.name })
-        .from(tenants)
-        .where(eq(tenants.status, 'active'))
-
-      const real = allTenants.find((t) => t.name !== 'Default Organisation') || allTenants[0]
-      const ts = (real?.settings ?? {}) as Record<string, unknown>
+      const org = await TenantService.getById()
+      const ts = (org?.settings ?? {}) as Record<string, unknown>
       logoUrl = (ts.logoUrl as string) || ''
       if (!logoAlt) logoAlt = (ts.logoAlt as string) || ''
     }

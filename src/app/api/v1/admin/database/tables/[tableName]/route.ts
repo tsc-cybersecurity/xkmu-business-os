@@ -105,10 +105,6 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         return apiError('MISSING_ID', 'ID ist erforderlich', 400)
       }
 
-      // Prevent changing tenant_id
-      delete updates.tenant_id
-      delete updates.tenantId
-
       // Get allowed column names for this table
       const colRows = toRows(await db.execute(sql`
         SELECT column_name FROM information_schema.columns

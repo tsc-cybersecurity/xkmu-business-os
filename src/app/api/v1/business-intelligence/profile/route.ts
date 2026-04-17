@@ -10,7 +10,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 export async function GET(request: NextRequest) {
   return withPermission(request, 'business_intelligence', 'read', async (auth) => {
-    const profile = await BusinessProfileService.getByTenant()
+    const profile = await BusinessProfileService.getLatest()
     return apiSuccess(profile)
   })
 }

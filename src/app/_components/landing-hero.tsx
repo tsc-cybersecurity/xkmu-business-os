@@ -55,8 +55,8 @@ export function LandingHero() {
             <div className="text-sm text-gray-300 mt-1">Open Source</div>
           </div>
           <div>
-            <div className="text-3xl md:text-4xl font-bold text-white">Multi</div>
-            <div className="text-sm text-gray-300 mt-1">Tenant</div>
+            <div className="text-3xl md:text-4xl font-bold text-white">Self</div>
+            <div className="text-sm text-gray-300 mt-1">Hosted</div>
           </div>
           <div>
             <div className="text-3xl md:text-4xl font-bold text-white">KI</div>

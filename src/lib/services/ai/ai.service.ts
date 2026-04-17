@@ -354,9 +354,9 @@ class AIServiceClass {
   }
 
   /**
-   * Tenant-aware: Prüft welche DB-Provider verfügbar sind
+   * Prüft welche DB-Provider verfügbar sind
    */
-  async getAvailableProvidersForTenant(): Promise<Array<{
+  async getAvailableDbProviders(): Promise<Array<{
     id: string
     name: string
     providerType: string

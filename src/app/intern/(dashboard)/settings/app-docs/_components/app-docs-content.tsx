@@ -181,7 +181,7 @@ withPermission(request, 'companies', 'read', async (auth) => {
             <SectionBlock title="Seiten">
               <PageTable pages={[
                 { url: '/intern/login', name: 'Login', desc: 'Anmeldung mit E-Mail und Passwort. Weiterleitung zum Dashboard nach Erfolg.' },
-                { url: '/intern/register', name: 'Registrierung', desc: 'Neuen Benutzer und Mandanten (Tenant) anlegen. Erstellt automatisch Admin-Rolle.' },
+                { url: '/intern/register', name: 'Registrierung', desc: 'Neuen Admin-Benutzer anlegen. Erstellt automatisch Admin-Rolle.' },
               ]} />
             </SectionBlock>
 
@@ -213,7 +213,7 @@ withPermission(request, 'companies', 'read', async (auth) => {
               <EndpointDoc
                 method="POST"
                 path="/api/v1/auth/register"
-                description="Neuen Benutzer und Tenant registrieren."
+                description="Neuen Admin-Benutzer registrieren."
                 requestBody={{
                   email: 'neu@example.com',
                   password: 'sicheres-passwort',

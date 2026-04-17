@@ -19,7 +19,7 @@ export const adminService: ApiService = {
       method: 'GET',
       path: '/api/v1/admin/database/tables/{tableName}',
       summary: 'Tabellendaten paginiert lesen',
-      description: 'Gibt Spalten-Metadaten und paginierte Zeilen einer Tabelle zurueck. Mandanten-gefilterte Tabellen werden automatisch nach tenant_id eingeschraenkt.',
+      description: 'Gibt Spalten-Metadaten und paginierte Zeilen einer Tabelle zurueck.',
       params: [
         { name: 'tableName', in: 'path', required: true, type: 'string', description: 'Tabellenname', example: 'users' },
         { name: 'page', in: 'query', required: false, type: 'number', description: 'Seitennummer (ab 1)', example: '1' },
@@ -36,7 +36,7 @@ export const adminService: ApiService = {
       method: 'PUT',
       path: '/api/v1/admin/database/tables/{tableName}',
       summary: 'Zeile in einer Tabelle aktualisieren',
-      description: 'Aktualisiert eine Zeile anhand der ID. tenant_id kann nicht geaendert werden. Globale Tabellen erfordern Owner-Rolle. Nur gueltige Spaltennamen werden akzeptiert.',
+      description: 'Aktualisiert eine Zeile anhand der ID. Globale Tabellen erfordern Owner-Rolle. Nur gueltige Spaltennamen werden akzeptiert.',
       params: [
         { name: 'tableName', in: 'path', required: true, type: 'string', description: 'Tabellenname', example: 'users' },
       ],

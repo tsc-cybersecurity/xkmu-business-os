@@ -41,7 +41,7 @@ export const authService: ApiService = {
       path: '/api/v1/auth/register',
       summary: 'Neues Konto registrieren',
       description:
-        'Erstellt einen neuen Tenant (Mandant) mit zugehoeriger Firma, setzt Default-Rollen, seeded strukturelle Daten und erstellt den ersten Admin-Benutzer. Setzt automatisch ein Session-Cookie. Rate-Limit: max 5 Registrierungen pro Minute pro IP.',
+        'Erstellt einen neuen Admin-Benutzer. Seeded Default-Rollen und strukturelle Daten (idempotent). Setzt automatisch ein Session-Cookie. Rate-Limit: max 5 Registrierungen pro Minute pro IP.',
       requestBody: {
         email: 'lisa@weber-consulting.de',
         password: 'meinPasswort456!',
@@ -59,11 +59,6 @@ export const authService: ApiService = {
             lastName: 'Weber',
             role: 'admin',
             roleId: 'r1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
-          },
-          tenant: {
-            id: 't1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
-            name: 'Weber Consulting GmbH',
-            slug: 'weber-consulting-gmbh',
           },
         },
       },

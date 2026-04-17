@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Business-Profil laden
-      const profile = await BusinessProfileService.getByTenant()
+      const profile = await BusinessProfileService.getLatest()
 
       // SWOT-Staerken extrahieren
       let strengths: string | undefined
