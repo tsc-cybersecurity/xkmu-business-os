@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  return withPermission(request, 'settings', 'update', async (auth) => {
+  return withPermission(request, 'settings', 'update', async (_auth) => {
     try {
       const body = await request.json()
       const validation = updateTenantSchema.safeParse(body)

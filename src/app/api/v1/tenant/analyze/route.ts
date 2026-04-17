@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
+import { TENANT_ID } from '@/lib/constants/tenant'
 import { db } from '@/lib/db'
 import { products, productCategories, leads, businessProfiles } from '@/lib/db/schema'
 import { eq, desc } from 'drizzle-orm'
@@ -11,7 +12,7 @@ import { logger } from '@/lib/utils/logger'
 import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
-  return withPermission(request, 'settings', 'update', async (auth) => {
+  return withPermission(request, 'settings', 'update', async (_auth) => {
     try {
       const tenantId = TENANT_ID
 

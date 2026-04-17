@@ -48,35 +48,39 @@ function exportRows(rows: Record<string, unknown>[], table: string): string {
 }
 
 export async function GET(request: NextRequest) {
+<<<<<<< HEAD
   return withPermission(request, 'database', 'read', async (auth) => {
   const tenantId = TENANT_ID
 
+=======
+  return withPermission(request, 'database', 'read', async (_auth) => {
+>>>>>>> 9e30423 (feat(05-02): handle special cases — export, import, tenant routes)
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder()
       const write = (text: string) => controller.enqueue(encoder.encode(text))
 
       // Write header
-      write(`-- SQL Export fuer Tenant: ${tenantId}\n`)
+      write(`-- SQL Export der xKMU-Instanz\n`)
       write(`-- Erstellt am: ${new Date().toISOString()}\n`)
       write(`-- =============================================\n\n`)
 
       try {
-        // 1. Tenant selbst (WHERE id = ...)
+        // 1. Tenant selbst (WHERE id = TENANT_ID)
         try {
           const rows = await db.execute<Record<string, unknown>>(
-            sql`SELECT * FROM tenants WHERE id = ${tenantId}`
+            sql`SELECT * FROM tenants WHERE id = ${TENANT_ID}`
           )
           write(exportRows(rows as unknown as Record<string, unknown>[], 'tenants'))
         } catch (error) {
           logger.error('Fehler beim Export der Tabelle tenants', error, { module: 'ExportDatabaseAPI' })
         }
 
-        // 2. Tenant-spezifische Tabellen (WHERE tenant_id = ...)
+        // 2. Tenant-spezifische Tabellen (alle Zeilen, kein Tenant-Filter)
         for (const table of TENANT_TABLES) {
           try {
             const rows = await db.execute<Record<string, unknown>>(
-              sql`SELECT * FROM ${sql.identifier(table)} WHERE tenant_id = ${tenantId}`
+              sql`SELECT * FROM ${sql.identifier(table)}`
             )
             write(exportRows(rows as unknown as Record<string, unknown>[], table))
           } catch (error) {
@@ -84,11 +88,11 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // 3. JOIN-Tabellen (kein tenant_id, aber ueber Parent verknuepft)
+        // 3. JOIN-Tabellen (alle Zeilen, kein Tenant-Filter)
         for (const jt of JOIN_TABLES) {
           try {
             const rows = await db.execute<Record<string, unknown>>(
-              sql`SELECT t.* FROM ${sql.identifier(jt.table)} t INNER JOIN ${sql.identifier(jt.parentTable)} p ON t.${sql.identifier(jt.foreignKey)} = p.${sql.identifier(jt.parentForeignKey)} WHERE p.tenant_id = ${tenantId}`
+              sql`SELECT * FROM ${sql.identifier(jt.table)}`
             )
             write(exportRows(rows as unknown as Record<string, unknown>[], jt.table))
           } catch (error) {
