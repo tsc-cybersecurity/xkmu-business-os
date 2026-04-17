@@ -59,10 +59,10 @@ export async function GET(request: NextRequest) {
       write(`-- =============================================\n\n`)
 
       try {
-        // 1. Tenant selbst (WHERE id = TENANT_ID)
+        // 1. Tenants (alle aktiven Tenants)
         try {
           const rows = await db.execute<Record<string, unknown>>(
-            sql`SELECT * FROM tenants WHERE id = ${TENANT_ID}`
+            sql`SELECT * FROM tenants`
           )
           write(exportRows(rows as unknown as Record<string, unknown>[], 'tenants'))
         } catch (error) {

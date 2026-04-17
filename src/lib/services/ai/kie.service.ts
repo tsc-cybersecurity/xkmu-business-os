@@ -24,8 +24,8 @@ export const KieService = {
   /**
    * Findet den kie.ai Provider für einen Tenant
    */
-  async getProvider(tenantId: string): Promise<KieProvider> {
-    const providers = await AiProviderService.getActiveProviders(tenantId)
+  async getProvider(): Promise<KieProvider> {
+    const providers = await AiProviderService.getActiveProviders()
     const kieConfig = providers.find((p) => p.providerType === 'kie')
 
     if (!kieConfig || !kieConfig.apiKey) {
@@ -39,12 +39,11 @@ export const KieService = {
    * Startet eine Video-Generierung
    */
   async createVideoTask(
-    tenantId: string,
     userId: string | null,
     params: VideoGenerationParams
   ): Promise<{ taskId: string }> {
     const startTime = Date.now()
-    const provider = await this.getProvider(tenantId)
+    const provider = await this.getProvider()
 
     try {
       const result = await provider.generateVideo(params.prompt, {
@@ -104,8 +103,8 @@ export const KieService = {
   /**
    * Fragt den Status einer Video-Generierung ab
    */
-  async getTaskStatus(tenantId: string, taskId: string): Promise<VideoTaskResult> {
-    const provider = await this.getProvider(tenantId)
+  async getTaskStatus(taskId: string): Promise<VideoTaskResult> {
+    const provider = await this.getProvider()
     const status = await provider.getTaskStatus(taskId)
 
     return {
@@ -118,7 +117,6 @@ export const KieService = {
    * Polling mit Exponential Backoff bis die Aufgabe fertig ist
    */
   async waitForCompletion(
-    tenantId: string,
     taskId: string,
     maxWaitMs = 300000 // 5 Minuten default
   ): Promise<VideoTaskResult> {

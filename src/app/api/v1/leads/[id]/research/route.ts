@@ -71,7 +71,7 @@ export async function POST(
         if (website) {
           logger.info(`Scraping company website: ${website}`, { module: 'LeadsResearchAPI' })
           try {
-            const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(website, undefined, TENANT_ID)
+            const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(website)
             if (scrapeResult.success && scrapeResult.combinedText) {
               websiteContent = scrapeResult.combinedText
               logger.info(`Website scraped (${websiteContent.length} chars)`, { module: 'LeadsResearchAPI' })

@@ -123,7 +123,7 @@ function stringifyObject(obj: Record<string, unknown>, index?: number): string {
 }
 
 /** Generate a 4-5 line German summary of activity content */
-async function generateSummary(tenantId: string, content: string, userId?: string | null): Promise<string> {
+async function generateSummary(content: string, userId?: string | null): Promise<string> {
   try {
     const response = await AIService.completeWithContext(
       `Fasse den folgenden Text in exakt 4-5 Saetzen zusammen. Schreibe praegnant und sachlich im Business-Stil. Antworte NUR mit der Zusammenfassung, ohne Einleitung oder Formatierung.\n\nText:\n${content}`,
@@ -138,7 +138,7 @@ async function generateSummary(tenantId: string, content: string, userId?: strin
 }
 
 export const CompanyActionsService = {
-  async generate(tenantId: string, companyId: string, actionSlug: string, userId?: string | null) {
+  async generate(companyId: string, actionSlug: string, userId?: string | null) {
     // 1. Load company data
     const company = await CompanyService.getById(companyId)
     if (!company) throw new Error('Firma nicht gefunden')
@@ -220,7 +220,7 @@ export const CompanyActionsService = {
 
       // Generate 4-5 line summary for preview
       const summary = textContent.length > 300
-        ? await generateSummary('', textContent, userId)
+        ? await generateSummary(textContent, userId)
         : ''
 
       return { subject, content: textContent, summary, actionSlug }
@@ -230,7 +230,7 @@ export const CompanyActionsService = {
 
     // Fallback: use raw text
     const fallbackSummary = response.text.length > 300
-      ? await generateSummary('', response.text, userId)
+      ? await generateSummary(response.text, userId)
       : ''
     return { subject: '', content: response.text, summary: fallbackSummary, actionSlug }
   },
@@ -239,7 +239,7 @@ export const CompanyActionsService = {
    * Generate summaries for activities that don't have one yet.
    * Called on company update to progressively enrich data.
    */
-  async enrichMissingSummaries(tenantId: string, companyId: string, userId?: string | null): Promise<number> {
+  async enrichMissingSummaries(companyId: string, userId?: string | null): Promise<number> {
     try {
       const result = await ActivityService.listByCompany(companyId, { limit: 20 })
       const activities = result.items || []

@@ -11,8 +11,6 @@ export interface CreateCmsBlockTemplateInput {
   isSystem?: boolean
 }
 
-// CMS Templates sind global — kein tenantId-Filter bei Queries.
-
 export const CmsBlockTemplateService = {
   async list(blockType?: string): Promise<CmsBlockTemplate[]> {
     const conditions = blockType ? [eq(cmsBlockTemplates.blockType, blockType)] : []

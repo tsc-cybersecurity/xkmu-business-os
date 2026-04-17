@@ -8,7 +8,7 @@ import { createActivitySchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
-import { ActivityService } from '@/lib/services/activity.service'
+import { ActivityService, type CreateActivityInput } from '@/lib/services/activity.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 export async function GET(request: NextRequest) {
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const activity = await ActivityService.create(validation.data, auth.userId)
+      const activity = await ActivityService.create(validation.data as CreateActivityInput, auth.userId)
       return apiSuccess(activity, undefined, 201)
     } catch (error) {
       logger.error('Error creating activity', error, { module: 'ActivitiesAPI' })

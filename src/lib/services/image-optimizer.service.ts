@@ -40,7 +40,7 @@ async function ensureDir(dir: string) {
 export const ImageOptimizerService = {
   /**
    * Optimiert einen Buffer und speichert als WebP.
-   * subDir: z.B. 'tenantId' oder 'generated/tenantId'
+   * subDir: z.B. 'uploads' oder 'generated'
    */
   async optimize(buffer: Buffer, subDir: string, options?: {
     maxWidth?: number

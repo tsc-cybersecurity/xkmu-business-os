@@ -33,7 +33,6 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
         .orderBy(desc(leads.createdAt))
         .limit(5)
 
-      // Offene Chancen (opportunities hat kein companyId — nur tenantId-Filter)
       const openOpps = await db
         .select()
         .from(opportunities)

@@ -50,7 +50,6 @@ const ACTIONS: Record<string, ActionDefinition> = {
     ],
     execute: async (ctx, config) => {
       const companyName = (ctx.triggerData.company as string)?.trim()
-      const tenantId = ctx.tenantId
       const fallback = (config.fallbackName as string) || NO_COMPANY_NAME
 
       if (!companyName) {

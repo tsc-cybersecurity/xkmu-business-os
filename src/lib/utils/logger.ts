@@ -2,7 +2,6 @@ type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 interface LogContext {
   module?: string
-  tenantId?: string
   userId?: string
   [key: string]: unknown
 }

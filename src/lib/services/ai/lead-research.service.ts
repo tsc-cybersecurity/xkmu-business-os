@@ -470,26 +470,21 @@ export const LeadResearchService = {
     let prompt: string
     let systemPrompt: string | undefined
 
-    if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault('lead_research')
-      systemPrompt = template.systemPrompt || undefined
+    const template = await AiPromptTemplateService.getOrDefault('lead_research')
+    systemPrompt = template.systemPrompt || undefined
 
-      const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
-        companyName: input.companyName,
-        personName: input.personName,
-        email: input.email,
-        website: input.website,
-        additionalContext: input.additionalContext,
-        websiteContent: input.websiteContent,
-      })
+    const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
+      companyName: input.companyName,
+      personName: input.personName,
+      email: input.email,
+      website: input.website,
+      additionalContext: input.additionalContext,
+      websiteContent: input.websiteContent,
+    })
 
-      prompt = template.outputFormat
-        ? `${userPrompt}\n\n${template.outputFormat}`
-        : userPrompt
-    } else {
-      // Fallback auf alten hart codierten Prompt (ohne Tenant-Kontext)
-      prompt = buildLeadResearchPrompt(input)
-    }
+    prompt = template.outputFormat
+      ? `${userPrompt}\n\n${template.outputFormat}`
+      : userPrompt
 
     const response = await aiComplete(prompt, { maxTokens: 4096, temperature: 0.3, systemPrompt }, ctx)
 
@@ -522,31 +517,29 @@ export const LeadResearchService = {
     research: CompanyResearchResult
     scrapedPages: Array<{ url: string; title: string; content: string; scrapedAt: string }>
   }> {
-    // Step 0: Load Firecrawl API key from DB if tenant context is available
+    // Step 0: Load Firecrawl API key from DB
     let firecrawlApiKey: string | undefined
-    if (context?.tenantId) {
-      try {
-        const { db } = await import('@/lib/db')
-        const { aiProviders } = await import('@/lib/db/schema')
-        const { eq, and } = await import('drizzle-orm')
+    try {
+      const { db } = await import('@/lib/db')
+      const { aiProviders } = await import('@/lib/db/schema')
+      const { eq, and } = await import('drizzle-orm')
 
-        const [provider] = await db
-          .select({ apiKey: aiProviders.apiKey })
-          .from(aiProviders)
-          .where(
-            and(eq(aiProviders.providerType, 'firecrawl'),
-              eq(aiProviders.isActive, true)
-            )
+      const [provider] = await db
+        .select({ apiKey: aiProviders.apiKey })
+        .from(aiProviders)
+        .where(
+          and(eq(aiProviders.providerType, 'firecrawl'),
+            eq(aiProviders.isActive, true)
           )
-          .limit(1)
+        )
+        .limit(1)
 
-        if (provider?.apiKey) {
-          firecrawlApiKey = provider.apiKey
-          logger.info('Firecrawl API key loaded from DB', { module: 'LeadResearchService' })
-        }
-      } catch (err) {
-        logger.warn('Could not load Firecrawl API key', { module: 'LeadResearchService' })
+      if (provider?.apiKey) {
+        firecrawlApiKey = provider.apiKey
+        logger.info('Firecrawl API key loaded from DB', { module: 'LeadResearchService' })
       }
+    } catch (err) {
+      logger.warn('Could not load Firecrawl API key', { module: 'LeadResearchService' })
     }
 
     // Step 1: Scrape website if URL available and no website content provided yet
@@ -555,7 +548,7 @@ export const LeadResearchService = {
     if (input.website && !input.websiteContent) {
       logger.info(`Scraping website: ${input.website}`, { module: 'LeadResearchService' })
       try {
-        const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(input.website, firecrawlApiKey, context?.tenantId)
+        const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(input.website, firecrawlApiKey)
         if (scrapeResult.success && scrapeResult.combinedText) {
           enrichedInput.websiteContent = scrapeResult.combinedText
           logger.info(`Website scraped successfully (${scrapeResult.combinedText.length} chars)`, { module: 'LeadResearchService' })
@@ -592,27 +585,23 @@ export const LeadResearchService = {
     let prompt: string
     let systemPrompt: string | undefined
 
-    if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault('company_research')
-      systemPrompt = template.systemPrompt || undefined
+    const template = await AiPromptTemplateService.getOrDefault('company_research')
+    systemPrompt = template.systemPrompt || undefined
 
-      const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
-        name: enrichedInput.name,
-        legalForm: enrichedInput.legalForm,
-        industry: enrichedInput.industry,
-        website: enrichedInput.website,
-        city: enrichedInput.city,
-        email: enrichedInput.email,
-        notes: enrichedInput.notes,
-        websiteContent: enrichedInput.websiteContent,
-      })
+    const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
+      name: enrichedInput.name,
+      legalForm: enrichedInput.legalForm,
+      industry: enrichedInput.industry,
+      website: enrichedInput.website,
+      city: enrichedInput.city,
+      email: enrichedInput.email,
+      notes: enrichedInput.notes,
+      websiteContent: enrichedInput.websiteContent,
+    })
 
-      prompt = template.outputFormat
-        ? `${userPrompt}\n\n${template.outputFormat}`
-        : userPrompt
-    } else {
-      prompt = buildCompanyResearchPrompt(enrichedInput)
-    }
+    prompt = template.outputFormat
+      ? `${userPrompt}\n\n${template.outputFormat}`
+      : userPrompt
 
     const response = await aiComplete(prompt, { maxTokens: 8192, temperature: 0.3, systemPrompt }, ctx)
 
@@ -670,26 +659,22 @@ export const LeadResearchService = {
     let prompt: string
     let systemPrompt: string | undefined
 
-    if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault('person_research')
-      systemPrompt = template.systemPrompt || undefined
+    const template = await AiPromptTemplateService.getOrDefault('person_research')
+    systemPrompt = template.systemPrompt || undefined
 
-      const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
-        firstName: input.firstName,
-        lastName: input.lastName,
-        email: input.email,
-        company: input.company,
-        jobTitle: input.jobTitle,
-        city: input.city,
-        notes: input.notes,
-      })
+    const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      company: input.company,
+      jobTitle: input.jobTitle,
+      city: input.city,
+      notes: input.notes,
+    })
 
-      prompt = template.outputFormat
-        ? `${userPrompt}\n\n${template.outputFormat}`
-        : userPrompt
-    } else {
-      prompt = buildPersonResearchPrompt(input)
-    }
+    prompt = template.outputFormat
+      ? `${userPrompt}\n\n${template.outputFormat}`
+      : userPrompt
 
     const response = await aiComplete(prompt, { maxTokens: 4096, temperature: 0.3, systemPrompt }, ctx)
 
@@ -727,10 +712,10 @@ export const LeadResearchService = {
     let prompt: string
     let systemPrompt: string | undefined
 
-    if (ctx?.tenantId) {
-      const template = await AiPromptTemplateService.getOrDefault('quick_score')
-      systemPrompt = template.systemPrompt || undefined
+    const template = await AiPromptTemplateService.getOrDefault('quick_score')
+    systemPrompt = template.systemPrompt || undefined
 
+    {
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
         companyName: input.companyName,
         personName: input.personName,
@@ -741,17 +726,6 @@ export const LeadResearchService = {
       prompt = template.outputFormat
         ? `${userPrompt}\n\n${template.outputFormat}`
         : userPrompt
-    } else {
-      prompt = `Du bist ein B2B-Sales-Experte. Bewerte den folgenden Lead mit einem Score von 0-100.
-
-Lead-Informationen:
-${input.companyName ? `- Firma: ${input.companyName}` : ''}
-${input.personName ? `- Person: ${input.personName}` : ''}
-${input.email ? `- E-Mail: ${input.email}` : ''}
-${input.website ? `- Website: ${input.website}` : ''}
-
-Antworte NUR mit diesem JSON-Format:
-{ "score": <Zahl von 0-100>, "reasoning": "<kurze deutsche Begründung>" }`
     }
 
     const response = await aiComplete(prompt, { maxTokens: 256, temperature: 0.2, systemPrompt }, ctx)

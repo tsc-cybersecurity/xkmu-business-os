@@ -60,7 +60,7 @@ export async function POST(
     })
 
     // Smart filter: AI selects relevant paths from homepage links
-    const includePaths = await WebsiteScraperService.getSmartIncludePaths(company.website, TENANT_ID)
+    const includePaths = await WebsiteScraperService.getSmartIncludePaths(company.website)
     if (includePaths) {
       logger.info(`Smart filter: ${includePaths.length} include patterns selected`, { module: 'CompaniesCrawlAPI' })
     }

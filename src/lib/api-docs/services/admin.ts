@@ -28,7 +28,6 @@ export const adminService: ApiService = {
       response: {
         columns: [{ name: 'id', type: 'uuid', nullable: false, default: 'gen_random_uuid()' }],
         rows: [{ id: 'uuid', name: 'Max' }],
-        hasTenantId: true,
         meta: { page: 1, limit: 20, total: 42, totalPages: 3 },
       },
       curl: `curl -s "https://example.com/api/v1/admin/database/tables/users?page=1&limit=20" -b cookies.txt`,

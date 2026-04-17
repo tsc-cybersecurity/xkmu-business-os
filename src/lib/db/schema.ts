@@ -97,7 +97,7 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
 }))
 
 // ============================================
-// Roles (Rollen pro Tenant)
+// Roles
 // ============================================
 export const roles = pgTable('roles', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -111,10 +111,6 @@ export const roles = pgTable('roles', {
 ])
 
 export const rolesRelations = relations(roles, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [roles.id],
-    references: [tenants.id],
-  }),
   permissions: many(rolePermissions),
   users: many(users),
 }))
@@ -162,10 +158,6 @@ export const users = pgTable('users', {
 ])
 
 export const usersRelations = relations(users, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [users.id],
-    references: [tenants.id],
-  }),
   userRole: one(roles, {
     fields: [users.roleId],
     references: [roles.id],
@@ -194,10 +186,6 @@ export const apiKeys = pgTable('api_keys', {
 ])
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [apiKeys.id],
-    references: [tenants.id],
-  }),
   user: one(users, {
     fields: [apiKeys.userId],
     references: [users.id],
@@ -239,10 +227,6 @@ export const companies = pgTable('companies', {
 ])
 
 export const companiesRelations = relations(companies, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [companies.id],
-    references: [tenants.id],
-  }),
   createdByUser: one(users, {
     fields: [companies.createdBy],
     references: [users.id],
@@ -292,10 +276,6 @@ export const persons = pgTable('persons', {
 ])
 
 export const personsRelations = relations(persons, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [persons.id],
-    references: [tenants.id],
-  }),
   company: one(companies, {
     fields: [persons.companyId],
     references: [companies.id],
@@ -344,10 +324,6 @@ export const leads = pgTable('leads', {
 ])
 
 export const leadsRelations = relations(leads, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [leads.id],
-    references: [tenants.id],
-  }),
   company: one(companies, {
     fields: [leads.companyId],
     references: [companies.id],
@@ -379,10 +355,6 @@ export const productCategories = pgTable('product_categories', {
 ])
 
 export const productCategoriesRelations = relations(productCategories, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [productCategories.id],
-    references: [tenants.id],
-  }),
   parent: one(productCategories, {
     fields: [productCategories.parentId],
     references: [productCategories.id],
@@ -438,10 +410,6 @@ export const products = pgTable('products', {
 ])
 
 export const productsRelations = relations(products, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [products.id],
-    references: [tenants.id],
-  }),
   category: one(productCategories, {
     fields: [products.categoryId],
     references: [productCategories.id],
@@ -478,10 +446,6 @@ export const aiProviders = pgTable('ai_providers', {
 ])
 
 export const aiProvidersRelations = relations(aiProviders, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [aiProviders.id],
-    references: [tenants.id],
-  }),
   logs: many(aiLogs),
 }))
 
@@ -515,10 +479,6 @@ export const aiLogs = pgTable('ai_logs', {
 ])
 
 export const aiLogsRelations = relations(aiLogs, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [aiLogs.id],
-    references: [tenants.id],
-  }),
   provider: one(aiProviders, {
     fields: [aiLogs.providerId],
     references: [aiProviders.id],
@@ -553,10 +513,6 @@ export const aiPromptTemplates = pgTable('ai_prompt_templates', {
 ])
 
 export const aiPromptTemplatesRelations = relations(aiPromptTemplates, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [aiPromptTemplates.id],
-    references: [tenants.id],
-  }),
 }))
 
 // ============================================
@@ -576,10 +532,6 @@ export const ideas = pgTable('ideas', {
 ])
 
 export const ideasRelations = relations(ideas, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [ideas.id],
-    references: [tenants.id],
-  }),
   createdByUser: one(users, {
     fields: [ideas.createdBy],
     references: [users.id],
@@ -607,10 +559,6 @@ export const activities = pgTable('activities', {
 ])
 
 export const activitiesRelations = relations(activities, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [activities.id],
-    references: [tenants.id],
-  }),
   lead: one(leads, {
     fields: [activities.leadId],
     references: [leads.id],
@@ -648,10 +596,6 @@ export const webhooks = pgTable('webhooks', {
 ])
 
 export const webhooksRelations = relations(webhooks, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [webhooks.id],
-    references: [tenants.id],
-  }),
 }))
 
 // ============================================
@@ -674,10 +618,6 @@ export const auditLog = pgTable('audit_log', {
 ])
 
 export const auditLogRelations = relations(auditLog, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [auditLog.id],
-    references: [tenants.id],
-  }),
   user: one(users, {
     fields: [auditLog.userId],
     references: [users.id],
@@ -739,10 +679,6 @@ export const documents = pgTable('documents', {
 ])
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [documents.id],
-    references: [tenants.id],
-  }),
   company: one(companies, {
     fields: [documents.companyId],
     references: [companies.id],
@@ -792,10 +728,6 @@ export const documentItemsRelations = relations(documentItems, ({ one }) => ({
     fields: [documentItems.documentId],
     references: [documents.id],
   }),
-  tenant: one(tenants, {
-    fields: [documentItems.id],
-    references: [tenants.id],
-  }),
   product: one(products, {
     fields: [documentItems.productId],
     references: [products.id],
@@ -821,10 +753,6 @@ export const contractTemplates = pgTable('contract_templates', {
 ])
 
 export const contractTemplatesRelations = relations(contractTemplates, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [contractTemplates.id],
-    references: [tenants.id],
-  }),
 }))
 
 // ============================================
@@ -844,10 +772,6 @@ export const contractClauses = pgTable('contract_clauses', {
 ])
 
 export const contractClausesRelations = relations(contractClauses, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [contractClauses.id],
-    references: [tenants.id],
-  }),
 }))
 
 // ============================================
@@ -889,10 +813,6 @@ export const dinAuditSessions = pgTable('din_audit_sessions', {
 ])
 
 export const dinAuditSessionsRelations = relations(dinAuditSessions, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [dinAuditSessions.id],
-    references: [tenants.id],
-  }),
   clientCompany: one(companies, {
     fields: [dinAuditSessions.clientCompanyId],
     references: [companies.id],
@@ -925,10 +845,6 @@ export const dinAnswers = pgTable('din_answers', {
 ])
 
 export const dinAnswersRelations = relations(dinAnswers, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [dinAnswers.id],
-    references: [tenants.id],
-  }),
   session: one(dinAuditSessions, {
     fields: [dinAnswers.sessionId],
     references: [dinAuditSessions.id],
@@ -973,10 +889,6 @@ export const wibaAuditSessions = pgTable('wiba_audit_sessions', {
 ])
 
 export const wibaAuditSessionsRelations = relations(wibaAuditSessions, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [wibaAuditSessions.id],
-    references: [tenants.id],
-  }),
   clientCompany: one(companies, {
     fields: [wibaAuditSessions.clientCompanyId],
     references: [companies.id],
@@ -1004,10 +916,6 @@ export const wibaAnswers = pgTable('wiba_answers', {
 ])
 
 export const wibaAnswersRelations = relations(wibaAnswers, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [wibaAnswers.id],
-    references: [tenants.id],
-  }),
   session: one(wibaAuditSessions, {
     fields: [wibaAnswers.sessionId],
     references: [wibaAuditSessions.id],
@@ -1119,10 +1027,6 @@ export const grundschutzAnswers = pgTable('grundschutz_answers', {
 ])
 
 export const grundschutzAuditSessionsRelations = relations(grundschutzAuditSessions, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [grundschutzAuditSessions.id],
-    references: [tenants.id],
-  }),
   clientCompany: one(companies, {
     fields: [grundschutzAuditSessions.clientCompanyId],
     references: [companies.id],
@@ -1196,7 +1100,6 @@ export const grundschutzAssetControls = pgTable('grundschutz_asset_controls', {
 ])
 
 export const grundschutzAssetsRelations = relations(grundschutzAssets, ({ one, many }) => ({
-  tenant: one(tenants, { fields: [grundschutzAssets.id], references: [tenants.id] }),
   company: one(companies, { fields: [grundschutzAssets.companyId], references: [companies.id] }),
   owner: one(users, { fields: [grundschutzAssets.ownerId], references: [users.id] }),
   controlMappings: many(grundschutzAssetControls),
@@ -1478,7 +1381,7 @@ export type CmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferSelect
 export type NewCmsBlockTypeDefinition = typeof cmsBlockTypeDefinitions.$inferInsert
 
 // ============================================
-// CMS Settings (Design & Konfiguration – global, kein Tenant)
+// CMS Settings (Design & Konfiguration)
 // ============================================
 export const cmsSettings = pgTable('cms_settings', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -1547,10 +1450,6 @@ export const mediaUploads = pgTable('media_uploads', {
 ])
 
 export const mediaUploadsRelations = relations(mediaUploads, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [mediaUploads.id],
-    references: [tenants.id],
-  }),
   uploadedByUser: one(users, {
     fields: [mediaUploads.uploadedBy],
     references: [users.id],
@@ -1573,10 +1472,6 @@ export const companyResearches = pgTable('company_researches', {
 ])
 
 export const companyResearchesRelations = relations(companyResearches, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [companyResearches.id],
-    references: [tenants.id],
-  }),
   company: one(companies, {
     fields: [companyResearches.companyId],
     references: [companies.id],
@@ -1599,10 +1494,6 @@ export const firecrawlResearches = pgTable('firecrawl_researches', {
 ])
 
 export const firecrawlResearchesRelations = relations(firecrawlResearches, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [firecrawlResearches.id],
-    references: [tenants.id],
-  }),
   company: one(companies, {
     fields: [firecrawlResearches.companyId],
     references: [companies.id],
@@ -1626,10 +1517,6 @@ export const businessDocuments = pgTable('business_documents', {
 ])
 
 export const businessDocumentsRelations = relations(businessDocuments, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [businessDocuments.id],
-    references: [tenants.id],
-  }),
   uploadedByUser: one(users, {
     fields: [businessDocuments.uploadedBy],
     references: [users.id],
@@ -1658,10 +1545,6 @@ export const businessProfiles = pgTable('business_profiles', {
 ])
 
 export const businessProfilesRelations = relations(businessProfiles, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [businessProfiles.id],
-    references: [tenants.id],
-  }),
 }))
 
 // ============================================
@@ -1684,10 +1567,6 @@ export const marketingCampaigns = pgTable('marketing_campaigns', {
 ])
 
 export const marketingCampaignsRelations = relations(marketingCampaigns, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [marketingCampaigns.id],
-    references: [tenants.id],
-  }),
   createdByUser: one(users, {
     fields: [marketingCampaigns.createdBy],
     references: [users.id],
@@ -1720,10 +1599,6 @@ export const marketingTasks = pgTable('marketing_tasks', {
 ])
 
 export const marketingTasksRelations = relations(marketingTasks, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [marketingTasks.id],
-    references: [tenants.id],
-  }),
   campaign: one(marketingCampaigns, {
     fields: [marketingTasks.campaignId],
     references: [marketingCampaigns.id],
@@ -1754,10 +1629,6 @@ export const marketingTemplates = pgTable('marketing_templates', {
 ])
 
 export const marketingTemplatesRelations = relations(marketingTemplates, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [marketingTemplates.id],
-    references: [tenants.id],
-  }),
 }))
 
 // ============================================
@@ -1774,10 +1645,6 @@ export const socialMediaTopics = pgTable('social_media_topics', {
 ])
 
 export const socialMediaTopicsRelations = relations(socialMediaTopics, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [socialMediaTopics.id],
-    references: [tenants.id],
-  }),
   posts: many(socialMediaPosts),
 }))
 
@@ -1803,10 +1670,6 @@ export const socialMediaPosts = pgTable('social_media_posts', {
 ])
 
 export const socialMediaPostsRelations = relations(socialMediaPosts, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [socialMediaPosts.id],
-    references: [tenants.id],
-  }),
   topic: one(socialMediaTopics, {
     fields: [socialMediaPosts.topicId],
     references: [socialMediaTopics.id],
@@ -1941,7 +1804,7 @@ export type SocialMediaPost = typeof socialMediaPosts.$inferSelect
 export type NewSocialMediaPost = typeof socialMediaPosts.$inferInsert
 
 // ============================================
-// n8n Connections (pro Tenant)
+// n8n Connections
 // ============================================
 export const n8nConnections = pgTable('n8n_connections', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -1955,10 +1818,6 @@ export const n8nConnections = pgTable('n8n_connections', {
 ])
 
 export const n8nConnectionsRelations = relations(n8nConnections, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [n8nConnections.id],
-    references: [tenants.id],
-  }),
 }))
 
 // ============================================
@@ -1979,10 +1838,6 @@ export const n8nWorkflowLogs = pgTable('n8n_workflow_logs', {
 ])
 
 export const n8nWorkflowLogsRelations = relations(n8nWorkflowLogs, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [n8nWorkflowLogs.id],
-    references: [tenants.id],
-  }),
   creator: one(users, {
     fields: [n8nWorkflowLogs.createdBy],
     references: [users.id],
@@ -2025,7 +1880,6 @@ export const opportunities = pgTable('opportunities', {
 ])
 
 export const opportunitiesRelations = relations(opportunities, ({ one }) => ({
-  tenant: one(tenants, { fields: [opportunities.id], references: [tenants.id] }),
   convertedCompany: one(companies, { fields: [opportunities.convertedCompanyId], references: [companies.id] }),
 }))
 
@@ -2048,10 +1902,6 @@ export const chatConversations = pgTable('chat_conversations', {
 ])
 
 export const chatConversationsRelations = relations(chatConversations, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [chatConversations.id],
-    references: [tenants.id],
-  }),
   user: one(users, {
     fields: [chatConversations.userId],
     references: [users.id],
@@ -2124,10 +1974,6 @@ export const cockpitCredentials = pgTable('cockpit_credentials', {
 ])
 
 export const cockpitSystemsRelations = relations(cockpitSystems, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [cockpitSystems.id],
-    references: [tenants.id],
-  }),
   creator: one(users, {
     fields: [cockpitSystems.createdBy],
     references: [users.id],
@@ -2171,10 +2017,6 @@ export const generatedImages = pgTable('generated_images', {
 ])
 
 export const generatedImagesRelations = relations(generatedImages, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [generatedImages.id],
-    references: [tenants.id],
-  }),
   createdByUser: one(users, {
     fields: [generatedImages.createdBy],
     references: [users.id],
@@ -2199,10 +2041,6 @@ export const processes = pgTable('processes', {
 ])
 
 export const processesRelations = relations(processes, ({ one, many }) => ({
-  tenant: one(tenants, {
-    fields: [processes.id],
-    references: [tenants.id],
-  }),
   tasks: many(processTasks),
 }))
 
@@ -2242,10 +2080,6 @@ export const processTasks = pgTable('process_tasks', {
 ])
 
 export const processTasksRelations = relations(processTasks, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [processTasks.id],
-    references: [tenants.id],
-  }),
   process: one(processes, {
     fields: [processTasks.processId],
     references: [processes.id],
@@ -2274,7 +2108,6 @@ export const receipts = pgTable('receipts', {
 ])
 
 export const receiptsRelations = relations(receipts, ({ one }) => ({
-  tenant: one(tenants, { fields: [receipts.id], references: [tenants.id] }),
 }))
 
 export type Receipt = typeof receipts.$inferSelect
@@ -2306,7 +2139,6 @@ export const feedbackResponses = pgTable('feedback_responses', {
 ])
 
 export const feedbackFormsRelations = relations(feedbackForms, ({ one, many }) => ({
-  tenant: one(tenants, { fields: [feedbackForms.id], references: [tenants.id] }),
   company: one(companies, { fields: [feedbackForms.companyId], references: [companies.id] }),
   responses: many(feedbackResponses),
 }))
@@ -2375,14 +2207,12 @@ export const projectTasks = pgTable('project_tasks', {
 ])
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
-  tenant: one(tenants, { fields: [projects.id], references: [tenants.id] }),
   company: one(companies, { fields: [projects.companyId], references: [companies.id] }),
   owner: one(users, { fields: [projects.ownerId], references: [users.id] }),
   tasks: many(projectTasks),
 }))
 
 export const projectTasksRelations = relations(projectTasks, ({ one }) => ({
-  tenant: one(tenants, { fields: [projectTasks.id], references: [tenants.id] }),
   project: one(projects, { fields: [projectTasks.projectId], references: [projects.id] }),
   assignedToUser: one(users, { fields: [projectTasks.assignedTo], references: [users.id] }),
 }))
@@ -2409,7 +2239,6 @@ export const documentTemplates = pgTable('document_templates', {
 ])
 
 export const documentTemplatesRelations = relations(documentTemplates, ({ one }) => ({
-  tenant: one(tenants, { fields: [documentTemplates.id], references: [tenants.id] }),
 }))
 
 export type DocumentTemplate = typeof documentTemplates.$inferSelect
@@ -2443,11 +2272,9 @@ export const newsletterCampaigns = pgTable('newsletter_campaigns', {
 ])
 
 export const newsletterSubscribersRelations = relations(newsletterSubscribers, ({ one }) => ({
-  tenant: one(tenants, { fields: [newsletterSubscribers.id], references: [tenants.id] }),
 }))
 
 export const newsletterCampaignsRelations = relations(newsletterCampaigns, ({ one }) => ({
-  tenant: one(tenants, { fields: [newsletterCampaigns.id], references: [tenants.id] }),
 }))
 
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect
@@ -2474,7 +2301,6 @@ export const timeEntries = pgTable('time_entries', {
 ])
 
 export const timeEntriesRelations = relations(timeEntries, ({ one }) => ({
-  tenant: one(tenants, { fields: [timeEntries.id], references: [tenants.id] }),
   user: one(users, { fields: [timeEntries.userId], references: [users.id] }),
   company: one(companies, { fields: [timeEntries.companyId], references: [companies.id] }),
 }))
@@ -2499,10 +2325,6 @@ export const emailTemplates = pgTable('email_templates', {
 ])
 
 export const emailTemplatesRelations = relations(emailTemplates, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [emailTemplates.id],
-    references: [tenants.id],
-  }),
 }))
 
 export type EmailTemplate = typeof emailTemplates.$inferSelect
@@ -2529,10 +2351,6 @@ export const taskQueue = pgTable('task_queue', {
 ])
 
 export const taskQueueRelations = relations(taskQueue, ({ one }) => ({
-  tenant: one(tenants, {
-    fields: [taskQueue.id],
-    references: [tenants.id],
-  }),
 }))
 
 export type TaskQueueItem = typeof taskQueue.$inferSelect

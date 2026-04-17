@@ -42,7 +42,6 @@ interface ColumnInfo {
 interface TableData {
   columns: ColumnInfo[]
   rows: Record<string, unknown>[]
-  hasTenantId: boolean
 }
 
 interface PaginationMeta {
@@ -141,7 +140,7 @@ export function DatabaseAdmin() {
 
   // Inline edit handlers
   const startEdit = (rowIndex: number, column: string, currentValue: unknown) => {
-    if (column === 'id' || column === 'tenant_id') return // Don't allow editing id or tenant_id
+    if (column === 'id') return // Don't allow editing id
     setEditingCell({ rowIndex, column })
     setEditValue(currentValue === null ? '' : String(currentValue))
   }

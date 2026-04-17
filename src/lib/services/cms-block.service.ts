@@ -19,8 +19,6 @@ export interface UpdateCmsBlockInput {
   isVisible?: boolean
 }
 
-// CMS ist global — kein tenantId-Filter bei Queries.
-
 async function markPageDraftChanges(pageId: string) {
   await db
     .update(cmsPages)

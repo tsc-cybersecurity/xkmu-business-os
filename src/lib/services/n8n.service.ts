@@ -41,7 +41,7 @@ async function getConnection() {
 async function n8nFetch(path: string,
   options: RequestInit = {}
 ): Promise<unknown> {
-  const conn = await getConnection(_tenantId)
+  const conn = await getConnection()
   const baseUrl = conn.apiUrl.replace(/\/$/, '')
 
   const response = await fetch(`${baseUrl}/api/v1${path}`, {

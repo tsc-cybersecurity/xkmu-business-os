@@ -105,7 +105,7 @@ async function stepScrape(
   // Try to get Firecrawl API key
   let firecrawlKey: string | undefined
   try {
-    const providers = await AiProviderService.getActiveProviders(tenantId)
+    const providers = await AiProviderService.getActiveProviders()
     const firecrawlProvider = providers.find(p => p.providerType === 'firecrawl')
     if (firecrawlProvider?.apiKey) {
       firecrawlKey = firecrawlProvider.apiKey
@@ -114,7 +114,7 @@ async function stepScrape(
     // No Firecrawl configured
   }
 
-  const result = await WebsiteScraperService.scrapeCompanyWebsite(url, firecrawlKey, tenantId)
+  const result = await WebsiteScraperService.scrapeCompanyWebsite(url, firecrawlKey)
 
   return {
     combinedText: result.combinedText,
@@ -265,7 +265,7 @@ export const MarketingAgentService = {
     logger.info(`Marketing Agent: Starting analysis for ${input.url}`, { module: 'MarketingAgent' })
 
     // Step 1: Scrape
-    const scrapeResult = await stepScrape(input.url, '')
+    const scrapeResult = await stepScrape(input.url)
     if (!scrapeResult.success || !scrapeResult.combinedText) {
       throw new Error('Website konnte nicht gescraped werden. Bitte pruefen Sie die URL.')
     }

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     // 4. Check row count if table exists
     if (checks.tableExists) {
       try {
-        const result = await db.execute(sql`SELECT COUNT(*) as count FROM opportunities WHERE tenant_id = ${TENANT_ID}`)
+        const result = await db.execute(sql`SELECT COUNT(*) as count FROM opportunities`)
         const rows = result as unknown as Array<{ count: number }>
         checks.rowCount = Number(rows[0]?.count ?? 0)
       } catch (e) {
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       const { SerpApiService } = await import('@/lib/services/serpapi.service')
       const { OpportunityService } = await import('@/lib/services/opportunity.service')
 
-      const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1, TENANT_ID)
+      const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1)
       checks.serpApiCallOk = true
       checks.serpApiResultCount = results.length
 
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     if (checks.serpApiProvider || checks.serpApiEnvKey) {
       try {
         const { SerpApiService } = await import('@/lib/services/serpapi.service')
-        const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1, TENANT_ID)
+        const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1)
         checks.serpApiTest = { success: true, resultCount: results.length, firstResult: results[0]?.name || null }
       } catch (e) {
         checks.serpApiTest = { success: false, error: e instanceof Error ? e.message : String(e) }

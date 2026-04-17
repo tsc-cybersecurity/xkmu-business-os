@@ -38,8 +38,7 @@ export async function POST(request: NextRequest) {
           queryList,
           locationList,
           radius || 25,
-          maxPerLocation || 20,
-          TENANT_ID
+          maxPerLocation || 20
         )
       } catch (error) {
         const msg = error instanceof Error ? error.message : 'Unbekannter Fehler'

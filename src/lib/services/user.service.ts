@@ -34,7 +34,7 @@ export interface UpdateUserInput {
 const SALT_ROUNDS = 10
 
 export const UserService = {
-  async create(tenantId: string, data: CreateUserInput): Promise<User> {
+  async create(data: CreateUserInput): Promise<User> {
     const passwordHash = await bcrypt.hash(data.password, SALT_ROUNDS)
 
     const [user] = await db
@@ -81,7 +81,6 @@ export const UserService = {
 
     const sessionUser: SessionUser = {
       id: user.id,
-      // tenantId entfernt — AUTH-02
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -92,7 +91,7 @@ export const UserService = {
     return { success: true, user: sessionUser }
   },
 
-  async getById(tenantId: string, userId: string): Promise<User | null> {
+  async getById(userId: string): Promise<User | null> {
     const [user] = await db
       .select()
       .from(users)
@@ -102,7 +101,7 @@ export const UserService = {
     return user ?? null
   },
 
-  async getByEmail(tenantId: string, email: string): Promise<User | null> {
+  async getByEmail(email: string): Promise<User | null> {
     const [user] = await db
       .select()
       .from(users)
@@ -115,7 +114,6 @@ export const UserService = {
   },
 
   async update(
-    tenantId: string,
     userId: string,
     data: UpdateUserInput
   ): Promise<User | null> {
@@ -138,7 +136,6 @@ export const UserService = {
   },
 
   async updatePassword(
-    tenantId: string,
     userId: string,
     newPassword: string
   ): Promise<boolean> {
@@ -156,7 +153,7 @@ export const UserService = {
     return result.length > 0
   },
 
-  async delete(tenantId: string, userId: string): Promise<boolean> {
+  async delete(userId: string): Promise<boolean> {
     const result = await db
       .delete(users)
       .where(and(eq(users.id, userId)))
@@ -166,7 +163,6 @@ export const UserService = {
   },
 
   async list(
-    tenantId: string,
     filters: UserFilters = {}
   ): Promise<PaginatedResult<Omit<User, 'passwordHash'>>> {
     const { role, status, search, page = 1, limit = 20 } = filters
@@ -229,7 +225,6 @@ export const UserService = {
   },
 
   async emailExists(
-    tenantId: string,
     email: string,
     excludeId?: string
   ): Promise<boolean> {

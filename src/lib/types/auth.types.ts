@@ -3,7 +3,6 @@ export type UserStatus = 'active' | 'inactive' | 'pending'
 
 export interface SessionUser {
   id: string
-  // tenantId entfernt — AUTH-02
   email: string
   firstName: string | null
   lastName: string | null
@@ -29,7 +28,6 @@ export interface AuthResult {
 }
 
 export interface ApiKeyPayload {
-  tenantId: string   // bleibt — AUTH-04 (API-Keys bleiben kompatibel)
   keyId: string
   permissions: string[]
 }

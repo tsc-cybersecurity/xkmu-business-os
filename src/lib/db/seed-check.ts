@@ -775,7 +775,7 @@ async function seedCheck() {
     .from(tenants)
     .limit(1)
 
-  let
+  let tenantId: string
   let adminUserId: string | null = null
 
   if (existingTenants.length > 0) {
@@ -864,10 +864,10 @@ async function seedCheck() {
   await seedManagementFramework()
 
   // 15. Seed Deliverable Catalog (16 Module + 70 Deliverables)
-  await seedDeliverableCatalog(TENANT_ID)
+  await seedDeliverableCatalog()
 
   // 16. Seed SOP Catalog (alle SOPs aus Framework v2)
-  await seedSopCatalog(TENANT_ID)
+  await seedSopCatalog()
 
   logger.info('Seed check completed!', { module: 'SeedCheck' })
   logger.info(`Login: ${SEED_DATA.user.email} / ${SEED_DATA.user.password}`, { module: 'SeedCheck' })

@@ -18,7 +18,6 @@ interface DunningPayload {
 }
 
 export async function handleDunning(
-  tenantId: string,
   payload: DunningPayload
 ): Promise<{ sent: boolean; level: number; nextLevel?: number }> {
   const { documentId, level, to, customerName } = payload

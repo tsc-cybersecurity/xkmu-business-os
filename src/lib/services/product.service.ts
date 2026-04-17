@@ -61,7 +61,7 @@ export const ProductService = {
     createdBy?: string
   ): Promise<Product> {
     const slug = emptyToNull(data.slug)
-      || await this.generateSlug(data.name, _tenantId)
+      || await this.generateSlug(data.name)
 
     const [product] = await db
       .insert(products)
@@ -253,7 +253,7 @@ export const ProductService = {
     }
   },
 
-  async generateSlug(name: string, _tenantId: string): Promise<string> {
+  async generateSlug(name: string): Promise<string> {
     let base = name
       .toLowerCase()
       .replace(/[äÄ]/g, 'ae')

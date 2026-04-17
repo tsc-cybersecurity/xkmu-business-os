@@ -6,10 +6,9 @@
 import { logger } from '@/lib/utils/logger'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 
-async function getProviderId(tenantId?: string): Promise<string | null> {
-  if (!tenantId) return null
+async function getProviderId(): Promise<string | null> {
   try {
-    const providers = await AiProviderService.list(tenantId)
+    const providers = await AiProviderService.list()
     return providers.find((p) => p.providerType === 'serpapi' && p.isActive)?.id || null
   } catch { return null }
 }
@@ -58,16 +57,14 @@ export interface OpportunityResult {
   metadata: Record<string, unknown>
 }
 
-async function getApiKey(tenantId?: string): Promise<string> {
+async function getApiKey(): Promise<string> {
   // 1. Try DB (AI Provider with type 'serpapi')
-  if (tenantId) {
-    try {
-      const providers = await AiProviderService.list(tenantId)
-      const serpapi = providers.find((p) => p.providerType === 'serpapi' && p.isActive && p.apiKey)
-      if (serpapi?.apiKey) return serpapi.apiKey
-    } catch {
-      // Fall through to env
-    }
+  try {
+    const providers = await AiProviderService.list()
+    const serpapi = providers.find((p) => p.providerType === 'serpapi' && p.isActive && p.apiKey)
+    if (serpapi?.apiKey) return serpapi.apiKey
+  } catch {
+    // Fall through to env
   }
   // 2. Fallback to env
   const key = process.env.SERPAPI_KEY
@@ -139,11 +136,11 @@ function parseAddress(address: string): { street: string; city: string; postalCo
 }
 
 export const SerpApiService = {
-  async searchPlaces(query: string, location: string, radius: number = 25, maxResults: number = 20, tenantId?: string): Promise<OpportunityResult[]> {
-    const apiKey = await getApiKey(tenantId)
+  async searchPlaces(query: string, location: string, radius: number = 25, maxResults: number = 20): Promise<OpportunityResult[]> {
+    const apiKey = await getApiKey()
     const startTime = Date.now()
     const prompt = `${query} in ${location}`
-    const providerId = await getProviderId(tenantId)
+    const providerId = await getProviderId()
 
     const params = new URLSearchParams({
       engine: 'google_maps',
@@ -161,26 +158,22 @@ export const SerpApiService = {
       response = await fetch(url, { signal: AbortSignal.timeout(30_000) })
     } catch (error) {
       const durationMs = Date.now() - startTime
-      if (tenantId) {
-        AiProviderService.createLog({
-          providerId, providerType: 'serpapi', model: 'google_maps',
-          prompt, status: 'error', errorMessage: error instanceof Error ? error.message : 'Timeout',
-          durationMs, feature: 'opportunity_search',
-        }).catch(() => {})
-      }
+      AiProviderService.createLog({
+        providerId, providerType: 'serpapi', model: 'google_maps',
+        prompt, status: 'error', errorMessage: error instanceof Error ? error.message : 'Timeout',
+        durationMs, feature: 'opportunity_search',
+      }).catch(() => {})
       throw error
     }
 
     if (!response.ok) {
       const text = await response.text()
       const durationMs = Date.now() - startTime
-      if (tenantId) {
-        AiProviderService.createLog({
-          providerId, providerType: 'serpapi', model: 'google_maps',
-          prompt, status: 'error', errorMessage: `HTTP ${response.status}: ${text.substring(0, 200)}`,
-          durationMs, feature: 'opportunity_search',
-        }).catch(() => {})
-      }
+      AiProviderService.createLog({
+        providerId, providerType: 'serpapi', model: 'google_maps',
+        prompt, status: 'error', errorMessage: `HTTP ${response.status}: ${text.substring(0, 200)}`,
+        durationMs, feature: 'opportunity_search',
+      }).catch(() => {})
       throw new Error(`SerpAPI Fehler: ${response.status}`)
     }
 
@@ -188,13 +181,11 @@ export const SerpApiService = {
 
     if (data.error) {
       const durationMs = Date.now() - startTime
-      if (tenantId) {
-        AiProviderService.createLog({
-          providerId, providerType: 'serpapi', model: 'google_maps',
-          prompt, status: 'error', errorMessage: data.error,
-          durationMs, feature: 'opportunity_search',
-        }).catch(() => {})
-      }
+      AiProviderService.createLog({
+        providerId, providerType: 'serpapi', model: 'google_maps',
+        prompt, status: 'error', errorMessage: data.error,
+        durationMs, feature: 'opportunity_search',
+      }).catch(() => {})
       throw new Error(`SerpAPI: ${data.error}`)
     }
 
@@ -232,13 +223,11 @@ export const SerpApiService = {
 
     // Log success
     const durationMs = Date.now() - startTime
-    if (tenantId) {
-      AiProviderService.createLog({
-        providerId, providerType: 'serpapi', model: 'google_maps',
-        prompt, response: `${results.length} Ergebnisse gefunden`,
-        status: 'success', durationMs, feature: 'opportunity_search',
-      }).catch(() => {})
-    }
+    AiProviderService.createLog({
+      providerId, providerType: 'serpapi', model: 'google_maps',
+      prompt, response: `${results.length} Ergebnisse gefunden`,
+      status: 'success', durationMs, feature: 'opportunity_search',
+    }).catch(() => {})
 
     return results
   },
@@ -247,8 +236,7 @@ export const SerpApiService = {
     queries: string[],
     locations: string[],
     radius: number = 25,
-    maxPerLocation: number = 20,
-    tenantId?: string
+    maxPerLocation: number = 20
   ): Promise<{ results: OpportunityResult[]; totalSearches: number; errors: string[] }> {
     const allResults: OpportunityResult[] = []
     const seenPlaceIds = new Set<string>()
@@ -264,7 +252,7 @@ export const SerpApiService = {
             await new Promise(resolve => setTimeout(resolve, 1000))
           }
 
-          const results = await this.searchPlaces(query.trim(), location.trim(), radius, maxPerLocation, tenantId)
+          const results = await this.searchPlaces(query.trim(), location.trim(), radius, maxPerLocation)
 
           for (const result of results) {
             if (!seenPlaceIds.has(result.placeId)) {

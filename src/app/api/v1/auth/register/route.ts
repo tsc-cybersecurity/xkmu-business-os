@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const adminRole = await RoleService.getByName(tenant.id, 'admin')
 
     // Benutzer erstellen
-    const user = await UserService.create(tenant.id, {
+    const user = await UserService.create({
       email,
       password,
       firstName,
@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
     // Session erstellen
     const sessionUser: SessionUser = {
       id: user.id,
-      // tenantId entfernt — AUTH-02
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,

@@ -1,4 +1,4 @@
-88 results - 34 files
+80 results - 29 files
 
 src\app\api\v1\admin\database\tables\[tableName]\route.ts:
   109        delete updates.tenant_id
@@ -10,29 +10,10 @@ src\app\api\v1\auth\register\route.ts:
   77:       // tenantId entfernt — AUTH-02
   78        email: user.email,
 
-src\app\api\v1\chat\route.ts:
-  58          messages.map((m) => `${m.role}: ${m.content}`).join('\n'),
-  59:         { tenantId: userId: auth.userId, feature: 'chat' },
-  60          {
-
 src\app\api\v1\companies\[id]\prep\route.ts:
   35  
   36:       // Offene Chancen (opportunities hat kein companyId — nur tenantId-Filter)
   37        const openOpps = await db
-
-  65        const response = await AIService.completeWithContext(userPrompt,
-  66:         { tenantId: feature: 'meeting_prep' },
-  67          { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt })
-
-src\app\api\v1\contact\route.ts:
-  23      }
-  24:     tenantId = real.id
-  25    } catch (error) {
-
-src\app\api\v1\din\audits\[id]\roadmap\route.ts:
-  44        const response = await AIService.completeWithContext(userPrompt,
-  45:         { tenantId: feature: 'security_roadmap' },
-  46          { maxTokens: 3000, temperature: 0.3, systemPrompt: template.systemPrompt })
 
 src\app\api\v1\import\database\route.ts:
   298              // Strip tenant_id column from imports (column no longer exists)
@@ -41,11 +22,6 @@ src\app\api\v1\import\database\route.ts:
   301:               insert.columns.splice(tenantIdIdx, 1)
   302:               insert.values.splice(tenantIdIdx, 1)
   303              }
-
-src\app\api\v1\seo\keywords\route.ts:
-  42        const response = await AIService.completeWithContext(userPrompt,
-  43:         { tenantId: feature: 'seo_keywords' },
-  44          { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt })
 
 src\app\intern\(dashboard)\settings\database\_components\database-admin.tsx:
   44    rows: Record<string, unknown>[]
@@ -61,15 +37,6 @@ src\lib\auth\api-key.ts:
   55        return {
   56:         tenantId: 'legacy', // tenant_id column dropped — AUTH-04 backward compat
   57          keyId: apiKey.id,
-
-src\lib\auth\auth-context.ts:
-  17      return {
-  18:       tenantId: // AUTH-03: statische Konstante, nicht aus JWT
-  19        userId: session.user.id,
-
-  31        return {
-  32:         tenantId: // AUTH-04: payload.tenantId ignoriert, TENANT_ID stattdessen
-  33          userId: null,
 
 src\lib\db\seed-check.ts:
   782      logger.info('Tenant already exists, skipping tenant/user seed...')

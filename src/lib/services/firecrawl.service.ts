@@ -58,7 +58,7 @@ export const FirecrawlService = {
   /**
    * Scrape a URL using the Firecrawl API and return markdown content
    */
-  async scrape(url: string, apiKey: string, tenantId?: string): Promise<FirecrawlResult> {
+  async scrape(url: string, apiKey: string): Promise<FirecrawlResult> {
     const startTime = Date.now()
     try {
       const controller = new AbortController()
@@ -110,27 +110,23 @@ export const FirecrawlService = {
       }
 
       // Log success
-      if (tenantId) {
-        const durationMs = Date.now() - startTime
-        AiProviderService.createLog({
-          providerType: 'firecrawl', model: 'scrape',
-          prompt: url, response: `${result.markdown.length} Zeichen extrahiert`,
-          status: 'success', durationMs, feature: 'web_scraping',
-        }).catch(() => {})
-      }
+      const durationMs = Date.now() - startTime
+      AiProviderService.createLog({
+        providerType: 'firecrawl', model: 'scrape',
+        prompt: url, response: `${result.markdown.length} Zeichen extrahiert`,
+        status: 'success', durationMs, feature: 'web_scraping',
+      }).catch(() => {})
 
       return result
     } catch (error) {
       // Log error
-      if (tenantId) {
-        const durationMs = Date.now() - startTime
-        AiProviderService.createLog({
-          providerType: 'firecrawl', model: 'scrape',
-          prompt: url, status: 'error',
-          errorMessage: error instanceof Error ? error.message : 'Unknown error',
-          durationMs, feature: 'web_scraping',
-        }).catch(() => {})
-      }
+      const durationMs = Date.now() - startTime
+      AiProviderService.createLog({
+        providerType: 'firecrawl', model: 'scrape',
+        prompt: url, status: 'error',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        durationMs, feature: 'web_scraping',
+      }).catch(() => {})
 
       return {
         markdown: '',

@@ -15,7 +15,6 @@ export const OutreachService = {
    * Generiert eine personalisierte Erstkontakt-E-Mail basierend auf Lead-Research-Daten
    */
   async generateOutreach(
-    tenantId: string,
     leadId: string,
     context: AIRequestContext
   ): Promise<OutreachResult> {

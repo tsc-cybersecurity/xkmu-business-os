@@ -157,7 +157,7 @@ export const CronService = {
           const trigger = (config.trigger as string) || 'cron.triggered'
           const { WorkflowEngine } = await import('./workflow')
           if (tenant) {
-            await WorkflowEngine.fire(trigger, tenant.id, { cronJobId: job.id, cronJobName: job.name })
+            await WorkflowEngine.fire(trigger, { cronJobId: job.id, cronJobName: job.name })
             msg = `Workflow trigger "${trigger}" fired`
           } else {
             msg = 'No active tenant found'

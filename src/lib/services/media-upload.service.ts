@@ -53,7 +53,7 @@ export const MediaUploadService = {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
-    const result = await ImageOptimizerService.optimize(buffer, TENANT_ID)
+    const result = await ImageOptimizerService.optimize(buffer, 'uploads')
 
     const [upload] = await db
       .insert(mediaUploads)

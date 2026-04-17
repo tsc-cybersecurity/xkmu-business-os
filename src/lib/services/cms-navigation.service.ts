@@ -33,8 +33,6 @@ export interface CreateNavigationItemInput {
 
 export type UpdateNavigationItemInput = Partial<CreateNavigationItemInput>
 
-// CMS Navigation ist global — kein tenantId-Filter bei Queries.
-
 export const CmsNavigationService = {
   async list(location?: string): Promise<CmsNavigationItem[]> {
     const conditions = location ? [eq(cmsNavigationItems.location, location)] : []

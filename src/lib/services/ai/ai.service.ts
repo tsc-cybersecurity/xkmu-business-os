@@ -49,7 +49,6 @@ export interface CompanyResearchResult {
 
 // Kontext für Logging
 export interface AIRequestContext {
-  tenantId?: string  // legacy — no longer required, kept for backward compat
   userId?: string | null
   feature?: string
   entityType?: string
@@ -357,7 +356,7 @@ class AIServiceClass {
   /**
    * Tenant-aware: Prüft welche DB-Provider verfügbar sind
    */
-  async getAvailableProvidersForTenant(tenantId: string): Promise<Array<{
+  async getAvailableProvidersForTenant(): Promise<Array<{
     id: string
     name: string
     providerType: string
@@ -365,7 +364,7 @@ class AIServiceClass {
     available: boolean
   }>> {
     // Text-AI-Provider (getActiveProviders filtert firecrawl/kie raus)
-    const dbProviders = await AiProviderService.getActiveProviders(tenantId)
+    const dbProviders = await AiProviderService.getActiveProviders()
     const result = []
 
     for (const config of dbProviders) {
@@ -393,7 +392,7 @@ class AIServiceClass {
     }
 
     // Spezial-Provider (firecrawl, kie, serpapi) separat prüfen - haben API-Key = verfügbar
-    const allProviders = await AiProviderService.list(tenantId)
+    const allProviders = await AiProviderService.list()
     const specialProviders = allProviders.filter(
       (p) => ['firecrawl', 'kie', 'serpapi'].includes(p.providerType) && p.isActive
     )

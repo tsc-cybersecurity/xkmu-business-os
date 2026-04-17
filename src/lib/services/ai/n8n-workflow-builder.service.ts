@@ -8,7 +8,6 @@ export const N8nWorkflowBuilderService = {
    * System-Prompt wird aus der DB geladen (oder Default aus DEFAULT_TEMPLATES).
    */
   async generateWorkflow(
-    tenantId: string,
     userId: string | null,
     prompt: string
   ): Promise<{ workflowJson: Record<string, unknown>; logId: string }> {
@@ -79,7 +78,6 @@ export const N8nWorkflowBuilderService = {
    * Generiert und deployt einen Workflow direkt auf n8n
    */
   async generateAndDeploy(
-    tenantId: string,
     userId: string | null,
     prompt: string
   ): Promise<{ workflowJson: Record<string, unknown>; workflowId: string; logId: string }> {
