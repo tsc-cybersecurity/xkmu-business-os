@@ -8,6 +8,7 @@ import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.servi
 import { AIService } from '@/lib/services/ai/ai.service'
 import { TenantService } from '@/lib/services/tenant.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'settings', 'update', async (_auth) => {
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
         : 'Keine Business-Intelligence-Analyse vorhanden'
 
       // 6. Get prompt template
-      const template = await AiPromptTemplateService.getOrDefault(tenantId, 'company_knowledge_analysis')
+      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'company_knowledge_analysis')
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
         companyName: tenant.name,
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       // 7. Call AI
       const fullPrompt = `${template.systemPrompt}\n\n${userPrompt}`
       const aiResult = await AIService.completeWithContext(fullPrompt, {
-        tenantId,
+        TENANT_ID,
         feature: 'company_knowledge',
       }, {
         maxTokens: 4000,
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
       }
 
       // 8. Save result to tenant settings
-      await TenantService.update(tenantId, {
+      await TenantService.update(TENANT_ID, {
         settings: {
           ...tenantSettings,
           companyKnowledge: aiResult.text,
