@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   try {
     const { firstName, lastName, company, phone, email, interests, message } = validation.data
 
-    const lead = await LeadService.create({
+    const lead = await LeadService.create('', {
       source: 'website',
       sourceDetail: 'Kontaktformular',
       title: `${firstName} ${lastName} – ${company || 'Privat'}`,
