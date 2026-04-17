@@ -46,7 +46,7 @@ export default async function SettingsPage() {
         </Link>
 
         {isAdmin && (
-          <Link href="/intern/settings/tenant">
+          <Link href="/intern/settings/organization">
             <Card className="cursor-pointer transition-colors hover:bg-muted/50">
               <CardHeader>
                 <Building className="h-8 w-8 text-muted-foreground" />

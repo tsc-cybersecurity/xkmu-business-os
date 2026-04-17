@@ -12,7 +12,7 @@ const segmentLabels: Record<string, string> = {
   users: 'Benutzer',
   roles: 'Rollen',
   profile: 'Profil',
-  tenant: 'Organisation',
+  organization: 'Organisation',
   contacts: 'Kontakte',
   companies: 'Firmen',
   persons: 'Personen',

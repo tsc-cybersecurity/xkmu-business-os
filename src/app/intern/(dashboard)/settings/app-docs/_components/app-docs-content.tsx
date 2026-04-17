@@ -82,17 +82,14 @@ export function AppDocsContent() {
               ]} />
             </SectionBlock>
 
-            <SectionBlock title="Multi-Tenant-Architektur">
+            <SectionBlock title="Single-Tenant-Architektur">
               <p className="text-sm text-muted-foreground mb-3">
-                Jede Datenbankentitaet ist mit einer <code className="text-xs bg-muted px-1.5 py-0.5 rounded">tenantId</code> versehen.
-                Benutzer sehen ausschliesslich Daten ihres eigenen Mandanten. Die Tenant-Isolation wird automatisch
-                durch die Middleware sichergestellt.
+                Die App laeuft als Single-Tenant-Instanz. Alle Daten gehoeren zur xKMU-Organisation.
+                Die Zugriffskontrolle erfolgt ueber rollenbasierte Berechtigungen (RBAC), nicht ueber Tenant-Isolation.
               </p>
               <CodeBlock code={`// Beispiel: Middleware-Pattern
-withPermission(request, 'companies', 'read', async (req, session) => {
-  const companies = await db.query.companies.findMany({
-    where: eq(companies.tenantId, session.tenantId),
-  })
+withPermission(request, 'companies', 'read', async (auth) => {
+  const companies = await db.query.companies.findMany()
   return apiSuccess(companies)
 })`} />
             </SectionBlock>
@@ -234,7 +231,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
                 path="/api/v1/auth/me"
                 description="Aktuelle Session-Informationen und Benutzerdetails abrufen."
                 responseExample={{
-                  user: { id: 'uuid', email: 'user@example.com', tenantId: 'uuid', role: 'admin' },
+                  user: { id: 'uuid', email: 'user@example.com', role: 'admin' },
                 }}
               />
               <EndpointDoc
@@ -1318,7 +1315,7 @@ withPermission(request, 'companies', 'read', async (req, session) => {
             <SectionBlock title="Seiten">
               <PageTable pages={[
                 { url: '/intern/settings', name: 'Uebersicht', desc: 'Einstellungs-Dashboard mit Schnellzugriff auf alle Bereiche.' },
-                { url: '/intern/settings/tenant', name: 'Organisation', desc: 'Firmenname, Slug, Status. Enthalt auch den Button zum Importieren von Demo-Daten (CMS-Seiten, Blog, Firmen, etc.).' },
+                { url: '/intern/settings/organization', name: 'Organisation', desc: 'Firmenname, Adresse, Bankdaten, Logo. Enthalt auch den Button zum Importieren von Demo-Daten.' },
                 { url: '/intern/settings/users', name: 'Benutzer', desc: 'Benutzerliste mit Rolle, E-Mail und Status. Benutzer anlegen/bearbeiten/deaktivieren.' },
                 { url: '/intern/settings/users/[id]', name: 'Benutzerdetail', desc: 'Benutzerprofil bearbeiten, Rolle zuweisen, Passwort zuruecksetzen.' },
                 { url: '/intern/settings/roles', name: 'Rollen', desc: 'Rollenverwaltung mit detaillierten Modul-Berechtigungen.' },
@@ -1361,9 +1358,9 @@ withPermission(request, 'companies', 'read', async (req, session) => {
             </SectionBlock>
 
             <SectionBlock title="API-Endpunkte - Sonstiges">
-              <EndpointDoc method="GET" path="/api/v1/tenant" description="Mandanten-Informationen abrufen." responseExample={{ id: 'uuid', name: 'Meine Firma GmbH', address: { street: 'Hauptstr. 1' } }} />
+              <EndpointDoc method="GET" path="/api/v1/tenant" description="Organisations-Informationen abrufen." responseExample={{ id: 'uuid', name: 'xKMU digital solutions', address: { street: 'Hauptstr. 1' } }} />
               <EndpointDoc method="POST" path="/api/v1/email/send" description="E-Mail versenden." requestBody={{ to: 'empfaenger@example.com', subject: 'Betreff', body: '<p>HTML-Inhalt</p>' }} responseExample={{ message: 'E-Mail gesendet' }} />
-              <EndpointDoc method="GET" path="/api/v1/export/database" description="SQL-Dump aller Tenant-Daten herunterladen." responseExample="-- SQL Export fuer Tenant: uuid\nINSERT INTO companies (...) VALUES (...);\n..." />
+              <EndpointDoc method="GET" path="/api/v1/export/database" description="SQL-Dump aller Instanz-Daten herunterladen." responseExample="-- SQL Export der xKMU-Instanz\nINSERT INTO companies (...) VALUES (...);\n..." />
               <EndpointDoc method="POST" path="/api/v1/import/database" description="SQL-Datei importieren (multipart/form-data)." requestBody={{ file: '(SQL-Datei als FormData)', mode: 'merge | replace' }} responseExample={{ totalStatements: 150, totalInserted: 148, tablesAffected: 12 }} />
               <EndpointDoc method="POST" path="/api/v1/tenant/seed-demo" description="Demo-Daten importieren (CMS-Seiten, Blog, Firmen, Personen, Leads, Produkte)." responseExample={{ message: 'Demo-Daten erfolgreich importiert', cmsPages: 7, companies: 5 }} />
               <EndpointDoc method="GET" path="/api/v1/admin/database/tables" description="Datenbank-Tabellen und Spalten anzeigen." responseExample={{ data: [{ tableName: 'companies', columns: [{ name: 'id', type: 'uuid' }] }] }} />
