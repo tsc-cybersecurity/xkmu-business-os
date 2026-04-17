@@ -57,7 +57,7 @@ const statusColors: Record<string, string> = {
   cancelled: 'bg-gray-500',
 }
 
-export default function TenantSettingsPage() {
+export default function OrganizationSettingsPage() {
   const [tenant, setTenant] = useState<Tenant | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -133,7 +133,7 @@ export default function TenantSettingsPage() {
         setCompanyKnowledge((data.data.settings?.companyKnowledge as string) || '')
       }
     } catch (error) {
-      logger.error('Failed to fetch tenant', error, { module: 'SettingsTenantPage' })
+      logger.error('Failed to fetch tenant', error, { module: 'SettingsOrganizationPage' })
       toast.error('Fehler beim Laden der Organisation')
     } finally {
       setLoading(false)
@@ -552,10 +552,6 @@ export default function TenantSettingsPage() {
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Erstellt am</span>
               <span className="text-sm font-medium">{formatDate(tenant?.createdAt || null)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Tenant-ID</span>
-              <code className="text-xs bg-muted px-2 py-0.5 rounded">{tenant?.id}</code>
             </div>
           </CardContent>
         </Card>

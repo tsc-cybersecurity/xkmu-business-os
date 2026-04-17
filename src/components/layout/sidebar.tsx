@@ -142,7 +142,7 @@ const navigation: NavItem[] = [
     href: '/intern/settings',
     icon: Settings,
     children: [
-      { name: 'Organisation', href: '/intern/settings/tenant', requiredModule: 'settings' },
+      { name: 'Organisation', href: '/intern/settings/organization', requiredModule: 'settings' },
       { name: 'Benutzer', href: '/intern/settings/users', requiredModule: 'users' },
       { name: 'Rollen', href: '/intern/settings/roles', requiredModule: 'roles' },
       { name: 'KI-Provider', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
