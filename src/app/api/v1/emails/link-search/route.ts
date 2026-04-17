@@ -5,6 +5,7 @@ import { logger } from '@/lib/utils/logger'
 import { db } from '@/lib/db'
 import { leads, companies, persons } from '@/lib/db/schema'
 import { and, eq, or, ilike, sql } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 /**
  * GET /api/v1/emails/link-search?q=...
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
       }
 
       const needle = `%${q}%`
-      const tenantId = auth.tenantId
+      const tenantId = TENANT_ID
       const PER_TYPE_LIMIT = 5
 
       // Run the three searches in parallel — no dependencies between them.

@@ -16,6 +16,7 @@ import { db } from '@/lib/db'
 import { socialMediaTopics } from '@/lib/db/schema'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'social_media', 'create', async (auth) => {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Business-Profil laden
-      const profile = await BusinessProfileService.getByTenant(auth.tenantId)
+      const profile = await BusinessProfileService.getByTenant(TENANT_ID)
 
       // SWOT-Staerken extrahieren
       let strengths: string | undefined
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
           strengths,
         },
         {
-          tenantId: auth.tenantId,
+          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'social_media',
           entityType: 'social_media_topic',
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
       // Generierte Themen direkt als Topics speichern (batch INSERT)
       const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316']
       const topicsToInsert = generated.map((t, i) => ({
-        tenantId: auth.tenantId,
+        tenantId: TENANT_ID,
         name: t.name,
         description: t.description || null,
         color: colors[i % colors.length],

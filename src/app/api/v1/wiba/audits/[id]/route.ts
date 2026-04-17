@@ -7,6 +7,7 @@ import {
 import { WibaAuditService } from '@/lib/services/wiba-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +15,7 @@ export async function GET(
 ) {
   return withPermission(request, 'wiba_audits', 'read', async (auth) => {
     const { id } = await params
-    const session = await WibaAuditService.getById(auth.tenantId, id)
+    const session = await WibaAuditService.getById(TENANT_ID, id)
     if (!session) return apiNotFound('Audit-Session nicht gefunden')
     return apiSuccess(session)
   })
@@ -28,7 +29,7 @@ export async function PUT(
     try {
       const { id } = await params
       const body = await request.json()
-      const session = await WibaAuditService.update(auth.tenantId, id, body)
+      const session = await WibaAuditService.update(TENANT_ID, id, body)
       if (!session) return apiNotFound('Audit-Session nicht gefunden')
       return apiSuccess(session)
     } catch (error) {
@@ -44,7 +45,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'wiba_audits', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await WibaAuditService.delete(auth.tenantId, id)
+    const deleted = await WibaAuditService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Audit-Session nicht gefunden')
     return apiSuccess({ deleted: true })
   })

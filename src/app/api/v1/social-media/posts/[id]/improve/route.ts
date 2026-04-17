@@ -15,6 +15,7 @@ import { SocialMediaPostService } from '@/lib/services/social-media-post.service
 import { SocialMediaAIService } from '@/lib/services/ai/social-media-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(
   request: NextRequest,
@@ -23,7 +24,7 @@ export async function POST(
   return withPermission(request, 'social_media', 'update', async (auth) => {
     try {
       const { id } = await params
-      const post = await SocialMediaPostService.getById(auth.tenantId, id)
+      const post = await SocialMediaPostService.getById(TENANT_ID, id)
       if (!post) return apiNotFound('Beitrag nicht gefunden')
 
       const body = await request.json()
@@ -39,7 +40,7 @@ export async function POST(
           instructions: validation.data.instructions,
         },
         {
-          tenantId: auth.tenantId,
+          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'social_media',
           entityType: 'social_media_post',

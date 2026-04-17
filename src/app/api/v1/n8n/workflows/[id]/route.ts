@@ -3,6 +3,7 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { N8nService } from '@/lib/services/n8n.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/n8n/workflows/[id] - Workflow Details
 export async function GET(
@@ -12,7 +13,7 @@ export async function GET(
   return withPermission(request, 'n8n_workflows', 'read', async (auth) => {
     try {
       const { id } = await params
-      const workflow = await N8nService.getWorkflow(auth.tenantId, id)
+      const workflow = await N8nService.getWorkflow(TENANT_ID, id)
       return apiSuccess(workflow)
     } catch (error) {
       logger.error('Failed to get n8n workflow', error, { module: 'N8nWorkflowsAPI' })
@@ -31,7 +32,7 @@ export async function PUT(
     try {
       const { id } = await params
       const body = await request.json()
-      const workflow = await N8nService.updateWorkflow(auth.tenantId, id, body)
+      const workflow = await N8nService.updateWorkflow(TENANT_ID, id, body)
       return apiSuccess(workflow)
     } catch (error) {
       logger.error('Failed to update n8n workflow', error, { module: 'N8nWorkflowsAPI' })
@@ -49,7 +50,7 @@ export async function DELETE(
   return withPermission(request, 'n8n_workflows', 'delete', async (auth) => {
     try {
       const { id } = await params
-      await N8nService.deleteWorkflow(auth.tenantId, id)
+      await N8nService.deleteWorkflow(TENANT_ID, id)
       return apiSuccess({ deleted: true })
     } catch (error) {
       logger.error('Failed to delete n8n workflow', error, { module: 'N8nWorkflowsAPI' })

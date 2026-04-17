@@ -13,6 +13,7 @@ import {
 import { MarketingTemplateService } from '@/lib/services/marketing-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
 ) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
     const { id } = await params
-    const template = await MarketingTemplateService.getById(auth.tenantId, id)
+    const template = await MarketingTemplateService.getById(TENANT_ID, id)
     if (!template) return apiNotFound('Vorlage nicht gefunden')
     return apiSuccess(template)
   })
@@ -39,7 +40,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const template = await MarketingTemplateService.update(auth.tenantId, id, validation.data)
+      const template = await MarketingTemplateService.update(TENANT_ID, id, validation.data)
       if (!template) return apiNotFound('Vorlage nicht gefunden')
       return apiSuccess(template)
     } catch (error) {
@@ -55,7 +56,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'marketing', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await MarketingTemplateService.delete(auth.tenantId, id)
+    const deleted = await MarketingTemplateService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Vorlage nicht gefunden')
     return apiSuccess({ deleted: true })
   })

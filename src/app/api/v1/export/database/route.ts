@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { TENANT_TABLES, GLOBAL_TABLES, JOIN_TABLES } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +49,7 @@ function exportRows(rows: Record<string, unknown>[], table: string): string {
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'database', 'read', async (auth) => {
-  const tenantId = auth.tenantId
+  const tenantId = TENANT_ID
 
   const stream = new ReadableStream({
     async start(controller) {

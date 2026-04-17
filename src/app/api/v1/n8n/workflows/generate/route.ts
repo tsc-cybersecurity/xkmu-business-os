@@ -3,6 +3,7 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { N8nWorkflowBuilderService } from '@/lib/services/ai/n8n-workflow-builder.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // POST /api/v1/n8n/workflows/generate - Workflow aus Beschreibung generieren
 export async function POST(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
 
       if (body.autoDeploy) {
         const result = await N8nWorkflowBuilderService.generateAndDeploy(
-          auth.tenantId,
+          TENANT_ID,
           auth.userId || null,
           body.prompt
         )
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await N8nWorkflowBuilderService.generateWorkflow(
-        auth.tenantId,
+        TENANT_ID,
         auth.userId || null,
         body.prompt
       )

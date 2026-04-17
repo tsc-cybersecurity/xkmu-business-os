@@ -14,6 +14,7 @@ import {
 import { UserService } from '@/lib/services/user.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -23,7 +24,7 @@ export async function GET(
 ) {
   return withPermission(request, 'users', 'read', async (auth) => {
     const { id } = await params
-    const user = await UserService.getById(auth.tenantId, id)
+    const user = await UserService.getById(TENANT_ID, id)
 
     if (!user) {
       return apiNotFound('User not found')
@@ -67,7 +68,7 @@ export async function PUT(
       // Check if email already exists
       if (validation.data.email) {
         const emailExists = await UserService.emailExists(
-          auth.tenantId,
+          TENANT_ID,
           validation.data.email,
           id
         )
@@ -77,7 +78,7 @@ export async function PUT(
       }
 
       const user = await UserService.update(
-        auth.tenantId,
+        TENANT_ID,
         id,
         validation.data
       )
@@ -109,7 +110,7 @@ export async function DELETE(
       return apiError('CANNOT_DELETE_SELF', 'Cannot delete your own account', 400)
     }
 
-    const deleted = await UserService.delete(auth.tenantId, id)
+    const deleted = await UserService.delete(TENANT_ID, id)
 
     if (!deleted) {
       return apiNotFound('User not found')

@@ -4,6 +4,7 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { AIService } from '@/lib/services/ai/ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -21,14 +22,14 @@ export async function POST(request: NextRequest, { params }: { params: Params })
 
       const keywords = [post.seoKeywords, post.seoTitle].filter(Boolean).join(', ')
 
-      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'blog_review')
+      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'blog_review')
       const userPrompt = AiPromptTemplateService.applyPlaceholders(
         template.userPrompt,
         { content: post.content.substring(0, 8000), keywords: keywords || 'keine angegeben' }
       )
 
       const response = await AIService.completeWithContext(userPrompt, {
-        tenantId: auth.tenantId,
+        tenantId: TENANT_ID,
         feature: 'blog_review',
       }, {
         maxTokens: 2000,

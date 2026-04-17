@@ -5,6 +5,7 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { CompanyActionsService } from '@/lib/services/ai/company-actions.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -31,7 +32,7 @@ export async function POST(
       const { actionSlug } = validation.data
 
       const result = await CompanyActionsService.generate(
-        auth.tenantId,
+        TENANT_ID,
         id,
         actionSlug,
         auth.userId

@@ -3,6 +3,7 @@ import { apiSuccess, apiNotFound, apiError } from '@/lib/utils/api-response'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -16,7 +17,7 @@ export async function POST(
 
     try {
       // Fetch the source document to determine its type
-      const document = await DocumentService.getById(auth.tenantId, id)
+      const document = await DocumentService.getById(TENANT_ID, id)
       if (!document) {
         return apiNotFound('Dokument nicht gefunden')
       }
@@ -31,7 +32,7 @@ export async function POST(
         }
 
         const result = await DocumentService.convertContractToDocument(
-          auth.tenantId,
+          TENANT_ID,
           id,
           targetType as 'offer' | 'invoice',
           auth.userId || undefined
@@ -45,7 +46,7 @@ export async function POST(
       } else if (document.type === 'offer') {
         // Existing offer-to-invoice conversion
         const invoice = await DocumentService.convertOfferToInvoice(
-          auth.tenantId,
+          TENANT_ID,
           id,
           auth.userId || undefined
         )

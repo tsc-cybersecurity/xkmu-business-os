@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 import { ALLOWED_TABLES as WHITELIST } from '@/lib/db/table-whitelist'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export const dynamic = 'force-dynamic'
 
@@ -221,7 +222,7 @@ function parseInsertStatements(sqlContent: string): ParsedInsert[] {
 export async function POST(request: NextRequest): Promise<Response> {
   return withPermission(request, 'database', 'create', async (auth) => {
     try {
-      const tenantId = auth.tenantId
+      const tenantId = TENANT_ID
 
       // FormData mit SQL-Datei lesen
       const formData = await request.formData()

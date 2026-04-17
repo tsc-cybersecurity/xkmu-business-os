@@ -9,10 +9,11 @@ import { BusinessDocumentService } from '@/lib/services/business-document.servic
 import { BusinessIntelligenceAIService } from '@/lib/services/ai/business-intelligence-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'business_intelligence', 'read', async (auth) => {
-    const profile = await BusinessProfileService.getByTenant(auth.tenantId)
+    const profile = await BusinessProfileService.getByTenant(TENANT_ID)
     return apiSuccess(profile)
   })
 }
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return withPermission(request, 'business_intelligence', 'create', async (auth) => {
     try {
-      const docs = await BusinessDocumentService.getExtractedDocuments(auth.tenantId)
+      const docs = await BusinessDocumentService.getExtractedDocuments(TENANT_ID)
 
       if (docs.length === 0) {
         return apiError('NO_DOCUMENTS', 'Keine extrahierten Dokumente vorhanden. Bitte laden Sie zuerst Dokumente hoch und extrahieren Sie den Text.', 400)
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
       const analysisResult = await BusinessIntelligenceAIService.analyzeDocuments(
         extractedTexts,
         {
-          tenantId: auth.tenantId,
+          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'business_intelligence',
           entityType: 'business_profile',
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
       )
 
       const documentIds = docs.map(d => d.id)
-      const profile = await BusinessProfileService.upsert(auth.tenantId, analysisResult, documentIds)
+      const profile = await BusinessProfileService.upsert(TENANT_ID, analysisResult, documentIds)
 
       return apiSuccess(profile)
     } catch (error) {

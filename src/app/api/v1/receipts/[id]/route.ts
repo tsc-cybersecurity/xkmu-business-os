@@ -2,13 +2,14 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
 import { ReceiptService } from '@/lib/services/receipt.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'documents', 'read', async (auth) => {
     const { id } = await params
-    const receipt = await ReceiptService.getById(auth.tenantId, id)
+    const receipt = await ReceiptService.getById(TENANT_ID, id)
     if (!receipt) return apiNotFound('Beleg nicht gefunden')
     return apiSuccess(receipt)
   })
@@ -19,7 +20,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
     try {
       const { id } = await params
       const body = await request.json()
-      const receipt = await ReceiptService.update(auth.tenantId, id, {
+      const receipt = await ReceiptService.update(TENANT_ID, id, {
         ...body,
         date: body.date ? new Date(body.date) : undefined,
       })
@@ -34,7 +35,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'documents', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await ReceiptService.delete(auth.tenantId, id)
+    const deleted = await ReceiptService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Beleg nicht gefunden')
     return apiSuccess({ deleted: true })
   })

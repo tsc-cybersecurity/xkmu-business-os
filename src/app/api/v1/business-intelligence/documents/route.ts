@@ -10,6 +10,7 @@ import {
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const UPLOAD_DIR = process.env.BI_UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads', 'bi')
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     const pagination = parsePaginationParams(searchParams)
     const status = searchParams.get('status') || undefined
 
-    const result = await BusinessDocumentService.list(auth.tenantId, {
+    const result = await BusinessDocumentService.list(TENANT_ID, {
       ...pagination,
       status,
     })
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       await writeFile(path.join(UPLOAD_DIR, filename), buffer)
 
       const doc = await BusinessDocumentService.create(
-        auth.tenantId,
+        TENANT_ID,
         {
           filename,
           originalName: file.name,

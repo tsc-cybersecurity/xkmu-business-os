@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { sopDocuments } from '@/lib/db/schema'
 import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const MATURITY_LABELS: Record<number, string> = {
   1: 'Anfaenger',
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
         .from(sopDocuments)
         .where(
           and(
-            eq(sopDocuments.tenantId, auth.tenantId),
+            eq(sopDocuments.tenantId, TENANT_ID),
             isNull(sopDocuments.deletedAt),
           )
         )

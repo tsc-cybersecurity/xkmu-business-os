@@ -13,13 +13,14 @@ import {
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'webhooks', 'read', async (auth) => {
     const { id } = await params
-    const webhook = await WebhookService.getById(auth.tenantId, id)
+    const webhook = await WebhookService.getById(TENANT_ID, id)
     if (!webhook) return apiNotFound('Webhook nicht gefunden')
 
     return apiSuccess(webhook)
@@ -36,7 +37,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const webhook = await WebhookService.update(auth.tenantId, id, validation.data)
+      const webhook = await WebhookService.update(TENANT_ID, id, validation.data)
       if (!webhook) return apiNotFound('Webhook nicht gefunden')
 
       return apiSuccess(webhook)
@@ -50,7 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'webhooks', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await WebhookService.delete(auth.tenantId, id)
+    const deleted = await WebhookService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Webhook nicht gefunden')
 
     return apiSuccess({ deleted: true })

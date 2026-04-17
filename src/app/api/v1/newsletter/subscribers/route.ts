@@ -3,6 +3,7 @@ import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { NewsletterService } from '@/lib/services/newsletter.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { parsePaginationParams } from '@/lib/utils/api-response'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
     const pagination = parsePaginationParams(searchParams)
     const status = searchParams.get('status') || undefined
     const search = searchParams.get('search') || undefined
-    const result = await NewsletterService.listSubscribers(auth.tenantId, { ...pagination, status, search })
+    const result = await NewsletterService.listSubscribers(TENANT_ID, { ...pagination, status, search })
     return apiSuccess(result.items, result.meta)
   })
 }
@@ -21,10 +22,10 @@ export async function POST(request: NextRequest) {
       const body = await request.json()
       // Bulk import or single
       if (Array.isArray(body.subscribers)) {
-        const created = await NewsletterService.importSubscribers(auth.tenantId, body.subscribers)
+        const created = await NewsletterService.importSubscribers(TENANT_ID, body.subscribers)
         return apiSuccess({ imported: created }, undefined, 201)
       }
-      const sub = await NewsletterService.createSubscriber(auth.tenantId, body)
+      const sub = await NewsletterService.createSubscriber(TENANT_ID, body)
       return apiSuccess(sub, undefined, 201)
     } catch {
       return apiServerError()

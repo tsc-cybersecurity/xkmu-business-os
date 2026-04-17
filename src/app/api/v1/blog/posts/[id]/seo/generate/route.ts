@@ -4,6 +4,7 @@ import { BlogPostService } from '@/lib/services/blog-post.service'
 import { BlogAIService } from '@/lib/services/ai/blog-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(
   request: NextRequest,
@@ -16,7 +17,7 @@ export async function POST(
       if (!post) return apiNotFound('Beitrag nicht gefunden')
 
       const seo = await BlogAIService.generateSEO(post.title, post.content || '', {
-        tenantId: auth.tenantId,
+        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'blog_seo_generate',
       })

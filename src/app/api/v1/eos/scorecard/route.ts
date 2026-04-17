@@ -2,10 +2,11 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { EosService } from '@/lib/services/eos.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'processes', 'read', async (auth) => {
-    const metrics = await EosService.listMetrics(auth.tenantId)
+    const metrics = await EosService.listMetrics(TENANT_ID)
     const metricsWithEntries = await Promise.all(
       metrics.map(async (m) => ({
         ...m,
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
         const entry = await EosService.upsertEntry(body.metricId, body.week, body.actual, body.note)
         return apiSuccess(entry)
       }
-      const metric = await EosService.createMetric(auth.tenantId, body)
+      const metric = await EosService.createMetric(TENANT_ID, body)
       return apiSuccess(metric, undefined, 201)
     } catch { return apiServerError() }
   })

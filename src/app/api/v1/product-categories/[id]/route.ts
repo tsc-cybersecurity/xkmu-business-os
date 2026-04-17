@@ -13,6 +13,7 @@ import {
 import { ProductCategoryService } from '@/lib/services/product-category.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -23,7 +24,7 @@ export async function GET(
 ) {
   return withPermission(request, 'product_categories', 'read', async (auth) => {
     const { id } = await params
-    const category = await ProductCategoryService.getById(auth.tenantId, id)
+    const category = await ProductCategoryService.getById(TENANT_ID, id)
 
     if (!category) {
       return apiNotFound('Kategorie nicht gefunden')
@@ -49,7 +50,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const category = await ProductCategoryService.update(auth.tenantId, id, validation.data)
+      const category = await ProductCategoryService.update(TENANT_ID, id, validation.data)
 
       if (!category) {
         return apiNotFound('Kategorie nicht gefunden')
@@ -73,7 +74,7 @@ export async function DELETE(
 
     try {
       // Check for child categories
-      const hasChildren = await ProductCategoryService.hasChildren(auth.tenantId, id)
+      const hasChildren = await ProductCategoryService.hasChildren(TENANT_ID, id)
       if (hasChildren) {
         return apiError(
           'HAS_CHILDREN',
@@ -83,7 +84,7 @@ export async function DELETE(
       }
 
       // Check for linked products
-      const hasProducts = await ProductCategoryService.hasProducts(auth.tenantId, id)
+      const hasProducts = await ProductCategoryService.hasProducts(TENANT_ID, id)
       if (hasProducts) {
         return apiError(
           'HAS_PRODUCTS',
@@ -92,7 +93,7 @@ export async function DELETE(
         )
       }
 
-      const deleted = await ProductCategoryService.delete(auth.tenantId, id)
+      const deleted = await ProductCategoryService.delete(TENANT_ID, id)
 
       if (!deleted) {
         return apiNotFound('Kategorie nicht gefunden')

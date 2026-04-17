@@ -13,6 +13,7 @@ import {
 import { ProductService } from '@/lib/services/product.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/products - List products with filters
 export async function GET(request: NextRequest) {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
         search: searchParams.get('search') || undefined,
       }
 
-      const result = await ProductService.list(auth.tenantId, filters)
+      const result = await ProductService.list(TENANT_ID, filters)
       return apiSuccess(result.items, result.meta)
     } catch (error) {
       logger.error('Failed to list products', error, { module: 'ProductsAPI' })
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       }
 
       const product = await ProductService.create(
-        auth.tenantId,
+        TENANT_ID,
         validation.data,
         auth.userId || undefined
       )

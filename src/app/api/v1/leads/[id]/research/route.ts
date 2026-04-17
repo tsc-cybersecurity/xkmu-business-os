@@ -11,6 +11,7 @@ import { LeadResearchService, WebsiteScraperService } from '@/lib/services/ai'
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -24,13 +25,13 @@ export async function POST(
 
   try {
     // Get the lead with relations
-    const lead = await LeadService.getById(auth.tenantId, id)
+    const lead = await LeadService.getById(TENANT_ID, id)
     if (!lead) {
       return apiNotFound('Lead not found')
     }
 
     // Update status to "processing" (DB constraint: pending, processing, completed, failed)
-    await LeadService.updateAIResearch(auth.tenantId, id, 'processing')
+    await LeadService.updateAIResearch(TENANT_ID, id, 'processing')
 
     // Gather information for research
     let companyName: string | undefined
@@ -42,7 +43,7 @@ export async function POST(
 
     // Get company info if linked
     if (lead.companyId) {
-      const company = await CompanyService.getById(auth.tenantId, lead.companyId)
+      const company = await CompanyService.getById(TENANT_ID, lead.companyId)
       if (company) {
         companyName = company.name
         website = company.website || undefined
@@ -73,7 +74,7 @@ export async function POST(
         if (website) {
           logger.info(`Scraping company website: ${website}`, { module: 'LeadsResearchAPI' })
           try {
-            const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(website, undefined, auth.tenantId)
+            const scrapeResult = await WebsiteScraperService.scrapeCompanyWebsite(website, undefined, TENANT_ID)
             if (scrapeResult.success && scrapeResult.combinedText) {
               websiteContent = scrapeResult.combinedText
               logger.info(`Website scraped (${websiteContent.length} chars)`, { module: 'LeadsResearchAPI' })
@@ -87,7 +88,7 @@ export async function POST(
 
     // Get person info if linked
     if (lead.personId) {
-      const person = await PersonService.getById(auth.tenantId, lead.personId)
+      const person = await PersonService.getById(TENANT_ID, lead.personId)
       if (person) {
         personName = `${person.firstName} ${person.lastName}`
         if (!email) email = person.email || undefined
@@ -111,7 +112,7 @@ export async function POST(
 
     // Validate we have enough info
     if (!companyName && !personName && !email) {
-      await LeadService.updateAIResearch(auth.tenantId, id, 'failed', {
+      await LeadService.updateAIResearch(TENANT_ID, id, 'failed', {
         error: 'Nicht genügend Informationen für die Recherche. Bitte verknüpfen Sie eine Firma oder Person.',
       })
       return apiError(
@@ -130,7 +131,7 @@ export async function POST(
       additionalContext,
       websiteContent,
     }, {
-      tenantId: auth.tenantId,
+      tenantId: TENANT_ID,
       userId: auth.userId,
       entityType: 'lead',
       entityId: id,
@@ -138,7 +139,7 @@ export async function POST(
 
     // Update lead with research results
     const updatedLead = await LeadService.updateAIResearch(
-      auth.tenantId,
+      TENANT_ID,
       id,
       'completed',
       researchResult as unknown as Record<string, unknown>
@@ -146,13 +147,13 @@ export async function POST(
 
     // Also update the lead score if we got one
     if (researchResult.score !== undefined) {
-      await LeadService.update(auth.tenantId, id, {
+      await LeadService.update(TENANT_ID, id, {
         score: researchResult.score,
       })
     }
 
     // Webhook feuern
-    WebhookService.fire(auth.tenantId, 'research.completed', {
+    WebhookService.fire(TENANT_ID, 'research.completed', {
       leadId: id,
       score: researchResult.score,
     }).catch(() => {})
@@ -165,7 +166,7 @@ export async function POST(
     logger.error('Lead research error', error, { module: 'LeadsResearchAPI' })
 
     // Update status to "failed"
-    await LeadService.updateAIResearch(auth.tenantId, id, 'failed', {
+    await LeadService.updateAIResearch(TENANT_ID, id, 'failed', {
       error: error instanceof Error ? error.message : 'Unbekannter Fehler',
     })
 
@@ -186,7 +187,7 @@ export async function GET(
   return withPermission(request, 'leads', 'update', async (auth) => {
   const { id } = await params
 
-  const lead = await LeadService.getById(auth.tenantId, id)
+  const lead = await LeadService.getById(TENANT_ID, id)
   if (!lead) {
     return apiNotFound('Lead not found')
   }

@@ -4,6 +4,7 @@ import { AIService } from '@/lib/services/ai'
 import { withPermission } from '@/lib/auth/require-permission'
 import { rateLimit } from '@/lib/utils/rate-limit'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'ai_providers', 'read', async (auth): Promise<Response> => {
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
 
       // Nutze DB-basierte Provider mit Logging
       const response = await AIService.completeWithContext(prompt, {
-        tenantId: auth.tenantId,
+        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'completion',
       }, {

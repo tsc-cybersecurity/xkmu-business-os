@@ -13,6 +13,7 @@ import {
 import { ActivityService } from '@/lib/services/activity.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'activities', 'read', async (auth) => {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     const personId = searchParams.get('personId') || undefined
     const type = searchParams.get('type') || undefined
 
-    const result = await ActivityService.list(auth.tenantId, {
+    const result = await ActivityService.list(TENANT_ID, {
       ...pagination,
       leadId,
       companyId,
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const activity = await ActivityService.create(auth.tenantId, validation.data, auth.userId)
+      const activity = await ActivityService.create(TENANT_ID, validation.data, auth.userId)
       return apiSuccess(activity, undefined, 201)
     } catch (error) {
       logger.error('Error creating activity', error, { module: 'ActivitiesAPI' })

@@ -3,11 +3,12 @@ import { apiSuccess, apiServerError, apiValidationError } from '@/lib/utils/api-
 import { ProcessService } from '@/lib/services/process.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { validateAndParse, formatZodErrors, createProcessSchema } from '@/lib/utils/validation'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/processes - List all process areas
 export async function GET(request: NextRequest) {
   return withPermission(request, 'processes', 'read', async (auth) => {
-    const items = await ProcessService.list(auth.tenantId)
+    const items = await ProcessService.list(TENANT_ID)
     return apiSuccess(items)
   })
 }
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
       if (!validation.success) {
         return apiValidationError(formatZodErrors(validation.errors!))
       }
-      const process = await ProcessService.create(auth.tenantId, validation.data!)
+      const process = await ProcessService.create(TENANT_ID, validation.data!)
       return apiSuccess(process, undefined, 201)
     } catch {
       return apiServerError()

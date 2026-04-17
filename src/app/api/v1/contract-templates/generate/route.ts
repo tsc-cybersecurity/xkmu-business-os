@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { AIService } from '@/lib/services/ai/ai.service'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'documents', 'create', async (auth) => {
@@ -36,7 +37,7 @@ Antworte als JSON:
 
     try {
       const response = await AIService.completeWithContext(userPrompt, {
-        tenantId: auth.tenantId,
+        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'contract_template_generation',
       }, { systemPrompt })

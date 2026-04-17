@@ -11,6 +11,7 @@ import { LeadResearchService } from '@/lib/services/ai'
 import type { CompanyResearchResult, CompanyAddress } from '@/lib/services/ai'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -179,7 +180,7 @@ export async function POST(
   const { id } = await params
 
   try {
-    const company = await CompanyService.getById(auth.tenantId, id)
+    const company = await CompanyService.getById(TENANT_ID, id)
     if (!company) {
       return apiNotFound('Company not found')
     }
@@ -190,7 +191,7 @@ export async function POST(
     let firecrawlContent: string | undefined
     if (company.website) {
       try {
-        const latestCrawl = await FirecrawlResearchService.getLatest(auth.tenantId, id)
+        const latestCrawl = await FirecrawlResearchService.getLatest(TENANT_ID, id)
         if (latestCrawl?.pages && Array.isArray(latestCrawl.pages)) {
           const pages = latestCrawl.pages as Array<{ url: string; title: string; markdown: string }>
           const parts = pages.map((page, i) => {
@@ -218,7 +219,7 @@ export async function POST(
       notes: company.notes || undefined,
       websiteContent: firecrawlContent,
     }, {
-      tenantId: auth.tenantId,
+      tenantId: TENANT_ID,
       userId: auth.userId,
       entityType: 'company',
       entityId: id,
@@ -237,7 +238,7 @@ export async function POST(
     }
 
     // Save research result to DB (but do NOT apply to company yet)
-    const savedResearch = await CompanyResearchService.create(auth.tenantId, id, {
+    const savedResearch = await CompanyResearchService.create(TENANT_ID, id, {
       companyId: id,
       researchData: {
         ...researchResult,
@@ -270,7 +271,7 @@ export async function POST(
       },
     }
 
-    await CompanyService.update(auth.tenantId, id, {
+    await CompanyService.update(TENANT_ID, id, {
       customFields: updatedCustomFields,
     })
 
@@ -300,12 +301,12 @@ export async function GET(
   return withPermission(request, 'companies', 'update', async (auth) => {
   const { id } = await params
 
-  const company = await CompanyService.getById(auth.tenantId, id)
+  const company = await CompanyService.getById(TENANT_ID, id)
   if (!company) {
     return apiNotFound('Company not found')
   }
 
-  const researches = await CompanyResearchService.listByCompany(auth.tenantId, id)
+  const researches = await CompanyResearchService.listByCompany(TENANT_ID, id)
 
   // Backward compat: also include customFields research data
   const customFields = (company.customFields || {}) as Record<string, unknown>

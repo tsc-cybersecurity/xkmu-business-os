@@ -13,6 +13,7 @@ import {
 import { MarketingTaskService } from '@/lib/services/marketing-task.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
 ) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
     const { id } = await params
-    const task = await MarketingTaskService.getById(auth.tenantId, id)
+    const task = await MarketingTaskService.getById(TENANT_ID, id)
     if (!task) return apiNotFound('Task nicht gefunden')
     return apiSuccess(task)
   })
@@ -39,7 +40,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const task = await MarketingTaskService.update(auth.tenantId, id, validation.data)
+      const task = await MarketingTaskService.update(TENANT_ID, id, validation.data)
       if (!task) return apiNotFound('Task nicht gefunden')
       return apiSuccess(task)
     } catch (error) {
@@ -55,7 +56,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'marketing', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await MarketingTaskService.delete(auth.tenantId, id)
+    const deleted = await MarketingTaskService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Task nicht gefunden')
     return apiSuccess({ deleted: true })
   })

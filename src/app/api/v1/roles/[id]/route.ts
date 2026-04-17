@@ -13,6 +13,7 @@ import {
 import { RoleService } from '@/lib/services/role.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -21,7 +22,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   return withPermission(request, 'roles', 'read', async (auth) => {
     const { id } = await params
-    const role = await RoleService.getWithPermissions(auth.tenantId, id)
+    const role = await RoleService.getWithPermissions(TENANT_ID, id)
 
     if (!role) {
       return apiNotFound('Rolle nicht gefunden')
@@ -42,7 +43,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const role = await RoleService.update(auth.tenantId, id, validation.data)
+      const role = await RoleService.update(TENANT_ID, id, validation.data)
 
       if (!role) {
         return apiNotFound('Rolle nicht gefunden')
@@ -59,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   return withPermission(request, 'roles', 'delete', async (auth) => {
     const { id } = await params
-    const role = await RoleService.getById(auth.tenantId, id)
+    const role = await RoleService.getById(TENANT_ID, id)
 
     if (!role) {
       return apiNotFound('Rolle nicht gefunden')
@@ -73,7 +74,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    const deleted = await RoleService.delete(auth.tenantId, id)
+    const deleted = await RoleService.delete(TENANT_ID, id)
 
     if (!deleted) {
       return apiError('DELETE_FAILED', 'Rolle konnte nicht gelöscht werden', 500)

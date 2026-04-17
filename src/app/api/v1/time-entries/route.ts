@@ -3,6 +3,7 @@ import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { TimeEntryService } from '@/lib/services/time-entry.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { parsePaginationParams } from '@/lib/utils/api-response'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'time_entries', 'read', async (auth) => {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     const from = searchParams.get('from') ? new Date(searchParams.get('from')!) : undefined
     const to = searchParams.get('to') ? new Date(searchParams.get('to')!) : undefined
 
-    const result = await TimeEntryService.list(auth.tenantId, {
+    const result = await TimeEntryService.list(TENANT_ID, {
       ...pagination,
       userId: auth.userId || undefined,
       companyId,
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     if (!auth.userId) return apiError('NO_USER', 'Zeiterfassung erfordert einen angemeldeten Benutzer', 403)
     try {
       const body = await request.json()
-      const entry = await TimeEntryService.create(auth.tenantId, auth.userId, {
+      const entry = await TimeEntryService.create(TENANT_ID, auth.userId, {
         companyId: body.companyId || undefined,
         description: body.description,
         date: new Date(body.date || new Date()),

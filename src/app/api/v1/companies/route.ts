@@ -14,6 +14,7 @@ import { CompanyService } from '@/lib/services/company.service'
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'companies', 'read', async (auth) => {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || undefined
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || undefined
 
-    const result = await CompanyService.list(auth.tenantId, {
+    const result = await CompanyService.list(TENANT_ID, {
       ...pagination,
       status,
       search,
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
 
       // Dublettenprüfung
       const duplicate = await CompanyService.checkDuplicate(
-        auth.tenantId,
+        TENANT_ID,
         validation.data.name,
         validation.data.website
       )
@@ -59,13 +60,13 @@ export async function POST(request: NextRequest) {
       }
 
       const company = await CompanyService.create(
-        auth.tenantId,
+        TENANT_ID,
         validation.data,
         auth.userId || undefined
       )
 
       // Webhook feuern
-      WebhookService.fire(auth.tenantId, 'company.created', {
+      WebhookService.fire(TENANT_ID, 'company.created', {
         companyId: company.id,
         companyName: company.name,
       }).catch(() => {})

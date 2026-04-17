@@ -13,6 +13,7 @@ import {
 import { PersonService } from '@/lib/services/person.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'persons', 'read', async (auth) => {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || undefined
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || undefined
 
-    const result = await PersonService.list(auth.tenantId, {
+    const result = await PersonService.list(TENANT_ID, {
       ...pagination,
       companyId,
       status,
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
       }
 
       const person = await PersonService.create(
-        auth.tenantId,
+        TENANT_ID,
         validation.data,
         auth.userId || undefined
       )

@@ -7,6 +7,7 @@ import {
 import { BusinessDocumentService } from '@/lib/services/business-document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +15,7 @@ export async function GET(
 ) {
   return withPermission(request, 'business_intelligence', 'read', async (auth) => {
     const { id } = await params
-    const doc = await BusinessDocumentService.getById(auth.tenantId, id)
+    const doc = await BusinessDocumentService.getById(TENANT_ID, id)
     if (!doc) return apiNotFound('Dokument nicht gefunden')
     return apiSuccess(doc)
   })
@@ -27,7 +28,7 @@ export async function DELETE(
   return withPermission(request, 'business_intelligence', 'delete', async (auth) => {
     try {
       const { id } = await params
-      const deleted = await BusinessDocumentService.delete(auth.tenantId, id)
+      const deleted = await BusinessDocumentService.delete(TENANT_ID, id)
       if (!deleted) return apiNotFound('Dokument nicht gefunden')
       return apiSuccess({ deleted: true })
     } catch (error) {

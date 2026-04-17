@@ -13,12 +13,13 @@ import {
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'webhooks', 'read', async (auth) => {
     const { searchParams } = new URL(request.url)
     const pagination = parsePaginationParams(searchParams)
-    const result = await WebhookService.list(auth.tenantId, pagination)
+    const result = await WebhookService.list(TENANT_ID, pagination)
     return apiSuccess(result.items, result.meta)
   })
 }
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const webhook = await WebhookService.create(auth.tenantId, validation.data)
+      const webhook = await WebhookService.create(TENANT_ID, validation.data)
       return apiSuccess(webhook, undefined, 201)
     } catch (error) {
       logger.error('Error creating webhook', error, { module: 'WebhooksAPI' })

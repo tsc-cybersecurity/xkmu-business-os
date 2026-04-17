@@ -13,6 +13,7 @@ import {
 import { UserService } from '@/lib/services/user.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'users', 'read', async (auth) => {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined
     const search = searchParams.get('search') || undefined
 
-    const result = await UserService.list(auth.tenantId, {
+    const result = await UserService.list(TENANT_ID, {
       ...pagination,
       role,
       status,
@@ -45,14 +46,14 @@ export async function POST(request: NextRequest) {
 
       // Check if email already exists
       const emailExists = await UserService.emailExists(
-        auth.tenantId,
+        TENANT_ID,
         validation.data.email
       )
       if (emailExists) {
         return apiError('EMAIL_EXISTS', 'Email already in use', 400)
       }
 
-      const user = await UserService.create(auth.tenantId, validation.data)
+      const user = await UserService.create(TENANT_ID, validation.data)
 
       // Remove password hash from response
       const { passwordHash: _, ...userWithoutPassword } = user

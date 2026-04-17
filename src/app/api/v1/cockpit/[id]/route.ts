@@ -13,6 +13,7 @@ import {
 import { CockpitService } from '@/lib/services/cockpit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -22,7 +23,7 @@ export async function GET(
 ) {
   return withPermission(request, 'cockpit', 'read', async (auth) => {
     const { id } = await params
-    const system = await CockpitService.getById(auth.tenantId, id)
+    const system = await CockpitService.getById(TENANT_ID, id)
 
     if (!system) {
       return apiNotFound('System not found')
@@ -47,7 +48,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const system = await CockpitService.update(auth.tenantId, id, validation.data)
+      const system = await CockpitService.update(TENANT_ID, id, validation.data)
 
       if (!system) {
         return apiNotFound('System not found')
@@ -67,7 +68,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'cockpit', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await CockpitService.delete(auth.tenantId, id)
+    const deleted = await CockpitService.delete(TENANT_ID, id)
 
     if (!deleted) {
       return apiNotFound('System not found')

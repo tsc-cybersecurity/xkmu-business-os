@@ -13,6 +13,7 @@ import {
 import { MarketingCampaignService } from '@/lib/services/marketing-campaign.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || undefined
     const search = searchParams.get('search') || undefined
 
-    const result = await MarketingCampaignService.list(auth.tenantId, {
+    const result = await MarketingCampaignService.list(TENANT_ID, {
       ...pagination,
       status,
       type,
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const campaign = await MarketingCampaignService.create(auth.tenantId, validation.data, auth.userId ?? undefined)
+      const campaign = await MarketingCampaignService.create(TENANT_ID, validation.data, auth.userId ?? undefined)
       return apiSuccess(campaign, undefined, 201)
     } catch (error) {
       logger.error('Error creating marketing campaign', error, { module: 'MarketingCampaignsAPI' })

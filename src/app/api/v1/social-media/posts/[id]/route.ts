@@ -13,6 +13,7 @@ import {
 import { SocialMediaPostService } from '@/lib/services/social-media-post.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
 ) {
   return withPermission(request, 'social_media', 'read', async (auth) => {
     const { id } = await params
-    const post = await SocialMediaPostService.getById(auth.tenantId, id)
+    const post = await SocialMediaPostService.getById(TENANT_ID, id)
     if (!post) return apiNotFound('Beitrag nicht gefunden')
     return apiSuccess(post)
   })
@@ -39,7 +40,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const post = await SocialMediaPostService.update(auth.tenantId, id, validation.data)
+      const post = await SocialMediaPostService.update(TENANT_ID, id, validation.data)
       if (!post) return apiNotFound('Beitrag nicht gefunden')
       return apiSuccess(post)
     } catch (error) {
@@ -55,7 +56,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'social_media', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await SocialMediaPostService.delete(auth.tenantId, id)
+    const deleted = await SocialMediaPostService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Beitrag nicht gefunden')
     return apiSuccess({ deleted: true })
   })

@@ -4,6 +4,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { sql } from 'drizzle-orm'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/opportunities/debug - Check if table and SerpAPI are configured
 export async function GET(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     // 2. Check if SerpAPI key is configured (DB)
     try {
-      const providers = await AiProviderService.list(auth.tenantId)
+      const providers = await AiProviderService.list(TENANT_ID)
       const serpapi = providers.find((p) => p.providerType === 'serpapi' && p.isActive)
       checks.serpApiProvider = serpapi ? { id: serpapi.id, name: serpapi.name, hasKey: !!serpapi.apiKey } : null
     } catch (e) {
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     // 4. Check row count if table exists
     if (checks.tableExists) {
       try {
-        const result = await db.execute(sql`SELECT COUNT(*) as count FROM opportunities WHERE tenant_id = ${auth.tenantId}`)
+        const result = await db.execute(sql`SELECT COUNT(*) as count FROM opportunities WHERE tenant_id = ${TENANT_ID}`)
         const rows = result as unknown as Array<{ count: number }>
         checks.rowCount = Number(rows[0]?.count ?? 0)
       } catch (e) {
@@ -53,13 +54,13 @@ export async function GET(request: NextRequest) {
       const { SerpApiService } = await import('@/lib/services/serpapi.service')
       const { OpportunityService } = await import('@/lib/services/opportunity.service')
 
-      const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1, auth.tenantId)
+      const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1, TENANT_ID)
       checks.serpApiCallOk = true
       checks.serpApiResultCount = results.length
 
       if (results.length > 0) {
         try {
-          const saveResult = await OpportunityService.createMany(auth.tenantId, results.map(r => ({
+          const saveResult = await OpportunityService.createMany(TENANT_ID, results.map(r => ({
             ...r,
             phone: r.phone ?? undefined,
             email: r.email ?? undefined,
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
     if (checks.serpApiProvider || checks.serpApiEnvKey) {
       try {
         const { SerpApiService } = await import('@/lib/services/serpapi.service')
-        const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1, auth.tenantId)
+        const results = await SerpApiService.searchPlaces('Restaurant', 'Berlin', 5, 1, TENANT_ID)
         checks.serpApiTest = { success: true, resultCount: results.length, firstResult: results[0]?.name || null }
       } catch (e) {
         checks.serpApiTest = { success: false, error: e instanceof Error ? e.message : String(e) }
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
   return withPermission(request, 'opportunities', 'update', async (auth) => {
     try {
       const { OpportunityService } = await import('@/lib/services/opportunity.service')
-      const fixed = await OpportunityService.repairAddresses(auth.tenantId)
+      const fixed = await OpportunityService.repairAddresses(TENANT_ID)
       return apiSuccess({ repaired: fixed })
     } catch (e) {
       return apiError('REPAIR_FAILED', e instanceof Error ? e.message : 'Fehler', 500)

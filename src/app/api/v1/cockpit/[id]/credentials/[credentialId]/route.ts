@@ -13,6 +13,7 @@ import {
 import { CockpitService } from '@/lib/services/cockpit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string; credentialId: string }>
 
@@ -24,7 +25,7 @@ export async function PUT(
     const { id, credentialId } = await params
 
     try {
-      const owns = await CockpitService.verifyCredentialOwnership(auth.tenantId, id, credentialId)
+      const owns = await CockpitService.verifyCredentialOwnership(TENANT_ID, id, credentialId)
       if (!owns) {
         return apiNotFound('Credential not found')
       }
@@ -57,7 +58,7 @@ export async function DELETE(
   return withPermission(request, 'cockpit', 'delete', async (auth) => {
     const { id, credentialId } = await params
 
-    const owns = await CockpitService.verifyCredentialOwnership(auth.tenantId, id, credentialId)
+    const owns = await CockpitService.verifyCredentialOwnership(TENANT_ID, id, credentialId)
     if (!owns) {
       return apiNotFound('Credential not found')
     }

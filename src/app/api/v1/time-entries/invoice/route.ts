@@ -6,6 +6,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { timeEntries } from '@/lib/db/schema'
 import { eq, and, gte, lte } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // POST /api/v1/time-entries/invoice - Rechnung aus Zeiterfassung erstellen
 export async function POST(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
 
       // Get time entries for company in date range
       const conditions = [
-        eq(timeEntries.tenantId, auth.tenantId),
+        eq(timeEntries.tenantId, TENANT_ID),
         eq(timeEntries.companyId, companyId),
       ]
       if (from) conditions.push(gte(timeEntries.date, new Date(from)))
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
       const dueDate = new Date()
       dueDate.setDate(dueDate.getDate() + 14)
 
-      const invoice = await DocumentService.create(auth.tenantId, {
+      const invoice = await DocumentService.create(TENANT_ID, {
         type: 'invoice',
         companyId,
         issueDate: new Date().toISOString().split('T')[0],
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
         const hours = (entry.durationMinutes || 0) / 60
         totalMinutes += entry.durationMinutes || 0
 
-        await DocumentService.addItem(auth.tenantId, invoice.id, {
+        await DocumentService.addItem(TENANT_ID, invoice.id, {
           name: entry.description || 'Dienstleistung',
           description: `${new Date(entry.date).toLocaleDateString('de-DE')} — ${Math.round(hours * 100) / 100} Std.`,
           quantity: Math.round(hours * 100) / 100,

@@ -12,6 +12,7 @@ import {
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -24,7 +25,7 @@ export async function GET(
     const { id } = await params
 
     try {
-      const items = await DocumentService.getItems(auth.tenantId, id)
+      const items = await DocumentService.getItems(TENANT_ID, id)
       return apiSuccess(items)
     } catch (error) {
       logger.error('Failed to get document items', error, { module: 'DocumentsItemsAPI' })
@@ -49,7 +50,7 @@ export async function POST(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const item = await DocumentService.addItem(auth.tenantId, id, validation.data)
+      const item = await DocumentService.addItem(TENANT_ID, id, validation.data)
       return apiSuccess(item, undefined, 201)
     } catch (error) {
       logger.error('Failed to add document item', error, { module: 'DocumentsItemsAPI' })

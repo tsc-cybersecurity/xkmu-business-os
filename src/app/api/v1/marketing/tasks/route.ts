@@ -14,6 +14,7 @@ import {
 import { MarketingTaskService } from '@/lib/services/marketing-task.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined
     const type = searchParams.get('type') || undefined
 
-    const result = await MarketingTaskService.list(auth.tenantId, {
+    const result = await MarketingTaskService.list(TENANT_ID, {
       ...pagination,
       campaignId,
       status,
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const task = await MarketingTaskService.create(auth.tenantId, {
+      const task = await MarketingTaskService.create(TENANT_ID, {
         ...validation.data,
         campaignId: body.campaignId,
       })

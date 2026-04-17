@@ -13,6 +13,7 @@ import {
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -32,7 +33,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const document = await DocumentService.updateStatus(auth.tenantId, id, validation.data.status)
+      const document = await DocumentService.updateStatus(TENANT_ID, id, validation.data.status)
 
       if (!document) {
         return apiNotFound('Dokument nicht gefunden')

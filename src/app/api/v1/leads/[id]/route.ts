@@ -13,6 +13,7 @@ import {
 import { LeadService } from '@/lib/services/lead.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -22,7 +23,7 @@ export async function GET(
 ) {
   return withPermission(request, 'leads', 'read', async (auth) => {
     const { id } = await params
-    const lead = await LeadService.getById(auth.tenantId, id)
+    const lead = await LeadService.getById(TENANT_ID, id)
 
     if (!lead) {
       return apiNotFound('Lead not found')
@@ -47,7 +48,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const lead = await LeadService.update(auth.tenantId, id, validation.data)
+      const lead = await LeadService.update(TENANT_ID, id, validation.data)
 
       if (!lead) {
         return apiNotFound('Lead not found')
@@ -67,7 +68,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'leads', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await LeadService.delete(auth.tenantId, id)
+    const deleted = await LeadService.delete(TENANT_ID, id)
 
     if (!deleted) {
       return apiNotFound('Lead not found')

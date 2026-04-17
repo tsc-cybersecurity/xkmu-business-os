@@ -3,6 +3,7 @@ import { apiSuccess, apiNotFound, apiServerError, apiValidationError } from '@/l
 import { ProcessService } from '@/lib/services/process.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { validateAndParse, formatZodErrors, updateProcessSchema } from '@/lib/utils/validation'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -13,10 +14,10 @@ export async function GET(
 ) {
   return withPermission(request, 'processes', 'read', async (auth) => {
     const { id } = await params
-    const process = await ProcessService.getById(auth.tenantId, id)
+    const process = await ProcessService.getById(TENANT_ID, id)
     if (!process) return apiNotFound('Prozess nicht gefunden')
 
-    const tasks = await ProcessService.listTasks(auth.tenantId, id)
+    const tasks = await ProcessService.listTasks(TENANT_ID, id)
     return apiSuccess({ ...process, tasks })
   })
 }
@@ -34,7 +35,7 @@ export async function PUT(
       if (!validation.success) {
         return apiValidationError(formatZodErrors(validation.errors!))
       }
-      const process = await ProcessService.update(auth.tenantId, id, validation.data!)
+      const process = await ProcessService.update(TENANT_ID, id, validation.data!)
       if (!process) return apiNotFound('Prozess nicht gefunden')
       return apiSuccess(process)
     } catch {
@@ -50,7 +51,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'processes', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await ProcessService.delete(auth.tenantId, id)
+    const deleted = await ProcessService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Prozess nicht gefunden')
     return apiSuccess({ deleted: true })
   })

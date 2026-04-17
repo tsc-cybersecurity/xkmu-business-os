@@ -7,6 +7,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { activities, leads, opportunities } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -15,14 +16,14 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
   return withPermission(request, 'companies', 'read', async (auth) => {
     try {
       const { id } = await params
-      const company = await CompanyService.getById(auth.tenantId, id)
+      const company = await CompanyService.getById(TENANT_ID, id)
       if (!company) return apiNotFound('Firma nicht gefunden')
 
       // Letzte Aktivitaeten
       const recentActivities = await db
         .select()
         .from(activities)
-        .where(and(eq(activities.tenantId, auth.tenantId), eq(activities.companyId, id)))
+        .where(and(eq(activities.tenantId, TENANT_ID), eq(activities.companyId, id)))
         .orderBy(desc(activities.createdAt))
         .limit(5)
 
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       const openLeads = await db
         .select()
         .from(leads)
-        .where(and(eq(leads.tenantId, auth.tenantId), eq(leads.companyId, id)))
+        .where(and(eq(leads.tenantId, TENANT_ID), eq(leads.companyId, id)))
         .orderBy(desc(leads.createdAt))
         .limit(5)
 
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       const openOpps = await db
         .select()
         .from(opportunities)
-        .where(eq(opportunities.tenantId, auth.tenantId))
+        .where(eq(opportunities.tenantId, TENANT_ID))
         .orderBy(desc(opportunities.createdAt))
         .limit(5)
 
@@ -61,11 +62,11 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
           : 'Keine offenen Chancen',
       ].filter(Boolean).join('\n')
 
-      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'meeting_prep')
+      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'meeting_prep')
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { context })
 
       const response = await AIService.completeWithContext(userPrompt,
-        { tenantId: auth.tenantId, feature: 'meeting_prep' },
+        { tenantId: TENANT_ID, feature: 'meeting_prep' },
         { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt },
       )
 

@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { SopService } from '@/lib/services/sop.service'
 import { generateSopPdf } from '@/lib/services/sop-pdf.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'processes', 'read', async (auth) => {
     const { id } = await params
-    const sop = await SopService.getById(auth.tenantId, id)
+    const sop = await SopService.getById(TENANT_ID, id)
     if (!sop) {
       return NextResponse.json({ error: 'SOP nicht gefunden' }, { status: 404 })
     }

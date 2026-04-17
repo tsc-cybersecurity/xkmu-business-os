@@ -13,6 +13,7 @@ import {
 import { CockpitService } from '@/lib/services/cockpit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'cockpit', 'read', async (auth) => {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined
     const search = searchParams.get('search') || undefined
 
-    const result = await CockpitService.list(auth.tenantId, {
+    const result = await CockpitService.list(TENANT_ID, {
       ...pagination,
       category,
       status,
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
       }
 
       const system = await CockpitService.create(
-        auth.tenantId,
+        TENANT_ID,
         validation.data,
         auth.userId || undefined
       )

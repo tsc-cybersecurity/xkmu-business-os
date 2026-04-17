@@ -12,11 +12,12 @@ import {
 import { RoleService } from '@/lib/services/role.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'roles', 'read', async (auth) => {
-    const roles = await RoleService.list(auth.tenantId)
-    const userCounts = await RoleService.countUsersPerRole(auth.tenantId)
+    const roles = await RoleService.list(TENANT_ID)
+    const userCounts = await RoleService.countUsersPerRole(TENANT_ID)
 
     const rolesWithCounts = roles.map((role) => ({
       ...role,
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
 
       // Pruefen ob Name bereits existiert
       const existing = await RoleService.getByName(
-        auth.tenantId,
+        TENANT_ID,
         validation.data.name
       )
       if (existing) {
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const role = await RoleService.create(auth.tenantId, validation.data)
+      const role = await RoleService.create(TENANT_ID, validation.data)
 
       return apiSuccess(role, undefined, 201)
     } catch (error) {

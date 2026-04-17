@@ -13,6 +13,7 @@ import {
 import { MarketingAIService } from '@/lib/services/ai/marketing-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'marketing', 'create', async (auth) => {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
           context,
         },
         {
-          tenantId: auth.tenantId,
+          tenantId: TENANT_ID,
           userId: auth.userId,
           feature: 'marketing',
           entityType: 'marketing_task',

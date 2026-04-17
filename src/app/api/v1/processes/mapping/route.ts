@@ -3,6 +3,7 @@ import { apiSuccess, apiServerError } from '@/lib/utils/api-response'
 import { ProcessService } from '@/lib/services/process.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // POST /api/v1/processes/mapping - Bulk update app mapping for tasks
 export async function POST(request: NextRequest) {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
 
       let updated = 0
       for (const [taskKey, mapping] of Object.entries(body)) {
-        const success = await ProcessService.updateTaskByKey(auth.tenantId, taskKey, {
+        const success = await ProcessService.updateTaskByKey(TENANT_ID, taskKey, {
           ...mapping,
         })
         if (success) updated++

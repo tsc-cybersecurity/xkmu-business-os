@@ -5,6 +5,7 @@ import { AIService } from '@/lib/services/ai/ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const APP_CAPABILITIES = `
 BESTEHENDE MODULE UND FUNKTIONEN:
@@ -88,7 +89,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Get all processes with tasks (parallel fetch)
-      const allProcesses = await ProcessService.list(auth.tenantId)
+      const allProcesses = await ProcessService.list(TENANT_ID)
       const allTasks: Array<{
         task: Awaited<ReturnType<typeof ProcessService.getTaskById>> & Record<string, unknown>
         processName: string
@@ -96,7 +97,7 @@ export async function POST(request: NextRequest) {
       }> = []
 
       const tasksByProcess = await Promise.all(
-        allProcesses.map(p => ProcessService.listTasks(auth.tenantId, p.id))
+        allProcesses.map(p => ProcessService.listTasks(TENANT_ID, p.id))
       )
       for (let pi = 0; pi < allProcesses.length; pi++) {
         const process = allProcesses[pi]
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
 
       logger.info(`Dev analysis: Starting batch for ${allTasks.length} tasks`, { module: 'DevTasksGenerateAPI' })
 
-      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'process_dev_analysis')
+      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'process_dev_analysis')
       let generated = 0
       let errors = 0
 
@@ -162,7 +163,7 @@ export async function POST(request: NextRequest) {
               )
 
           const response = await AIService.completeWithContext(userPrompt, {
-            tenantId: auth.tenantId,
+            tenantId: TENANT_ID,
             feature: 'process_dev_analysis',
           }, {
             maxTokens: 3000,
@@ -216,7 +217,7 @@ export async function POST(request: NextRequest) {
           }).filter(r => r.neededFunction && r.approach)
 
           if (normalized.length > 0) {
-            await ProcessService.updateTaskByKey(auth.tenantId, task.taskKey, {
+            await ProcessService.updateTaskByKey(TENANT_ID, task.taskKey, {
               devRequirements: normalized,
             })
             generated++

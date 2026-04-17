@@ -4,6 +4,7 @@ import { CmsPageService } from '@/lib/services/cms-page.service'
 import { CmsAIService } from '@/lib/services/ai/cms-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(
   request: NextRequest,
@@ -21,7 +22,7 @@ export async function POST(
       }).join('\n')
 
       const seo = await CmsAIService.generateSEO(blockContents, page.slug, {
-        tenantId: auth.tenantId,
+        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'cms_seo_generate',
       })

@@ -9,6 +9,7 @@ import { CompanyService } from '@/lib/services/company.service'
 import { LeadResearchService } from '@/lib/services/ai'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -21,7 +22,7 @@ export async function POST(
   const { id } = await params
 
   try {
-    const person = await PersonService.getById(auth.tenantId, id)
+    const person = await PersonService.getById(TENANT_ID, id)
     if (!person) {
       return apiNotFound('Person not found')
     }
@@ -29,7 +30,7 @@ export async function POST(
     // If person has a linked company, fetch the company name
     let companyName: string | undefined
     if (person.companyId) {
-      const company = await CompanyService.getById(auth.tenantId, person.companyId)
+      const company = await CompanyService.getById(TENANT_ID, person.companyId)
       if (company) {
         companyName = company.name
       }
@@ -44,7 +45,7 @@ export async function POST(
       city: person.city || undefined,
       notes: person.notes || undefined,
     }, {
-      tenantId: auth.tenantId,
+      tenantId: TENANT_ID,
       userId: auth.userId,
       entityType: 'person',
       entityId: id,
@@ -60,7 +61,7 @@ export async function POST(
       },
     }
 
-    await PersonService.update(auth.tenantId, id, {
+    await PersonService.update(TENANT_ID, id, {
       customFields: updatedCustomFields,
     })
 
@@ -89,7 +90,7 @@ export async function GET(
   return withPermission(request, 'persons', 'update', async (auth) => {
   const { id } = await params
 
-  const person = await PersonService.getById(auth.tenantId, id)
+  const person = await PersonService.getById(TENANT_ID, id)
   if (!person) {
     return apiNotFound('Person not found')
   }

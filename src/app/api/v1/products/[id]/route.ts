@@ -13,6 +13,7 @@ import {
 import { ProductService } from '@/lib/services/product.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -23,7 +24,7 @@ export async function GET(
 ) {
   return withPermission(request, 'products', 'read', async (auth) => {
     const { id } = await params
-    const product = await ProductService.getById(auth.tenantId, id)
+    const product = await ProductService.getById(TENANT_ID, id)
 
     if (!product) {
       return apiNotFound('Produkt nicht gefunden')
@@ -49,7 +50,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const product = await ProductService.update(auth.tenantId, id, validation.data)
+      const product = await ProductService.update(TENANT_ID, id, validation.data)
 
       if (!product) {
         return apiNotFound('Produkt nicht gefunden')
@@ -70,7 +71,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'products', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await ProductService.delete(auth.tenantId, id)
+    const deleted = await ProductService.delete(TENANT_ID, id)
 
     if (!deleted) {
       return apiNotFound('Produkt nicht gefunden')

@@ -6,6 +6,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { dinAuditSessions, dinAnswers, dinRequirements } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
       const { id } = await params
 
       const [session] = await db.select().from(dinAuditSessions)
-        .where(and(eq(dinAuditSessions.tenantId, auth.tenantId), eq(dinAuditSessions.id, id))).limit(1)
+        .where(and(eq(dinAuditSessions.tenantId, TENANT_ID), eq(dinAuditSessions.id, id))).limit(1)
       if (!session) return apiNotFound('Audit nicht gefunden')
 
       // Get all not-fulfilled answers
@@ -39,11 +40,11 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         `- ${a.reqNumber}: ${a.reqText} (${a.reqPoints} Punkte)${a.justification ? ` — ${a.justification}` : ''}`
       ).join('\n')
 
-      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'security_roadmap')
+      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'security_roadmap')
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { requirements: context })
 
       const response = await AIService.completeWithContext(userPrompt,
-        { tenantId: auth.tenantId, feature: 'security_roadmap' },
+        { tenantId: TENANT_ID, feature: 'security_roadmap' },
         { maxTokens: 3000, temperature: 0.3, systemPrompt: template.systemPrompt },
       )
 

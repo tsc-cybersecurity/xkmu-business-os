@@ -5,6 +5,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 import fs from 'fs/promises'
 import path from 'path'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // POST /api/v1/processes/seed - Import processes from JSON files
 export async function POST(request: NextRequest) {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await ProcessService.seed(
-        auth.tenantId,
+        TENANT_ID,
         mainJson as Parameters<typeof ProcessService.seed>[1],
         newSopsJson as Parameters<typeof ProcessService.seed>[2],
       )

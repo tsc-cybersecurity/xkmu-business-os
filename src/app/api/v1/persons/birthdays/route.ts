@@ -4,6 +4,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { persons } from '@/lib/db/schema'
 import { eq, and, isNotNull, sql } from 'drizzle-orm'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/persons/birthdays?days=7 - Upcoming birthdays
 export async function GET(request: NextRequest) {
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
     const days = parseInt(searchParams.get('days') || '7')
 
     const allPersons = await db.select().from(persons)
-      .where(and(eq(persons.tenantId, auth.tenantId), isNotNull(persons.birthday)))
+      .where(and(eq(persons.tenantId, TENANT_ID), isNotNull(persons.birthday)))
 
     const today = new Date()
     const upcoming = allPersons.filter(p => {

@@ -13,6 +13,7 @@ import {
 import { MarketingTemplateService } from '@/lib/services/marketing-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'marketing', 'read', async (auth) => {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     const pagination = parsePaginationParams(searchParams)
     const type = searchParams.get('type') || undefined
 
-    const result = await MarketingTemplateService.list(auth.tenantId, {
+    const result = await MarketingTemplateService.list(TENANT_ID, {
       ...pagination,
       type,
     })
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const template = await MarketingTemplateService.create(auth.tenantId, validation.data)
+      const template = await MarketingTemplateService.create(TENANT_ID, validation.data)
       return apiSuccess(template, undefined, 201)
     } catch (error) {
       logger.error('Error creating marketing template', error, { module: 'MarketingTemplatesAPI' })

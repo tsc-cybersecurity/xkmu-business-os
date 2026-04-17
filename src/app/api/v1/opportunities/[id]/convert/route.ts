@@ -7,6 +7,7 @@ import {
 import { OpportunityService } from '@/lib/services/opportunity.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -18,12 +19,12 @@ export async function POST(
     const { id } = await params
 
     try {
-      const opportunity = await OpportunityService.getById(auth.tenantId, id)
+      const opportunity = await OpportunityService.getById(TENANT_ID, id)
       if (!opportunity) {
         return apiNotFound('Opportunity not found')
       }
 
-      const result = await OpportunityService.convert(auth.tenantId, id, auth.userId || undefined)
+      const result = await OpportunityService.convert(TENANT_ID, id, auth.userId || undefined)
 
       return apiSuccess(result, undefined, 201)
     } catch (error) {

@@ -12,6 +12,7 @@ import {
 import { ProductCategoryService } from '@/lib/services/product-category.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/product-categories - List all categories
 export async function GET(request: NextRequest) {
@@ -19,8 +20,8 @@ export async function GET(request: NextRequest) {
     try {
       const tree = request.nextUrl.searchParams.get('tree') === 'true'
       const items = tree
-        ? await ProductCategoryService.getTree(auth.tenantId)
-        : await ProductCategoryService.list(auth.tenantId)
+        ? await ProductCategoryService.getTree(TENANT_ID)
+        : await ProductCategoryService.list(TENANT_ID)
 
       return apiSuccess(items)
     } catch (error) {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const category = await ProductCategoryService.create(auth.tenantId, validation.data)
+      const category = await ProductCategoryService.create(TENANT_ID, validation.data)
       return apiSuccess(category, undefined, 201)
     } catch (error) {
       logger.error('Failed to create category', error, { module: 'ProductCategoriesAPI' })

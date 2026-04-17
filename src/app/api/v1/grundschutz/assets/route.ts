@@ -5,6 +5,7 @@ import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { validateAndParse } from '@/lib/utils/validation'
 import { GrundschutzAssetService } from '@/lib/services/grundschutz-asset.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const createAssetSchema = z.object({
   companyId: z.string().uuid(),
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
         search: searchParams.get('search') || undefined,
       }
 
-      const assets = await GrundschutzAssetService.list(auth.tenantId, companyId, filters)
+      const assets = await GrundschutzAssetService.list(TENANT_ID, companyId, filters)
       return apiSuccess(assets)
     } catch (error) {
       logger.error('Error listing Grundschutz assets', error, { module: 'GrundschutzAssetsAPI' })
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', parsed.errors.issues.map(i => i.message).join(', '), 400)
       }
 
-      const asset = await GrundschutzAssetService.create(auth.tenantId, parsed.data)
+      const asset = await GrundschutzAssetService.create(TENANT_ID, parsed.data)
       return apiSuccess(asset, undefined, 201)
     } catch (error) {
       logger.error('Error creating Grundschutz asset', error, { module: 'GrundschutzAssetsAPI' })

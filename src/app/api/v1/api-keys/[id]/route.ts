@@ -5,6 +5,7 @@ import {
 } from '@/lib/utils/api-response'
 import { ApiKeyService } from '@/lib/services/api-key.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -14,7 +15,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'api_keys', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await ApiKeyService.delete(auth.tenantId, id)
+    const deleted = await ApiKeyService.delete(TENANT_ID, id)
 
     if (!deleted) {
       return apiNotFound('API key not found')

@@ -7,6 +7,7 @@ import {
 import { DinAuditService } from '@/lib/services/din-audit.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +15,7 @@ export async function GET(
 ) {
   return withPermission(request, 'din_audits', 'read', async (auth) => {
     const { id } = await params
-    const session = await DinAuditService.getById(auth.tenantId, id)
+    const session = await DinAuditService.getById(TENANT_ID, id)
     if (!session) return apiNotFound('Audit-Session nicht gefunden')
     return apiSuccess(session)
   })
@@ -28,7 +29,7 @@ export async function PUT(
     try {
       const { id } = await params
       const body = await request.json()
-      const session = await DinAuditService.update(auth.tenantId, id, body)
+      const session = await DinAuditService.update(TENANT_ID, id, body)
       if (!session) return apiNotFound('Audit-Session nicht gefunden')
       return apiSuccess(session)
     } catch (error) {
@@ -44,7 +45,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'din_audits', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await DinAuditService.delete(auth.tenantId, id)
+    const deleted = await DinAuditService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Audit-Session nicht gefunden')
     return apiSuccess({ deleted: true })
   })

@@ -7,6 +7,7 @@ import {
 import { CompanyResearchService } from '@/lib/services/company-research.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string; researchId: string }>
 
@@ -19,7 +20,7 @@ export async function POST(
   const { id, researchId } = await params
 
   try {
-    const research = await CompanyResearchService.getById(auth.tenantId, researchId)
+    const research = await CompanyResearchService.getById(TENANT_ID, researchId)
     if (!research || research.companyId !== id) {
       return apiNotFound('Research not found')
     }
@@ -29,7 +30,7 @@ export async function POST(
     }
 
     const updated = await CompanyResearchService.updateStatus(
-      auth.tenantId,
+      TENANT_ID,
       researchId,
       'rejected'
     )

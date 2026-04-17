@@ -3,6 +3,7 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/documents/next-number?type=invoice
 export async function GET(request: NextRequest) {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'Type muss "invoice" oder "offer" sein', 400)
       }
 
-      const number = await DocumentService.getNextNumber(auth.tenantId, type)
+      const number = await DocumentService.getNextNumber(TENANT_ID, type)
       return apiSuccess({ number })
     } catch (error) {
       logger.error('Failed to get next number', error, { module: 'DocumentsNextNumberAPI' })

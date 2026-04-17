@@ -6,12 +6,13 @@ import {
 import { AiPromptTemplateService, TEMPLATE_PLACEHOLDERS } from '@/lib/services/ai-prompt-template.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/ai-prompt-templates - Alle Templates auflisten
 export async function GET(request: NextRequest) {
   return withPermission(request, 'ai_prompts', 'read', async (auth) => {
     try {
-      const templates = await AiPromptTemplateService.list(auth.tenantId)
+      const templates = await AiPromptTemplateService.list(TENANT_ID)
       return apiSuccess({
         templates,
         placeholders: TEMPLATE_PLACEHOLDERS,
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'slug, name, systemPrompt und userPrompt sind erforderlich', 400)
       }
 
-      const template = await AiPromptTemplateService.create(auth.tenantId, {
+      const template = await AiPromptTemplateService.create(TENANT_ID, {
         slug: body.slug,
         name: body.name,
         description: body.description || null,

@@ -4,6 +4,7 @@ import { AIService } from '@/lib/services/ai/ai.service'
 import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.service'
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // POST /api/v1/seo/keywords - KI-basierte Keyword-Recherche
 export async function POST(request: NextRequest) {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
       // Try SerpAPI if available
       let serpResults: unknown = null
       try {
-        const providers = await AiProviderService.getActiveProviders(auth.tenantId)
+        const providers = await AiProviderService.getActiveProviders(TENANT_ID)
         const serpProvider = providers.find(p => p.providerType === 'serpapi')
         if (serpProvider?.apiKey) {
           const serpUrl = `https://serpapi.com/search.json?q=${encodeURIComponent(keyword)}&hl=${language || 'de'}&gl=de&api_key=${serpProvider.apiKey}`
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
         }
       } catch { /* SerpAPI optional */ }
 
-      const template = await AiPromptTemplateService.getOrDefault(auth.tenantId, 'seo_keywords')
+      const template = await AiPromptTemplateService.getOrDefault(TENANT_ID, 'seo_keywords')
       const serpContext = serpResults ? `SerpAPI-Daten: ${JSON.stringify(serpResults)}` : 'Keine SerpAPI-Daten verfuegbar.'
 
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       })
 
       const response = await AIService.completeWithContext(userPrompt,
-        { tenantId: auth.tenantId, feature: 'seo_keywords' },
+        { tenantId: TENANT_ID, feature: 'seo_keywords' },
         { maxTokens: 1500, temperature: 0.3, systemPrompt: template.systemPrompt },
       )
 

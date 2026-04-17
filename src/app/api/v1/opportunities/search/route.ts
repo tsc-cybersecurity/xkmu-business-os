@@ -13,6 +13,7 @@ import { OpportunityService } from '@/lib/services/opportunity.service'
 import { SerpApiService } from '@/lib/services/serpapi.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'opportunities', 'create', async (auth) => {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
           locationList,
           radius || 25,
           maxPerLocation || 20,
-          auth.tenantId
+          TENANT_ID
         )
       } catch (error) {
         const msg = error instanceof Error ? error.message : 'Unbekannter Fehler'
@@ -64,12 +65,12 @@ export async function POST(request: NextRequest) {
         }))
 
         const saveResult = await OpportunityService.createMany(
-          auth.tenantId,
+          TENANT_ID,
           items
         )
 
         // Repair addresses for all opportunities (including just-inserted ones)
-        await OpportunityService.repairAddresses(auth.tenantId).catch(() => {})
+        await OpportunityService.repairAddresses(TENANT_ID).catch(() => {})
 
         return apiSuccess({
           saved: saveResult.inserted,

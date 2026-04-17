@@ -10,6 +10,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const createAuditSchema = z.object({
   clientCompanyId: z.string().uuid(),
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const pagination = parsePaginationParams(searchParams)
     const status = searchParams.get('status') || undefined
-    const result = await DinAuditService.list(auth.tenantId, { ...pagination, status })
+    const result = await DinAuditService.list(TENANT_ID, { ...pagination, status })
     return apiSuccess(result.items, result.meta)
   })
 }
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
       }
 
       const session = await DinAuditService.create(
-        auth.tenantId,
+        TENANT_ID,
         auth.userId!,
         validation.data
       )

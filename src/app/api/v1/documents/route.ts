@@ -13,6 +13,7 @@ import {
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/documents - List documents with filters
 export async function GET(request: NextRequest) {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
         search: searchParams.get('search') || undefined,
       }
 
-      const result = await DocumentService.list(auth.tenantId, filters)
+      const result = await DocumentService.list(TENANT_ID, filters)
       return apiSuccess(result.items, result.meta)
     } catch (error) {
       logger.error('Failed to list documents', error, { module: 'DocumentsAPI' })
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
       }
 
       const document = await DocumentService.create(
-        auth.tenantId,
+        TENANT_ID,
         validation.data,
         auth.userId || undefined
       )

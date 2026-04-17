@@ -8,6 +8,7 @@ import { EmailService } from '@/lib/services/email.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const sendEmailSchema = z.object({
   to: z.string().email(),
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Send email
     const result = await EmailService.send(
-      auth.tenantId,
+      TENANT_ID,
       {
         to,
         subject,

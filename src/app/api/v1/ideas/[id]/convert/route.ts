@@ -13,13 +13,14 @@ import { AIService } from '@/lib/services/ai/ai.service'
 import { WebhookService } from '@/lib/services/webhook.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   return withPermission(request, 'ideas', 'update', async (auth) => {
 
   try {
     const { id } = await params
-    const idea = await IdeaService.getById(auth.tenantId, id)
+    const idea = await IdeaService.getById(TENANT_ID, id)
     if (!idea) return apiNotFound('Idee nicht gefunden')
 
     if (idea.status === 'converted') {
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     let entities: { companies?: string[]; people?: string[]; emails?: string[] } = {}
     try {
       entities = await AIService.extractEntities(idea.rawContent, {
-        tenantId: auth.tenantId,
+        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'idea_conversion',
       })
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         : `[Aus Idee konvertiert]\n\n${idea.rawContent}`
 
       const company = await CompanyService.create(
-        auth.tenantId,
+        TENANT_ID,
         {
           name: companyNames[0],
           status: 'prospect',
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       : idea.rawContent.substring(0, 100)
 
     // Lead erstellen – mit title, notes, tags und vollstaendigem Idee-Kontext
-    const lead = await LeadService.create(auth.tenantId, {
+    const lead = await LeadService.create(TENANT_ID, {
       source: 'idea',
       title: leadTitle,
       sourceDetail: aiSummary
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       : `Idee konvertiert zu Lead.\n\nOriginal:\n${idea.rawContent}`
 
     await ActivityService.create(
-      auth.tenantId,
+      TENANT_ID,
       {
         leadId: lead.id,
         companyId: createdEntities.companyId || null,
@@ -121,7 +122,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     )
 
     // Idee-Status aktualisieren
-    await IdeaService.update(auth.tenantId, id, {
+    await IdeaService.update(TENANT_ID, id, {
       status: 'converted',
       structuredContent: {
         ...structured,
@@ -131,14 +132,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     })
 
     // Webhooks feuern
-    WebhookService.fire(auth.tenantId, 'idea.converted', {
+    WebhookService.fire(TENANT_ID, 'idea.converted', {
       ideaId: id,
       leadId: createdEntities.leadId,
       companyId: createdEntities.companyId,
     }).catch(() => {})
 
     if (createdEntities.companyId) {
-      WebhookService.fire(auth.tenantId, 'company.created', {
+      WebhookService.fire(TENANT_ID, 'company.created', {
         companyId: createdEntities.companyId,
         companyName: createdEntities.companyName,
         source: 'idea_conversion',

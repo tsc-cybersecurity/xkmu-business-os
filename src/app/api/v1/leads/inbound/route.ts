@@ -3,6 +3,7 @@ import { apiSuccess, apiError, apiServerError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { LeadService } from '@/lib/services/lead.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // POST /api/v1/leads/inbound - Inbound lead from form/email/webhook
 export async function POST(request: NextRequest) {
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
         return apiError('MISSING_DATA', 'Mindestens Email, Name oder Firma noetig', 400)
       }
 
-      const lead = await LeadService.create(auth.tenantId, {
+      const lead = await LeadService.create(TENANT_ID, {
         source: source || 'inbound',
         sourceDetail: 'Inbound API',
         contactEmail: email || undefined,

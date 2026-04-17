@@ -8,11 +8,12 @@ import { AiPromptTemplateService } from '@/lib/services/ai-prompt-template.servi
 import { AIService } from '@/lib/services/ai/ai.service'
 import { TenantService } from '@/lib/services/tenant.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function POST(request: NextRequest) {
   return withPermission(request, 'settings', 'update', async (auth) => {
     try {
-      const tenantId = auth.tenantId
+      const tenantId = TENANT_ID
 
       // 1. Load tenant info
       const tenant = await TenantService.getById(tenantId)

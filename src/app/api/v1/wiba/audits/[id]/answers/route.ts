@@ -9,6 +9,7 @@ import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const answerSchema = z.object({
   requirementId: z.number().int().positive(),
@@ -26,7 +27,7 @@ export async function GET(
 ) {
   return withPermission(request, 'wiba_audits', 'read', async (auth) => {
     const { id } = await params
-    const answers = await WibaAuditService.getAnswers(auth.tenantId, id)
+    const answers = await WibaAuditService.getAnswers(TENANT_ID, id)
     return apiSuccess(answers)
   })
 }
@@ -46,7 +47,7 @@ export async function POST(
         if (!validation.success) {
           return apiValidationError(formatZodErrors(validation.errors))
         }
-        const results = await WibaAuditService.saveBulkAnswers(auth.tenantId, id, validation.data.answers)
+        const results = await WibaAuditService.saveBulkAnswers(TENANT_ID, id, validation.data.answers)
         return apiSuccess(results)
       }
 
@@ -54,7 +55,7 @@ export async function POST(
       if (!validation.success) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
-      const answer = await WibaAuditService.saveAnswer(auth.tenantId, id, validation.data)
+      const answer = await WibaAuditService.saveAnswer(TENANT_ID, id, validation.data)
       return apiSuccess(answer)
     } catch (error) {
       logger.error('Error saving WiBA audit answer', error, { module: 'WibaAuditsAnswersAPI' })

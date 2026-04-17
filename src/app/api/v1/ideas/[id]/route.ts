@@ -13,13 +13,14 @@ import {
 import { IdeaService } from '@/lib/services/idea.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
 export async function GET(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'ideas', 'read', async (auth) => {
     const { id } = await params
-    const idea = await IdeaService.getById(auth.tenantId, id)
+    const idea = await IdeaService.getById(TENANT_ID, id)
     if (!idea) return apiNotFound('Idee nicht gefunden')
 
     return apiSuccess(idea)
@@ -36,7 +37,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const idea = await IdeaService.update(auth.tenantId, id, validation.data)
+      const idea = await IdeaService.update(TENANT_ID, id, validation.data)
       if (!idea) return apiNotFound('Idee nicht gefunden')
 
       return apiSuccess(idea)
@@ -50,7 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: Params }) 
 export async function DELETE(request: NextRequest, { params }: { params: Params }) {
   return withPermission(request, 'ideas', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await IdeaService.delete(auth.tenantId, id)
+    const deleted = await IdeaService.delete(TENANT_ID, id)
     if (!deleted) return apiNotFound('Idee nicht gefunden')
 
     return apiSuccess({ deleted: true })

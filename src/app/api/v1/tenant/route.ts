@@ -8,6 +8,7 @@ import { TenantService } from '@/lib/services/tenant.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { z } from 'zod'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 const optStr = z.string().max(255).optional().or(z.literal(''))
 
@@ -43,7 +44,7 @@ const updateTenantSchema = z.object({
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'settings', 'read', async (auth) => {
-    const tenant = await TenantService.getById(auth.tenantId)
+    const tenant = await TenantService.getById(TENANT_ID)
 
     if (!tenant) {
       return apiError('NOT_FOUND', 'Tenant not found', 404)
@@ -72,7 +73,7 @@ export async function PUT(request: NextRequest) {
       if (validation.data.slug) {
         const slugExists = await TenantService.slugExists(
           validation.data.slug,
-          auth.tenantId
+          TENANT_ID
         )
         if (slugExists) {
           return apiError('SLUG_EXISTS', 'This slug is already in use', 400)
@@ -80,7 +81,7 @@ export async function PUT(request: NextRequest) {
       }
 
       const tenant = await TenantService.update(
-        auth.tenantId,
+        TENANT_ID,
         validation.data
       )
 

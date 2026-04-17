@@ -13,6 +13,7 @@ import {
 import { DocumentService } from '@/lib/services/document.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string; itemId: string }>
 
@@ -32,7 +33,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const item = await DocumentService.updateItem(auth.tenantId, id, itemId, validation.data)
+      const item = await DocumentService.updateItem(TENANT_ID, id, itemId, validation.data)
 
       if (!item) {
         return apiNotFound('Position nicht gefunden')
@@ -54,7 +55,7 @@ export async function DELETE(
   return withPermission(request, 'documents', 'update', async (auth) => {
     const { id, itemId } = await params
 
-    const deleted = await DocumentService.removeItem(auth.tenantId, id, itemId)
+    const deleted = await DocumentService.removeItem(TENANT_ID, id, itemId)
 
     if (!deleted) {
       return apiNotFound('Position nicht gefunden')

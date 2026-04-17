@@ -13,6 +13,7 @@ import {
 import { OpportunityService } from '@/lib/services/opportunity.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 type Params = Promise<{ id: string }>
 
@@ -22,7 +23,7 @@ export async function GET(
 ) {
   return withPermission(request, 'opportunities', 'read', async (auth) => {
     const { id } = await params
-    const opportunity = await OpportunityService.getById(auth.tenantId, id)
+    const opportunity = await OpportunityService.getById(TENANT_ID, id)
 
     if (!opportunity) {
       return apiNotFound('Opportunity not found')
@@ -47,7 +48,7 @@ export async function PUT(
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const opportunity = await OpportunityService.update(auth.tenantId, id, validation.data)
+      const opportunity = await OpportunityService.update(TENANT_ID, id, validation.data)
 
       if (!opportunity) {
         return apiNotFound('Opportunity not found')
@@ -67,7 +68,7 @@ export async function DELETE(
 ) {
   return withPermission(request, 'opportunities', 'delete', async (auth) => {
     const { id } = await params
-    const deleted = await OpportunityService.delete(auth.tenantId, id)
+    const deleted = await OpportunityService.delete(TENANT_ID, id)
 
     if (!deleted) {
       return apiNotFound('Opportunity not found')

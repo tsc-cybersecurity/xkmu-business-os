@@ -6,6 +6,7 @@ import {
 import { AiProviderService } from '@/lib/services/ai-provider.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // GET /api/v1/ai-logs - Logs mit Filtern auflisten
 export async function GET(request: NextRequest) {
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
     try {
       const { searchParams } = new URL(request.url)
 
-      const result = await AiProviderService.listLogs(auth.tenantId, {
+      const result = await AiProviderService.listLogs(TENANT_ID, {
         providerType: searchParams.get('providerType') || undefined,
         status: searchParams.get('status') || undefined,
         feature: searchParams.get('feature') || undefined,

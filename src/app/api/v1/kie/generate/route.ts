@@ -3,6 +3,7 @@ import { apiSuccess, apiError } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { KieService } from '@/lib/services/ai/kie.service'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 // POST /api/v1/kie/generate - Video-Generierung starten
 export async function POST(request: NextRequest) {
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await KieService.createVideoTask(
-        auth.tenantId,
+        TENANT_ID,
         auth.userId || null,
         {
           prompt: body.prompt,

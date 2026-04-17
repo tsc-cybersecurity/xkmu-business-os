@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiError, apiServerError, parsePaginationParams } from '@/lib/utils/api-response'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
-import { isValidTable, TENANT_TABLES_SET, OWNER_ONLY_TABLES, GLOBAL_WITH_TENANT_ID } from '@/lib/db/table-whitelist'
+import { isValidTable, OWNER_ONLY_TABLES } from '@/lib/db/table-whitelist'
 import { sql } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
@@ -16,7 +16,7 @@ interface RouteContext {
   params: Promise<{ tableName: string }>
 }
 
-// GET /api/v1/admin/database/tables/[tableName] - Read table data (global-aware)
+// GET /api/v1/admin/database/tables/[tableName] - Read table data
 export async function GET(request: NextRequest, context: RouteContext) {
   return withPermission(request, 'database', 'read', async (auth) => {
     const { tableName } = await context.params
@@ -45,30 +45,15 @@ export async function GET(request: NextRequest, context: RouteContext) {
         default: row.column_default as string | null,
       }))
 
-      // Build query with tenant filter if applicable (skip for globally accessible tables)
-      const hasTenantId = TENANT_TABLES_SET.has(tableName) && !GLOBAL_WITH_TENANT_ID.has(tableName) && !GLOBAL_WITH_TENANT_ID.has(tableName)
       const tableIdent = sql.identifier(tableName)
 
-      let countRows: Row[]
-      let dataRows: Row[]
-
-      if (hasTenantId) {
-        countRows = toRows(await db.execute(sql`
-          SELECT COUNT(*) as total FROM ${tableIdent} WHERE tenant_id = ${auth.tenantId}
-        `))
-        dataRows = toRows(await db.execute(sql`
-          SELECT * FROM ${tableIdent} WHERE tenant_id = ${auth.tenantId}
-          LIMIT ${limit} OFFSET ${offset}
-        `))
-      } else {
-        countRows = toRows(await db.execute(sql`
-          SELECT COUNT(*) as total FROM ${tableIdent}
-        `))
-        dataRows = toRows(await db.execute(sql`
-          SELECT * FROM ${tableIdent}
-          LIMIT ${limit} OFFSET ${offset}
-        `))
-      }
+      const countRows = toRows(await db.execute(sql`
+        SELECT COUNT(*) as total FROM ${tableIdent}
+      `))
+      const dataRows = toRows(await db.execute(sql`
+        SELECT * FROM ${tableIdent}
+        LIMIT ${limit} OFFSET ${offset}
+      `))
 
       const total = Number(countRows[0]?.total ?? 0)
       const totalPages = Math.ceil(total / (limit ?? 20))
@@ -88,7 +73,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       })
 
       return apiSuccess(
-        { columns, rows: maskedRows, hasTenantId },
+        { columns, rows: maskedRows },
         { page: page ?? 1, limit: limit ?? 20, total, totalPages }
       )
     } catch (error) {
@@ -137,21 +122,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         return apiError('NO_VALID_COLUMNS', 'Keine gültigen Spalten zum Aktualisieren', 400)
       }
 
-      // Verify tenant ownership if applicable
-      const hasTenantId = TENANT_TABLES_SET.has(tableName) && !GLOBAL_WITH_TENANT_ID.has(tableName)
       const tableIdent = sql.identifier(tableName)
-
-      if (hasTenantId) {
-        const existing = toRows(await db.execute(sql`
-          SELECT tenant_id FROM ${tableIdent} WHERE id = ${id}
-        `))
-        if (existing.length === 0) {
-          return apiError('NOT_FOUND', 'Datensatz nicht gefunden', 404)
-        }
-        if (existing[0].tenant_id !== auth.tenantId) {
-          return apiError('FORBIDDEN', 'Kein Zugriff auf diesen Datensatz', 403)
-        }
-      }
 
       // Build SET clause with parameterized values
       const setClauses = validUpdates.map(([col, val]) =>
@@ -200,21 +171,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
         return apiError('MISSING_ID', 'ID ist erforderlich', 400)
       }
 
-      const hasTenantId = TENANT_TABLES_SET.has(tableName) && !GLOBAL_WITH_TENANT_ID.has(tableName)
       const tableIdent = sql.identifier(tableName)
-
-      // Verify tenant ownership if applicable
-      if (hasTenantId) {
-        const existing = toRows(await db.execute(sql`
-          SELECT tenant_id FROM ${tableIdent} WHERE id = ${id}
-        `))
-        if (existing.length === 0) {
-          return apiError('NOT_FOUND', 'Datensatz nicht gefunden', 404)
-        }
-        if (existing[0].tenant_id !== auth.tenantId) {
-          return apiError('FORBIDDEN', 'Kein Zugriff auf diesen Datensatz', 403)
-        }
-      }
 
       const result = toRows(await db.execute(sql`
         DELETE FROM ${tableIdent} WHERE id = ${id}

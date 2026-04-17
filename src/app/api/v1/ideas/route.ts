@@ -14,6 +14,7 @@ import { IdeaService } from '@/lib/services/idea.service'
 import { IdeaAIService } from '@/lib/services/ai/idea-ai.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
+import { TENANT_ID } from '@/lib/constants/tenant'
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'ideas', 'read', async (auth) => {
@@ -23,12 +24,12 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get('type') || undefined
 
     if (grouped) {
-      const result = await IdeaService.listGroupedByStatus(auth.tenantId)
+      const result = await IdeaService.listGroupedByStatus(TENANT_ID)
       return apiSuccess(result)
     }
 
     const pagination = parsePaginationParams(searchParams)
-    const result = await IdeaService.list(auth.tenantId, { ...pagination, status, type })
+    const result = await IdeaService.list(TENANT_ID, { ...pagination, status, type })
     return apiSuccess(result.items, result.meta)
   })
 }
@@ -42,15 +43,15 @@ export async function POST(request: NextRequest) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
 
-      const idea = await IdeaService.create(auth.tenantId, validation.data, auth.userId ?? undefined)
+      const idea = await IdeaService.create(TENANT_ID, validation.data, auth.userId ?? undefined)
 
       // KI-Verarbeitung asynchron starten
       IdeaAIService.processIdea(idea.rawContent, {
-        tenantId: auth.tenantId,
+        tenantId: TENANT_ID,
         userId: auth.userId,
         feature: 'idea_processing',
       }).then(async (result) => {
-        await IdeaService.update(auth.tenantId, idea.id, {
+        await IdeaService.update(TENANT_ID, idea.id, {
           structuredContent: { summary: result.summary },
           tags: result.tags,
         })
