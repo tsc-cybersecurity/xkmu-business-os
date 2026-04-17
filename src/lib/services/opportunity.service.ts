@@ -393,7 +393,7 @@ export const OpportunityService = {
 
     // 3. Create company via CompanyService
     const company = await CompanyService.create(
-      _{
+      '', {
         name: opportunity.name,
         industry: opportunity.industry || undefined,
         street: street || undefined,

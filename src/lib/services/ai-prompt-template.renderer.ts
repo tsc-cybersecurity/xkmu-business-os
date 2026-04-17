@@ -13,7 +13,7 @@ export function applyPlaceholders(template: string, data: Record<string, string 
   // 1. Konditionale Blöcke: {{#if key}}...{{/if}}
   result = result.replace(
     /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
-    ('', key: string, content: string) => {
+    (_, key: string, content: string) => {
       const value = data[key]
       if (value && value.trim() !== '') {
         // Rekursiv die Platzhalter im Block ersetzen
@@ -26,7 +26,7 @@ export function applyPlaceholders(template: string, data: Record<string, string 
   // 2. Einfache Platzhalter: {{key}}
   result = result.replace(
     /\{\{(\w+)\}\}/g,
-    ('', key: string) => {
+    (_, key: string) => {
       return data[key] || ''
     }
   )

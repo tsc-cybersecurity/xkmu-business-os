@@ -88,7 +88,7 @@ export const ReceiptService = {
       const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, { imageDescription: imageBase64.substring(0, 500) })
 
       const response = await AIService.completeWithContext(userPrompt,
-        { tenantId: _feature: 'receipt_ocr' },
+        { feature: 'receipt_ocr' },
         { maxTokens: 500, temperature: 0.1, systemPrompt: template.systemPrompt })
 
       const jsonMatch = response.text.match(/\{[\s\S]*\}/)
