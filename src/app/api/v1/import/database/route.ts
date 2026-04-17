@@ -18,7 +18,7 @@ const IMPORT_ORDER = [
   // Allgemein
   'ideas', 'activities', 'webhooks', 'audit_log',
   'documents', 'document_items', 'document_templates', 'email_templates',
-  // Management Framework v2
+  // Management Framework v2 (deliverables vor sop_documents)
   'deliverable_modules', 'deliverables', 'execution_logs',
   // Prozesse & Projekte
   'processes', 'process_tasks', 'projects', 'project_tasks',
@@ -27,8 +27,17 @@ const IMPORT_ORDER = [
   // DIN & WiBA
   'din_requirements', 'din_grants', 'din_audit_sessions', 'din_answers',
   'wiba_requirements', 'wiba_audit_sessions', 'wiba_answers',
+  // Grundschutz (catalog first, then sessions/assets)
+  'grundschutz_groups', 'grundschutz_controls', 'grundschutz_catalog_meta',
+  'grundschutz_audit_sessions', 'grundschutz_answers',
+  'grundschutz_assets', 'grundschutz_asset_controls', 'grundschutz_asset_relations', 'grundschutz_control_links',
+  // IR Playbook (scenarios first, then children)
+  'ir_scenarios', 'ir_detection_indicators', 'ir_actions',
+  'ir_escalation_levels', 'ir_escalation_recipients',
+  'ir_recovery_steps', 'ir_checklist_items', 'ir_lessons_learned', 'ir_references',
   // CMS & Blog
-  'cms_block_type_definitions', 'cms_pages', 'cms_blocks', 'cms_block_templates', 'cms_navigation_items',
+  'cms_block_type_definitions', 'cms_settings',
+  'cms_pages', 'cms_blocks', 'cms_block_templates', 'cms_navigation_items',
   'blog_posts', 'media_uploads', 'generated_images',
   // Business Intelligence
   'company_researches', 'firecrawl_researches', 'business_documents', 'business_profiles',
@@ -41,6 +50,20 @@ const IMPORT_ORDER = [
   // Chat & Cockpit
   'chat_conversations', 'chat_messages',
   'cockpit_systems', 'cockpit_credentials',
+  // Email
+  'email_accounts', 'emails',
+  // Contracts
+  'contract_templates', 'contract_clauses',
+  // Workflows & Cron
+  'workflows', 'workflow_runs', 'cron_jobs',
+  // EOS (rocks → milestones, metrics → entries)
+  'vto', 'rocks', 'rock_milestones',
+  'scorecard_metrics', 'scorecard_entries',
+  'eos_issues', 'meeting_sessions',
+  // OKR (cycles → objectives → key_results → checkins)
+  'okr_cycles', 'okr_objectives', 'okr_key_results', 'okr_checkins',
+  // SOP (after deliverables)
+  'sop_documents', 'sop_steps', 'sop_versions',
 ]
 
 // Löschreihenfolge = umgekehrt (Children vor Parents)
@@ -269,14 +292,25 @@ export async function POST(request: NextRequest): Promise<Response> {
       // Alles in einer Transaktion ausführen
       await db.transaction(async (tx) => {
         if (mode === 'replace') {
-          // Bei Replace-Modus: bestehende Daten löschen
-          // Join-Tabellen (referenziert ueber Parent)
-          const skipDeleteTables = new Set(['tenants', 'role_permissions', 'chat_messages', 'cockpit_credentials', 'feedback_responses', 'din_requirements', 'din_grants', 'wiba_requirements', 'cms_block_type_definitions'])
+          // Bei Replace-Modus: bestehende Daten löschen.
+          // skipDeleteTables = Singleton (tenants), Join-Tabellen (werden via CASCADE geloescht)
+          // und read-only Katalog-Tabellen (DIN/WiBA/IR/Grundschutz/CMS definitions).
+          const skipDeleteTables = new Set([
+            'tenants',
+            // Join/child tables — removed via parent CASCADE
+            'role_permissions', 'chat_messages', 'cockpit_credentials', 'feedback_responses',
+            // Read-only catalogs
+            'din_requirements', 'din_grants',
+            'wiba_requirements',
+            'grundschutz_groups', 'grundschutz_controls', 'grundschutz_catalog_meta',
+            'ir_scenarios', 'ir_detection_indicators', 'ir_actions',
+            'ir_escalation_levels', 'ir_escalation_recipients',
+            'ir_recovery_steps', 'ir_checklist_items', 'ir_lessons_learned', 'ir_references',
+            'cms_block_type_definitions',
+          ])
           for (const table of DELETE_ORDER) {
             try {
-              if (table === 'tenants') continue
-              if (skipDeleteTables.has(table)) continue // Globale/Join-Tabellen nicht loeschen
-              // delete all rows
+              if (skipDeleteTables.has(table)) continue
               await tx.execute(
                 sql`DELETE FROM ${sql.identifier(table)}`
               )
