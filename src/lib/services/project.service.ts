@@ -175,6 +175,6 @@ export const ProjectService = {
   },
 
   async moveTask(_tenantId: string, taskId: string, columnId: string, position: number): Promise<ProjectTask | null> {
-    return this.updateTask(_tenantId, taskId, { columnId, position })
+    return this.updateTask(_taskId, { columnId, position })
   },
 }

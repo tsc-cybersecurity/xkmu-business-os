@@ -88,7 +88,7 @@ export const SopService = {
 
   async publish(_tenantId: string, id: string, userId?: string) {
     // Snapshot current state as version
-    const current = await this.getById(_tenantId, id)
+    const current = await this.getById(_id)
     if (!current) return null
     const nextVersion = incrementVersion(current.version || '1.0.0')
     await db.insert(sopVersions).values({

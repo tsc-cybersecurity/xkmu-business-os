@@ -58,7 +58,6 @@ export const KieService = {
 
       // Erfolg loggen (fire-and-forget)
       AiProviderService.createLog({
-        tenantId,
         providerId: null,
         userId,
         providerType: 'kie',
@@ -83,7 +82,6 @@ export const KieService = {
 
       // Fehler loggen (fire-and-forget)
       AiProviderService.createLog({
-        tenantId,
         providerId: null,
         userId,
         providerType: 'kie',
@@ -128,7 +126,7 @@ export const KieService = {
     let delay = 2000 // Start mit 2s
 
     while (Date.now() - startTime < maxWaitMs) {
-      const result = await this.getTaskStatus(tenantId, taskId)
+      const result = await this.getTaskStatus(taskId)
 
       if (result.status === 'completed' || result.status === 'success') {
         return result

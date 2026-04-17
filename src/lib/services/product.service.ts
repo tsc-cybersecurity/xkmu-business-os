@@ -365,7 +365,7 @@ export const ProductService = {
     const currentTags = product.tags || []
     if (currentTags.includes(tag)) return product
 
-    return this.update(_tenantId, productId, { tags: [...currentTags, tag] })
+    return this.update(_productId, { tags: [...currentTags, tag] })
   },
 
   async removeTag(
@@ -383,6 +383,6 @@ export const ProductService = {
     if (!product) return null
     const currentTags = product.tags || []
 
-    return this.update(_tenantId, productId, { tags: currentTags.filter(t => t !== tag) })
+    return this.update(_productId, { tags: currentTags.filter(t => t !== tag) })
   },
 }

@@ -110,7 +110,7 @@ export const DocumentCalculationService = {
       })
       .returning()
 
-    await this.recalculateTotals(_tenantId, docId)
+    await this.recalculateTotals(_docId)
     return item
   },
 
@@ -165,7 +165,7 @@ export const DocumentCalculationService = {
       )
       .returning()
 
-    await this.recalculateTotals(_tenantId, docId)
+    await this.recalculateTotals(_docId)
     return item ?? null
   },
 
@@ -181,7 +181,7 @@ export const DocumentCalculationService = {
       .returning({ id: documentItems.id })
 
     if (result.length > 0) {
-      await this.recalculateTotals(_tenantId, docId)
+      await this.recalculateTotals(_docId)
     }
     return result.length > 0
   },

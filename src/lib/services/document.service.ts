@@ -67,7 +67,7 @@ export const DocumentService = {
   },
 
   async getNextNumber(_tenantId: string, type: string): Promise<string> {
-    return this.generateNumber(_tenantId, type)
+    return this.generateNumber(_type)
   },
 
   async create(
@@ -76,7 +76,7 @@ export const DocumentService = {
     createdBy?: string
   ): Promise<Document> {
     // Auto-generate number if not provided
-    const number = data.number || await this.generateNumber(_tenantId, data.type)
+    const number = data.number || await this.generateNumber(_data.type)
 
     // Snapshot company address if companyId provided and no customer address given
     let customerSnapshot: Partial<NewDocument> = {}
@@ -361,14 +361,14 @@ export const DocumentService = {
   },
 
   async convertOfferToInvoice(_tenantId: string, offerId: string, createdBy?: string): Promise<Document | null> {
-    const offer = await this.getById(_tenantId, offerId)
+    const offer = await this.getById(_offerId)
     if (!offer) return null
     if (offer.type !== 'offer') throw new Error('Nur Angebote können umgewandelt werden')
     if (offer.status !== 'accepted' && offer.status !== 'sent') {
       throw new Error('Nur versendete oder angenommene Angebote können umgewandelt werden')
     }
 
-    const number = await this.generateNumber(_tenantId, 'invoice')
+    const number = await this.generateNumber(_'invoice')
 
     const [invoice] = await db
       .insert(documents)
@@ -427,11 +427,11 @@ export const DocumentService = {
     targetType: 'offer' | 'invoice',
     createdBy?: string
   ): Promise<Document | null> {
-    const contract = await this.getById(_tenantId, contractId)
+    const contract = await this.getById(_contractId)
     if (!contract) return null
     if (contract.type !== 'contract') throw new Error('Nur Vertraege koennen umgewandelt werden')
 
-    const number = await this.generateNumber(_tenantId, targetType)
+    const number = await this.generateNumber(_targetType)
 
     const [newDoc] = await db
       .insert(documents)

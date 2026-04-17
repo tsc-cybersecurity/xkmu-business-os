@@ -392,17 +392,17 @@ export const SocialPublishingService = {
     for (const platform of platforms) {
       switch (platform.toLowerCase()) {
         case 'linkedin':
-          results.linkedin = await this.publishToLinkedIn(_tenantId, post)
+          results.linkedin = await this.publishToLinkedIn(_post)
           break
         case 'twitter':
         case 'x':
-          results.twitter = await this.publishToTwitter(_tenantId, post)
+          results.twitter = await this.publishToTwitter(_post)
           break
         case 'facebook':
-          results.facebook = await this.publishToFacebook(_tenantId, post)
+          results.facebook = await this.publishToFacebook(_post)
           break
         case 'instagram':
-          results.instagram = await this.publishToInstagram(_tenantId, post)
+          results.instagram = await this.publishToInstagram(_post)
           break
         default:
           results[platform] = { success: false, error: `Plattform '${platform}' nicht unterstuetzt` }

@@ -250,7 +250,7 @@ export const GrundschutzAuditService = {
   async saveAnswersBatch(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<number> {
     let saved = 0
     for (const a of answers) {
-      await this.saveAnswer(_tenantId, sessionId, a)
+      await this.saveAnswer(_sessionId, a)
       saved++
     }
     return saved

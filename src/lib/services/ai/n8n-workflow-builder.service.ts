@@ -13,12 +13,11 @@ export const N8nWorkflowBuilderService = {
     prompt: string
   ): Promise<{ workflowJson: Record<string, unknown>; logId: string }> {
     // Prompt-Template aus DB laden (oder Fallback auf DEFAULT_TEMPLATES)
-    const template = await AiPromptTemplateService.getOrDefault(tenantId, 'n8n_workflow_builder')
+    const template = await AiPromptTemplateService.getOrDefault('n8n_workflow_builder')
     const systemPrompt = template.systemPrompt
     const outputFormat = template.outputFormat
 
     const context: AIRequestContext = {
-      tenantId,
       userId,
       feature: 'n8n_workflow_builder',
     }
@@ -39,7 +38,7 @@ export const N8nWorkflowBuilderService = {
     const jsonMatch = response.text.match(/\{[\s\S]*\}/)
     if (!jsonMatch) {
       // Log mit Fehler erstellen
-      const log = await N8nService.createWorkflowLog(tenantId, {
+      const log = await N8nService.createWorkflowLog({
         prompt,
         status: 'error',
         errorMessage: 'KI konnte kein valides Workflow-JSON generieren',
@@ -53,7 +52,7 @@ export const N8nWorkflowBuilderService = {
     try {
       workflowJson = JSON.parse(jsonMatch[0])
     } catch {
-      const log = await N8nService.createWorkflowLog(tenantId, {
+      const log = await N8nService.createWorkflowLog({
         prompt,
         generatedJson: jsonMatch[0],
         status: 'error',
@@ -65,7 +64,7 @@ export const N8nWorkflowBuilderService = {
     }
 
     // Log erstellen
-    const log = await N8nService.createWorkflowLog(tenantId, {
+    const log = await N8nService.createWorkflowLog({
       n8nWorkflowName: (workflowJson.name as string) || 'Generierter Workflow',
       prompt,
       generatedJson: workflowJson,
@@ -84,10 +83,10 @@ export const N8nWorkflowBuilderService = {
     userId: string | null,
     prompt: string
   ): Promise<{ workflowJson: Record<string, unknown>; workflowId: string; logId: string }> {
-    const { workflowJson, logId } = await this.generateWorkflow(tenantId, userId, prompt)
+    const { workflowJson, logId } = await this.generateWorkflow(userId, prompt)
 
     try {
-      const created = await N8nService.createWorkflow(tenantId, workflowJson)
+      const created = await N8nService.createWorkflow(workflowJson)
 
       // Log aktualisieren
       await N8nService.updateWorkflowLog(logId, {

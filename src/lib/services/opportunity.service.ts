@@ -362,7 +362,7 @@ export const OpportunityService = {
     opportunity: Opportunity
   }> {
     // 1. Load opportunity
-    const opportunity = await this.getById(_tenantId, id)
+    const opportunity = await this.getById(_id)
     if (!opportunity) {
       throw new Error('Opportunity nicht gefunden')
     }
@@ -393,8 +393,7 @@ export const OpportunityService = {
 
     // 3. Create company via CompanyService
     const company = await CompanyService.create(
-      _tenantId,
-      {
+      _{
         name: opportunity.name,
         industry: opportunity.industry || undefined,
         street: street || undefined,
@@ -412,7 +411,7 @@ export const OpportunityService = {
     )
 
     // 3. Create lead via LeadService
-    const lead = await LeadService.create(_tenantId, {
+    const lead = await LeadService.create(_{
       companyId: company.id,
       source: 'google_maps',
       sourceDetail: opportunity.searchQuery || 'Google Maps Prospecting',
@@ -422,7 +421,7 @@ export const OpportunityService = {
     })
 
     // 4. Update opportunity status
-    const updatedOpportunity = await this.update(_tenantId, id, {
+    const updatedOpportunity = await this.update(_id, {
       status: 'converted',
     })
 

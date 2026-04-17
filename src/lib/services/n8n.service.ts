@@ -109,7 +109,7 @@ export const N8nService = {
 
   async testConnection(_tenantId: string): Promise<{ success: boolean; message: string }> {
     try {
-      await n8nFetch(_tenantId, '/workflows?limit=1')
+      await n8nFetch(_'/workflows?limit=1')
       return { success: true, message: 'Verbindung erfolgreich' }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Verbindungsfehler'
@@ -122,17 +122,17 @@ export const N8nService = {
   // ==========================================
 
   async listWorkflows(_tenantId: string): Promise<N8nWorkflow[]> {
-    const data = await n8nFetch(_tenantId, '/workflows') as { data?: N8nWorkflow[] }
+    const data = await n8nFetch(_'/workflows') as { data?: N8nWorkflow[] }
     return data.data || []
   },
 
   async getWorkflow(_tenantId: string, workflowId: string): Promise<N8nWorkflow> {
-    const data = await n8nFetch(_tenantId, `/workflows/${workflowId}`) as N8nWorkflow
+    const data = await n8nFetch(_`/workflows/${workflowId}`) as N8nWorkflow
     return data
   },
 
   async createWorkflow(_tenantId: string, workflowJson: Record<string, unknown>): Promise<N8nWorkflow> {
-    const data = await n8nFetch(_tenantId, '/workflows', {
+    const data = await n8nFetch(_'/workflows', {
       method: 'POST',
       body: JSON.stringify(workflowJson),
     }) as N8nWorkflow
@@ -140,7 +140,7 @@ export const N8nService = {
   },
 
   async updateWorkflow(_tenantId: string, workflowId: string, workflowJson: Record<string, unknown>): Promise<N8nWorkflow> {
-    const data = await n8nFetch(_tenantId, `/workflows/${workflowId}`, {
+    const data = await n8nFetch(_`/workflows/${workflowId}`, {
       method: 'PUT',
       body: JSON.stringify(workflowJson),
     }) as N8nWorkflow
@@ -148,13 +148,13 @@ export const N8nService = {
   },
 
   async deleteWorkflow(_tenantId: string, workflowId: string): Promise<void> {
-    await n8nFetch(_tenantId, `/workflows/${workflowId}`, {
+    await n8nFetch(_`/workflows/${workflowId}`, {
       method: 'DELETE',
     })
   },
 
   async activateWorkflow(_tenantId: string, workflowId: string, active: boolean): Promise<N8nWorkflow> {
-    const data = await n8nFetch(_tenantId, `/workflows/${workflowId}/${active ? 'activate' : 'deactivate'}`, {
+    const data = await n8nFetch(_`/workflows/${workflowId}/${active ? 'activate' : 'deactivate'}`, {
       method: 'POST',
     }) as N8nWorkflow
     return data
@@ -162,7 +162,7 @@ export const N8nService = {
 
   async executeWorkflow(_tenantId: string, workflowId: string, inputData?: Record<string, unknown>): Promise<unknown> {
     const body = inputData ? { data: inputData } : undefined
-    const data = await n8nFetch(_tenantId, `/workflows/${workflowId}/run`, {
+    const data = await n8nFetch(_`/workflows/${workflowId}/run`, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
     })
@@ -171,7 +171,7 @@ export const N8nService = {
 
   async getExecutions(_tenantId: string, workflowId?: string): Promise<N8nExecution[]> {
     const query = workflowId ? `?workflowId=${workflowId}` : ''
-    const data = await n8nFetch(_tenantId, `/executions${query}`) as { data?: N8nExecution[] }
+    const data = await n8nFetch(_`/executions${query}`) as { data?: N8nExecution[] }
     return data.data || []
   },
 

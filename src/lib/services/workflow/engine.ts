@@ -99,7 +99,7 @@ export const WorkflowEngine = {
     }
 
     for (const workflow of activeWorkflows) {
-      this.executeWorkflow(workflow.id, workflow.name, workflow.steps as WorkflowStep[], tenantId, trigger, triggerData)
+      this.executeWorkflow(workflow.id, workflow.name, workflow.steps as WorkflowStep[], trigger, triggerData)
         .catch(err => logger.error(`Workflow "${workflow.name}" failed`, err, { module: 'WorkflowEngine' }))
     }
   },
@@ -170,7 +170,6 @@ export const WorkflowEngine = {
         }
 
         const ctx: ActionContext = {
-          tenantId,
           triggerData,
           stepResults: actionResults,
         }

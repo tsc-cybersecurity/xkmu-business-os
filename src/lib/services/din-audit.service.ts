@@ -197,7 +197,7 @@ export const DinAuditService = {
   },
 
   async saveBulkAnswers(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<DinAnswer[]> {
-    return Promise.all(answers.map(a => this.saveAnswer(_tenantId, sessionId, a)))
+    return Promise.all(answers.map(a => this.saveAnswer(_sessionId, a)))
   },
 
   async getAnswers(_tenantId: string, sessionId: string): Promise<DinAnswer[]> {

@@ -79,12 +79,12 @@ export const LeadService = {
       .returning()
 
     // Auto-Score: KI-basierte Qualifizierung im Hintergrund (non-blocking)
-    this.autoScore(_tenantId, lead.id).catch(() => {})
+    this.autoScore(_lead.id).catch(() => {})
 
     // Erstantwort-E-Mail in Task-Queue wenn E-Mail vorhanden
     if (lead.contactEmail) {
       import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-        TaskQueueService.create(_tenantId, {
+        TaskQueueService.create(_{
           type: 'email',
           priority: 1,
           payload: {
@@ -110,7 +110,7 @@ export const LeadService = {
    */
   async autoScore(_tenantId: string, leadId: string): Promise<void> {
     try {
-      const lead = await this.getById(_tenantId, leadId)
+      const lead = await this.getById(_leadId)
       if (!lead || (lead.score ?? 0) > 0) return // Nur fuer neue Leads ohne Score
 
       let score = 20 // Basis-Score fuer jeden neuen Lead
@@ -346,22 +346,22 @@ export const LeadService = {
     status: string,
     oldStatus?: string
   ): Promise<Lead | null> {
-    const lead = await this.update(_tenantId, leadId, { status })
+    const lead = await this.update(_leadId, { status })
     if (lead) {
       // Webhook-Trigger asynchron feuern (blockiert nicht)
       import('@/lib/services/webhook.service').then(({ WebhookService }) => {
-        WebhookService.fire(_tenantId, 'lead.status_changed', {
+        WebhookService.fire(_'lead.status_changed', {
           leadId,
           oldStatus: oldStatus || 'unknown',
           newStatus: status,
         }).catch(() => {})
 
         if (status === 'won') {
-          WebhookService.fire(_tenantId, 'lead.won', { leadId }).catch(() => {})
+          WebhookService.fire(_'lead.won', { leadId }).catch(() => {})
           // Willkommens-E-Mail in Queue
           if (lead!.contactEmail) {
             import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-              TaskQueueService.create(_tenantId, {
+              TaskQueueService.create(_{
                 type: 'email',
                 priority: 1,
                 payload: {
@@ -379,7 +379,7 @@ export const LeadService = {
           }
         }
         if (status === 'lost') {
-          WebhookService.fire(_tenantId, 'lead.lost', { leadId }).catch(() => {})
+          WebhookService.fire(_'lead.lost', { leadId }).catch(() => {})
         }
       }).catch(() => {})
     }
@@ -391,7 +391,7 @@ export const LeadService = {
     leadId: string,
     userId: string | null
   ): Promise<Lead | null> {
-    return this.update(_tenantId, leadId, { assignedTo: userId })
+    return this.update(_leadId, { assignedTo: userId })
   },
 
   async getStatusCounts(
@@ -417,7 +417,7 @@ export const LeadService = {
     status: string,
     result?: Record<string, unknown>
   ): Promise<Lead | null> {
-    return this.update(_tenantId, leadId, {
+    return this.update(_leadId, {
       aiResearchStatus: status,
       aiResearchResult: result,
     })

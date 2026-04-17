@@ -36,17 +36,17 @@ export const LeadPipelineService = {
    * Run the full pipeline (async, non-blocking from the contact API)
    */
   async process(input: LeadPipelineInput): Promise<void> {
-    const { tenantId, leadId } = input
+    const { leadId } = input
     logger.info(`Pipeline started for lead ${leadId}, tenant ${tenantId}`, { module: 'LeadPipeline' })
     try {
       // Step 1: Find or create company
       logger.info(`Step 1: Finding/creating company "${input.company || '(none)'}"`, { module: 'LeadPipeline' })
-      const companyId = await this.findOrCreateCompany(tenantId, input.company)
+      const companyId = await this.findOrCreateCompany(input.company)
       logger.info(`Step 1 done: companyId=${companyId}`, { module: 'LeadPipeline' })
 
       // Step 2: Find or create person
       logger.info(`Step 2: Finding/creating person ${input.email}`, { module: 'LeadPipeline' })
-      const personId = await this.findOrCreatePerson(tenantId, {
+      const personId = await this.findOrCreatePerson({
         firstName: input.firstName,
         lastName: input.lastName,
         email: input.email,
@@ -69,17 +69,17 @@ export const LeadPipelineService = {
 
       // Step 4: KI company research (async, non-blocking)
       if (input.company) {
-        this.triggerCompanyResearch(tenantId, companyId, input.company).catch(() => {})
+        this.triggerCompanyResearch(companyId, input.company).catch(() => {})
       }
 
       // Step 5: KI-based lead scoring
-      await this.scoreLeadWithKI(tenantId, leadId, input)
+      await this.scoreLeadWithKI(leadId, input)
 
       // Step 6: Log activity
-      await this.logActivity(tenantId, leadId, companyId, personId, input)
+      await this.logActivity(leadId, companyId, personId, input)
 
       // Step 7: Admin notification
-      await this.notifyAdmin(tenantId, leadId, input)
+      await this.notifyAdmin(leadId, input)
 
       logger.info(`Pipeline completed for lead ${leadId}`, { module: 'LeadPipeline' })
     } catch (error) {
@@ -175,7 +175,7 @@ export const LeadPipelineService = {
   async triggerCompanyResearch(_tenantId: string, companyId: string, companyName: string): Promise<void> {
     try {
       const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-      await TaskQueueService.create(_tenantId, {
+      await TaskQueueService.create(_{
         type: 'ai',
         priority: 2,
         payload: {
@@ -276,7 +276,7 @@ export const LeadPipelineService = {
   async notifyAdmin(_tenantId: string, leadId: string, input: LeadPipelineInput): Promise<void> {
     try {
       const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-      await TaskQueueService.create(_tenantId, {
+      await TaskQueueService.create(_{
         type: 'email',
         priority: 1,
         payload: {

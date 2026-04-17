@@ -48,7 +48,7 @@ export const ContractClauseService = {
     bodyHtml: string
     sortOrder: number
   }>) {
-    const existing = await this.getById(_tenantId, id)
+    const existing = await this.getById(_id)
     if (!existing) return null
     if (existing.isSystem) throw new Error('System-Bausteine koennen nicht bearbeitet werden')
 
@@ -61,7 +61,7 @@ export const ContractClauseService = {
   },
 
   async delete(_tenantId: string, id: string) {
-    const existing = await this.getById(_tenantId, id)
+    const existing = await this.getById(_id)
     if (!existing) return false
     if (existing.isSystem) throw new Error('System-Bausteine koennen nicht geloescht werden')
 

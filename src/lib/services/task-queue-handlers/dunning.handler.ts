@@ -52,7 +52,6 @@ export async function handleDunning(
 
   // Send email
   const result = await EmailService.sendWithTemplate(
-    tenantId,
     templateSlug,
     to,
     {
@@ -82,7 +81,6 @@ export async function handleDunning(
   // Level 3: Create activity "Telefonisch nachfassen"
   if (level === 3 && doc.companyId) {
     await db.insert(activities).values({
-      tenantId,
       companyId: doc.companyId,
       type: 'task',
       subject: `Telefonisch nachfassen: Rechnung ${doc.number}`,
@@ -95,7 +93,7 @@ export async function handleDunning(
     const nextDate = new Date()
     nextDate.setDate(nextDate.getDate() + 7) // 7 Tage bis naechste Stufe
 
-    await TaskQueueService.create(tenantId, {
+    await TaskQueueService.create({
       type: 'dunning',
       priority: 1,
       payload: {

@@ -214,7 +214,7 @@ export const PersonService = {
     personId: string,
     tag: string
   ): Promise<Person | null> {
-    const person = await this.getById(_tenantId, personId)
+    const person = await this.getById(_personId)
     if (!person) return null
 
     const currentTags = person.tags || []
@@ -222,7 +222,7 @@ export const PersonService = {
       return person
     }
 
-    return this.update(_tenantId, personId, {
+    return this.update(_personId, {
       tags: [...currentTags, tag],
     })
   },
@@ -232,12 +232,12 @@ export const PersonService = {
     personId: string,
     tag: string
   ): Promise<Person | null> {
-    const person = await this.getById(_tenantId, personId)
+    const person = await this.getById(_personId)
     if (!person) return null
 
     const currentTags = person.tags || []
 
-    return this.update(_tenantId, personId, {
+    return this.update(_personId, {
       tags: currentTags.filter((t) => t !== tag),
     })
   },
@@ -259,6 +259,6 @@ export const PersonService = {
       )
 
     // Then set the new primary contact
-    return this.update(_tenantId, personId, { isPrimaryContact: true })
+    return this.update(_personId, { isPrimaryContact: true })
   },
 }

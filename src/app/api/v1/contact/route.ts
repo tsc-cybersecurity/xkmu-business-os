@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
   try {
     const { firstName, lastName, company, phone, email, interests, message } = validation.data
 
-    const lead = await LeadService.create(tenantId, {
+    const lead = await LeadService.create({
       source: 'website',
       sourceDetail: 'Kontaktformular',
       title: `${firstName} ${lastName} – ${company || 'Privat'}`,
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Step 4: Fire workflow trigger (async, non-blocking)
-    WorkflowEngine.fire('contact.submitted', tenantId, {
+    WorkflowEngine.fire('contact.submitted', {
       leadId: lead.id,
       firstName,
       lastName,

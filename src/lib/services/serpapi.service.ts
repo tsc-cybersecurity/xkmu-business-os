@@ -163,7 +163,7 @@ export const SerpApiService = {
       const durationMs = Date.now() - startTime
       if (tenantId) {
         AiProviderService.createLog({
-          tenantId, providerId, providerType: 'serpapi', model: 'google_maps',
+          providerId, providerType: 'serpapi', model: 'google_maps',
           prompt, status: 'error', errorMessage: error instanceof Error ? error.message : 'Timeout',
           durationMs, feature: 'opportunity_search',
         }).catch(() => {})
@@ -176,7 +176,7 @@ export const SerpApiService = {
       const durationMs = Date.now() - startTime
       if (tenantId) {
         AiProviderService.createLog({
-          tenantId, providerId, providerType: 'serpapi', model: 'google_maps',
+          providerId, providerType: 'serpapi', model: 'google_maps',
           prompt, status: 'error', errorMessage: `HTTP ${response.status}: ${text.substring(0, 200)}`,
           durationMs, feature: 'opportunity_search',
         }).catch(() => {})
@@ -190,7 +190,7 @@ export const SerpApiService = {
       const durationMs = Date.now() - startTime
       if (tenantId) {
         AiProviderService.createLog({
-          tenantId, providerId, providerType: 'serpapi', model: 'google_maps',
+          providerId, providerType: 'serpapi', model: 'google_maps',
           prompt, status: 'error', errorMessage: data.error,
           durationMs, feature: 'opportunity_search',
         }).catch(() => {})
@@ -234,7 +234,7 @@ export const SerpApiService = {
     const durationMs = Date.now() - startTime
     if (tenantId) {
       AiProviderService.createLog({
-        tenantId, providerId, providerType: 'serpapi', model: 'google_maps',
+        providerId, providerType: 'serpapi', model: 'google_maps',
         prompt, response: `${results.length} Ergebnisse gefunden`,
         status: 'success', durationMs, feature: 'opportunity_search',
       }).catch(() => {})

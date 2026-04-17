@@ -65,7 +65,7 @@ export const BusinessDocumentService = {
 
   async delete(_tenantId: string, id: string): Promise<boolean> {
     // Get document record to find filename
-    const doc = await this.getById(_tenantId, id)
+    const doc = await this.getById(_id)
     if (!doc) return false
 
     const result = await db

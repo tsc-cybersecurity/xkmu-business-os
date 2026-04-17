@@ -210,7 +210,7 @@ export const WibaAuditService = {
   async saveBulkAnswers(_tenantId: string, sessionId: string, answers: SaveAnswerInput[]): Promise<WibaAnswer[]> {
     const results: WibaAnswer[] = []
     for (const answer of answers) {
-      const saved = await this.saveAnswer(_tenantId, sessionId, answer)
+      const saved = await this.saveAnswer(_sessionId, answer)
       results.push(saved)
     }
     return results

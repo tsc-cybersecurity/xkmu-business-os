@@ -97,9 +97,9 @@ export const EmailTemplateService = {
   async seed(_tenantId: string): Promise<number> {
     let created = 0
     for (const tpl of DEFAULT_EMAIL_TEMPLATES) {
-      const existing = await this.getBySlug(_tenantId, tpl.slug)
+      const existing = await this.getBySlug(_tpl.slug)
       if (existing) continue
-      await this.create(_tenantId, tpl)
+      await this.create(_tpl)
       created++
     }
     return created

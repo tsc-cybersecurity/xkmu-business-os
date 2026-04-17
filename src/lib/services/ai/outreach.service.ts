@@ -20,7 +20,7 @@ export const OutreachService = {
     context: AIRequestContext
   ): Promise<OutreachResult> {
     // 1. Lead laden
-    const lead = await LeadService.getById(tenantId, leadId)
+    const lead = await LeadService.getById(leadId)
     if (!lead) throw new Error('Lead nicht gefunden')
 
     // 2. Verknüpfte Daten laden
@@ -31,12 +31,12 @@ export const OutreachService = {
     const score = lead.score?.toString() || '0'
 
     if (lead.companyId) {
-      const company = await CompanyService.getById(tenantId, lead.companyId)
+      const company = await CompanyService.getById(lead.companyId)
       if (company) companyName = company.name
     }
 
     if (lead.personId) {
-      const person = await PersonService.getById(tenantId, lead.personId)
+      const person = await PersonService.getById(lead.personId)
       if (person) personName = `${person.firstName} ${person.lastName}`
     }
 
@@ -52,7 +52,7 @@ export const OutreachService = {
     }
 
     // 4. Template laden
-    const template = await AiPromptTemplateService.getOrDefault(tenantId, 'outreach_email')
+    const template = await AiPromptTemplateService.getOrDefault('outreach_email')
 
     const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
       companyName,

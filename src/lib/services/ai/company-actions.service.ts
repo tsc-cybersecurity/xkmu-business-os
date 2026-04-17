@@ -127,7 +127,7 @@ async function generateSummary(tenantId: string, content: string, userId?: strin
   try {
     const response = await AIService.completeWithContext(
       `Fasse den folgenden Text in exakt 4-5 Saetzen zusammen. Schreibe praegnant und sachlich im Business-Stil. Antworte NUR mit der Zusammenfassung, ohne Einleitung oder Formatierung.\n\nText:\n${content}`,
-      { tenantId, userId, feature: 'activity_summary' },
+      { userId, feature: 'activity_summary' },
       { temperature: 0.3, maxTokens: 300 }
     )
     return response.text.trim()
@@ -140,21 +140,21 @@ async function generateSummary(tenantId: string, content: string, userId?: strin
 export const CompanyActionsService = {
   async generate(tenantId: string, companyId: string, actionSlug: string, userId?: string | null) {
     // 1. Load company data
-    const company = await CompanyService.getById(tenantId, companyId)
+    const company = await CompanyService.getById(companyId)
     if (!company) throw new Error('Firma nicht gefunden')
 
     // 2. Load persons via CompanyService.getPersons (returns Person[])
-    const persons = await CompanyService.getPersons(tenantId, companyId)
+    const persons = await CompanyService.getPersons(companyId)
     const primaryContact = persons.find(p => p.isPrimaryContact) || persons[0] || null
 
     // 3. Load recent activities (last 5)
-    const recentActivitiesResult = await ActivityService.listByCompany(tenantId, companyId, { limit: 5 })
+    const recentActivitiesResult = await ActivityService.listByCompany(companyId, { limit: 5 })
     const recentActivities = (recentActivitiesResult.items || [])
       .map(a => `${a.createdAt}: [${a.type}] ${a.subject || ''} - ${(a.content || '').substring(0, 100)}`)
       .join('\n') || 'Keine bisherigen Aktivitäten'
 
     // 4. Load and apply prompt template
-    const template = await AiPromptTemplateService.getOrDefault(tenantId, actionSlug)
+    const template = await AiPromptTemplateService.getOrDefault(actionSlug)
 
     const placeholderData: Record<string, string> = {
       companyName: company.name || '',
@@ -177,7 +177,6 @@ export const CompanyActionsService = {
 
     // 5. Call AI
     const response = await AIService.completeWithContext(fullPrompt, {
-      tenantId,
       userId,
       feature: 'company_action',
       entityType: 'company',
@@ -221,7 +220,7 @@ export const CompanyActionsService = {
 
       // Generate 4-5 line summary for preview
       const summary = textContent.length > 300
-        ? await generateSummary(tenantId, textContent, userId)
+        ? await generateSummary(textContent, userId)
         : ''
 
       return { subject, content: textContent, summary, actionSlug }
@@ -231,7 +230,7 @@ export const CompanyActionsService = {
 
     // Fallback: use raw text
     const fallbackSummary = response.text.length > 300
-      ? await generateSummary(tenantId, response.text, userId)
+      ? await generateSummary(response.text, userId)
       : ''
     return { subject: '', content: response.text, summary: fallbackSummary, actionSlug }
   },
@@ -242,7 +241,7 @@ export const CompanyActionsService = {
    */
   async enrichMissingSummaries(tenantId: string, companyId: string, userId?: string | null): Promise<number> {
     try {
-      const result = await ActivityService.listByCompany(tenantId, companyId, { limit: 20 })
+      const result = await ActivityService.listByCompany(companyId, { limit: 20 })
       const activities = result.items || []
       let enriched = 0
 
@@ -251,11 +250,11 @@ export const CompanyActionsService = {
         if (meta.summary) continue // already has summary
         if (!activity.content || activity.content.length < 300) continue // too short
 
-        const summary = await generateSummary(tenantId, activity.content, userId)
+        const summary = await generateSummary(activity.content, userId)
         if (!summary) continue
 
         // Update activity metadata with summary
-        await ActivityService.update(tenantId, activity.id, {
+        await ActivityService.update(activity.id, {
           metadata: { ...meta, summary },
         })
         enriched++

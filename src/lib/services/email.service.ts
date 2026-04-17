@@ -177,7 +177,7 @@ export const EmailService = {
     userId?: string | null
   ): Promise<SendEmailResult> {
     const { EmailTemplateService } = await import('./email-template.service')
-    const template = await EmailTemplateService.getBySlug(_tenantId, templateSlug)
+    const template = await EmailTemplateService.getBySlug(_templateSlug)
     if (!template) {
       return { success: false, error: `E-Mail-Template '${templateSlug}' nicht gefunden` }
     }
@@ -186,7 +186,7 @@ export const EmailService = {
     const html = EmailTemplateService.applyPlaceholders(template.bodyHtml, placeholders)
     const body = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
-    return this.send(_tenantId, {
+    return this.send(_{
       to,
       subject,
       body,

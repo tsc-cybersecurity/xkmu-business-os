@@ -47,7 +47,7 @@ export const NewsletterService = {
       const [existing] = await db.select({ id: newsletterSubscribers.id }).from(newsletterSubscribers)
         .where(eq(newsletterSubscribers.email, entry.email)).limit(1)
       if (existing) continue
-      await this.createSubscriber(_tenantId, entry)
+      await this.createSubscriber(_entry)
       created++
     }
     return created
@@ -83,7 +83,7 @@ export const NewsletterService = {
 
   // --- Send Campaign ---
   async sendCampaign(_tenantId: string, campaignId: string): Promise<{ sent: number; failed: number }> {
-    const campaign = await this.getCampaign(_tenantId, campaignId)
+    const campaign = await this.getCampaign(_campaignId)
     if (!campaign) throw new Error('Kampagne nicht gefunden')
     if (!campaign.subject || !campaign.bodyHtml) throw new Error('Betreff oder Inhalt fehlt')
 
@@ -107,7 +107,7 @@ export const NewsletterService = {
         const html = campaign.bodyHtml!.replace(/\{\{name\}\}/g, subscriber.name || subscriber.email)
         const subject = campaign.subject!.replace(/\{\{name\}\}/g, subscriber.name || subscriber.email)
 
-        const result = await EmailService.send(_tenantId, {
+        const result = await EmailService.send(_{
           to: subscriber.email,
           subject,
           body: html.replace(/<[^>]+>/g, ' ').trim(),

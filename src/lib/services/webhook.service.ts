@@ -106,7 +106,7 @@ export const WebhookService = {
    * Runs asynchronously – does not block the caller.
    */
   async fire(_tenantId: string, event: string, payload: Record<string, unknown>): Promise<void> {
-    const matchingWebhooks = await this.getByEvent(_tenantId, event)
+    const matchingWebhooks = await this.getByEvent(_event)
     if (matchingWebhooks.length === 0) return
 
     // Fire all webhooks in parallel, don't await

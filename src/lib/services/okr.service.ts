@@ -161,7 +161,7 @@ export const OkrService = {
   async getDashboard(_tenantId: string) {
     const activeCycle = await this.getActiveCycle(_tenantId)
     if (!activeCycle) return { cycle: null, objectives: [], overallProgress: 0 }
-    const objectives = await this.listObjectives(_tenantId, activeCycle.id)
+    const objectives = await this.listObjectives(_activeCycle.id)
     const overallProgress = objectives.length > 0
       ? Math.round(objectives.reduce((s, o) => s + o.progress, 0) / objectives.length)
       : 0

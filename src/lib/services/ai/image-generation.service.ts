@@ -442,7 +442,7 @@ export const ImageGenerationService = {
    * Delete image (DB + file)
    */
   async delete(tenantId: string, id: string): Promise<boolean> {
-    const image = await this.getById(tenantId, id)
+    const image = await this.getById(id)
     if (!image) return false
 
     // Delete file

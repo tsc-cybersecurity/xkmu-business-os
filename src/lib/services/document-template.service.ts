@@ -58,16 +58,16 @@ export const DocumentTemplateService = {
   },
 
   async generateWithAI(_tenantId: string, templateId: string, context: string): Promise<string> {
-    const tpl = await this.getById(_tenantId, templateId)
+    const tpl = await this.getById(_templateId)
     if (!tpl) throw new Error('Template nicht gefunden')
 
-    const promptTemplate = await AiPromptTemplateService.getOrDefault(_tenantId, 'document_template_fill')
+    const promptTemplate = await AiPromptTemplateService.getOrDefault(_'document_template_fill')
     const userPrompt = AiPromptTemplateService.applyPlaceholders(promptTemplate.userPrompt, {
       context, template: tpl.bodyHtml || '',
     })
 
     const response = await AIService.completeWithContext(userPrompt,
-      { tenantId: _tenantId, feature: 'document_template_generate' },
+      { tenantId: _feature: 'document_template_generate' },
       { maxTokens: 4000, temperature: 0.3, systemPrompt: promptTemplate.systemPrompt })
 
     return response.text
@@ -79,7 +79,7 @@ export const DocumentTemplateService = {
       const existing = await db.select({ id: documentTemplates.id }).from(documentTemplates)
         .where(eq(documentTemplates.name, tpl.name)).limit(1)
       if (existing.length > 0) continue
-      await this.create(_tenantId, tpl)
+      await this.create(_tpl)
       created++
     }
     return created

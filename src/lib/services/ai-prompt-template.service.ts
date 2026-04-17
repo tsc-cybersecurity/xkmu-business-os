@@ -103,7 +103,7 @@ export const AiPromptTemplateService = {
 
   async delete(_tenantId: string, id: string) {
     // Don't allow deleting default templates
-    const existing = await this.getById(_tenantId, id)
+    const existing = await this.getById(_id)
     if (!existing || existing.isDefault) {
       return false
     }
@@ -143,13 +143,13 @@ export const AiPromptTemplateService = {
   },
 
   async resetToDefault(_tenantId: string, id: string) {
-    const existing = await this.getById(_tenantId, id)
+    const existing = await this.getById(_id)
     if (!existing) return null
 
     const defaults = DEFAULT_TEMPLATES[existing.slug]
     if (!defaults) return null
 
-    return this.update(_tenantId, id, {
+    return this.update(_id, {
       systemPrompt: defaults.systemPrompt,
       userPrompt: defaults.userPrompt,
       outputFormat: defaults.outputFormat,
@@ -171,7 +171,7 @@ export const AiPromptTemplateService = {
     outputFormat: string
   }> {
     // Versuche aus DB zu laden (nur wenn systemPrompt befüllt ist)
-    const template = await this.getBySlug(_tenantId, slug)
+    const template = await this.getBySlug(_slug)
     if (template && template.systemPrompt) {
       return {
         systemPrompt: template.systemPrompt,

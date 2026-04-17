@@ -201,7 +201,7 @@ export const TaskQueueService = {
     let failed = 0
 
     for (const id of ids) {
-      const result = await this.execute(_tenantId, id)
+      const result = await this.execute(_id)
       if (result?.status === 'completed') completed++
       else if (result?.status === 'failed') failed++
     }
@@ -218,7 +218,7 @@ export const TaskQueueService = {
         lte(taskQueue.scheduledFor, new Date())))
       .orderBy(asc(taskQueue.priority), asc(taskQueue.scheduledFor))
 
-    return this.executeBatch(_tenantId, pending.map(p => p.id))
+    return this.executeBatch(_pending.map(p => p.id))
   },
 
   async getStats(_tenantId: string) {

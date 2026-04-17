@@ -59,7 +59,7 @@ const ACTIONS: Record<string, ActionDefinition> = {
           .where(and(eq(companies.name, fallback))).limit(1)
         if (existing) return { success: true, data: { companyId: existing.id, created: false } }
         const [created] = await db.insert(companies)
-          .values({ tenantId, name: fallback, status: 'active', country: 'DE' })
+          .values({ name: fallback, status: 'active', country: 'DE' })
           .returning({ id: companies.id })
         return { success: true, data: { companyId: created.id, created: true } }
       }
@@ -69,7 +69,7 @@ const ACTIONS: Record<string, ActionDefinition> = {
       if (existing) return { success: true, data: { companyId: existing.id, created: false } }
 
       const [created] = await db.insert(companies)
-        .values({ tenantId, name: companyName, status: 'active', country: 'DE' })
+        .values({ name: companyName, status: 'active', country: 'DE' })
         .returning({ id: companies.id })
       return { success: true, data: { companyId: created.id, created: true } }
     },
@@ -82,7 +82,7 @@ const ACTIONS: Record<string, ActionDefinition> = {
     category: 'data',
     icon: 'User',
     execute: async (ctx) => {
-      const { tenantId, triggerData, stepResults } = ctx
+      const { triggerData, stepResults } = ctx
       const email = (triggerData.email as string)?.trim()
       const companyId = (stepResults.find_or_create_company as Record<string, unknown>)?.companyId as string | undefined
 
@@ -99,7 +99,6 @@ const ACTIONS: Record<string, ActionDefinition> = {
       }
 
       const [created] = await db.insert(persons).values({
-        tenantId,
         companyId: companyId || null,
         firstName: (triggerData.firstName as string) || '',
         lastName: (triggerData.lastName as string) || '',
@@ -143,14 +142,14 @@ const ACTIONS: Record<string, ActionDefinition> = {
     category: 'ai',
     icon: 'Bot',
     execute: async (ctx) => {
-      const { tenantId, triggerData, stepResults } = ctx
+      const { triggerData, stepResults } = ctx
       const companyId = (stepResults.find_or_create_company as Record<string, unknown>)?.companyId as string | undefined
       const companyName = (triggerData.company as string)?.trim()
       if (!companyId || !companyName) return { success: true, data: { skipped: true, reason: 'Keine Firma' } }
 
       try {
         const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-        await TaskQueueService.create(tenantId, {
+        await TaskQueueService.create({
           type: 'ai',
           priority: 2,
           payload: {
@@ -216,7 +215,7 @@ const ACTIONS: Record<string, ActionDefinition> = {
       { key: 'subject', label: 'Betreff', type: 'string' },
     ],
     execute: async (ctx, config) => {
-      const { tenantId, triggerData, stepResults } = ctx
+      const { triggerData, stepResults } = ctx
       const leadId = triggerData.leadId as string
       const companyId = (stepResults.find_or_create_company as Record<string, unknown>)?.companyId as string | undefined
       const personId = (stepResults.find_or_create_person as Record<string, unknown>)?.personId as string | undefined
@@ -224,7 +223,6 @@ const ACTIONS: Record<string, ActionDefinition> = {
       const message = (triggerData.message as string) || ''
 
       await db.insert(activities).values({
-        tenantId,
         leadId: leadId || undefined,
         companyId: companyId || undefined,
         personId: personId || undefined,
@@ -252,14 +250,14 @@ const ACTIONS: Record<string, ActionDefinition> = {
       { key: 'to', label: 'Empfänger (leer = Kontakt-E-Mail)', type: 'string' },
     ],
     execute: async (ctx, config) => {
-      const { tenantId, triggerData } = ctx
+      const { triggerData } = ctx
       const to = (config.to as string) || (triggerData.email as string)
       const template = (config.template as string) || 'lead_first_response'
       if (!to) return { success: false, error: 'Kein Empfänger' }
 
       try {
         const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-        await TaskQueueService.create(tenantId, {
+        await TaskQueueService.create({
           type: 'email', priority: 1,
           payload: {
             templateSlug: template, to,
@@ -290,13 +288,13 @@ const ACTIONS: Record<string, ActionDefinition> = {
       { key: 'template', label: 'Template-Slug', type: 'string' },
     ],
     execute: async (ctx, config) => {
-      const { tenantId, triggerData } = ctx
+      const { triggerData } = ctx
       const template = (config.template as string) || 'lead_admin_notification'
       const leadId = triggerData.leadId as string
 
       try {
         const { TaskQueueService } = await import('@/lib/services/task-queue.service')
-        await TaskQueueService.create(tenantId, {
+        await TaskQueueService.create({
           type: 'email', priority: 1,
           payload: {
             templateSlug: template, to: '__ADMIN__',

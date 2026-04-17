@@ -54,7 +54,7 @@ export const ContractTemplateService = {
     placeholders: unknown[]
     clauses: unknown[]
   }>) {
-    const existing = await this.getById(_tenantId, id)
+    const existing = await this.getById(_id)
     if (!existing) return null
     if (existing.isSystem) throw new Error('System-Templates koennen nicht bearbeitet werden')
 
@@ -67,7 +67,7 @@ export const ContractTemplateService = {
   },
 
   async delete(_tenantId: string, id: string) {
-    const existing = await this.getById(_tenantId, id)
+    const existing = await this.getById(_id)
     if (!existing) return false
     if (existing.isSystem) throw new Error('System-Templates koennen nicht geloescht werden')
 
@@ -79,10 +79,10 @@ export const ContractTemplateService = {
   },
 
   async duplicate(_tenantId: string, id: string) {
-    const original = await this.getById(_tenantId, id)
+    const original = await this.getById(_id)
     if (!original) return null
 
-    return this.create(_tenantId, {
+    return this.create(_{
       name: `${original.name} (Kopie)`,
       category: original.category,
       description: original.description || undefined,

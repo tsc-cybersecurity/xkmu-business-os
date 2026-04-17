@@ -92,7 +92,7 @@ export const RoleService = {
     _tenantId: string,
     roleId: string
   ): Promise<RoleWithPermissions | null> {
-    const role = await this.getById(_tenantId, roleId)
+    const role = await this.getById(_roleId)
     if (!role) return null
 
     const perms = await db
@@ -163,12 +163,12 @@ export const RoleService = {
     roleId: string,
     data: UpdateRoleInput
   ): Promise<RoleWithPermissions | null> {
-    const existing = await this.getById(_tenantId, roleId)
+    const existing = await this.getById(_roleId)
     if (!existing) return null
 
     // Owner-Rolle darf nicht geaendert werden
     if (existing.name === 'owner' && existing.isSystem) {
-      return this.getWithPermissions(_tenantId, roleId)
+      return this.getWithPermissions(_roleId)
     }
 
     const updateData: Partial<NewRole> = {
@@ -186,11 +186,11 @@ export const RoleService = {
       await this.setPermissions(roleId, data.permissions)
     }
 
-    return this.getWithPermissions(_tenantId, roleId)
+    return this.getWithPermissions(_roleId)
   },
 
   async delete(_tenantId: string, roleId: string): Promise<boolean> {
-    const role = await this.getById(_tenantId, roleId)
+    const role = await this.getById(_roleId)
     if (!role) return false
 
     // System-Rollen können nicht gelöscht werden

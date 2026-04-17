@@ -113,7 +113,7 @@ export const FirecrawlService = {
       if (tenantId) {
         const durationMs = Date.now() - startTime
         AiProviderService.createLog({
-          tenantId, providerType: 'firecrawl', model: 'scrape',
+          providerType: 'firecrawl', model: 'scrape',
           prompt: url, response: `${result.markdown.length} Zeichen extrahiert`,
           status: 'success', durationMs, feature: 'web_scraping',
         }).catch(() => {})
@@ -125,7 +125,7 @@ export const FirecrawlService = {
       if (tenantId) {
         const durationMs = Date.now() - startTime
         AiProviderService.createLog({
-          tenantId, providerType: 'firecrawl', model: 'scrape',
+          providerType: 'firecrawl', model: 'scrape',
           prompt: url, status: 'error',
           errorMessage: error instanceof Error ? error.message : 'Unknown error',
           durationMs, feature: 'web_scraping',

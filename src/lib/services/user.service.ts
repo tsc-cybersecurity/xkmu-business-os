@@ -40,7 +40,6 @@ export const UserService = {
     const [user] = await db
       .insert(users)
       .values({
-        tenantId,
         email: data.email.toLowerCase(),
         passwordHash,
         firstName: data.firstName,

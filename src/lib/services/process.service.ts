@@ -277,13 +277,13 @@ export const ProcessService = {
 
     for (const [key, area] of Object.entries(mainJson.prozessbereiche)) {
       // Check if already exists
-      const existing = await this.getByKey(_tenantId, key)
+      const existing = await this.getByKey(_key)
       if (existing) {
         processMap.set(key, existing.id)
         continue
       }
 
-      const process = await this.create(_tenantId, {
+      const process = await this.create(_{
         key,
         name: area.name,
         description: area.beschreibung,
@@ -308,7 +308,7 @@ export const ProcessService = {
 
       if (existingTasks.length > 0) continue
 
-      await this.createTask(_tenantId, processId, {
+      await this.createTask(_processId, {
         taskKey: aufgabe.id,
         subprocess: aufgabe.teilprozess,
         title: aufgabe.aufgabe,
@@ -340,11 +340,11 @@ export const ProcessService = {
 
       // Auto-create process area if not yet known (e.g. KP6, KP7 from new_sops)
       if (!processId) {
-        const existing = await this.getByKey(_tenantId, processKey)
+        const existing = await this.getByKey(_processKey)
         if (existing) {
           processId = existing.id
         } else {
-          const newProcess = await this.create(_tenantId, {
+          const newProcess = await this.create(_{
             key: processKey,
             name: sop.process || processKey,
             description: `Automatisch erstellt aus ${sop.process || processKey}`,
@@ -364,7 +364,7 @@ export const ProcessService = {
 
       if (existingTasks.length > 0) continue
 
-      await this.createTask(_tenantId, processId, {
+      await this.createTask(_processId, {
         taskKey: sop.id,
         subprocess: sop.subprocess,
         title: sop.title,

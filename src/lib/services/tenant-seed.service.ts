@@ -392,7 +392,7 @@ export class TenantSeedService {
     const cmsCount = await this.seedCmsPages()
     const navCount = await this.seedNavigation()
     const blogCount = await this.seedBlogPosts(userId)
-    const bizCounts = await this.seedExampleBusinessData(_tenantId, userId)
+    const bizCounts = await this.seedExampleBusinessData(_userId)
 
     return {
       cmsPages: cmsCount,

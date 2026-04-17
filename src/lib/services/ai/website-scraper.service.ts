@@ -278,14 +278,13 @@ async function getSmartIncludePaths(
     logger.info(`Smart filter: Found ${links.length} internal links, running AI selection`, { module: 'WebsiteScraperService' })
 
     // 3. AI call to select relevant paths
-    const template = await AiPromptTemplateService.getOrDefault(tenantId, 'firecrawl_smart_filter')
+    const template = await AiPromptTemplateService.getOrDefault('firecrawl_smart_filter')
     const userPrompt = AiPromptTemplateService.applyPlaceholders(
       template.userPrompt,
       { links: links.join('\n') }
     )
 
     const aiResponse = await AIService.completeWithContext(userPrompt, {
-      tenantId,
       feature: 'firecrawl_smart_filter',
     }, {
       maxTokens: 1000,

@@ -195,7 +195,7 @@ export const CompanyService = {
     companyId: string,
     tag: string
   ): Promise<Company | null> {
-    const company = await this.getById(_tenantId, companyId)
+    const company = await this.getById(_companyId)
     if (!company) return null
 
     const currentTags = company.tags || []
@@ -203,7 +203,7 @@ export const CompanyService = {
       return company
     }
 
-    return this.update(_tenantId, companyId, {
+    return this.update(_companyId, {
       tags: [...currentTags, tag],
     })
   },
@@ -213,12 +213,12 @@ export const CompanyService = {
     companyId: string,
     tag: string
   ): Promise<Company | null> {
-    const company = await this.getById(_tenantId, companyId)
+    const company = await this.getById(_companyId)
     if (!company) return null
 
     const currentTags = company.tags || []
 
-    return this.update(_tenantId, companyId, {
+    return this.update(_companyId, {
       tags: currentTags.filter((t) => t !== tag),
     })
   },
