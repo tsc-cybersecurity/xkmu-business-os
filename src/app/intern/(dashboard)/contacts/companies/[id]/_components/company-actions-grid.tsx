@@ -227,7 +227,7 @@ export function CompanyActionsGrid({ companyId }: CompanyActionsGridProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                   {actions.map(action => {
                     const ActionIcon = ICON_MAP[action.icon] || Mail
                     const isLoading = loadingSlug === action.slug
