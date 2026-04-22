@@ -140,6 +140,10 @@ export async function proxy(request: NextRequest) {
 
   // Portal gate: /portal requires session with role=portal_user + companyId
   if (pathname.startsWith('/portal')) {
+    // CSRF-Schutz fuer session-basierte Mutation-Routes (portal)
+    const csrfResult = csrfCheck(request)
+    if (csrfResult) return csrfResult
+
     const sessionToken = request.cookies.get('xkmu_session')?.value
     if (!sessionToken) {
       const loginUrl = new URL('/intern/login', request.url)
