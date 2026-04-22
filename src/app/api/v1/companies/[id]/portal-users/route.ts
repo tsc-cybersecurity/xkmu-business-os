@@ -112,12 +112,15 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
           status: users.status,
           firstLoginAt: users.firstLoginAt,
           inviteTokenExpiresAt: users.inviteTokenExpiresAt,
-          hasPendingInvite: users.inviteToken,   // will be post-processed to boolean
+          inviteToken: users.inviteToken,
           createdAt: users.createdAt,
         })
         .from(users)
         .where(and(eq(users.companyId, companyId), eq(users.role, 'portal_user')))
-      return apiSuccess(rows.map(r => ({ ...r, hasPendingInvite: !!r.hasPendingInvite })))
+      return apiSuccess(rows.map(({ inviteToken, ...rest }) => ({
+        ...rest,
+        hasPendingInvite: !!inviteToken,
+      })))
     } catch (error) {
       logger.error('Failed to list portal users', error, { module: 'PortalUsersAPI' })
       return apiError('INTERNAL_ERROR', 'Fehler beim Laden', 500)
