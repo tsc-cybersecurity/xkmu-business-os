@@ -1,4 +1,4 @@
-export type UserRole = 'owner' | 'admin' | 'member' | 'viewer'
+export type UserRole = 'owner' | 'admin' | 'member' | 'viewer' | 'portal_user'
 export type UserStatus = 'active' | 'inactive' | 'pending'
 
 export interface SessionUser {

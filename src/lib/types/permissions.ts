@@ -168,6 +168,12 @@ function buildDesignerAccess(): Record<Module, Record<Action, boolean>> {
   ) as Record<Module, Record<Action, boolean>>
 }
 
+function buildPortalUserAccess(): Record<Module, Record<Action, boolean>> {
+  return Object.fromEntries(
+    MODULES.map((m) => [m, { ...allFalse }])
+  ) as Record<Module, Record<Action, boolean>>
+}
+
 export const DEFAULT_ROLE_PERMISSIONS: Record<
   string,
   { displayName: string; description: string; permissions: Record<Module, Record<Action, boolean>> }
@@ -201,5 +207,10 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<
     displayName: 'Designer',
     description: 'CMS-Seiten und Blog-Beitraege verwalten',
     permissions: buildDesignerAccess(),
+  },
+  portal_user: {
+    displayName: 'Portal-Nutzer',
+    description: 'Extern angelegter Kunden-Zugang; kein Zugriff auf interne Module',
+    permissions: buildPortalUserAccess(),
   },
 }
