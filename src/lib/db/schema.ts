@@ -14,6 +14,7 @@ import { pgTable,
   serial,
   smallint,
   char,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
@@ -149,12 +150,18 @@ export const users = pgTable('users', {
   lastName: varchar('last_name', { length: 100 }),
   role: varchar('role', { length: 50 }).default('member'),
   roleId: uuid('role_id').references(() => roles.id, { onDelete: 'set null' }),
+  companyId: uuid('company_id').references((): AnyPgColumn => companies.id, { onDelete: 'set null' }),
+  inviteToken: varchar('invite_token', { length: 64 }),
+  inviteTokenExpiresAt: timestamp('invite_token_expires_at', { withTimezone: true }),
+  firstLoginAt: timestamp('first_login_at', { withTimezone: true }),
   status: varchar('status', { length: 20 }).default('active'),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
   index('idx_users_email').on(table.email),
+  index('idx_users_company_id').on(table.companyId),
+  index('idx_users_invite_token').on(table.inviteToken),
 ])
 
 export const usersRelations = relations(users, ({ one, many }) => ({

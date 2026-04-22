@@ -48,4 +48,8 @@ export const MIGRATIONS: Migration[] = [
     name: '007_blog_categories.sql',
     description: 'Neue Tabelle blog_categories für verwaltbare Blog-Kategorien',
   },
+  {
+    name: '008_portal_users.sql',
+    description: 'users.companyId + Invite-Flow Felder + Rolle portal_user',
+  },
 ]

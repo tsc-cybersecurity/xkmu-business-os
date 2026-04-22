@@ -281,6 +281,15 @@ CREATE TABLE IF NOT EXISTS blog_categories (
 CREATE INDEX IF NOT EXISTS idx_blog_categories_slug ON blog_categories(slug);
 CREATE INDEX IF NOT EXISTS idx_blog_categories_active ON blog_categories(is_active);
 
+-- users: Portal-User-Felder
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS invite_token VARCHAR(64),
+  ADD COLUMN IF NOT EXISTS invite_token_expires_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS first_login_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_users_company_id ON users(company_id);
+CREATE INDEX IF NOT EXISTS idx_users_invite_token ON users(invite_token);
+
 -- Execution Logs
 CREATE TABLE IF NOT EXISTS execution_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
