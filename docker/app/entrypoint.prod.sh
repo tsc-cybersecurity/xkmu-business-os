@@ -263,6 +263,9 @@ CREATE TABLE IF NOT EXISTS custom_ai_prompts (
 CREATE INDEX IF NOT EXISTS idx_custom_ai_prompts_active ON custom_ai_prompts(is_active);
 CREATE INDEX IF NOT EXISTS idx_custom_ai_prompts_category ON custom_ai_prompts(category);
 
+-- email_accounts.signature (HTML-Signatur je Account)
+ALTER TABLE email_accounts ADD COLUMN IF NOT EXISTS signature TEXT;
+
 -- Execution Logs
 CREATE TABLE IF NOT EXISTS execution_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

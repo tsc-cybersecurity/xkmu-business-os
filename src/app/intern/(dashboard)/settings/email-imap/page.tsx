@@ -11,6 +11,7 @@ import { Dialog,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
@@ -44,6 +45,7 @@ interface EmailAccount {
   syncEnabled: boolean
   syncIntervalMinutes: number
   syncFolders: string
+  signature: string | null
   lastSyncAt: string | null
   syncStatus: string | null
   createdAt: string
@@ -65,6 +67,7 @@ interface FormData {
   syncEnabled: boolean
   syncIntervalMinutes: number
   syncFolders: string
+  signature: string
 }
 
 const defaultForm: FormData = {
@@ -83,6 +86,7 @@ const defaultForm: FormData = {
   syncEnabled: true,
   syncIntervalMinutes: 5,
   syncFolders: 'INBOX',
+  signature: '',
 }
 
 export default function EmailImapPage() {
@@ -100,7 +104,13 @@ export default function EmailImapPage() {
       const response = await fetch('/api/v1/email-accounts')
       const data = await response.json()
       if (data.success) {
-        setAccounts(data.data)
+        // API returns DB column names (syncInterval, syncFolder) — UI expects plural
+        const mapped = (data.data as Array<Record<string, unknown>>).map(a => ({
+          ...a,
+          syncIntervalMinutes: a.syncIntervalMinutes ?? a.syncInterval ?? 5,
+          syncFolders: a.syncFolders ?? a.syncFolder ?? 'INBOX',
+        })) as EmailAccount[]
+        setAccounts(mapped)
       }
     } catch (error) {
       logger.error('Failed to fetch email accounts', error, { module: 'SettingsEmailImapPage' })
@@ -140,6 +150,7 @@ export default function EmailImapPage() {
       syncEnabled: account.syncEnabled,
       syncIntervalMinutes: account.syncIntervalMinutes,
       syncFolders: account.syncFolders,
+      signature: account.signature || '',
     })
     setEditingId(account.id)
     setShowDialog(true)
@@ -158,7 +169,13 @@ export default function EmailImapPage() {
         : '/api/v1/email-accounts'
       const method = editingId ? 'PUT' : 'POST'
 
-      const payload: Record<string, unknown> = { ...formData }
+      // Map UI field names to API field names (DB columns are syncInterval / syncFolder, not plural)
+      const { syncIntervalMinutes, syncFolders, ...rest } = formData
+      const payload: Record<string, unknown> = {
+        ...rest,
+        syncInterval: syncIntervalMinutes,
+        syncFolder: syncFolders,
+      }
       if (editingId && !formData.imapPassword) delete payload.imapPassword
       if (editingId && !formData.smtpPassword) delete payload.smtpPassword
 
@@ -576,6 +593,22 @@ export default function EmailImapPage() {
                     onChange={(e) => updateField('syncFolders', e.target.value)}
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Signatur */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Signatur</h3>
+              <div className="space-y-2">
+                <Label htmlFor="signature">HTML-Signatur (wird an jede versandte E-Mail unten angehängt)</Label>
+                <Textarea
+                  id="signature"
+                  rows={6}
+                  className="font-mono text-sm"
+                  placeholder={`<p>Mit freundlichen Grüßen</p>\n<p><strong>Max Mustermann</strong><br>xKMU digital solutions<br>Tel. +49 ...<br><a href="https://xkmu-digitalsolutions.de">xkmu-digitalsolutions.de</a></p>`}
+                  value={formData.signature}
+                  onChange={(e) => updateField('signature', e.target.value)}
+                />
               </div>
             </div>
           </div>

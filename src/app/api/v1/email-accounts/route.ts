@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
           syncEnabled: body.syncEnabled ?? true,
           syncInterval: body.syncInterval ?? 5,
           syncFolder: body.syncFolder ?? 'INBOX',
+          signature: body.signature ?? null,
           createdBy: auth.userId ?? null,
         })
         .returning()

@@ -2462,6 +2462,8 @@ export const emailAccounts = pgTable('email_accounts', {
   smtpUser: varchar('smtp_user', { length: 255 }),
   smtpPassword: text('smtp_password'),
   smtpTls: boolean('smtp_tls').default(true),
+  // Signatur (HTML) — wird bei jedem Versand unten an den Body angehaengt
+  signature: text('signature'),
   // Sync
   isActive: boolean('is_active').default(true),
   syncEnabled: boolean('sync_enabled').default(true),

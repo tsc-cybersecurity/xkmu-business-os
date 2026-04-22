@@ -175,14 +175,21 @@ export const EmailService = {
     const account = await this.getDefaultAccount()
     if (account) {
       const { EmailSmtpService } = await import('./email-smtp.service')
-      const html = input.html || input.body.replace(/\n/g, '<br>')
+      let html = input.html || input.body.replace(/\n/g, '<br>')
+      let bodyText = input.body
+      // Append per-account signature
+      if (account.signature && account.signature.trim()) {
+        html = `${html}\n<br><br>\n${account.signature}`
+        const sigText = account.signature.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+        if (sigText) bodyText = `${bodyText}\n\n${sigText}`
+      }
       const result = await EmailSmtpService.send({
         accountId: account.id,
         to: [input.to],
         cc: input.cc ? [input.cc] : undefined,
         subject: input.subject,
         bodyHtml: html,
-        bodyText: input.body,
+        bodyText,
       })
 
       if (result.success) {

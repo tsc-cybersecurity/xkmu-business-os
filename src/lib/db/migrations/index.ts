@@ -40,4 +40,8 @@ export const MIGRATIONS: Migration[] = [
     name: '005_custom_ai_prompts.sql',
     description: 'Neue Tabelle custom_ai_prompts für user-defined KI-Prompts',
   },
+  {
+    name: '006_email_account_signature.sql',
+    description: 'email_accounts.signature — HTML-Signatur pro Account',
+  },
 ]

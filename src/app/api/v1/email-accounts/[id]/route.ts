@@ -55,6 +55,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         'name', 'email', 'imapHost', 'imapPort', 'imapUser', 'imapTls',
         'smtpHost', 'smtpPort', 'smtpUser', 'smtpTls',
         'syncEnabled', 'syncInterval', 'syncFolder', 'isActive',
+        'signature',
       ]
 
       for (const field of allowedFields) {
