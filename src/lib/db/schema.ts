@@ -150,6 +150,8 @@ export const users = pgTable('users', {
   lastName: varchar('last_name', { length: 100 }),
   role: varchar('role', { length: 50 }).default('member'),
   roleId: uuid('role_id').references(() => roles.id, { onDelete: 'set null' }),
+  // AnyPgColumn thunk required: users is declared before companies, and
+  // companies.createdBy → users creates a circular type inference.
   companyId: uuid('company_id').references((): AnyPgColumn => companies.id, { onDelete: 'set null' }),
   inviteToken: varchar('invite_token', { length: 64 }),
   inviteTokenExpiresAt: timestamp('invite_token_expires_at', { withTimezone: true }),
@@ -168,6 +170,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   userRole: one(roles, {
     fields: [users.roleId],
     references: [roles.id],
+  }),
+  company: one(companies, {
+    fields: [users.companyId],
+    references: [companies.id],
   }),
   createdCompanies: many(companies),
   createdPersons: many(persons),
