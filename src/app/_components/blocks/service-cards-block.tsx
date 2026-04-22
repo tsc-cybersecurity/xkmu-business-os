@@ -60,8 +60,8 @@ export function ServiceCardsBlock({ content, settings }: ServiceCardsBlockProps)
               {/* Header with badge */}
               <div className="flex items-start gap-4 mb-4">
                 {item.badge && (
-                  <div className="shrink-0 h-12 w-12 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 flex items-center justify-center">
-                    <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{item.badge}</span>
+                  <div className="shrink-0 h-12 w-12 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
+                    <span className="text-sm font-bold text-white">{item.badge}</span>
                   </div>
                 )}
                 <div className="min-w-0">
