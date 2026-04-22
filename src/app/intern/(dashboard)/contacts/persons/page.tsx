@@ -13,7 +13,8 @@ import { Table,
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Search, Users } from 'lucide-react'
+import { Plus, Search, Users, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 
 interface Person {
@@ -59,6 +60,24 @@ export default function PersonsPage() {
       logger.error('Failed to fetch persons', error, { module: 'ContactsPersonsPage' })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDelete = async (person: Person) => {
+    const label = `${person.firstName} ${person.lastName}`.trim() || 'diese Person'
+    if (!confirm(`"${label}" wirklich löschen?`)) return
+    try {
+      const res = await fetch(`/api/v1/persons/${person.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data?.success) {
+        toast.success('Person gelöscht')
+        setPersons(prev => prev.filter(p => p.id !== person.id))
+      } else {
+        toast.error(data?.error?.message || 'Löschen fehlgeschlagen')
+      }
+    } catch (error) {
+      logger.error('Failed to delete person', error, { module: 'ContactsPersonsPage' })
+      toast.error('Löschen fehlgeschlagen')
     }
   }
 
@@ -123,6 +142,7 @@ export default function PersonsPage() {
                   <TableHead>Position</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Tags</TableHead>
+                  <TableHead className="w-24 text-right">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -167,6 +187,24 @@ export default function PersonsPage() {
                             +{person.tags.length - 3}
                           </Badge>
                         )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8" title="Bearbeiten">
+                          <Link href={`/intern/contacts/persons/${person.id}/edit`}>
+                            <Pencil className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                          title="Löschen"
+                          onClick={() => handleDelete(person)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>

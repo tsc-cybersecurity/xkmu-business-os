@@ -19,7 +19,8 @@ import { Select,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Search, Package } from 'lucide-react'
+import { Plus, Search, Package, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 
 interface Category {
@@ -124,6 +125,23 @@ export default function ProductsPage() {
     }
   }
 
+  const handleDelete = async (product: Product) => {
+    if (!confirm(`Produkt "${product.name}" wirklich löschen?`)) return
+    try {
+      const res = await fetch(`/api/v1/products/${product.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data?.success) {
+        toast.success('Produkt gelöscht')
+        setProducts(prev => prev.filter(p => p.id !== product.id))
+      } else {
+        toast.error(data?.error?.message || 'Löschen fehlgeschlagen')
+      }
+    } catch (error) {
+      logger.error('Failed to delete product', error, { module: 'CatalogProductsPage' })
+      toast.error('Löschen fehlgeschlagen')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -213,6 +231,7 @@ export default function ProductsPage() {
                     <TableHead>Einheit</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Tags</TableHead>
+                    <TableHead className="w-24 text-right">Aktionen</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -260,6 +279,24 @@ export default function ProductsPage() {
                               +{product.tags.length - 2}
                             </Badge>
                           )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button asChild variant="ghost" size="icon" className="h-8 w-8" title="Bearbeiten">
+                            <Link href={`/intern/catalog/products/${product.id}`}>
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            title="Löschen"
+                            onClick={() => handleDelete(product)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
