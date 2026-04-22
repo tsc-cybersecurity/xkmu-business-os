@@ -86,23 +86,26 @@ export function CtaBlock({ content, settings }: CtaBlockProps) {
           )}
 
           {content.buttons && content.buttons.length > 0 && (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              {content.buttons.map((btn, i) => (
-                <Link key={i} href={btn.href}>
-                  <Button
-                    size="lg"
-                    variant={btn.variant === 'outline' ? 'outline' : 'secondary'}
-                    className={
-                      btn.variant === 'outline'
-                        ? `text-lg px-8 ${style.btnOutline}`
-                        : 'text-lg px-8'
-                    }
-                  >
-                    {btn.label}
-                    {i === 0 && <ArrowRight className="ml-2 h-5 w-5" />}
-                  </Button>
-                </Link>
-              ))}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 w-full max-w-md mx-auto sm:max-w-none sm:w-auto">
+              {content.buttons.map((btn, i) => {
+                const baseBtn = 'text-base md:text-lg px-6 md:px-8 w-full sm:w-auto !whitespace-normal break-words h-auto min-h-11 py-2.5 leading-snug max-w-full'
+                return (
+                  <Link key={i} href={btn.href} className="w-full sm:w-auto">
+                    <Button
+                      size="lg"
+                      variant={btn.variant === 'outline' ? 'outline' : 'secondary'}
+                      className={
+                        btn.variant === 'outline'
+                          ? `${baseBtn} ${style.btnOutline}`
+                          : baseBtn
+                      }
+                    >
+                      <span className="text-center block break-words">{btn.label}</span>
+                      {i === 0 && <ArrowRight className="ml-2 h-5 w-5 shrink-0" />}
+                    </Button>
+                  </Link>
+                )
+              })}
             </div>
           )}
 
