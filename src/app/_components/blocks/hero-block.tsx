@@ -83,9 +83,9 @@ export function HeroBlock({ content, settings }: HeroBlockProps) {
                   <Button
                     size="lg"
                     variant={btn.variant === 'outline' ? 'outline' : 'default'}
-                    className="text-base md:text-lg px-6 md:px-8 w-full sm:w-auto whitespace-normal h-auto min-h-11 py-2.5 leading-snug"
+                    className="text-base md:text-lg px-6 md:px-8 w-full sm:w-auto !whitespace-normal break-words h-auto min-h-11 py-2.5 leading-snug max-w-full"
                   >
-                    <span className="text-center">{btn.label}</span>
+                    <span className="text-center block break-words">{btn.label}</span>
                     {i === 0 && <ArrowRight className="ml-2 h-5 w-5 shrink-0" />}
                   </Button>
                 </Link>
