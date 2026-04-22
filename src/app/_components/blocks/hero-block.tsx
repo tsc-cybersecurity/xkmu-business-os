@@ -77,16 +77,16 @@ export function HeroBlock({ content, settings }: HeroBlockProps) {
           )}
 
           {content.buttons && content.buttons.length > 0 && (
-            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+            <div className="flex flex-col sm:flex-row gap-4 mt-8 w-full max-w-md sm:max-w-none sm:w-auto">
               {content.buttons.map((btn, i) => (
-                <Link key={i} href={btn.href}>
+                <Link key={i} href={btn.href} className="w-full sm:w-auto">
                   <Button
                     size="lg"
                     variant={btn.variant === 'outline' ? 'outline' : 'default'}
-                    className="text-lg px-8"
+                    className="text-base md:text-lg px-6 md:px-8 w-full sm:w-auto whitespace-normal h-auto min-h-11 py-2.5 leading-snug"
                   >
-                    {btn.label}
-                    {i === 0 && <ArrowRight className="ml-2 h-5 w-5" />}
+                    <span className="text-center">{btn.label}</span>
+                    {i === 0 && <ArrowRight className="ml-2 h-5 w-5 shrink-0" />}
                   </Button>
                 </Link>
               ))}
