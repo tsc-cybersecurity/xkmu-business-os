@@ -8,6 +8,7 @@ export interface SessionUser {
   lastName: string | null
   role: UserRole
   roleId: string | null
+  companyId?: string | null   // set for portal_user, null/undefined otherwise
 }
 
 export interface Session {
