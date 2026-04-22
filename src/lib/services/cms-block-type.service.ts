@@ -324,6 +324,30 @@ const BLOCK_TYPE_DEFAULTS: Array<Omit<NewCmsBlockTypeDefinition, 'id' | 'created
     isActive: true,
     sortOrder: 23,
   },
+  {
+    slug: 'wheel',
+    name: 'Radial-Wheel',
+    description: 'Radiales Rad mit 2–8 anklickbaren Segmenten, animiertem Zeiger und Hub-Detail',
+    icon: 'Target',
+    category: 'content',
+    fields: ['sectionLabel', 'heading', 'subheading', 'segments'],
+    defaultContent: {
+      sectionLabel: 'Sechs Kernbereiche',
+      heading: 'Drehe das Rad.',
+      subheading: 'Jeder Bereich ist ein Segment. Klicke, um den Zeiger zu drehen.',
+      segments: [
+        { label: 'Reasoning', icon: 'Bot', title: 'Logisches Denken', description: 'Kurzbeschreibung des Segments.', metric: '89.2', metricLabel: 'Bench (MMLU)' },
+        { label: 'Vision', icon: 'Eye', title: 'Bilder verstehen', description: 'Kurzbeschreibung des Segments.', metric: '82.1', metricLabel: 'Bench (VQA)' },
+        { label: 'Code', icon: 'Code2', title: 'Code generieren', description: 'Kurzbeschreibung des Segments.', metric: '78.4', metricLabel: 'Bench (HumanEval)' },
+        { label: 'Audio', icon: 'Volume2', title: 'Audio verarbeiten', description: 'Kurzbeschreibung des Segments.', metric: '71.0', metricLabel: 'Bench (ASR)' },
+        { label: 'Memory', icon: 'Database', title: 'Langzeitgedächtnis', description: 'Kurzbeschreibung des Segments.', metric: '64.3', metricLabel: 'Bench (Recall)' },
+        { label: 'Tools', icon: 'Wrench', title: 'Werkzeuge nutzen', description: 'Kurzbeschreibung des Segments.', metric: '55.8', metricLabel: 'Bench (Tool-Use)' },
+      ],
+    },
+    defaultSettings: {},
+    isActive: true,
+    sortOrder: 24,
+  },
 ]
 
 export const CmsBlockTypeService = {

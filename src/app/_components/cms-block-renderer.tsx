@@ -24,7 +24,9 @@ import { ServiceCardsBlock } from './blocks/service-cards-block'
 import { BlogListingBlock } from './blocks/blog-listing-block'
 import { ContactFormBlock } from './blocks/contact-form-block'
 import { ColumnsBlock } from './blocks/columns-block'
+import { WheelBlock } from './blocks/wheel-block'
 import type { HeroBlockContent } from './blocks/hero-block'
+import type { WheelBlockContent } from './blocks/wheel-block'
 import type { BannerBlockContent } from './blocks/banner-block'
 import type { BlogListingBlockContent } from './blocks/blog-listing-block'
 import type { ContactFormBlockContent } from './blocks/contact-form-block'
@@ -131,6 +133,8 @@ export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRende
       return <ContactFormBlock content={content as ContactFormBlockContent} settings={settings} />
     case 'columns':
       return <ColumnsBlock content={content as ColumnsBlockContent} settings={settings} />
+    case 'wheel':
+      return <WheelBlock content={content as WheelBlockContent} settings={settings} />
     default:
       return (
         <div className="container mx-auto px-4 py-8">
