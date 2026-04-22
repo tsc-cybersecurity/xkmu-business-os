@@ -167,6 +167,12 @@ export const CronService = {
           msg = `${method} ${url} → ${res.status}`
           break
         }
+        case 'process_queue': {
+          const { TaskQueueService } = await import('./task-queue.service')
+          const result = await TaskQueueService.executeAllPending()
+          msg = `Queue processed: ${result.completed} completed, ${result.failed} failed`
+          break
+        }
         default:
           msg = `Unknown action type: ${job.actionType}`
       }

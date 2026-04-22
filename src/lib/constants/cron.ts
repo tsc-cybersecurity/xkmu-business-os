@@ -10,5 +10,6 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'email_sync', label: 'E-Mail Sync (alle Accounts)' },
   { value: 'workflow', label: 'Workflow auslösen' },
   { value: 'api_call', label: 'API-Endpoint aufrufen' },
+  { value: 'process_queue', label: 'Task-Queue abarbeiten (ausstehende Tasks)' },
   { value: 'custom', label: 'Benutzerdefiniert' },
 ]
