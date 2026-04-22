@@ -127,12 +127,22 @@ Antworte NUR als JSON:
 }`
 
     const response = await AIService.completeWithContext(prompt, context, {
-      maxTokens: 4000,
+      maxTokens: 8000,
       temperature: 0.7,
       systemPrompt: `Du bist ein professioneller IT-Fachautor. Schreibe ${tone} auf ${lang}. Antworte NUR als valides JSON ohne Markdown-Code-Bloecke.`,
     })
 
-    const parsed = this.parseGeneratedPost(response.text)
+    let parsed: GeneratedPost
+    try {
+      parsed = this.parseGeneratedPost(response.text)
+    } catch (err) {
+      // Log the raw response length and a preview so we can diagnose truncation vs. format issues
+      const snippet = response.text.length > 500
+        ? `${response.text.substring(0, 250)}...${response.text.substring(response.text.length - 250)}`
+        : response.text
+      logger.error(`Blog parse failed (${response.text.length} chars). Snippet: ${snippet}`, err, { module: 'BlogAIService' })
+      throw err
+    }
     // Ensure slug is URL-safe
     parsed.slug = parsed.slug
       .toLowerCase()
