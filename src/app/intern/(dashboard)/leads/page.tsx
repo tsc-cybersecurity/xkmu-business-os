@@ -19,7 +19,8 @@ import { Select,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Plus, Search, TrendingUp, Filter } from 'lucide-react'
+import { Plus, Search, TrendingUp, Filter, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 
 interface Lead {
@@ -129,6 +130,24 @@ export default function LeadsPage() {
     return 'text-red-600'
   }
 
+  const handleDelete = async (lead: Lead) => {
+    const name = lead.title || lead.company?.name || lead.contactCompany || 'diesen Lead'
+    if (!confirm(`"${name}" wirklich löschen?`)) return
+    try {
+      const res = await fetch(`/api/v1/leads/${lead.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data?.success) {
+        toast.success('Lead gelöscht')
+        setLeads(prev => prev.filter(l => l.id !== lead.id))
+      } else {
+        toast.error(data?.error?.message || 'Löschen fehlgeschlagen')
+      }
+    } catch (error) {
+      logger.error('Failed to delete lead', error, { module: 'LeadsPage' })
+      toast.error('Löschen fehlgeschlagen')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -221,6 +240,7 @@ export default function LeadsPage() {
                   <TableHead>KI-Status</TableHead>
                   <TableHead>Zugewiesen</TableHead>
                   <TableHead>Erstellt</TableHead>
+                  <TableHead className="w-24 text-right">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -276,6 +296,24 @@ export default function LeadsPage() {
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(lead.createdAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8" title="Bearbeiten">
+                          <Link href={`/intern/leads/${lead.id}?edit=1`}>
+                            <Pencil className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                          title="Löschen"
+                          onClick={() => handleDelete(lead)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

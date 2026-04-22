@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { ConfirmDialog } from '@/components/shared'
 import { toast } from 'sonner'
 import { Brain } from 'lucide-react'
@@ -59,8 +59,10 @@ interface Person {
 export default function LeadDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { openChat } = useChatContext()
   const leadId = params.id as string
+  const autoEdit = searchParams.get('edit') === '1'
 
   const [lead, setLead] = useState<Lead | null>(null)
   const [users, setUsers] = useState<UserData[]>([])
@@ -191,6 +193,14 @@ export default function LeadDetailPage() {
       setEditing(true)
     }
   }
+
+  // Auto-start editing when navigated with ?edit=1
+  useEffect(() => {
+    if (autoEdit && lead && !editing) {
+      startEditing()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoEdit, lead])
 
   const cancelEditing = () => {
     setEditing(false)
