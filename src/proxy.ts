@@ -26,6 +26,7 @@ const PUBLIC_PATHS = [
   '/api/v1/public',
   '/api/v1/media/serve',
   '/api/health',
+  '/portal/accept-invite',
 ]
 
 const CSRF_COOKIE = 'csrf_token'
@@ -64,13 +65,21 @@ function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(secret)
 }
 
-async function verifySession(token: string): Promise<boolean> {
+interface SessionInfo {
+  role: string
+  companyId: string | null
+}
+
+async function verifySession(token: string): Promise<SessionInfo | null> {
   try {
     const { payload } = await jwtVerify(token, getJwtSecret())
-    const expiresAt = payload.expiresAt as string
-    return new Date(expiresAt) > new Date()
+    const expiresAt = payload.expiresAt as string | undefined
+    if (!expiresAt || new Date(expiresAt) <= new Date()) return null
+    const user = payload.user as { role?: string; companyId?: string | null } | undefined
+    if (!user?.role) return null
+    return { role: user.role, companyId: user.companyId ?? null }
   } catch {
-    return false
+    return null
   }
 }
 
@@ -120,9 +129,35 @@ export async function proxy(request: NextRequest) {
     return new NextResponse(null, { status: 204, headers: preflightHeaders })
   }
 
-  // All non-intern, non-api paths are public (CMS pages, blog, etc.)
-  if (!pathname.startsWith('/intern') && !pathname.startsWith('/api/')) {
+  // All non-intern, non-api, non-portal paths are public (CMS pages, blog, etc.)
+  if (
+    !pathname.startsWith('/intern') &&
+    !pathname.startsWith('/api/') &&
+    !pathname.startsWith('/portal')
+  ) {
     return NextResponse.next()
+  }
+
+  // Portal gate: /portal requires session with role=portal_user + companyId
+  if (pathname.startsWith('/portal')) {
+    const sessionToken = request.cookies.get('xkmu_session')?.value
+    if (!sessionToken) {
+      const loginUrl = new URL('/intern/login', request.url)
+      loginUrl.searchParams.set('next', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+    const sessionInfo = await verifySession(sessionToken)
+    if (!sessionInfo) {
+      const loginUrl = new URL('/intern/login', request.url)
+      loginUrl.searchParams.set('next', pathname)
+      const response = NextResponse.redirect(loginUrl)
+      response.cookies.delete('xkmu_session')
+      return response
+    }
+    if (sessionInfo.role !== 'portal_user' || !sessionInfo.companyId) {
+      return new NextResponse('Forbidden', { status: 403 })
+    }
+    return NextResponse.next({ request: { headers: requestHeaders } })
   }
 
   // Check for API key on API routes
@@ -151,9 +186,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const isValidSession = await verifySession(sessionToken)
+  const sessionInfo = await verifySession(sessionToken)
 
-  if (!isValidSession) {
+  if (!sessionInfo) {
     // Clear invalid session
     const response = pathname.startsWith('/api/')
       ? NextResponse.json({ error: 'Session expired' }, { status: 401 })
@@ -161,6 +196,11 @@ export async function proxy(request: NextRequest) {
 
     response.cookies.delete('xkmu_session')
     return response
+  }
+
+  // Block portal users from accessing the internal dashboard
+  if (pathname.startsWith('/intern') && sessionInfo.role === 'portal_user') {
+    return new NextResponse('Forbidden', { status: 403 })
   }
 
   const response = NextResponse.next({

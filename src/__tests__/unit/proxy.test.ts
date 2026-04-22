@@ -94,7 +94,7 @@ describe('proxy() — CSRF Double-Submit Cookie', () => {
 
   it('POST with matching CSRF cookie+header passes through', async () => {
     jwtVerifyMock.mockResolvedValueOnce({
-      payload: { expiresAt: new Date(Date.now() + 3600000).toISOString() },
+      payload: { expiresAt: new Date(Date.now() + 3600000).toISOString(), user: { role: 'admin' } },
     })
 
     const csrfToken = 'abc123def456'
@@ -130,7 +130,7 @@ describe('proxy() — CSRF Double-Submit Cookie', () => {
 
   it('GET request is not blocked by CSRF', async () => {
     jwtVerifyMock.mockResolvedValueOnce({
-      payload: { expiresAt: new Date(Date.now() + 3600000).toISOString() },
+      payload: { expiresAt: new Date(Date.now() + 3600000).toISOString(), user: { role: 'admin' } },
     })
 
     const req = makeNextRequest({
