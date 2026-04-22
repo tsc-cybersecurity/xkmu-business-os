@@ -32,8 +32,10 @@ export async function POST(request: NextRequest) {
     // Create session
     await createSession(result.user)
 
+    const redirectTo = result.user.role === 'portal_user' ? '/portal' : '/intern/dashboard'
     return apiSuccess({
       user: result.user,
+      redirectTo,
     })
   } catch (error) {
     logger.error('Login failed', error, { module: 'AuthLogin' })

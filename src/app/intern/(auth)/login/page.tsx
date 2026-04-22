@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -37,7 +38,15 @@ export default function LoginPage() {
         return
       }
 
-      router.push('/intern/dashboard')
+      const redirectTo = data.data?.redirectTo || '/intern/dashboard'
+      const next = searchParams.get('next')
+
+      // Only honor ?next= if it matches the role's domain
+      const isCompatible =
+        (redirectTo === '/portal' && next?.startsWith('/portal')) ||
+        (redirectTo.startsWith('/intern') && next?.startsWith('/intern'))
+
+      router.push(isCompatible && next ? next : redirectTo)
       router.refresh()
     } catch {
       setError('Ein Fehler ist aufgetreten')
