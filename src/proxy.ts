@@ -20,6 +20,7 @@ const PUBLIC_PATHS = [
   '/it-news',
   '/intern/login',
   '/intern/register',
+  '/api/v1/auth/accept-invite',
   '/api/v1/auth/login',
   '/api/v1/auth/register',
   '/api/v1/contact',
