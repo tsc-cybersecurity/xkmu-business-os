@@ -112,6 +112,30 @@ export const EmailTemplateService = {
 
 const DEFAULT_EMAIL_TEMPLATES = [
   {
+    slug: 'lead_admin_notification',
+    name: 'Admin-Benachrichtigung: Neuer Lead',
+    subject: 'Neuer Lead: {{name}}{{#if firma}} ({{firma}}){{/if}}',
+    bodyHtml: `<p>Ein neuer Lead ist eingegangen.</p>
+<ul>
+  <li><strong>Name:</strong> {{name}}</li>
+  <li><strong>Firma:</strong> {{firma}}</li>
+  <li><strong>E-Mail:</strong> {{email}}</li>
+  <li><strong>Telefon:</strong> {{telefon}}</li>
+  <li><strong>Interessen:</strong> {{interessen}}</li>
+</ul>
+<p><strong>Nachricht:</strong><br>{{nachricht}}</p>
+<p><a href="{{leadUrl}}">Lead im CRM öffnen</a></p>`,
+    placeholders: [
+      { key: 'name', label: 'Name', description: 'Name des Leads' },
+      { key: 'firma', label: 'Firma', description: 'Firma des Leads' },
+      { key: 'email', label: 'E-Mail', description: 'E-Mail des Leads' },
+      { key: 'telefon', label: 'Telefon', description: 'Telefonnummer des Leads' },
+      { key: 'interessen', label: 'Interessen', description: 'Ausgewählte Interessen' },
+      { key: 'nachricht', label: 'Nachricht', description: 'Freitext-Nachricht' },
+      { key: 'leadUrl', label: 'Lead-URL', description: 'Pfad zum Lead im CRM' },
+    ],
+  },
+  {
     slug: 'lead_first_response',
     name: 'Erstantwort auf Anfrage',
     subject: 'Vielen Dank fuer Ihre Anfrage, {{name}}!',

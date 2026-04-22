@@ -104,13 +104,48 @@ export const EmailService = {
   },
 
   /**
+   * Resolve the special "__ADMIN__" recipient to a real address.
+   * Preference order:
+   *   1. First active admin user's email (users table, role with admin slug)
+   *   2. ADMIN_EMAIL env var
+   *   3. SEED_ADMIN_EMAIL env var
+   *   4. The default email_account's own address (we send to ourselves)
+   */
+  async resolveAdminRecipient(): Promise<string | null> {
+    try {
+      const { users } = await import('@/lib/db/schema')
+      const [row] = await db
+        .select({ email: users.email })
+        .from(users)
+        .where(and(eq(users.status, 'active'), eq(users.role, 'admin')))
+        .limit(1)
+      if (row?.email) return row.email
+    } catch {
+      // fall through
+    }
+    if (process.env.ADMIN_EMAIL) return process.env.ADMIN_EMAIL
+    if (process.env.SEED_ADMIN_EMAIL) return process.env.SEED_ADMIN_EMAIL
+    const account = await this.getDefaultAccount()
+    return account?.email ?? null
+  },
+
+  /**
    * Send email.
    * Primary path: use a configured email_account (SMTP settings from DB).
    * Fallback: env-based nodemailer (legacy EMAIL_USER/EMAIL_PASSWORD).
+   * Special recipient "__ADMIN__" is resolved to the admin user's email.
    */
   async send(input: SendEmailInput,
     userId?: string | null
   ): Promise<SendEmailResult> {
+    // Resolve __ADMIN__ sentinel
+    if (input.to === '__ADMIN__') {
+      const resolved = await this.resolveAdminRecipient()
+      if (!resolved) {
+        return { success: false, error: 'Kein Admin-Empfänger auflösbar (kein aktiver Admin-User, ADMIN_EMAIL nicht gesetzt)' }
+      }
+      input = { ...input, to: resolved }
+    }
     // Primary: DB-backed account via EmailSmtpService (multi-account, encrypted creds, logs to emails table)
     const account = await this.getDefaultAccount()
     if (account) {
