@@ -79,26 +79,9 @@ export const LeadService = {
     // Auto-Score: KI-basierte Qualifizierung im Hintergrund (non-blocking)
     this.autoScore(lead.id).catch(() => {})
 
-    // Erstantwort-E-Mail in Task-Queue wenn E-Mail vorhanden
-    if (lead.contactEmail) {
-      import('@/lib/services/task-queue.service').then(({ TaskQueueService }) => {
-        TaskQueueService.create({
-          type: 'email',
-          priority: 1,
-          payload: {
-            templateSlug: 'lead_first_response',
-            to: lead.contactEmail,
-            placeholders: {
-              name: [lead.contactFirstName, lead.contactLastName].filter(Boolean).join(' ') || 'Interessent',
-              firma: lead.contactCompany || '',
-            },
-            leadId: lead.id,
-          },
-          referenceType: 'lead',
-          referenceId: lead.id,
-        }).catch(() => {})
-      }).catch(() => {})
-    }
+    // Note: Erstantwort-Mail wird jetzt ausschließlich über den Workflow
+    // (send_email-Step im "Lead Kontaktformular"-Workflow) versendet.
+    // Früher wurde sie hier zusätzlich in die Queue eingetragen → doppelte Mails.
 
     return lead
   },
