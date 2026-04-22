@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq, and, ilike, count } from 'drizzle-orm'
@@ -5,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import type { User, NewUser } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
 import type { SessionUser, AuthResult } from '@/lib/types/auth.types'
+import { logger } from '@/lib/utils/logger'
 
 export interface UserFilters {
   role?: string
@@ -31,7 +33,27 @@ export interface UpdateUserInput {
   status?: string
 }
 
+export interface CreatePortalUserInput {
+  companyId: string
+  firstName: string
+  lastName: string
+  email: string
+  method: 'password' | 'invite'
+  password?: string  // required when method === 'password'
+}
+
 const SALT_ROUNDS = 10
+const INVITE_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
+const MIN_PASSWORD_LENGTH = 10
+
+function generateInviteToken(): string {
+  return crypto.randomBytes(32).toString('hex')
+}
+
+async function generateDummyPasswordHash(): Promise<string> {
+  const random = crypto.randomBytes(24).toString('hex')
+  return bcrypt.hash(random, SALT_ROUNDS)
+}
 
 export const UserService = {
   async create(data: CreateUserInput): Promise<User> {
@@ -239,5 +261,98 @@ export const UserService = {
     if (results.length === 0) return false
     if (excludeId && results[0].id === excludeId) return false
     return true
+  },
+
+  /**
+   * Create a portal user (role='portal_user') for a given company.
+   * Either with a direct password or via an invite token that must be redeemed via acceptInvite.
+   */
+  async createPortalUser(input: CreatePortalUserInput): Promise<User> {
+    const email = input.email.toLowerCase()
+
+    // Duplicate check: same email + same company + role portal_user
+    const [existing] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(
+        eq(users.email, email),
+        eq(users.companyId, input.companyId),
+        eq(users.role, 'portal_user'),
+      ))
+      .limit(1)
+    if (existing) {
+      throw new Error('Portal-User mit dieser E-Mail ist fuer diese Firma bereits vorhanden')
+    }
+
+    let passwordHash: string
+    let inviteToken: string | null = null
+    let inviteTokenExpiresAt: Date | null = null
+
+    if (input.method === 'password') {
+      if (!input.password || input.password.length < MIN_PASSWORD_LENGTH) {
+        throw new Error(`Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen lang sein`)
+      }
+      passwordHash = await bcrypt.hash(input.password, SALT_ROUNDS)
+    } else {
+      passwordHash = await generateDummyPasswordHash()
+      inviteToken = generateInviteToken()
+      inviteTokenExpiresAt = new Date(Date.now() + INVITE_TOKEN_TTL_MS)
+    }
+
+    const [created] = await db.insert(users).values({
+      email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      role: 'portal_user',
+      status: 'active',
+      companyId: input.companyId,
+      passwordHash,
+      inviteToken,
+      inviteTokenExpiresAt,
+    }).returning()
+
+    logger.info(
+      `Portal user created: ${created.email} (company=${input.companyId}, method=${input.method})`,
+      { module: 'UserService' }
+    )
+    return created
+  },
+
+  /** Regenerate the invite token (e.g. "resend invite"). */
+  async regenerateInviteToken(userId: string): Promise<User | null> {
+    const token = generateInviteToken()
+    const expiresAt = new Date(Date.now() + INVITE_TOKEN_TTL_MS)
+    const [updated] = await db
+      .update(users)
+      .set({ inviteToken: token, inviteTokenExpiresAt: expiresAt, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning()
+    return updated ?? null
+  },
+
+  /** Accept an invite: validate token + expiry, set password, clear token, record firstLoginAt. */
+  async acceptInvite(token: string, newPassword: string): Promise<User> {
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
+      throw new Error(`Passwort muss mindestens ${MIN_PASSWORD_LENGTH} Zeichen lang sein`)
+    }
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.inviteToken, token))
+      .limit(1)
+    if (!user) throw new Error('Ungueltiger Einladungs-Link')
+    if (!user.inviteTokenExpiresAt || user.inviteTokenExpiresAt < new Date()) {
+      throw new Error('Einladungs-Link ist abgelaufen')
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS)
+    const [updated] = await db.update(users).set({
+      passwordHash,
+      inviteToken: null,
+      inviteTokenExpiresAt: null,
+      firstLoginAt: new Date(),
+      updatedAt: new Date(),
+    }).where(eq(users.id, user.id)).returning()
+    return updated
   },
 }
