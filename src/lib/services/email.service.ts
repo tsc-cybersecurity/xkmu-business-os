@@ -112,6 +112,7 @@ export const EmailService = {
    *   4. The default email_account's own address (we send to ourselves)
    */
   async resolveAdminRecipient(): Promise<string | null> {
+    // 1. Direct varchar role
     try {
       const { users } = await import('@/lib/db/schema')
       const [row] = await db
@@ -123,10 +124,34 @@ export const EmailService = {
     } catch {
       // fall through
     }
+    // 2. Role via roleId → roles.name='admin' (case-insensitive)
+    try {
+      const { users, roles } = await import('@/lib/db/schema')
+      const { sql } = await import('drizzle-orm')
+      const [row] = await db
+        .select({ email: users.email })
+        .from(users)
+        .innerJoin(roles, eq(users.roleId, roles.id))
+        .where(and(
+          eq(users.status, 'active'),
+          sql`lower(${roles.name}) IN ('admin', 'administrator')`
+        ))
+        .limit(1)
+      if (row?.email) return row.email
+    } catch {
+      // fall through
+    }
+    // 3. Fallback to env vars
     if (process.env.ADMIN_EMAIL) return process.env.ADMIN_EMAIL
     if (process.env.SEED_ADMIN_EMAIL) return process.env.SEED_ADMIN_EMAIL
+    // 4. Last resort: send to ourselves (default email account)
     const account = await this.getDefaultAccount()
-    return account?.email ?? null
+    if (account?.email) {
+      logger.warn(`__ADMIN__ resolved to sending account ${account.email} (no admin user + no env var)`, { module: 'EmailService' })
+      return account.email
+    }
+    logger.error('__ADMIN__ cannot be resolved: no active admin user, no ADMIN_EMAIL env, no default account', undefined, { module: 'EmailService' })
+    return null
   },
 
   /**
