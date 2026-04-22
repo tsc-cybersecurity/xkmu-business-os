@@ -94,7 +94,7 @@ export function ServiceCardsBlock({ content, settings }: ServiceCardsBlockProps)
                       return (
                         <span
                           key={k}
-                          className="inline-flex items-center whitespace-nowrap rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 px-3 py-1 text-xs font-bold text-white"
+                          className="inline-flex items-center whitespace-nowrap rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 px-3 py-1 text-xs font-light text-white"
                         >
                           {label}
                         </span>
