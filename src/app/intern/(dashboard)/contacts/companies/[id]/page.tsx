@@ -15,6 +15,7 @@ import { CompanyInfoCard } from './_components/company-info-card'
 import { CompanyContactsSection } from './_components/company-contacts-section'
 import { CompanyResearchSection } from './_components/company-research-section'
 import { CompanyActionsGrid } from './_components/company-actions-grid'
+import { PortalUsersTab } from './_components/portal-users-tab'
 
 interface AIResearchData {
   lastResearchedAt?: string
@@ -326,6 +327,7 @@ export default function CompanyDetailPage() {
             <Sparkles className="h-4 w-4 mr-1" />
             KI-Aktionen
           </TabsTrigger>
+          <TabsTrigger value="portal">Portal-Zugänge</TabsTrigger>
           <TabsTrigger value="activity">Aktivitäten</TabsTrigger>
         </TabsList>
 
@@ -364,6 +366,10 @@ export default function CompanyDetailPage() {
 
         <TabsContent value="ai-actions">
           <CompanyActionsGrid companyId={companyId} />
+        </TabsContent>
+
+        <TabsContent value="portal">
+          <PortalUsersTab companyId={companyId} />
         </TabsContent>
 
         <TabsContent value="activity">
