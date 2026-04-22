@@ -136,6 +136,21 @@ const DEFAULT_EMAIL_TEMPLATES = [
     ],
   },
   {
+    slug: 'portal_invite',
+    name: 'Portal: Einladungs-Link',
+    subject: 'Ihr Zugang zum Kundenportal von {{firma}}',
+    bodyHtml: `<p>Hallo {{name}},</p>
+<p>Sie wurden als Zugang zum Kundenportal von <strong>{{firma}}</strong> angelegt. Klicken Sie auf den folgenden Link, um Ihr Passwort festzulegen und den Zugang zu aktivieren. Der Link ist 7 Tage gültig.</p>
+<p><a href="{{inviteUrl}}">Zugang aktivieren</a></p>
+<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+    placeholders: [
+      { key: 'name', label: 'Name', description: 'Name des Portal-Nutzers' },
+      { key: 'firma', label: 'Firma', description: 'Name der Firma' },
+      { key: 'inviteUrl', label: 'Einladungs-Link', description: 'Vollständige URL mit Token' },
+      { key: 'absender', label: 'Absender', description: 'Name des einladenden Admins' },
+    ],
+  },
+  {
     slug: 'lead_first_response',
     name: 'Erstantwort auf Anfrage',
     subject: 'Vielen Dank fuer Ihre Anfrage, {{name}}!',
