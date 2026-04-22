@@ -6,7 +6,7 @@
 import { db } from '@/lib/db'
 import { taskQueue } from '@/lib/db/schema'
 import type { TaskQueueItem, NewTaskQueueItem } from '@/lib/db/schema'
-import { eq, ne, and, asc, desc, count, lte, inArray } from 'drizzle-orm'
+import { eq, ne, and, or, asc, desc, count, lte, isNull, inArray } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 
 export interface TaskQueueFilters {
@@ -208,14 +208,17 @@ export const TaskQueueService = {
   },
 
   async executeAllPending(): Promise<{ completed: number; failed: number }> {
+    // Include tasks with NULL scheduledFor (treated as "ready now").
+    const now = new Date()
     const pending = await db
       .select({ id: taskQueue.id })
       .from(taskQueue)
       .where(and(
         eq(taskQueue.status, 'pending'),
-        lte(taskQueue.scheduledFor, new Date())))
+        or(isNull(taskQueue.scheduledFor), lte(taskQueue.scheduledFor, now))))
       .orderBy(asc(taskQueue.priority), asc(taskQueue.scheduledFor))
 
+    logger.info(`executeAllPending: ${pending.length} due task(s)`, { module: 'TaskQueue' })
     return this.executeBatch(pending.map(p => p.id))
   },
 
