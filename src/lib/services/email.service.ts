@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
-import { activities } from '@/lib/db/schema'
+import { activities, emailAccounts } from '@/lib/db/schema'
+import { and, eq, isNotNull } from 'drizzle-orm'
 import nodemailer from 'nodemailer'
 import { logger } from '@/lib/utils/logger'
 
@@ -89,24 +90,77 @@ export const EmailService = {
   },
 
   /**
-   * Send email
+   * Pick a default SMTP-capable email account from the DB.
+   * Prefers the first active account with smtpHost configured.
+   */
+  async getDefaultAccount() {
+    const [account] = await db
+      .select()
+      .from(emailAccounts)
+      .where(and(eq(emailAccounts.isActive, true), isNotNull(emailAccounts.smtpHost)))
+      .orderBy(emailAccounts.createdAt)
+      .limit(1)
+    return account ?? null
+  },
+
+  /**
+   * Send email.
+   * Primary path: use a configured email_account (SMTP settings from DB).
+   * Fallback: env-based nodemailer (legacy EMAIL_USER/EMAIL_PASSWORD).
    */
   async send(input: SendEmailInput,
     userId?: string | null
   ): Promise<SendEmailResult> {
-    const config = this.getConfig()
+    // Primary: DB-backed account via EmailSmtpService (multi-account, encrypted creds, logs to emails table)
+    const account = await this.getDefaultAccount()
+    if (account) {
+      const { EmailSmtpService } = await import('./email-smtp.service')
+      const html = input.html || input.body.replace(/\n/g, '<br>')
+      const result = await EmailSmtpService.send({
+        accountId: account.id,
+        to: [input.to],
+        cc: input.cc ? [input.cc] : undefined,
+        subject: input.subject,
+        bodyHtml: html,
+        bodyText: input.body,
+      })
 
+      if (result.success) {
+        // Keep CRM activity log in sync (EmailSmtpService only logs to emails table)
+        try {
+          await db.insert(activities).values({
+            leadId: input.leadId || undefined,
+            companyId: input.companyId || undefined,
+            personId: input.personId || undefined,
+            type: 'email',
+            subject: input.subject,
+            content: `An: ${input.to}\n\n${input.body}`,
+            metadata: {
+              messageId: result.messageId,
+              to: input.to,
+              sentVia: 'email_account',
+              accountId: account.id,
+            },
+            userId: userId || undefined,
+          })
+        } catch (logErr) {
+          logger.warn('Failed to log email activity', { module: 'EmailService', err: logErr })
+        }
+      }
+      return result
+    }
+
+    // Fallback: legacy env-based nodemailer
+    const config = this.getConfig()
     if (!config) {
       return {
         success: false,
-        error: 'E-Mail nicht konfiguriert. Bitte EMAIL_USER und EMAIL_PASSWORD in .env setzen.',
+        error: 'E-Mail nicht konfiguriert. Kein aktives E-Mail-Konto mit SMTP gefunden und keine ENV-Credentials gesetzt.',
       }
     }
 
     try {
       const transporter = this.createTransporter(config)
-
-      // Send email
       const info = await transporter.sendMail({
         from: config.user,
         to: input.to,
@@ -121,7 +175,6 @@ export const EmailService = {
         })),
       })
 
-      // Log activity
       await db.insert(activities).values({
         leadId: input.leadId || undefined,
         companyId: input.companyId || undefined,
@@ -137,10 +190,7 @@ export const EmailService = {
         userId: userId || undefined,
       })
 
-      return {
-        success: true,
-        messageId: info.messageId,
-      }
+      return { success: true, messageId: info.messageId }
     } catch (error) {
       logger.error('Email send error', error, { module: 'EmailService' })
       return {
@@ -151,9 +201,11 @@ export const EmailService = {
   },
 
   /**
-   * Check if email is configured
+   * Check if email is configured — either a DB account or env fallback.
    */
-  isConfigured(): boolean {
+  async isConfigured(): Promise<boolean> {
+    const account = await this.getDefaultAccount()
+    if (account) return true
     return this.getConfig() !== null
   },
 

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const { to, subject, body: emailBody, html, leadId, companyId, personId } = parseResult.data
 
     // Check if email is configured
-    if (!EmailService.isConfigured()) {
+    if (!(await EmailService.isConfigured())) {
       return apiError(
         'EMAIL_NOT_CONFIGURED',
         'E-Mail-Versand ist nicht konfiguriert. Bitte verwenden Sie "In Gmail öffnen" oder "Im E-Mail-Client öffnen".',
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
 // GET /api/v1/email/send - Check email configuration status
 export async function GET(request: NextRequest) {
   return withPermission(request, 'activities', 'create', async (auth) => {
-  const isConfigured = EmailService.isConfigured()
+  const isConfigured = await EmailService.isConfigured()
 
   if (isConfigured) {
     const verification = await EmailService.verifyConfig()
