@@ -23,6 +23,8 @@ export interface BlogListingBlockContent {
   showTags?: boolean
   showDate?: boolean
   linkPrefix?: string
+  /** Kategorien filtern — leer/unset = alle anzeigen */
+  categories?: string[]
 }
 
 interface BlogListingBlockProps {
@@ -47,17 +49,21 @@ export function BlogListingBlock({ content, settings }: BlogListingBlockProps) {
 
   const gridClass = cols === 1 ? 'max-w-2xl mx-auto' : cols === 2 ? 'md:grid-cols-2' : cols === 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2 lg:grid-cols-3'
 
+  const categories = content.categories && content.categories.length > 0 ? content.categories : null
+
   useEffect(() => {
     loadPosts(1, true)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [categories?.join(',')])
 
   const loadPosts = async (p: number, reset = false) => {
     if (reset) setLoading(true)
     else setLoadingMore(true)
 
     try {
-      const res = await fetch(`/api/v1/public/blog/posts?page=${p}&limit=${perPage}`)
+      const params = new URLSearchParams({ page: String(p), limit: String(perPage) })
+      if (categories) params.set('categories', categories.join(','))
+      const res = await fetch(`/api/v1/public/blog/posts?${params}`)
       const data = await res.json()
       if (data.success) {
         const items = data.data || []

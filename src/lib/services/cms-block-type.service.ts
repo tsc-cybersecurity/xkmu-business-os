@@ -261,7 +261,7 @@ const BLOCK_TYPE_DEFAULTS: Array<Omit<NewCmsBlockTypeDefinition, 'id' | 'created
     description: 'Dynamische Blog-Beitraege mit konfigurierbarem Layout, Spalten und Mehr-Laden',
     icon: 'Newspaper',
     category: 'content',
-    fields: ['title', 'subtitle', 'columns', 'postsPerPage', 'showLoadMore', 'showCategory', 'showTags', 'showDate', 'linkPrefix'],
+    fields: ['title', 'subtitle', 'columns', 'postsPerPage', 'showLoadMore', 'showCategory', 'showTags', 'showDate', 'linkPrefix', 'categories'],
     defaultContent: {
       title: 'IT-News',
       subtitle: 'Aktuelle Nachrichten und Trends',
@@ -272,6 +272,7 @@ const BLOCK_TYPE_DEFAULTS: Array<Omit<NewCmsBlockTypeDefinition, 'id' | 'created
       showTags: true,
       showDate: true,
       linkPrefix: '/it-news',
+      categories: [],
     },
     defaultSettings: {},
     isActive: true,

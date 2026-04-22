@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, Loader2, Save, Globe, EyeOff, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImageField } from '@/components/shared'
@@ -51,7 +52,15 @@ export default function BlogPostEditorPage() {
   const [seoKeywords, setSeoKeywords] = useState('')
   const [tagsStr, setTagsStr] = useState('')
   const [category, setCategory] = useState('')
+  const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; name: string }>>([])
   const [generatingSeo, setGeneratingSeo] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/v1/blog-categories?active=true')
+      .then(r => r.json())
+      .then(d => { if (d?.success) setCategoryOptions(d.data.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }))) })
+      .catch(() => { /* silent */ })
+  }, [])
 
   const fetchPost = useCallback(async () => {
     try {
@@ -265,7 +274,17 @@ export default function BlogPostEditorPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Kategorie</Label>
-                <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="z.B. IT-Sicherheit" />
+                {categoryOptions.length > 0 ? (
+                  <Select value={category || '__none__'} onValueChange={v => setCategory(v === '__none__' ? '' : v)}>
+                    <SelectTrigger><SelectValue placeholder="Kategorie auswählen..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">— Keine —</SelectItem>
+                      {categoryOptions.map(opt => <SelectItem key={opt.id} value={opt.name}>{opt.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Keine Kategorien — unter CMS → Blog-Kategorien anlegen" />
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Tags (kommagetrennt)</Label>

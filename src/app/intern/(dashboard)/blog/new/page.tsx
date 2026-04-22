@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -33,7 +33,15 @@ export default function NewBlogPostPage() {
   const [content, setContent] = useState('')
   const [excerpt, setExcerpt] = useState('')
   const [category, setCategory] = useState('')
+  const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; name: string }>>([])
   const [tagsStr, setTagsStr] = useState('')
+
+  useEffect(() => {
+    fetch('/api/v1/blog-categories?active=true')
+      .then(r => r.json())
+      .then(d => { if (d?.success) setCategoryOptions(d.data.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }))) })
+      .catch(() => { /* silent */ })
+  }, [])
   const [featuredImage, setFeaturedImage] = useState('')
   const [featuredImageAlt, setFeaturedImageAlt] = useState('')
 
@@ -196,7 +204,17 @@ export default function NewBlogPostPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Kategorie</Label>
-                  <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="z.B. IT-Sicherheit" />
+                  {categoryOptions.length > 0 ? (
+                    <Select value={category || '__none__'} onValueChange={v => setCategory(v === '__none__' ? '' : v)}>
+                      <SelectTrigger><SelectValue placeholder="Kategorie auswählen..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">— Keine —</SelectItem>
+                        {categoryOptions.map(opt => <SelectItem key={opt.id} value={opt.name}>{opt.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Keine Kategorien — unter CMS → Blog-Kategorien anlegen" />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Tags (kommagetrennt)</Label>

@@ -1469,6 +1469,27 @@ export const blogPostsRelations = relations(blogPosts, ({ one }) => ({
 }))
 
 // ============================================
+// Blog Categories (Verwaltbare Kategorien für Blog-Beiträge)
+// ============================================
+export const blogCategories = pgTable('blog_categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull(),
+  slug: varchar('slug', { length: 100 }).notNull(),
+  description: text('description'),
+  color: varchar('color', { length: 30 }), // optional Tailwind color class or hex
+  sortOrder: integer('sort_order').default(0),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_blog_categories_slug').on(table.slug),
+  index('idx_blog_categories_active').on(table.isActive),
+])
+
+export type BlogCategory = typeof blogCategories.$inferSelect
+export type NewBlogCategory = typeof blogCategories.$inferInsert
+
+// ============================================
 // Media Uploads (Hochgeladene Dateien)
 // ============================================
 export const mediaUploads = pgTable('media_uploads', {

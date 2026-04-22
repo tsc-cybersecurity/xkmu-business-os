@@ -44,4 +44,8 @@ export const MIGRATIONS: Migration[] = [
     name: '006_email_account_signature.sql',
     description: 'email_accounts.signature — HTML-Signatur pro Account',
   },
+  {
+    name: '007_blog_categories.sql',
+    description: 'Neue Tabelle blog_categories für verwaltbare Blog-Kategorien',
+  },
 ]

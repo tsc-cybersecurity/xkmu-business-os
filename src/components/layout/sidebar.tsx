@@ -87,6 +87,7 @@ const navigation: NavItem[] = [
       { name: 'Vorlagen', href: '/intern/cms/templates', requiredModule: 'cms' },
       { name: 'Navigation', href: '/intern/cms/navigation', requiredModule: 'cms' },
       { name: 'Blogartikel', href: '/intern/blog', requiredModule: 'blog' },
+      { name: 'Blog-Kategorien', href: '/intern/cms/blog-categories', requiredModule: 'blog' },
       { name: 'Kampagnen', href: '/intern/marketing', requiredModule: 'marketing' },
       { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
       { name: 'Newsletter', href: '/intern/marketing/newsletter', requiredModule: 'marketing' },

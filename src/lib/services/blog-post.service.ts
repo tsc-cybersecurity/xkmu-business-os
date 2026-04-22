@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { blogPosts } from '@/lib/db/schema'
-import { eq, and, count, desc, ilike } from 'drizzle-orm'
+import { eq, and, count, desc, ilike, inArray } from 'drizzle-orm'
 import type { BlogPost, NewBlogPost } from '@/lib/db/schema'
 
 export interface BlogPostFilters {
@@ -158,12 +158,16 @@ export const BlogPostService = {
     }
   },
 
-  async listPublished(filters: { category?: string; page?: number; limit?: number } = {}) {
-    const { category, page = 1, limit = 12 } = filters
+  async listPublished(filters: { category?: string; categories?: string[]; page?: number; limit?: number } = {}) {
+    const { category, categories, page = 1, limit = 12 } = filters
     const offset = (page - 1) * limit
 
     const conditions = [eq(blogPosts.status, 'published')]
-    if (category) conditions.push(eq(blogPosts.category, category))
+    if (categories && categories.length > 0) {
+      conditions.push(inArray(blogPosts.category, categories))
+    } else if (category) {
+      conditions.push(eq(blogPosts.category, category))
+    }
 
     const whereClause = and(...conditions)
 

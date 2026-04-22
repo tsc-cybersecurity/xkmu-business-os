@@ -12,6 +12,62 @@ import { Select,
 } from '@/components/ui/select'
 import { Plus, Trash2, Check } from 'lucide-react'
 import { ImageField, IconPicker } from '@/components/shared'
+import { useEffect, useState } from 'react'
+
+interface BlogCategoryOption { id: string; name: string }
+
+function BlogCategoriesMultiSelect({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const [options, setOptions] = useState<BlogCategoryOption[]>([])
+  const [loaded, setLoaded] = useState(false)
+  useEffect(() => {
+    fetch('/api/v1/blog-categories?active=true')
+      .then(r => r.json())
+      .then(d => { if (d?.success) setOptions(d.data.map((c: BlogCategoryOption) => ({ id: c.id, name: c.name }))) })
+      .catch(() => { /* silent */ })
+      .finally(() => setLoaded(true))
+  }, [])
+
+  const toggle = (name: string) => {
+    if (value.includes(name)) onChange(value.filter(v => v !== name))
+    else onChange([...value, name])
+  }
+
+  if (!loaded) return <div className="text-xs text-muted-foreground">Laden...</div>
+  if (options.length === 0) {
+    return <div className="text-xs text-muted-foreground">Keine Kategorien vorhanden — lege sie unter CMS → Blog-Kategorien an.</div>
+  }
+
+  const allSelected = value.length === 0
+  return (
+    <div className="space-y-2">
+      <div className="text-xs text-muted-foreground">
+        {allSelected ? 'Alle Kategorien werden angezeigt.' : `${value.length} Kategorie(n) ausgewählt.`}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => onChange([])}
+          className={`rounded-full px-3 py-1 text-xs border transition-colors ${allSelected ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-input'}`}
+        >
+          Alle
+        </button>
+        {options.map(opt => {
+          const active = value.includes(opt.name)
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => toggle(opt.name)}
+              className={`rounded-full px-3 py-1 text-xs border transition-colors ${active ? 'bg-primary text-primary-foreground border-primary' : 'bg-background hover:bg-muted border-input'}`}
+            >
+              {opt.name}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 interface BadgeContent { icon?: string; text?: string }
 
@@ -602,6 +658,13 @@ export function BlockFieldRenderer({ blockType, content, updateContent: updateCo
             <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={(content.showCategory as boolean) !== false} onChange={e => updateContent('showCategory', e.target.checked)} className="rounded" /><span className="text-sm">Kategorie anzeigen</span></label>
             <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={(content.showTags as boolean) !== false} onChange={e => updateContent('showTags', e.target.checked)} className="rounded" /><span className="text-sm">Tags anzeigen</span></label>
             <label className="flex items-center gap-2 cursor-pointer"><input type="checkbox" checked={(content.showDate as boolean) !== false} onChange={e => updateContent('showDate', e.target.checked)} className="rounded" /><span className="text-sm">Datum anzeigen</span></label>
+          </div>
+          <div className="space-y-2">
+            <Label>Kategorien-Filter</Label>
+            <BlogCategoriesMultiSelect
+              value={(content.categories as string[]) || []}
+              onChange={(v) => updateContent('categories', v)}
+            />
           </div>
         </>
       )
