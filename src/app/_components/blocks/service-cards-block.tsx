@@ -91,18 +91,10 @@ export function ServiceCardsBlock({ content, settings }: ServiceCardsBlockProps)
                   <div className="flex flex-wrap gap-2">
                     {item.deliverables.map((tag, k) => {
                       const label = typeof tag === 'string' ? tag : tag.label
-                      const color = typeof tag === 'string' ? 'blue' : (tag.color || 'blue')
-                      const colorClasses: Record<string, string> = {
-                        green: 'text-emerald-600 dark:text-emerald-400 from-emerald-50 to-emerald-100 dark:from-emerald-950 dark:to-emerald-900',
-                        blue: 'text-blue-600 dark:text-blue-400 from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900',
-                        purple: 'text-purple-600 dark:text-purple-400 from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900',
-                        orange: 'text-orange-600 dark:text-orange-400 from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900',
-                        gray: 'text-gray-600 dark:text-gray-400 from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800',
-                      }
                       return (
                         <span
                           key={k}
-                          className={`inline-flex items-center rounded-xl bg-gradient-to-br px-4 py-2.5 text-sm font-bold ${colorClasses[color] || colorClasses.blue}`}
+                          className="inline-flex items-center whitespace-nowrap rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 px-3 py-1 text-xs font-bold text-blue-600 dark:text-blue-400"
                         >
                           {label}
                         </span>
