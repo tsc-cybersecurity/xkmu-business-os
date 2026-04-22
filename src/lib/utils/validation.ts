@@ -203,6 +203,9 @@ export const contactFormSchema = z.object({
   interests: z.array(z.string()).min(1, 'Bitte wählen Sie mindestens ein Interesse'),
   message: z.string().min(1, 'Nachricht ist erforderlich'),
   privacyAccepted: z.literal(true, 'Datenschutzbestimmungen müssen akzeptiert werden'),
+  // Anti-Spam — Honeypot (muss leer sein) + Load-Timestamp für Min-Submit-Zeit
+  website: z.string().optional().or(z.literal('')),
+  _t: z.number().optional(),
 })
 
 // ============================================

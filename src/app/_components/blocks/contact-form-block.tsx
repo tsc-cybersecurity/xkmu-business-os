@@ -55,7 +55,11 @@ export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
     interests: [] as string[],
     message: '',
     privacyAccepted: false,
+    // Honeypot — muss leer bleiben (echte User sehen das Feld nicht)
+    website: '',
   })
+  // Zeitstempel beim Mount — für Min-Submit-Zeit-Check (Bots submitten in ms)
+  const [formLoadedAt] = useState(() => Date.now())
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -95,7 +99,7 @@ export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
       const response = await fetch('/api/v1/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, _t: formLoadedAt }),
       })
       const data = await response.json()
       if (response.ok && data.success) {
@@ -141,6 +145,20 @@ export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
             {errors.general}
           </div>
         )}
+
+        {/* Honeypot — unsichtbares Feld, echte User lassen es leer, Bots füllen es aus */}
+        <div aria-hidden="true" style={{ position: 'absolute', left: '-10000px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }}>
+          <label htmlFor="website">Webseite (bitte leer lassen)</label>
+          <input
+            type="text"
+            id="website"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            value={formData.website}
+            onChange={e => setFormData(prev => ({ ...prev, website: e.target.value }))}
+          />
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="company">Firma</Label>

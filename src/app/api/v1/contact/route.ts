@@ -19,6 +19,27 @@ export async function POST(request: NextRequest) {
     return apiValidationError(formatZodErrors(validation.errors))
   }
 
+  // ── Anti-Spam: Honeypot ──────────────────────────────────────────────
+  // "website" is a hidden field that only bots fill. Silent-drop if set.
+  if (validation.data.website && validation.data.website.trim()) {
+    logger.warn('Honeypot triggered — dropping contact submission silently', { module: 'ContactAPI' })
+    return apiSuccess({ id: 'ok' }, undefined)
+  }
+
+  // ── Anti-Spam: Min-Submit-Zeit ───────────────────────────────────────
+  // Humans need >= 2s to fill the form. Bots submit instantly.
+  if (validation.data._t) {
+    const elapsedMs = Date.now() - validation.data._t
+    if (elapsedMs < 2000) {
+      logger.warn(`Form submitted too fast (${elapsedMs}ms) — dropping silently`, { module: 'ContactAPI' })
+      return apiSuccess({ id: 'ok' }, undefined)
+    }
+    // 24h safety cap: stale form tokens (cached pages scraped by bots)
+    if (elapsedMs > 24 * 60 * 60 * 1000) {
+      return apiError('FORM_EXPIRED', 'Formular ist abgelaufen. Bitte Seite neu laden.', 400)
+    }
+  }
+
   // Step 3: Create lead
   try {
     const { firstName, lastName, company, phone, email, interests, message } = validation.data

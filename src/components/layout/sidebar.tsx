@@ -91,7 +91,6 @@ const navigation: NavItem[] = [
       { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
       { name: 'Newsletter', href: '/intern/marketing/newsletter', requiredModule: 'marketing' },
       { name: 'Bildgenerierung', href: '/intern/images', requiredModule: 'media' },
-      { name: 'E-Mail-Vorlagen', href: '/intern/settings/email-templates', requiredModule: 'settings' },
     ],
   },
   // ── Intelligence ──
@@ -149,6 +148,7 @@ const navigation: NavItem[] = [
       { name: 'Eigene Prompts', href: '/intern/settings/custom-prompts', requiredModule: 'ai_prompts' },
       { name: 'KI-Logging', href: '/intern/settings/ai-logs', requiredModule: 'ai_logs' },
       { name: 'E-Mail (IMAP)', href: '/intern/settings/email-imap', requiredModule: 'settings' },
+      { name: 'E-Mail (Vorlagen)', href: '/intern/settings/email-templates', requiredModule: 'settings' },
       { name: 'Cron-Jobs', href: '/intern/settings/cron-jobs', requiredModule: 'settings' },
       { name: 'Datenbank', href: '/intern/settings/database', requiredModule: 'database' },
       { name: 'Mein Profil', href: '/intern/settings/profile', requiredModule: 'settings' },
