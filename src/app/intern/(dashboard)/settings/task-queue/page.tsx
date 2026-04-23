@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { ListTodo, Loader2, Play, Trash2, XCircle, CheckCircle2, Clock,
   AlertCircle, ChevronDown, ChevronRight, Mail, Bot, Eye, Pencil,
-  ExternalLink, RefreshCcw,
+  ExternalLink, RefreshCcw, RotateCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -211,6 +211,17 @@ export default function TaskQueuePage() {
       fetchItems()
     } catch {
       toast.error('Löschen fehlgeschlagen')
+    }
+  }
+
+  const retryItem = async (id: string) => {
+    const res = await fetch(`/api/v1/task-queue/${id}/retry`, { method: 'POST' })
+    const data = await res.json()
+    if (data?.success) {
+      toast.success('Task zurückgesetzt — kann erneut ausgeführt werden')
+      fetchItems()
+    } else {
+      toast.error(data?.error?.message || 'Retry fehlgeschlagen')
     }
   }
 
@@ -448,6 +459,17 @@ export default function TaskQueuePage() {
                     {item.status === 'pending' && (
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setEditItem(item); setEditPayload(JSON.stringify(item.payload, null, 2)) }} title="Bearbeiten">
                         <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {item.status === 'failed' && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7"
+                        onClick={() => retryItem(item.id)}
+                        title="Erneut versuchen"
+                      >
+                        <RotateCw className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteItem(item.id)} title="Löschen">

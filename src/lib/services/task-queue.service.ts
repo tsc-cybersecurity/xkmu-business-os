@@ -105,6 +105,27 @@ export const TaskQueueService = {
     return !!item
   },
 
+  /**
+   * Reset a failed task back to 'pending' so it can be re-executed.
+   * Only tasks with status='failed' are eligible — pending/running/completed/cancelled are not.
+   * Clears error, result, and executedAt; sets scheduledFor=now.
+   */
+  async retry(id: string): Promise<TaskQueueItem | null> {
+    const [item] = await db
+      .update(taskQueue)
+      .set({
+        status: 'pending',
+        error: null,
+        result: null,
+        executedAt: null,
+        scheduledFor: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(taskQueue.id, id), eq(taskQueue.status, 'failed')))
+      .returning()
+    return item ?? null
+  },
+
   async delete(id: string): Promise<boolean> {
     const result = await db
       .delete(taskQueue)
