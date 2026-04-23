@@ -15,7 +15,7 @@ describe.skipIf(!hasTestDb)('API Key Scoping — real DB', () => {
 
     // Create a real API key via the service (real bcrypt hashing)
     const { ApiKeyService } = await import('@/lib/services/api-key.service')
-    const result = await ApiKeyService.create(TEST_INTEGRATION_TENANT_A, {
+    const result = await ApiKeyService.create({
       name: 'Integration Test Key',
       permissions: ['leads:read', 'companies:read'],
     })
@@ -39,7 +39,6 @@ describe.skipIf(!hasTestDb)('API Key Scoping — real DB', () => {
     const { validateApiKey } = await import('@/lib/auth/api-key')
     const payload = await validateApiKey(rawKey)
     expect(payload).not.toBeNull()
-    expect(payload!.tenantId).toBe(TEST_INTEGRATION_TENANT_A)
     expect(payload!.keyId).toBe(keyId)
   })
 
@@ -76,14 +75,14 @@ describe.skipIf(!hasTestDb)('API Key Scoping — real DB', () => {
 
   it('ApiKeyService.getById returns the key record', async () => {
     const { ApiKeyService } = await import('@/lib/services/api-key.service')
-    const found = await ApiKeyService.getById(TEST_INTEGRATION_TENANT_A, keyId)
+    const found = await ApiKeyService.getById(keyId)
     expect(found).not.toBeNull()
     expect(found!.keyPrefix).toBe(rawKey.substring(0, 10))
   })
 
   it('ApiKeyService.delete removes the key; subsequent validateApiKey returns null', async () => {
     const { ApiKeyService } = await import('@/lib/services/api-key.service')
-    const deleted = await ApiKeyService.delete(TEST_INTEGRATION_TENANT_A, keyId)
+    const deleted = await ApiKeyService.delete(keyId)
     expect(deleted).toBe(true)
 
     const { validateApiKey } = await import('@/lib/auth/api-key')

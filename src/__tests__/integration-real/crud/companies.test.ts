@@ -23,7 +23,7 @@ describe.skipIf(!hasTestDb)('CRUD: Companies — real DB', () => {
 
   it('create() inserts a company and returns it with an id', async () => {
     const { CompanyService } = await import('@/lib/services/company.service')
-    const company = await CompanyService.create(TEST_INTEGRATION_TENANT_A, {
+    const company = await CompanyService.create({
       name: 'CRUD Test GmbH',
       status: 'prospect',
       country: 'DE',
@@ -35,35 +35,35 @@ describe.skipIf(!hasTestDb)('CRUD: Companies — real DB', () => {
 
   it('getById() returns the created company', async () => {
     const { CompanyService } = await import('@/lib/services/company.service')
-    const found = await CompanyService.getById(TEST_INTEGRATION_TENANT_A, createdId)
+    const found = await CompanyService.getById(createdId)
     expect(found).not.toBeNull()
     expect(found!.id).toBe(createdId)
   })
 
-  it('getById() returns null for wrong tenantId (isolation check)', async () => {
+  it('getById() returns null for unknown id', async () => {
     const { CompanyService } = await import('@/lib/services/company.service')
-    const notFound = await CompanyService.getById('00000000-0000-0000-0000-000000000099', createdId)
+    const notFound = await CompanyService.getById('00000000-0000-0000-0000-000000000099')
     expect(notFound).toBeNull()
   })
 
   it('list() includes the created company', async () => {
     const { CompanyService } = await import('@/lib/services/company.service')
-    const result = await CompanyService.list(TEST_INTEGRATION_TENANT_A, {})
+    const result = await CompanyService.list({})
     const found = result.items.find(c => c.id === createdId)
     expect(found).toBeDefined()
   })
 
   it('update() changes the company name', async () => {
     const { CompanyService } = await import('@/lib/services/company.service')
-    const updated = await CompanyService.update(TEST_INTEGRATION_TENANT_A, createdId, { name: 'Updated GmbH' })
+    const updated = await CompanyService.update(createdId, { name: 'Updated GmbH' })
     expect(updated).not.toBeNull()
     expect(updated!.name).toBe('Updated GmbH')
   })
 
   it('delete() removes the company; subsequent getById returns null', async () => {
     const { CompanyService } = await import('@/lib/services/company.service')
-    await CompanyService.delete(TEST_INTEGRATION_TENANT_A, createdId)
-    const gone = await CompanyService.getById(TEST_INTEGRATION_TENANT_A, createdId)
+    await CompanyService.delete(createdId)
+    const gone = await CompanyService.getById(createdId)
     expect(gone).toBeNull()
   })
 })

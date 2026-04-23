@@ -28,7 +28,6 @@ INSERT INTO companies (id, name, tenant_id) VALUES ('bbbbbbbb-0000-0000-0000-000
 `
 
 const TEST_AUTH: AuthContext = {
-  tenantId: TEST_TENANT_ID,
   userId: TEST_USER_ID,
   role: 'admin',
   roleId: null,

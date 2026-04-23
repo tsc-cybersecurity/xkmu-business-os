@@ -58,7 +58,7 @@ describe.skipIf(!hasTestDb)('Auth Flow — real DB', () => {
 
   it('login route returns 200 and sets session cookie for valid credentials', async () => {
     const { createTestRequest } = await import('../helpers/mock-request')
-    const handler = (await import('@/app/api/auth/login/route')).POST
+    const handler = (await import('@/app/api/v1/auth/login/route')).POST
     const req = createTestRequest('POST', '/api/auth/login', {
       email: testEmail,
       password: testPassword,
@@ -71,7 +71,7 @@ describe.skipIf(!hasTestDb)('Auth Flow — real DB', () => {
 
   it('login route returns 401 for wrong password', async () => {
     const { createTestRequest } = await import('../helpers/mock-request')
-    const handler = (await import('@/app/api/auth/login/route')).POST
+    const handler = (await import('@/app/api/v1/auth/login/route')).POST
     const req = createTestRequest('POST', '/api/auth/login', {
       email: testEmail,
       password: 'WrongPassword!',
@@ -82,7 +82,7 @@ describe.skipIf(!hasTestDb)('Auth Flow — real DB', () => {
 
   it('login route returns 401 for nonexistent user', async () => {
     const { createTestRequest } = await import('../helpers/mock-request')
-    const handler = (await import('@/app/api/auth/login/route')).POST
+    const handler = (await import('@/app/api/v1/auth/login/route')).POST
     const req = createTestRequest('POST', '/api/auth/login', {
       email: 'nobody@nonexistent-ffff.invalid',
       password: 'AnyPassword',

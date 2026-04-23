@@ -25,7 +25,7 @@ describe.skipIf(!hasTestDb)('CRUD: Leads — real DB', () => {
 
   it('create() inserts a lead and returns it with an id', async () => {
     const { LeadService } = await import('@/lib/services/lead.service')
-    const lead = await LeadService.create(TEST_INTEGRATION_TENANT_A, {
+    const lead = await LeadService.create({
       source: 'manual',
       status: 'new',
       contactFirstName: 'Integration',
@@ -40,20 +40,20 @@ describe.skipIf(!hasTestDb)('CRUD: Leads — real DB', () => {
 
   it('getById() returns the created lead', async () => {
     const { LeadService } = await import('@/lib/services/lead.service')
-    const found = await LeadService.getById(TEST_INTEGRATION_TENANT_A, createdId)
+    const found = await LeadService.getById(createdId)
     expect(found).not.toBeNull()
     expect(found!.id).toBe(createdId)
   })
 
-  it('getById() returns null for wrong tenantId', async () => {
+  it('getById() returns null for unknown id', async () => {
     const { LeadService } = await import('@/lib/services/lead.service')
-    const notFound = await LeadService.getById('00000000-0000-0000-0000-000000000099', createdId)
+    const notFound = await LeadService.getById('00000000-0000-0000-0000-000000000099')
     expect(notFound).toBeNull()
   })
 
   it('list() includes the created lead', async () => {
     const { LeadService } = await import('@/lib/services/lead.service')
-    const result = await LeadService.list(TEST_INTEGRATION_TENANT_A, {})
+    const result = await LeadService.list({})
     const found = result.items.find(l => l.id === createdId)
     expect(found).toBeDefined()
   })
@@ -61,15 +61,15 @@ describe.skipIf(!hasTestDb)('CRUD: Leads — real DB', () => {
   it('update() changes the lead status', async () => {
     const { LeadService } = await import('@/lib/services/lead.service')
     // Adaptation: update status (not name — leads don't have a name field)
-    const updated = await LeadService.update(TEST_INTEGRATION_TENANT_A, createdId, { status: 'qualified' })
+    const updated = await LeadService.update(createdId, { status: 'qualified' })
     expect(updated).not.toBeNull()
     expect(updated!.status).toBe('qualified')
   })
 
   it('delete() removes the lead; subsequent getById returns null', async () => {
     const { LeadService } = await import('@/lib/services/lead.service')
-    await LeadService.delete(TEST_INTEGRATION_TENANT_A, createdId)
-    const gone = await LeadService.getById(TEST_INTEGRATION_TENANT_A, createdId)
+    await LeadService.delete(createdId)
+    const gone = await LeadService.getById(createdId)
     expect(gone).toBeNull()
   })
 })

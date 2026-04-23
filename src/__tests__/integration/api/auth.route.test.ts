@@ -377,7 +377,8 @@ describe('POST /api/v1/auth/logout', () => {
 
   it('returns 200 on successful logout', async () => {
     const handler = await getHandler()
-    const res = await handler()
+    const req = createTestRequest('POST', '/api/v1/auth/logout', {})
+    const res = await handler(req)
     const body = await res.json()
 
     expect(res.status).toBe(200)
