@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
+import { TEST_USER_ID } from '../../helpers/fixtures'
 
 const TEST_PRODUCT_ID = '00000000-0000-0000-0000-000000000010'
 const TEST_CATEGORY_ID = '00000000-0000-0000-0000-000000000011'
@@ -8,7 +8,6 @@ const TEST_CATEGORY_ID = '00000000-0000-0000-0000-000000000011'
 function productFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_PRODUCT_ID,
-    tenantId: TEST_TENANT_ID,
     type: 'product',
     name: 'Test Produkt',
     description: null,
@@ -71,7 +70,7 @@ describe('ProductService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'product',
         name: 'Test Produkt',
         sku: 'SKU-001',
@@ -86,7 +85,7 @@ describe('ProductService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'product',
         name: 'Test Produkt',
         slug: 'my-custom-slug',
@@ -103,7 +102,7 @@ describe('ProductService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'product',
         name: 'Test',
       })
@@ -118,7 +117,7 @@ describe('ProductService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'product',
         name: 'Test',
       })
@@ -135,7 +134,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_PRODUCT_ID)
+      const result = await service.getById(TEST_PRODUCT_ID)
 
       expect(result).toBeDefined()
       expect(result!.id).toBe(TEST_PRODUCT_ID)
@@ -150,7 +149,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_PRODUCT_ID)
+      const result = await service.getById(TEST_PRODUCT_ID)
 
       expect(result!.category).toEqual({ id: TEST_CATEGORY_ID, name: 'Software' })
     })
@@ -159,7 +158,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -173,7 +172,7 @@ describe('ProductService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_PRODUCT_ID, {
+      const result = await service.update(TEST_PRODUCT_ID, {
         name: 'Updated Produkt',
       })
 
@@ -186,7 +185,7 @@ describe('ProductService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_PRODUCT_ID, {
+      const result = await service.update(TEST_PRODUCT_ID, {
         priceNet: 149.99,
       })
 
@@ -199,7 +198,7 @@ describe('ProductService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_PRODUCT_ID, {
+      const result = await service.update(TEST_PRODUCT_ID, {
         vatRate: 7,
       })
 
@@ -210,7 +209,7 @@ describe('ProductService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { name: 'X' })
+      const result = await service.update('nonexistent', { name: 'X' })
 
       expect(result).toBeNull()
     })
@@ -223,7 +222,7 @@ describe('ProductService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_PRODUCT_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_PRODUCT_ID)
+      const result = await service.delete(TEST_PRODUCT_ID)
 
       expect(result).toBe(true)
     })
@@ -232,7 +231,7 @@ describe('ProductService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -251,7 +250,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -265,7 +264,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(20)
@@ -276,7 +275,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 50 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 3, limit: 10 })
+      const result = await service.list({ page: 3, limit: 10 })
 
       expect(result.meta.page).toBe(3)
       expect(result.meta.limit).toBe(10)
@@ -288,7 +287,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { type: 'service' })
+      await service.list({ type: 'service' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -298,7 +297,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'active' })
+      await service.list({ status: 'active' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -308,7 +307,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { search: 'Test' })
+      await service.list({ search: 'Test' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -318,7 +317,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { tags: ['premium'] })
+      await service.list({ tags: ['premium'] })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -332,7 +331,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.search(TEST_TENANT_ID, 'Test')
+      const result = await service.search('Test')
 
       expect(result).toHaveLength(1)
       expect(result[0].name).toBe('Test Produkt')
@@ -340,7 +339,7 @@ describe('ProductService', () => {
 
     it('returns empty array for empty query', async () => {
       const service = await getService()
-      const result = await service.search(TEST_TENANT_ID, '   ')
+      const result = await service.search('   ')
 
       expect(result).toEqual([])
       expect(dbMock.db.select).not.toHaveBeenCalled()
@@ -358,7 +357,7 @@ describe('ProductService', () => {
       dbMock.mockUpdate.mockResolvedValue([updated])
 
       const service = await getService()
-      const result = await service.addTag(TEST_TENANT_ID, TEST_PRODUCT_ID, 'new-tag')
+      const result = await service.addTag(TEST_PRODUCT_ID, 'new-tag')
 
       expect(result!.tags).toContain('new-tag')
     })
@@ -368,7 +367,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.addTag(TEST_TENANT_ID, TEST_PRODUCT_ID, 'existing')
+      const result = await service.addTag(TEST_PRODUCT_ID, 'existing')
 
       expect(result).toEqual(fixture)
       expect(dbMock.db.update).not.toHaveBeenCalled()
@@ -378,7 +377,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.addTag(TEST_TENANT_ID, 'nonexistent', 'tag')
+      const result = await service.addTag('nonexistent', 'tag')
 
       expect(result).toBeNull()
     })
@@ -395,7 +394,7 @@ describe('ProductService', () => {
       dbMock.mockUpdate.mockResolvedValue([updated])
 
       const service = await getService()
-      const result = await service.removeTag(TEST_TENANT_ID, TEST_PRODUCT_ID, 'remove')
+      const result = await service.removeTag(TEST_PRODUCT_ID, 'remove')
 
       expect(result!.tags).toEqual(['keep'])
     })
@@ -404,7 +403,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.removeTag(TEST_TENANT_ID, 'nonexistent', 'tag')
+      const result = await service.removeTag('nonexistent', 'tag')
 
       expect(result).toBeNull()
     })
@@ -417,7 +416,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const slug = await service.generateSlug('Mein Produkt', TEST_TENANT_ID)
+      const slug = await service.generateSlug('Mein Produkt')
 
       expect(slug).toBe('mein-produkt')
     })
@@ -426,7 +425,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const slug = await service.generateSlug('Müller & Söhne', TEST_TENANT_ID)
+      const slug = await service.generateSlug('Müller & Söhne')
 
       expect(slug).toBe('mueller-soehne')
     })
@@ -437,7 +436,7 @@ describe('ProductService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([])
 
       const service = await getService()
-      const slug = await service.generateSlug('Test', TEST_TENANT_ID)
+      const slug = await service.generateSlug('Test')
 
       expect(slug).toBe('test-2')
     })

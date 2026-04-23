@@ -1,13 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID } from '../../helpers/fixtures'
 
 const TEST_ROLE_ID = '00000000-0000-0000-0000-000000000020'
 
 function roleFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_ROLE_ID,
-    tenantId: TEST_TENANT_ID,
     name: 'editor',
     displayName: 'Editor',
     description: 'Can edit content',
@@ -53,7 +51,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_ROLE_ID)
+      const result = await service.getById(TEST_ROLE_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -62,7 +60,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -76,7 +74,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getByName(TEST_TENANT_ID, 'editor')
+      const result = await service.getByName('editor')
 
       expect(result).toEqual(fixture)
     })
@@ -85,7 +83,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getByName(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getByName('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -94,12 +92,12 @@ describe('RoleService', () => {
   // ---- list ----
 
   describe('list', () => {
-    it('returns all roles for tenant', async () => {
+    it('returns all roles', async () => {
       const fixtures = [roleFixture(), roleFixture({ id: '00000000-0000-0000-0000-000000000021', name: 'viewer' })]
       dbMock.mockSelect.mockResolvedValue(fixtures)
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result).toHaveLength(2)
       expect(dbMock.db.select).toHaveBeenCalled()
@@ -109,7 +107,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result).toEqual([])
     })
@@ -127,7 +125,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([perm])
 
       const service = await getService()
-      const result = await service.getWithPermissions(TEST_TENANT_ID, TEST_ROLE_ID)
+      const result = await service.getWithPermissions(TEST_ROLE_ID)
 
       expect(result).not.toBeNull()
       expect(result!.permissions).toHaveLength(1)
@@ -138,7 +136,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getWithPermissions(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getWithPermissions('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -155,7 +153,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([perm])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'editor',
         displayName: 'Editor',
         permissions: [
@@ -175,7 +173,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'viewer',
         displayName: 'Viewer',
         permissions: [],
@@ -203,7 +201,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([perm])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_ROLE_ID, {
+      const result = await service.update(TEST_ROLE_ID, {
         displayName: 'Senior Editor',
       })
 
@@ -215,7 +213,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { displayName: 'X' })
+      const result = await service.update('nonexistent', { displayName: 'X' })
 
       expect(result).toBeNull()
     })
@@ -232,7 +230,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([perm])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_ROLE_ID, { displayName: 'Changed' })
+      const result = await service.update(TEST_ROLE_ID, { displayName: 'Changed' })
 
       // Should return without actually updating
       expect(dbMock.db.update).not.toHaveBeenCalled()
@@ -249,7 +247,7 @@ describe('RoleService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_ROLE_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_ROLE_ID)
+      const result = await service.delete(TEST_ROLE_ID)
 
       expect(result).toBe(true)
     })
@@ -258,7 +256,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -268,7 +266,7 @@ describe('RoleService', () => {
       dbMock.mockSelect.mockResolvedValue([systemRole])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_ROLE_ID)
+      const result = await service.delete(TEST_ROLE_ID)
 
       expect(result).toBe(false)
       expect(dbMock.db.delete).not.toHaveBeenCalled()

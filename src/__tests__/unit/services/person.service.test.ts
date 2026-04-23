@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
 
-const TEST_TENANT_ID = '00000000-0000-0000-0000-000000000001'
 const TEST_USER_ID = '00000000-0000-0000-0000-000000000002'
 const TEST_PERSON_ID = '00000000-0000-0000-0000-000000000010'
 const TEST_COMPANY_ID = '00000000-0000-0000-0000-000000000003'
@@ -9,7 +8,6 @@ const TEST_COMPANY_ID = '00000000-0000-0000-0000-000000000003'
 function personFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_PERSON_ID,
-    tenantId: TEST_TENANT_ID,
     companyId: TEST_COMPANY_ID,
     salutation: 'Herr',
     firstName: 'Max',
@@ -57,7 +55,7 @@ describe('PersonService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         firstName: 'Max',
         lastName: 'Mustermann',
         email: 'max@example.de',
@@ -72,7 +70,7 @@ describe('PersonService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         firstName: 'Max',
         lastName: 'Mustermann',
         salutation: '',
@@ -90,7 +88,7 @@ describe('PersonService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         firstName: 'Max',
         lastName: 'Mustermann',
       })
@@ -103,7 +101,7 @@ describe('PersonService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         firstName: 'Max',
         lastName: 'Mustermann',
       })
@@ -116,7 +114,7 @@ describe('PersonService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         firstName: 'Max',
         lastName: 'Mustermann',
       })
@@ -133,7 +131,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_PERSON_ID)
+      const result = await service.getById(TEST_PERSON_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -142,7 +140,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -156,7 +154,7 @@ describe('PersonService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_PERSON_ID, {
+      const result = await service.update(TEST_PERSON_ID, {
         firstName: 'Updated',
       })
 
@@ -168,7 +166,7 @@ describe('PersonService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { firstName: 'X' })
+      const result = await service.update('nonexistent', { firstName: 'X' })
 
       expect(result).toBeNull()
     })
@@ -181,7 +179,7 @@ describe('PersonService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_PERSON_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_PERSON_ID)
+      const result = await service.delete(TEST_PERSON_ID)
 
       expect(result).toBe(true)
     })
@@ -190,7 +188,7 @@ describe('PersonService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -207,7 +205,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -221,7 +219,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(20)
@@ -232,7 +230,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 50 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 3, limit: 10 })
+      const result = await service.list({ page: 3, limit: 10 })
 
       expect(result.meta.page).toBe(3)
       expect(result.meta.limit).toBe(10)
@@ -244,7 +242,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { companyId: TEST_COMPANY_ID })
+      await service.list({ companyId: TEST_COMPANY_ID })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -254,7 +252,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'active' })
+      await service.list({ status: 'active' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -264,7 +262,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { search: 'Max' })
+      await service.list({ search: 'Max' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -275,7 +273,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 1 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items[0].company).toBeNull()
     })
@@ -289,7 +287,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.search(TEST_TENANT_ID, 'Max')
+      const result = await service.search('Max')
 
       expect(result).toHaveLength(1)
       expect(result[0].firstName).toBe('Max')
@@ -297,7 +295,7 @@ describe('PersonService', () => {
 
     it('returns empty array for empty query', async () => {
       const service = await getService()
-      const result = await service.search(TEST_TENANT_ID, '   ')
+      const result = await service.search('   ')
 
       expect(result).toEqual([])
       expect(dbMock.db.select).not.toHaveBeenCalled()
@@ -305,7 +303,7 @@ describe('PersonService', () => {
 
     it('returns empty array for empty string', async () => {
       const service = await getService()
-      const result = await service.search(TEST_TENANT_ID, '')
+      const result = await service.search('')
 
       expect(result).toEqual([])
       expect(dbMock.db.select).not.toHaveBeenCalled()
@@ -323,7 +321,7 @@ describe('PersonService', () => {
       dbMock.mockUpdate.mockResolvedValue([updated])
 
       const service = await getService()
-      const result = await service.addTag(TEST_TENANT_ID, TEST_PERSON_ID, 'vip')
+      const result = await service.addTag(TEST_PERSON_ID, 'vip')
 
       expect(result!.tags).toContain('vip')
     })
@@ -333,7 +331,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.addTag(TEST_TENANT_ID, TEST_PERSON_ID, 'vip')
+      const result = await service.addTag(TEST_PERSON_ID, 'vip')
 
       expect(result).toEqual(fixture)
       expect(dbMock.db.update).not.toHaveBeenCalled()
@@ -343,7 +341,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.addTag(TEST_TENANT_ID, 'nonexistent', 'tag')
+      const result = await service.addTag('nonexistent', 'tag')
 
       expect(result).toBeNull()
     })
@@ -360,7 +358,7 @@ describe('PersonService', () => {
       dbMock.mockUpdate.mockResolvedValue([updated])
 
       const service = await getService()
-      const result = await service.removeTag(TEST_TENANT_ID, TEST_PERSON_ID, 'remove')
+      const result = await service.removeTag(TEST_PERSON_ID, 'remove')
 
       expect(result!.tags).toEqual(['keep'])
     })
@@ -369,7 +367,7 @@ describe('PersonService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.removeTag(TEST_TENANT_ID, 'nonexistent', 'tag')
+      const result = await service.removeTag('nonexistent', 'tag')
 
       expect(result).toBeNull()
     })
@@ -385,7 +383,7 @@ describe('PersonService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([fixture])
 
       const service = await getService()
-      const result = await service.setPrimaryContact(TEST_TENANT_ID, TEST_COMPANY_ID, TEST_PERSON_ID)
+      const result = await service.setPrimaryContact(TEST_COMPANY_ID, TEST_PERSON_ID)
 
       expect(result!.isPrimaryContact).toBe(true)
       expect(dbMock.db.update).toHaveBeenCalledTimes(2)
@@ -396,7 +394,7 @@ describe('PersonService', () => {
       dbMock.mockUpdate.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.setPrimaryContact(TEST_TENANT_ID, TEST_COMPANY_ID, 'nonexistent')
+      const result = await service.setPrimaryContact(TEST_COMPANY_ID, 'nonexistent')
 
       expect(result).toBeNull()
     })

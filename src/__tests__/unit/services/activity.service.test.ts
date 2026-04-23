@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID, TEST_USER_ID, TEST_COMPANY_ID } from '../../helpers/fixtures'
+import { TEST_USER_ID, TEST_COMPANY_ID } from '../../helpers/fixtures'
 
 const TEST_ACTIVITY_ID = '00000000-0000-0000-0000-000000000020'
 const TEST_LEAD_ID = '00000000-0000-0000-0000-000000000021'
@@ -9,7 +9,6 @@ const TEST_PERSON_ID = '00000000-0000-0000-0000-000000000022'
 function activityFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_ACTIVITY_ID,
-    tenantId: TEST_TENANT_ID,
     leadId: null,
     companyId: null,
     personId: null,
@@ -57,7 +56,7 @@ describe('ActivityService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'note',
         subject: 'Test Subject',
         content: 'Test Content',
@@ -72,7 +71,7 @@ describe('ActivityService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'call',
         leadId: TEST_LEAD_ID,
       })
@@ -85,7 +84,7 @@ describe('ActivityService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'meeting',
         companyId: TEST_COMPANY_ID,
       })
@@ -98,7 +97,7 @@ describe('ActivityService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'note',
       })
 
@@ -115,7 +114,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_ACTIVITY_ID)
+      const result = await service.getById(TEST_ACTIVITY_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -124,7 +123,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -137,7 +136,7 @@ describe('ActivityService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_ACTIVITY_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_ACTIVITY_ID)
+      const result = await service.delete(TEST_ACTIVITY_ID)
 
       expect(result).toBe(true)
     })
@@ -146,7 +145,7 @@ describe('ActivityService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -165,7 +164,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -179,7 +178,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(50)
@@ -190,7 +189,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 100 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 2, limit: 25 })
+      const result = await service.list({ page: 2, limit: 25 })
 
       expect(result.meta.page).toBe(2)
       expect(result.meta.limit).toBe(25)
@@ -202,7 +201,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { leadId: TEST_LEAD_ID })
+      await service.list({ leadId: TEST_LEAD_ID })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -212,7 +211,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { companyId: TEST_COMPANY_ID })
+      await service.list({ companyId: TEST_COMPANY_ID })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -222,7 +221,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { type: 'call' })
+      await service.list({ type: 'call' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -236,7 +235,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 1 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items[0].user).toBeNull()
     })
@@ -252,7 +251,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 1 }])
 
       const service = await getService()
-      const result = await service.listByLead(TEST_TENANT_ID, TEST_LEAD_ID)
+      const result = await service.listByLead(TEST_LEAD_ID)
 
       expect(result.items).toHaveLength(1)
       expect(result.meta.total).toBe(1)
@@ -263,7 +262,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.listByLead(TEST_TENANT_ID, 'nonexistent-lead')
+      const result = await service.listByLead('nonexistent-lead')
 
       expect(result.items).toHaveLength(0)
       expect(result.meta.total).toBe(0)
@@ -280,7 +279,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 1 }])
 
       const service = await getService()
-      const result = await service.listByCompany(TEST_TENANT_ID, TEST_COMPANY_ID)
+      const result = await service.listByCompany(TEST_COMPANY_ID)
 
       expect(result.items).toHaveLength(1)
       expect(result.meta.total).toBe(1)
@@ -291,7 +290,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.listByCompany(TEST_TENANT_ID, 'nonexistent-company')
+      const result = await service.listByCompany('nonexistent-company')
 
       expect(result.items).toHaveLength(0)
     })
@@ -301,7 +300,7 @@ describe('ActivityService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 200 }])
 
       const service = await getService()
-      const result = await service.listByCompany(TEST_TENANT_ID, TEST_COMPANY_ID, { page: 2, limit: 50 })
+      const result = await service.listByCompany(TEST_COMPANY_ID, { page: 2, limit: 50 })
 
       expect(result.meta.page).toBe(2)
       expect(result.meta.totalPages).toBe(4)

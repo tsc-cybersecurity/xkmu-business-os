@@ -1,15 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID, TEST_USER_ID, TEST_COMPANY_ID } from '../../helpers/fixtures'
+import { TEST_USER_ID, TEST_COMPANY_ID } from '../../helpers/fixtures'
 
 const TEST_DOC_ID = '00000000-0000-0000-0000-000000000030'
 const TEST_ITEM_ID = '00000000-0000-0000-0000-000000000031'
-const TEST_PERSON_ID = '00000000-0000-0000-0000-000000000032'
 
 function documentFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_DOC_ID,
-    tenantId: TEST_TENANT_ID,
     type: 'invoice',
     number: 'RE-2026-0001',
     companyId: null,
@@ -61,7 +59,6 @@ function documentWithCompanyFixture() {
 function documentItemFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_ITEM_ID,
-    tenantId: TEST_TENANT_ID,
     documentId: TEST_DOC_ID,
     position: 0,
     productId: null,
@@ -100,7 +97,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue([{ count: 0 }])
 
       const service = await getService()
-      const number = await service.generateNumber(TEST_TENANT_ID, 'invoice', 2026)
+      const number = await service.generateNumber('invoice', 2026)
 
       expect(number).toBe('RE-2026-0001')
     })
@@ -109,7 +106,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue([{ count: 0 }])
 
       const service = await getService()
-      const number = await service.generateNumber(TEST_TENANT_ID, 'offer', 2026)
+      const number = await service.generateNumber('offer', 2026)
 
       expect(number).toBe('AN-2026-0001')
     })
@@ -118,7 +115,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue([{ count: 5 }])
 
       const service = await getService()
-      const number = await service.generateNumber(TEST_TENANT_ID, 'invoice', 2026)
+      const number = await service.generateNumber('invoice', 2026)
 
       expect(number).toBe('RE-2026-0006')
     })
@@ -132,7 +129,7 @@ describe('DocumentService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'invoice',
         number: 'RE-2026-0001',
       }, TEST_USER_ID)
@@ -148,7 +145,7 @@ describe('DocumentService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'invoice',
       })
 
@@ -179,7 +176,7 @@ describe('DocumentService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'invoice',
         companyId: TEST_COMPANY_ID,
       })
@@ -193,7 +190,7 @@ describe('DocumentService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         type: 'invoice',
       })
 
@@ -212,7 +209,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValueOnce(itemFixtures)
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_DOC_ID)
+      const result = await service.getById(TEST_DOC_ID)
 
       expect(result).toBeDefined()
       expect(result!.id).toBe(TEST_DOC_ID)
@@ -229,7 +226,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_DOC_ID)
+      const result = await service.getById(TEST_DOC_ID)
 
       expect(result!.company).toBeNull()
     })
@@ -238,7 +235,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -255,7 +252,7 @@ describe('DocumentService', () => {
       dbMock.mockUpdate.mockResolvedValue([updatedFixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_DOC_ID, {
+      const result = await service.update(TEST_DOC_ID, {
         notes: 'Updated notes',
       })
 
@@ -269,7 +266,7 @@ describe('DocumentService', () => {
       const service = await getService()
 
       await expect(
-        service.update(TEST_TENANT_ID, TEST_DOC_ID, { notes: 'test' })
+        service.update(TEST_DOC_ID, { notes: 'test' })
       ).rejects.toThrow('Entwurf')
     })
 
@@ -277,7 +274,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { notes: 'test' })
+      const result = await service.update('nonexistent', { notes: 'test' })
 
       expect(result).toBeNull()
     })
@@ -291,7 +288,7 @@ describe('DocumentService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_DOC_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_DOC_ID)
+      const result = await service.delete(TEST_DOC_ID)
 
       expect(result).toBe(true)
     })
@@ -300,7 +297,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -311,7 +308,7 @@ describe('DocumentService', () => {
       const service = await getService()
 
       await expect(
-        service.delete(TEST_TENANT_ID, TEST_DOC_ID)
+        service.delete(TEST_DOC_ID)
       ).rejects.toThrow('Entwurf')
     })
   })
@@ -329,7 +326,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -343,7 +340,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(20)
@@ -354,7 +351,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 40 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 2, limit: 10 })
+      const result = await service.list({ page: 2, limit: 10 })
 
       expect(result.meta.page).toBe(2)
       expect(result.meta.limit).toBe(10)
@@ -366,7 +363,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { type: 'invoice' })
+      await service.list({ type: 'invoice' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -376,7 +373,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'sent' })
+      await service.list({ status: 'sent' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -386,7 +383,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { search: 'RE-2026' })
+      await service.list({ search: 'RE-2026' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -403,7 +400,7 @@ describe('DocumentService', () => {
       dbMock.mockUpdate.mockResolvedValue([updatedFixture])
 
       const service = await getService()
-      const result = await service.updateStatus(TEST_TENANT_ID, TEST_DOC_ID, 'sent')
+      const result = await service.updateStatus(TEST_DOC_ID, 'sent')
 
       expect(result!.status).toBe('sent')
     })
@@ -416,7 +413,7 @@ describe('DocumentService', () => {
       dbMock.mockUpdate.mockResolvedValue([updatedFixture])
 
       const service = await getService()
-      const result = await service.updateStatus(TEST_TENANT_ID, TEST_DOC_ID, 'paid')
+      const result = await service.updateStatus(TEST_DOC_ID, 'paid')
 
       expect(result!.status).toBe('paid')
     })
@@ -427,7 +424,7 @@ describe('DocumentService', () => {
       const service = await getService()
 
       await expect(
-        service.updateStatus(TEST_TENANT_ID, TEST_DOC_ID, 'paid')
+        service.updateStatus(TEST_DOC_ID, 'paid')
       ).rejects.toThrow('nicht erlaubt')
     })
 
@@ -437,7 +434,7 @@ describe('DocumentService', () => {
       dbMock.mockUpdate.mockResolvedValue([updatedFixture])
 
       const service = await getService()
-      const result = await service.updateStatus(TEST_TENANT_ID, TEST_DOC_ID, 'sent')
+      const result = await service.updateStatus(TEST_DOC_ID, 'sent')
 
       expect(result!.status).toBe('sent')
     })
@@ -446,7 +443,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.updateStatus(TEST_TENANT_ID, 'nonexistent', 'sent')
+      const result = await service.updateStatus('nonexistent', 'sent')
 
       expect(result).toBeNull()
     })
@@ -468,7 +465,7 @@ describe('DocumentService', () => {
       dbMock.mockUpdate.mockResolvedValue([documentFixture()])
 
       const service = await getService()
-      const result = await service.addItem(TEST_TENANT_ID, TEST_DOC_ID, {
+      const result = await service.addItem(TEST_DOC_ID, {
         name: 'Test Position',
         quantity: 1,
         unitPrice: 100,
@@ -491,7 +488,7 @@ describe('DocumentService', () => {
       dbMock.mockUpdate.mockResolvedValue([documentFixture()])
 
       const service = await getService()
-      const result = await service.removeItem(TEST_TENANT_ID, TEST_DOC_ID, TEST_ITEM_ID)
+      const result = await service.removeItem(TEST_DOC_ID, TEST_ITEM_ID)
 
       expect(result).toBe(true)
     })
@@ -500,7 +497,7 @@ describe('DocumentService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.removeItem(TEST_TENANT_ID, TEST_DOC_ID, 'nonexistent')
+      const result = await service.removeItem(TEST_DOC_ID, 'nonexistent')
 
       expect(result).toBe(false)
     })
@@ -514,7 +511,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue(items)
 
       const service = await getService()
-      const result = await service.getItems(TEST_TENANT_ID, TEST_DOC_ID)
+      const result = await service.getItems(TEST_DOC_ID)
 
       expect(result).toHaveLength(2)
     })
@@ -523,7 +520,7 @@ describe('DocumentService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getItems(TEST_TENANT_ID, TEST_DOC_ID)
+      const result = await service.getItems(TEST_DOC_ID)
 
       expect(result).toEqual([])
     })

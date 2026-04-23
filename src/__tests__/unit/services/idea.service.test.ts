@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
 
-const TEST_TENANT_ID = '00000000-0000-0000-0000-000000000001'
 const TEST_USER_ID = '00000000-0000-0000-0000-000000000002'
 const TEST_IDEA_ID = '00000000-0000-0000-0000-000000000030'
 
 function ideaFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_IDEA_ID,
-    tenantId: TEST_TENANT_ID,
     rawContent: 'Eine tolle Idee für das Produkt',
     type: 'text',
     status: 'backlog',
@@ -42,7 +40,7 @@ describe('IdeaService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         rawContent: 'Eine tolle Idee für das Produkt',
       }, TEST_USER_ID)
 
@@ -55,7 +53,7 @@ describe('IdeaService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         rawContent: 'Test Idee',
       })
 
@@ -67,7 +65,7 @@ describe('IdeaService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         rawContent: 'Test Idee',
       })
 
@@ -79,7 +77,7 @@ describe('IdeaService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         rawContent: 'Feature Idee',
         type: 'feature',
         status: 'in_progress',
@@ -94,7 +92,7 @@ describe('IdeaService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         rawContent: 'Test',
       })
 
@@ -111,7 +109,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_IDEA_ID)
+      const result = await service.getById(TEST_IDEA_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -120,7 +118,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -134,7 +132,7 @@ describe('IdeaService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_IDEA_ID, {
+      const result = await service.update(TEST_IDEA_ID, {
         status: 'in_progress',
       })
 
@@ -146,7 +144,7 @@ describe('IdeaService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { status: 'converted' })
+      const result = await service.update('nonexistent', { status: 'converted' })
 
       expect(result).toBeNull()
     })
@@ -156,7 +154,7 @@ describe('IdeaService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_IDEA_ID, {
+      const result = await service.update(TEST_IDEA_ID, {
         rawContent: 'Aktualisierter Inhalt',
       })
 
@@ -168,7 +166,7 @@ describe('IdeaService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_IDEA_ID, {
+      const result = await service.update(TEST_IDEA_ID, {
         tags: ['important', 'urgent'],
       })
 
@@ -181,7 +179,7 @@ describe('IdeaService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_IDEA_ID, {
+      const result = await service.update(TEST_IDEA_ID, {
         structuredContent,
       })
 
@@ -196,7 +194,7 @@ describe('IdeaService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_IDEA_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_IDEA_ID)
+      const result = await service.delete(TEST_IDEA_ID)
 
       expect(result).toBe(true)
     })
@@ -205,7 +203,7 @@ describe('IdeaService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -221,7 +219,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -235,7 +233,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(50)
@@ -246,7 +244,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 100 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 2, limit: 25 })
+      const result = await service.list({ page: 2, limit: 25 })
 
       expect(result.meta.page).toBe(2)
       expect(result.meta.limit).toBe(25)
@@ -258,7 +256,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'in_progress' })
+      await service.list({ status: 'in_progress' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -268,7 +266,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { type: 'feature' })
+      await service.list({ type: 'feature' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -285,7 +283,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValue([backlogIdea, inProgressIdea, convertedIdea])
 
       const service = await getService()
-      const result = await service.listGroupedByStatus(TEST_TENANT_ID)
+      const result = await service.listGroupedByStatus()
 
       expect(result.backlog).toHaveLength(1)
       expect(result.in_progress).toHaveLength(1)
@@ -297,7 +295,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.listGroupedByStatus(TEST_TENANT_ID)
+      const result = await service.listGroupedByStatus()
 
       expect(result.backlog).toEqual([])
       expect(result.in_progress).toEqual([])
@@ -309,7 +307,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValue([idea])
 
       const service = await getService()
-      const result = await service.listGroupedByStatus(TEST_TENANT_ID)
+      const result = await service.listGroupedByStatus()
 
       expect(result.backlog).toHaveLength(1)
     })
@@ -319,7 +317,7 @@ describe('IdeaService', () => {
       dbMock.mockSelect.mockResolvedValue([idea])
 
       const service = await getService()
-      const result = await service.listGroupedByStatus(TEST_TENANT_ID)
+      const result = await service.listGroupedByStatus()
 
       expect(result.archived).toHaveLength(1)
     })
