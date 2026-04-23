@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
+import { TEST_USER_ID } from '../../helpers/fixtures'
 
 // Mock nodemailer
 vi.mock('nodemailer', () => ({
@@ -108,7 +108,8 @@ describe('EmailService', () => {
   describe('isConfigured', () => {
     it('returns false when no config', async () => {
       const service = await getService()
-      expect(service.isConfigured()).toBe(false)
+      const result = await service.isConfigured()
+      expect(result).toBe(false)
     })
 
     it('returns true when config present', async () => {
@@ -116,7 +117,8 @@ describe('EmailService', () => {
       process.env.EMAIL_PASSWORD = 'app-password'
 
       const service = await getService()
-      expect(service.isConfigured()).toBe(true)
+      const result = await service.isConfigured()
+      expect(result).toBe(true)
     })
   })
 
@@ -125,7 +127,7 @@ describe('EmailService', () => {
   describe('send', () => {
     it('returns error result when not configured', async () => {
       const service = await getService()
-      const result = await service.send(TEST_TENANT_ID, {
+      const result = await service.send({
         to: 'recipient@example.com',
         subject: 'Test',
         body: 'Hello',
@@ -146,7 +148,7 @@ describe('EmailService', () => {
       dbMock.mockInsert.mockResolvedValue([{}])
 
       const service = await getService()
-      const result = await service.send(TEST_TENANT_ID, {
+      const result = await service.send({
         to: 'recipient@example.com',
         subject: 'Test Subject',
         body: 'Hello World',
@@ -173,7 +175,7 @@ describe('EmailService', () => {
       dbMock.mockInsert.mockResolvedValue([{}])
 
       const service = await getService()
-      await service.send(TEST_TENANT_ID, {
+      await service.send({
         to: 'recipient@example.com',
         subject: 'Log Test',
         body: 'Test body',
@@ -192,7 +194,7 @@ describe('EmailService', () => {
       sendMailMock.mockRejectedValue(new Error('SMTP connection refused'))
 
       const service = await getService()
-      const result = await service.send(TEST_TENANT_ID, {
+      const result = await service.send({
         to: 'recipient@example.com',
         subject: 'Test',
         body: 'Hello',

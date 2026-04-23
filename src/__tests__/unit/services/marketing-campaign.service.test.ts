@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
+import { TEST_USER_ID } from '../../helpers/fixtures'
 
 const TEST_CAMPAIGN_ID = '00000000-0000-0000-0000-000000000040'
 const TEST_CAMPAIGN_ID_2 = '00000000-0000-0000-0000-000000000041'
@@ -8,7 +8,6 @@ const TEST_CAMPAIGN_ID_2 = '00000000-0000-0000-0000-000000000041'
 function campaignFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_CAMPAIGN_ID,
-    tenantId: TEST_TENANT_ID,
     name: 'Summer Campaign',
     description: null,
     type: 'email',
@@ -45,7 +44,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'Summer Campaign',
         type: 'email',
       })
@@ -59,7 +58,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'Test Campaign',
         type: 'social',
       })
@@ -72,7 +71,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'Test Campaign',
         type: 'email',
       }, TEST_USER_ID)
@@ -89,7 +88,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_CAMPAIGN_ID)
+      const result = await service.getById(TEST_CAMPAIGN_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -98,7 +97,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -112,7 +111,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_CAMPAIGN_ID, {
+      const result = await service.update(TEST_CAMPAIGN_ID, {
         name: 'Updated Campaign',
       })
 
@@ -124,7 +123,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { name: 'X' })
+      const result = await service.update('nonexistent', { name: 'X' })
 
       expect(result).toBeNull()
     })
@@ -134,7 +133,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_CAMPAIGN_ID, {
+      const result = await service.update(TEST_CAMPAIGN_ID, {
         startDate: '2026-06-01',
       })
 
@@ -149,7 +148,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_CAMPAIGN_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_CAMPAIGN_ID)
+      const result = await service.delete(TEST_CAMPAIGN_ID)
 
       expect(result).toBe(true)
     })
@@ -158,7 +157,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -177,7 +176,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -190,7 +189,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(20)
@@ -201,7 +200,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'active' })
+      await service.list({ status: 'active' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -211,7 +210,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { type: 'email' })
+      await service.list({ type: 'email' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -221,7 +220,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { search: 'Summer' })
+      await service.list({ search: 'Summer' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -231,7 +230,7 @@ describe('MarketingCampaignService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 50 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 3, limit: 10 })
+      const result = await service.list({ page: 3, limit: 10 })
 
       expect(result.meta.page).toBe(3)
       expect(result.meta.limit).toBe(10)

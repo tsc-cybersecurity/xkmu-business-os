@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
+import { TEST_USER_ID } from '../../helpers/fixtures'
 
 // Mock bcryptjs
 vi.mock('bcryptjs', () => ({
@@ -15,7 +15,6 @@ const TEST_ROLE_ID = '00000000-0000-0000-0000-000000000010'
 function userFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_USER_ID,
-    tenantId: TEST_TENANT_ID,
     email: 'test@example.com',
     passwordHash: 'hashed_password',
     firstName: 'Max',
@@ -51,7 +50,7 @@ describe('UserService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         email: 'Test@Example.com',
         password: 'secret123',
       })
@@ -65,7 +64,7 @@ describe('UserService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         email: 'TEST@EXAMPLE.COM',
         password: 'secret123',
       })
@@ -78,7 +77,7 @@ describe('UserService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         email: 'test@example.com',
         password: 'secret123',
       })
@@ -91,7 +90,7 @@ describe('UserService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         email: 'admin@example.com',
         password: 'secret123',
         role: 'admin',
@@ -106,16 +105,13 @@ describe('UserService', () => {
   describe('authenticate', () => {
     it('returns success with session user for valid credentials', async () => {
       const fixture = userFixture()
-      // findByEmail -> select (AUTH-01: kein tenantId-Parameter mehr)
       dbMock.mockSelect.mockResolvedValueOnce([fixture])
-      // update lastLoginAt
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const bcrypt = await import('bcryptjs')
       vi.mocked(bcrypt.default.compare).mockResolvedValueOnce(true as never)
 
       const service = await getService()
-      // AUTH-01: kein tenantId-Parameter mehr
       const result = await service.authenticate('test@example.com', 'correct')
 
       expect(result.success).toBe(true)
@@ -129,7 +125,6 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      // AUTH-01: kein tenantId-Parameter mehr
       const result = await service.authenticate('nobody@example.com', 'pass')
 
       expect(result.success).toBe(false)
@@ -143,7 +138,6 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      // AUTH-01: kein tenantId-Parameter mehr
       const result = await service.authenticate('test@example.com', 'pass')
 
       expect(result.success).toBe(false)
@@ -160,7 +154,6 @@ describe('UserService', () => {
       vi.mocked(bcrypt.default.compare).mockResolvedValueOnce(false as never)
 
       const service = await getService()
-      // AUTH-01: kein tenantId-Parameter mehr
       const result = await service.authenticate('test@example.com', 'wrongpass')
 
       expect(result.success).toBe(false)
@@ -178,7 +171,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_USER_ID)
+      const result = await service.getById(TEST_USER_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -187,7 +180,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -201,7 +194,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getByEmail(TEST_TENANT_ID, 'test@example.com')
+      const result = await service.getByEmail('test@example.com')
 
       expect(result).toEqual(fixture)
     })
@@ -210,7 +203,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getByEmail(TEST_TENANT_ID, 'nobody@example.com')
+      const result = await service.getByEmail('nobody@example.com')
 
       expect(result).toBeNull()
     })
@@ -224,7 +217,7 @@ describe('UserService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_USER_ID, { firstName: 'Updated' })
+      const result = await service.update(TEST_USER_ID, { firstName: 'Updated' })
 
       expect(result).toEqual(fixture)
       expect(result!.firstName).toBe('Updated')
@@ -235,7 +228,7 @@ describe('UserService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_USER_ID, { email: 'NEW@EXAMPLE.COM' })
+      const result = await service.update(TEST_USER_ID, { email: 'NEW@EXAMPLE.COM' })
 
       expect(result).toBeDefined()
     })
@@ -244,7 +237,7 @@ describe('UserService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { firstName: 'X' })
+      const result = await service.update('nonexistent', { firstName: 'X' })
 
       expect(result).toBeNull()
     })
@@ -257,7 +250,7 @@ describe('UserService', () => {
       dbMock.mockUpdate.mockResolvedValue([{ id: TEST_USER_ID }])
 
       const service = await getService()
-      const result = await service.updatePassword(TEST_TENANT_ID, TEST_USER_ID, 'newpassword')
+      const result = await service.updatePassword(TEST_USER_ID, 'newpassword')
 
       expect(result).toBe(true)
       expect(dbMock.db.update).toHaveBeenCalled()
@@ -267,7 +260,7 @@ describe('UserService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.updatePassword(TEST_TENANT_ID, 'nonexistent', 'newpassword')
+      const result = await service.updatePassword('nonexistent', 'newpassword')
 
       expect(result).toBe(false)
     })
@@ -280,7 +273,7 @@ describe('UserService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_USER_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_USER_ID)
+      const result = await service.delete(TEST_USER_ID)
 
       expect(result).toBe(true)
     })
@@ -289,7 +282,7 @@ describe('UserService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -305,7 +298,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -318,7 +311,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(20)
@@ -329,7 +322,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 50 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 3, limit: 10 })
+      const result = await service.list({ page: 3, limit: 10 })
 
       expect(result.meta.page).toBe(3)
       expect(result.meta.limit).toBe(10)
@@ -341,7 +334,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ count: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { role: 'admin' })
+      await service.list({ role: 'admin' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -354,7 +347,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([{ id: TEST_USER_ID }])
 
       const service = await getService()
-      const result = await service.emailExists(TEST_TENANT_ID, 'test@example.com')
+      const result = await service.emailExists('test@example.com')
 
       expect(result).toBe(true)
     })
@@ -363,7 +356,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.emailExists(TEST_TENANT_ID, 'nobody@example.com')
+      const result = await service.emailExists('nobody@example.com')
 
       expect(result).toBe(false)
     })
@@ -372,7 +365,7 @@ describe('UserService', () => {
       dbMock.mockSelect.mockResolvedValue([{ id: TEST_USER_ID }])
 
       const service = await getService()
-      const result = await service.emailExists(TEST_TENANT_ID, 'test@example.com', TEST_USER_ID)
+      const result = await service.emailExists('test@example.com', TEST_USER_ID)
 
       expect(result).toBe(false)
     })

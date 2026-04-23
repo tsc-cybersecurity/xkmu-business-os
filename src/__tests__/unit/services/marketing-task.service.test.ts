@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID } from '../../helpers/fixtures'
 
 const TEST_CAMPAIGN_ID = '00000000-0000-0000-0000-000000000040'
 const TEST_TASK_ID = '00000000-0000-0000-0000-000000000050'
@@ -9,7 +8,6 @@ const TEST_TASK_ID_2 = '00000000-0000-0000-0000-000000000051'
 function taskFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_TASK_ID,
-    tenantId: TEST_TENANT_ID,
     campaignId: TEST_CAMPAIGN_ID,
     type: 'email',
     recipientEmail: 'test@example.com',
@@ -48,7 +46,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         campaignId: TEST_CAMPAIGN_ID,
         type: 'email',
         recipientEmail: 'test@example.com',
@@ -64,7 +62,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         campaignId: TEST_CAMPAIGN_ID,
         type: 'email',
       })
@@ -77,7 +75,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         campaignId: TEST_CAMPAIGN_ID,
         type: 'email',
         scheduledAt: '2026-06-01T10:00:00Z',
@@ -95,7 +93,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_TASK_ID)
+      const result = await service.getById(TEST_TASK_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -104,7 +102,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -118,7 +116,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_TASK_ID, {
+      const result = await service.update(TEST_TASK_ID, {
         subject: 'Updated Subject',
       })
 
@@ -130,7 +128,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { subject: 'X' })
+      const result = await service.update('nonexistent', { subject: 'X' })
 
       expect(result).toBeNull()
     })
@@ -140,7 +138,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_TASK_ID, {
+      const result = await service.update(TEST_TASK_ID, {
         status: 'sent',
       })
 
@@ -155,7 +153,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_TASK_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_TASK_ID)
+      const result = await service.delete(TEST_TASK_ID)
 
       expect(result).toBe(true)
     })
@@ -164,7 +162,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -180,7 +178,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -193,7 +191,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { campaignId: TEST_CAMPAIGN_ID })
+      await service.list({ campaignId: TEST_CAMPAIGN_ID })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -203,7 +201,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'sent' })
+      await service.list({ status: 'sent' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -213,7 +211,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 30 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 2, limit: 10 })
+      const result = await service.list({ page: 2, limit: 10 })
 
       expect(result.meta.page).toBe(2)
       expect(result.meta.limit).toBe(10)
@@ -229,7 +227,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockSelect.mockResolvedValue(fixtures)
 
       const service = await getService()
-      const result = await service.listByCampaign(TEST_TENANT_ID, TEST_CAMPAIGN_ID)
+      const result = await service.listByCampaign(TEST_CAMPAIGN_ID)
 
       expect(result).toHaveLength(2)
     })
@@ -238,7 +236,7 @@ describe('MarketingTaskService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.listByCampaign(TEST_TENANT_ID, TEST_CAMPAIGN_ID)
+      const result = await service.listByCampaign(TEST_CAMPAIGN_ID)
 
       expect(result).toEqual([])
     })
