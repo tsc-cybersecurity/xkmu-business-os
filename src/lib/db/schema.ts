@@ -2982,7 +2982,8 @@ export type AuditLog = typeof auditLogs.$inferSelect
 export const companyChangeRequests = pgTable('company_change_requests', {
   id: uuid('id').primaryKey().defaultRandom(),
   companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
-  requestedBy: uuid('requested_by').notNull().references(() => users.id, { onDelete: 'set null' }),
+  // nullable because ON DELETE SET NULL preserves change-request history when user is deleted
+  requestedBy: uuid('requested_by').references(() => users.id, { onDelete: 'set null' }),
   requestedAt: timestamp('requested_at', { withTimezone: true }).notNull().defaultNow(),
   proposedChanges: jsonb('proposed_changes').notNull(),
   status: varchar('status', { length: 20 }).notNull().default('pending'),
