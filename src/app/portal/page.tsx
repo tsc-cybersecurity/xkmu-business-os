@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, Building2, FileText, Briefcase, ShoppingCart, MessageCircle } from 'lucide-react'
+import { Loader2, Building2, FileText, Briefcase, ShoppingCart, MessageCircle, AlertTriangle } from 'lucide-react'
 
 interface PortalCompany {
   id: string
@@ -18,15 +19,27 @@ interface PortalCompany {
   website: string | null
 }
 
+interface ChangeRequest {
+  id: string
+  status: string
+}
+
 export default function PortalDashboard() {
   const [company, setCompany] = useState<PortalCompany | null>(null)
   const [loading, setLoading] = useState(true)
+  const [hasPending, setHasPending] = useState(false)
 
   useEffect(() => {
-    fetch('/api/v1/portal/me/company')
-      .then(r => r.json())
-      .then(d => { if (d?.success) setCompany(d.data) })
-      .finally(() => setLoading(false))
+    Promise.all([
+      fetch('/api/v1/portal/me/company').then(r => r.json()),
+      fetch('/api/v1/portal/me/company/change-requests').then(r => r.json()),
+    ]).then(([cData, rData]) => {
+      if (cData?.success) setCompany(cData.data)
+      if (rData?.success) {
+        const rows = rData.data as ChangeRequest[]
+        setHasPending(rows.some((r) => r.status === 'pending'))
+      }
+    }).finally(() => setLoading(false))
   }, [])
 
   if (loading) {
@@ -48,13 +61,25 @@ export default function PortalDashboard() {
         )}
       </div>
 
+      {hasPending && (
+        <div className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 dark:bg-amber-950/20 px-4 py-3 text-sm">
+          <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+          <span>
+            Ein Antrag läuft — Details unter{' '}
+            <Link href="/portal/company/requests" className="underline underline-offset-2 font-medium">
+              Meine Anträge
+            </Link>
+          </span>
+        </div>
+      )}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5" /> Meine Firmendaten
           </CardTitle>
-          <Button variant="outline" size="sm" disabled>
-            Bearbeiten (kommt in Kürze)
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/portal/company">Bearbeiten</Link>
           </Button>
         </CardHeader>
         <CardContent>

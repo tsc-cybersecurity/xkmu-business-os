@@ -13,9 +13,15 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <div className="min-h-screen bg-muted/20 flex flex-col">
         <header className="border-b bg-background">
           <div className="container mx-auto flex items-center justify-between px-4 py-3">
-            <Link href="/portal" className="font-semibold">
-              Kundenportal
-            </Link>
+            <div className="flex items-center gap-6">
+              <Link href="/portal" className="font-semibold">
+                Kundenportal
+              </Link>
+              <nav className="flex items-center gap-4">
+                <Link href="/portal/company" className="text-sm text-muted-foreground hover:text-foreground">Firmendaten</Link>
+                <Link href="/portal/company/requests" className="text-sm text-muted-foreground hover:text-foreground">Anträge</Link>
+              </nav>
+            </div>
             <LogoutButton />
           </div>
         </header>
