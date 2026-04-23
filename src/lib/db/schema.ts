@@ -2953,3 +2953,26 @@ export type Deliverable = typeof deliverables.$inferSelect
 export type NewDeliverable = typeof deliverables.$inferInsert
 export type ExecutionLog = typeof executionLogs.$inferSelect
 export type NewExecutionLog = typeof executionLogs.$inferInsert
+
+// ============================================
+// Audit Logs — revisionssichere Aktions-Historie
+// ============================================
+export const auditLogs = pgTable('audit_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  userRole: varchar('user_role', { length: 50 }),
+  action: varchar('action', { length: 100 }).notNull(),
+  entityType: varchar('entity_type', { length: 50 }),
+  entityId: uuid('entity_id'),
+  payload: jsonb('payload').notNull().default({}),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_audit_logs_user_id').on(table.userId, table.createdAt),
+  index('idx_audit_logs_entity').on(table.entityType, table.entityId, table.createdAt),
+  index('idx_audit_logs_action').on(table.action, table.createdAt),
+])
+
+export type AuditLog = typeof auditLogs.$inferSelect
+export type NewAuditLog = typeof auditLogs.$inferInsert

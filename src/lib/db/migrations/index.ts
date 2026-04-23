@@ -52,4 +52,8 @@ export const MIGRATIONS: Migration[] = [
     name: '008_portal_users.sql',
     description: 'users.companyId + Invite-Flow Felder + Rolle portal_user',
   },
+  {
+    name: '009_audit_logs.sql',
+    description: 'Revisionssichere Audit-Trail (audit_logs + Indexe)',
+  },
 ]
