@@ -151,6 +151,44 @@ const DEFAULT_EMAIL_TEMPLATES = [
     ],
   },
   {
+    slug: 'portal_change_request_admin',
+    name: 'Portal: Neuer Firmendaten-Antrag',
+    subject: 'Neuer Firmendaten-Antrag von {{kunde}} ({{firma}})',
+    bodyHtml: `<p>Hallo,</p>
+<p>ein Portal-Nutzer hat Änderungen an den Firmendaten von <strong>{{firma}}</strong> beantragt.</p>
+<p><strong>Antragsteller:</strong> {{kunde}}<br>
+<strong>Eingereicht am:</strong> {{datum}}</p>
+<p>Vorgeschlagene Änderungen:</p>
+<pre>{{aenderungen}}</pre>
+<p><a href="{{pruefUrl}}">Antrag im Admin-Bereich prüfen</a></p>`,
+    placeholders: [
+      { key: 'kunde', label: 'Kunde', description: 'Name des Portal-Nutzers' },
+      { key: 'firma', label: 'Firma', description: 'Firmenname' },
+      { key: 'datum', label: 'Datum', description: 'Antragsdatum' },
+      { key: 'aenderungen', label: 'Änderungen', description: 'Liste der geänderten Felder (Text)' },
+      { key: 'pruefUrl', label: 'Prüf-URL', description: 'Link zur Admin-Review-Seite' },
+    ],
+  },
+  {
+    slug: 'portal_change_request_decision',
+    name: 'Portal: Entscheidung zu Ihrem Antrag',
+    subject: 'Ihr Firmendaten-Antrag wurde {{entscheidung}}',
+    bodyHtml: `<p>Hallo {{name}},</p>
+<p>Ihr Antrag auf Änderung der Firmendaten von <strong>{{firma}}</strong> vom {{datum}} wurde <strong>{{entscheidung}}</strong>.</p>
+{{kommentarBlock}}
+<p><a href="{{portalUrl}}">Zum Kundenportal</a></p>
+<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+    placeholders: [
+      { key: 'name', label: 'Name', description: 'Name des Portal-Nutzers' },
+      { key: 'firma', label: 'Firma', description: 'Firmenname' },
+      { key: 'datum', label: 'Datum', description: 'Antragsdatum' },
+      { key: 'entscheidung', label: 'Entscheidung', description: 'genehmigt oder abgelehnt' },
+      { key: 'kommentarBlock', label: 'Kommentar-Block', description: 'Vorformatierter HTML-Block mit Admin-Kommentar (leer bei Genehmigung)' },
+      { key: 'portalUrl', label: 'Portal-URL', description: 'Link zum Kundenportal' },
+      { key: 'absender', label: 'Absender', description: 'Absender-Name' },
+    ],
+  },
+  {
     slug: 'lead_first_response',
     name: 'Erstantwort auf Anfrage',
     subject: 'Vielen Dank fuer Ihre Anfrage, {{name}}!',

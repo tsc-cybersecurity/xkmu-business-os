@@ -1,10 +1,17 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
+import { eq } from 'drizzle-orm'
 import { apiSuccess, apiError, apiNotFound, apiValidationError } from '@/lib/utils/api-response'
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { withPermission } from '@/lib/auth/require-permission'
 import { CompanyChangeRequestService } from '@/lib/services/company-change-request.service'
 import { AuditLogService } from '@/lib/services/audit-log.service'
+import { OrganizationService } from '@/lib/services/organization.service'
+import { CompanyService } from '@/lib/services/company.service'
+import { CmsDesignService } from '@/lib/services/cms-design.service'
+import { TaskQueueService } from '@/lib/services/task-queue.service'
+import { db } from '@/lib/db'
+import { users } from '@/lib/db/schema'
 import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
@@ -43,6 +50,50 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         })
       } catch (err) {
         logger.error('Audit write failed for change_request.rejected', err, { module: 'AdminChangeRequestAPI' })
+      }
+
+      // Decision email to requester (fail-safe)
+      if (existing.requestedBy) {
+        try {
+          const [requester] = await db
+            .select({ email: users.email, firstName: users.firstName, lastName: users.lastName })
+            .from(users)
+            .where(eq(users.id, existing.requestedBy))
+            .limit(1)
+          if (requester?.email) {
+            const [org, company] = await Promise.all([
+              OrganizationService.getById(),
+              CompanyService.getById(existing.companyId),
+            ])
+            const baseUrl = await CmsDesignService.getAppUrl()
+            const esc = (s: string) =>
+              s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            const kommentarBlock = validation.data.reviewComment
+              ? `<p><strong>Kommentar:</strong><br>${esc(validation.data.reviewComment)}</p>`
+              : ''
+            await TaskQueueService.create({
+              type: 'email',
+              priority: 2,
+              payload: {
+                templateSlug: 'portal_change_request_decision',
+                to: requester.email,
+                placeholders: {
+                  name: `${requester.firstName ?? ''} ${requester.lastName ?? ''}`.trim() || requester.email,
+                  firma: company?.name ?? 'Ihre Firma',
+                  datum: new Date(existing.requestedAt).toLocaleDateString('de-DE'),
+                  entscheidung: 'abgelehnt',
+                  kommentarBlock,
+                  portalUrl: `${baseUrl}/portal`,
+                  absender: org?.name ?? 'Ihr Team',
+                },
+              },
+              referenceType: 'company_change_request',
+              referenceId: id,
+            })
+          }
+        } catch (err) {
+          logger.error('Decision email (reject) queue failed', err, { module: 'AdminChangeRequestAPI' })
+        }
       }
 
       return apiSuccess({

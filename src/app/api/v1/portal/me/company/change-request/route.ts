@@ -5,6 +5,10 @@ import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { withPortalAuth } from '@/lib/auth/with-portal-auth'
 import { CompanyChangeRequestService } from '@/lib/services/company-change-request.service'
 import { AuditLogService } from '@/lib/services/audit-log.service'
+import { OrganizationService } from '@/lib/services/organization.service'
+import { CompanyService } from '@/lib/services/company.service'
+import { CmsDesignService } from '@/lib/services/cms-design.service'
+import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { logger } from '@/lib/utils/logger'
 
 const changeableFields = z
@@ -58,6 +62,41 @@ export async function POST(request: NextRequest) {
         })
       } catch (err) {
         logger.error('Audit write failed for company_change_requested', err, { module: 'PortalChangeRequestAPI' })
+      }
+
+      // Admin notification email (fail-safe)
+      try {
+        const [org, company] = await Promise.all([
+          OrganizationService.getById(),
+          CompanyService.getById(auth.companyId),
+        ])
+        if (org?.email) {
+          const baseUrl = await CmsDesignService.getAppUrl()
+          const aenderungenText = Object.entries(validation.data.proposedChanges)
+            .map(([k, v]) => `- ${k}: ${v === null ? '(geleert)' : v}`)
+            .join('\n')
+          await TaskQueueService.create({
+            type: 'email',
+            priority: 2,
+            payload: {
+              templateSlug: 'portal_change_request_admin',
+              to: org.email,
+              placeholders: {
+                kunde: auth.email,
+                firma: company?.name ?? 'Unbekannte Firma',
+                datum: new Date().toLocaleDateString('de-DE'),
+                aenderungen: aenderungenText,
+                pruefUrl: `${baseUrl}/intern/portal/change-requests`,
+              },
+            },
+            referenceType: 'company_change_request',
+            referenceId: created.id,
+          })
+        } else {
+          logger.warn('Admin notification skipped: no org email configured', { module: 'PortalChangeRequestAPI' })
+        }
+      } catch (err) {
+        logger.error('Admin notification email queue failed', err, { module: 'PortalChangeRequestAPI' })
       }
 
       return apiSuccess(
