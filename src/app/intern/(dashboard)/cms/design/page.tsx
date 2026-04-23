@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Palette, Loader2, Save, Type, RectangleHorizontal, Sun, Image, MessageSquare, X, Plus } from 'lucide-react'
+import { Palette, Loader2, Save, Type, RectangleHorizontal, Sun, Image, MessageSquare, X, Plus, Link as LinkIcon } from 'lucide-react'
 import { fontOptions, accentOptions, radiusOptions, themeOptions, type FontId, type AccentId, type RadiusId, type ThemeId } from '@/app/_components/design-provider'
 import { logger } from '@/lib/utils/logger'
 
@@ -22,6 +22,7 @@ interface DesignSettings {
   contactHeadline: string
   contactDescription: string
   contactInterestTags: string[]
+  appUrl: string
 }
 
 const DEFAULT_TAGS = [
@@ -44,6 +45,7 @@ const DEFAULTS: DesignSettings = {
   contactHeadline: 'Kontakt',
   contactDescription: 'Haben Sie Fragen oder möchten Sie mehr über unsere Leistungen erfahren? Schreiben Sie uns!',
   contactInterestTags: DEFAULT_TAGS,
+  appUrl: '',
 }
 
 export default function CmsDesignPage() {
@@ -76,6 +78,7 @@ export default function CmsDesignPage() {
           contactInterestTags: Array.isArray(s.contactInterestTags) && s.contactInterestTags.length > 0
             ? (s.contactInterestTags as string[])
             : DEFAULT_TAGS,
+          appUrl: (s.appUrl as string) || '',
         })
       }
     } catch (error) {
@@ -106,6 +109,7 @@ export default function CmsDesignPage() {
           contactHeadline: settings.contactHeadline || '',
           contactDescription: settings.contactDescription || '',
           contactInterestTags: settings.contactInterestTags.filter((t) => t.trim()),
+          appUrl: settings.appUrl.trim(),
         }),
       })
       if (!putRes.ok) {
@@ -333,6 +337,27 @@ export default function CmsDesignPage() {
               </button>
               <Label>Header fixiert (sticky)</Label>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* App-Basis-URL */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <LinkIcon className="h-5 w-5" />
+              App-Basis-URL
+            </CardTitle>
+            <CardDescription>
+              Öffentlich erreichbare URL der Anwendung. Wird für Links in E-Mails verwendet (z.B. Portal-Einladungen).
+              Leer lassen, um die Umgebungsvariable <code className="text-xs">NEXT_PUBLIC_APP_URL</code> zu verwenden.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Input
+              placeholder="https://bos.example.de"
+              value={settings.appUrl}
+              onChange={(e) => setSettings((s) => ({ ...s, appUrl: e.target.value }))}
+            />
           </CardContent>
         </Card>
 
