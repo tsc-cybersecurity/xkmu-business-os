@@ -5,6 +5,7 @@ import { UserService } from '@/lib/services/user.service'
 import { createSession } from '@/lib/auth/session'
 import { logger } from '@/lib/utils/logger'
 import { rateLimit } from '@/lib/utils/rate-limit'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +32,20 @@ export async function POST(request: NextRequest) {
 
     // Create session
     await createSession(result.user)
+
+    const action = result.user.role === 'portal_user' ? 'portal_user.login' : 'internal.login'
+    try {
+      await AuditLogService.log({
+        userId: result.user.id,
+        userRole: result.user.role,
+        action,
+        entityType: 'user',
+        entityId: result.user.id,
+        request,
+      })
+    } catch (err) {
+      logger.error('Login audit write failed (non-blocking)', err, { module: 'AuthLogin' })
+    }
 
     const redirectTo = result.user.role === 'portal_user' ? '/portal' : '/intern/dashboard'
     return apiSuccess({

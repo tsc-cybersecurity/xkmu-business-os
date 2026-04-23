@@ -7,6 +7,7 @@ import { UserService } from '@/lib/services/user.service'
 import { createSession } from '@/lib/auth/session'
 import { logger } from '@/lib/utils/logger'
 import type { SessionUser } from '@/lib/types/auth.types'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 
 const schema = z.object({
   token: z.string().min(32).max(128),
@@ -44,6 +45,19 @@ export async function POST(request: NextRequest) {
       companyId: user.companyId ?? null,
     }
     await createSession(sessionUser)
+
+    try {
+      await AuditLogService.log({
+        userId: user.id,
+        userRole: user.role,
+        action: 'portal_user.invite_accepted',
+        entityType: 'user',
+        entityId: user.id,
+        request,
+      })
+    } catch (err) {
+      logger.error('Accept-invite audit write failed (non-blocking)', err, { module: 'AcceptInviteAPI' })
+    }
 
     logger.info(`Invite accepted: ${user.email} (company=${user.companyId})`, { module: 'AcceptInviteAPI' })
 
