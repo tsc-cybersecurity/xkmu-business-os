@@ -20,6 +20,7 @@ import { LayoutDashboard,
   LogOut,
   User,
   ExternalLink,
+  ClipboardList,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -161,6 +162,13 @@ const navigation: NavItem[] = [
     href: '/intern/settings/task-queue',
     icon: ListTodo,
     requiredModule: 'settings',
+  },
+  // ── Portal-Anträge (standalone) ──
+  {
+    name: 'Portal-Anträge',
+    href: '/intern/portal/change-requests',
+    icon: ClipboardList,
+    requiredModule: 'users',
   },
   // ── E-Mail Inbox (standalone) ──
   {

@@ -16,6 +16,7 @@ import { CompanyContactsSection } from './_components/company-contacts-section'
 import { CompanyResearchSection } from './_components/company-research-section'
 import { CompanyActionsGrid } from './_components/company-actions-grid'
 import { PortalUsersTab } from './_components/portal-users-tab'
+import { ChangeRequestsTab } from './_components/change-requests-tab'
 
 interface AIResearchData {
   lastResearchedAt?: string
@@ -328,6 +329,7 @@ export default function CompanyDetailPage() {
             KI-Aktionen
           </TabsTrigger>
           <TabsTrigger value="portal">Portal-Zugänge</TabsTrigger>
+          <TabsTrigger value="change-requests">Änderungsanträge</TabsTrigger>
           <TabsTrigger value="activity">Aktivitäten</TabsTrigger>
         </TabsList>
 
@@ -370,6 +372,10 @@ export default function CompanyDetailPage() {
 
         <TabsContent value="portal">
           <PortalUsersTab companyId={companyId} />
+        </TabsContent>
+
+        <TabsContent value="change-requests">
+          <ChangeRequestsTab companyId={companyId} />
         </TabsContent>
 
         <TabsContent value="activity">
