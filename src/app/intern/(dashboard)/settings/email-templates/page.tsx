@@ -113,8 +113,11 @@ export default function EmailTemplatesPage() {
     const response = await fetch('/api/v1/email-templates/seed', { method: 'POST' })
     const data = await response.json()
     if (data.success) {
-      toast.success(`${data.data.created} Templates importiert`)
+      const n = data.data.created
+      toast.success(n === 0 ? 'Alle Standard-Templates bereits vorhanden' : `${n} fehlende Templates nachgeladen`)
       fetchTemplates()
+    } else {
+      toast.error(data.error?.message || 'Seed fehlgeschlagen')
     }
   }
 
@@ -133,11 +136,9 @@ export default function EmailTemplatesPage() {
           <p className="text-muted-foreground mt-1">Templates fuer automatisierte E-Mails</p>
         </div>
         <div className="flex gap-2">
-          {templates.length === 0 && (
-            <Button variant="outline" onClick={seedTemplates}>
-              <Upload className="h-4 w-4 mr-2" />Standard-Templates laden
-            </Button>
-          )}
+          <Button variant="outline" onClick={seedTemplates} title="Fehlende Standard-Templates nachladen (idempotent)">
+            <Upload className="h-4 w-4 mr-2" />Standard-Templates laden
+          </Button>
           <Button onClick={() => openEdit(null)}>
             <Plus className="h-4 w-4 mr-2" />Neues Template
           </Button>
