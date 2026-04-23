@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
 
-const TEST_TENANT_ID = '00000000-0000-0000-0000-000000000001'
 const TEST_KEY_ID = '00000000-0000-0000-0000-000000000060'
-const FAKE_UUID = 'abcdef1234567890abcdef1234567890'
 
 // Mock bcryptjs
 vi.mock('bcryptjs', () => ({
@@ -16,7 +14,6 @@ vi.mock('bcryptjs', () => ({
 function apiKeyRowFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_KEY_ID,
-    tenantId: TEST_TENANT_ID,
     userId: null,
     name: 'Test Key',
     keyHash: '$2a$10$mockhashedvalue',
@@ -61,7 +58,6 @@ describe('auth/api-key module', () => {
       const mod = await getModule()
       const { key: key1 } = mod.generateApiKey()
       const { key: key2 } = mod.generateApiKey()
-      // Keys should differ (crypto.randomUUID is called each time)
       expect(key1).not.toBe(key2)
     })
   })
@@ -131,7 +127,6 @@ describe('auth/api-key module', () => {
       const result = await mod.validateApiKey('xkmu_abcde12345')
 
       expect(result).not.toBeNull()
-      expect(result?.tenantId).toBe(TEST_TENANT_ID)
       expect(result?.keyId).toBe(TEST_KEY_ID)
       expect(result?.permissions).toEqual(['*'])
     })
@@ -173,19 +168,19 @@ describe('auth/api-key module', () => {
   describe('hasPermission', () => {
     it('returns true for wildcard permission', async () => {
       const mod = await getModule()
-      const payload = { tenantId: TEST_TENANT_ID, keyId: TEST_KEY_ID, permissions: ['*'] }
+      const payload = { keyId: TEST_KEY_ID, permissions: ['*'] }
       expect(mod.hasPermission(payload, 'leads:read')).toBe(true)
     })
 
     it('returns true for exact permission match', async () => {
       const mod = await getModule()
-      const payload = { tenantId: TEST_TENANT_ID, keyId: TEST_KEY_ID, permissions: ['leads:read', 'companies:read'] }
+      const payload = { keyId: TEST_KEY_ID, permissions: ['leads:read', 'companies:read'] }
       expect(mod.hasPermission(payload, 'leads:read')).toBe(true)
     })
 
     it('returns false when permission not in list', async () => {
       const mod = await getModule()
-      const payload = { tenantId: TEST_TENANT_ID, keyId: TEST_KEY_ID, permissions: ['leads:read'] }
+      const payload = { keyId: TEST_KEY_ID, permissions: ['leads:read'] }
       expect(mod.hasPermission(payload, 'companies:write')).toBe(false)
     })
   })

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
+import { TEST_USER_ID } from '../../helpers/fixtures'
 
 const TEST_API_KEY_ID = '00000000-0000-0000-0000-000000000050'
 const RAW_KEY = 'xkmu_abc123def456'
@@ -16,7 +16,6 @@ vi.mock('@/lib/auth/api-key', () => ({
 function apiKeyFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_API_KEY_ID,
-    tenantId: TEST_TENANT_ID,
     userId: TEST_USER_ID,
     name: 'Test API Key',
     keyHash: KEY_HASH,
@@ -51,7 +50,7 @@ describe('ApiKeyService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, { name: 'Test API Key' }, TEST_USER_ID)
+      const result = await service.create({ name: 'Test API Key' }, TEST_USER_ID)
 
       expect(result.rawKey).toBe(RAW_KEY)
       expect(result.keyHash).toBe(KEY_HASH)
@@ -64,7 +63,7 @@ describe('ApiKeyService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, { name: 'Default Perms Key' })
+      const result = await service.create({ name: 'Default Perms Key' })
 
       expect(result.permissions).toEqual(['read', 'write'])
     })
@@ -74,7 +73,7 @@ describe('ApiKeyService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'Scoped Key',
         permissions: ['leads:read', 'companies:read'],
       })
@@ -86,12 +85,12 @@ describe('ApiKeyService', () => {
   // ---- getById ----
 
   describe('getById', () => {
-    it('returns api key when found for tenant', async () => {
+    it('returns api key when found', async () => {
       const fixture = apiKeyFixture()
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_API_KEY_ID)
+      const result = await service.getById(TEST_API_KEY_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -100,7 +99,7 @@ describe('ApiKeyService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent-id')
+      const result = await service.getById('nonexistent-id')
 
       expect(result).toBeNull()
     })
@@ -115,7 +114,7 @@ describe('ApiKeyService', () => {
       dbMock.mockSelect.mockResolvedValue([key2, key1])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result).toHaveLength(2)
       expect(result[0].name).toBe('Key 2')
@@ -129,7 +128,7 @@ describe('ApiKeyService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_API_KEY_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_API_KEY_ID)
+      const result = await service.delete(TEST_API_KEY_ID)
 
       expect(result).toBe(true)
     })
@@ -138,7 +137,7 @@ describe('ApiKeyService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent-id')
+      const result = await service.delete('nonexistent-id')
 
       expect(result).toBe(false)
     })

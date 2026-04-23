@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID } from '../../helpers/fixtures'
 
 const TEST_TOPIC_ID = '00000000-0000-0000-0000-000000000070'
 const TEST_TOPIC_ID_2 = '00000000-0000-0000-0000-000000000071'
@@ -8,7 +7,6 @@ const TEST_TOPIC_ID_2 = '00000000-0000-0000-0000-000000000071'
 function topicFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_TOPIC_ID,
-    tenantId: TEST_TENANT_ID,
     name: 'AI & Automation',
     description: null,
     color: '#3b82f6',
@@ -34,13 +32,13 @@ describe('SocialMediaTopicService', () => {
   // ---- list ----
 
   describe('list', () => {
-    it('returns all topics for tenant', async () => {
+    it('returns all topics', async () => {
       const topics = [topicFixture(), topicFixture({ id: TEST_TOPIC_ID_2, name: 'Cyber Security' })]
       dbMock.mockSelect.mockResolvedValueOnce(topics)
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -52,7 +50,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toEqual([])
       expect(result.meta.total).toBe(0)
@@ -67,7 +65,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_TOPIC_ID)
+      const result = await service.getById(TEST_TOPIC_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -76,7 +74,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -90,7 +88,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'AI & Automation',
       })
 
@@ -103,7 +101,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'Marketing',
       })
 
@@ -115,7 +113,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'Urgent',
         color: '#ff0000',
       })
@@ -132,7 +130,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_TOPIC_ID, {
+      const result = await service.update(TEST_TOPIC_ID, {
         name: 'Updated Topic',
       })
 
@@ -144,7 +142,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { name: 'X' })
+      const result = await service.update('nonexistent', { name: 'X' })
 
       expect(result).toBeNull()
     })
@@ -154,7 +152,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_TOPIC_ID, {
+      const result = await service.update(TEST_TOPIC_ID, {
         color: '#00ff00',
       })
 
@@ -169,7 +167,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_TOPIC_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_TOPIC_ID)
+      const result = await service.delete(TEST_TOPIC_ID)
 
       expect(result).toBe(true)
     })
@@ -178,7 +176,7 @@ describe('SocialMediaTopicService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })

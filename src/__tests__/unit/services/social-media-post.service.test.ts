@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
+import { TEST_USER_ID } from '../../helpers/fixtures'
 
 const TEST_POST_ID = '00000000-0000-0000-0000-000000000060'
 const TEST_POST_ID_2 = '00000000-0000-0000-0000-000000000061'
@@ -9,7 +9,6 @@ const TEST_TOPIC_ID = '00000000-0000-0000-0000-000000000070'
 function postFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_POST_ID,
-    tenantId: TEST_TENANT_ID,
     topicId: null,
     platform: 'linkedin',
     title: null,
@@ -48,7 +47,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         platform: 'linkedin',
         content: 'Test post content',
       })
@@ -62,7 +61,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         platform: 'twitter',
         content: 'Hello Twitter!',
       })
@@ -75,7 +74,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         platform: 'linkedin',
         content: 'Manual post',
       })
@@ -88,7 +87,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         platform: 'linkedin',
         content: 'Test',
       }, TEST_USER_ID)
@@ -105,7 +104,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_POST_ID)
+      const result = await service.getById(TEST_POST_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -114,7 +113,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -128,7 +127,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_POST_ID, {
+      const result = await service.update(TEST_POST_ID, {
         content: 'Updated content',
       })
 
@@ -140,7 +139,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { content: 'X' })
+      const result = await service.update('nonexistent', { content: 'X' })
 
       expect(result).toBeNull()
     })
@@ -150,7 +149,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_POST_ID, {
+      const result = await service.update(TEST_POST_ID, {
         platform: 'twitter',
       })
 
@@ -165,7 +164,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_POST_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_POST_ID)
+      const result = await service.delete(TEST_POST_ID)
 
       expect(result).toBe(true)
     })
@@ -174,7 +173,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -193,7 +192,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -206,7 +205,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(20)
@@ -217,7 +216,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { platform: 'linkedin' })
+      await service.list({ platform: 'linkedin' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -227,7 +226,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { status: 'scheduled' })
+      await service.list({ status: 'scheduled' })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -237,7 +236,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { topicId: TEST_TOPIC_ID })
+      await service.list({ topicId: TEST_TOPIC_ID })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -247,7 +246,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 40 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID, { page: 2, limit: 10 })
+      const result = await service.list({ page: 2, limit: 10 })
 
       expect(result.meta.page).toBe(2)
       expect(result.meta.limit).toBe(10)
@@ -263,7 +262,7 @@ describe('SocialMediaPostService', () => {
       dbMock.mockInsert.mockResolvedValue(fixtures)
 
       const service = await getService()
-      const result = await service.bulkCreate(TEST_TENANT_ID, [
+      const result = await service.bulkCreate([
         { platform: 'linkedin', content: 'Post 1' },
         { platform: 'twitter', content: 'Post 2' },
       ])
@@ -274,7 +273,7 @@ describe('SocialMediaPostService', () => {
 
     it('returns empty array for empty input', async () => {
       const service = await getService()
-      const result = await service.bulkCreate(TEST_TENANT_ID, [])
+      const result = await service.bulkCreate([])
 
       expect(result).toEqual([])
       expect(dbMock.db.insert).not.toHaveBeenCalled()

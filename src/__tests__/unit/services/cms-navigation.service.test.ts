@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID } from '../../helpers/fixtures'
 
 const TEST_NAV_ID = '00000000-0000-0000-0000-000000000030'
 const TEST_NAV_ID_2 = '00000000-0000-0000-0000-000000000031'
@@ -8,7 +7,6 @@ const TEST_NAV_ID_2 = '00000000-0000-0000-0000-000000000031'
 function navItemFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_NAV_ID,
-    tenantId: TEST_TENANT_ID,
     location: 'header',
     label: 'Home',
     href: '/',
@@ -33,7 +31,7 @@ describe('CmsNavigationService', () => {
   async function getService() {
     // Mock db.transaction used by reorder()
     const dbModule = await import('@/lib/db')
-    ;(dbModule.db as Record<string, unknown>).transaction = vi.fn().mockImplementation(
+    ;(dbModule.db as unknown as Record<string, unknown>).transaction = vi.fn().mockImplementation(
       async (fn: (tx: typeof dbModule.db) => Promise<void>) => fn(dbModule.db)
     )
     const mod = await import('@/lib/services/cms-navigation.service')
@@ -43,7 +41,7 @@ describe('CmsNavigationService', () => {
   // ---- list ----
 
   describe('list', () => {
-    it('returns all navigation items for tenant', async () => {
+    it('returns all navigation items', async () => {
       const items = [navItemFixture(), navItemFixture({ id: TEST_NAV_ID_2, label: 'About', sortOrder: 1 })]
       dbMock.mockSelect.mockResolvedValue(items)
 

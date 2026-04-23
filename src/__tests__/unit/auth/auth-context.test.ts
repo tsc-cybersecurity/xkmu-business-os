@@ -8,7 +8,7 @@ vi.mock('@/lib/auth/api-key', () => ({
 describe('getAuthContext()', () => {
   beforeEach(() => { vi.resetModules() })
 
-  it('session-Zweig: tenantId ist TENANT_ID-Konstante', async () => {
+  it('session-Zweig: userId und role werden gesetzt', async () => {
     const { getSession } = await import('@/lib/auth/session')
     vi.mocked(getSession).mockResolvedValue({
       user: { id: 'user-1', email: 'a@b.de', firstName: null, lastName: null, role: 'admin', roleId: null },
@@ -20,18 +20,18 @@ describe('getAuthContext()', () => {
     const req = new Request('http://localhost/') as unknown as import('next/server').NextRequest
     const ctx = await getAuthContext(req)
 
-    expect(ctx?.tenantId).toBe()
     expect(ctx?.userId).toBe('user-1')
+    expect(ctx?.role).toBe('admin')
+    expect(ctx?.apiKeyPermissions).toBeNull()
   })
 
-  it('api-key-Zweig: tenantId ist TENANT_ID-Konstante, nicht payload.tenantId', async () => {
+  it('api-key-Zweig: permissions werden aus payload gesetzt', async () => {
     const { getSession } = await import('@/lib/auth/session')
     vi.mocked(getSession).mockResolvedValue(null)
 
     const { getApiKeyFromRequest, validateApiKey } = await import('@/lib/auth/api-key')
     vi.mocked(getApiKeyFromRequest).mockReturnValue('xkmu_somekey')
     vi.mocked(validateApiKey).mockResolvedValue({
-      tenantId: 'different-tenant-id',   // wird ignoriert — AUTH-04
       keyId: 'key-1',
       permissions: ['*'],
     })
@@ -40,7 +40,9 @@ describe('getAuthContext()', () => {
     const req = new Request('http://localhost/') as unknown as import('next/server').NextRequest
     const ctx = await getAuthContext(req)
 
-    expect(ctx?.tenantId).toBe()   // nicht 'different-tenant-id'
+    expect(ctx?.role).toBe('api')
+    expect(ctx?.apiKeyPermissions).toEqual(['*'])
+    expect(ctx?.userId).toBeNull()
   })
 
   it('gibt null zurueck wenn weder Session noch API-Key vorhanden', async () => {

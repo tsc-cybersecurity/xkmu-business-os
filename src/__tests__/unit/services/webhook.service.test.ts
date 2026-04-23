@@ -1,13 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../helpers/mock-db'
-import { TEST_TENANT_ID } from '../../helpers/fixtures'
 
 const TEST_WEBHOOK_ID = '00000000-0000-0000-0000-000000000040'
 
 function webhookFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_WEBHOOK_ID,
-    tenantId: TEST_TENANT_ID,
     name: 'Test Webhook',
     url: 'https://example.com/webhook',
     events: ['company.created', 'company.updated'],
@@ -28,7 +26,6 @@ describe('WebhookService', () => {
   beforeEach(() => {
     vi.resetModules()
     dbMock = setupDbMock()
-    // Reset fetch mock
     vi.stubGlobal('fetch', vi.fn())
   })
 
@@ -45,7 +42,7 @@ describe('WebhookService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'Test Webhook',
         url: 'https://example.com/webhook',
         events: ['company.created'],
@@ -60,7 +57,7 @@ describe('WebhookService', () => {
       dbMock.mockInsert.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.create(TEST_TENANT_ID, {
+      const result = await service.create({
         name: 'Webhook',
         url: 'https://example.com/wh',
         events: ['company.created'],
@@ -78,7 +75,7 @@ describe('WebhookService', () => {
       dbMock.mockSelect.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, TEST_WEBHOOK_ID)
+      const result = await service.getById(TEST_WEBHOOK_ID)
 
       expect(result).toEqual(fixture)
     })
@@ -87,7 +84,7 @@ describe('WebhookService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getById(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.getById('nonexistent')
 
       expect(result).toBeNull()
     })
@@ -101,7 +98,7 @@ describe('WebhookService', () => {
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, TEST_WEBHOOK_ID, { name: 'Updated Webhook' })
+      const result = await service.update(TEST_WEBHOOK_ID, { name: 'Updated Webhook' })
 
       expect(result).toEqual(fixture)
       expect(result!.name).toBe('Updated Webhook')
@@ -111,7 +108,7 @@ describe('WebhookService', () => {
       dbMock.mockUpdate.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.update(TEST_TENANT_ID, 'nonexistent', { name: 'X' })
+      const result = await service.update('nonexistent', { name: 'X' })
 
       expect(result).toBeNull()
     })
@@ -124,7 +121,7 @@ describe('WebhookService', () => {
       dbMock.mockDelete.mockResolvedValue([{ id: TEST_WEBHOOK_ID }])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, TEST_WEBHOOK_ID)
+      const result = await service.delete(TEST_WEBHOOK_ID)
 
       expect(result).toBe(true)
     })
@@ -133,7 +130,7 @@ describe('WebhookService', () => {
       dbMock.mockDelete.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.delete(TEST_TENANT_ID, 'nonexistent')
+      const result = await service.delete('nonexistent')
 
       expect(result).toBe(false)
     })
@@ -149,7 +146,7 @@ describe('WebhookService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 2 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.items).toHaveLength(2)
       expect(result.meta.total).toBe(2)
@@ -162,7 +159,7 @@ describe('WebhookService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      const result = await service.list(TEST_TENANT_ID)
+      const result = await service.list()
 
       expect(result.meta.page).toBe(1)
       expect(result.meta.limit).toBe(50)
@@ -173,7 +170,7 @@ describe('WebhookService', () => {
       dbMock.mockSelect.mockResolvedValueOnce([{ total: 0 }])
 
       const service = await getService()
-      await service.list(TEST_TENANT_ID, { isActive: true })
+      await service.list({ isActive: true })
 
       expect(dbMock.db.select).toHaveBeenCalledTimes(2)
     })
@@ -193,7 +190,7 @@ describe('WebhookService', () => {
       dbMock.mockSelect.mockResolvedValue([matchingWebhook, otherWebhook])
 
       const service = await getService()
-      const result = await service.getByEvent(TEST_TENANT_ID, 'company.created')
+      const result = await service.getByEvent('company.created')
 
       expect(result).toHaveLength(1)
       expect(result[0].id).toBe(TEST_WEBHOOK_ID)
@@ -203,7 +200,7 @@ describe('WebhookService', () => {
       dbMock.mockSelect.mockResolvedValue([])
 
       const service = await getService()
-      const result = await service.getByEvent(TEST_TENANT_ID, 'unknown.event')
+      const result = await service.getByEvent('unknown.event')
 
       expect(result).toEqual([])
     })
@@ -213,7 +210,7 @@ describe('WebhookService', () => {
       dbMock.mockSelect.mockResolvedValue([webhook])
 
       const service = await getService()
-      const result = await service.getByEvent(TEST_TENANT_ID, 'company.created')
+      const result = await service.getByEvent('company.created')
 
       expect(result).toHaveLength(0)
     })
@@ -234,9 +231,8 @@ describe('WebhookService', () => {
       vi.stubGlobal('fetch', mockFetch)
 
       const service = await getService()
-      await service.fire(TEST_TENANT_ID, 'company.created', { id: '123' })
+      await service.fire('company.created', { id: '123' })
 
-      // fire() is async fire-and-forget, give it a tick to run
       await new Promise((r) => setTimeout(r, 10))
 
       expect(mockFetch).toHaveBeenCalledWith(
@@ -255,7 +251,7 @@ describe('WebhookService', () => {
       vi.stubGlobal('fetch', mockFetch)
 
       const service = await getService()
-      await service.fire(TEST_TENANT_ID, 'nonexistent.event', {})
+      await service.fire('nonexistent.event', {})
 
       expect(mockFetch).not.toHaveBeenCalled()
     })

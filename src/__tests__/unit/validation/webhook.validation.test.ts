@@ -26,7 +26,7 @@ describe('webhookEventSchema', () => {
   })
 
   it('rejects empty string event', () => {
-    expect(webhookEventSchema.safeParse().success).toBe(false)
+    expect(webhookEventSchema.safeParse('').success).toBe(false)
   })
 })
 
