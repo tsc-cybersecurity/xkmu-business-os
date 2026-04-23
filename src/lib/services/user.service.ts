@@ -108,6 +108,7 @@ export const UserService = {
       lastName: user.lastName,
       role: user.role as SessionUser['role'],
       roleId: user.roleId ?? null,
+      companyId: user.companyId ?? null,
     }
 
     return { success: true, user: sessionUser }
