@@ -6,7 +6,6 @@ export const TEST_COMPANY_ID = '00000000-0000-0000-0000-000000000003'
 
 export function authFixture(overrides: Partial<AuthContext> = {}): AuthContext {
   return {
-    tenantId: TEST_TENANT_ID,
     userId: TEST_USER_ID,
     role: 'admin',
     roleId: null,
@@ -18,7 +17,6 @@ export function authFixture(overrides: Partial<AuthContext> = {}): AuthContext {
 export function companyFixture(overrides: Record<string, unknown> = {}) {
   return {
     id: TEST_COMPANY_ID,
-    tenantId: TEST_TENANT_ID,
     name: 'Test GmbH',
     legalForm: 'GmbH',
     street: 'Teststraße',

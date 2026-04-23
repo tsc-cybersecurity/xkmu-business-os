@@ -13,7 +13,7 @@ export function createTestRequest(
     init.headers = { 'Content-Type': 'application/json' }
   }
 
-  return new NextRequest(fullUrl, init)
+  return new NextRequest(fullUrl, init as ConstructorParameters<typeof NextRequest>[1])
 }
 
 export function createTestParams(id: string): { params: Promise<{ id: string }> } {

@@ -22,27 +22,13 @@ export function createTestDb() {
   return drizzle(client, { schema })
 }
 
-export async function seedTestTenants(db: TestDb): Promise<void> {
-  // Insert both test tenants — idempotent (ignore if already exists from a previous crashed run)
-  await db.insert(schema.tenants).values([
-    {
-      id: TEST_INTEGRATION_TENANT_A,
-      name: 'Integration Test Tenant A',
-      slug: 'integration-test-tenant-a-ffff',
-      status: 'active',
-    },
-    {
-      id: TEST_INTEGRATION_TENANT_B,
-      name: 'Integration Test Tenant B',
-      slug: 'integration-test-tenant-b-ffff',
-      status: 'active',
-    },
-  ]).onConflictDoNothing()
+// Single-tenant: organization table is a singleton managed by migrations.
+// seedTestTenants / seedTestTenant are no-ops — nothing to insert.
+export async function seedTestTenants(_db: TestDb): Promise<void> {
+  // no-op: organization is a singleton, already seeded by migrations
 }
 
 export async function cleanupTestTenants(db: TestDb): Promise<void> {
-  const tenantIds = [TEST_INTEGRATION_TENANT_A, TEST_INTEGRATION_TENANT_B]
-
   // Delete test data by known test-email pattern (*.test-ffff.invalid)
   // FK-correct order: children before parents
   try {
@@ -79,32 +65,19 @@ export async function cleanupTestTenants(db: TestDb): Promise<void> {
     if (testUserIds.length > 0) {
       await db.delete(schema.users).where(ilike(schema.users.email, '%@test-ffff.invalid'))
     }
-    // Delete test tenants
-    for (const tenantId of tenantIds) {
-      await db.delete(schema.tenants).where(eq(schema.tenants.id, tenantId))
-    }
+    // NOTE: do NOT delete from organization — it is a singleton, not test-scoped
   } catch (err) {
     // Log but do not rethrow — cleanup must not fail silently hiding test results
     console.warn(`[test-db] Cleanup warning:`, err)
   }
 }
 
-// Single-tenant variants for tests that only need one tenant
-export async function seedTestTenant(db: TestDb, tenantId = TEST_INTEGRATION_TENANT_A): Promise<string> {
-  const name = tenantId === TEST_INTEGRATION_TENANT_A
-    ? 'Integration Test Tenant A'
-    : 'Integration Test Tenant B'
-  const slug = `integration-test-${tenantId.slice(-4)}-ffff`
-  await db.insert(schema.tenants).values({
-    id: tenantId,
-    name,
-    slug,
-    status: 'active',
-  }).onConflictDoNothing()
+// Single-tenant variants for tests that only need one context handle
+export async function seedTestTenant(_db: TestDb, tenantId = TEST_INTEGRATION_TENANT_A): Promise<string> {
+  // no-op: organization is a singleton, already seeded by migrations
   return tenantId
 }
 
-export async function cleanupTestTenant(db: TestDb, tenantId = TEST_INTEGRATION_TENANT_A): Promise<void> {
-  // Use the multi-tenant cleanup which handles both tenant IDs safely
+export async function cleanupTestTenant(db: TestDb, _tenantId = TEST_INTEGRATION_TENANT_A): Promise<void> {
   return cleanupTestTenants(db)
 }
