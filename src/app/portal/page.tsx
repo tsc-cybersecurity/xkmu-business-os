@@ -28,17 +28,23 @@ export default function PortalDashboard() {
   const [company, setCompany] = useState<PortalCompany | null>(null)
   const [loading, setLoading] = useState(true)
   const [hasPending, setHasPending] = useState(false)
+  const [contractCount, setContractCount] = useState(0)
+  const [projectCount, setProjectCount] = useState(0)
 
   useEffect(() => {
     Promise.all([
       fetch('/api/v1/portal/me/company').then(r => r.json()),
       fetch('/api/v1/portal/me/company/change-requests').then(r => r.json()),
-    ]).then(([cData, rData]) => {
+      fetch('/api/v1/portal/me/contracts').then(r => r.json()),
+      fetch('/api/v1/portal/me/projects').then(r => r.json()),
+    ]).then(([cData, rData, contractData, projectData]) => {
       if (cData?.success) setCompany(cData.data)
       if (rData?.success) {
         const rows = rData.data as ChangeRequest[]
         setHasPending(rows.some((r) => r.status === 'pending'))
       }
+      if (contractData?.success) setContractCount(contractData.data?.length ?? 0)
+      if (projectData?.success) setProjectCount(projectData.data?.length ?? 0)
     }).finally(() => setLoading(false))
   }, [])
 
@@ -119,24 +125,55 @@ export default function PortalDashboard() {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[
-          { icon: FileText, title: 'Verträge', hint: 'kommt in Kürze' },
-          { icon: Briefcase, title: 'Projekte', hint: 'kommt in Kürze' },
-          { icon: ShoppingCart, title: 'Aufträge', hint: 'kommt in Kürze' },
-          { icon: MessageCircle, title: 'Chat', hint: 'kommt in Kürze' },
-        ].map(({ icon: Icon, title, hint }) => (
-          <Card key={title} className="opacity-60">
+        <Link href="/portal/contracts" className="block">
+          <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Icon className="h-5 w-5" />
-                {title}
+                <FileText className="h-5 w-5" />Verträge
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">{hint}</p>
+              <p className="text-2xl font-semibold">{contractCount}</p>
+              <p className="text-sm text-muted-foreground">Verträge einsehen</p>
             </CardContent>
           </Card>
-        ))}
+        </Link>
+
+        <Link href="/portal/projects" className="block">
+          <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />Projekte
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold">{projectCount}</p>
+              <p className="text-sm text-muted-foreground">Projekte einsehen</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Card className="opacity-60">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5" />Aufträge
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">kommt in Kürze</p>
+          </CardContent>
+        </Card>
+
+        <Card className="opacity-60">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />Chat
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">kommt in Kürze</p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

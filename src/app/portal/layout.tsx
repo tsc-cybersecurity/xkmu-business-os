@@ -19,6 +19,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               </Link>
               <nav className="flex items-center gap-4">
                 <Link href="/portal/company" className="text-sm text-muted-foreground hover:text-foreground">Firmendaten</Link>
+                <Link href="/portal/contracts" className="text-sm text-muted-foreground hover:text-foreground">Verträge</Link>
+                <Link href="/portal/projects" className="text-sm text-muted-foreground hover:text-foreground">Projekte</Link>
                 <Link href="/portal/company/requests" className="text-sm text-muted-foreground hover:text-foreground">Anträge</Link>
               </nav>
             </div>
