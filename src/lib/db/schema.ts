@@ -2975,4 +2975,27 @@ export const auditLogs = pgTable('audit_logs', {
 ])
 
 export type AuditLog = typeof auditLogs.$inferSelect
+
+// ============================================
+// Company Change Requests — Portal P2: Firmendaten-Antrag
+// ============================================
+export const companyChangeRequests = pgTable('company_change_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  requestedBy: uuid('requested_by').notNull().references(() => users.id, { onDelete: 'set null' }),
+  requestedAt: timestamp('requested_at', { withTimezone: true }).notNull().defaultNow(),
+  proposedChanges: jsonb('proposed_changes').notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  reviewComment: text('review_comment'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_ccr_company').on(table.companyId, table.status, table.requestedAt),
+  index('idx_ccr_status').on(table.status, table.requestedAt),
+])
+
+export type CompanyChangeRequest = typeof companyChangeRequests.$inferSelect
+export type NewCompanyChangeRequest = typeof companyChangeRequests.$inferInsert
 export type NewAuditLog = typeof auditLogs.$inferInsert

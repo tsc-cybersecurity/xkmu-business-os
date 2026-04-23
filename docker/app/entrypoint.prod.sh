@@ -307,6 +307,23 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id, created
 CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action, created_at DESC);
 
+-- company_change_requests: Portal P2 Firmendaten-Antrags-Workflow
+CREATE TABLE IF NOT EXISTS company_change_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  requested_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  proposed_changes JSONB NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  reviewed_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  reviewed_at TIMESTAMPTZ,
+  review_comment TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_ccr_company ON company_change_requests(company_id, status, requested_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ccr_status ON company_change_requests(status, requested_at DESC);
+
 -- Execution Logs
 CREATE TABLE IF NOT EXISTS execution_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

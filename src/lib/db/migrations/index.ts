@@ -56,4 +56,8 @@ export const MIGRATIONS: Migration[] = [
     name: '009_audit_logs.sql',
     description: 'Revisionssichere Audit-Trail (audit_logs + Indexe)',
   },
+  {
+    name: '010_company_change_requests.sql',
+    description: 'Portal P2: Firmendaten-Antrags-Workflow (company_change_requests + Indexe)',
+  },
 ]
