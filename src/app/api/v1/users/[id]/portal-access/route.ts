@@ -12,6 +12,7 @@ import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 
 type Params = Promise<{ id: string }>
 
@@ -20,7 +21,7 @@ const patchSchema = z.object({
 })
 
 export async function PATCH(request: NextRequest, { params }: { params: Params }) {
-  return withPermission(request, 'users', 'update', async () => {
+  return withPermission(request, 'users', 'update', async (auth) => {
     const { id } = await params
     try {
       const body = await request.json()
@@ -41,6 +42,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Params }
         await db.update(users)
           .set({ status: 'inactive', updatedAt: new Date() })
           .where(eq(users.id, id))
+        try {
+          await AuditLogService.log({
+            userId: auth.userId,
+            userRole: auth.role,
+            action: 'admin.portal_user.deactivated',
+            entityType: 'user',
+            entityId: id,
+            payload: { previousStatus: user.status },
+            request,
+          })
+        } catch (err) {
+          logger.error('Audit write failed for portal_user.deactivated', err, { module: 'PortalAccessAPI' })
+        }
         logger.info(`Portal user deactivated: ${user.email}`, { module: 'PortalAccessAPI' })
         return apiSuccess({ status: 'inactive' })
       }
@@ -49,6 +63,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Params }
         await db.update(users)
           .set({ status: 'active', updatedAt: new Date() })
           .where(eq(users.id, id))
+        try {
+          await AuditLogService.log({
+            userId: auth.userId,
+            userRole: auth.role,
+            action: 'admin.portal_user.reactivated',
+            entityType: 'user',
+            entityId: id,
+            payload: { previousStatus: user.status },
+            request,
+          })
+        } catch (err) {
+          logger.error('Audit write failed for portal_user.reactivated', err, { module: 'PortalAccessAPI' })
+        }
         logger.info(`Portal user reactivated: ${user.email}`, { module: 'PortalAccessAPI' })
         return apiSuccess({ status: 'active' })
       }
@@ -79,6 +106,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Params }
         referenceType: 'company',
         referenceId: updated.companyId,
       })
+      try {
+        await AuditLogService.log({
+          userId: auth.userId,
+          userRole: auth.role,
+          action: 'admin.portal_user.invite_resent',
+          entityType: 'user',
+          entityId: id,
+          payload: { email: updated.email },
+          request,
+        })
+      } catch (err) {
+        logger.error('Audit write failed for portal_user.invite_resent', err, { module: 'PortalAccessAPI' })
+      }
       logger.info(`Invite resent to ${updated.email} (company=${updated.companyId})`, { module: 'PortalAccessAPI' })
       return apiSuccess({ resent: true })
     } catch (error) {

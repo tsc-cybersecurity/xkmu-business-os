@@ -12,6 +12,7 @@ import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 
 type Params = Promise<{ id: string }>
 
@@ -32,7 +33,7 @@ const createSchema = z.discriminatedUnion('method', [
 ])
 
 export async function POST(request: NextRequest, { params }: { params: Params }) {
-  return withPermission(request, 'users', 'create', async () => {
+  return withPermission(request, 'users', 'create', async (auth) => {
     const { id: companyId } = await params
     try {
       const company = await CompanyService.getById(companyId)
@@ -53,6 +54,20 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         method: data.method,
         password: data.method === 'password' ? data.password : undefined,
       })
+
+      try {
+        await AuditLogService.log({
+          userId: auth.userId,
+          userRole: auth.role,
+          action: 'admin.portal_user.created',
+          entityType: 'user',
+          entityId: user.id,
+          payload: { companyId, email: user.email, method: data.method },
+          request,
+        })
+      } catch (err) {
+        logger.error('Audit write failed for portal_user.created', err, { module: 'PortalUsersAPI' })
+      }
 
       // Queue invite email only for invite flow
       if (data.method === 'invite' && user.inviteToken) {
