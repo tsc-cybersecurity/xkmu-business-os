@@ -7,6 +7,7 @@ import { AuditLogService } from '@/lib/services/audit-log.service'
 import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { CompanyService } from '@/lib/services/company.service'
 import { OrganizationService } from '@/lib/services/organization.service'
+import { CmsDesignService } from '@/lib/services/cms-design.service'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { and, eq, ne } from 'drizzle-orm'
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
           .where(and(ne(users.role, 'portal_user'), eq(users.status, 'active')))
         const company = await CompanyService.getById(auth.companyId)
         const org = await OrganizationService.getById()
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
+        const baseUrl = await CmsDesignService.getAppUrl()
         const adminUrl = `${baseUrl}/intern/contacts/companies/${auth.companyId}?tab=documents`
         for (const u of internals) {
           await TaskQueueService.create({

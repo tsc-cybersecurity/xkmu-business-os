@@ -8,6 +8,7 @@ import { AuditLogService } from '@/lib/services/audit-log.service'
 import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { CompanyService } from '@/lib/services/company.service'
 import { OrganizationService } from '@/lib/services/organization.service'
+import { CmsDesignService } from '@/lib/services/cms-design.service'
 import { logger } from '@/lib/utils/logger'
 
 type Params = Promise<{ id: string }>
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         try {
           const company = await CompanyService.getById(result.user.companyId!)
           const org = await OrganizationService.getById()
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'
+          const baseUrl = await CmsDesignService.getAppUrl()
           const inviteUrl = `${baseUrl}/portal/accept-invite?token=${result.user.inviteToken}`
           await TaskQueueService.create({
             type: 'email',
