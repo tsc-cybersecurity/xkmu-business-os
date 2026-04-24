@@ -60,4 +60,8 @@ export const MIGRATIONS: Migration[] = [
     name: '010_company_change_requests.sql',
     description: 'Portal P2: Firmendaten-Antrags-Workflow (company_change_requests + Indexe)',
   },
+  {
+    name: '011_orders.sql',
+    description: 'Portal P4: orders + order_categories + Default-Kategorien (Seed)',
+  },
 ]

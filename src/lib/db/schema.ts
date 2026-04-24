@@ -3000,3 +3000,55 @@ export const companyChangeRequests = pgTable('company_change_requests', {
 export type CompanyChangeRequest = typeof companyChangeRequests.$inferSelect
 export type NewCompanyChangeRequest = typeof companyChangeRequests.$inferInsert
 export type NewAuditLog = typeof auditLogs.$inferInsert
+
+// ============================================
+// Order Categories — Portal P4
+// ============================================
+export const orderCategories = pgTable('order_categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull(),
+  slug: varchar('slug', { length: 50 }).notNull().unique(),
+  description: text('description'),
+  color: varchar('color', { length: 30 }),
+  sortOrder: integer('sort_order').default(0),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_order_categories_active_sort').on(table.isActive, table.sortOrder),
+])
+
+export type OrderCategory = typeof orderCategories.$inferSelect
+export type NewOrderCategory = typeof orderCategories.$inferInsert
+
+// ============================================
+// Orders — Portal P4: Service-Anfragen
+// ============================================
+export const orders = pgTable('orders', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  requestedBy: uuid('requested_by').references(() => users.id, { onDelete: 'set null' }),
+  categoryId: uuid('category_id').references(() => orderCategories.id, { onDelete: 'set null' }),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description').notNull(),
+  priority: varchar('priority', { length: 20 }).notNull().default('mittel'),
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  contractId: uuid('contract_id').references(() => documents.id, { onDelete: 'set null' }),
+  projectId: uuid('project_id').references(() => projects.id, { onDelete: 'set null' }),
+  assignedTo: uuid('assigned_to').references(() => users.id, { onDelete: 'set null' }),
+  rejectReason: text('reject_reason'),
+  acceptedAt: timestamp('accepted_at', { withTimezone: true }),
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  rejectedAt: timestamp('rejected_at', { withTimezone: true }),
+  cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_orders_company_status').on(table.companyId, table.status, table.createdAt),
+  index('idx_orders_status_priority').on(table.status, table.priority, table.createdAt),
+  index('idx_orders_assigned').on(table.assignedTo, table.status),
+])
+
+export type Order = typeof orders.$inferSelect
+export type NewOrder = typeof orders.$inferInsert
