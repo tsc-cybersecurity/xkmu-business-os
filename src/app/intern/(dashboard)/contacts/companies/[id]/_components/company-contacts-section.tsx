@@ -1,10 +1,13 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Table,
   TableBody,
   TableCell,
@@ -15,16 +18,29 @@ import { Table,
 import { Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
 import { DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ChevronDown,
+import { Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
+import { Ban,
+  CheckCircle2,
+  ChevronDown,
+  Dice6,
+  Loader2,
+  MoreHorizontal,
   Plus,
+  RefreshCw,
   Search,
   User,
   UserPlus,
@@ -46,6 +62,17 @@ interface AvailablePerson {
   lastName: string
   email: string | null
   companyId: string | null
+}
+
+interface PortalUser {
+  id: string
+  email: string
+  firstName: string | null
+  lastName: string | null
+  status: string | null
+  firstLoginAt: string | null
+  hasPendingInvite: boolean
+  linkedPersonId: string | null
 }
 
 interface CompanyContactsSectionProps {
@@ -77,6 +104,101 @@ export function CompanyContactsSection({
   assigningPerson,
   onAssignPerson,
 }: CompanyContactsSectionProps) {
+  // Portal users state
+  const [portalUsers, setPortalUsers] = useState<PortalUser[]>([])
+
+  // Create portal dialog state
+  const [createPortalFor, setCreatePortalFor] = useState<{ personId: string; personName: string } | null>(null)
+  const [createTab, setCreateTab] = useState<'invite' | 'password'>('invite')
+  const [createPassword, setCreatePassword] = useState('')
+  const [createSubmitting, setCreateSubmitting] = useState(false)
+
+  const fetchPortalUsers = async () => {
+    try {
+      const res = await fetch(`/api/v1/companies/${companyId}/portal-users`)
+      const data = await res.json()
+      if (data?.success) setPortalUsers(data.data || [])
+    } catch {
+      // silently ignore — portal column stays empty
+    }
+  }
+
+  useEffect(() => {
+    fetchPortalUsers()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyId])
+
+  // Helper map: linkedPersonId -> PortalUser
+  const portalByPersonId = new Map(
+    portalUsers.filter(u => u.linkedPersonId).map(u => [u.linkedPersonId!, u])
+  )
+
+  function renderPortalBadge(personId: string): React.ReactNode {
+    const u = portalByPersonId.get(personId)
+    if (!u) return <span className="text-muted-foreground">—</span>
+    if (u.status === 'inactive') return <Badge variant="secondary">Deaktiviert</Badge>
+    if (u.hasPendingInvite && !u.firstLoginAt) return <Badge variant="outline">Eingeladen</Badge>
+    return <Badge>Aktiv</Badge>
+  }
+
+  // Portal password generator
+  const genPortalPassword = () => {
+    const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+    const arr = new Uint8Array(16)
+    crypto.getRandomValues(arr)
+    let pw = ''
+    for (const n of arr) pw += charset[n % charset.length]
+    setCreatePassword(pw)
+  }
+
+  // Submit create portal access
+  const submitCreatePortal = async () => {
+    if (!createPortalFor) return
+    if (createTab === 'password' && createPassword.length < 10) {
+      toast.error('Passwort mindestens 10 Zeichen')
+      return
+    }
+    setCreateSubmitting(true)
+    try {
+      const body = createTab === 'password'
+        ? { method: 'password', password: createPassword }
+        : { method: 'invite' }
+      const res = await fetch(`/api/v1/persons/${createPortalFor.personId}/portal-access`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (data?.success) {
+        toast.success(createTab === 'invite' ? 'Einladung gesendet' : 'Portal-Zugang angelegt')
+        setCreatePortalFor(null)
+        setCreatePassword('')
+        setCreateTab('invite')
+        fetchPortalUsers()
+      } else {
+        toast.error(data?.error?.message || 'Fehler')
+      }
+    } finally {
+      setCreateSubmitting(false)
+    }
+  }
+
+  // Portal inline actions (resend / deactivate / reactivate)
+  const portalAction = async (userId: string, action: 'resend_invite' | 'deactivate' | 'reactivate') => {
+    const res = await fetch(`/api/v1/users/${userId}/portal-access`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    })
+    const data = await res.json()
+    if (data?.success) {
+      toast.success('Aktion erfolgreich')
+      fetchPortalUsers()
+    } else {
+      toast.error(data?.error?.message || 'Fehler')
+    }
+  }
+
   return (
     <>
       <Card>
@@ -121,6 +243,8 @@ export function CompanyContactsSection({
                   <TableHead>Position</TableHead>
                   <TableHead>E-Mail</TableHead>
                   <TableHead>Telefon</TableHead>
+                  <TableHead>Portal</TableHead>
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -153,6 +277,64 @@ export function CompanyContactsSection({
                       )}
                     </TableCell>
                     <TableCell>{person.phone || '-'}</TableCell>
+                    <TableCell>{renderPortalBadge(person.id)}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Aktionen</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {(() => {
+                            const u = portalByPersonId.get(person.id)
+                            if (!u) {
+                              return (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    setCreatePortalFor({
+                                      personId: person.id,
+                                      personName: `${person.firstName} ${person.lastName}`,
+                                    })
+                                  }
+                                >
+                                  <UserPlus className="h-4 w-4 mr-2" />
+                                  Als Portal-User anlegen
+                                </DropdownMenuItem>
+                              )
+                            }
+                            return (
+                              <>
+                                {u.hasPendingInvite && !u.firstLoginAt && (
+                                  <DropdownMenuItem onClick={() => portalAction(u.id, 'resend_invite')}>
+                                    <RefreshCw className="h-4 w-4 mr-2" />
+                                    Invite erneut senden
+                                  </DropdownMenuItem>
+                                )}
+                                {u.status === 'active' ? (
+                                  <DropdownMenuItem onClick={() => portalAction(u.id, 'deactivate')}>
+                                    <Ban className="h-4 w-4 mr-2 text-red-500" />
+                                    Portal-Zugang deaktivieren
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onClick={() => portalAction(u.id, 'reactivate')}>
+                                    <CheckCircle2 className="h-4 w-4 mr-2 text-green-600" />
+                                    Portal-Zugang reaktivieren
+                                  </DropdownMenuItem>
+                                )}
+                              </>
+                            )
+                          })()}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href={`/intern/contacts/persons/${person.id}`}>
+                              Person öffnen
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -228,6 +410,56 @@ export function CompanyContactsSection({
               )}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Portal Access Dialog */}
+      <Dialog open={!!createPortalFor} onOpenChange={(open) => !open && setCreatePortalFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Portal-Zugang für {createPortalFor?.personName}</DialogTitle>
+          </DialogHeader>
+          <Tabs
+            value={createTab}
+            onValueChange={(v) => setCreateTab(v as 'invite' | 'password')}
+            className="py-2"
+          >
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="invite">Invite-Link (empfohlen)</TabsTrigger>
+              <TabsTrigger value="password">Passwort direkt</TabsTrigger>
+            </TabsList>
+            <TabsContent value="password" className="space-y-1 mt-3">
+              <Label>Passwort (mind. 10 Zeichen)</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  value={createPassword}
+                  onChange={e => setCreatePassword(e.target.value)}
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={genPortalPassword}
+                  title="Zufallspasswort"
+                >
+                  <Dice6 className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Passwort wird dem Kunden manuell mitgeteilt.</p>
+            </TabsContent>
+            <TabsContent value="invite" className="mt-3">
+              <p className="text-xs text-muted-foreground">Eine E-Mail mit einem 7 Tage gültigen Link geht raus. Der User setzt sein eigenes Passwort.</p>
+            </TabsContent>
+          </Tabs>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCreatePortalFor(null)}>Abbrechen</Button>
+            <Button onClick={submitCreatePortal} disabled={createSubmitting}>
+              {createSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Anlegen
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
