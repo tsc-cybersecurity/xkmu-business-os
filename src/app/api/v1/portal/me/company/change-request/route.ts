@@ -10,6 +10,9 @@ import { CompanyService } from '@/lib/services/company.service'
 import { CmsDesignService } from '@/lib/services/cms-design.service'
 import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { logger } from '@/lib/utils/logger'
+import { db } from '@/lib/db'
+import { persons, activities } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 const changeableFields = z
   .object({
@@ -49,6 +52,10 @@ export async function POST(request: NextRequest) {
         proposedChanges: validation.data.proposedChanges,
       })
 
+      const aenderungenText = Object.entries(validation.data.proposedChanges)
+        .map(([k, v]) => `- ${k}: ${v === null ? '(geleert)' : v}`)
+        .join('\n')
+
       // Audit (fail-safe)
       try {
         await AuditLogService.log({
@@ -64,6 +71,26 @@ export async function POST(request: NextRequest) {
         logger.error('Audit write failed for company_change_requested', err, { module: 'PortalChangeRequestAPI' })
       }
 
+      // Activity-Eintrag auf die Firma (Dokumentation für Aktivitäten-Tab)
+      try {
+        const [linkedPerson] = await db.select({ id: persons.id })
+          .from(persons)
+          .where(eq(persons.portalUserId, auth.userId))
+          .limit(1)
+
+        await db.insert(activities).values({
+          companyId: auth.companyId,
+          personId: linkedPerson?.id ?? null,
+          userId: auth.userId,
+          type: 'change_request',
+          subject: 'Portal: Änderungsantrag Firmendaten',
+          content: aenderungenText,
+          metadata: { changeRequestId: created.id, proposedChanges: validation.data.proposedChanges },
+        })
+      } catch (err) {
+        logger.error('Activity write for change_request failed', err, { module: 'PortalChangeRequestAPI' })
+      }
+
       // Admin notification email (fail-safe)
       try {
         const [org, company] = await Promise.all([
@@ -72,9 +99,6 @@ export async function POST(request: NextRequest) {
         ])
         if (org?.email) {
           const baseUrl = await CmsDesignService.getAppUrl()
-          const aenderungenText = Object.entries(validation.data.proposedChanges)
-            .map(([k, v]) => `- ${k}: ${v === null ? '(geleert)' : v}`)
-            .join('\n')
           await TaskQueueService.create({
             type: 'email',
             priority: 2,
