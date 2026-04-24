@@ -189,6 +189,49 @@ const DEFAULT_EMAIL_TEMPLATES = [
     ],
   },
   {
+    slug: 'portal_order_created_admin',
+    name: 'Portal: Neuer Auftrag',
+    subject: 'Neuer Auftrag: {{titel}} von {{kunde}} ({{firma}})',
+    bodyHtml: `<p>Hallo,</p>
+<p>ein Portal-Nutzer hat einen neuen Auftrag eingereicht.</p>
+<p><strong>Kunde:</strong> {{kunde}}<br>
+<strong>Firma:</strong> {{firma}}<br>
+<strong>Kategorie:</strong> {{kategorie}}<br>
+<strong>Titel:</strong> {{titel}}<br>
+<strong>Priorität:</strong> {{prioritaet}}</p>
+<p><a href="{{pruefUrl}}">Auftrag im Admin-Bereich prüfen</a></p>`,
+    placeholders: [
+      { key: 'kunde', label: 'Kunde', description: 'E-Mail des einreichenden Portal-Nutzers' },
+      { key: 'firma', label: 'Firma', description: 'Firmenname' },
+      { key: 'kategorie', label: 'Kategorie', description: 'Name der Auftrags-Kategorie' },
+      { key: 'titel', label: 'Titel', description: 'Titel des Auftrags' },
+      { key: 'prioritaet', label: 'Priorität', description: 'Priorität des Auftrags' },
+      { key: 'pruefUrl', label: 'Prüf-URL', description: 'Link zur Admin-Detail-Ansicht' },
+    ],
+  },
+  {
+    slug: 'portal_order_status_changed',
+    name: 'Portal: Auftrags-Status geändert',
+    subject: 'Ihr Auftrag "{{titel}}" ist jetzt {{statusNeu}}',
+    bodyHtml: `<p>Hallo {{name}},</p>
+<p>der Status Ihres Auftrags <strong>{{titel}}</strong> von <strong>{{firma}}</strong> hat sich geändert.</p>
+<p><strong>Neuer Status:</strong> {{statusNeu}}<br>
+<strong>Vorheriger Status:</strong> {{statusAlt}}</p>
+{{rejectReasonBlock}}
+<p><a href="{{portalUrl}}">Auftrag im Kundenportal öffnen</a></p>
+<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+    placeholders: [
+      { key: 'name', label: 'Name', description: 'Name des Portal-Nutzers' },
+      { key: 'firma', label: 'Firma', description: 'Firmenname' },
+      { key: 'titel', label: 'Titel', description: 'Titel des Auftrags' },
+      { key: 'statusAlt', label: 'Status alt', description: 'Vorheriger Status (deutsch)' },
+      { key: 'statusNeu', label: 'Status neu', description: 'Neuer Status (deutsch)' },
+      { key: 'rejectReasonBlock', label: 'Ablehnungsgrund-Block', description: 'Vorformatierter HTML-Block mit Begründung (leer bei anderen Status)' },
+      { key: 'portalUrl', label: 'Portal-URL', description: 'Link zum Portal-Detail' },
+      { key: 'absender', label: 'Absender', description: 'Absender-Name' },
+    ],
+  },
+  {
     slug: 'lead_first_response',
     name: 'Erstantwort auf Anfrage',
     subject: 'Vielen Dank fuer Ihre Anfrage, {{name}}!',
