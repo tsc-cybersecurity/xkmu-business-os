@@ -151,6 +151,40 @@ const DEFAULT_EMAIL_TEMPLATES = [
     ],
   },
   {
+    slug: 'portal_document_shared',
+    name: 'Portal: Neues Dokument für Sie',
+    subject: 'Neues Dokument im Kundenportal von {{firma}}',
+    bodyHtml: `<p>Hallo {{name}},</p>
+<p>Im Kundenportal von <strong>{{firma}}</strong> wurde ein neues Dokument für Sie bereitgestellt:</p>
+<p><strong>{{fileName}}</strong></p>
+<p><a href="{{portalUrl}}">Zum Dokument im Portal</a></p>
+<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+    placeholders: [
+      { key: 'name', label: 'Name', description: 'Name des Portal-Nutzers' },
+      { key: 'firma', label: 'Firma', description: 'Name der Firma' },
+      { key: 'fileName', label: 'Datei', description: 'Dateiname des Dokuments' },
+      { key: 'portalUrl', label: 'Portal-Link', description: 'Direkt-Link zur Dokumenten-Seite' },
+      { key: 'absender', label: 'Absender', description: 'Absender-Name (Organisation)' },
+    ],
+  },
+  {
+    slug: 'portal_document_received',
+    name: 'Portal: Kunde hat Dokument hochgeladen',
+    subject: 'Neues Dokument von {{firma}} erhalten',
+    bodyHtml: `<p>Hallo {{empfaenger}},</p>
+<p>Von der Firma <strong>{{firma}}</strong> wurde ein neues Dokument im Kundenportal hochgeladen:</p>
+<p><strong>{{fileName}}</strong></p>
+<p><a href="{{adminUrl}}">In Admin-Oberfläche ansehen</a></p>
+<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+    placeholders: [
+      { key: 'empfaenger', label: 'Empfänger', description: 'Name des internen Empfängers' },
+      { key: 'firma', label: 'Firma', description: 'Name der sendenden Firma' },
+      { key: 'fileName', label: 'Datei', description: 'Dateiname des Dokuments' },
+      { key: 'adminUrl', label: 'Admin-Link', description: 'Link zum Dokumente-Tab auf der Firma' },
+      { key: 'absender', label: 'Absender', description: 'System-Absender-Name' },
+    ],
+  },
+  {
     slug: 'portal_change_request_admin',
     name: 'Portal: Neuer Firmendaten-Antrag',
     subject: 'Neuer Firmendaten-Antrag von {{kunde}} ({{firma}})',
