@@ -32,6 +32,7 @@ import { Mail,
   Clock,
   ChevronDown,
   ChevronUp,
+  FileEdit,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared'
 import { toast } from 'sonner'
@@ -70,6 +71,7 @@ const typeConfig: Record<string, { icon: typeof Mail; label: string; color: stri
   note: { icon: FileText, label: 'Notiz', color: 'text-gray-500' },
   meeting: { icon: Calendar, label: 'Meeting', color: 'text-purple-500' },
   ai_outreach: { icon: Brain, label: 'KI-Outreach', color: 'text-amber-500' },
+  change_request: { icon: FileEdit, label: 'Änderungsantrag', color: 'text-orange-500' },
 }
 
 export function ActivityTimeline({
