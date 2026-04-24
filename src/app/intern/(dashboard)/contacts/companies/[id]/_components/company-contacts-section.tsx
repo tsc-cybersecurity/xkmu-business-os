@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -104,11 +105,20 @@ export function CompanyContactsSection({
   assigningPerson,
   onAssignPerson,
 }: CompanyContactsSectionProps) {
+  const router = useRouter()
+
   // Portal users state
   const [portalUsers, setPortalUsers] = useState<PortalUser[]>([])
 
   // Create portal dialog state
   const [createPortalFor, setCreatePortalFor] = useState<{ personId: string; personName: string } | null>(null)
+
+  // Claim-as-contact dialog state
+  const [claimUser, setClaimUser] = useState<{
+    id: string; email: string; firstName: string | null; lastName: string | null
+  } | null>(null)
+  const [claimForm, setClaimForm] = useState({ firstName: '', lastName: '', jobTitle: '' })
+  const [claimSubmitting, setClaimSubmitting] = useState(false)
   const [createTab, setCreateTab] = useState<'invite' | 'password'>('invite')
   const [createPassword, setCreatePassword] = useState('')
   const [createSubmitting, setCreateSubmitting] = useState(false)
@@ -196,6 +206,48 @@ export function CompanyContactsSection({
       fetchPortalUsers()
     } else {
       toast.error(data?.error?.message || 'Fehler')
+    }
+  }
+
+  // Claim orphan portal-user as a new contact person
+  const openClaim = (u: { id: string; email: string; firstName: string | null; lastName: string | null }) => {
+    setClaimUser(u)
+    setClaimForm({ firstName: u.firstName || '', lastName: u.lastName || '', jobTitle: '' })
+  }
+
+  const submitClaim = async () => {
+    if (!claimUser) return
+    if (!claimForm.firstName || !claimForm.lastName) {
+      toast.error('Vor- und Nachname sind Pflicht')
+      return
+    }
+    setClaimSubmitting(true)
+    try {
+      const res = await fetch('/api/v1/persons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyId,
+          firstName: claimForm.firstName,
+          lastName: claimForm.lastName,
+          email: claimUser.email,
+          jobTitle: claimForm.jobTitle || undefined,
+          portalUserId: claimUser.id,
+        }),
+      })
+      const data = await res.json()
+      if (data?.success) {
+        toast.success('Als Ansprechpartner übernommen')
+        setClaimUser(null)
+        // Refresh portal-user list (removes from orphan block)
+        await fetchPortalUsers()
+        // Trigger server-component revalidation so persons list re-loads from parent
+        router.refresh()
+      } else {
+        toast.error(data?.error?.message || 'Übernahme fehlgeschlagen')
+      }
+    } finally {
+      setClaimSubmitting(false)
     }
   }
 
@@ -344,6 +396,39 @@ export function CompanyContactsSection({
         </CardContent>
       </Card>
 
+      {/* Orphan Portal-Users Block */}
+      {(() => {
+        const orphans = portalUsers.filter(u => !u.linkedPersonId)
+        if (orphans.length === 0) return null
+        return (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="text-base">Verwaiste Portal-Zugänge</CardTitle>
+              <p className="text-sm text-muted-foreground">Diese Portal-Zugänge sind keiner Person zugeordnet.</p>
+            </CardHeader>
+            <CardContent>
+              <ul className="divide-y">
+                {orphans.map(u => (
+                  <li key={u.id} className="py-2 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium">
+                        {[u.firstName, u.lastName].filter(Boolean).join(' ') || u.email}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {u.email} · {u.status === 'active' ? 'aktiv' : u.status}
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => openClaim(u)}>
+                      Als Ansprechpartner übernehmen
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )
+      })()}
+
       {/* Select Person Dialog */}
       <Dialog open={selectPersonDialogOpen} onOpenChange={onSelectPersonDialogOpenChange}>
         <DialogContent className="max-w-lg max-w-[calc(100vw-2rem)]">
@@ -458,6 +543,41 @@ export function CompanyContactsSection({
             <Button onClick={submitCreatePortal} disabled={createSubmitting}>
               {createSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Anlegen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Claim Portal-User as Contact Dialog */}
+      <Dialog open={!!claimUser} onOpenChange={(open) => !open && setClaimUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Portal-User als Ansprechpartner übernehmen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1">
+              <Label>E-Mail</Label>
+              <Input value={claimUser?.email || ''} disabled />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Vorname</Label>
+                <Input value={claimForm.firstName} onChange={e => setClaimForm({ ...claimForm, firstName: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>Nachname</Label>
+                <Input value={claimForm.lastName} onChange={e => setClaimForm({ ...claimForm, lastName: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Position (optional)</Label>
+              <Input value={claimForm.jobTitle} onChange={e => setClaimForm({ ...claimForm, jobTitle: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setClaimUser(null)}>Abbrechen</Button>
+            <Button onClick={submitClaim} disabled={claimSubmitting}>
+              {claimSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Übernehmen
             </Button>
           </DialogFooter>
         </DialogContent>
