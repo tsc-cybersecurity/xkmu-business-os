@@ -9,7 +9,7 @@ import { OrganizationService } from '@/lib/services/organization.service'
 import { CmsDesignService } from '@/lib/services/cms-design.service'
 import { TaskQueueService } from '@/lib/services/task-queue.service'
 import { db } from '@/lib/db'
-import { users } from '@/lib/db/schema'
+import { users, persons } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { logger } from '@/lib/utils/logger'
 import { AuditLogService } from '@/lib/services/audit-log.service'
@@ -130,8 +130,10 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
           inviteTokenExpiresAt: users.inviteTokenExpiresAt,
           inviteToken: users.inviteToken,
           createdAt: users.createdAt,
+          linkedPersonId: persons.id,
         })
         .from(users)
+        .leftJoin(persons, eq(persons.portalUserId, users.id))
         .where(and(eq(users.companyId, companyId), eq(users.role, 'portal_user')))
       return apiSuccess(rows.map(({ inviteToken, ...rest }) => ({
         ...rest,
