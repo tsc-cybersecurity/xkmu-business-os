@@ -32,6 +32,7 @@ export default function PortalDashboard() {
   const [projectCount, setProjectCount] = useState(0)
   const [openOrderCount, setOpenOrderCount] = useState(0)
   const [chatUnread, setChatUnread] = useState(0)
+  const [documentCount, setDocumentCount] = useState(0)
 
   useEffect(() => {
     Promise.all([
@@ -41,7 +42,8 @@ export default function PortalDashboard() {
       fetch('/api/v1/portal/me/projects').then(r => r.json()),
       fetch('/api/v1/portal/me/orders').then(r => r.json()),
       fetch('/api/v1/portal/me/chat/unread-count').then(r => r.json()),
-    ]).then(([cData, rData, contractData, projectData, orderData, chatData]) => {
+      fetch('/api/v1/portal/me/documents?direction=admin_to_portal').then(r => r.json()),
+    ]).then(([cData, rData, contractData, projectData, orderData, chatData, docData]) => {
       if (cData?.success) setCompany(cData.data)
       if (rData?.success) {
         const rows = rData.data as ChangeRequest[]
@@ -54,6 +56,7 @@ export default function PortalDashboard() {
         setOpenOrderCount(orderRows.filter(o => ['pending', 'accepted', 'in_progress'].includes(o.status)).length)
       }
       if (chatData?.success) setChatUnread(chatData.data?.unread ?? 0)
+      if (docData?.success) setDocumentCount(docData.data?.length ?? 0)
     }).finally(() => setLoading(false))
   }, [])
 
@@ -186,6 +189,22 @@ export default function PortalDashboard() {
             <CardContent>
               <p className="text-2xl font-semibold">{chatUnread}</p>
               <p className="text-sm text-muted-foreground">ungelesene Nachrichten</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/portal/documents" className="block">
+          <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />Dokumente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold">{documentCount}</p>
+              <p className="text-sm text-muted-foreground">
+                {documentCount === 0 ? 'Keine neuen Dokumente' : `${documentCount} verfügbar`}
+              </p>
             </CardContent>
           </Card>
         </Link>
