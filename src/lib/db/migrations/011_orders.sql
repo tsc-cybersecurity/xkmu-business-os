@@ -6,13 +6,14 @@
 CREATE TABLE IF NOT EXISTS order_categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(100) NOT NULL,
-  slug VARCHAR(50) NOT NULL UNIQUE,
+  slug VARCHAR(50) NOT NULL,
   description TEXT,
   color VARCHAR(30),
   sort_order INTEGER DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT order_categories_slug_unique UNIQUE (slug)
 );
 CREATE INDEX IF NOT EXISTS idx_order_categories_active_sort ON order_categories(is_active, sort_order);
 
