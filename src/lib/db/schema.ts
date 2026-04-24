@@ -3052,3 +3052,23 @@ export const orders = pgTable('orders', {
 
 export type Order = typeof orders.$inferSelect
 export type NewOrder = typeof orders.$inferInsert
+
+// ============================================
+// Portal Messages — Portal P5 (Admin ↔ Portal-User, 1:1 pro Firma)
+// ============================================
+export const portalMessages = pgTable('portal_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  senderId: uuid('sender_id').references(() => users.id, { onDelete: 'set null' }),
+  senderRole: varchar('sender_role', { length: 50 }).notNull(),
+  bodyText: text('body_text').notNull(),
+  readByPortalAt: timestamp('read_by_portal_at', { withTimezone: true }),
+  readByAdminAt: timestamp('read_by_admin_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_portal_messages_company_created').on(table.companyId, table.createdAt),
+  index('idx_portal_messages_sender').on(table.senderId),
+])
+
+export type PortalMessage = typeof portalMessages.$inferSelect
+export type NewPortalMessage = typeof portalMessages.$inferInsert

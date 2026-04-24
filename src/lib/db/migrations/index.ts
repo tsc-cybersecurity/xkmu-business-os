@@ -64,4 +64,8 @@ export const MIGRATIONS: Migration[] = [
     name: '011_orders.sql',
     description: 'Portal P4: orders + order_categories + Default-Kategorien (Seed)',
   },
+  {
+    name: '012_chat_messages.sql',
+    description: 'Portal P5: chat_messages für Kunden-Admin-Chat (eine Thread pro Firma)',
+  },
 ]
