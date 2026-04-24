@@ -3,6 +3,7 @@ import { persons, companies } from '@/lib/db/schema'
 import { eq, and, ilike, count, arrayContains, sql, or, getTableColumns } from 'drizzle-orm'
 import type { Person, NewPerson } from '@/lib/db/schema'
 import type { PaginatedResult } from '@/lib/utils/api-response'
+import { logger } from '@/lib/utils/logger'
 
 // Type for person with company info
 export interface PersonWithCompany extends Person {
@@ -248,5 +249,36 @@ export const PersonService = {
 
     // Then set the new primary contact
     return this.update(personId, { isPrimaryContact: true })
+  },
+
+  async createPortalAccess(personId: string, input: {
+    method: 'password' | 'invite'
+    password?: string
+  }) {
+    // Dynamic import to avoid circular dep between user.service and person.service
+    const { UserService } = await import('./user.service')
+
+    const [person] = await db.select().from(persons).where(eq(persons.id, personId)).limit(1)
+    if (!person) throw new Error('Person nicht gefunden')
+    if (!person.companyId) throw new Error('Person ohne Firma kann keinen Portal-Zugang erhalten')
+    if (!person.email) throw new Error('Person ohne E-Mail kann keinen Portal-Zugang erhalten')
+    if (person.portalUserId) throw new Error('Person hat bereits einen Portal-Zugang')
+
+    const user = await UserService.createPortalUser({
+      companyId: person.companyId,
+      firstName: person.firstName,
+      lastName: person.lastName,
+      email: person.email,
+      method: input.method,
+      password: input.password,
+    })
+
+    const [updated] = await db.update(persons)
+      .set({ portalUserId: user.id, updatedAt: new Date() })
+      .where(eq(persons.id, personId))
+      .returning()
+
+    logger.info(`Portal access created for person ${personId} → user ${user.id}`, { module: 'PersonService' })
+    return { user, person: updated }
   },
 }
