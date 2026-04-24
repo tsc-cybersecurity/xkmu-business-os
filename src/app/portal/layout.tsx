@@ -22,6 +22,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 <Link href="/portal/contracts" className="text-sm text-muted-foreground hover:text-foreground">Verträge</Link>
                 <Link href="/portal/projects" className="text-sm text-muted-foreground hover:text-foreground">Projekte</Link>
                 <Link href="/portal/orders" className="text-sm text-muted-foreground hover:text-foreground">Aufträge</Link>
+                <Link href="/portal/chat" className="text-sm text-muted-foreground hover:text-foreground">Chat</Link>
                 <Link href="/portal/company/requests" className="text-sm text-muted-foreground hover:text-foreground">Anträge</Link>
               </nav>
             </div>

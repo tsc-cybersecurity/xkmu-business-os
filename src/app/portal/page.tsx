@@ -31,6 +31,7 @@ export default function PortalDashboard() {
   const [contractCount, setContractCount] = useState(0)
   const [projectCount, setProjectCount] = useState(0)
   const [openOrderCount, setOpenOrderCount] = useState(0)
+  const [chatUnread, setChatUnread] = useState(0)
 
   useEffect(() => {
     Promise.all([
@@ -39,7 +40,8 @@ export default function PortalDashboard() {
       fetch('/api/v1/portal/me/contracts').then(r => r.json()),
       fetch('/api/v1/portal/me/projects').then(r => r.json()),
       fetch('/api/v1/portal/me/orders').then(r => r.json()),
-    ]).then(([cData, rData, contractData, projectData, orderData]) => {
+      fetch('/api/v1/portal/me/chat/unread-count').then(r => r.json()),
+    ]).then(([cData, rData, contractData, projectData, orderData, chatData]) => {
       if (cData?.success) setCompany(cData.data)
       if (rData?.success) {
         const rows = rData.data as ChangeRequest[]
@@ -51,6 +53,7 @@ export default function PortalDashboard() {
         const orderRows = orderData.data as { status: string }[]
         setOpenOrderCount(orderRows.filter(o => ['pending', 'accepted', 'in_progress'].includes(o.status)).length)
       }
+      if (chatData?.success) setChatUnread(chatData.data?.unread ?? 0)
     }).finally(() => setLoading(false))
   }, [])
 
@@ -173,16 +176,19 @@ export default function PortalDashboard() {
           </Card>
         </Link>
 
-        <Card className="opacity-60">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5" />Chat
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">kommt in Kürze</p>
-          </CardContent>
-        </Card>
+        <Link href="/portal/chat" className="block">
+          <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />Chat
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold">{chatUnread}</p>
+              <p className="text-sm text-muted-foreground">ungelesene Nachrichten</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
     </div>
   )
