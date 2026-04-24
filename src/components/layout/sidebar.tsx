@@ -22,6 +22,7 @@ import { LayoutDashboard,
   ExternalLink,
   ClipboardList,
   ListOrdered,
+  MessageCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -184,6 +185,13 @@ const navigation: NavItem[] = [
     href: '/intern/emails',
     icon: Mail,
     requiredModule: 'settings',
+  },
+  // ── Kunden-Chat (standalone) ──
+  {
+    name: 'Kunden-Chat',
+    href: '/intern/portal/chat',
+    icon: MessageCircle,
+    requiredModule: 'users',
   },
 ]
 
