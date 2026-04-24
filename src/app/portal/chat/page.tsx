@@ -50,7 +50,13 @@ export default function PortalChatPage() {
       if (initial) {
         setMessages(rows)
       } else if (rows.length > 0) {
-        setMessages(prev => [...prev, ...rows])
+        // Dedupe by ID: PG timestamp has µs precision, JS Date only ms,
+        // so `?since=<iso>` can return the boundary message again.
+        setMessages(prev => {
+          const existing = new Set(prev.map(m => m.id))
+          const fresh = rows.filter(r => !existing.has(r.id))
+          return fresh.length === 0 ? prev : [...prev, ...fresh]
+        })
       }
 
       if (rows.length > 0) {

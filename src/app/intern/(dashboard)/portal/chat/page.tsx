@@ -93,8 +93,17 @@ function ChatPageInner() {
       if (!data?.success) return
       const rows = data.data as PortalMessage[]
 
-      if (initial) setMessages(rows)
-      else if (rows.length > 0) setMessages(prev => [...prev, ...rows])
+      if (initial) {
+        setMessages(rows)
+      } else if (rows.length > 0) {
+        // Dedupe by ID: PG timestamp has µs precision, JS Date only ms,
+        // so `?since=<iso>` can return the boundary message again.
+        setMessages(prev => {
+          const existing = new Set(prev.map(m => m.id))
+          const fresh = rows.filter(r => !existing.has(r.id))
+          return fresh.length === 0 ? prev : [...prev, ...fresh]
+        })
+      }
 
       if (rows.length > 0) {
         lastCreatedAt.current = rows[rows.length - 1].createdAt
