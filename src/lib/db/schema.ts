@@ -3072,3 +3072,52 @@ export const portalMessages = pgTable('portal_messages', {
 
 export type PortalMessage = typeof portalMessages.$inferSelect
 export type NewPortalMessage = typeof portalMessages.$inferInsert
+
+// ============================================
+// Portal Documents — P6
+// ============================================
+export const portalDocumentCategories = pgTable('portal_document_categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull(),
+  direction: varchar('direction', { length: 20 }).notNull(),
+  sortOrder: integer('sort_order').default(0),
+  isSystem: boolean('is_system').default(false),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_portal_doc_categories_direction').on(table.direction),
+])
+
+export const portalDocuments = pgTable('portal_documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  companyId: uuid('company_id').notNull().references(() => companies.id, { onDelete: 'cascade' }),
+  categoryId: uuid('category_id').notNull().references(() => portalDocumentCategories.id, { onDelete: 'restrict' }),
+  direction: varchar('direction', { length: 20 }).notNull(),
+
+  fileName: varchar('file_name', { length: 255 }).notNull(),
+  storagePath: varchar('storage_path', { length: 500 }).notNull(),
+  mimeType: varchar('mime_type', { length: 100 }).notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+
+  linkedType: varchar('linked_type', { length: 20 }),
+  linkedId: uuid('linked_id'),
+
+  uploadedByUserId: uuid('uploaded_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+  uploaderRole: varchar('uploader_role', { length: 20 }).notNull(),
+  note: varchar('note', { length: 500 }),
+
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  deletedByUserId: uuid('deleted_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_portal_docs_company_dir_created').on(table.companyId, table.direction, table.createdAt.desc()),
+  index('idx_portal_docs_linked').on(table.linkedType, table.linkedId),
+  index('idx_portal_docs_category').on(table.categoryId),
+])
+
+export type PortalDocumentCategory = typeof portalDocumentCategories.$inferSelect
+export type NewPortalDocumentCategory = typeof portalDocumentCategories.$inferInsert
+export type PortalDocument = typeof portalDocuments.$inferSelect
+export type NewPortalDocument = typeof portalDocuments.$inferInsert

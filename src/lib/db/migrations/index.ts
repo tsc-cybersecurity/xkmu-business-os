@@ -68,4 +68,8 @@ export const MIGRATIONS: Migration[] = [
     name: '012_chat_messages.sql',
     description: 'Portal P5: chat_messages für Kunden-Admin-Chat (eine Thread pro Firma)',
   },
+  {
+    name: '013_portal_documents.sql',
+    description: 'Portal P6 — portal_documents + portal_document_categories + seed',
+  },
 ]
