@@ -21,6 +21,7 @@ import { LayoutDashboard,
   User,
   ExternalLink,
   ClipboardList,
+  ListOrdered,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -168,6 +169,13 @@ const navigation: NavItem[] = [
     name: 'Portal-Anträge',
     href: '/intern/portal/change-requests',
     icon: ClipboardList,
+    requiredModule: 'users',
+  },
+  // ── Aufträge (standalone) ──
+  {
+    name: 'Aufträge',
+    href: '/intern/orders',
+    icon: ListOrdered,
     requiredModule: 'users',
   },
   // ── E-Mail Inbox (standalone) ──
