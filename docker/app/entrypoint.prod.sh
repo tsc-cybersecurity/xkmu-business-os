@@ -511,6 +511,22 @@ CREATE INDEX IF NOT EXISTS idx_execution_logs_tenant ON execution_logs(tenant_id
 CREATE INDEX IF NOT EXISTS idx_execution_logs_entity ON execution_logs(tenant_id, entity_type, entity_id);
 CREATE INDEX IF NOT EXISTS idx_execution_logs_status ON execution_logs(tenant_id, status);
 CREATE INDEX IF NOT EXISTS idx_execution_logs_started ON execution_logs(tenant_id, started_at);
+
+-- persons.portal_user_id (Portal P7 — Migration 014)
+ALTER TABLE persons
+  ADD COLUMN IF NOT EXISTS portal_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_persons_portal_user_id ON persons(portal_user_id);
+
+-- Backfill: existing portal_users per (email, companyId) an Personen verknüpfen.
+UPDATE persons p
+SET portal_user_id = u.id
+FROM users u
+WHERE u.role = 'portal_user'
+  AND u.company_id IS NOT NULL
+  AND p.company_id = u.company_id
+  AND LOWER(p.email) = LOWER(u.email)
+  AND p.portal_user_id IS NULL;
 EOSQL
 echo "Pre-Drizzle migrations complete!"
 

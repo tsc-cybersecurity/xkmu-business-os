@@ -257,6 +257,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
 export const persons = pgTable('persons', {
   id: uuid('id').primaryKey().defaultRandom(),
   companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
+  portalUserId: uuid('portal_user_id').references((): AnyPgColumn => users.id, { onDelete: 'set null' }),
   // Name
   salutation: varchar('salutation', { length: 20 }),
   firstName: varchar('first_name', { length: 100 }).notNull(),
@@ -286,6 +287,7 @@ export const persons = pgTable('persons', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index('idx_persons_portal_user_id').on(table.portalUserId),
 ])
 
 export const personsRelations = relations(persons, ({ one, many }) => ({
@@ -295,6 +297,10 @@ export const personsRelations = relations(persons, ({ one, many }) => ({
   }),
   createdByUser: one(users, {
     fields: [persons.createdBy],
+    references: [users.id],
+  }),
+  portalUser: one(users, {
+    fields: [persons.portalUserId],
     references: [users.id],
   }),
   leads: many(leads),

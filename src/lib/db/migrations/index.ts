@@ -72,4 +72,8 @@ export const MIGRATIONS: Migration[] = [
     name: '013_portal_documents.sql',
     description: 'Portal P6 — portal_documents + portal_document_categories + seed',
   },
+  {
+    name: '014_persons_portal_user.sql',
+    description: 'persons.portal_user_id nullable FK + Backfill per (email, companyId)-Match',
+  },
 ]
