@@ -35,6 +35,7 @@ const roleLabels: Record<string, string> = {
   admin: 'Administrator',
   member: 'Mitarbeiter',
   viewer: 'Betrachter',
+  portal_user: 'Portal-Nutzer',
 }
 
 const statusLabels: Record<string, string> = {
@@ -166,6 +167,7 @@ export default function UserDetailPage() {
   }
 
   const isOwner = user.role === 'owner'
+  const isPortalUser = user.role === 'portal_user'
 
   return (
     <div className="space-y-6">
@@ -275,7 +277,7 @@ export default function UserDetailPage() {
                 onValueChange={(value) =>
                   setFormData({ ...formData, role: value })
                 }
-                disabled={isOwner}
+                disabled={isOwner || isPortalUser}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -287,11 +289,19 @@ export default function UserDetailPage() {
                   <SelectItem value="admin">Administrator</SelectItem>
                   <SelectItem value="member">Mitarbeiter</SelectItem>
                   <SelectItem value="viewer">Betrachter</SelectItem>
+                  <SelectItem value="portal_user" disabled>
+                    Portal-Nutzer
+                  </SelectItem>
                 </SelectContent>
               </Select>
               {isOwner && (
                 <p className="text-sm text-muted-foreground">
                   Die Inhaber-Rolle kann nicht geandert werden.
+                </p>
+              )}
+              {isPortalUser && (
+                <p className="text-sm text-muted-foreground">
+                  Portal-Zugänge werden über die zugehörige Firma verwaltet.
                 </p>
               )}
             </div>

@@ -20,7 +20,7 @@ export const paginationSchema = z.object({
 // ============================================
 // User Schemas
 // ============================================
-export const userRoleSchema = z.enum(['owner', 'admin', 'member', 'viewer'])
+export const userRoleSchema = z.enum(['owner', 'admin', 'member', 'viewer', 'portal_user'])
 export const userStatusSchema = z.enum(['active', 'inactive', 'pending'])
 
 export const createUserSchema = z.object({
