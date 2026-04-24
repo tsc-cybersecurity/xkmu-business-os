@@ -153,6 +153,7 @@ const navigation: NavItem[] = [
       { name: 'KI-Logging', href: '/intern/settings/ai-logs', requiredModule: 'ai_logs' },
       { name: 'E-Mail (IMAP)', href: '/intern/settings/email-imap', requiredModule: 'settings' },
       { name: 'E-Mail (Vorlagen)', href: '/intern/settings/email-templates', requiredModule: 'settings' },
+      { name: 'Portal-Dok.-Kategorien', href: '/intern/settings/portal-document-categories', requiredModule: 'settings' },
       { name: 'Cron-Jobs', href: '/intern/settings/cron-jobs', requiredModule: 'settings' },
       { name: 'Datenbank', href: '/intern/settings/database', requiredModule: 'database' },
       { name: 'Mein Profil', href: '/intern/settings/profile', requiredModule: 'settings' },
