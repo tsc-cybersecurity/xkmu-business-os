@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Loader2, ArrowLeft, FileText } from 'lucide-react'
+import { DocumentSection } from '@/app/portal/_components/document-section'
 
 interface ContractItem {
   id: string
@@ -172,6 +173,8 @@ export default function PortalContractDetailPage() {
           <CardContent className="whitespace-pre-wrap text-sm">{data.notes}</CardContent>
         </Card>
       )}
+
+      <DocumentSection linkedType="contract" linkedId={id} />
     </div>
   )
 }

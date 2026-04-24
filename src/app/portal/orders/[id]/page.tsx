@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, ArrowLeft, ShoppingCart, Clock } from 'lucide-react'
+import { DocumentSection } from '@/app/portal/_components/document-section'
 
 interface OrderDetail {
   id: string
@@ -248,6 +249,8 @@ export default function PortalOrderDetailPage({ params }: { params: Promise<{ id
           </ol>
         </CardContent>
       </Card>
+
+      <DocumentSection linkedType="order" linkedId={id} />
 
       {/* Cancel action */}
       {order.status === 'pending' && (

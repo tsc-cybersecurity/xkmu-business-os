@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, ArrowLeft, Briefcase, CheckCircle2, Calendar } from 'lucide-react'
+import { DocumentSection } from '@/app/portal/_components/document-section'
 
 interface PortalTask {
   id: string
@@ -157,6 +158,8 @@ export default function PortalProjectDetailPage() {
           )}
         </div>
       )}
+
+      <DocumentSection linkedType="project" linkedId={id} />
     </div>
   )
 }
