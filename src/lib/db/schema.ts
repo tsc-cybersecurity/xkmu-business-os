@@ -2440,6 +2440,7 @@ export const workflows = pgTable('workflows', {
   description: text('description'),
   trigger: varchar('trigger', { length: 100 }).notNull(), // e.g. 'contact.submitted', 'lead.created'
   steps: jsonb('steps').default([]).notNull(), // Array of { action, config?, condition?, label? }
+  schedule: jsonb('schedule'), // { interval: '5min'|'15min'|'30min'|'60min'|'daily', dailyAt?: 'HH:MM' } | null
   isActive: boolean('is_active').default(true),
   createdBy: uuid('created_by').references(() => users.id),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

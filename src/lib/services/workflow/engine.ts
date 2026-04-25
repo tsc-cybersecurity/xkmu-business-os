@@ -15,7 +15,7 @@ import { eq, and } from 'drizzle-orm'
 import { getAction } from './action-registry'
 import { logger } from '@/lib/utils/logger'
 
-type StepKind = 'action' | 'branch' | 'parallel'
+type StepKind = 'action' | 'branch' | 'parallel' | 'for_each'
 
 interface BaseStep {
   id?: string
@@ -42,7 +42,13 @@ interface ParallelStep extends BaseStep {
   steps: WorkflowStep[]
 }
 
-type WorkflowStep = ActionStep | BranchStep | ParallelStep
+interface ForEachStep extends BaseStep {
+  kind: 'for_each'
+  source: string             // 'data.<path>' | 'steps.<id>.<path>' — muss zu Array auflösen
+  steps: WorkflowStep[]
+}
+
+type WorkflowStep = ActionStep | BranchStep | ParallelStep | ForEachStep
 
 interface StepResult {
   step: number
@@ -152,6 +158,7 @@ interface RunContext {
 
 const MAX_DEPTH = 10
 const MAX_PARALLEL_FANOUT = 100
+const MAX_LOOP_ITERATIONS = 100
 
 async function persistStepResults(ctx: RunContext): Promise<void> {
   await db.update(workflowRuns)

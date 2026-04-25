@@ -1,4 +1,4 @@
-export type StepKind = 'action' | 'branch' | 'parallel'
+export type StepKind = 'action' | 'branch' | 'parallel' | 'for_each'
 
 export interface BaseStep {
   id?: string
@@ -24,7 +24,13 @@ export interface ParallelStep extends BaseStep {
   steps: WorkflowStep[]
 }
 
-export type WorkflowStep = ActionStep | BranchStep | ParallelStep
+export interface ForEachStep extends BaseStep {
+  kind: 'for_each'
+  source: string
+  steps: WorkflowStep[]
+}
+
+export type WorkflowStep = ActionStep | BranchStep | ParallelStep | ForEachStep
 
 export interface ActionDefinition {
   name: string

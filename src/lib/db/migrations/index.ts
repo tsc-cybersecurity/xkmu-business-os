@@ -76,4 +76,8 @@ export const MIGRATIONS: Migration[] = [
     name: '014_persons_portal_user.sql',
     description: 'persons.portal_user_id nullable FK + Backfill per (email, companyId)-Match',
   },
+  {
+    name: '015_workflow_schedule.sql',
+    description: 'workflows.schedule jsonb column for scheduled triggers (interval + dailyAt)',
+  },
 ]
