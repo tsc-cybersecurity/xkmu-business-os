@@ -42,6 +42,7 @@ export function ForEachStepEditor({ step, actions, onChange }: Props) {
             steps={step.steps}
             onChange={updated => onChange({ ...step, steps: updated })}
             actions={actions}
+            containerId={`${step.id ?? 'fe'}.steps`}
           />
         </div>
       </CardContent>

@@ -46,6 +46,7 @@ export function BranchStepEditor({ step, actions, onChange }: Props) {
             steps={step.then}
             onChange={updated => onChange({ ...step, then: updated })}
             actions={actions}
+            containerId={`${step.id ?? 'br'}.then`}
           />
         </div>
 
@@ -68,6 +69,7 @@ export function BranchStepEditor({ step, actions, onChange }: Props) {
               steps={step.else ?? []}
               onChange={updated => onChange({ ...step, else: updated })}
               actions={actions}
+              containerId={`${step.id ?? 'br'}.else`}
             />
           </div>
         ) : (

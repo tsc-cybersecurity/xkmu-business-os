@@ -10,8 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Trash2, ChevronDown, ChevronRight, Settings, ChevronUp,
   Building, User, Link as LinkIcon, Bot, BarChart3, FileText, Mail,
-  Bell, Clock, Sparkles,
+  Bell, Clock, Sparkles, GripVertical,
 } from 'lucide-react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { ActionStep, ActionDefinition, WorkflowStep, BranchStep, ParallelStep, ForEachStep } from './types'
 import { BranchStepEditor } from './branch-step-editor'
 import { ParallelStepEditor } from './parallel-step-editor'
@@ -76,6 +78,8 @@ export interface StepCardProps {
   onDelete: () => void
   onMoveUp?: () => void
   onMoveDown?: () => void
+  sortableId: string
+  containerId: string
 }
 
 function StepHeader({
@@ -260,11 +264,37 @@ function BranchOrParallelHeader({ index, label, onDelete, onMoveUp, onMoveDown }
 }
 
 export function StepCard(props: StepCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: props.sortableId,
+    data: { containerId: props.containerId },
+  })
+
+  const dragWrapper = (children: React.ReactNode) => (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      className="relative"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute -left-6 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+      >
+        <GripVertical className="h-4 w-4" />
+      </div>
+      {children}
+    </div>
+  )
+
   const kind = (props.step as { kind?: string }).kind ?? 'action'
 
   if (kind === 'branch') {
     const bs = props.step as BranchStep
-    return (
+    return dragWrapper(
       <div>
         <BranchOrParallelHeader
           index={props.index}
@@ -284,7 +314,7 @@ export function StepCard(props: StepCardProps) {
 
   if (kind === 'parallel') {
     const ps = props.step as ParallelStep
-    return (
+    return dragWrapper(
       <div>
         <BranchOrParallelHeader
           index={props.index}
@@ -304,7 +334,7 @@ export function StepCard(props: StepCardProps) {
 
   if (kind === 'for_each') {
     const fes = props.step as ForEachStep
-    return (
+    return dragWrapper(
       <div>
         <BranchOrParallelHeader
           index={props.index}
@@ -322,7 +352,7 @@ export function StepCard(props: StepCardProps) {
     )
   }
 
-  return <ActionStepBody {...props} />
+  return dragWrapper(<ActionStepBody {...props} />)
 }
 
 export { StepHeader }

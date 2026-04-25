@@ -33,6 +33,7 @@ export function ParallelStepEditor({ step, actions, onChange }: Props) {
             steps={step.steps}
             onChange={updated => onChange({ ...step, steps: updated })}
             actions={actions}
+            containerId={`${step.id ?? 'par'}.steps`}
           />
         </div>
       </CardContent>
