@@ -12,9 +12,10 @@ import {
   Building, User, Link as LinkIcon, Bot, BarChart3, FileText, Mail,
   Bell, Clock, Sparkles,
 } from 'lucide-react'
-import type { ActionStep, ActionDefinition, WorkflowStep, BranchStep, ParallelStep } from './types'
+import type { ActionStep, ActionDefinition, WorkflowStep, BranchStep, ParallelStep, ForEachStep } from './types'
 import { BranchStepEditor } from './branch-step-editor'
 import { ParallelStepEditor } from './parallel-step-editor'
+import { ForEachStepEditor } from './for-each-step-editor'
 
 const ICONS: Record<string, React.ReactNode> = {
   Building: <Building className="h-4 w-4" />,
@@ -60,6 +61,10 @@ export function makeBranchStep(): BranchStep {
 
 export function makeParallelStep(): ParallelStep {
   return { id: shortId(), kind: 'parallel', steps: [] }
+}
+
+export function makeForEachStep(): ForEachStep {
+  return { id: shortId(), kind: 'for_each', source: '', steps: [] }
 }
 
 export interface StepCardProps {
@@ -290,6 +295,26 @@ export function StepCard(props: StepCardProps) {
         />
         <ParallelStepEditor
           step={ps}
+          actions={props.actions}
+          onChange={updated => props.onChange(updated)}
+        />
+      </div>
+    )
+  }
+
+  if (kind === 'for_each') {
+    const fes = props.step as ForEachStep
+    return (
+      <div>
+        <BranchOrParallelHeader
+          index={props.index}
+          label={fes.label || 'Schleife'}
+          onDelete={props.onDelete}
+          onMoveUp={props.onMoveUp}
+          onMoveDown={props.onMoveDown}
+        />
+        <ForEachStepEditor
+          step={fes}
           actions={props.actions}
           onChange={updated => props.onChange(updated)}
         />

@@ -1,7 +1,7 @@
 'use client'
 
 import type { WorkflowStep, ActionDefinition } from './types'
-import { StepCard, makeActionStep, makeBranchStep, makeParallelStep } from './step-card'
+import { StepCard, makeActionStep, makeBranchStep, makeParallelStep, makeForEachStep } from './step-card'
 import { AddStepMenu } from './add-step-menu'
 
 function swap<T>(arr: T[], i: number, j: number): T[] {
@@ -40,6 +40,7 @@ export function StepList({ steps, onChange, actions }: Props) {
         }}
         onAddBranch={() => onChange([...steps, makeBranchStep()])}
         onAddParallel={() => onChange([...steps, makeParallelStep()])}
+        onAddForEach={() => onChange([...steps, makeForEachStep()])}
       />
     </div>
   )

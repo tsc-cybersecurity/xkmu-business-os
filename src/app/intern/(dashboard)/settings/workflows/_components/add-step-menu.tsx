@@ -5,7 +5,7 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Plus, GitBranch, Layers } from 'lucide-react'
+import { Plus, GitBranch, Layers, Repeat } from 'lucide-react'
 import type { ActionDefinition } from './types'
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -20,9 +20,10 @@ interface Props {
   onAddAction: (name: string) => void
   onAddBranch: () => void
   onAddParallel: () => void
+  onAddForEach: () => void
 }
 
-export function AddStepMenu({ actions, onAddAction, onAddBranch, onAddParallel }: Props) {
+export function AddStepMenu({ actions, onAddAction, onAddBranch, onAddParallel, onAddForEach }: Props) {
   const categories = [...new Set(actions.map(a => a.category))]
 
   return (
@@ -54,6 +55,9 @@ export function AddStepMenu({ actions, onAddAction, onAddBranch, onAddParallel }
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onAddParallel}>
           <Layers className="h-4 w-4 mr-2" /> Parallel
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onAddForEach}>
+          <Repeat className="h-4 w-4 mr-2" /> Schleife (for-each)
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
