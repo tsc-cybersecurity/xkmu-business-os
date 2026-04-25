@@ -14,6 +14,7 @@ import { ArrowLeft, Save, Loader2, Play, Pause, CheckCircle2, AlertCircle, Clock
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { WorkflowDesigner } from '../_components/workflow-designer'
+import type { WorkflowStep } from '../_components/types'
 import { TRIGGER_LABELS, WORKFLOW_TRIGGERS } from '@/lib/services/workflow/triggers'
 
 interface WorkflowData {
@@ -21,8 +22,20 @@ interface WorkflowData {
   name: string
   description: string | null
   trigger: string
-  steps: Array<{ action: string; label?: string; config?: Record<string, unknown>; condition?: string }>
+  steps: WorkflowStep[]
   isActive: boolean
+}
+
+interface StepResultEntry {
+  step: number
+  path?: string
+  action: string
+  kind?: 'action' | 'branch' | 'parallel'
+  label?: string
+  status: string
+  result?: { taken?: 'then' | 'else' | 'none'; ranSubSteps?: number; failedCount?: number } & Record<string, unknown>
+  error?: string
+  durationMs: number
 }
 
 interface WorkflowRun {
@@ -30,7 +43,7 @@ interface WorkflowRun {
   status: string
   currentStep: number
   totalSteps: number
-  stepResults: Array<{ step: number; action: string; label?: string; status: string; error?: string; durationMs: number }>
+  stepResults: StepResultEntry[]
   error: string | null
   startedAt: string
   completedAt: string | null
@@ -266,17 +279,33 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                     )}
                     {/* Step details */}
                     <div className="space-y-1">
-                      {(run.stepResults as Array<{ step: number; action: string; label?: string; status: string; error?: string; durationMs: number }>).map((sr, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs">
-                          {sr.status === 'completed' && <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" />}
-                          {sr.status === 'failed' && <AlertCircle className="h-3 w-3 text-red-600 shrink-0" />}
-                          {sr.status === 'skipped' && <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
-                          <span className={sr.status === 'failed' ? 'text-destructive' : 'text-muted-foreground'}>
-                            {sr.label || sr.action}
-                          </span>
-                          <span className="text-muted-foreground/50 ml-auto">{sr.durationMs}ms</span>
-                        </div>
-                      ))}
+                      {run.stepResults.map((sr, i) => {
+                        const depth = sr.path ? Math.max(0, sr.path.split('.').length - 1) : 0
+                        const indent = depth * 12
+                        const kind = sr.kind ?? 'action'
+                        return (
+                          <div key={i} className="flex items-center gap-2 text-xs" style={{ paddingLeft: indent }}>
+                            {sr.status === 'completed' && <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" />}
+                            {sr.status === 'failed' && <AlertCircle className="h-3 w-3 text-red-600 shrink-0" />}
+                            {sr.status === 'skipped' && <Clock className="h-3 w-3 text-muted-foreground shrink-0" />}
+                            {kind === 'branch' && (
+                              <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                Verzweigung → {sr.result?.taken ?? '?'}
+                              </Badge>
+                            )}
+                            {kind === 'parallel' && (
+                              <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                Parallel ({sr.result?.ranSubSteps ?? 0}
+                                {(sr.result?.failedCount ?? 0) > 0 ? `, ${sr.result?.failedCount} fail` : ''})
+                              </Badge>
+                            )}
+                            <span className={sr.status === 'failed' ? 'text-destructive truncate' : 'text-muted-foreground truncate'}>
+                              {sr.label || (kind === 'action' ? sr.action : '')}
+                            </span>
+                            <span className="text-muted-foreground/50 ml-auto shrink-0">{sr.durationMs}ms</span>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 )
