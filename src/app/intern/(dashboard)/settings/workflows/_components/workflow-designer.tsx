@@ -13,6 +13,7 @@ import { GripVertical, Trash2, Plus, ChevronDown, ChevronRight, Settings,
 } from 'lucide-react'
 
 interface WorkflowStep {
+  id?: string
   action: string
   label?: string
   config?: Record<string, unknown>
@@ -85,7 +86,7 @@ export function WorkflowDesigner({ steps, actions, onChange }: WorkflowDesignerP
 
   const addStep = (actionName: string) => {
     const def = actions.find(a => a.name === actionName)
-    onChange([...steps, { action: actionName, label: def?.label || actionName, config: {} }])
+    onChange([...steps, { id: crypto.randomUUID().slice(0, 8), action: actionName, label: def?.label || actionName, config: {} }])
     setExpandedStep(steps.length) // Expand the new step
   }
 
