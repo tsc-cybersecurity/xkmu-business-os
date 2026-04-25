@@ -17,12 +17,18 @@ import { WorkflowDesigner } from '../_components/workflow-designer'
 import type { WorkflowStep } from '../_components/types'
 import { TRIGGER_LABELS, WORKFLOW_TRIGGERS } from '@/lib/services/workflow/triggers'
 
+interface ScheduleConfig {
+  interval: '5min' | '15min' | '30min' | '60min' | 'daily'
+  dailyAt?: string
+}
+
 interface WorkflowData {
   id: string
   name: string
   description: string | null
   trigger: string
   steps: WorkflowStep[]
+  schedule: ScheduleConfig | null
   isActive: boolean
 }
 
@@ -108,6 +114,7 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
           description: workflow.description,
           trigger: workflow.trigger,
           steps: workflow.steps,
+          schedule: workflow.schedule,
           isActive: workflow.isActive,
         }),
       })
@@ -181,7 +188,15 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                 </div>
                 <div className="space-y-2">
                   <Label>Trigger</Label>
-                  <Select value={workflow.trigger} onValueChange={v => update({ trigger: v })}>
+                  <Select
+                    value={workflow.trigger}
+                    onValueChange={v => {
+                      const newSchedule = v === '__scheduled__'
+                        ? (workflow.schedule ?? { interval: 'daily' as const, dailyAt: '08:00' })
+                        : null
+                      update({ trigger: v, schedule: newSchedule })
+                    }}
+                  >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {Object.entries(TRIGGER_LABELS).map(([k, v]) => (
@@ -219,6 +234,50 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
               </div>
             </CardContent>
           </Card>
+
+          {/* Schedule Configuration */}
+          {workflow.trigger === '__scheduled__' && workflow.schedule && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Clock className="h-4 w-4" /> Zeitplan
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Intervall</Label>
+                    <Select
+                      value={workflow.schedule.interval}
+                      onValueChange={v => update({ schedule: { ...workflow.schedule!, interval: v as ScheduleConfig['interval'] } })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="5min">Alle 5 Minuten</SelectItem>
+                        <SelectItem value="15min">Alle 15 Minuten</SelectItem>
+                        <SelectItem value="30min">Alle 30 Minuten</SelectItem>
+                        <SelectItem value="60min">Stündlich</SelectItem>
+                        <SelectItem value="daily">Täglich</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {workflow.schedule.interval === 'daily' && (
+                    <div className="space-y-1">
+                      <Label>Uhrzeit (Europe/Berlin)</Label>
+                      <Input
+                        type="time"
+                        value={workflow.schedule.dailyAt ?? '08:00'}
+                        onChange={e => update({ schedule: { ...workflow.schedule!, dailyAt: e.target.value } })}
+                      />
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Der Workflow läuft automatisch entsprechend dem Intervall — verwaltet als Cron-Job in der Hintergrund-Queue.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Visual Designer */}
           <Card>
