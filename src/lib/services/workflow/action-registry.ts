@@ -38,6 +38,34 @@ export interface ActionDefinition {
 
 const NO_COMPANY_NAME = '– ohne Firma –'
 
+function resolveTemplate(input: unknown, ctx: ActionContext): unknown {
+  if (typeof input === 'string') {
+    return input.replace(/\{\{\s*([^}]+)\s*\}\}/g, (_, path: string) => {
+      const parts = path.trim().split('.')
+      let cur: unknown
+      if (parts[0] === 'data') cur = ctx.triggerData
+      else if (parts[0] === 'steps') cur = ctx.stepResults
+      else return ''
+      for (let i = 1; i < parts.length; i++) {
+        if (cur == null || typeof cur !== 'object') return ''
+        cur = (cur as Record<string, unknown>)[parts[i]]
+      }
+      return cur == null ? '' : String(cur)
+    })
+  }
+  if (Array.isArray(input)) return input.map(item => resolveTemplate(item, ctx))
+  if (input && typeof input === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(input)) out[k] = resolveTemplate(v, ctx)
+    return out
+  }
+  return input
+}
+
+function safeParseJson(text: string): unknown {
+  try { return JSON.parse(text) } catch { return null }
+}
+
 const ACTIONS: Record<string, ActionDefinition> = {
   find_or_create_company: {
     name: 'find_or_create_company',
@@ -410,6 +438,94 @@ const ACTIONS: Record<string, ActionDefinition> = {
       } catch (err) {
         return { success: false, error: `Prompt-Ausführung fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}` }
       }
+    },
+  },
+
+  webhook_call: {
+    name: 'webhook_call',
+    label: 'Webhook aufrufen',
+    description: 'HTTP-Request an externe URL (POST/GET/PUT/DELETE) mit Mustache-Templating, Retry und Timeout',
+    category: 'communication',
+    icon: 'Webhook',
+    configFields: [
+      { key: 'url', label: 'URL', type: 'string' },
+      { key: 'method', label: 'Methode', type: 'select', options: ['POST', 'GET', 'PUT', 'DELETE'] },
+      { key: 'authBearer', label: 'Bearer-Token (optional)', type: 'string' },
+      { key: 'headers', label: 'Custom Headers (JSON)', type: 'json' },
+      { key: 'body', label: 'Body (JSON, mit {{data.field}})', type: 'json' },
+      { key: 'retries', label: 'Retries (5xx/Network)', type: 'number' },
+      { key: 'timeoutMs', label: 'Timeout (ms)', type: 'number' },
+    ],
+    execute: async (ctx, config) => {
+      const cfg = config as {
+        url?: unknown; method?: unknown; headers?: unknown;
+        authBearer?: unknown; body?: unknown; retries?: unknown; timeoutMs?: unknown
+      }
+
+      const url = String(resolveTemplate(cfg.url ?? '', ctx))
+      if (!url.trim()) return { success: false, error: 'URL leer nach Templating' }
+
+      const methodRaw = typeof cfg.method === 'string' ? cfg.method : 'POST'
+      const method = methodRaw.toUpperCase()
+
+      const baseHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+      const resolvedHeaders = resolveTemplate(cfg.headers ?? {}, ctx)
+      const headers: Record<string, string> = {
+        ...baseHeaders,
+        ...(resolvedHeaders && typeof resolvedHeaders === 'object'
+          ? Object.fromEntries(
+              Object.entries(resolvedHeaders as Record<string, unknown>)
+                .map(([k, v]) => [k, String(v)]),
+            )
+          : {}),
+      }
+      if (cfg.authBearer) {
+        headers.Authorization = `Bearer ${resolveTemplate(cfg.authBearer, ctx)}`
+      }
+
+      let body: string | undefined
+      if (method !== 'GET' && method !== 'DELETE') {
+        try {
+          body = JSON.stringify(resolveTemplate(cfg.body ?? {}, ctx))
+        } catch (err) {
+          return { success: false, error: `Body nicht serialisierbar: ${err instanceof Error ? err.message : String(err)}` }
+        }
+      }
+
+      const retriesRaw = typeof cfg.retries === 'number' ? cfg.retries : 2
+      const maxAttempts = Math.min(Math.max(0, retriesRaw), 5) + 1
+      const timeoutMs = typeof cfg.timeoutMs === 'number' && cfg.timeoutMs > 0 ? cfg.timeoutMs : 10_000
+
+      let lastError: string = 'unknown'
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), timeoutMs)
+        try {
+          const res = await fetch(url, { method, headers, body, signal: controller.signal })
+          clearTimeout(timer)
+          const text = await res.text().catch(() => '')
+          const parsedBody = safeParseJson(text) ?? text
+
+          if (res.ok) {
+            return { success: true, data: { status: res.status, body: parsedBody } }
+          }
+          if (res.status >= 400 && res.status < 500) {
+            return {
+              success: false,
+              error: `HTTP ${res.status}: ${text.slice(0, 200)}`,
+              data: { status: res.status, body: parsedBody },
+            }
+          }
+          lastError = `HTTP ${res.status}: ${text.slice(0, 200)}`
+        } catch (err) {
+          clearTimeout(timer)
+          lastError = err instanceof Error ? err.message : String(err)
+        }
+        if (attempt < maxAttempts) {
+          await new Promise(r => setTimeout(r, 1000 * attempt))
+        }
+      }
+      return { success: false, error: lastError }
     },
   },
 }
