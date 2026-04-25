@@ -17,6 +17,7 @@ import { logger } from '@/lib/utils/logger'
 
 interface WorkflowStep {
   action: string
+  id?: string             // Eindeutiger Step-Key für stepResults; rückwärtskompatibel via action-name-Fallback.
   label?: string
   config?: Record<string, unknown>
   condition?: string // Simple expression: "data.company != null"
@@ -176,7 +177,13 @@ export const WorkflowEngine = {
         try {
           const actionResult: ActionResult = await actionDef.execute(ctx, step.config || {})
           if (actionResult.data) {
-            actionResults[step.action] = actionResult.data
+            const stepKey = step.id || step.action
+            actionResults[stepKey] = actionResult.data
+            // Backwards-compat: existierende Workflows referenzieren via action-name.
+            // Nur belegen, wenn noch nicht gesetzt — vermeidet Überschreiben bei Mehrfach-Action mit IDs.
+            if (!(step.action in actionResults)) {
+              actionResults[step.action] = actionResult.data
+            }
           }
 
           const result: StepResult = {
