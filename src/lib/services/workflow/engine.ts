@@ -14,6 +14,7 @@ import { workflows, workflowRuns } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { getAction } from './action-registry'
 import { logger } from '@/lib/utils/logger'
+import { evaluateCondition } from './condition-parser'
 
 type StepKind = 'action' | 'branch' | 'parallel' | 'for_each'
 
@@ -62,90 +63,7 @@ interface StepResult {
   durationMs: number
 }
 
-/**
- * Evaluate a condition string against runtime context.
- *
- * Pfade:
- *   data.<field>[.<nested>...]      → ctx.triggerData
- *   steps.<id>.<field>[.<nested>...] → ctx.actionResults[<id>]
- *
- * Operatoren:  ==  !=  >  >=  <  <=
- * Spezialfall: == null / != null  (true für null/undefined/leerer-String)
- * Truthy: einzelner Pfad ohne Operator
- *
- * Unbekannte Formate → returns true (default execute, mit logger.warn).
- */
-export function evaluateCondition(
-  condition: string,
-  scope: { triggerData: Record<string, unknown>; actionResults: Record<string, unknown> },
-): boolean {
-  if (!condition || !condition.trim()) return true
-
-  try {
-    const expr = condition.trim()
-
-    function resolvePath(path: string): unknown {
-      const parts = path.split('.')
-      let cur: unknown
-      if (parts[0] === 'data') cur = scope.triggerData
-      else if (parts[0] === 'steps') cur = scope.actionResults
-      else return undefined
-      for (let i = 1; i < parts.length; i++) {
-        if (cur == null || typeof cur !== 'object') return undefined
-        cur = (cur as Record<string, unknown>)[parts[i]]
-      }
-      return cur
-    }
-
-    const PATH = String.raw`(?:data|steps)(?:\.\w+)+`
-
-    // == null / != null
-    let m = expr.match(new RegExp(`^(${PATH})\\s*(==|!=)\\s*null$`))
-    if (m) {
-      const val = resolvePath(m[1])
-      const isNullish = val === null || val === undefined || val === ''
-      return m[2] === '==' ? isNullish : !isNullish
-    }
-
-    // == 'value' / != 'value'
-    m = expr.match(new RegExp(`^(${PATH})\\s*(==|!=)\\s*'([^']*)'$`))
-    if (m) {
-      const val = resolvePath(m[1])
-      return m[2] === '==' ? String(val) === m[3] : String(val) !== m[3]
-    }
-
-    // numerische Operatoren
-    m = expr.match(new RegExp(`^(${PATH})\\s*(==|!=|>=|<=|>|<)\\s*(-?\\d+(?:\\.\\d+)?)$`))
-    if (m) {
-      const raw = resolvePath(m[1])
-      const val = Number(raw)
-      const num = Number(m[3])
-      if (Number.isNaN(val)) return false
-      switch (m[2]) {
-        case '==': return val === num
-        case '!=': return val !== num
-        case '>':  return val > num
-        case '>=': return val >= num
-        case '<':  return val < num
-        case '<=': return val <= num
-      }
-    }
-
-    // truthy
-    m = expr.match(new RegExp(`^(${PATH})$`))
-    if (m) {
-      const val = resolvePath(m[1])
-      if (val == null || val === '' || val === false || val === 0) return false
-      if (Array.isArray(val) && val.length === 0) return false
-      return true
-    }
-
-    logger.warn(`Unknown condition format: ${expr}`, { module: 'WorkflowEngine' })
-    return true
-  } catch {
-    return true
-  }
-}
+export { evaluateCondition } from './condition-parser'
 
 interface RunContext {
   runId: string

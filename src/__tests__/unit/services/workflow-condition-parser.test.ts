@@ -7,7 +7,7 @@ vi.mock('@/lib/utils/logger', () => ({
 
 describe('evaluateCondition', () => {
   function load() {
-    return import('@/lib/services/workflow/engine').then(m => (m as any).evaluateCondition)
+    return import('@/lib/services/workflow/condition-parser').then(m => (m as any).evaluateCondition)
   }
 
   function scope(triggerData: Record<string, unknown> = {}, actionResults: Record<string, unknown> = {}) {
