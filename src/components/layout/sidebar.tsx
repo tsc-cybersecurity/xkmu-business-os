@@ -455,16 +455,25 @@ export function Sidebar({ user }: SidebarProps) {
           </div>
         ) : (
           <>
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            >
-              <Avatar className="h-6 w-6">
-                <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
-              </Avatar>
-              <span className="flex-1 text-left truncate">{displayName}</span>
-              <ChevronRight className={cn('h-4 w-4 transition-transform', userMenuOpen && 'rotate-90')} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                className="flex flex-1 items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+              >
+                <Avatar className="h-6 w-6">
+                  <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+                </Avatar>
+                <span className="flex-1 text-left truncate">{displayName}</span>
+                <ChevronRight className={cn('h-4 w-4 transition-transform', userMenuOpen && 'rotate-90')} />
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                title="Abmelden"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
             {userMenuOpen && (
               <div className="ml-7 space-y-1">
                 <Link
