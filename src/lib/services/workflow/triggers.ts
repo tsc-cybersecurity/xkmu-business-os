@@ -76,6 +76,12 @@ export const WORKFLOW_TRIGGERS: TriggerDefinition[] = [
     description: 'Wird gefeuert wenn sich der Status eines Leads ändert.',
     dataShape: ['leadId', 'companyId', 'fromStatus', 'toStatus'],
   },
+  {
+    key: '__scheduled__',
+    label: 'Geplant (Cron)',
+    description: 'Workflow läuft auf Zeitplan. Konfiguration im Bereich „Zeitplan" oben am Workflow.',
+    dataShape: ['scheduledAt', 'workflowId', 'cronJobId'],
+  },
 ]
 
 export const TRIGGER_LABELS: Record<string, string> = Object.fromEntries(
