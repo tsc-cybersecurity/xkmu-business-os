@@ -70,6 +70,12 @@ export const WORKFLOW_TRIGGERS: TriggerDefinition[] = [
     description: 'Wird gefeuert nach Status-Übergang eines Auftrags.',
     dataShape: ['orderId', 'companyId', 'fromStatus', 'toStatus'],
   },
+  {
+    key: 'lead.status_changed',
+    label: 'Lead-Status geändert',
+    description: 'Wird gefeuert wenn sich der Status eines Leads ändert.',
+    dataShape: ['leadId', 'companyId', 'fromStatus', 'toStatus'],
+  },
 ]
 
 export const TRIGGER_LABELS: Record<string, string> = Object.fromEntries(

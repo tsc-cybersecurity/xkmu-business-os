@@ -14,6 +14,7 @@ import { ArrowLeft, Save, Loader2, Play, Pause, CheckCircle2, AlertCircle, Clock
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { WorkflowDesigner } from '../_components/workflow-designer'
+import { TRIGGER_LABELS, WORKFLOW_TRIGGERS } from '@/lib/services/workflow/triggers'
 
 interface WorkflowData {
   id: string
@@ -42,13 +43,6 @@ interface ActionDef {
   category: string
   icon: string
   configFields: Array<{ key: string; label: string; type: string; options?: string[] }>
-}
-
-const TRIGGER_LABELS: Record<string, string> = {
-  'contact.submitted': 'Kontaktformular abgesendet',
-  'lead.created': 'Lead erstellt',
-  'lead.scored': 'Lead bewertet',
-  'lead.status_changed': 'Lead-Status geändert',
 }
 
 const RUN_STATUS: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -182,6 +176,23 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                       ))}
                     </SelectContent>
                   </Select>
+                  {(() => {
+                    const def = WORKFLOW_TRIGGERS.find(t => t.key === workflow.trigger)
+                    if (!def) return null
+                    return (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {def.description}
+                        {def.dataShape && def.dataShape.length > 0 && (
+                          <>
+                            {' '}Verfügbar in <code>{'{{data.*}}'}</code>:
+                            {def.dataShape.map(f => (
+                              <code key={f} className="ml-1">{f}</code>
+                            ))}
+                          </>
+                        )}
+                      </p>
+                    )
+                  })()}
                 </div>
               </div>
               <div className="space-y-2">

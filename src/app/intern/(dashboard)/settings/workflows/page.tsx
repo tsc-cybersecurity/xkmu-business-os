@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Workflow, Plus, Loader2, Trash2, Play, Pause, ChevronRight, ArrowRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { TRIGGER_LABELS } from '@/lib/services/workflow/triggers'
 
 interface WorkflowItem {
   id: string
@@ -22,13 +23,6 @@ interface WorkflowItem {
   steps: Array<{ action: string; label?: string }>
   isActive: boolean
   createdAt: string
-}
-
-const TRIGGER_LABELS: Record<string, string> = {
-  'contact.submitted': 'Kontaktformular abgesendet',
-  'lead.created': 'Lead erstellt',
-  'lead.scored': 'Lead bewertet',
-  'lead.status_changed': 'Lead-Status geändert',
 }
 
 export default function WorkflowsPage() {
