@@ -76,6 +76,15 @@ export const LeadService = {
       })
       .returning()
 
+    import('@/lib/services/workflow').then(({ WorkflowEngine }) =>
+      WorkflowEngine.fire('lead.created', {
+        leadId: lead.id,
+        companyId: lead.companyId ?? null,
+        personId: lead.personId ?? null,
+        source: lead.source ?? null,
+      })
+    ).catch(err => logger.error('Workflow fire (lead.created) failed', err, { module: 'LeadService' }))
+
     // Auto-Score: KI-basierte Qualifizierung im Hintergrund (non-blocking)
     this.autoScore(lead.id).catch(() => {})
 
@@ -115,6 +124,14 @@ export const LeadService = {
           .update(leads)
           .set({ score, updatedAt: new Date() })
           .where(eq(leads.id, leadId))
+
+        import('@/lib/services/workflow').then(({ WorkflowEngine }) =>
+          WorkflowEngine.fire('lead.scored', {
+            leadId,
+            score,
+            priority: null,
+          })
+        ).catch(err => logger.error('Workflow fire (lead.scored) failed', err, { module: 'LeadService' }))
       }
 
       logger.info(`Auto-scored lead ${leadId}: ${score}`, { module: 'LeadService' })

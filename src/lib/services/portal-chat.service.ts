@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { portalMessages, companies } from '@/lib/db/schema'
 import type { PortalMessage } from '@/lib/db/schema'
 import { eq, and, gt, desc, asc, sql, ne, isNull, count } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 export interface CreateMessageInput {
   companyId: string
@@ -26,6 +27,17 @@ export const PortalChatService = {
       senderRole: input.senderRole,
       bodyText: input.bodyText,
     }).returning()
+
+    import('@/lib/services/workflow').then(({ WorkflowEngine }) =>
+      WorkflowEngine.fire('portal.message_sent', {
+        messageId: created.id,
+        companyId: created.companyId,
+        senderId: created.senderId,
+        senderRole: created.senderRole,
+        bodyPreview: (created.bodyText ?? '').slice(0, 120),
+      })
+    ).catch(err => logger.error('Workflow fire (portal.message_sent) failed', err, { module: 'PortalChatService' }))
+
     return created
   },
 

@@ -130,6 +130,18 @@ export const PortalDocumentService = {
       logger.info(`Portal document uploaded: ${created.fileName} (company=${input.companyId}, dir=${input.direction})`, {
         module: 'PortalDocumentService',
       })
+
+      import('@/lib/services/workflow').then(({ WorkflowEngine }) =>
+        WorkflowEngine.fire('portal.document_uploaded', {
+          documentId: created.id,
+          companyId: created.companyId,
+          direction: created.direction,
+          fileName: created.fileName,
+          sizeBytes: created.sizeBytes,
+          uploaderRole: created.uploaderRole,
+        })
+      ).catch(err => logger.error('Workflow fire (portal.document_uploaded) failed', err, { module: 'PortalDocumentService' }))
+
       return created
     } catch (err) {
       try { await unlink(resolveStoragePath(storagePath)) } catch { /* ignore */ }
