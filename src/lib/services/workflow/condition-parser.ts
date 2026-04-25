@@ -73,15 +73,98 @@ function evaluateAtom(atom: string, scope: Scope): boolean {
   return true
 }
 
-/**
- * Boolean-Composer kommt in Task 3. Diese Initial-Version delegiert
- * nur an evaluateAtom — Phase-2-Cases müssen weiter funktionieren.
- */
+type Token =
+  | { type: 'atom'; value: string }
+  | { type: 'and' }
+  | { type: 'or' }
+  | { type: 'lparen' }
+  | { type: 'rparen' }
+
+function tokenize(expr: string): Token[] {
+  const tokens: Token[] = []
+  let i = 0
+  let atomStart = -1
+
+  const flushAtom = (end: number) => {
+    if (atomStart >= 0) {
+      const value = expr.slice(atomStart, end).trim()
+      if (value) tokens.push({ type: 'atom', value })
+      atomStart = -1
+    }
+  }
+
+  while (i < expr.length) {
+    const ch = expr[i]
+    if (ch === '&' && expr[i + 1] === '&') { flushAtom(i); tokens.push({ type: 'and' }); i += 2; continue }
+    if (ch === '|' && expr[i + 1] === '|') { flushAtom(i); tokens.push({ type: 'or' }); i += 2; continue }
+    if (ch === '(') { flushAtom(i); tokens.push({ type: 'lparen' }); i += 1; continue }
+    if (ch === ')') { flushAtom(i); tokens.push({ type: 'rparen' }); i += 1; continue }
+    // Innerhalb '...'-Strings &/| nicht als Operator interpretieren
+    if (ch === "'") {
+      if (atomStart < 0) atomStart = i
+      i += 1
+      while (i < expr.length && expr[i] !== "'") i += 1
+      if (i < expr.length) i += 1
+      continue
+    }
+    if (atomStart < 0 && !/\s/.test(ch)) atomStart = i
+    i += 1
+  }
+  flushAtom(i)
+  return tokens
+}
+
+function parseOr(tokens: Token[], scope: Scope, pos: { i: number }): boolean {
+  let left = parseAnd(tokens, scope, pos)
+  while (pos.i < tokens.length && tokens[pos.i].type === 'or') {
+    pos.i += 1
+    const right = parseAnd(tokens, scope, pos)
+    left = left || right
+  }
+  return left
+}
+
+function parseAnd(tokens: Token[], scope: Scope, pos: { i: number }): boolean {
+  let left = parsePrimary(tokens, scope, pos)
+  while (pos.i < tokens.length && tokens[pos.i].type === 'and') {
+    pos.i += 1
+    const right = parsePrimary(tokens, scope, pos)
+    left = left && right
+  }
+  return left
+}
+
+function parsePrimary(tokens: Token[], scope: Scope, pos: { i: number }): boolean {
+  const tok = tokens[pos.i]
+  if (!tok) throw new Error('unexpected end of expression')
+  if (tok.type === 'lparen') {
+    pos.i += 1
+    const val = parseOr(tokens, scope, pos)
+    if (tokens[pos.i]?.type !== 'rparen') throw new Error('missing closing paren')
+    pos.i += 1
+    return val
+  }
+  if (tok.type === 'atom') {
+    pos.i += 1
+    return evaluateAtom(tok.value, scope)
+  }
+  throw new Error(`unexpected token: ${tok.type}`)
+}
+
 export function evaluateCondition(condition: string, scope: Scope): boolean {
   if (!condition || !condition.trim()) return true
   try {
-    return evaluateAtom(condition, scope)
-  } catch {
+    const tokens = tokenize(condition)
+    if (tokens.length === 0) return true
+    const pos = { i: 0 }
+    const result = parseOr(tokens, scope, pos)
+    if (pos.i !== tokens.length) {
+      logger.warn(`Trailing tokens in condition: ${condition}`, { module: 'WorkflowEngine' })
+      return true
+    }
+    return result
+  } catch (err) {
+    logger.warn(`Parse error in condition "${condition}": ${err instanceof Error ? err.message : err}`, { module: 'WorkflowEngine' })
     return true
   }
 }

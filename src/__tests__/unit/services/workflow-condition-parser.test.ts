@@ -83,3 +83,76 @@ describe('evaluateCondition', () => {
     expect(fn('foo bar baz', scope())).toBe(true)
   })
 })
+
+describe('boolean composition', () => {
+  function load() {
+    return import('@/lib/services/workflow/condition-parser').then(m => m.evaluateCondition)
+  }
+  function scope(triggerData: Record<string, unknown> = {}) {
+    return { triggerData, actionResults: {} }
+  }
+
+  it('A && B both true', async () => {
+    const fn = await load()
+    expect(fn("data.a == 'x' && data.b == 'y'", scope({ a: 'x', b: 'y' }))).toBe(true)
+  })
+
+  it('A && B second false', async () => {
+    const fn = await load()
+    expect(fn("data.a == 'x' && data.b == 'y'", scope({ a: 'x', b: 'z' }))).toBe(false)
+  })
+
+  it('A || B first true', async () => {
+    const fn = await load()
+    expect(fn("data.a == 'x' || data.b == 'y'", scope({ a: 'x', b: 'z' }))).toBe(true)
+  })
+
+  it('A || B both false', async () => {
+    const fn = await load()
+    expect(fn("data.a == 'x' || data.b == 'y'", scope({ a: 'z', b: 'z' }))).toBe(false)
+  })
+
+  it('precedence: A && B || C parses as (A && B) || C', async () => {
+    const fn = await load()
+    // false && false || true == true
+    expect(fn("data.a == 'x' && data.b == 'y' || data.c == 'z'", scope({ a: 'X', b: 'Y', c: 'z' }))).toBe(true)
+  })
+
+  it('precedence: A || B && C parses as A || (B && C)', async () => {
+    const fn = await load()
+    // false || (true && false) == false
+    expect(fn("data.a == 'x' || data.b == 'y' && data.c == 'z'", scope({ a: 'X', b: 'y', c: 'X' }))).toBe(false)
+  })
+
+  it('parens override precedence: (A || B) && C', async () => {
+    const fn = await load()
+    expect(fn("(data.a == 'x' || data.b == 'y') && data.c == 'z'", scope({ a: 'x', b: 'X', c: 'z' }))).toBe(true)
+    expect(fn("(data.a == 'x' || data.b == 'y') && data.c == 'z'", scope({ a: 'X', b: 'X', c: 'z' }))).toBe(false)
+  })
+
+  it('whitespace tolerant', async () => {
+    const fn = await load()
+    expect(fn("  data.a == 'x'   &&   data.b == 'y'  ", scope({ a: 'x', b: 'y' }))).toBe(true)
+  })
+
+  it('short-circuit && does not evaluate second on false', async () => {
+    const fn = await load()
+    expect(fn("data.x == 'no' && data.y >= 10", scope({ x: 'X', y: 'abc' }))).toBe(false)
+  })
+
+  it('short-circuit || does not evaluate second on true', async () => {
+    const fn = await load()
+    expect(fn("data.x == 'yes' || data.y >= 10", scope({ x: 'yes', y: 'abc' }))).toBe(true)
+  })
+
+  it('atom-only still works (backwards compat)', async () => {
+    const fn = await load()
+    expect(fn("data.a == 'x'", scope({ a: 'x' }))).toBe(true)
+  })
+
+  it('malformed expression defaults to true', async () => {
+    const fn = await load()
+    expect(fn("data.a && && data.b", scope({ a: 'x', b: 'y' }))).toBe(true)
+    expect(fn("(data.a == 'x'", scope({ a: 'x' }))).toBe(true)
+  })
+})
