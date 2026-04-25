@@ -36,10 +36,10 @@ interface StepResultEntry {
   step: number
   path?: string
   action: string
-  kind?: 'action' | 'branch' | 'parallel'
+  kind?: 'action' | 'branch' | 'parallel' | 'for_each'
   label?: string
   status: string
-  result?: { taken?: 'then' | 'else' | 'none'; ranSubSteps?: number; failedCount?: number } & Record<string, unknown>
+  result?: { taken?: 'then' | 'else' | 'none'; ranSubSteps?: number; iterations?: number; failedCount?: number } & Record<string, unknown>
   error?: string
   durationMs: number
 }
@@ -355,6 +355,12 @@ export default function WorkflowDetailPage({ params }: { params: Promise<{ id: s
                             {kind === 'parallel' && (
                               <Badge variant="outline" className="text-[10px] px-1 py-0">
                                 Parallel ({sr.result?.ranSubSteps ?? 0}
+                                {(sr.result?.failedCount ?? 0) > 0 ? `, ${sr.result?.failedCount} fail` : ''})
+                              </Badge>
+                            )}
+                            {kind === 'for_each' && (
+                              <Badge variant="outline" className="text-[10px] px-1 py-0">
+                                Schleife ({sr.result?.iterations ?? 0}
                                 {(sr.result?.failedCount ?? 0) > 0 ? `, ${sr.result?.failedCount} fail` : ''})
                               </Badge>
                             )}
