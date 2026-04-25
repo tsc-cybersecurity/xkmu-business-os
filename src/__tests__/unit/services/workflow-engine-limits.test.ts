@@ -78,4 +78,24 @@ describe('WorkflowEngine — defensive limits', () => {
     const failed = lastStepResults.find(r => r.status === 'failed' && /nesting depth/i.test((r.error as string) ?? ''))
     expect(failed).toBeDefined()
   })
+
+  it('rejects nesting deeper than 10 levels via for_each', async () => {
+    const { WorkflowEngine } = await import('@/lib/services/workflow/engine')
+
+    function buildLoopNest(depth: number): any[] {
+      if (depth === 0) return [{ id: 'leaf', kind: 'action', action: 'noop' }]
+      return [{
+        id: `loop${depth}`,
+        kind: 'for_each',
+        source: 'data.arr',
+        steps: buildLoopNest(depth - 1),
+      }]
+    }
+
+    const steps = buildLoopNest(12)
+    await WorkflowEngine.executeWorkflow('wf', 'TestWf', steps as any, 'test', { arr: [1] })
+
+    const failed = lastStepResults.find(r => r.status === 'failed' && /nesting depth/i.test((r.error as string) ?? ''))
+    expect(failed).toBeDefined()
+  })
 })
