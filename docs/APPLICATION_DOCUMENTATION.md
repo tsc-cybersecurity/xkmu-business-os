@@ -32,6 +32,7 @@
 21. [KPI-Dashboard](#21-kpi-dashboard)
 22. [Social Media Publishing](#22-social-media-publishing)
 23. [SEO-Keyword-Recherche](#23-seo-keyword-recherche)
+24. [Workflow-Engine](#24-workflow-engine)
 
 ---
 
@@ -1972,4 +1973,286 @@ primaryKeyword, searchIntent, difficulty, relatedKeywords, longTailKeywords, con
 
 ---
 
-*Diese Dokumentation wurde am 2026-03-23 aktualisiert. Version 1.2.211.*
+## 24. Workflow-Engine
+
+Interne, in BusinessOS eingebettete Workflow-Automatisierung. Reagiert auf System-Events (Trigger), führt eine Sequenz von Aktionen aus und unterstützt Verzweigungen (`if/else`) sowie parallele Ausführung. Migration-frei (Steps + Step-Results sind `jsonb`).
+
+> Abgrenzung zu Section 10 (n8n): Die n8n-Integration ist optional und ruft externe n8n-Workflows. Die Workflow-Engine hier läuft inhouse, ohne externe Dependencies, und hat direkten DB-Zugriff auf BusinessOS-Tabellen (Leads, Firmen, Personen, Aktivitäten, …).
+
+### Seiten
+| Route | Beschreibung |
+|-------|-------------|
+| `/intern/settings/workflows` | Workflow-Übersicht (Liste, Aktivieren, Löschen, Duplizieren) |
+| `/intern/settings/workflows/[id]` | Designer + Run-History für einzelnen Workflow |
+
+### API-Endpunkte
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/workflows` | Liste aller Workflows |
+| POST | `/api/v1/workflows` | Workflow anlegen |
+| GET | `/api/v1/workflows/[id]` | Workflow-Details |
+| PUT | `/api/v1/workflows/[id]` | Workflow speichern (steps, name, trigger, isActive) |
+| DELETE | `/api/v1/workflows/[id]` | Workflow löschen |
+| GET | `/api/v1/workflows/[id]/runs` | Ausführungshistorie |
+| GET | `/api/v1/workflows/actions` | Alle verfügbaren Actions (für Designer) |
+
+### DB-Tabellen
+- `workflows` — id, name, description, trigger, steps (jsonb), isActive
+- `workflow_runs` — id, workflowId, trigger, triggerData, status, currentStep, totalSteps, stepResults (jsonb), error, startedAt, completedAt
+
+### Berechtigungen
+Modul: `settings` (read/update). Wer Settings administrieren darf, kann Workflows konfigurieren.
+
+---
+
+### 24.1 Trigger
+
+Trigger sind System-Events. Wenn ein Trigger feuert, werden alle aktiven Workflows mit passendem `trigger` ausgeführt. Pro Trigger gibt es ein `data.*`-Objekt mit Feldern, die in Conditions und Templates referenziert werden können.
+
+| Trigger-Key | Wann gefeuert | Verfügbar als `{{data.*}}` |
+|---|---|---|
+| `contact.submitted` | Öffentliches Kontaktformular abgesendet | `firstName`, `lastName`, `email`, `phone`, `company`, `message` |
+| `lead.created` | Lead angelegt | `leadId`, `companyId`, `personId`, `source` |
+| `lead.scored` | Lead-Scoring abgeschlossen | `leadId`, `score`, `priority` |
+| `lead.status_changed` | Lead-Status-Übergang | `leadId`, `companyId`, `fromStatus`, `toStatus` |
+| `order.created` | Auftrag angelegt | `orderId`, `companyId`, `title`, `createdByRole` |
+| `order.status_changed` | Auftrag-Status-Übergang | `orderId`, `companyId`, `fromStatus`, `toStatus` |
+| `portal.user_invited` | Portal-Zugang erstellt mit Invite-Link | `userId`, `companyId`, `email` |
+| `portal.message_sent` | Portal-Chat-Nachricht | `messageId`, `companyId`, `senderId`, `senderRole`, `bodyPreview` |
+| `portal.document_uploaded` | Portal-Dokument hochgeladen | `documentId`, `companyId`, `direction`, `fileName`, `sizeBytes`, `uploaderRole` |
+| `portal.change_request_created` | Firmendaten-Änderungsantrag im Portal | `changeRequestId`, `companyId`, `requestedBy`, `proposedChanges` |
+
+Zentrale Source of Truth: `src/lib/services/workflow/triggers.ts`.
+
+---
+
+### 24.2 Step-Typen
+
+Ein Workflow ist eine Liste von Steps. Jeder Step hat einen `kind`:
+
+#### `kind: 'action'` (Standard)
+Führt eine registrierte Action aus. Bestandsworkflows ohne `kind`-Feld werden als Action behandelt (Backwards-Compat).
+
+```json
+{ "id": "log1", "kind": "action", "action": "log_activity",
+  "config": { "subject": "Kontakt eingegangen" },
+  "condition": "data.email != null" }
+```
+
+- `id` (optional, empfohlen): Eindeutiger Key für `{{steps.<id>.*}}`-Referenzen
+- `action`: Name der Action (siehe 24.3)
+- `config`: Action-spezifische Konfiguration (siehe Config-Felder pro Action)
+- `condition` (optional): Wenn falsch, wird der Step übersprungen (siehe 24.4)
+- `label` (optional): Anzeigename im Designer + Run-History
+
+#### `kind: 'branch'` (if/else)
+Wertet `ifCondition` aus und führt entweder `then` oder `else` aus. `else` ist optional — wenn nicht gesetzt und Condition falsch, wird kein Sub-Step ausgeführt (`taken: 'none'`).
+
+```json
+{ "id": "br1", "kind": "branch",
+  "ifCondition": "data.priority == 'hoch'",
+  "then": [
+    { "id": "alert", "kind": "action", "action": "notify_admin" }
+  ],
+  "else": [
+    { "id": "queue", "kind": "action", "action": "send_email", "config": { "template": "lead_first_response" } }
+  ] }
+```
+
+#### `kind: 'parallel'` (Fan-out)
+Führt alle `steps` parallel aus (`Promise.allSettled`). Sub-Steps haben isolierte Contexts — gegenseitige Step-Result-Referenzen funktionieren nicht. Nach Abschluss läuft der Workflow normal weiter.
+
+```json
+{ "id": "fan1", "kind": "parallel",
+  "steps": [
+    { "id": "wh_a", "kind": "action", "action": "webhook_call", "config": { "url": "https://a.example/" } },
+    { "id": "wh_b", "kind": "action", "action": "webhook_call", "config": { "url": "https://b.example/" } }
+  ] }
+```
+
+Ein fehlgeschlagener Sub-Step bricht den Workflow nicht ab — `failedCount` im Summary zeigt, wieviele scheiterten.
+
+#### Limits (defensiv)
+- `MAX_DEPTH = 10` — maximale Verschachtelungstiefe (branch/parallel ineinander)
+- `MAX_PARALLEL_FANOUT = 100` — maximale Sub-Step-Anzahl pro `parallel`
+
+Bei Überschreitung wird der entsprechende Step mit Status `failed` markiert; der Workflow läuft weiter.
+
+---
+
+### 24.3 Action-Referenz
+
+Alle Actions sind in `src/lib/services/workflow/action-registry.ts` registriert. Der Designer holt sie via `GET /api/v1/workflows/actions`.
+
+#### Daten-Actions
+
+**`find_or_create_company`** — Firma per Name suchen oder anlegen
+- Liest: `data.company` (Name)
+- Config: `fallbackName` (string, default `– ohne Firma –`)
+- Liefert: `{ companyId, created }`
+
+**`find_or_create_person`** — Person per E-Mail suchen oder anlegen
+- Liest: `data.email`, `data.firstName`, `data.lastName`, `data.phone`
+- Verknüpft mit `steps.find_or_create_company.companyId` falls vorhanden
+- Liefert: `{ personId, created }`
+
+**`link_lead`** — Lead mit Firma + Person verknüpfen
+- Liest: `data.leadId`, `steps.find_or_create_company.companyId`, `steps.find_or_create_person.personId`
+- Liefert: `{ companyId, personId }`
+
+**`log_activity`** — Aktivitätseintrag erstellen (Kontaktverlauf)
+- Liest: `data.leadId`, `data.interests`, `data.message`, `data.company`, plus Step-Results für Firma/Person
+- Config: `subject` (string, default „Kontaktformular ausgefüllt")
+
+#### Logik-Actions
+
+**`score_lead`** — Lead bewerten (0–100)
+- Berechnet Score aus Vollständigkeit (E-Mail/Telefon/Firma) + Interessen-Gewichtung + Nachrichten-Länge
+- Config: `highValueInterests` (JSON-Array, default: Security/Hardening/IR/NIS-2/Datenschutz/Kombination)
+- Liefert: `{ score }`
+
+**`set_field`** — Feld auf Lead setzen
+- Config: `field` (`status` | `tags` | `notes`), `value` (string, oder Array bei `tags`)
+- Liefert: `{ field, value }`
+
+**`delay`** — Sekunden warten
+- Config: `seconds` (number, default `5`)
+- Liefert: `{ waited }`
+- ⚠ Lange Delays blockieren den Workflow-Run (synchron). Für lange Verzögerungen besser Task-Queue mit `scheduledFor` nutzen.
+
+#### KI-Actions
+
+**`ai_research_company`** — KI-Firmenrecherche (Website, Branche, Größe)
+- Reiht Task in Task-Queue ein (Typ `ai`, Action `company_research`); läuft asynchron
+- Liest: `data.company`, `steps.find_or_create_company.companyId`
+- Liefert: `{ queued: true }` (kein direktes Ergebnis im Workflow)
+
+**`run_custom_prompt`** — Eigenen KI-Prompt mit Firmenkontext ausführen
+- Synchron via `CustomAiPromptService.execute`
+- Config: `promptId` (Referenz auf Custom-Prompt), `saveAsActivity` (boolean, default `true`)
+- Liefert: `{ promptId, companyId, subject, content, activityId }`
+
+#### Kommunikations-Actions
+
+**`send_email`** — E-Mail über Task-Queue versenden (Templating mit Platzhaltern)
+- Config: `template` (Slug, default `lead_first_response`), `to` (Empfänger, default `data.email`)
+- Reiht in Task-Queue ein; tatsächliches Senden erfolgt asynchron
+- Liefert: `{ to, template }`
+
+**`notify_admin`** — Admin-Benachrichtigung (E-Mail an `__ADMIN__`)
+- Config: `template` (Slug, default `lead_admin_notification`)
+- Reiht in Task-Queue ein
+- Liefert: `{ template }`
+
+**`webhook_call`** — HTTP-Request an externe URL
+- Config:
+  - `url` (string, mit `{{data.x}}`-Templating)
+  - `method` (`POST` | `GET` | `PUT` | `DELETE`, default `POST`)
+  - `authBearer` (string, optional — wird zu `Authorization: Bearer ...`)
+  - `headers` (JSON-Objekt, mit Templating)
+  - `body` (JSON, mit Templating; für GET/DELETE ignoriert)
+  - `retries` (number, default `2`, max `5`) — nur bei 5xx und Netzwerkfehlern
+  - `timeoutMs` (number, default `10000`)
+- Liefert: `{ status, body }` (Body ist JSON wenn parsebar, sonst String)
+- 4xx wird als Fehler behandelt **ohne** Retry; 5xx und Netzwerkfehler werden mit exponentiell wachsendem Delay (1s, 2s, 3s, …) wiederholt.
+
+---
+
+### 24.4 Conditions
+
+Conditions sind String-Ausdrücke. Sie werden auf `condition` (action-step skip) und `ifCondition` (branch) angewandt.
+
+#### Pfade
+- `data.<feld>[.<nested>]` — verweist auf `triggerData` (vom Trigger geliefert)
+- `steps.<id>.<feld>[.<nested>]` — verweist auf das `result.data` eines vorherigen Action-Steps mit dieser `id`. Fallback: wenn kein `id`, dann `steps.<actionName>.<feld>` (für Bestandsworkflows).
+
+Beispiele:
+- `data.email` — wahr wenn E-Mail nicht-leer
+- `steps.score_lead.score` — wahr wenn Score gesetzt
+- `steps.webhook_a.body.code == 'OK'` — verschachtelter Pfad
+
+#### Operatoren
+| Form | Beispiel | Semantik |
+|---|---|---|
+| Truthy (Pfad allein) | `data.email` | Wahr wenn nicht null/undefined/leerer-String/`false`/`0`/leeres-Array |
+| `== null` / `!= null` | `data.companyId == null` | null/undefined/leerer-String zählen als „null" |
+| `== 'wert'` / `!= 'wert'` | `data.priority == 'hoch'` | String-Vergleich (Wert in einfachen Anführungszeichen) |
+| `==`, `!=`, `>`, `>=`, `<`, `<=` (numerisch) | `steps.webhook_x.status >= 400` | Wert wird zu `Number()` gecastet; non-numerisch → `false` |
+
+#### Verhalten
+- Leere Condition → `true` (Step läuft)
+- Unbekanntes Format → `true` mit Warning im Log (defensiver Default)
+- Alle Operatoren sind reine Vergleiche, keine Boolean-Verknüpfungen (`&&`, `||` werden **nicht** unterstützt). Für AND/OR: mehrere Steps mit `condition` hintereinander oder `branch` verschachteln.
+
+---
+
+### 24.5 Templating in Action-Configs
+
+Die `webhook_call`-Action (und alle weiteren Actions, die `resolveTemplate` aufrufen) erlaubt `{{...}}`-Substitution in `url`, `headers`, `body`, `authBearer`:
+
+- `{{data.email}}` → Wert aus Trigger-Data
+- `{{steps.find_or_create_company.companyId}}` → Wert aus Step-Result
+- Tiefe Pfade (`data.foo.bar.baz`) werden traversiert; `null`/`undefined` werden zu Leerstring
+
+Beispiel-Body für `webhook_call`:
+```json
+{
+  "kunde": "{{data.firstName}} {{data.lastName}}",
+  "firma": "{{data.company}}",
+  "score": "{{steps.score_lead.score}}"
+}
+```
+
+---
+
+### 24.6 Run-History
+
+In `/intern/settings/workflows/[id]` (rechte Sidebar) zeigt die Engine pro Run:
+- Status (`running` | `completed` | `failed`)
+- Aktueller / Gesamt-Schritt-Counter
+- Pro Step-Result: Path (`1`, `2.then.1`, `3.parallel.2`), Action, Status, Dauer, Fehler
+- Indentation pro Verschachtelungs-Ebene (12px pro Tiefe)
+- Kind-Badges: `Verzweigung → then/else/none`, `Parallel (N, M fail)`
+
+Step-Results sind in `workflow_runs.stepResults` als JSON persistiert — auch für SQL-Auswertung verfügbar.
+
+---
+
+### 24.7 Beispiel-Workflow (Lead-Routing)
+
+Ein typischer Lead-Workflow mit allen Konzepten:
+
+```json
+[
+  { "id": "co", "kind": "action", "action": "find_or_create_company" },
+  { "id": "pe", "kind": "action", "action": "find_or_create_person" },
+  { "id": "ld", "kind": "action", "action": "link_lead" },
+  { "id": "sc", "kind": "action", "action": "score_lead" },
+  {
+    "id": "route", "kind": "branch",
+    "ifCondition": "steps.sc.score >= 70",
+    "then": [
+      { "id": "hot", "kind": "parallel", "steps": [
+        { "id": "n1", "kind": "action", "action": "notify_admin" },
+        { "id": "wh", "kind": "action", "action": "webhook_call",
+          "config": { "url": "https://hooks.slack.com/...", "body": { "lead": "{{data.firstName}} {{data.lastName}}", "score": "{{steps.sc.score}}" } } }
+      ]}
+    ],
+    "else": [
+      { "id": "cold", "kind": "action", "action": "send_email",
+        "config": { "template": "lead_first_response" } }
+    ]
+  },
+  { "id": "log", "kind": "action", "action": "log_activity" }
+]
+```
+
+Verhalten:
+1. Firma + Person suchen/anlegen, Lead verknüpfen, scoren.
+2. Wenn Score ≥ 70: parallel Admin benachrichtigen + Slack-Webhook feuern.
+3. Sonst: First-Response-E-Mail.
+4. In jedem Fall: Aktivität loggen.
+
+---
+
+*Diese Dokumentation wurde am 2026-04-25 aktualisiert. Workflow-Engine in 1.4.529.*
