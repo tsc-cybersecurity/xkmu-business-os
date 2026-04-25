@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { orders } from '@/lib/db/schema'
 import type { Order } from '@/lib/db/schema'
 import { eq, and, desc } from 'drizzle-orm'
+import { logger } from '@/lib/utils/logger'
 
 export interface CreateOrderInput {
   companyId: string
@@ -55,6 +56,15 @@ export const OrderService = {
       contractId: input.contractId ?? null,
       projectId: input.projectId ?? null,
     }).returning()
+
+    import('@/lib/services/workflow').then(({ WorkflowEngine }) =>
+      WorkflowEngine.fire('order.created', {
+        orderId: created.id,
+        companyId: created.companyId,
+        title: created.title,
+      })
+    ).catch(err => logger.error('Workflow fire (order.created) failed', err, { module: 'OrderService' }))
+
     return created
   },
 
@@ -133,6 +143,16 @@ export const OrderService = {
       .set(patch)
       .where(eq(orders.id, id))
       .returning()
+
+    import('@/lib/services/workflow').then(({ WorkflowEngine }) =>
+      WorkflowEngine.fire('order.status_changed', {
+        orderId: id,
+        companyId: updated.companyId,
+        fromStatus: current.status,
+        toStatus: updated.status,
+      })
+    ).catch(err => logger.error('Workflow fire (order.status_changed) failed', err, { module: 'OrderService' }))
+
     return updated
   },
 

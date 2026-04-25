@@ -91,6 +91,19 @@ export async function POST(request: NextRequest) {
         logger.error('Activity write for change_request failed', err, { module: 'PortalChangeRequestAPI' })
       }
 
+      // Workflow trigger (fail-safe)
+      try {
+        const { WorkflowEngine } = await import('@/lib/services/workflow')
+        await WorkflowEngine.fire('portal.change_request_created', {
+          changeRequestId: created.id,
+          companyId: auth.companyId,
+          requestedBy: auth.userId,
+          proposedChanges: validation.data.proposedChanges,
+        })
+      } catch (err) {
+        logger.error('Workflow fire (portal.change_request_created) failed', err, { module: 'PortalChangeRequestAPI' })
+      }
+
       // Admin notification email (fail-safe)
       try {
         const [org, company] = await Promise.all([

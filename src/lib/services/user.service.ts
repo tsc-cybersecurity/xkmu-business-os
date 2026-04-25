@@ -316,6 +316,17 @@ export const UserService = {
       `Portal user created: ${created.email} (company=${input.companyId}, method=${input.method})`,
       { module: 'UserService' }
     )
+
+    if (input.method === 'invite') {
+      import('@/lib/services/workflow').then(({ WorkflowEngine }) =>
+        WorkflowEngine.fire('portal.user_invited', {
+          userId: created.id,
+          companyId: input.companyId,
+          email: created.email,
+        })
+      ).catch(err => logger.error('Workflow fire (portal.user_invited) failed', err, { module: 'UserService' }))
+    }
+
     return created
   },
 
