@@ -439,11 +439,20 @@ export function Sidebar({ user }: SidebarProps) {
 
         {/* User */}
         {collapsed ? (
-          <Link href="/intern/settings/profile" className="flex justify-center py-2" title={displayName}>
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-            </Avatar>
-          </Link>
+          <div className="flex flex-col items-center gap-1 py-2">
+            <Link href="/intern/settings/profile" className="flex justify-center" title={displayName}>
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+              </Avatar>
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+              title="Abmelden"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         ) : (
           <>
             <button
