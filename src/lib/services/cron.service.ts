@@ -150,10 +150,33 @@ export const CronService = {
         }
         case 'workflow': {
           const config = (job.actionConfig || {}) as Record<string, unknown>
-          const trigger = (config.trigger as string) || 'cron.triggered'
-          const { WorkflowEngine } = await import('./workflow')
-          await WorkflowEngine.fire(trigger, { cronJobId: job.id, cronJobName: job.name })
-          msg = `Workflow trigger "${trigger}" fired`
+          if (config.direct === true && config.workflowId) {
+            // Phase-3-Pfad: direkter Workflow-Aufruf
+            const { workflows: wfTable } = await import('@/lib/db/schema')
+            const { eq: eqDr } = await import('drizzle-orm')
+            const [wf] = await db.select().from(wfTable).where(eqDr(wfTable.id, config.workflowId as string))
+            if (!wf) {
+              msg = `Workflow ${config.workflowId} nicht gefunden — Cron-Job verwaist`
+              break
+            }
+            if (!wf.isActive) {
+              msg = 'Workflow deaktiviert — übersprungen'
+              break
+            }
+            const { WorkflowEngine } = await import('./workflow')
+            await WorkflowEngine.executeWorkflow(
+              wf.id, wf.name, wf.steps as any[],
+              '__scheduled__',
+              { scheduledAt: new Date().toISOString(), workflowId: wf.id, cronJobId: job.id },
+            )
+            msg = `Workflow "${wf.name}" direkt ausgeführt`
+          } else {
+            // Bestehender Pfad: trigger-basiert
+            const trigger = (config.trigger as string) || 'cron.triggered'
+            const { WorkflowEngine } = await import('./workflow')
+            await WorkflowEngine.fire(trigger, { cronJobId: job.id, cronJobName: job.name })
+            msg = `Workflow trigger "${trigger}" fired`
+          }
           break
         }
         case 'api_call': {
