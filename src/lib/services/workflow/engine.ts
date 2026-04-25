@@ -14,7 +14,7 @@ import { workflows, workflowRuns } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { getAction } from './action-registry'
 import { logger } from '@/lib/utils/logger'
-import { evaluateCondition } from './condition-parser'
+import { evaluateCondition, resolvePath } from './condition-parser'
 
 type StepKind = 'action' | 'branch' | 'parallel' | 'for_each'
 
@@ -187,6 +187,71 @@ async function executeOneStep(
     ctx.stepResults[summaryIdx] = {
       ...ctx.stepResults[summaryIdx],
       result: { ranSubSteps: ps.steps.length, failedCount },
+      durationMs: Date.now() - startTime,
+    }
+    await persistStepResults(ctx)
+    return
+  }
+
+  // ── FOR_EACH ────────────────────────────────────────────────
+  if (kind === 'for_each') {
+    const fes = step as ForEachStep
+    const arr = resolvePath(fes.source, {
+      triggerData: ctx.triggerData,
+      actionResults: ctx.actionResults,
+    })
+
+    if (!Array.isArray(arr)) {
+      ctx.stepResults.push({
+        step: stepNum, path, action: 'for_each', kind: 'for_each', label: fes.label,
+        status: 'failed',
+        error: `Source "${fes.source}" ist kein Array`,
+        durationMs: Date.now() - startTime,
+      })
+      await persistStepResults(ctx)
+      return
+    }
+
+    if (arr.length > MAX_LOOP_ITERATIONS) {
+      ctx.stepResults.push({
+        step: stepNum, path, action: 'for_each', kind: 'for_each', label: fes.label,
+        status: 'failed',
+        error: `Loop iterations > ${MAX_LOOP_ITERATIONS}`,
+        durationMs: Date.now() - startTime,
+      })
+      await persistStepResults(ctx)
+      return
+    }
+
+    const summaryIdx = ctx.stepResults.length
+    ctx.stepResults.push({
+      step: stepNum, path, action: 'for_each', kind: 'for_each', label: fes.label,
+      status: 'completed',
+      result: { iterations: arr.length, failedCount: 0 },
+      durationMs: 0,
+    })
+    await persistStepResults(ctx)
+
+    let failedCount = 0
+    const childCtx: RunContext = { ...ctx, depth: ctx.depth + 1 }
+
+    for (let i = 0; i < arr.length; i++) {
+      childCtx.actionResults.__item = arr[i] as Record<string, unknown> | unknown
+      childCtx.actionResults.__loop = { value: arr[i], index: i }
+
+      const beforeLen = childCtx.stepResults.length
+      await executeStepList(fes.steps, `${path}.iter[${i + 1}]`, childCtx)
+      for (let j = beforeLen; j < childCtx.stepResults.length; j++) {
+        if (childCtx.stepResults[j].status === 'failed') failedCount++
+      }
+    }
+
+    delete childCtx.actionResults.__item
+    delete childCtx.actionResults.__loop
+
+    ctx.stepResults[summaryIdx] = {
+      ...ctx.stepResults[summaryIdx],
+      result: { iterations: arr.length, failedCount },
       durationMs: Date.now() - startTime,
     }
     await persistStepResults(ctx)
