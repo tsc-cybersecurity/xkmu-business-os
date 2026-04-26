@@ -55,6 +55,9 @@ export function setupDbMock() {
     delete: vi.fn().mockImplementation(() => deleteMock.createFreshChain()),
   }
 
+  const mockTransaction = vi.fn().mockImplementation(async (cb: (tx: unknown) => unknown) => cb(db))
+  ;(db as Record<string, unknown>).transaction = mockTransaction
+
   vi.doMock('@/lib/db', () => ({ db }))
 
   return {
@@ -63,5 +66,6 @@ export function setupDbMock() {
     mockSelect: selectMock,
     mockUpdate: updateMock,
     mockDelete: deleteMock,
+    mockTransaction,
   }
 }
