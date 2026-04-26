@@ -97,6 +97,11 @@ export function CourseEditView({ courseId }: { courseId: string }) {
     await load()
   }
 
+  async function restore() {
+    await fetch(`/api/v1/courses/${courseId}/restore`, { method: 'POST' })
+    await load()
+  }
+
   const loadPreview = useCallback(async () => {
     if (!course) return
     setPreviewLoading(true)
@@ -151,6 +156,11 @@ export function CourseEditView({ courseId }: { courseId: string }) {
                 Archivieren
               </Button>
             </>
+          )}
+          {course.status === 'archived' && (
+            <Button onClick={restore} variant="outline">
+              Wiederbeleben
+            </Button>
           )}
         </div>
       </div>
