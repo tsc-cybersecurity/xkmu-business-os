@@ -115,6 +115,31 @@ describe('CourseService', () => {
     })
   })
 
+  describe('restore', () => {
+    it('sets status=draft and clears publishedAt for archived course', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ status: 'archived', publishedAt: new Date('2026-04-20') })])
+      dbMock.mockUpdate.mockResolvedValue([courseFixture({ status: 'draft', publishedAt: null })])
+      const svc = await getService()
+      const r = await svc.restore(TEST_COURSE_ID, { userId: TEST_USER_ID, userRole: 'admin' })
+      expect(r.status).toBe('draft')
+      expect(r.publishedAt).toBeNull()
+    })
+
+    it('rejects restore on draft course', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ status: 'draft' })])
+      const svc = await getService()
+      await expect(svc.restore(TEST_COURSE_ID, { userId: TEST_USER_ID, userRole: 'admin' }))
+        .rejects.toMatchObject({ code: 'INVALID_STATE' })
+    })
+
+    it('rejects restore on missing course', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      const svc = await getService()
+      await expect(svc.restore(TEST_COURSE_ID, { userId: TEST_USER_ID, userRole: 'admin' }))
+        .rejects.toMatchObject({ code: 'NOT_FOUND' })
+    })
+  })
+
   describe('delete', () => {
     it('deletes course and logs audit', async () => {
       dbMock.mockSelect.mockResolvedValueOnce([courseFixture()])
