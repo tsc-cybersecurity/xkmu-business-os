@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, Loader2 } from 'lucide-react'
 import { LessonContentForm } from './LessonContentForm'
+import { LessonVideoUploader } from './LessonVideoUploader'
 
 export interface LessonAsset {
   id: string
@@ -81,7 +82,7 @@ export function LessonEditView({
           <LessonContentForm lesson={lesson} onSaved={load} />
         </TabsContent>
         <TabsContent value="video" className="mt-6">
-          <p className="text-muted-foreground">Video-Tab kommt in Task 20.</p>
+          <LessonVideoUploader lesson={lesson} onSaved={load} />
         </TabsContent>
         <TabsContent value="anhaenge" className="mt-6">
           <p className="text-muted-foreground">Anhänge-Tab kommt in Task 21.</p>
