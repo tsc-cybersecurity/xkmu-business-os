@@ -121,6 +121,10 @@ export const TENANT_TABLES = [
   'okr_objectives',
   'sop_documents',
   'grundschutz_assets',
+  'course_assets',
+  'course_lessons',
+  'course_modules',
+  'courses',
 ]
 
 // Join/child tables that reference a parent (exported via JOIN)
