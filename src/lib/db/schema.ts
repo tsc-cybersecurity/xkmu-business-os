@@ -1,4 +1,5 @@
 import { pgTable,
+  pgEnum,
   uuid,
   varchar,
   text,
@@ -6,11 +7,13 @@ import { pgTable,
   jsonb,
   boolean,
   integer,
+  bigint,
   decimal,
   numeric,
   real,
   inet,
   index,
+  uniqueIndex,
   serial,
   smallint,
   char,
@@ -3128,3 +3131,89 @@ export type PortalDocumentCategory = typeof portalDocumentCategories.$inferSelec
 export type NewPortalDocumentCategory = typeof portalDocumentCategories.$inferInsert
 export type PortalDocument = typeof portalDocuments.$inferSelect
 export type NewPortalDocument = typeof portalDocuments.$inferInsert
+
+// ============================================
+// Onlinekurse (E-Learning) — Sub-Projekt 1: Core Authoring
+// ============================================
+export const courseVisibility = pgEnum('course_visibility', ['public', 'portal', 'both'])
+
+export const courses = pgTable('courses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: varchar('slug', { length: 160 }).notNull().unique(),
+  title: varchar('title', { length: 200 }).notNull(),
+  subtitle: varchar('subtitle', { length: 300 }),
+  description: text('description'),
+  coverImageId: uuid('cover_image_id').references(() => mediaUploads.id, { onDelete: 'set null' }),
+  visibility: courseVisibility('visibility').notNull().default('portal'),
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
+  useModules: boolean('use_modules').notNull().default(false),
+  enforceSequential: boolean('enforce_sequential').notNull().default(false),
+  estimatedMinutes: integer('estimated_minutes'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  statusIdx: index('idx_courses_status').on(t.status),
+  visIdx: index('idx_courses_visibility').on(t.visibility, t.status),
+}))
+
+export const courseModules = pgTable('course_modules', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  courseId: uuid('course_id').notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  courseIdx: index('idx_course_modules_course').on(t.courseId, t.position),
+}))
+
+export const courseAssets = pgTable('course_assets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  courseId: uuid('course_id').references(() => courses.id, { onDelete: 'cascade' }),
+  lessonId: uuid('lesson_id'),
+  kind: varchar('kind', { length: 20 }).notNull(),
+  filename: varchar('filename', { length: 255 }).notNull(),
+  originalName: varchar('original_name', { length: 255 }).notNull(),
+  mimeType: varchar('mime_type', { length: 120 }).notNull(),
+  sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+  path: varchar('path', { length: 500 }).notNull(),
+  label: varchar('label', { length: 200 }),
+  position: integer('position'),
+  uploadedBy: uuid('uploaded_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  courseIdx: index('idx_course_assets_course').on(t.courseId),
+  lessonIdx: index('idx_course_assets_lesson').on(t.lessonId),
+}))
+
+export const courseLessons = pgTable('course_lessons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  courseId: uuid('course_id').notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  moduleId: uuid('module_id').references(() => courseModules.id, { onDelete: 'set null' }),
+  position: integer('position').notNull(),
+  slug: varchar('slug', { length: 160 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  contentMarkdown: text('content_markdown'),
+  videoAssetId: uuid('video_asset_id').references(() => courseAssets.id, { onDelete: 'set null' }),
+  videoExternalUrl: text('video_external_url'),
+  durationMinutes: integer('duration_minutes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  courseIdx: index('idx_course_lessons_course').on(t.courseId, t.position),
+  moduleIdx: index('idx_course_lessons_module').on(t.moduleId, t.position),
+  slugUnique: uniqueIndex('uq_course_lessons_slug').on(t.courseId, t.slug),
+}))
+
+export type Course = typeof courses.$inferSelect
+export type NewCourse = typeof courses.$inferInsert
+export type CourseModule = typeof courseModules.$inferSelect
+export type NewCourseModule = typeof courseModules.$inferInsert
+export type CourseLesson = typeof courseLessons.$inferSelect
+export type NewCourseLesson = typeof courseLessons.$inferInsert
+export type CourseAsset = typeof courseAssets.$inferSelect
+export type NewCourseAsset = typeof courseAssets.$inferInsert
+

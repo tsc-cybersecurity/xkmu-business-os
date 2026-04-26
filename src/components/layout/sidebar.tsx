@@ -23,6 +23,7 @@ import { LayoutDashboard,
   ClipboardList,
   ListOrdered,
   MessageCircle,
+  GraduationCap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -179,6 +180,13 @@ const navigation: NavItem[] = [
     href: '/intern/orders',
     icon: ListOrdered,
     requiredModule: 'users',
+  },
+  // ── Onlinekurse (standalone) ──
+  {
+    name: 'Onlinekurse',
+    href: '/intern/elearning',
+    icon: GraduationCap,
+    requiredModule: 'courses',
   },
   // ── E-Mail Inbox (standalone) ──
   {

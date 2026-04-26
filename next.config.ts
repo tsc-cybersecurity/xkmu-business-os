@@ -31,10 +31,12 @@ const nextConfig: NextConfig = {
 
   serverExternalPackages: ['postgres', 'pdf-parse'],
 
-  // Limit request body size to 10MB (default is unlimited)
+  // Body-Limit für Server-Actions (10mb für CRUD); Course-Asset-Uploads laufen
+  // über reguläre API-Routen mit FormData und werden vom Reverse-Proxy begrenzt
+  // (Coolify/NGINX: client_max_body_size 2200m).
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb',
+      bodySizeLimit: '2200mb',
     },
   },
 

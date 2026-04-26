@@ -80,4 +80,8 @@ export const MIGRATIONS: Migration[] = [
     name: '015_workflow_schedule.sql',
     description: 'workflows.schedule jsonb column for scheduled triggers (interval + dailyAt)',
   },
+  {
+    name: '016_courses.sql',
+    description: 'Onlinekurse: courses, modules, lessons, assets',
+  },
 ]
