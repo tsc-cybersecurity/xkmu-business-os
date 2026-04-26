@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS course_lessons (
   duration_minutes   INTEGER,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE (course_id, slug)
+  CONSTRAINT uq_course_lessons_slug UNIQUE (course_id, slug)
 );
 CREATE INDEX IF NOT EXISTS idx_course_lessons_course ON course_lessons(course_id, position);
 CREATE INDEX IF NOT EXISTS idx_course_lessons_module ON course_lessons(module_id, position);

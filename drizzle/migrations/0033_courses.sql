@@ -64,7 +64,7 @@ CREATE TABLE course_lessons (
   duration_minutes   integer,
   created_at         timestamptz NOT NULL DEFAULT now(),
   updated_at         timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (course_id, slug)
+  CONSTRAINT uq_course_lessons_slug UNIQUE (course_id, slug)
 );
 CREATE INDEX idx_course_lessons_course ON course_lessons(course_id, position);
 CREATE INDEX idx_course_lessons_module ON course_lessons(module_id, position);
