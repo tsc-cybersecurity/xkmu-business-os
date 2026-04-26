@@ -744,3 +744,48 @@ export function formatZodErrors(error: z.ZodError): Array<{ field: string; messa
     message: e.message,
   }))
 }
+
+// ============================================
+// Onlinekurse / Courses
+// ============================================
+export const courseVisibilityEnum = z.enum(['public', 'portal', 'both'])
+
+export const createCourseSchema = z.object({
+  title: z.string().min(1).max(200),
+  slug: z.string().min(1).max(160).regex(/^[a-z0-9-]+$/).optional(),
+  subtitle: z.string().max(300).nullable().optional(),
+  description: z.string().nullable().optional(),
+  visibility: courseVisibilityEnum.optional(),
+  useModules: z.boolean().optional(),
+  enforceSequential: z.boolean().optional(),
+  estimatedMinutes: z.number().int().nonnegative().nullable().optional(),
+  coverImageId: z.string().uuid().nullable().optional(),
+})
+export const updateCourseSchema = createCourseSchema.partial()
+
+export const createCourseModuleSchema = z.object({
+  title: z.string().min(1).max(200),
+  description: z.string().nullable().optional(),
+})
+export const updateCourseModuleSchema = createCourseModuleSchema.partial()
+
+export const reorderItemsSchema = z.array(z.object({
+  id: z.string().uuid(),
+  position: z.number().int().nonnegative(),
+}))
+
+export const createCourseLessonSchema = z.object({
+  title: z.string().min(1).max(200),
+  slug: z.string().min(1).max(160).regex(/^[a-z0-9-]+$/).optional(),
+  moduleId: z.string().uuid().nullable().optional(),
+  contentMarkdown: z.string().nullable().optional(),
+  videoExternalUrl: z.string().url().nullable().optional(),
+  durationMinutes: z.number().int().nonnegative().nullable().optional(),
+})
+export const updateCourseLessonSchema = createCourseLessonSchema.partial()
+
+export const reorderLessonsSchema = z.array(z.object({
+  id: z.string().uuid(),
+  position: z.number().int().nonnegative(),
+  moduleId: z.string().uuid().nullable().optional(),
+}))
