@@ -117,6 +117,23 @@ docker compose -f docker-compose.prod.yml up -d
 docker exec xkmu-app npm run db:push
 ```
 
+### Reverse-Proxy / Coolify
+
+Wenn die App hinter einem NGINX-Reverse-Proxy (z. B. Coolify) läuft, muss das
+Body-Limit für Onlinekurs-Video-Uploads erhöht werden — sonst bricht jeder
+Upload > 1 MB mit `413 Request Entity Too Large` ab, bevor er Next.js erreicht:
+
+```nginx
+client_max_body_size 2200m;
+```
+
+Next.js selbst ist bereits in `next.config.ts` auf `2200mb` konfiguriert
+(`experimental.serverActions.bodySizeLimit`).
+
+Ablage-Verzeichnis für Course-Assets ist standardmäßig
+`public/uploads/courses/` und kann via `COURSE_ASSET_DIR` env überschrieben
+werden (sinnvoll für Persistent-Volumes außerhalb des Containers).
+
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -133,6 +150,7 @@ docker exec xkmu-app npm run db:push
 | `SERPAPI_API_KEY` | Optional | SerpAPI for web research |
 | `UNSPLASH_ACCESS_KEY` | Optional | Unsplash stock photos |
 | `SMTP_*` | Optional | Email configuration |
+| `COURSE_ASSET_DIR` | Optional | Verzeichnis für Onlinekurs-Asset-Uploads (default: `public/uploads/courses`) |
 
 See `.env.example` for full list.
 
