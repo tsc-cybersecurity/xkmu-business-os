@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Loader2 } from 'lucide-react'
 import { CourseStammdatenForm } from '../../_components/CourseStammdatenForm'
+import { CourseContentTree } from './CourseContentTree'
 
 export interface CourseModule {
   id: string
@@ -92,7 +93,13 @@ export function CourseEditView({ courseId }: { courseId: string }) {
           <CourseStammdatenForm mode="edit" initial={course} />
         </TabsContent>
         <TabsContent value="inhalt" className="mt-6">
-          <p className="text-muted-foreground">Tree kommt in Task 18.</p>
+          <CourseContentTree
+            courseId={course.id}
+            useModules={course.useModules}
+            modules={course.modules}
+            lessons={course.lessons}
+            onChange={load}
+          />
         </TabsContent>
         <TabsContent value="vorschau" className="mt-6">
           <p className="text-muted-foreground">Vorschau kommt in Task 23.</p>
