@@ -118,7 +118,17 @@
       "Bash(ls -R \"/c/Daten/xkmu-business-os/src/app/intern/\\(dashboard\\)/wiba/\")",
       "Bash(sed 's/.*pgTable.//')",
       "Bash(sed \"s/'''',.*//\")",
-      "Bash(ls -la /c/Daten/xkmu-business-os/src/app/\\\\\\(public\\\\\\)/)"
+      "Bash(ls -la /c/Daten/xkmu-business-os/src/app/\\\\\\(public\\\\\\)/)",
+      "WebFetch(domain:www.shadcn.io)",
+      "Bash(mkdir -p \"C:/Daten/xkmu-business-os/src/app/api/v1/companies/[id]/change-requests\")",
+      "Bash(mkdir -p \"C:/Daten/xkmu-business-os/src/app/api/v1/portal/change-requests/[id]/approve\")",
+      "Bash(mkdir -p \"C:/Daten/xkmu-business-os/src/app/api/v1/portal/change-requests/[id]/reject\")",
+      "Bash(printenv TEST_DATABASE_URL)",
+      "Bash(mkdir -p \"C:/Daten/xkmu-business-os/src/app/api/v1/chat/companies/[id]/messages\")",
+      "Bash(mkdir -p \"C:/Daten/xkmu-business-os/src/app/api/v1/chat/companies/[id]/mark-read\")",
+      "Bash(sed -n '80,115p' \"C:\\\\Daten\\\\xkmu-business-os\\\\src\\\\lib\\\\services\\\\task-queue.service.ts\")",
+      "Bash(sed -n '1,40p' \"C:\\\\Daten\\\\xkmu-business-os\\\\src\\\\lib\\\\utils\\\\rate-limit.ts\")",
+      "Bash(bash *)"
     ]
   }
 }
