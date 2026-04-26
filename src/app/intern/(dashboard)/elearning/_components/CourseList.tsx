@@ -20,7 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { GraduationCap, Plus, Loader2, Pencil } from 'lucide-react'
+import { GraduationCap, Plus, Pencil, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { LoadingSpinner } from '@/components/shared/loading-states'
+import { EmptyState } from '@/components/shared/empty-state'
 import { logger } from '@/lib/utils/logger'
 
 interface Course {
@@ -36,6 +39,18 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
   draft: 'secondary',
   published: 'default',
   archived: 'outline',
+}
+
+const statusLabels: Record<string, string> = {
+  draft: 'Entwurf',
+  published: 'Veröffentlicht',
+  archived: 'Archiviert',
+}
+
+const visibilityLabels: Record<string, string> = {
+  public: 'Public',
+  portal: 'Portal',
+  both: 'Beides',
 }
 
 const ALL = '__all__'
@@ -68,13 +83,36 @@ export function CourseList() {
     void load()
   }, [load])
 
+  async function handleDelete(id: string, title: string) {
+    if (!confirm(`Kurs „${title}" wirklich löschen? Diese Aktion ist nicht umkehrbar.`)) return
+    try {
+      const res = await fetch(`/api/v1/courses/${id}`, { method: 'DELETE' })
+      const body = await res.json()
+      if (body.success) {
+        toast.success('Kurs gelöscht')
+        await load()
+      } else {
+        toast.error(body.error?.message ?? 'Löschen fehlgeschlagen')
+      }
+    } catch (err) {
+      logger.error('Course delete failed', err, { module: 'CourseList' })
+      toast.error('Löschen fehlgeschlagen')
+    }
+  }
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="flex items-center gap-2 text-2xl font-semibold">
-          <GraduationCap className="h-6 w-6" /> Onlinekurse
-        </h1>
-        <Button asChild>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <GraduationCap className="h-8 w-8" />
+            Onlinekurse
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Kurse anlegen, strukturieren und veröffentlichen
+          </p>
+        </div>
+        <Button asChild className="self-start sm:self-auto">
           <Link href="/intern/elearning/new">
             <Plus className="mr-2 h-4 w-4" />
             Neuer Kurs
@@ -84,28 +122,28 @@ export function CourseList() {
 
       <div className="flex flex-wrap gap-3">
         <Input
-          placeholder="Suche…"
+          placeholder="Suche nach Titel…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className="max-w-xs"
         />
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-44">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>Alle</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
+            <SelectItem value={ALL}>Alle Status</SelectItem>
+            <SelectItem value="draft">Entwurf</SelectItem>
+            <SelectItem value="published">Veröffentlicht</SelectItem>
+            <SelectItem value="archived">Archiviert</SelectItem>
           </SelectContent>
         </Select>
         <Select value={visibility} onValueChange={setVisibility}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Visibility" />
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="Sichtbarkeit" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={ALL}>Alle</SelectItem>
+            <SelectItem value={ALL}>Alle Sichtbarkeiten</SelectItem>
             <SelectItem value="public">Public</SelectItem>
             <SelectItem value="portal">Portal</SelectItem>
             <SelectItem value="both">Beides</SelectItem>
@@ -114,45 +152,75 @@ export function CourseList() {
       </div>
 
       {loading ? (
-        <Loader2 className="h-6 w-6 animate-spin" />
+        <LoadingSpinner />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon={GraduationCap}
+          title="Noch keine Kurse"
+          description="Lege deinen ersten Onlinekurs an, um Inhalte für Kunden oder die Öffentlichkeit zu erstellen."
+          action={
+            <Button asChild>
+              <Link href="/intern/elearning/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Neuer Kurs
+              </Link>
+            </Button>
+          }
+        />
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Titel</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Visibility</TableHead>
-              <TableHead>Geändert</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((c) => (
-              <TableRow key={c.id}>
-                <TableCell>{c.title}</TableCell>
-                <TableCell>
-                  <Badge variant={statusVariant[c.status] ?? 'secondary'}>{c.status}</Badge>
-                </TableCell>
-                <TableCell>{c.visibility}</TableCell>
-                <TableCell>{new Date(c.updatedAt).toLocaleString('de-DE')}</TableCell>
-                <TableCell>
-                  <Button asChild size="sm" variant="ghost">
-                    <Link href={`/intern/elearning/${c.id}`}>
-                      <Pencil className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {items.length === 0 && (
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  Keine Kurse
-                </TableCell>
+                <TableHead>Titel</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Sichtbarkeit</TableHead>
+                <TableHead>Letzte Änderung</TableHead>
+                <TableHead className="w-[120px]">Aktionen</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {items.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium">{c.title}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant[c.status] ?? 'secondary'}>
+                      {statusLabels[c.status] ?? c.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{visibilityLabels[c.visibility] ?? c.visibility}</Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {new Date(c.updatedAt).toLocaleDateString('de-DE', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Button asChild variant="ghost" size="icon" title="Bearbeiten" aria-label="Bearbeiten">
+                        <Link href={`/intern/elearning/${c.id}`}>
+                          <Pencil className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Löschen"
+                        aria-label="Löschen"
+                        onClick={() => handleDelete(c.id, c.title)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   )
