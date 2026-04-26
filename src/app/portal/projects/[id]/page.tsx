@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Loader2, ArrowLeft, Briefcase, CheckCircle2, Calendar } from 'lucide-react'
 import { DocumentSection } from '@/app/portal/_components/document-section'
 
@@ -183,32 +184,108 @@ function KanbanColumn({ name, color, tasks }: { name: string; color?: string; ta
 }
 
 function TaskCard({ task }: { task: PortalTask }) {
+  const [open, setOpen] = useState(false)
   const dot = (task.priority && PRIORITY_DOT[task.priority]) ?? null
   return (
-    <div className="rounded-md border bg-card p-3 text-sm space-y-2">
-      <div className="flex items-start gap-2">
-        {dot && <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${dot}`} />}
-        <div className="flex-1 min-w-0">
-          <div className="font-medium leading-snug">{task.title}</div>
-          {task.description && (
-            <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{task.description}</div>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="block w-full text-left rounded-md border bg-card p-3 text-sm space-y-2 hover:border-foreground/30 hover:bg-muted/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label={`Aufgabe öffnen: ${task.title}`}
+      >
+        <div className="flex items-start gap-2">
+          {dot && <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${dot}`} />}
+          <div className="flex-1 min-w-0">
+            <div className="font-medium leading-snug">{task.title}</div>
+            {task.description && (
+              <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{task.description}</div>
+            )}
+          </div>
+          {task.status === 'done' && <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />}
+        </div>
+        {(task.dueDate || (task.labels && task.labels.length > 0)) && (
+          <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground">
+            {task.dueDate && (
+              <span className="inline-flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {new Date(task.dueDate).toLocaleDateString('de-DE')}
+              </span>
+            )}
+            {task.labels && task.labels.map((l) => (
+              <Badge key={l} variant="outline" className="text-xs font-normal">{l}</Badge>
+            ))}
+          </div>
+        )}
+      </button>
+      <TaskDialog task={task} open={open} onOpenChange={setOpen} />
+    </>
+  )
+}
+
+function TaskDialog({ task, open, onOpenChange }: { task: PortalTask; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const dot = (task.priority && PRIORITY_DOT[task.priority]) ?? null
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-start gap-2 pr-6">
+            {dot && <span className={`h-2.5 w-2.5 rounded-full mt-1.5 shrink-0 ${dot}`} />}
+            <span className="leading-snug">{task.title}</span>
+            {task.status === 'done' && (
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+            )}
+          </DialogTitle>
+          {task.priority && (
+            <DialogDescription>
+              Priorität: <span className="capitalize">{task.priority}</span>
+              {task.status === 'done' && ' · Erledigt'}
+            </DialogDescription>
+          )}
+        </DialogHeader>
+
+        <div className="space-y-5">
+          {task.description ? (
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Beschreibung</div>
+              <div className="text-sm whitespace-pre-wrap leading-relaxed">{task.description}</div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">Keine Beschreibung hinterlegt.</p>
+          )}
+
+          <dl className="grid gap-3 sm:grid-cols-2 text-sm">
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Start</dt>
+              <dd className="mt-0.5">{formatDate(task.startDate)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">Fällig</dt>
+              <dd className="mt-0.5 inline-flex items-center gap-1.5">
+                {task.dueDate && <Calendar className="h-3.5 w-3.5 text-muted-foreground" />}
+                {formatDate(task.dueDate)}
+              </dd>
+            </div>
+            {task.completedAt && (
+              <div className="sm:col-span-2">
+                <dt className="text-xs uppercase tracking-wide text-muted-foreground">Erledigt am</dt>
+                <dd className="mt-0.5">{formatDate(task.completedAt)}</dd>
+              </div>
+            )}
+          </dl>
+
+          {task.labels && task.labels.length > 0 && (
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1.5">Labels</div>
+              <div className="flex flex-wrap gap-1.5">
+                {task.labels.map((l) => (
+                  <Badge key={l} variant="outline" className="text-xs font-normal">{l}</Badge>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-        {task.status === 'done' && <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />}
-      </div>
-      {(task.dueDate || (task.labels && task.labels.length > 0)) && (
-        <div className="flex items-center flex-wrap gap-2 text-xs text-muted-foreground">
-          {task.dueDate && (
-            <span className="inline-flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {new Date(task.dueDate).toLocaleDateString('de-DE')}
-            </span>
-          )}
-          {task.labels && task.labels.map((l) => (
-            <Badge key={l} variant="outline" className="text-xs font-normal">{l}</Badge>
-          ))}
-        </div>
-      )}
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { CsrfProvider } from '@/components/csrf-provider'
 import { LogoutButton } from './_components/logout-button'
+import { PortalNav } from './_components/portal-nav'
 
 export const metadata: Metadata = {
   title: 'Kundenportal',
@@ -11,21 +12,13 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   return (
     <CsrfProvider>
       <div className="min-h-screen bg-muted/20 flex flex-col">
-        <header className="border-b bg-background">
-          <div className="container mx-auto flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-6">
-              <Link href="/portal" className="font-semibold">
+        <header className="border-b bg-background sticky top-0 z-30">
+          <div className="container mx-auto flex items-center justify-between gap-3 px-4 py-3">
+            <div className="flex items-center gap-3 md:gap-6 min-w-0">
+              <Link href="/portal" className="font-semibold truncate">
                 Kundenportal
               </Link>
-              <nav className="flex items-center gap-4">
-                <Link href="/portal/company" className="text-sm text-muted-foreground hover:text-foreground">Firmendaten</Link>
-                <Link href="/portal/contracts" className="text-sm text-muted-foreground hover:text-foreground">Verträge</Link>
-                <Link href="/portal/projects" className="text-sm text-muted-foreground hover:text-foreground">Projekte</Link>
-                <Link href="/portal/orders" className="text-sm text-muted-foreground hover:text-foreground">Aufträge</Link>
-                <Link href="/portal/documents" className="text-sm text-muted-foreground hover:text-foreground">Dokumente</Link>
-                <Link href="/portal/chat" className="text-sm text-muted-foreground hover:text-foreground">Chat</Link>
-                <Link href="/portal/company/requests" className="text-sm text-muted-foreground hover:text-foreground">Anträge</Link>
-              </nav>
+              <PortalNav />
             </div>
             <LogoutButton />
           </div>
