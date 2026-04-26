@@ -11,6 +11,7 @@ import {
   PublishValidationDialog,
   type PublishProblem,
 } from './PublishValidationDialog'
+import { CoursePreview, type PreviewLesson } from './CoursePreview'
 
 export interface CourseModule {
   id: string
@@ -54,6 +55,8 @@ export function CourseEditView({ courseId }: { courseId: string }) {
   const [problems, setProblems] = useState<PublishProblem[]>([])
   const [publishOpen, setPublishOpen] = useState(false)
   const [publishing, setPublishing] = useState(false)
+  const [previewLessons, setPreviewLessons] = useState<PreviewLesson[]>([])
+  const [previewLoading, setPreviewLoading] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -93,6 +96,23 @@ export function CourseEditView({ courseId }: { courseId: string }) {
     await fetch(`/api/v1/courses/${courseId}/archive`, { method: 'POST' })
     await load()
   }
+
+  const loadPreview = useCallback(async () => {
+    if (!course) return
+    setPreviewLoading(true)
+    try {
+      const detailed = await Promise.all(
+        course.lessons.map((l) =>
+          fetch(`/api/v1/courses/${courseId}/lessons/${l.id}`)
+            .then((r) => r.json())
+            .then((b) => b.data as PreviewLesson),
+        ),
+      )
+      setPreviewLessons(detailed.filter(Boolean))
+    } finally {
+      setPreviewLoading(false)
+    }
+  }, [course, courseId])
 
   if (loading) {
     return (
@@ -154,7 +174,31 @@ export function CourseEditView({ courseId }: { courseId: string }) {
           />
         </TabsContent>
         <TabsContent value="vorschau" className="mt-6">
-          <p className="text-muted-foreground">Vorschau kommt in Task 23.</p>
+          <Button
+            onClick={loadPreview}
+            variant="outline"
+            size="sm"
+            className="mb-4"
+            disabled={previewLoading}
+          >
+            {previewLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Aktualisieren
+          </Button>
+          {previewLessons.length > 0 && (
+            <CoursePreview
+              course={{ ...course, lessons: previewLessons }}
+              lessonAssets={Object.fromEntries(
+                previewLessons.flatMap((l) =>
+                  (l.assets ?? []).map((a) => [a.id, a]),
+                ),
+              )}
+            />
+          )}
+          {previewLessons.length === 0 && !previewLoading && (
+            <p className="text-muted-foreground text-sm">
+              Klick „Aktualisieren", um die Vorschau zu laden.
+            </p>
+          )}
         </TabsContent>
       </Tabs>
 
