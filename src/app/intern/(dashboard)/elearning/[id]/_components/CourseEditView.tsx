@@ -3,9 +3,14 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { CourseStammdatenForm } from '../../_components/CourseStammdatenForm'
 import { CourseContentTree } from './CourseContentTree'
+import {
+  PublishValidationDialog,
+  type PublishProblem,
+} from './PublishValidationDialog'
 
 export interface CourseModule {
   id: string
@@ -46,6 +51,9 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
 export function CourseEditView({ courseId }: { courseId: string }) {
   const [course, setCourse] = useState<Course | null>(null)
   const [loading, setLoading] = useState(true)
+  const [problems, setProblems] = useState<PublishProblem[]>([])
+  const [publishOpen, setPublishOpen] = useState(false)
+  const [publishing, setPublishing] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -58,6 +66,33 @@ export function CourseEditView({ courseId }: { courseId: string }) {
   useEffect(() => {
     void load()
   }, [load])
+
+  async function publish() {
+    setPublishing(true)
+    try {
+      const res = await fetch(`/api/v1/courses/${courseId}/publish`, { method: 'POST' })
+      const body = await res.json()
+      if (res.status === 422) {
+        setProblems(body.error?.details ?? [])
+        setPublishOpen(true)
+        return
+      }
+      if (body.success) await load()
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  async function unpublish() {
+    await fetch(`/api/v1/courses/${courseId}/unpublish`, { method: 'POST' })
+    await load()
+  }
+
+  async function archive() {
+    if (!confirm('Kurs archivieren?')) return
+    await fetch(`/api/v1/courses/${courseId}/archive`, { method: 'POST' })
+    await load()
+  }
 
   if (loading) {
     return (
@@ -80,7 +115,24 @@ export function CourseEditView({ courseId }: { courseId: string }) {
             <Badge variant="outline">{course.visibility}</Badge>
           </div>
         </div>
-        {/* Publish-Button kommt in Task 22 */}
+        <div className="flex gap-2">
+          {course.status === 'draft' && (
+            <Button onClick={publish} disabled={publishing}>
+              {publishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Veröffentlichen
+            </Button>
+          )}
+          {course.status === 'published' && (
+            <>
+              <Button onClick={unpublish} variant="outline">
+                Zurück zu Draft
+              </Button>
+              <Button onClick={archive} variant="outline">
+                Archivieren
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="stammdaten">
@@ -105,6 +157,12 @@ export function CourseEditView({ courseId }: { courseId: string }) {
           <p className="text-muted-foreground">Vorschau kommt in Task 23.</p>
         </TabsContent>
       </Tabs>
+
+      <PublishValidationDialog
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        problems={problems}
+      />
     </div>
   )
 }
