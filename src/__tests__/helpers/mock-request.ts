@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 export function createTestRequest(
   method: string,
   url: string,
-  body?: Record<string, unknown>,
+  body?: Record<string, unknown> | unknown[],
 ): NextRequest {
   const fullUrl = url.startsWith('http') ? url : `http://localhost:3000${url}`
   const init: RequestInit = { method }
