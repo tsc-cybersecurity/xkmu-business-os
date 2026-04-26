@@ -27,6 +27,8 @@ const segmentLabels: Record<string, string> = {
   offers: 'Angebote',
   cms: 'CMS',
   blog: 'Blog',
+  elearning: 'Onlinekurse',
+  lektionen: 'Lektion',
   marketing: 'Marketing',
   'social-media': 'Social Media',
   'business-intelligence': 'Business Intelligence',

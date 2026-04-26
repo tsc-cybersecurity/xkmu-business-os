@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, Loader2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { ChevronLeft, FileText } from 'lucide-react'
+import { LoadingSpinner } from '@/components/shared/loading-states'
 import { LessonContentForm } from './LessonContentForm'
 import { LessonVideoUploader } from './LessonVideoUploader'
 import { LessonAttachmentList } from './LessonAttachmentList'
@@ -54,24 +56,50 @@ export function LessonEditView({
     void load()
   }, [load])
 
-  if (loading) {
+  if (loading) return <LoadingSpinner />
+  if (!lesson) {
     return (
-      <div className="p-6">
-        <Loader2 className="h-6 w-6 animate-spin" />
+      <div className="space-y-4">
+        <Button asChild variant="ghost" size="sm" className="-ml-2">
+          <Link href={`/intern/elearning/${courseId}`}>
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Zurück zum Kurs
+          </Link>
+        </Button>
+        <p className="text-muted-foreground">Lektion nicht gefunden.</p>
       </div>
     )
   }
-  if (!lesson) return <div className="p-6">Lektion nicht gefunden</div>
+
+  const docCount = lesson.assets.filter((a) => a.kind === 'document').length
+  const hasVideo = !!lesson.videoAssetId || !!lesson.videoExternalUrl
 
   return (
-    <div className="space-y-6 p-6">
-      <Button asChild variant="ghost" size="sm">
+    <div className="space-y-6">
+      <Button asChild variant="ghost" size="sm" className="-ml-2 self-start">
         <Link href={`/intern/elearning/${courseId}`}>
           <ChevronLeft className="mr-1 h-4 w-4" />
           Zurück zum Kurs
         </Link>
       </Button>
-      <h1 className="text-2xl font-semibold">{lesson.title}</h1>
+
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold flex items-center gap-3">
+          <FileText className="h-8 w-8" />
+          {lesson.title}
+        </h1>
+        <div className="flex flex-wrap gap-2">
+          {hasVideo && <Badge variant="outline">Video</Badge>}
+          {docCount > 0 && (
+            <Badge variant="outline">
+              {docCount} Anhang{docCount === 1 ? '' : 'e'}
+            </Badge>
+          )}
+          {lesson.durationMinutes != null && (
+            <Badge variant="outline">{lesson.durationMinutes} Min</Badge>
+          )}
+        </div>
+      </div>
 
       <Tabs defaultValue="inhalt">
         <TabsList>

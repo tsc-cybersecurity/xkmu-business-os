@@ -3,7 +3,11 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 import { Loader2, Trash2, Upload } from 'lucide-react'
+import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 import type { Lesson } from './LessonEditView'
 
@@ -18,14 +22,12 @@ export function LessonVideoUploader({
   const [externalUrl, setExternalUrl] = useState(lesson.videoExternalUrl ?? '')
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState(0)
-  const [err, setErr] = useState<string | null>(null)
 
   const videoAsset = lesson.assets.find((a) => a.id === lesson.videoAssetId)
 
   async function upload() {
     if (!file) return
     setBusy(true)
-    setErr(null)
     setProgress(0)
     try {
       const fd = new FormData()
@@ -53,19 +55,19 @@ export function LessonVideoUploader({
         xhr.send(fd)
       })
       if (!result.success || !result.data) {
-        setErr(result.error?.message ?? 'Upload fehlgeschlagen')
+        toast.error(result.error?.message ?? 'Upload fehlgeschlagen')
         return
       }
-      // Lektion mit videoAssetId verknüpfen
       await fetch(`/api/v1/courses/${lesson.courseId}/lessons/${lesson.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ videoAssetId: result.data.id }),
       })
+      toast.success('Video hochgeladen')
       onSaved()
     } catch (e) {
       logger.error('Video upload failed', e, { module: 'LessonVideoUploader' })
-      setErr('Upload fehlgeschlagen')
+      toast.error('Upload fehlgeschlagen')
     } finally {
       setBusy(false)
       setFile(null)
@@ -83,82 +85,103 @@ export function LessonVideoUploader({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ videoAssetId: null }),
     })
+    toast.success('Video entfernt')
     onSaved()
   }
 
   async function saveExternalUrl() {
     setBusy(true)
-    await fetch(`/api/v1/courses/${lesson.courseId}/lessons/${lesson.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoExternalUrl: externalUrl || null }),
-    })
-    onSaved()
-    setBusy(false)
+    try {
+      const res = await fetch(`/api/v1/courses/${lesson.courseId}/lessons/${lesson.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ videoExternalUrl: externalUrl || null }),
+      })
+      const body = await res.json()
+      if (body.success) {
+        toast.success('Externe Video-URL gespeichert')
+        onSaved()
+      } else {
+        toast.error(body.error?.message ?? 'Speichern fehlgeschlagen')
+      }
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
     <div className="space-y-6">
-      <section>
-        <h2 className="font-semibold mb-2">Video-Upload</h2>
-        {videoAsset && (
-          <div className="mb-4 space-y-2">
-            <video
-              controls
-              className="w-full max-w-2xl rounded border"
-              src={`/api/v1/courses/assets/serve/${videoAsset.path}`}
-            />
-            <div className="text-sm text-muted-foreground">
-              {videoAsset.originalName} ·{' '}
-              {(videoAsset.sizeBytes / 1024 / 1024).toFixed(1)} MB
+      <Card>
+        <CardHeader>
+          <CardTitle>Video-Upload</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {videoAsset && (
+            <div className="space-y-2">
+              <video
+                controls
+                className="w-full max-w-2xl rounded-md border"
+                src={`/api/v1/courses/assets/serve/${videoAsset.path}`}
+              />
+              <div className="text-sm text-muted-foreground">
+                {videoAsset.originalName} ·{' '}
+                {(videoAsset.sizeBytes / 1024 / 1024).toFixed(1)} MB
+              </div>
+              <Button variant="outline" size="sm" onClick={removeVideo}>
+                <Trash2 className="h-4 w-4 mr-1" />
+                Video entfernen
+              </Button>
             </div>
-            <Button variant="outline" size="sm" onClick={removeVideo}>
-              <Trash2 className="h-4 w-4 mr-1" />
-              Video entfernen
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="video-file">Neues Video hochladen (MP4, WebM, MOV)</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="video-file"
+                type="file"
+                accept="video/mp4,video/webm,video/quicktime"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+              <Button onClick={upload} disabled={!file || busy}>
+                {busy ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="mr-2 h-4 w-4" />
+                )}
+                Upload
+              </Button>
+            </div>
+            {busy && progress > 0 && (
+              <div className="space-y-1">
+                <Progress value={progress} />
+                <div className="text-xs text-muted-foreground">{progress}%</div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Externe Video-URL</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Label htmlFor="video-url">
+            Alternative zum Upload — z. B. YouTube unlisted oder Vimeo
+          </Label>
+          <div className="flex gap-2 max-w-xl">
+            <Input
+              id="video-url"
+              value={externalUrl}
+              onChange={(e) => setExternalUrl(e.target.value)}
+              placeholder="https://..."
+            />
+            <Button onClick={saveExternalUrl} disabled={busy} variant="outline">
+              Speichern
             </Button>
           </div>
-        )}
-        <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            accept="video/mp4,video/webm,video/quicktime"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-          <Button onClick={upload} disabled={!file || busy}>
-            {busy ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Upload className="h-4 w-4 mr-1" />
-            )}
-            Upload
-          </Button>
-        </div>
-        {busy && progress > 0 && (
-          <div className="mt-2 h-2 bg-muted rounded">
-            <div
-              className="h-2 bg-primary rounded"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
-        {err && <div className="text-sm text-red-600 mt-2">{err}</div>}
-      </section>
-
-      <section>
-        <h2 className="font-semibold mb-2">
-          Alternative: externe URL (z. B. YouTube unlisted)
-        </h2>
-        <div className="flex gap-2 max-w-xl">
-          <Input
-            value={externalUrl}
-            onChange={(e) => setExternalUrl(e.target.value)}
-            placeholder="https://..."
-          />
-          <Button onClick={saveExternalUrl} disabled={busy} variant="outline">
-            Speichern
-          </Button>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -132,6 +132,20 @@ export const CourseService = {
     return row
   },
 
+  async restore(id: string, actor: Actor): Promise<Course> {
+    const existing = await this.get(id)
+    if (!existing) throw new CourseError('NOT_FOUND', `Kurs ${id} nicht gefunden`)
+    if (existing.status !== 'archived') throw new CourseError('INVALID_STATE', `Kurs ist nicht archived (status=${existing.status})`)
+    const [row] = await db.update(courses)
+      .set({ status: 'draft', publishedAt: null, updatedAt: new Date() })
+      .where(eq(courses.id, id)).returning()
+    await AuditLogService.log({
+      userId: actor.userId, userRole: actor.userRole,
+      action: 'course.restored', entityType: 'course', entityId: id, payload: {},
+    })
+    return row
+  },
+
   async unpublish(id: string, actor: Actor): Promise<Course> {
     const existing = await this.get(id)
     if (!existing) throw new CourseError('NOT_FOUND', `Kurs ${id} nicht gefunden`)
