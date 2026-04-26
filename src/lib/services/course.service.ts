@@ -3,6 +3,7 @@ import { courses } from '@/lib/db/schema'
 import type { Course } from '@/lib/db/schema'
 import { eq, and, ilike, desc, sql } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
+import { logger } from '@/lib/utils/logger'
 
 export interface Actor { userId: string | null; userRole: string | null }
 
@@ -116,5 +117,44 @@ export const CourseService = {
       payload: { changes: Object.keys(update).filter(k => k !== 'updatedAt') },
     })
     return row
+  },
+
+  async archive(id: string, actor: Actor): Promise<Course> {
+    const existing = await this.get(id)
+    if (!existing) throw new CourseError('NOT_FOUND', `Kurs ${id} nicht gefunden`)
+    const [row] = await db.update(courses)
+      .set({ status: 'archived', updatedAt: new Date() })
+      .where(eq(courses.id, id)).returning()
+    await AuditLogService.log({
+      userId: actor.userId, userRole: actor.userRole,
+      action: 'course.archived', entityType: 'course', entityId: id, payload: {},
+    })
+    return row
+  },
+
+  async unpublish(id: string, actor: Actor): Promise<Course> {
+    const existing = await this.get(id)
+    if (!existing) throw new CourseError('NOT_FOUND', `Kurs ${id} nicht gefunden`)
+    if (existing.status !== 'published') throw new CourseError('INVALID_STATE', `Kurs ist nicht published (status=${existing.status})`)
+    const [row] = await db.update(courses)
+      .set({ status: 'draft', updatedAt: new Date() })
+      .where(eq(courses.id, id)).returning()
+    await AuditLogService.log({
+      userId: actor.userId, userRole: actor.userRole,
+      action: 'course.unpublished', entityType: 'course', entityId: id, payload: {},
+    })
+    return row
+  },
+
+  async delete(id: string, actor: Actor): Promise<void> {
+    const existing = await this.get(id)
+    if (!existing) throw new CourseError('NOT_FOUND', `Kurs ${id} nicht gefunden`)
+    await db.delete(courses).where(eq(courses.id, id))
+    await AuditLogService.log({
+      userId: actor.userId, userRole: actor.userRole,
+      action: 'course.deleted', entityType: 'course', entityId: id,
+      payload: { slug: existing.slug, title: existing.title },
+    })
+    logger.info('Course deleted', { module: 'CourseService', id })
   },
 }

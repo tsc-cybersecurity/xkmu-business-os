@@ -87,4 +87,41 @@ describe('CourseService', () => {
       expect(result.title).toBe('Neu')
     })
   })
+
+  describe('archive', () => {
+    it('sets status=archived', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ status: 'published' })])
+      dbMock.mockUpdate.mockResolvedValue([courseFixture({ status: 'archived' })])
+      const svc = await getService()
+      const r = await svc.archive(TEST_COURSE_ID, { userId: TEST_USER_ID, userRole: 'admin' })
+      expect(r.status).toBe('archived')
+    })
+  })
+
+  describe('unpublish', () => {
+    it('sets status=draft', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ status: 'published' })])
+      dbMock.mockUpdate.mockResolvedValue([courseFixture({ status: 'draft' })])
+      const svc = await getService()
+      const r = await svc.unpublish(TEST_COURSE_ID, { userId: TEST_USER_ID, userRole: 'admin' })
+      expect(r.status).toBe('draft')
+    })
+
+    it('rejects unpublish on draft course', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ status: 'draft' })])
+      const svc = await getService()
+      await expect(svc.unpublish(TEST_COURSE_ID, { userId: TEST_USER_ID, userRole: 'admin' }))
+        .rejects.toMatchObject({ code: 'INVALID_STATE' })
+    })
+  })
+
+  describe('delete', () => {
+    it('deletes course and logs audit', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture()])
+      dbMock.mockDelete.mockResolvedValue(undefined)
+      const svc = await getService()
+      await svc.delete(TEST_COURSE_ID, { userId: TEST_USER_ID, userRole: 'admin' })
+      expect(dbMock.db.delete).toHaveBeenCalled()
+    })
+  })
 })
