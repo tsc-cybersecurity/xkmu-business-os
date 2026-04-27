@@ -3241,3 +3241,17 @@ export const courseLessonBlocks = pgTable('course_lesson_blocks', {
 export type CourseLessonBlock = typeof courseLessonBlocks.$inferSelect
 export type NewCourseLessonBlock = typeof courseLessonBlocks.$inferInsert
 
+// ============================================
+// Migration Tracking (managed by src/lib/db/migrator.ts)
+// ============================================
+// Declared here so drizzle-kit push --force preserves the table instead of
+// dropping it. Without this, every deploy wipes migration history and the
+// migrator re-runs all 19 entries from scratch (and dies on legacy 001).
+export const dbMigrations = pgTable('_migrations', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 255 }).notNull().unique(),
+  executedAt: timestamp('executed_at', { withTimezone: true }).defaultNow(),
+})
+
+export type DbMigration = typeof dbMigrations.$inferSelect
+
