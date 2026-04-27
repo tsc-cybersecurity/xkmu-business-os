@@ -2,11 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Save } from 'lucide-react'
@@ -24,7 +21,6 @@ export function LessonContentForm({
   const router = useRouter()
   const [title, setTitle] = useState(lesson.title)
   const [slug, setSlug] = useState(lesson.slug)
-  const [markdown, setMarkdown] = useState(lesson.contentMarkdown ?? '')
   const [duration, setDuration] = useState(lesson.durationMinutes ?? 0)
   const [busy, setBusy] = useState(false)
 
@@ -39,7 +35,6 @@ export function LessonContentForm({
           body: JSON.stringify({
             title,
             slug,
-            contentMarkdown: markdown,
             durationMinutes: duration || null,
           }),
         },
@@ -85,34 +80,6 @@ export function LessonContentForm({
               value={duration}
               onChange={(e) => setDuration(Number(e.target.value))}
             />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Inhalt (Markdown)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="lesson-markdown">Markdown</Label>
-              <Textarea
-                id="lesson-markdown"
-                value={markdown}
-                onChange={(e) => setMarkdown(e.target.value)}
-                rows={20}
-                className="font-mono text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Live-Vorschau</Label>
-              <div className="prose prose-sm border rounded-md p-4 min-h-[400px] dark:prose-invert bg-muted/20">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {markdown || '*Leer*'}
-                </ReactMarkdown>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
