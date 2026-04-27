@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
 import type { Actor } from './course.service'
 import { logger } from '@/lib/utils/logger'
+import { invalidateAssetAccess } from '@/lib/utils/course-asset-acl'
 import path from 'path'
 import { randomUUID } from 'crypto'
 
@@ -90,6 +91,7 @@ export const CourseAssetService = {
     const existing = await this.get(id)
     if (!existing) throw new CourseAssetError('NOT_FOUND', `Asset ${id} nicht gefunden`)
     await db.delete(courseAssets).where(eq(courseAssets.id, id))
+    invalidateAssetAccess(id)
     try {
       const { unlink } = await import('fs/promises')
       await unlink(this.resolveAbsolutePath(existing))

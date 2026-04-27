@@ -4,6 +4,7 @@ import type { Course } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
 import type { Actor } from './course.service'
+import { invalidateAssetAccessByCourse } from '@/lib/utils/course-asset-acl'
 
 export interface PublishProblem {
   lessonId?: string
@@ -59,6 +60,8 @@ export const CoursePublishService = {
     const [row] = await db.update(courses)
       .set({ status: 'published', publishedAt: new Date(), updatedAt: new Date() })
       .where(eq(courses.id, courseId)).returning()
+
+    invalidateAssetAccessByCourse(courseId)
 
     await AuditLogService.log({
       userId: actor.userId, userRole: actor.userRole,
