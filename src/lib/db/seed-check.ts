@@ -2,7 +2,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
 import { organization, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates, wibaRequirements } from './schema'
-import { eq, and, count } from 'drizzle-orm'
+import { eq, and, count, sql } from 'drizzle-orm'
 import { requirementsSeedData } from './seeds/din-requirements.seed'
 import { grantsSeedData } from './seeds/din-grants.seed'
 import { wibaRequirementsSeedData } from './seeds/wiba-requirements.seed'
@@ -645,6 +645,184 @@ const BLOCK_TEMPLATES = [
   { name: '3 Spalten gleich', blockType: 'columns', content: { columns: 3, layout: 'equal', left: [{ blockType: 'text', content: { content: '### Spalte 1' } }], center: [{ blockType: 'text', content: { content: '### Spalte 2' } }], right: [{ blockType: 'text', content: { content: '### Spalte 3' } }] }, settings: {}, isSystem: true },
 ]
 
+// ============================================
+// Onlinekurse Sub-2b/2c: Lesson-Block-Setup
+// (Ersetzt die Migrations 017+019, weil deren Migrator wegen Legacy-001 stirbt.)
+// Idempotent: läuft bei jedem Startup, UPSERT nach slug.
+// ============================================
+async function seedCourseLessonBlockSetup(db: ReturnType<typeof drizzle>) {
+  // 1) Legacy-Typen für Lessons freigeben.
+  await db.execute(sql`
+    UPDATE cms_block_type_definitions
+    SET available_in_lessons = true
+    WHERE slug IN ('video', 'image', 'gallery', 'text', 'divider', 'heading')
+      AND available_in_lessons = false
+  `)
+
+  // 2) Sechs Course-* Typen anlegen oder updaten.
+  const courseTypes = [
+    {
+      slug: 'course-callout',
+      name: 'Hinweis / Callout',
+      description: 'Hervorgehobener Hinweisblock (Tipp, Warnung, Info, Gefahr)',
+      icon: 'AlertCircle',
+      category: 'course',
+      sortOrder: 100,
+      defaultContent: { variant: 'tip', title: '', body: '' },
+      fieldDefinitions: [
+        { name: 'variant', label: 'Variante', type: 'select', options: ['note', 'tip', 'info', 'warning', 'danger'] },
+        { name: 'title', label: 'Titel', type: 'text' },
+        { name: 'body', label: 'Text', type: 'textarea' },
+      ],
+    },
+    {
+      slug: 'course-code',
+      name: 'Code-Block',
+      description: 'Code mit Syntax-Highlighting und Copy-Button',
+      icon: 'Code',
+      category: 'course',
+      sortOrder: 101,
+      defaultContent: { language: 'typescript', code: '', filename: '', showLineNumbers: false },
+      fieldDefinitions: [
+        { name: 'language', label: 'Sprache', type: 'text' },
+        { name: 'filename', label: 'Dateiname', type: 'text' },
+        { name: 'code', label: 'Code', type: 'textarea' },
+        { name: 'showLineNumbers', label: 'Zeilennummern', type: 'boolean' },
+      ],
+    },
+    {
+      slug: 'course-learning-objectives',
+      name: 'Lernziele',
+      description: 'Liste der Lernziele dieser Lektion',
+      icon: 'Target',
+      category: 'course',
+      sortOrder: 102,
+      defaultContent: { title: 'Was du lernst', items: [] },
+      fieldDefinitions: [
+        { name: 'title', label: 'Titel', type: 'text' },
+        { name: 'items', label: 'Lernziele', type: 'list-text' },
+      ],
+    },
+    {
+      slug: 'course-key-takeaways',
+      name: 'Wichtigste Punkte',
+      description: 'Zusammenfassung der wichtigsten Erkenntnisse',
+      icon: 'Sparkles',
+      category: 'course',
+      sortOrder: 103,
+      defaultContent: { title: 'Wichtigste Punkte', items: [] },
+      fieldDefinitions: [
+        { name: 'title', label: 'Titel', type: 'text' },
+        { name: 'items', label: 'Erkenntnisse', type: 'list-text' },
+      ],
+    },
+    {
+      slug: 'course-step-by-step',
+      name: 'Schritt-für-Schritt',
+      description: 'Nummerierte Anleitung mit mehreren Schritten',
+      icon: 'ListOrdered',
+      category: 'course',
+      sortOrder: 104,
+      defaultContent: { title: '', steps: [] },
+      fieldDefinitions: [
+        { name: 'title', label: 'Titel', type: 'text' },
+        { name: 'steps', label: 'Schritte', type: 'list-object', schema: [
+          { name: 'title', label: 'Schritt-Titel', type: 'text' },
+          { name: 'description', label: 'Beschreibung', type: 'textarea' },
+        ] },
+      ],
+    },
+    {
+      slug: 'course-accordion',
+      name: 'FAQ / Akkordeon',
+      description: 'Aufklappbare Frage-Antwort-Paare',
+      icon: 'ChevronDown',
+      category: 'course',
+      sortOrder: 105,
+      defaultContent: { items: [] },
+      fieldDefinitions: [
+        { name: 'items', label: 'Frage-Antwort-Paare', type: 'list-object', schema: [
+          { name: 'question', label: 'Frage', type: 'text' },
+          { name: 'answer', label: 'Antwort', type: 'textarea' },
+        ] },
+      ],
+    },
+  ] as const
+
+  for (const t of courseTypes) {
+    await db.execute(sql`
+      INSERT INTO cms_block_type_definitions
+        (slug, name, description, icon, category, fields, field_definitions,
+         default_content, default_settings, is_active, sort_order, available_in_lessons)
+      VALUES (
+        ${t.slug}, ${t.name}, ${t.description}, ${t.icon}, ${t.category},
+        ${JSON.stringify(t.fieldDefinitions.map((f) => f.name))}::jsonb,
+        ${JSON.stringify(t.fieldDefinitions)}::jsonb,
+        ${JSON.stringify(t.defaultContent)}::jsonb,
+        '{}'::jsonb, true, ${t.sortOrder}, true
+      )
+      ON CONFLICT (slug) DO UPDATE SET
+        name = EXCLUDED.name,
+        description = EXCLUDED.description,
+        icon = EXCLUDED.icon,
+        category = EXCLUDED.category,
+        field_definitions = EXCLUDED.field_definitions,
+        available_in_lessons = true
+    `)
+  }
+
+  // 3) FieldDefinitions für die 6 Legacy-Typen setzen (nur falls leer/leeres Array).
+  const legacyFieldDefs: Record<string, unknown[]> = {
+    video: [
+      { name: 'src', label: 'Video-URL', type: 'text' },
+      { name: 'title', label: 'Titel', type: 'text' },
+      { name: 'caption', label: 'Bildunterschrift', type: 'text' },
+      { name: 'width', label: 'Breite', type: 'select', options: ['container', 'full'] },
+      { name: 'aspectRatio', label: 'Seitenverhältnis', type: 'select', options: ['16:9', '4:3', '1:1', '21:9'] },
+    ],
+    image: [
+      { name: 'src', label: 'Bild-URL', type: 'text' },
+      { name: 'alt', label: 'Alt-Text', type: 'text' },
+      { name: 'caption', label: 'Bildunterschrift', type: 'text' },
+      { name: 'width', label: 'Breite', type: 'select', options: ['container', 'full', 'narrow'] },
+    ],
+    gallery: [
+      { name: 'sectionTitle', label: 'Sektion-Titel', type: 'text' },
+      { name: 'columns', label: 'Spalten', type: 'select', options: ['2', '3', '4'] },
+      { name: 'items', label: 'Bilder', type: 'list-object', schema: [
+        { name: 'src', label: 'Bild-URL', type: 'text' },
+        { name: 'alt', label: 'Alt-Text', type: 'text' },
+        { name: 'caption', label: 'Bildunterschrift', type: 'text' },
+      ] },
+    ],
+    text: [
+      { name: 'content', label: 'Inhalt (Markdown)', type: 'textarea' },
+      { name: 'alignment', label: 'Ausrichtung', type: 'select', options: ['left', 'center', 'right'] },
+    ],
+    divider: [
+      { name: 'style', label: 'Stil', type: 'select', options: ['solid', 'dashed', 'dotted', 'gradient'] },
+      { name: 'label', label: 'Label (optional)', type: 'text' },
+    ],
+    heading: [
+      { name: 'text', label: 'Text', type: 'text' },
+      { name: 'level', label: 'Ebene', type: 'select', options: ['1', '2', '3', '4'] },
+      { name: 'subtitle', label: 'Untertitel', type: 'text' },
+    ],
+  }
+
+  for (const [slug, defs] of Object.entries(legacyFieldDefs)) {
+    await db.execute(sql`
+      UPDATE cms_block_type_definitions
+      SET field_definitions = ${JSON.stringify(defs)}::jsonb
+      WHERE slug = ${slug}
+        AND (field_definitions IS NULL OR field_definitions = '[]'::jsonb)
+    `)
+  }
+
+  logger.info('Course lesson block setup applied (6 course types + legacy field-defs)', { module: 'SeedCheck' })
+  return courseTypes.length
+}
+
 async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>) {
   const [{ total }] = await db.select({ total: count() }).from(cmsBlockTemplates)
   if (Number(total) > 0) {
@@ -853,6 +1031,9 @@ async function seedCheck() {
 
   // 12. Seed CMS block type definitions (global)
   await seedCmsBlockTypeDefinitions(db)
+
+  // 12.5 Course-Lesson-Block-Setup (Sub-2b/2c — bypasses migrator 017+019)
+  await seedCourseLessonBlockSetup(db)
 
   // 13. Seed CMS block templates (global)
   await seedCmsBlockTemplates(db)
