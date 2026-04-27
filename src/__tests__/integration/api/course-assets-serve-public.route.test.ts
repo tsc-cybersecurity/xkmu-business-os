@@ -71,4 +71,27 @@ describe('GET /api/v1/courses/assets/serve/[...path] (public/portal)', () => {
     expect(res.status).toBe(206)
     expect(res.headers.get('content-range')).toBe('bytes 0-49/100')
   })
+
+  it('returns 200 for logged-in portal user on portal-only asset', async () => {
+    // Logged-in portal user — has session but no courses:read permission
+    mockAuthContext({
+      userId: 'u-portal-1',
+      role: 'viewer',
+      roleId: null,
+      apiKeyPermissions: null,
+    })
+    vi.doMock('@/lib/utils/course-asset-acl', () => ({
+      checkAssetAccess: vi.fn(async (_path, session) => {
+        // Real check: portal-only + session.user must be present → allow
+        if (session?.user) return { allowed: true }
+        return { allowed: false, status: 403 }
+      }),
+      invalidateAssetAccess: vi.fn(),
+      invalidateAssetAccessByCourse: vi.fn(),
+    }))
+    const { GET } = await import('@/app/api/v1/courses/assets/serve/[...path]/route')
+    const req = new Request('http://x/')
+    const res = await GET(req as never, { params: createTestParams({ path: [courseId, `${assetId}.mp4`] }) })
+    expect(res.status).toBe(200)
+  })
 })

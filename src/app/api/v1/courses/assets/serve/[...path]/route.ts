@@ -96,7 +96,8 @@ export async function GET(request: NextRequest, ctx: Ctx) {
   }
 
   // 2) Public/Portal-Pfad: visibility-basierte ACL
-  const session = await getAuthContext(request) as SessionLike | null
+  const auth = await getAuthContext(request)
+  const session: SessionLike = auth?.userId ? { user: { id: auth.userId } } : { user: null }
   const acl = await checkAssetAccess(rawPath, session)
   if (!acl.allowed) {
     const code = acl.status === 403 ? 'FORBIDDEN' : 'NOT_FOUND'
