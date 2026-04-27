@@ -565,10 +565,30 @@ EOSQL
 echo "Migration 004 complete!"
 
 # ------------------------------------
+# Pre-Drizzle: ensure unique constraints that drizzle-kit push would prompt for
+# (drizzle-kit push asks "Do you want to truncate?" interactively when a UNIQUE
+# constraint is added to a non-empty table — pre-creating them here defuses the
+# prompt entirely)
+# ------------------------------------
+echo "Ensuring unique constraints exist..."
+PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 <<'EOSQL'
+DO $$
+BEGIN
+  IF to_regclass('public.courses') IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'courses_slug_unique') THEN
+    ALTER TABLE courses ADD CONSTRAINT courses_slug_unique UNIQUE (slug);
+  END IF;
+END $$;
+EOSQL
+echo "Unique constraints ensured!"
+
+# ------------------------------------
 # Sync database schema via Drizzle
 # ------------------------------------
 echo "Syncing database schema..."
-printf 'n\n%.0s' {1..20} | npx drizzle-kit push --force
+# `yes "n"` pipes "n\n" infinitely — robust against any number of interactive
+# prompts (replaces the previous fixed 20-iteration printf loop).
+yes "n" | npx drizzle-kit push --force
 echo "Schema sync complete!"
 
 # ------------------------------------
