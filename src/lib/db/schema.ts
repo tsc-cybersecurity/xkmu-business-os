@@ -1428,6 +1428,7 @@ export const cmsBlockTypeDefinitions = pgTable('cms_block_type_definitions', {
   defaultSettings: jsonb('default_settings').default({}),
   isActive: boolean('is_active').default(true),
   sortOrder: integer('sort_order').default(0),
+  availableInLessons: boolean('available_in_lessons').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
   index('idx_cms_block_type_defs_slug').on(table.slug),
@@ -3216,4 +3217,26 @@ export type CourseLesson = typeof courseLessons.$inferSelect
 export type NewCourseLesson = typeof courseLessons.$inferInsert
 export type CourseAsset = typeof courseAssets.$inferSelect
 export type NewCourseAsset = typeof courseAssets.$inferInsert
+
+// ============================================
+// Course Lesson Blocks (polymorphe Lesson-Inhalte: Markdown + CMS-Block-Refs)
+// ============================================
+export const courseLessonBlocks = pgTable('course_lesson_blocks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  lessonId: uuid('lesson_id').notNull().references(() => courseLessons.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull(),
+  kind: varchar('kind', { length: 20 }).notNull(),
+  markdownBody: text('markdown_body'),
+  blockType: varchar('block_type', { length: 50 }),
+  content: jsonb('content').notNull().default({}),
+  settings: jsonb('settings').notNull().default({}),
+  isVisible: boolean('is_visible').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_course_lesson_blocks_lesson').on(table.lessonId, table.position),
+])
+
+export type CourseLessonBlock = typeof courseLessonBlocks.$inferSelect
+export type NewCourseLessonBlock = typeof courseLessonBlocks.$inferInsert
 

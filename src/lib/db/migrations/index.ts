@@ -84,4 +84,8 @@ export const MIGRATIONS: Migration[] = [
     name: '016_courses.sql',
     description: 'Onlinekurse: courses, modules, lessons, assets',
   },
+  {
+    name: '017_course_lesson_blocks.sql',
+    description: 'Onlinekurse Sub-3 prep: lesson content blocks (markdown + cms-block refs) + 6 course block types',
+  },
 ]
