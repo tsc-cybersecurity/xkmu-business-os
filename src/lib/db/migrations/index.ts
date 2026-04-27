@@ -88,4 +88,8 @@ export const MIGRATIONS: Migration[] = [
     name: '017_course_lesson_blocks.sql',
     description: 'Onlinekurse Sub-3 prep: lesson content blocks (markdown + cms-block refs) + 6 course block types',
   },
+  {
+    name: '018_course_block_templates_seed.sql',
+    description: 'Onlinekurse Sub-3 prep: 12 system-templates für die 6 course block types',
+  },
 ]
