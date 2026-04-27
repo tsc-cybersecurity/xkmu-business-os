@@ -47,7 +47,7 @@ export default async function PublicLessonPage({ params }: Props) {
           videoAsset={videoAsset}
           videoExternalUrl={ctx.lesson.videoExternalUrl}
         />
-        <LessonContent lesson={ctx.lesson} assets={ctx.assets} />
+        <LessonContent lesson={{ ...ctx.lesson, blocks: ctx.blocks }} assets={ctx.assets} />
         <LessonPrevNextNav prev={ctx.prev} next={ctx.next} basePath="/kurse" />
       </CoursePlayerLayout>
     </div>
