@@ -789,3 +789,32 @@ export const reorderLessonsSchema = z.array(z.object({
   position: z.number().int().nonnegative(),
   moduleId: z.string().uuid().nullable().optional(),
 }))
+
+// Lesson Content Blocks (Sub-2b)
+
+export const createLessonBlockSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('markdown'),
+    markdownBody: z.string(),
+    position: z.number().int().nonnegative().optional(),
+  }),
+  z.object({
+    kind: z.literal('cms_block'),
+    blockType: z.string().min(1).max(50),
+    content: z.record(z.string(), z.unknown()).optional(),
+    settings: z.record(z.string(), z.unknown()).optional(),
+    position: z.number().int().nonnegative().optional(),
+  }),
+])
+
+export const updateLessonBlockSchema = z.object({
+  markdownBody: z.string().nullable().optional(),
+  content: z.record(z.string(), z.unknown()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
+  isVisible: z.boolean().optional(),
+})
+
+export const reorderLessonBlocksSchema = z.array(z.object({
+  id: z.string().uuid(),
+  position: z.number().int().nonnegative(),
+}))
