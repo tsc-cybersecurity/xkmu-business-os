@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Award, CheckCircle2, Clock, XCircle, Loader2 } from 'lucide-react'
+import { Award, CheckCircle2, Clock, XCircle, Loader2, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 
@@ -117,7 +117,16 @@ export function CertificateStatusCard({ courseId, certificate, eligibleForReques
           <p className="text-xs text-muted-foreground font-mono">
             Verifikations-ID: {certificate.identifier}
           </p>
-          {/* Sub-3c: Download-Button kommt hier rein */}
+          <Button asChild size="sm">
+            <a
+              href={`/api/v1/portal/courses/${courseId}/certificate/pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Zertifikat herunterladen (PDF)
+            </a>
+          </Button>
         </CardContent>
       </Card>
     )
