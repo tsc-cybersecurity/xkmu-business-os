@@ -1,11 +1,10 @@
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Download, Paperclip } from 'lucide-react'
-import type { CourseAsset, CourseLesson } from '@/lib/db/schema'
+import type { CourseAsset, CourseLesson, CourseLessonBlock } from '@/lib/db/schema'
+import { LessonContentRenderer } from './LessonContentRenderer'
 
 interface Props {
-  lesson: CourseLesson
+  lesson: CourseLesson & { blocks?: CourseLessonBlock[] }
   assets: CourseAsset[]
 }
 
@@ -14,11 +13,7 @@ export function LessonContent({ lesson, assets }: Props) {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">{lesson.title}</h1>
-      {lesson.contentMarkdown && (
-        <article className="prose prose-sm max-w-none dark:prose-invert sm:prose-base">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{lesson.contentMarkdown}</ReactMarkdown>
-        </article>
-      )}
+      <LessonContentRenderer blocks={lesson.blocks ?? []} />
       {docs.length > 0 && (
         <Card>
           <CardHeader>
