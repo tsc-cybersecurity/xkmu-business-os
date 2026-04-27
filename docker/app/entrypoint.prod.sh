@@ -568,13 +568,38 @@ echo "Migration 004 complete!"
 # Sync database schema via Drizzle
 # ------------------------------------
 echo "Syncing database schema..."
-# drizzle-kit push uses an Inquirer-style TUI that requires a real TTY —
-# piped stdin is silently ignored, causing it to hang on prompts in CI.
-# `script -qec ... /dev/null` allocates a pseudo-TTY and runs the wrapped
-# command inside it; `yes ""` pipes Enter keypresses to accept the
-# highlighted default ("No, add the constraint without truncating") for
-# any UNIQUE-constraint or column-rename prompt.
-script -qec 'yes "" | npx drizzle-kit push --force' /dev/null
+# drizzle-kit push uses an Inquirer-style TUI that requires a real TTY
+# AND properly consumed input. Piped stdin (printf, yes, here-doc) is
+# silently dropped; `script` allocates a pty but the inner pipe still
+# bypasses it. `expect` is purpose-built for this — it spawns the
+# child with a real pty, watches output, and sends responses on match.
+#
+# Strategy: accept the highlighted default for every prompt drizzle
+# emits (truncate-on-UNIQUE, column-rename detection, etc.) by sending
+# "\r" (Enter) whenever a prompt arrow ("❯") appears. Timeout 300s for
+# the full sync; exit with the wrapped command's exit code.
+expect <<'EOF'
+set timeout 300
+log_user 1
+spawn npx drizzle-kit push --force
+expect {
+    -re "❯ " {
+        send "\r"
+        exp_continue
+    }
+    -re "Do you want to" {
+        send "\r"
+        exp_continue
+    }
+    timeout {
+        puts stderr "ERROR: drizzle-kit push timed out after 300s"
+        exit 1
+    }
+    eof
+}
+catch wait result
+exit [lindex $result 3]
+EOF
 echo "Schema sync complete!"
 
 # ------------------------------------
