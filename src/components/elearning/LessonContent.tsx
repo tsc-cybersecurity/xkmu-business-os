@@ -2,18 +2,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Download, Paperclip } from 'lucide-react'
 import type { CourseAsset, CourseLesson, CourseLessonBlock } from '@/lib/db/schema'
 import { LessonContentRenderer } from './LessonContentRenderer'
+import { LessonCompletionToggle } from './LessonCompletionToggle'
 
 interface Props {
   lesson: CourseLesson & { blocks?: CourseLessonBlock[] }
   assets: CourseAsset[]
+  // Sub-3a: completion-toggle nur im portal-Pfad rendern (mit aktuellem User).
+  completion?: { courseId: string; isCompleted: boolean }
 }
 
-export function LessonContent({ lesson, assets }: Props) {
+export function LessonContent({ lesson, assets, completion }: Props) {
   const docs = assets.filter((a) => a.kind === 'document')
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">{lesson.title}</h1>
       <LessonContentRenderer blocks={lesson.blocks ?? []} />
+      {completion && (
+        <div className="flex justify-end">
+          <LessonCompletionToggle
+            courseId={completion.courseId}
+            lessonId={lesson.id}
+            initialCompleted={completion.isCompleted}
+          />
+        </div>
+      )}
       {docs.length > 0 && (
         <Card>
           <CardHeader>

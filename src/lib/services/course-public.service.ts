@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { courses, courseModules, courseLessons, courseAssets, courseLessonBlocks } from '@/lib/db/schema'
+import { courses, courseModules, courseLessons, courseAssets, courseLessonBlocks, courseLessonProgress } from '@/lib/db/schema'
 import type { Course, CourseModule, CourseLesson, CourseAsset, CourseLessonBlock } from '@/lib/db/schema'
 import { eq, and, ilike, desc, asc, sql, inArray } from 'drizzle-orm'
 
@@ -24,6 +24,13 @@ export interface PublicLessonContext {
   blocks: CourseLessonBlock[]
   prev: { courseSlug: string; lessonSlug: string } | null
   next: { courseSlug: string; lessonSlug: string } | null
+  // Sub-3a: per-user progress (nur portal-Pfad mit userId).
+  progress?: {
+    completedLessonIds: string[]
+    completed: number
+    total: number
+    percentage: number
+  }
 }
 
 type Visibility = 'public' | 'portal' | 'both'
@@ -77,6 +84,7 @@ async function getLessonBySurface(
   surface: 'public' | 'portal',
   courseSlug: string,
   lessonSlug: string,
+  userId?: string,
 ): Promise<PublicLessonContext | null> {
   const detail = await getBySurfaceAndSlug(surface, courseSlug)
   if (!detail) return null
@@ -110,6 +118,23 @@ async function getLessonBySurface(
   const prevL = idx > 0 ? sortedLessons[idx - 1] : null
   const nextL = idx < sortedLessons.length - 1 ? sortedLessons[idx + 1] : null
 
+  // Sub-3a: per-user progress (nur portal-Pfad mit userId).
+  let progress: PublicLessonContext['progress']
+  if (userId && surface === 'portal') {
+    const progressRows = await db
+      .select({ lessonId: courseLessonProgress.lessonId })
+      .from(courseLessonProgress)
+      .where(and(
+        eq(courseLessonProgress.userId, userId),
+        eq(courseLessonProgress.courseId, detail.course.id),
+      ))
+    const completedLessonIds = progressRows.map((r) => r.lessonId)
+    const total = sortedLessons.length
+    const completed = completedLessonIds.length
+    const percentage = total === 0 ? 0 : Math.round((completed / total) * 100)
+    progress = { completedLessonIds, completed, total, percentage }
+  }
+
   return {
     course: detail.course,
     modules: detail.modules,
@@ -119,6 +144,7 @@ async function getLessonBySurface(
     blocks,
     prev: prevL ? { courseSlug: detail.course.slug, lessonSlug: prevL.slug } : null,
     next: nextL ? { courseSlug: detail.course.slug, lessonSlug: nextL.slug } : null,
+    progress,
   }
 }
 
@@ -128,5 +154,6 @@ export const CoursePublicService = {
   getPublicBySlug: (slug: string) => getBySurfaceAndSlug('public', slug),
   getPortalBySlug: (slug: string) => getBySurfaceAndSlug('portal', slug),
   getPublicLesson: (courseSlug: string, lessonSlug: string) => getLessonBySurface('public', courseSlug, lessonSlug),
-  getPortalLesson: (courseSlug: string, lessonSlug: string) => getLessonBySurface('portal', courseSlug, lessonSlug),
+  getPortalLesson: (courseSlug: string, lessonSlug: string, userId?: string) =>
+    getLessonBySurface('portal', courseSlug, lessonSlug, userId),
 }

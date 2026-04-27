@@ -177,5 +177,45 @@ describe('CoursePublicService', () => {
       expect(ctx?.blocks).toHaveLength(1)
       expect(ctx?.blocks?.[0].kind).toBe('markdown')
     })
+
+    it('getPortalLesson with userId returns progress for that user', async () => {
+      const userId = '00000000-0000-0000-0000-0000000000a1'
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ visibility: 'portal' })])  // course
+      dbMock.mockSelect.mockResolvedValueOnce([])                                          // modules
+      dbMock.mockSelect.mockResolvedValueOnce([                                            // lessons
+        { id: lessonId1, courseId: COURSE_ID, moduleId: null, position: 1, slug: 'a',
+          title: 'a', contentMarkdown: null, videoAssetId: null, videoExternalUrl: null,
+          durationMinutes: null, createdAt: new Date(), updatedAt: new Date() },
+        { id: lessonId2, courseId: COURSE_ID, moduleId: null, position: 2, slug: 'b',
+          title: 'b', contentMarkdown: null, videoAssetId: null, videoExternalUrl: null,
+          durationMinutes: null, createdAt: new Date(), updatedAt: new Date() },
+      ])
+      dbMock.mockSelect.mockResolvedValueOnce([])                                          // assets
+      dbMock.mockSelect.mockResolvedValueOnce([])                                          // blocks
+      dbMock.mockSelect.mockResolvedValueOnce([{ lessonId: lessonId1 }])                   // progress rows
+      const svc = await getSvc()
+      const ctx = await svc.getPortalLesson('kurs-1', 'a', userId)
+      expect(ctx?.progress).toEqual({
+        completedLessonIds: [lessonId1],
+        completed: 1,
+        total: 2,
+        percentage: 50,
+      })
+    })
+
+    it('getPortalLesson without userId leaves progress undefined', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ visibility: 'portal' })])  // course
+      dbMock.mockSelect.mockResolvedValueOnce([])                                          // modules
+      dbMock.mockSelect.mockResolvedValueOnce([                                            // lessons
+        { id: lessonId1, courseId: COURSE_ID, moduleId: null, position: 1, slug: 'a',
+          title: 'a', contentMarkdown: null, videoAssetId: null, videoExternalUrl: null,
+          durationMinutes: null, createdAt: new Date(), updatedAt: new Date() },
+      ])
+      dbMock.mockSelect.mockResolvedValueOnce([])                                          // assets
+      dbMock.mockSelect.mockResolvedValueOnce([])                                          // blocks
+      const svc = await getSvc()
+      const ctx = await svc.getPortalLesson('kurs-1', 'a')
+      expect(ctx?.progress).toBeUndefined()
+    })
   })
 })

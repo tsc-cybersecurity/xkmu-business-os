@@ -3255,3 +3255,23 @@ export const dbMigrations = pgTable('_migrations', {
 
 export type DbMigration = typeof dbMigrations.$inferSelect
 
+// ============================================
+// Onlinekurse Sub-3a: Lesson-Completion-Tracking
+// ============================================
+// Per-User-Tracking welche Lektionen abgeschlossen wurden.
+// Nur Portal-User (angemeldet via session) → user_id ist die users.id.
+// Eindeutigkeit (user × lesson) via uniqueIndex statt Composite-PK,
+// um konsistent mit dem Rest des Schemas zu bleiben (Surrogat-IDs).
+export const courseLessonProgress = pgTable('course_lesson_progress', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  lessonId: uuid('lesson_id').notNull().references(() => courseLessons.id, { onDelete: 'cascade' }),
+  courseId: uuid('course_id').notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('uq_course_lesson_progress_user_lesson').on(table.userId, table.lessonId),
+  index('idx_course_lesson_progress_user_course').on(table.userId, table.courseId),
+])
+
+export type CourseLessonProgress = typeof courseLessonProgress.$inferSelect
+export type NewCourseLessonProgress = typeof courseLessonProgress.$inferInsert
