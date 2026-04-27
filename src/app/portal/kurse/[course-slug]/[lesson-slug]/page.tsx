@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { CoursePublicService } from '@/lib/services/course-public.service'
+import { CourseCertificateService } from '@/lib/services/course-certificate.service'
 import { CoursePlayerLayout } from '@/components/elearning/CoursePlayerLayout'
 import { LessonContent } from '@/components/elearning/LessonContent'
 import { LessonVideoPlayer } from '@/components/elearning/LessonVideoPlayer'
 import { LessonPrevNextNav } from '@/components/elearning/LessonPrevNextNav'
+import { CertificateStatusCard } from '@/components/elearning/CertificateStatusCard'
 import { getSession } from '@/lib/auth/session'
 
 export const dynamic = 'force-dynamic'
@@ -26,6 +28,10 @@ export default async function PortalLessonPage({ params }: Props) {
         isCompleted: ctx.progress?.completedLessonIds.includes(ctx.lesson.id) ?? false,
       }
     : undefined
+  const certificate = userId
+    ? await CourseCertificateService.getForUserCourse(userId, ctx.course.id)
+    : null
+  const eligibleForRequest = (ctx.progress?.percentage ?? 0) >= 100
   return (
     <CoursePlayerLayout
       course={ctx.course}
@@ -43,6 +49,13 @@ export default async function PortalLessonPage({ params }: Props) {
         videoAsset={videoAsset}
         videoExternalUrl={ctx.lesson.videoExternalUrl}
       />
+      {userId && (
+        <CertificateStatusCard
+          courseId={ctx.course.id}
+          certificate={certificate}
+          eligibleForRequest={eligibleForRequest}
+        />
+      )}
       <LessonContent
         lesson={{ ...ctx.lesson, blocks: ctx.blocks }}
         assets={ctx.assets}
