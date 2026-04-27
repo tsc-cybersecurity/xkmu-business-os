@@ -43,7 +43,7 @@ FROM base AS production
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN apk add --no-cache netcat-openbsd postgresql16-client su-exec
+RUN apk add --no-cache netcat-openbsd postgresql16-client su-exec util-linux-misc
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 

@@ -568,11 +568,13 @@ echo "Migration 004 complete!"
 # Sync database schema via Drizzle
 # ------------------------------------
 echo "Syncing database schema..."
-# `yes "n"` pipes "n\n" infinitely — robust against any number of interactive
-# prompts (replaces the previous fixed 20-iteration printf loop). Drizzle uses
-# DATABASE_URL (privileged migration role) and can apply UNIQUE constraints
-# the deploy DB_USER cannot, so we let drizzle handle it via its own session.
-yes "n" | npx drizzle-kit push --force
+# drizzle-kit push uses an Inquirer-style TUI that requires a real TTY —
+# piped stdin is silently ignored, causing it to hang on prompts in CI.
+# `script -qec ... /dev/null` allocates a pseudo-TTY and runs the wrapped
+# command inside it; `yes ""` pipes Enter keypresses to accept the
+# highlighted default ("No, add the constraint without truncating") for
+# any UNIQUE-constraint or column-rename prompt.
+script -qec 'yes "" | npx drizzle-kit push --force' /dev/null
 echo "Schema sync complete!"
 
 # ------------------------------------
