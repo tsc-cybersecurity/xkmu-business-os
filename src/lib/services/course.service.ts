@@ -4,6 +4,7 @@ import type { Course } from '@/lib/db/schema'
 import { eq, and, ilike, desc, sql } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
 import { logger } from '@/lib/utils/logger'
+import { invalidateAssetAccessByCourse } from '@/lib/utils/course-asset-acl'
 
 export interface Actor { userId: string | null; userRole: string | null }
 
@@ -111,6 +112,9 @@ export const CourseService = {
     }
 
     const [row] = await db.update(courses).set(update).where(eq(courses.id, id)).returning()
+    if (Object.prototype.hasOwnProperty.call(update, 'visibility')) {
+      invalidateAssetAccessByCourse(id)
+    }
     await AuditLogService.log({
       userId: actor.userId, userRole: actor.userRole,
       action: 'course.updated', entityType: 'course', entityId: id,
@@ -125,6 +129,7 @@ export const CourseService = {
     const [row] = await db.update(courses)
       .set({ status: 'archived', updatedAt: new Date() })
       .where(eq(courses.id, id)).returning()
+    invalidateAssetAccessByCourse(id)
     await AuditLogService.log({
       userId: actor.userId, userRole: actor.userRole,
       action: 'course.archived', entityType: 'course', entityId: id, payload: {},
@@ -139,6 +144,7 @@ export const CourseService = {
     const [row] = await db.update(courses)
       .set({ status: 'draft', publishedAt: null, updatedAt: new Date() })
       .where(eq(courses.id, id)).returning()
+    invalidateAssetAccessByCourse(id)
     await AuditLogService.log({
       userId: actor.userId, userRole: actor.userRole,
       action: 'course.restored', entityType: 'course', entityId: id, payload: {},
@@ -153,6 +159,7 @@ export const CourseService = {
     const [row] = await db.update(courses)
       .set({ status: 'draft', updatedAt: new Date() })
       .where(eq(courses.id, id)).returning()
+    invalidateAssetAccessByCourse(id)
     await AuditLogService.log({
       userId: actor.userId, userRole: actor.userRole,
       action: 'course.unpublished', entityType: 'course', entityId: id, payload: {},
@@ -163,6 +170,7 @@ export const CourseService = {
   async delete(id: string, actor: Actor): Promise<void> {
     const existing = await this.get(id)
     if (!existing) throw new CourseError('NOT_FOUND', `Kurs ${id} nicht gefunden`)
+    invalidateAssetAccessByCourse(id)
     await db.delete(courses).where(eq(courses.id, id))
     await AuditLogService.log({
       userId: actor.userId, userRole: actor.userRole,
