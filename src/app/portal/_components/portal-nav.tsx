@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/portal/projects', label: 'Projekte' },
   { href: '/portal/orders', label: 'Aufträge' },
   { href: '/portal/documents', label: 'Dokumente' },
+  { href: '/portal/kurse', label: 'Onlinekurse' },
   { href: '/portal/chat', label: 'Chat' },
   { href: '/portal/company/requests', label: 'Anträge' },
 ]
