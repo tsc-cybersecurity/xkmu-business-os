@@ -649,15 +649,42 @@ const BLOCK_TEMPLATES = [
 // Onlinekurse Sub-2b/2c: Lesson-Block-Setup
 // (Ersetzt die Migrations 017+019, weil deren Migrator wegen Legacy-001 stirbt.)
 // Idempotent: läuft bei jedem Startup, UPSERT nach slug.
+// Fault-tolerant: einzelne Fehler (fehlende Spalte, fehlende Owner-Rechte)
+// werden geloggt, brechen aber NICHT den seed-check ab.
 // ============================================
 async function seedCourseLessonBlockSetup(db: ReturnType<typeof drizzle>) {
+  // Vorbedingung: prüfen ob field_definitions-Spalte überhaupt existiert.
+  // Wenn nicht (drizzle-kit push schlug fehl wegen Owner-Rechten), skip.
+  try {
+    const colCheck = await db.execute(sql`
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'cms_block_type_definitions'
+        AND column_name = 'field_definitions'
+      LIMIT 1
+    `) as unknown as Array<unknown>
+    if (!colCheck || colCheck.length === 0) {
+      logger.warn(
+        'Course lesson block setup skipped: field_definitions column missing — DB-Owner fehlt drizzle-kit push?',
+        { module: 'SeedCheck' },
+      )
+      return 0
+    }
+  } catch (err) {
+    logger.warn('Course lesson block setup skipped: column-check failed', { module: 'SeedCheck', error: String(err) })
+    return 0
+  }
+
   // 1) Legacy-Typen für Lessons freigeben.
-  await db.execute(sql`
-    UPDATE cms_block_type_definitions
-    SET available_in_lessons = true
-    WHERE slug IN ('video', 'image', 'gallery', 'text', 'divider', 'heading')
-      AND available_in_lessons = false
-  `)
+  try {
+    await db.execute(sql`
+      UPDATE cms_block_type_definitions
+      SET available_in_lessons = true
+      WHERE slug IN ('video', 'image', 'gallery', 'text', 'divider', 'heading')
+        AND available_in_lessons = false
+    `)
+  } catch (err) {
+    logger.warn('Legacy-types available_in_lessons update failed', { module: 'SeedCheck', error: String(err) })
+  }
 
   // 2) Sechs Course-* Typen anlegen oder updaten.
   const courseTypes = [
@@ -749,26 +776,32 @@ async function seedCourseLessonBlockSetup(db: ReturnType<typeof drizzle>) {
     },
   ] as const
 
+  let courseInserted = 0
   for (const t of courseTypes) {
-    await db.execute(sql`
-      INSERT INTO cms_block_type_definitions
-        (slug, name, description, icon, category, fields, field_definitions,
-         default_content, default_settings, is_active, sort_order, available_in_lessons)
-      VALUES (
-        ${t.slug}, ${t.name}, ${t.description}, ${t.icon}, ${t.category},
-        ${JSON.stringify(t.fieldDefinitions.map((f) => f.name))}::jsonb,
-        ${JSON.stringify(t.fieldDefinitions)}::jsonb,
-        ${JSON.stringify(t.defaultContent)}::jsonb,
-        '{}'::jsonb, true, ${t.sortOrder}, true
-      )
-      ON CONFLICT (slug) DO UPDATE SET
-        name = EXCLUDED.name,
-        description = EXCLUDED.description,
-        icon = EXCLUDED.icon,
-        category = EXCLUDED.category,
-        field_definitions = EXCLUDED.field_definitions,
-        available_in_lessons = true
-    `)
+    try {
+      await db.execute(sql`
+        INSERT INTO cms_block_type_definitions
+          (slug, name, description, icon, category, fields, field_definitions,
+           default_content, default_settings, is_active, sort_order, available_in_lessons)
+        VALUES (
+          ${t.slug}, ${t.name}, ${t.description}, ${t.icon}, ${t.category},
+          ${JSON.stringify(t.fieldDefinitions.map((f) => f.name))}::jsonb,
+          ${JSON.stringify(t.fieldDefinitions)}::jsonb,
+          ${JSON.stringify(t.defaultContent)}::jsonb,
+          '{}'::jsonb, true, ${t.sortOrder}, true
+        )
+        ON CONFLICT (slug) DO UPDATE SET
+          name = EXCLUDED.name,
+          description = EXCLUDED.description,
+          icon = EXCLUDED.icon,
+          category = EXCLUDED.category,
+          field_definitions = EXCLUDED.field_definitions,
+          available_in_lessons = true
+      `)
+      courseInserted++
+    } catch (err) {
+      logger.warn(`Course type upsert failed for ${t.slug}`, { module: 'SeedCheck', error: String(err) })
+    }
   }
 
   // 3) FieldDefinitions für die 6 Legacy-Typen setzen (nur falls leer/leeres Array).
@@ -811,16 +844,23 @@ async function seedCourseLessonBlockSetup(db: ReturnType<typeof drizzle>) {
   }
 
   for (const [slug, defs] of Object.entries(legacyFieldDefs)) {
-    await db.execute(sql`
-      UPDATE cms_block_type_definitions
-      SET field_definitions = ${JSON.stringify(defs)}::jsonb
-      WHERE slug = ${slug}
-        AND (field_definitions IS NULL OR field_definitions = '[]'::jsonb)
-    `)
+    try {
+      await db.execute(sql`
+        UPDATE cms_block_type_definitions
+        SET field_definitions = ${JSON.stringify(defs)}::jsonb
+        WHERE slug = ${slug}
+          AND (field_definitions IS NULL OR field_definitions = '[]'::jsonb)
+      `)
+    } catch (err) {
+      logger.warn(`Legacy field_definitions update failed for ${slug}`, { module: 'SeedCheck', error: String(err) })
+    }
   }
 
-  logger.info('Course lesson block setup applied (6 course types + legacy field-defs)', { module: 'SeedCheck' })
-  return courseTypes.length
+  logger.info(
+    `Course lesson block setup applied (${courseInserted}/${courseTypes.length} course types + legacy field-defs)`,
+    { module: 'SeedCheck' },
+  )
+  return courseInserted
 }
 
 async function seedCmsBlockTemplates(db: ReturnType<typeof drizzle>) {
