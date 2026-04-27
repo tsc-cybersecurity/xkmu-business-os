@@ -1424,6 +1424,7 @@ export const cmsBlockTypeDefinitions = pgTable('cms_block_type_definitions', {
   icon: varchar('icon', { length: 50 }),
   category: varchar('category', { length: 50 }),
   fields: jsonb('fields').default([]),
+  fieldDefinitions: jsonb('field_definitions').notNull().default([]),
   defaultContent: jsonb('default_content').default({}),
   defaultSettings: jsonb('default_settings').default({}),
   isActive: boolean('is_active').default(true),

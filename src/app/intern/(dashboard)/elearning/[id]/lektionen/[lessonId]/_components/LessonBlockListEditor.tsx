@@ -16,7 +16,7 @@ import { LessonBlockEditDialog } from './LessonBlockEditDialog'
 
 interface BlockTypeDef {
   slug: string
-  fields: Array<{ name: string; label: string; type: string; options?: string[]; schema?: unknown }>
+  fieldDefinitions: Array<{ name: string; label: string; type: string; options?: string[]; schema?: unknown }>
 }
 
 interface Props {
@@ -110,7 +110,7 @@ export function LessonBlockListEditor({ courseId, lessonId }: Props) {
   if (loading) return <LoadingSpinner />
 
   const editingFields = editing?.kind === 'cms_block'
-    ? (typeDefs[editing.blockType ?? '']?.fields ?? [])
+    ? (typeDefs[editing.blockType ?? '']?.fieldDefinitions ?? [])
     : []
 
   return (
