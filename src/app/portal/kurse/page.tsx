@@ -4,6 +4,8 @@ import { CourseListGrid } from '@/components/elearning/CourseListGrid'
 import { EmptyState } from '@/components/shared/empty-state'
 import { GraduationCap } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Onlinekurse — Kundenportal',
   robots: { index: false, follow: false },

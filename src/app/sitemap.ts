@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { CoursePublicService } from '@/lib/services/course-public.service'
 
+export const dynamic = 'force-dynamic'
 export const revalidate = 3600
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://xkmu.de'

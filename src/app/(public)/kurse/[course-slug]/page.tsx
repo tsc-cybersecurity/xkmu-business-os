@@ -4,6 +4,8 @@ import { CoursePublicService } from '@/lib/services/course-public.service'
 import { CourseLandingHeader } from '@/components/elearning/CourseLandingHeader'
 import { CourseLandingOutline } from '@/components/elearning/CourseLandingOutline'
 
+export const dynamic = 'force-dynamic'
+
 interface Props { params: Promise<{ 'course-slug': string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

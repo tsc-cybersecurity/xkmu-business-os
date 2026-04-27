@@ -6,6 +6,8 @@ import { LessonContent } from '@/components/elearning/LessonContent'
 import { LessonVideoPlayer } from '@/components/elearning/LessonVideoPlayer'
 import { LessonPrevNextNav } from '@/components/elearning/LessonPrevNextNav'
 
+export const dynamic = 'force-dynamic'
+
 interface Props { params: Promise<{ 'course-slug': string; 'lesson-slug': string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
