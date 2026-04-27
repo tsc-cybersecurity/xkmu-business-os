@@ -20,6 +20,13 @@ export function mockAuthContext(auth: AuthContext | null) {
         return handler(auth)
       },
     ),
+    tryWithPermission: vi.fn().mockImplementation(async () => {
+      if (!auth) return { allowed: false }
+      return { allowed: true, auth }
+    }),
+  }))
+  vi.doMock('@/lib/auth/auth-context', () => ({
+    getAuthContext: vi.fn().mockResolvedValue(auth),
   }))
 }
 
@@ -31,6 +38,7 @@ export function mockAuthForbidden() {
         { status: 403 },
       )
     }),
+    tryWithPermission: vi.fn().mockResolvedValue({ allowed: false }),
   }))
 }
 

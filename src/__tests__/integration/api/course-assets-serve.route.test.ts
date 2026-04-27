@@ -15,6 +15,11 @@ describe('GET /api/v1/courses/assets/serve/[...path]', () => {
     vi.resetModules()
     setupDbMock()
     mockAuthContext(authFixture())
+    vi.doMock('@/lib/utils/course-asset-acl', () => ({
+      checkAssetAccess: vi.fn().mockResolvedValue({ allowed: true }),
+      invalidateAssetAccess: vi.fn(),
+      invalidateAssetAccessByCourse: vi.fn(),
+    }))
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'serve-'))
     process.env.COURSE_ASSET_DIR = tmpDir
     testFile = path.join(tmpDir, 'a', 'b.bin')
