@@ -2,6 +2,8 @@
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { LessonContentRenderer } from '@/components/elearning/LessonContentRenderer'
+import type { CourseLessonBlock } from '@/lib/db/schema'
 
 export interface PreviewLesson {
   id: string
@@ -12,6 +14,7 @@ export interface PreviewLesson {
   contentMarkdown: string | null
   videoAssetId: string | null
   assets: Array<{ id: string; path: string; mimeType: string }>
+  blocks?: CourseLessonBlock[]
 }
 
 export interface PreviewCourse {
@@ -71,8 +74,12 @@ function renderLesson(
           src={`/api/v1/courses/assets/serve/${video.path}`}
         />
       )}
-      {l.contentMarkdown && (
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{l.contentMarkdown}</ReactMarkdown>
+      {l.blocks && l.blocks.length > 0 ? (
+        <LessonContentRenderer blocks={l.blocks} />
+      ) : (
+        l.contentMarkdown && (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{l.contentMarkdown}</ReactMarkdown>
+        )
       )}
     </article>
   )

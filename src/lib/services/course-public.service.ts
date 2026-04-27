@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
-import { courses, courseModules, courseLessons, courseAssets } from '@/lib/db/schema'
-import type { Course, CourseModule, CourseLesson, CourseAsset } from '@/lib/db/schema'
-import { eq, and, ilike, desc, sql, inArray } from 'drizzle-orm'
+import { courses, courseModules, courseLessons, courseAssets, courseLessonBlocks } from '@/lib/db/schema'
+import type { Course, CourseModule, CourseLesson, CourseAsset, CourseLessonBlock } from '@/lib/db/schema'
+import { eq, and, ilike, desc, asc, sql, inArray } from 'drizzle-orm'
 
 export interface PublicListFilter {
   q?: string
@@ -21,6 +21,7 @@ export interface PublicLessonContext {
   lessons: CourseLesson[]
   lesson: CourseLesson
   assets: CourseAsset[]
+  blocks: CourseLessonBlock[]
   prev: { courseSlug: string; lessonSlug: string } | null
   next: { courseSlug: string; lessonSlug: string } | null
 }
@@ -88,6 +89,15 @@ async function getLessonBySurface(
     .from(courseAssets)
     .where(eq(courseAssets.lessonId, lesson.id))
 
+  const blocks = await db
+    .select()
+    .from(courseLessonBlocks)
+    .where(and(
+      eq(courseLessonBlocks.lessonId, lesson.id),
+      eq(courseLessonBlocks.isVisible, true),
+    ))
+    .orderBy(asc(courseLessonBlocks.position))
+
   const modulePositions = new Map(detail.modules.map((m) => [m.id, m.position]))
   const sortedLessons = [...detail.lessons].sort((a, b) => {
     const aPos = a.moduleId ? (modulePositions.get(a.moduleId) ?? Number.MAX_SAFE_INTEGER) : Number.MAX_SAFE_INTEGER
@@ -106,6 +116,7 @@ async function getLessonBySurface(
     lessons: sortedLessons,
     lesson,
     assets,
+    blocks,
     prev: prevL ? { courseSlug: detail.course.slug, lessonSlug: prevL.slug } : null,
     next: nextL ? { courseSlug: detail.course.slug, lessonSlug: nextL.slug } : null,
   }

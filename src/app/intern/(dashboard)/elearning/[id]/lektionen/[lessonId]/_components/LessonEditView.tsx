@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { ChevronLeft, FileText } from 'lucide-react'
 import { LoadingSpinner } from '@/components/shared/loading-states'
 import { LessonContentForm } from './LessonContentForm'
+import { LessonBlockListEditor } from './LessonBlockListEditor'
 import { LessonVideoUploader } from './LessonVideoUploader'
 import { LessonAttachmentList } from './LessonAttachmentList'
 
@@ -103,12 +104,16 @@ export function LessonEditView({
 
       <Tabs defaultValue="inhalt">
         <TabsList>
+          <TabsTrigger value="stammdaten">Stammdaten</TabsTrigger>
           <TabsTrigger value="inhalt">Inhalt</TabsTrigger>
           <TabsTrigger value="video">Video</TabsTrigger>
           <TabsTrigger value="anhaenge">Anhänge</TabsTrigger>
         </TabsList>
-        <TabsContent value="inhalt" className="mt-6">
+        <TabsContent value="stammdaten" className="mt-6">
           <LessonContentForm lesson={lesson} onSaved={load} />
+        </TabsContent>
+        <TabsContent value="inhalt" className="mt-6">
+          <LessonBlockListEditor courseId={courseId} lessonId={lessonId} />
         </TabsContent>
         <TabsContent value="video" className="mt-6">
           <LessonVideoUploader lesson={lesson} onSaved={load} />

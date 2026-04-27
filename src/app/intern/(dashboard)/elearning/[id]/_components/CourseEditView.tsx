@@ -152,13 +152,19 @@ export function CourseEditView({ courseId }: { courseId: string }) {
     setPreviewLoading(true)
     try {
       const detailed = await Promise.all(
-        course.lessons.map((l) =>
-          fetch(`/api/v1/courses/${courseId}/lessons/${l.id}`)
-            .then((r) => r.json())
-            .then((b) => b.data as PreviewLesson),
-        ),
+        course.lessons.map(async (l): Promise<PreviewLesson | null> => {
+          const [lessonRes, blocksRes] = await Promise.all([
+            fetch(`/api/v1/courses/${courseId}/lessons/${l.id}`).then((r) => r.json()),
+            fetch(`/api/v1/courses/${courseId}/lessons/${l.id}/blocks`).then((r) => r.json()),
+          ])
+          if (!lessonRes?.data) return null
+          return {
+            ...(lessonRes.data as PreviewLesson),
+            blocks: blocksRes?.success ? blocksRes.data : [],
+          }
+        }),
       )
-      setPreviewLessons(detailed.filter(Boolean))
+      setPreviewLessons(detailed.filter((x): x is PreviewLesson => x !== null))
     } finally {
       setPreviewLoading(false)
     }

@@ -50,6 +50,18 @@ import type { TestimonialsBlockContent } from './blocks/testimonials-block'
 import type { TextBlockContent } from './blocks/text-block'
 import type { TimelineBlockContent } from './blocks/timeline-block'
 import type { VideoBlockContent } from './blocks/video-block'
+import { CourseCalloutBlock } from './blocks/course-callout-block'
+import { CourseCodeBlock } from './blocks/course-code-block'
+import { CourseLearningObjectivesBlock } from './blocks/course-learning-objectives-block'
+import { CourseKeyTakeawaysBlock } from './blocks/course-key-takeaways-block'
+import { CourseStepByStepBlock } from './blocks/course-step-by-step-block'
+import { CourseAccordionBlock } from './blocks/course-accordion-block'
+import type { CourseCalloutBlockContent } from './blocks/course-callout-block'
+import type { CourseCodeBlockContent } from './blocks/course-code-block'
+import type { CourseLearningObjectivesBlockContent } from './blocks/course-learning-objectives-block'
+import type { CourseKeyTakeawaysBlockContent } from './blocks/course-key-takeaways-block'
+import type { CourseStepByStepBlockContent } from './blocks/course-step-by-step-block'
+import type { CourseAccordionBlockContent } from './blocks/course-accordion-block'
 
 interface CmsBlockRendererProps {
   blockType: string
@@ -135,6 +147,18 @@ export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRende
       return <ColumnsBlock content={content as ColumnsBlockContent} settings={settings} />
     case 'wheel':
       return <WheelBlock content={content as WheelBlockContent} settings={settings} />
+    case 'course-callout':
+      return <CourseCalloutBlock content={content as CourseCalloutBlockContent} />
+    case 'course-code':
+      return <CourseCodeBlock content={content as CourseCodeBlockContent} />
+    case 'course-learning-objectives':
+      return <CourseLearningObjectivesBlock content={content as CourseLearningObjectivesBlockContent} />
+    case 'course-key-takeaways':
+      return <CourseKeyTakeawaysBlock content={content as CourseKeyTakeawaysBlockContent} />
+    case 'course-step-by-step':
+      return <CourseStepByStepBlock content={content as CourseStepByStepBlockContent} />
+    case 'course-accordion':
+      return <CourseAccordionBlock content={content as CourseAccordionBlockContent} />
     default:
       return (
         <div className="container mx-auto px-4 py-8">
