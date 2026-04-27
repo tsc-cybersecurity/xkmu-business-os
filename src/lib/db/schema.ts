@@ -3275,3 +3275,37 @@ export const courseLessonProgress = pgTable('course_lesson_progress', {
 
 export type CourseLessonProgress = typeof courseLessonProgress.$inferSelect
 export type NewCourseLessonProgress = typeof courseLessonProgress.$inferInsert
+
+// ============================================
+// Onlinekurse Sub-3b: Course Certificates (Antrag → Approval → Issued)
+// ============================================
+// Ein Zertifikats-Antrag und das ausgestellte Zertifikat in EINER Tabelle.
+// Status-Lebenszyklus:
+//   requested  → User klickt "Zertifikat anfordern" (Voraussetzung: 100% Lessons)
+//   issued     → Admin approved, identifier (public-verifiable) und issuedAt gesetzt
+//   rejected   → Admin abgelehnt, reviewComment optional
+//
+// Eindeutigkeit (user × course): nur EIN Zertifikat pro User+Kurs (latest wins).
+export const courseCertificates = pgTable('course_certificates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  courseId: uuid('course_id').notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  status: varchar('status', { length: 20 }).notNull().default('requested'),
+  // Public-verifiable identifier (separater UUID, getrennt von id) — fuer
+  // Sub-3c PDF-URL und kuenftige Verify-Endpunkte.
+  identifier: uuid('identifier').notNull().defaultRandom(),
+  requestedAt: timestamp('requested_at', { withTimezone: true }).notNull().defaultNow(),
+  issuedAt: timestamp('issued_at', { withTimezone: true }),
+  reviewedBy: uuid('reviewed_by').references(() => users.id, { onDelete: 'set null' }),
+  reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+  reviewComment: text('review_comment'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('uq_course_certificates_user_course').on(table.userId, table.courseId),
+  uniqueIndex('uq_course_certificates_identifier').on(table.identifier),
+  index('idx_course_certificates_status').on(table.status, table.requestedAt),
+])
+
+export type CourseCertificate = typeof courseCertificates.$inferSelect
+export type NewCourseCertificate = typeof courseCertificates.$inferInsert

@@ -818,3 +818,9 @@ export const reorderLessonBlocksSchema = z.array(z.object({
   id: z.string().uuid(),
   position: z.number().int().nonnegative(),
 }))
+
+// Course Certificates (Sub-3b)
+
+export const reviewCertificateSchema = z.object({
+  reviewComment: z.string().max(1000).optional(),
+})
