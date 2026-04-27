@@ -115,4 +115,52 @@ describe('checkAssetAccess', () => {
     expect(r2).toEqual({ allowed: false, status: 403 })
     expect(dbMock.db.select).toHaveBeenCalledTimes(2)
   })
+
+  it('refetches from DB after TTL expiry', async () => {
+    vi.useFakeTimers()
+    try {
+      dbMock.mockSelect.mockResolvedValueOnce([
+        { courseId: COURSE_ID, visibility: 'public', status: 'published' },
+      ])
+      const { checkAssetAccess } = await getAcl()
+      await checkAssetAccess(PATH, null)
+      // Advance past 5-minute TTL
+      vi.setSystemTime(Date.now() + 6 * 60 * 1000)
+      dbMock.mockSelect.mockResolvedValueOnce([
+        { courseId: COURSE_ID, visibility: 'portal', status: 'published' },
+      ])
+      const result = await checkAssetAccess(PATH, null)
+      expect(result).toEqual({ allowed: false, status: 403 })
+      expect(dbMock.db.select).toHaveBeenCalledTimes(2)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('invalidateAssetAccessByCourse evicts all assets of that course', async () => {
+    const ASSET_2 = '00000000-0000-0000-0000-0000000000a2'
+    const PATH_2 = `${COURSE_ID}/${ASSET_2}.mp4`
+    dbMock.mockSelect.mockResolvedValueOnce([
+      { courseId: COURSE_ID, visibility: 'public', status: 'published' },
+    ])
+    dbMock.mockSelect.mockResolvedValueOnce([
+      { courseId: COURSE_ID, visibility: 'public', status: 'published' },
+    ])
+    const { checkAssetAccess, invalidateAssetAccessByCourse } = await getAcl()
+    await checkAssetAccess(PATH, null)
+    await checkAssetAccess(PATH_2, null)
+    expect(dbMock.db.select).toHaveBeenCalledTimes(2)
+
+    invalidateAssetAccessByCourse(COURSE_ID)
+
+    dbMock.mockSelect.mockResolvedValueOnce([
+      { courseId: COURSE_ID, visibility: 'public', status: 'published' },
+    ])
+    dbMock.mockSelect.mockResolvedValueOnce([
+      { courseId: COURSE_ID, visibility: 'public', status: 'published' },
+    ])
+    await checkAssetAccess(PATH, null)
+    await checkAssetAccess(PATH_2, null)
+    expect(dbMock.db.select).toHaveBeenCalledTimes(4)
+  })
 })

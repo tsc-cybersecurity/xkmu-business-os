@@ -19,6 +19,9 @@ interface CachedAccess {
 
 const TTL_MS = 5 * 60 * 1000
 const MAX_ENTRIES = 500
+// FIFO + TTL cache. Insertion order = age. evictIfFull() drops the oldest insertion.
+// Note: not LRU on read — a hot cache hit does not move the entry. This is acceptable
+// for Range-Request workloads (one cold start, then many hits on the same entry).
 const cache = new Map<string, CachedAccess>()
 
 function isStale(entry: CachedAccess): boolean {
@@ -73,6 +76,8 @@ export async function checkAssetAccess(
     if (!fresh) return { allowed: false, status: 404 }
     entry = { ...fresh, cachedAt: Date.now() }
     evictIfFull()
+    // On stale-refresh: re-insert to move the entry to the end of insertion order
+    // (so eviction picks the actually-oldest entry next time, not this freshly-loaded one).
     cache.delete(assetId)
     cache.set(assetId, entry)
   }
