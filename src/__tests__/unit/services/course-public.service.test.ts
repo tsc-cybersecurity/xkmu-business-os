@@ -157,5 +157,25 @@ describe('CoursePublicService', () => {
       expect(ctx?.prev?.lessonSlug).toBe('a1')
       expect(ctx?.next?.lessonSlug).toBe('b1')
     })
+
+    it('includes blocks sorted by position with visibility filter', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture()])  // course
+      dbMock.mockSelect.mockResolvedValueOnce([])                 // modules
+      dbMock.mockSelect.mockResolvedValueOnce([                   // lessons
+        { id: lessonId1, courseId: COURSE_ID, moduleId: null, position: 1, slug: 'a',
+          title: 'a', contentMarkdown: null, videoAssetId: null, videoExternalUrl: null,
+          durationMinutes: null, createdAt: new Date(), updatedAt: new Date() },
+      ])
+      dbMock.mockSelect.mockResolvedValueOnce([])                 // assets
+      dbMock.mockSelect.mockResolvedValueOnce([                   // blocks
+        { id: 'b1', lessonId: lessonId1, position: 1, kind: 'markdown', markdownBody: '# Hi',
+          blockType: null, content: {}, settings: {}, isVisible: true,
+          createdAt: new Date(), updatedAt: new Date() },
+      ])
+      const svc = await getSvc()
+      const ctx = await svc.getPublicLesson('kurs-1', 'a')
+      expect(ctx?.blocks).toHaveLength(1)
+      expect(ctx?.blocks?.[0].kind).toBe('markdown')
+    })
   })
 })
