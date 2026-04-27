@@ -86,4 +86,76 @@ describe('CoursePublicService', () => {
       expect(result?.course.visibility).toBe('portal')
     })
   })
+
+  describe('getPublicLesson', () => {
+    const lessonId1 = '00000000-0000-0000-0000-0000000000e1'
+    const lessonId2 = '00000000-0000-0000-0000-0000000000e2'
+    const lessonId3 = '00000000-0000-0000-0000-0000000000e3'
+
+    function lesson(id: string, slug: string, position: number, moduleId: string | null = null) {
+      return {
+        id, courseId: COURSE_ID, moduleId, position, slug,
+        title: slug, contentMarkdown: null, videoAssetId: null,
+        videoExternalUrl: null, durationMinutes: null,
+        createdAt: new Date(), updatedAt: new Date(),
+      }
+    }
+
+    it('returns prev=null and next set for first lesson', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture()])
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      dbMock.mockSelect.mockResolvedValueOnce([
+        lesson(lessonId1, 'a', 1),
+        lesson(lessonId2, 'b', 2),
+      ])
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      const svc = await getSvc()
+      const ctx = await svc.getPublicLesson('kurs-1', 'a')
+      expect(ctx?.prev).toBeNull()
+      expect(ctx?.next).toEqual({ courseSlug: 'kurs-1', lessonSlug: 'b' })
+    })
+
+    it('returns prev set and next=null for last lesson', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture()])
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      dbMock.mockSelect.mockResolvedValueOnce([
+        lesson(lessonId1, 'a', 1),
+        lesson(lessonId2, 'b', 2),
+      ])
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      const svc = await getSvc()
+      const ctx = await svc.getPublicLesson('kurs-1', 'b')
+      expect(ctx?.prev).toEqual({ courseSlug: 'kurs-1', lessonSlug: 'a' })
+      expect(ctx?.next).toBeNull()
+    })
+
+    it('returns null when lesson slug missing', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture()])
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      dbMock.mockSelect.mockResolvedValueOnce([lesson(lessonId1, 'a', 1)])
+      const svc = await getSvc()
+      const ctx = await svc.getPublicLesson('kurs-1', 'nope')
+      expect(ctx).toBeNull()
+    })
+
+    it('sorts across modules then within module', async () => {
+      const modA = '00000000-0000-0000-0000-0000000000d1'
+      const modB = '00000000-0000-0000-0000-0000000000d2'
+      dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ useModules: true })])
+      dbMock.mockSelect.mockResolvedValueOnce([
+        { id: modA, courseId: COURSE_ID, position: 1, title: 'A', description: null, createdAt: new Date(), updatedAt: new Date() },
+        { id: modB, courseId: COURSE_ID, position: 2, title: 'B', description: null, createdAt: new Date(), updatedAt: new Date() },
+      ])
+      dbMock.mockSelect.mockResolvedValueOnce([
+        lesson(lessonId2, 'b1', 1, modB),
+        lesson(lessonId1, 'a1', 1, modA),
+        lesson(lessonId3, 'a2', 2, modA),
+      ])
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      const svc = await getSvc()
+      const ctx = await svc.getPublicLesson('kurs-1', 'a2')
+      expect(ctx?.prev?.lessonSlug).toBe('a1')
+      expect(ctx?.next?.lessonSlug).toBe('b1')
+    })
+  })
 })
