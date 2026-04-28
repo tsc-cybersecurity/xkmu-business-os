@@ -107,11 +107,10 @@ describe('GET /api/v1/portal/certificate-requests (admin)', () => {
     mockAuthContext(authFixture())
   })
 
-  it('returns pending list', async () => {
+  it('defaults to status=requested when no query param', async () => {
+    const listByStatus = vi.fn().mockResolvedValue([certFixture()])
     vi.doMock('@/lib/services/course-certificate.service', () => ({
-      CourseCertificateService: {
-        listPending: vi.fn().mockResolvedValue([certFixture()]),
-      },
+      CourseCertificateService: { listByStatus },
       CourseCertificateError: CertErr,
     }))
     const { GET } = await import('@/app/api/v1/portal/certificate-requests/route')
@@ -119,6 +118,71 @@ describe('GET /api/v1/portal/certificate-requests (admin)', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.data).toHaveLength(1)
+    expect(listByStatus).toHaveBeenCalledWith('requested')
+  })
+
+  it('filters by status=issued', async () => {
+    const listByStatus = vi.fn().mockResolvedValue([certFixture({ status: 'issued' })])
+    vi.doMock('@/lib/services/course-certificate.service', () => ({
+      CourseCertificateService: { listByStatus },
+      CourseCertificateError: CertErr,
+    }))
+    const { GET } = await import('@/app/api/v1/portal/certificate-requests/route')
+    const res = await GET(createTestRequest('GET', '/x?status=issued'))
+    expect(res.status).toBe(200)
+    expect(listByStatus).toHaveBeenCalledWith('issued')
+  })
+
+  it('returns empty array on invalid status param', async () => {
+    vi.doMock('@/lib/services/course-certificate.service', () => ({
+      CourseCertificateService: { listByStatus: vi.fn() },
+      CourseCertificateError: CertErr,
+    }))
+    const { GET } = await import('@/app/api/v1/portal/certificate-requests/route')
+    const res = await GET(createTestRequest('GET', '/x?status=banana'))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data).toEqual([])
+  })
+})
+
+describe('POST /api/v1/portal/certificate-requests/[id]/revoke', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    setupDbMock()
+    mockAuthContext(authFixture())
+  })
+
+  it('revokes issued certificate', async () => {
+    vi.doMock('@/lib/services/course-certificate.service', () => ({
+      CourseCertificateService: {
+        revoke: vi.fn().mockResolvedValue(certFixture({ status: 'revoked', reviewComment: 'fraud' })),
+      },
+      CourseCertificateError: CertErr,
+    }))
+    const { POST } = await import('@/app/api/v1/portal/certificate-requests/[id]/revoke/route')
+    const res = await POST(
+      createTestRequest('POST', '/x', { reviewComment: 'fraud' }),
+      { params: createTestParams({ id: CERT_ID }) },
+    )
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.data.status).toBe('revoked')
+  })
+
+  it('returns 409 when not in issued state (BAD_STATE)', async () => {
+    vi.doMock('@/lib/services/course-certificate.service', () => ({
+      CourseCertificateService: {
+        revoke: vi.fn().mockRejectedValue(new CertErr('BAD_STATE', 'nicht issued')),
+      },
+      CourseCertificateError: CertErr,
+    }))
+    const { POST } = await import('@/app/api/v1/portal/certificate-requests/[id]/revoke/route')
+    const res = await POST(
+      createTestRequest('POST', '/x', {}),
+      { params: createTestParams({ id: CERT_ID }) },
+    )
+    expect(res.status).toBe(409)
   })
 })
 

@@ -6,7 +6,14 @@ const DESIGN_KEY = 'design'
 
 interface DesignSettings {
   appUrl?: string
+  brandColor?: string
+  logoUrl?: string
   [key: string]: unknown
+}
+
+export interface BrandingSettings {
+  brandColor: string | null
+  logoUrl: string | null
 }
 
 async function getDesign(): Promise<DesignSettings> {
@@ -33,5 +40,17 @@ export const CmsDesignService = {
       || process.env.NEXTAUTH_URL
       || 'http://localhost:3000'
     return raw.replace(/\/+$/, '')
+  },
+
+  /**
+   * Branding fuer ausgehende Artefakte (PDFs, Email-Header etc.).
+   * Beide Felder optional — Konsumenten greifen auf eigene Defaults zurueck.
+   */
+  async getBranding(): Promise<BrandingSettings> {
+    const design = await getDesign()
+    return {
+      brandColor: design.brandColor?.trim() || null,
+      logoUrl: design.logoUrl?.trim() || null,
+    }
   },
 }
