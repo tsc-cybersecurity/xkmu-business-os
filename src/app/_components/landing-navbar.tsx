@@ -129,12 +129,6 @@ export function LandingNavbar() {
               {item.name}
             </Link>
           ))}
-          <Link
-            href="/kurse"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] dark:hover:text-[var(--brand-400)] transition-colors"
-          >
-            Kurse
-          </Link>
 
           {user ? (
             <DropdownMenu>
@@ -255,13 +249,6 @@ export function LandingNavbar() {
                 {item.name}
               </Link>
             ))}
-            <Link
-              href="/kurse"
-              className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] py-2 border-b border-gray-100 dark:border-slate-800"
-              onClick={() => setMobileOpen(false)}
-            >
-              Kurse
-            </Link>
 
             {user ? (
               <>
