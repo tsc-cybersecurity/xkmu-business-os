@@ -1,8 +1,13 @@
 import { db } from '@/lib/db'
-import { courseLessonProgress, courseLessons } from '@/lib/db/schema'
+import { courses, courseLessonProgress, courseLessons, courseModules } from '@/lib/db/schema'
 import type { CourseLessonProgress } from '@/lib/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
+import { computeLockedLessonIds, sortLessonsForOutline } from '@/lib/utils/course-sequential'
+
+export class CourseLessonProgressError extends Error {
+  constructor(public code: string, message: string) { super(message) }
+}
 
 export interface CourseProgressSummary {
   completed: number
@@ -25,6 +30,38 @@ export const CourseLessonProgressService = {
       ))
       .limit(1)
     if (existing) return existing
+
+    // Sequential mode: reject if any earlier lesson isn't completed yet.
+    const [course] = await db
+      .select({ enforceSequential: courses.enforceSequential })
+      .from(courses)
+      .where(eq(courses.id, courseId))
+      .limit(1)
+    if (course?.enforceSequential) {
+      const [allLessons, allModules, completedRows] = await Promise.all([
+        db.select().from(courseLessons).where(eq(courseLessons.courseId, courseId)),
+        db.select().from(courseModules).where(eq(courseModules.courseId, courseId)),
+        db
+          .select({ lessonId: courseLessonProgress.lessonId })
+          .from(courseLessonProgress)
+          .where(and(
+            eq(courseLessonProgress.userId, userId),
+            eq(courseLessonProgress.courseId, courseId),
+          )),
+      ])
+      const sorted = sortLessonsForOutline(allLessons, allModules)
+      const locked = computeLockedLessonIds({
+        course: { enforceSequential: true },
+        sortedLessons: sorted,
+        completedLessonIds: completedRows.map((r) => r.lessonId),
+      })
+      if (locked.has(lessonId)) {
+        throw new CourseLessonProgressError(
+          'LESSON_LOCKED',
+          'Lektion ist gesperrt — bitte vorherige Lektionen abschließen.',
+        )
+      }
+    }
 
     const [row] = await db
       .insert(courseLessonProgress)

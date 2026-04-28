@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
-import { apiSuccess, apiUnauthorized, apiServerError } from '@/lib/utils/api-response'
-import { CourseLessonProgressService } from '@/lib/services/course-lesson-progress.service'
+import { apiSuccess, apiUnauthorized, apiServerError, apiError } from '@/lib/utils/api-response'
+import { CourseLessonProgressService, CourseLessonProgressError } from '@/lib/services/course-lesson-progress.service'
 import { getSession } from '@/lib/auth/session'
 import { logger } from '@/lib/utils/logger'
 
@@ -14,6 +14,9 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     const row = await CourseLessonProgressService.markCompleted(session.user.id, courseId, lessonId)
     return apiSuccess(row)
   } catch (err) {
+    if (err instanceof CourseLessonProgressError && err.code === 'LESSON_LOCKED') {
+      return apiError(err.code, err.message, 409)
+    }
     logger.error('Lesson complete failed', err, { module: 'CourseLessonProgressAPI' })
     return apiServerError()
   }

@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 
 interface Props {
   prev: { courseSlug: string; lessonSlug: string } | null
-  next: { courseSlug: string; lessonSlug: string } | null
+  next: { courseSlug: string; lessonSlug: string; locked?: boolean } | null
   basePath: '/kurse' | '/portal/kurse'
 }
 
@@ -22,12 +22,19 @@ export function LessonPrevNextNav({ prev, next, basePath }: Props) {
         <span />
       )}
       {next ? (
-        <Button asChild>
-          <Link href={`${basePath}/${next.courseSlug}/${next.lessonSlug}`}>
+        next.locked ? (
+          <Button disabled title="Schließe diese Lektion ab, um weiterzugehen">
+            <Lock className="mr-1 h-4 w-4" />
             Nächste Lektion
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Link>
-        </Button>
+          </Button>
+        ) : (
+          <Button asChild>
+            <Link href={`${basePath}/${next.courseSlug}/${next.lessonSlug}`}>
+              Nächste Lektion
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Link>
+          </Button>
+        )
       ) : (
         <span />
       )}

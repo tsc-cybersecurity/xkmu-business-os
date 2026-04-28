@@ -13,6 +13,8 @@ interface Props {
   lessons: CourseLesson[]
   currentLessonId: string
   basePath: '/kurse' | '/portal/kurse'
+  completedLessonIds?: string[]
+  lockedLessonIds?: string[]
 }
 
 export function LessonTocSheet(props: Props) {

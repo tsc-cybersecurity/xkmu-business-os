@@ -32,6 +32,12 @@ export default async function PortalLessonPage({ params }: Props) {
     ? await CourseCertificateService.getForUserCourse(userId, ctx.course.id)
     : null
   const eligibleForRequest = (ctx.progress?.percentage ?? 0) >= 100
+  const lockedSet = new Set(ctx.lockedLessonIds ?? [])
+  const next = ctx.next ? { ...ctx.next, locked: false } : null
+  if (next && ctx.course.enforceSequential) {
+    const nextLesson = ctx.lessons.find((l) => l.slug === next.lessonSlug)
+    if (nextLesson && lockedSet.has(nextLesson.id)) next.locked = true
+  }
   return (
     <CoursePlayerLayout
       course={ctx.course}
@@ -44,6 +50,8 @@ export default async function PortalLessonPage({ params }: Props) {
           ? { completed: ctx.progress.completed, total: ctx.progress.total, percentage: ctx.progress.percentage }
           : undefined
       }
+      completedLessonIds={ctx.progress?.completedLessonIds}
+      lockedLessonIds={ctx.lockedLessonIds}
     >
       <LessonVideoPlayer
         videoAsset={videoAsset}
@@ -61,7 +69,7 @@ export default async function PortalLessonPage({ params }: Props) {
         assets={ctx.assets}
         completion={completion}
       />
-      <LessonPrevNextNav prev={ctx.prev} next={ctx.next} basePath="/portal/kurse" />
+      <LessonPrevNextNav prev={ctx.prev} next={next} basePath="/portal/kurse" />
     </CoursePlayerLayout>
   )
 }

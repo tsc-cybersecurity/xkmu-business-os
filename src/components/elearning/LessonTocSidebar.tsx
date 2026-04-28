@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileText, FolderOpen } from 'lucide-react'
+import { Check, FileText, FolderOpen, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { CourseLesson, CourseModule, Course } from '@/lib/db/schema'
 
@@ -9,10 +9,17 @@ interface Props {
   lessons: CourseLesson[]
   currentLessonId: string
   basePath: '/kurse' | '/portal/kurse'
+  completedLessonIds?: string[]
+  lockedLessonIds?: string[]
 }
 
-export function LessonTocSidebar({ course, modules, lessons, currentLessonId, basePath }: Props) {
+export function LessonTocSidebar({
+  course, modules, lessons, currentLessonId, basePath,
+  completedLessonIds, lockedLessonIds,
+}: Props) {
   const useModules = modules.length > 0
+  const completed = new Set(completedLessonIds ?? [])
+  const locked = new Set(lockedLessonIds ?? [])
   return (
     <nav aria-label="Lektionen" className="space-y-3 text-sm">
       <div className="border-b pb-2">
@@ -37,6 +44,8 @@ export function LessonTocSidebar({ course, modules, lessons, currentLessonId, ba
                     courseSlug={course.slug}
                     basePath={basePath}
                     active={l.id === currentLessonId}
+                    completed={completed.has(l.id)}
+                    locked={locked.has(l.id)}
                   />
                 ))}
               </ul>
@@ -52,6 +61,8 @@ export function LessonTocSidebar({ course, modules, lessons, currentLessonId, ba
               courseSlug={course.slug}
               basePath={basePath}
               active={l.id === currentLessonId}
+              completed={completed.has(l.id)}
+              locked={locked.has(l.id)}
             />
           ))}
         </ul>
@@ -61,13 +72,30 @@ export function LessonTocSidebar({ course, modules, lessons, currentLessonId, ba
 }
 
 function LessonLink({
-  lesson, courseSlug, basePath, active,
+  lesson, courseSlug, basePath, active, completed, locked,
 }: {
   lesson: CourseLesson
   courseSlug: string
   basePath: '/kurse' | '/portal/kurse'
   active: boolean
+  completed: boolean
+  locked: boolean
 }) {
+  const Icon = completed ? Check : locked ? Lock : FileText
+  if (locked) {
+    return (
+      <li>
+        <span
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-muted-foreground/60 cursor-not-allowed"
+          title="Vorherige Lektion zuerst abschließen"
+          aria-disabled="true"
+        >
+          <Icon className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">{lesson.title}</span>
+        </span>
+      </li>
+    )
+  }
   return (
     <li>
       <Link
@@ -80,7 +108,7 @@ function LessonLink({
         )}
         aria-current={active ? 'page' : undefined}
       >
-        <FileText className="h-3.5 w-3.5 shrink-0" />
+        <Icon className={cn('h-3.5 w-3.5 shrink-0', completed && 'text-green-600')} />
         <span className="truncate">{lesson.title}</span>
       </Link>
     </li>

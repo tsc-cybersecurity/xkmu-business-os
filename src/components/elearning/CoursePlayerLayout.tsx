@@ -9,11 +9,14 @@ interface Props {
   currentLessonId: string
   basePath: '/kurse' | '/portal/kurse'
   progress?: { completed: number; total: number; percentage: number }
+  completedLessonIds?: string[]
+  lockedLessonIds?: string[]
   children: React.ReactNode
 }
 
 export function CoursePlayerLayout({
-  course, modules, lessons, currentLessonId, basePath, progress, children,
+  course, modules, lessons, currentLessonId, basePath, progress,
+  completedLessonIds, lockedLessonIds, children,
 }: Props) {
   return (
     <div className="grid gap-6 md:grid-cols-[260px_1fr]">
@@ -24,6 +27,8 @@ export function CoursePlayerLayout({
           lessons={lessons}
           currentLessonId={currentLessonId}
           basePath={basePath}
+          completedLessonIds={completedLessonIds}
+          lockedLessonIds={lockedLessonIds}
         />
       </aside>
       <div className="space-y-4">
@@ -34,6 +39,8 @@ export function CoursePlayerLayout({
             lessons={lessons}
             currentLessonId={currentLessonId}
             basePath={basePath}
+            completedLessonIds={completedLessonIds}
+            lockedLessonIds={lockedLessonIds}
           />
         </div>
         {progress && (

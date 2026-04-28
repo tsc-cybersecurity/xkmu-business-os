@@ -3,6 +3,7 @@ import { courses, courseModules, courseLessons, courseAssets, courseLessonBlocks
 import type { Course, CourseModule, CourseLesson, CourseAsset, CourseLessonBlock } from '@/lib/db/schema'
 import { eq, and, ilike, desc, asc, sql, inArray } from 'drizzle-orm'
 import { CourseAccessService } from './course-access.service'
+import { computeLockedLessonIds, sortLessonsForOutline } from '@/lib/utils/course-sequential'
 
 export interface PublicListFilter {
   q?: string
@@ -14,6 +15,8 @@ export interface PublicCourseDetail {
   course: Course
   modules: CourseModule[]
   lessons: CourseLesson[]
+  /** Lessons currently locked by enforceSequential (only populated for portal+userId). */
+  lockedLessonIds?: string[]
 }
 
 export interface PublicLessonContext {
@@ -32,6 +35,8 @@ export interface PublicLessonContext {
     total: number
     percentage: number
   }
+  /** Lessons currently locked by enforceSequential (only populated for portal+userId). */
+  lockedLessonIds?: string[]
 }
 
 type Visibility = 'public' | 'portal' | 'both'
@@ -88,7 +93,24 @@ async function getBySurfaceAndSlug(
     db.select().from(courseModules).where(eq(courseModules.courseId, course.id)),
     db.select().from(courseLessons).where(eq(courseLessons.courseId, course.id)),
   ])
-  return { course, modules, lessons }
+
+  let lockedLessonIds: string[] | undefined
+  if (surface === 'portal' && userId && course.enforceSequential) {
+    const progressRows = await db
+      .select({ lessonId: courseLessonProgress.lessonId })
+      .from(courseLessonProgress)
+      .where(and(
+        eq(courseLessonProgress.userId, userId),
+        eq(courseLessonProgress.courseId, course.id),
+      ))
+    const completed = new Set(progressRows.map((r) => r.lessonId))
+    const sorted = sortLessonsForOutline(lessons, modules)
+    lockedLessonIds = Array.from(computeLockedLessonIds({
+      course, sortedLessons: sorted, completedLessonIds: completed,
+    }))
+  }
+
+  return { course, modules, lessons, lockedLessonIds }
 }
 
 async function getLessonBySurface(
@@ -117,13 +139,7 @@ async function getLessonBySurface(
     ))
     .orderBy(asc(courseLessonBlocks.position))
 
-  const modulePositions = new Map(detail.modules.map((m) => [m.id, m.position]))
-  const sortedLessons = [...detail.lessons].sort((a, b) => {
-    const aPos = a.moduleId ? (modulePositions.get(a.moduleId) ?? Number.MAX_SAFE_INTEGER) : Number.MAX_SAFE_INTEGER
-    const bPos = b.moduleId ? (modulePositions.get(b.moduleId) ?? Number.MAX_SAFE_INTEGER) : Number.MAX_SAFE_INTEGER
-    if (aPos !== bPos) return aPos - bPos
-    return a.position - b.position
-  })
+  const sortedLessons = sortLessonsForOutline(detail.lessons, detail.modules)
 
   const idx = sortedLessons.findIndex((l) => l.id === lesson.id)
   const prevL = idx > 0 ? sortedLessons[idx - 1] : null
@@ -131,6 +147,7 @@ async function getLessonBySurface(
 
   // Sub-3a: per-user progress (nur portal-Pfad mit userId).
   let progress: PublicLessonContext['progress']
+  let lockedLessonIds: string[] | undefined
   if (userId && surface === 'portal') {
     const progressRows = await db
       .select({ lessonId: courseLessonProgress.lessonId })
@@ -144,6 +161,17 @@ async function getLessonBySurface(
     const completed = completedLessonIds.length
     const percentage = total === 0 ? 0 : Math.round((completed / total) * 100)
     progress = { completedLessonIds, completed, total, percentage }
+
+    if (detail.course.enforceSequential) {
+      const lockedSet = computeLockedLessonIds({
+        course: detail.course,
+        sortedLessons,
+        completedLessonIds,
+      })
+      lockedLessonIds = Array.from(lockedSet)
+      // Server-side enforcement: deny direct URL access to a locked lesson.
+      if (lockedSet.has(lesson.id)) return null
+    }
   }
 
   return {
@@ -156,6 +184,7 @@ async function getLessonBySurface(
     prev: prevL ? { courseSlug: detail.course.slug, lessonSlug: prevL.slug } : null,
     next: nextL ? { courseSlug: detail.course.slug, lessonSlug: nextL.slug } : null,
     progress,
+    lockedLessonIds,
   }
 }
 
