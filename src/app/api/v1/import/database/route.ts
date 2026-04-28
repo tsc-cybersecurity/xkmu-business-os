@@ -11,12 +11,16 @@ export const dynamic = 'force-dynamic'
 const IMPORT_ORDER = [
   // Grundstruktur
   'organization', 'roles', 'role_permissions', 'users', 'api_keys',
+  // Benutzergruppen (vor Inhalten, die darauf referenzieren)
+  'user_groups', 'user_group_members',
   // Kontakte & Katalog
   'companies', 'persons', 'leads', 'opportunities', 'product_categories', 'products',
+  'company_change_requests',
   // KI & Integrationen
-  'ai_providers', 'ai_logs', 'ai_prompt_templates', 'n8n_connections', 'n8n_workflow_logs',
+  'ai_providers', 'ai_logs', 'ai_prompt_templates', 'custom_ai_prompts',
+  'n8n_connections', 'n8n_workflow_logs',
   // Allgemein
-  'ideas', 'activities', 'webhooks', 'audit_log',
+  'ideas', 'activities', 'webhooks', 'audit_log', 'audit_logs',
   'documents', 'document_items', 'document_templates', 'email_templates',
   // Management Framework v2 (deliverables vor sop_documents)
   'deliverable_modules', 'deliverables', 'execution_logs',
@@ -38,7 +42,7 @@ const IMPORT_ORDER = [
   // CMS & Blog
   'cms_block_type_definitions', 'cms_settings',
   'cms_pages', 'cms_blocks', 'cms_block_templates', 'cms_navigation_items',
-  'blog_posts', 'media_uploads', 'generated_images',
+  'blog_categories', 'blog_posts', 'media_uploads', 'generated_images',
   // Business Intelligence
   'company_researches', 'firecrawl_researches', 'business_documents', 'business_profiles',
   // Marketing & Social Media
@@ -64,6 +68,14 @@ const IMPORT_ORDER = [
   'okr_cycles', 'okr_objectives', 'okr_key_results', 'okr_checkins',
   // SOP (after deliverables)
   'sop_documents', 'sop_steps', 'sop_versions',
+  // Portal-Inhalte (nach companies, users)
+  'portal_document_categories', 'portal_documents', 'portal_messages',
+  'order_categories', 'orders',
+  // Onlinekurse (courses → modules → lessons → blocks/assets/quiz)
+  'courses', 'course_modules', 'course_lessons',
+  'course_assets', 'course_lesson_blocks', 'course_lesson_progress',
+  'course_certificates', 'course_assignments', 'course_access_grants',
+  'course_quizzes', 'course_quiz_questions', 'course_quiz_attempts',
 ]
 
 // Löschreihenfolge = umgekehrt (Children vor Parents)

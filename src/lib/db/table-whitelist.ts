@@ -121,10 +121,24 @@ export const TENANT_TABLES = [
   'okr_objectives',
   'sop_documents',
   'grundschutz_assets',
-  'course_assets',
-  'course_lessons',
-  'course_modules',
   'courses',
+  'course_modules',
+  'course_lessons',
+  'course_assets',
+  'course_certificates',
+  'course_assignments',
+  'course_access_grants',
+  'course_quizzes',
+  'user_groups',
+  'audit_logs',
+  'blog_categories',
+  'company_change_requests',
+  'custom_ai_prompts',
+  'order_categories',
+  'orders',
+  'portal_document_categories',
+  'portal_documents',
+  'portal_messages',
 ]
 
 // Join/child tables that reference a parent (exported via JOIN)
@@ -147,6 +161,11 @@ export const JOIN_TABLES: Array<{
   { table: 'grundschutz_asset_controls', parentTable: 'grundschutz_assets', foreignKey: 'asset_id', parentForeignKey: 'id' },
   { table: 'grundschutz_asset_relations', parentTable: 'grundschutz_assets', foreignKey: 'source_asset_id', parentForeignKey: 'id' },
   { table: 'grundschutz_control_links', parentTable: 'grundschutz_assets', foreignKey: 'asset_id', parentForeignKey: 'id' },
+  { table: 'user_group_members', parentTable: 'user_groups', foreignKey: 'group_id', parentForeignKey: 'id' },
+  { table: 'course_lesson_blocks', parentTable: 'course_lessons', foreignKey: 'lesson_id', parentForeignKey: 'id' },
+  { table: 'course_lesson_progress', parentTable: 'course_lessons', foreignKey: 'lesson_id', parentForeignKey: 'id' },
+  { table: 'course_quiz_questions', parentTable: 'course_quizzes', foreignKey: 'quiz_id', parentForeignKey: 'id' },
+  { table: 'course_quiz_attempts', parentTable: 'course_quizzes', foreignKey: 'quiz_id', parentForeignKey: 'id' },
 ]
 
 // Legacy bucket — unused now
