@@ -33,6 +33,7 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'email_sync', label: 'E-Mail Sync (alle Accounts)' },
   { value: 'workflow', label: 'Workflow auslösen' },
   { value: 'api_call', label: 'API-Endpoint aufrufen' },
+  { value: 'course_assignment_reminders', label: 'Pflichtkurs-Erinnerungen versenden' },
   { value: 'custom', label: 'Benutzerdefiniert' },
 ]
 
@@ -194,6 +195,12 @@ export const CronService = {
           const { TaskQueueService } = await import('./task-queue.service')
           const result = await TaskQueueService.executeAllPending()
           msg = `Queue processed: ${result.completed} completed, ${result.failed} failed`
+          break
+        }
+        case 'course_assignment_reminders': {
+          const { CourseAssignmentService } = await import('./course-assignment.service')
+          const result = await CourseAssignmentService.processDueReminders()
+          msg = `Reminders: ${result.sent} sent, ${result.skipped} skipped`
           break
         }
         default:

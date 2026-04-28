@@ -3421,3 +3421,28 @@ export interface CourseQuizOption {
   text: string
   isCorrect: boolean
 }
+
+// ============================================
+// Course Assignments (Phase 3) — pflichtkurse mit Deadline + Reminder
+// ============================================
+// An assignment is a "you must do this" — distinct from access grants ("you
+// may see this"). An assignment also implies access. Subject is either a
+// user or a group, mirroring access grants.
+export const courseAssignments = pgTable('course_assignments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  courseId: uuid('course_id').notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  subjectKind: courseAccessSubjectKind('subject_kind').notNull(),
+  subjectId: uuid('subject_id').notNull(),
+  dueDate: timestamp('due_date', { withTimezone: true, mode: 'date' }),
+  assignedBy: uuid('assigned_by').references(() => users.id, { onDelete: 'set null' }),
+  assignedAt: timestamp('assigned_at', { withTimezone: true }).notNull().defaultNow(),
+  lastReminderAt: timestamp('last_reminder_at', { withTimezone: true }),
+}, (table) => [
+  uniqueIndex('uq_course_assignments').on(table.courseId, table.subjectKind, table.subjectId),
+  index('idx_course_assignments_course').on(table.courseId),
+  index('idx_course_assignments_subject').on(table.subjectKind, table.subjectId),
+  index('idx_course_assignments_due').on(table.dueDate),
+])
+
+export type CourseAssignment = typeof courseAssignments.$inferSelect
+export type NewCourseAssignment = typeof courseAssignments.$inferInsert

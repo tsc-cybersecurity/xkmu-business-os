@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { courseAccessGrants, courses, userGroups, userGroupMembers, users } from '@/lib/db/schema'
+import { courseAccessGrants, courseAssignments, courses, userGroups, userGroupMembers, users } from '@/lib/db/schema'
 import type { CourseAccessGrant } from '@/lib/db/schema'
 import { and, eq, inArray, sql } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
@@ -203,16 +203,30 @@ export const CourseAccessService = {
    */
   accessibleCondition(userId: string) {
     return sql`(
-      NOT EXISTS (
-        SELECT 1 FROM ${courseAccessGrants}
-        WHERE ${courseAccessGrants.courseId} = ${courses.id}
+      (
+        NOT EXISTS (
+          SELECT 1 FROM ${courseAccessGrants}
+          WHERE ${courseAccessGrants.courseId} = ${courses.id}
+        )
+        OR EXISTS (
+          SELECT 1 FROM ${courseAccessGrants} cag
+          WHERE cag.course_id = ${courses.id}
+            AND (
+              (cag.subject_kind = 'user' AND cag.subject_id = ${userId})
+              OR (cag.subject_kind = 'group' AND cag.subject_id IN (
+                SELECT ${userGroupMembers.groupId}
+                FROM ${userGroupMembers}
+                WHERE ${userGroupMembers.userId} = ${userId}
+              ))
+            )
+        )
       )
       OR EXISTS (
-        SELECT 1 FROM ${courseAccessGrants} cag
-        WHERE cag.course_id = ${courses.id}
+        SELECT 1 FROM ${courseAssignments} cas
+        WHERE cas.course_id = ${courses.id}
           AND (
-            (cag.subject_kind = 'user' AND cag.subject_id = ${userId})
-            OR (cag.subject_kind = 'group' AND cag.subject_id IN (
+            (cas.subject_kind = 'user' AND cas.subject_id = ${userId})
+            OR (cas.subject_kind = 'group' AND cas.subject_id IN (
               SELECT ${userGroupMembers.groupId}
               FROM ${userGroupMembers}
               WHERE ${userGroupMembers.userId} = ${userId}

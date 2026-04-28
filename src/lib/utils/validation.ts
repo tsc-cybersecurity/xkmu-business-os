@@ -869,3 +869,13 @@ export const reorderQuizQuestionsSchema = z.array(z.object({
 export const submitQuizAttemptSchema = z.object({
   answers: z.record(z.string().uuid(), z.array(z.string())),
 })
+
+// Course Assignments (Phase 3)
+
+export const createCourseAssignmentSchema = z.object({
+  subjectKind: z.enum(['user', 'group']),
+  subjectId: z.string().uuid(),
+  // ISO date string from <input type="date">; null/undefined means no deadline
+  dueDate: z.string().datetime().nullable().optional()
+    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional()),
+})

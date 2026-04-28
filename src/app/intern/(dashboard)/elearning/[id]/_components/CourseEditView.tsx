@@ -12,6 +12,7 @@ import { LoadingSpinner } from '@/components/shared/loading-states'
 import { CourseStammdatenForm } from '../../_components/CourseStammdatenForm'
 import { CourseContentTree } from './CourseContentTree'
 import { CourseAccessTab } from './CourseAccessTab'
+import { CourseAssignmentsTab } from './CourseAssignmentsTab'
 import {
   PublishValidationDialog,
   type PublishProblem,
@@ -242,6 +243,7 @@ export function CourseEditView({ courseId }: { courseId: string }) {
           <TabsTrigger value="stammdaten">Stammdaten</TabsTrigger>
           <TabsTrigger value="inhalt">Inhalt</TabsTrigger>
           <TabsTrigger value="berechtigungen">Berechtigungen</TabsTrigger>
+          <TabsTrigger value="zuweisungen">Zuweisungen</TabsTrigger>
           <TabsTrigger value="vorschau">Vorschau</TabsTrigger>
         </TabsList>
 
@@ -261,6 +263,10 @@ export function CourseEditView({ courseId }: { courseId: string }) {
 
         <TabsContent value="berechtigungen" className="mt-6">
           <CourseAccessTab courseId={course.id} />
+        </TabsContent>
+
+        <TabsContent value="zuweisungen" className="mt-6">
+          <CourseAssignmentsTab courseId={course.id} />
         </TabsContent>
 
         <TabsContent value="vorschau" className="mt-6 space-y-4">
