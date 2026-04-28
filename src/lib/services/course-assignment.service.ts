@@ -12,6 +12,7 @@ import type { CourseAssignment, Course } from '@/lib/db/schema'
 import { and, eq, inArray, sql, gte, lte, or, isNull } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
 import { EmailService } from './email.service'
+import { EmailTemplateService } from './email-template.service'
 import { logger } from '@/lib/utils/logger'
 
 export type SubjectKind = 'user' | 'group'
@@ -301,6 +302,14 @@ export const CourseAssignmentService = {
     const courseRows = await db.select().from(courses).where(inArray(courses.id, courseIds))
     const courseMap = new Map(courseRows.map((c) => [c.id, c]))
 
+    // Load editable email templates with hard-coded fallbacks.
+    const [tplReminder, tplOverdue] = await Promise.all([
+      EmailTemplateService.getBySlug('course_assignment_reminder'),
+      EmailTemplateService.getBySlug('course_assignment_overdue'),
+    ])
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || ''
+
     let sent = 0
     let skipped = 0
     for (const a of dueAssignments) {
@@ -345,16 +354,33 @@ export const CourseAssignmentService = {
         }
         const due = a.dueDate
         const isOverdue = due ? due.getTime() < now.getTime() : false
-        const subject = isOverdue
-          ? `Pflichtkurs überfällig: ${course.title}`
-          : `Erinnerung: Pflichtkurs „${course.title}"`
         const dueStr = due ? due.toLocaleDateString('de-DE') : '—'
-        const greeting = u.firstName ? `Hallo ${u.firstName}` : 'Hallo'
-        const body = isOverdue
-          ? `${greeting},\n\nder Pflichtkurs „${course.title}" ist seit dem ${dueStr} überfällig. Bitte schließe ihn so bald wie möglich ab.\n\nKurs öffnen: /portal/kurse/${course.slug}`
-          : `${greeting},\n\nder Pflichtkurs „${course.title}" ist bis zum ${dueStr} fällig. Bitte schließe ihn rechtzeitig ab.\n\nKurs öffnen: /portal/kurse/${course.slug}`
+        const kursUrl = `${baseUrl}/portal/kurse/${course.slug}`
+        const placeholders: Record<string, string> = {
+          name: u.firstName ?? '',
+          kursTitel: course.title,
+          frist: dueStr,
+          kursUrl,
+        }
+        const tpl = isOverdue ? tplOverdue : tplReminder
+        let subject: string
+        let html: string
+        if (tpl) {
+          subject = EmailTemplateService.applyPlaceholders(tpl.subject, placeholders)
+          html = EmailTemplateService.applyPlaceholders(tpl.bodyHtml, placeholders)
+        } else {
+          // Fallback if template was removed by admin — keep reminders working.
+          subject = isOverdue
+            ? `Pflichtkurs überfällig: ${course.title}`
+            : `Erinnerung: Pflichtkurs „${course.title}"`
+          const greeting = u.firstName ? `Hallo ${u.firstName}` : 'Hallo'
+          html = isOverdue
+            ? `<p>${greeting},</p><p>der Pflichtkurs <strong>${course.title}</strong> ist seit dem ${dueStr} überfällig. Bitte schließe ihn so bald wie möglich ab.</p><p><a href="${kursUrl}">Kurs öffnen</a></p>`
+            : `<p>${greeting},</p><p>der Pflichtkurs <strong>${course.title}</strong> ist bis zum ${dueStr} fällig. Bitte schließe ihn rechtzeitig ab.</p><p><a href="${kursUrl}">Kurs öffnen</a></p>`
+        }
+        const body = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
         try {
-          const result = await EmailService.send({ to: u.email, subject, body })
+          const result = await EmailService.send({ to: u.email, subject, body, html })
           if (result.success) { sent++; perAssignmentSent++ }
           else skipped++
         } catch (err) {

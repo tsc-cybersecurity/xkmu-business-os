@@ -434,6 +434,34 @@ const DEFAULT_EMAIL_TEMPLATES = [
     ],
   },
   {
+    slug: 'course_assignment_reminder',
+    name: 'Pflichtkurs: Erinnerung (fällig)',
+    subject: 'Erinnerung: Pflichtkurs „{{kursTitel}}"',
+    bodyHtml: `<p>Hallo {{name}},</p>
+<p>der Pflichtkurs <strong>{{kursTitel}}</strong> ist bis zum <strong>{{frist}}</strong> faellig. Bitte schliessen Sie ihn rechtzeitig ab.</p>
+<p><a href="{{kursUrl}}">Kurs oeffnen</a></p>`,
+    placeholders: [
+      { key: 'name', label: 'Name', description: 'Vorname des Empfaengers (oder leer)' },
+      { key: 'kursTitel', label: 'Kurs-Titel', description: 'Titel des Pflichtkurses' },
+      { key: 'frist', label: 'Frist', description: 'Faelligkeitsdatum (deutsches Format)' },
+      { key: 'kursUrl', label: 'Kurs-URL', description: 'Vollstaendige URL zur Kurslandung im Portal' },
+    ],
+  },
+  {
+    slug: 'course_assignment_overdue',
+    name: 'Pflichtkurs: Erinnerung (ueberfaellig)',
+    subject: 'Pflichtkurs ueberfaellig: {{kursTitel}}',
+    bodyHtml: `<p>Hallo {{name}},</p>
+<p>der Pflichtkurs <strong>{{kursTitel}}</strong> ist seit dem <strong>{{frist}}</strong> ueberfaellig. Bitte schliessen Sie ihn so bald wie moeglich ab.</p>
+<p><a href="{{kursUrl}}">Kurs oeffnen</a></p>`,
+    placeholders: [
+      { key: 'name', label: 'Name', description: 'Vorname des Empfaengers (oder leer)' },
+      { key: 'kursTitel', label: 'Kurs-Titel', description: 'Titel des Pflichtkurses' },
+      { key: 'frist', label: 'Frist', description: 'Faelligkeitsdatum (deutsches Format)' },
+      { key: 'kursUrl', label: 'Kurs-URL', description: 'Vollstaendige URL zur Kurslandung im Portal' },
+    ],
+  },
+  {
     slug: 'meeting_invite',
     name: 'Termineinladung',
     subject: 'Terminvorschlag: {{betreff}}',
