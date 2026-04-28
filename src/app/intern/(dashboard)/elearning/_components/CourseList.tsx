@@ -112,12 +112,19 @@ export function CourseList() {
             Kurse anlegen, strukturieren und veröffentlichen
           </p>
         </div>
-        <Button asChild className="self-start sm:self-auto">
-          <Link href="/intern/elearning/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Neuer Kurs
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2 self-start sm:self-auto">
+          <Button asChild variant="outline">
+            <Link href="/intern/elearning/berichte">
+              Berichte
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/intern/elearning/new">
+              <Plus className="mr-2 h-4 w-4" />
+              Neuer Kurs
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
