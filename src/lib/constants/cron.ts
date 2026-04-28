@@ -11,5 +11,6 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'workflow', label: 'Workflow auslösen' },
   { value: 'api_call', label: 'API-Endpoint aufrufen' },
   { value: 'process_queue', label: 'Task-Queue abarbeiten (ausstehende Tasks)' },
+  { value: 'course_assignment_reminders', label: 'Pflichtkurs-Erinnerungen versenden' },
   { value: 'custom', label: 'Benutzerdefiniert' },
 ]
