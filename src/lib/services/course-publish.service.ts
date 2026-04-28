@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
-import { courses, courseLessons, courseModules, courseAssets } from '@/lib/db/schema'
+import { courses, courseLessons, courseModules, courseAssets, courseLessonBlocks } from '@/lib/db/schema'
 import type { Course } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
 import type { Actor } from './course.service'
 import { invalidateAssetAccessByCourse } from '@/lib/utils/course-asset-acl'
@@ -30,6 +30,15 @@ export const CoursePublishService = {
     const lessonAssetCount = new Map<string, number>()
     for (const a of assets) if (a.lessonId) lessonAssetCount.set(a.lessonId, (lessonAssetCount.get(a.lessonId) ?? 0) + 1)
 
+    const lessonBlockCount = new Map<string, number>()
+    if (lessons.length > 0) {
+      const blocks = await db
+        .select({ lessonId: courseLessonBlocks.lessonId })
+        .from(courseLessonBlocks)
+        .where(inArray(courseLessonBlocks.lessonId, lessons.map((l) => l.id)))
+      for (const b of blocks) lessonBlockCount.set(b.lessonId, (lessonBlockCount.get(b.lessonId) ?? 0) + 1)
+    }
+
     const problems: PublishProblem[] = []
 
     if (!course.slug) problems.push({ code: 'COURSE_SLUG_MISSING', message: 'Kurs hat keinen Slug' })
@@ -46,7 +55,13 @@ export const CoursePublishService = {
     for (const l of lessons) {
       if (!l.title) problems.push({ lessonId: l.id, code: 'LESSON_TITLE_MISSING', message: 'Lektion ohne Titel' })
       if (!l.slug) problems.push({ lessonId: l.id, code: 'LESSON_SLUG_MISSING', message: 'Lektion ohne Slug' })
-      const hasContent = !!(l.contentMarkdown || l.videoAssetId || l.videoExternalUrl || (lessonAssetCount.get(l.id) ?? 0) > 0)
+      const hasContent = !!(
+        l.contentMarkdown ||
+        l.videoAssetId ||
+        l.videoExternalUrl ||
+        (lessonAssetCount.get(l.id) ?? 0) > 0 ||
+        (lessonBlockCount.get(l.id) ?? 0) > 0
+      )
       if (!hasContent) {
         problems.push({ lessonId: l.id, code: 'LESSON_EMPTY', message: `Lektion '${l.title}' hat keinen Inhalt` })
       }

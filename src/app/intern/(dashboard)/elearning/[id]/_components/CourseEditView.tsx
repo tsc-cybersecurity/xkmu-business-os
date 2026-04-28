@@ -21,6 +21,7 @@ import { logger } from '@/lib/utils/logger'
 export interface CourseModule {
   id: string
   title: string
+  description: string | null
   position: number
 }
 

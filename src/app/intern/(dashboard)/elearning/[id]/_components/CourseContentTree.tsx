@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import {
@@ -12,6 +12,8 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Select,
@@ -20,8 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog'
 import { EmptyState } from '@/components/shared/empty-state'
-import { GripVertical, Plus, Trash2, FolderOpen, FileText, ListTree } from 'lucide-react'
+import { GripVertical, Pencil, Plus, Trash2, FolderOpen, FileText, ListTree } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CourseModule, CourseLesson } from './CourseEditView'
 
@@ -102,6 +107,7 @@ export function CourseContentTree({
   const [newModuleTitle, setNewModuleTitle] = useState('')
   const [newLessonTitle, setNewLessonTitle] = useState('')
   const [newLessonModuleId, setNewLessonModuleId] = useState<string | null>(null)
+  const [editingModule, setEditingModule] = useState<CourseModule | null>(null)
 
   async function addModule() {
     if (!newModuleTitle) return
@@ -149,6 +155,22 @@ export function CourseContentTree({
     await fetch(`/api/v1/courses/${courseId}/modules/${id}`, { method: 'DELETE' })
     toast.success('Modul gelöscht')
     onChange()
+  }
+
+  async function saveModule(id: string, patch: { title: string; description: string | null }) {
+    const res = await fetch(`/api/v1/courses/${courseId}/modules/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    })
+    const body = await res.json()
+    if (body.success) {
+      toast.success('Modul gespeichert')
+      setEditingModule(null)
+      onChange()
+    } else {
+      toast.error(body.error?.message ?? 'Speichern fehlgeschlagen')
+    }
   }
 
   async function reorderLessons(reordered: CourseLesson[]) {
@@ -279,15 +301,25 @@ export function CourseContentTree({
                               <FolderOpen className="h-4 w-4" />
                               {m.title}
                             </span>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              aria-label="Modul löschen"
-                              title="Modul löschen"
-                              onClick={() => deleteModule(m.id, m.title)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingModule(m)}
+                              >
+                                <Pencil className="mr-1 h-4 w-4" />
+                                Bearbeiten
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                aria-label="Modul löschen"
+                                title="Modul löschen"
+                                onClick={() => deleteModule(m.id, m.title)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
                           </div>
                           {moduleLessons.length === 0 ? (
                             <p className="ml-6 text-xs text-muted-foreground">
@@ -382,6 +414,80 @@ export function CourseContentTree({
           </CardContent>
         </Card>
       </div>
+
+      <ModuleEditDialog
+        module={editingModule}
+        onClose={() => setEditingModule(null)}
+        onSave={saveModule}
+      />
     </div>
+  )
+}
+
+function ModuleEditDialog({
+  module,
+  onClose,
+  onSave,
+}: {
+  module: CourseModule | null
+  onClose: () => void
+  onSave: (id: string, patch: { title: string; description: string | null }) => Promise<void>
+}) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!module) return
+    setTitle(module.title)
+    setDescription(module.description ?? '')
+  }, [module])
+
+  if (!module) return null
+
+  async function submit() {
+    if (!module || !title.trim()) return
+    setBusy(true)
+    try {
+      await onSave(module.id, {
+        title: title.trim(),
+        description: description.trim() ? description.trim() : null,
+      })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Dialog open={!!module} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Modul bearbeiten</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="module-title">Titel</Label>
+            <Input
+              id="module-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="module-description">Beschreibung</Label>
+            <Textarea
+              id="module-description"
+              rows={4}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Abbrechen</Button>
+          <Button onClick={submit} disabled={busy || !title.trim()}>Speichern</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

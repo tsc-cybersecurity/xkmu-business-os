@@ -60,34 +60,36 @@ export function LessonBlockEditDialog({ block, fields, onClose, onSave }: Props)
 
   return (
     <Dialog open={!!block} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col gap-0 p-0">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle>
             {block.kind === 'markdown' ? 'Markdown' : block.blockType} bearbeiten
           </DialogTitle>
         </DialogHeader>
 
-        {block.kind === 'markdown' ? (
-          <Textarea
-            value={markdownBody}
-            onChange={(e) => setMarkdownBody(e.target.value)}
-            rows={15}
-            className="font-mono text-sm"
-          />
-        ) : (
-          <div className="space-y-4">
-            {fields.map((f) => (
-              <FieldEditor
-                key={f.name}
-                field={f}
-                value={content[f.name]}
-                onChange={(v) => setContent({ ...content, [f.name]: v })}
-              />
-            ))}
-          </div>
-        )}
+        <div className="flex-1 overflow-y-auto p-6">
+          {block.kind === 'markdown' ? (
+            <Textarea
+              value={markdownBody}
+              onChange={(e) => setMarkdownBody(e.target.value)}
+              rows={15}
+              className="font-mono text-sm"
+            />
+          ) : (
+            <div className="space-y-4">
+              {fields.map((f) => (
+                <FieldEditor
+                  key={f.name}
+                  field={f}
+                  value={content[f.name]}
+                  onChange={(v) => setContent({ ...content, [f.name]: v })}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
-        <DialogFooter>
+        <DialogFooter className="p-6 pt-4 border-t bg-background">
           <Button variant="ghost" onClick={onClose}>Abbrechen</Button>
           <Button onClick={save} disabled={busy}>Speichern</Button>
         </DialogFooter>
