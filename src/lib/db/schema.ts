@@ -3359,3 +3359,65 @@ export const courseAccessGrants = pgTable('course_access_grants', {
 
 export type CourseAccessGrant = typeof courseAccessGrants.$inferSelect
 export type NewCourseAccessGrant = typeof courseAccessGrants.$inferInsert
+
+// ============================================
+// Course Quizzes (Phase 2)
+// ============================================
+// One optional quiz per lesson. When present, lesson completion requires
+// a passing attempt (score >= passThreshold). Manual "mark completed" is
+// blocked while a quiz exists.
+export const courseQuizzes = pgTable('course_quizzes', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  lessonId: uuid('lesson_id').notNull().references(() => courseLessons.id, { onDelete: 'cascade' }),
+  passThreshold: integer('pass_threshold').notNull().default(70), // 0–100
+  allowRetake: boolean('allow_retake').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('uq_course_quizzes_lesson').on(table.lessonId),
+])
+
+export const courseQuizQuestionKind = pgEnum('course_quiz_question_kind', [
+  'single', 'multiple', 'truefalse',
+])
+
+// Options live as JSONB inside questions: [{ id, text, isCorrect }].
+export const courseQuizQuestions = pgTable('course_quiz_questions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  quizId: uuid('quiz_id').notNull().references(() => courseQuizzes.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull(),
+  kind: courseQuizQuestionKind('kind').notNull(),
+  prompt: text('prompt').notNull(),
+  options: jsonb('options').notNull().default([]),
+  explanation: text('explanation'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_course_quiz_questions_quiz').on(table.quizId, table.position),
+])
+
+// Attempts capture user submissions. answers is JSONB: { [questionId]: string[] }.
+export const courseQuizAttempts = pgTable('course_quiz_attempts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  quizId: uuid('quiz_id').notNull().references(() => courseQuizzes.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  score: integer('score').notNull(), // 0–100
+  passed: boolean('passed').notNull(),
+  answers: jsonb('answers').notNull().default({}),
+  completedAt: timestamp('completed_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_course_quiz_attempts_quiz_user').on(table.quizId, table.userId, table.completedAt),
+])
+
+export type CourseQuiz = typeof courseQuizzes.$inferSelect
+export type NewCourseQuiz = typeof courseQuizzes.$inferInsert
+export type CourseQuizQuestion = typeof courseQuizQuestions.$inferSelect
+export type NewCourseQuizQuestion = typeof courseQuizQuestions.$inferInsert
+export type CourseQuizAttempt = typeof courseQuizAttempts.$inferSelect
+export type NewCourseQuizAttempt = typeof courseQuizAttempts.$inferInsert
+
+export interface CourseQuizOption {
+  id: string
+  text: string
+  isCorrect: boolean
+}

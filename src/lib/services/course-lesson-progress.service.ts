@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { courses, courseLessonProgress, courseLessons, courseModules } from '@/lib/db/schema'
+import { courses, courseLessonProgress, courseLessons, courseModules, courseQuizzes } from '@/lib/db/schema'
 import type { CourseLessonProgress } from '@/lib/db/schema'
 import { eq, and, sql } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
@@ -20,6 +20,7 @@ export const CourseLessonProgressService = {
     userId: string,
     courseId: string,
     lessonId: string,
+    options: { fromQuiz?: boolean } = {},
   ): Promise<CourseLessonProgress> {
     const [existing] = await db
       .select()
@@ -30,6 +31,22 @@ export const CourseLessonProgressService = {
       ))
       .limit(1)
     if (existing) return existing
+
+    // Quiz gate: a lesson with a quiz can only be completed via passing the
+    // quiz; manual "Erledigt" on the lesson is blocked.
+    if (!options.fromQuiz) {
+      const [quiz] = await db
+        .select({ id: courseQuizzes.id })
+        .from(courseQuizzes)
+        .where(eq(courseQuizzes.lessonId, lessonId))
+        .limit(1)
+      if (quiz) {
+        throw new CourseLessonProgressError(
+          'QUIZ_REQUIRED',
+          'Lektion mit Quiz: bitte Quiz bestehen, um abzuschließen.',
+        )
+      }
+    }
 
     // Sequential mode: reject if any earlier lesson isn't completed yet.
     const [course] = await db

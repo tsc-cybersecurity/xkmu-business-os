@@ -841,3 +841,31 @@ export const createCourseAccessGrantSchema = z.object({
   subjectKind: z.enum(['user', 'group']),
   subjectId: z.string().uuid(),
 })
+
+// Course Quizzes (Phase 2)
+
+export const upsertQuizConfigSchema = z.object({
+  passThreshold: z.number().int().min(0).max(100).optional(),
+  allowRetake: z.boolean().optional(),
+})
+
+const quizQuestionOption = z.object({
+  text: z.string().min(1).max(500),
+  isCorrect: z.boolean(),
+})
+
+export const upsertQuizQuestionSchema = z.object({
+  kind: z.enum(['single', 'multiple', 'truefalse']),
+  prompt: z.string().min(1).max(2000),
+  explanation: z.string().max(2000).nullable().optional(),
+  options: z.array(quizQuestionOption).min(1),
+})
+
+export const reorderQuizQuestionsSchema = z.array(z.object({
+  id: z.string().uuid(),
+  position: z.number().int().nonnegative(),
+}))
+
+export const submitQuizAttemptSchema = z.object({
+  answers: z.record(z.string().uuid(), z.array(z.string())),
+})

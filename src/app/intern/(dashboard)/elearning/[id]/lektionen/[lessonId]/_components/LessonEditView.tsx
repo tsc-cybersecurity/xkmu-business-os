@@ -11,6 +11,7 @@ import { LessonContentForm } from './LessonContentForm'
 import { LessonBlockListEditor } from './LessonBlockListEditor'
 import { LessonVideoUploader } from './LessonVideoUploader'
 import { LessonAttachmentList } from './LessonAttachmentList'
+import { LessonQuizEditor } from './LessonQuizEditor'
 
 export interface LessonAsset {
   id: string
@@ -108,6 +109,7 @@ export function LessonEditView({
           <TabsTrigger value="inhalt">Inhalt</TabsTrigger>
           <TabsTrigger value="video">Video</TabsTrigger>
           <TabsTrigger value="anhaenge">Anhänge</TabsTrigger>
+          <TabsTrigger value="quiz">Quiz</TabsTrigger>
         </TabsList>
         <TabsContent value="stammdaten" className="mt-6">
           <LessonContentForm lesson={lesson} onSaved={load} />
@@ -120,6 +122,9 @@ export function LessonEditView({
         </TabsContent>
         <TabsContent value="anhaenge" className="mt-6">
           <LessonAttachmentList lesson={lesson} onSaved={load} />
+        </TabsContent>
+        <TabsContent value="quiz" className="mt-6">
+          <LessonQuizEditor courseId={courseId} lessonId={lessonId} />
         </TabsContent>
       </Tabs>
     </div>

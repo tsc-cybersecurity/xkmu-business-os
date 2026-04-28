@@ -14,7 +14,10 @@ export async function POST(_request: NextRequest, ctx: Ctx) {
     const row = await CourseLessonProgressService.markCompleted(session.user.id, courseId, lessonId)
     return apiSuccess(row)
   } catch (err) {
-    if (err instanceof CourseLessonProgressError && err.code === 'LESSON_LOCKED') {
+    if (
+      err instanceof CourseLessonProgressError &&
+      (err.code === 'LESSON_LOCKED' || err.code === 'QUIZ_REQUIRED')
+    ) {
       return apiError(err.code, err.message, 409)
     }
     logger.error('Lesson complete failed', err, { module: 'CourseLessonProgressAPI' })

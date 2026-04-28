@@ -1,5 +1,8 @@
 import { db } from '@/lib/db'
-import { courses, courseLessons, courseModules, courseAssets, courseLessonBlocks } from '@/lib/db/schema'
+import {
+  courses, courseLessons, courseModules, courseAssets, courseLessonBlocks,
+  courseQuizzes, courseQuizQuestions,
+} from '@/lib/db/schema'
 import type { Course } from '@/lib/db/schema'
 import { eq, inArray } from 'drizzle-orm'
 import { AuditLogService } from './audit-log.service'
@@ -39,6 +42,29 @@ export const CoursePublishService = {
       for (const b of blocks) lessonBlockCount.set(b.lessonId, (lessonBlockCount.get(b.lessonId) ?? 0) + 1)
     }
 
+    const lessonQuizQuestionCount = new Map<string, number>()
+    if (lessons.length > 0) {
+      const quizRows = await db
+        .select({ id: courseQuizzes.id, lessonId: courseQuizzes.lessonId })
+        .from(courseQuizzes)
+        .where(inArray(courseQuizzes.lessonId, lessons.map((l) => l.id)))
+      if (quizRows.length > 0) {
+        const quizIds = quizRows.map((q) => q.id)
+        const lessonByQuizId = new Map(quizRows.map((q) => [q.id, q.lessonId]))
+        const questions = await db
+          .select({ quizId: courseQuizQuestions.quizId })
+          .from(courseQuizQuestions)
+          .where(inArray(courseQuizQuestions.quizId, quizIds))
+        for (const q of questions) {
+          const lessonId = lessonByQuizId.get(q.quizId)
+          if (lessonId) lessonQuizQuestionCount.set(lessonId, (lessonQuizQuestionCount.get(lessonId) ?? 0) + 1)
+        }
+        for (const q of quizRows) {
+          if (!lessonQuizQuestionCount.has(q.lessonId)) lessonQuizQuestionCount.set(q.lessonId, 0)
+        }
+      }
+    }
+
     const problems: PublishProblem[] = []
 
     if (!course.slug) problems.push({ code: 'COURSE_SLUG_MISSING', message: 'Kurs hat keinen Slug' })
@@ -64,6 +90,13 @@ export const CoursePublishService = {
       )
       if (!hasContent) {
         problems.push({ lessonId: l.id, code: 'LESSON_EMPTY', message: `Lektion '${l.title}' hat keinen Inhalt` })
+      }
+      if (lessonQuizQuestionCount.has(l.id) && (lessonQuizQuestionCount.get(l.id) ?? 0) === 0) {
+        problems.push({
+          lessonId: l.id,
+          code: 'QUIZ_EMPTY',
+          message: `Quiz von Lektion '${l.title}' enthält noch keine Fragen`,
+        })
       }
       if (course.useModules && !l.moduleId) {
         problems.push({ lessonId: l.id, code: 'LESSON_NO_MODULE', message: `Lektion '${l.title}' keinem Modul zugeordnet` })
