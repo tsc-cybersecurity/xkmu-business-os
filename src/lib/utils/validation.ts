@@ -824,3 +824,20 @@ export const reorderLessonBlocksSchema = z.array(z.object({
 export const reviewCertificateSchema = z.object({
   reviewComment: z.string().max(1000).optional(),
 })
+
+// User Groups + Course Access Grants
+
+export const createUserGroupSchema = z.object({
+  name: z.string().min(1).max(200),
+  description: z.string().max(2000).nullable().optional(),
+})
+export const updateUserGroupSchema = createUserGroupSchema.partial()
+
+export const addUserGroupMemberSchema = z.object({
+  userId: z.string().uuid(),
+})
+
+export const createCourseAccessGrantSchema = z.object({
+  subjectKind: z.enum(['user', 'group']),
+  subjectId: z.string().uuid(),
+})

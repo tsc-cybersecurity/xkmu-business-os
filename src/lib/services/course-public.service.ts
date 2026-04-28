@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { courses, courseModules, courseLessons, courseAssets, courseLessonBlocks, courseLessonProgress } from '@/lib/db/schema'
 import type { Course, CourseModule, CourseLesson, CourseAsset, CourseLessonBlock } from '@/lib/db/schema'
 import { eq, and, ilike, desc, asc, sql, inArray } from 'drizzle-orm'
+import { CourseAccessService } from './course-access.service'
 
 export interface PublicListFilter {
   q?: string
@@ -42,6 +43,7 @@ function visibilitySet(surface: 'public' | 'portal'): Visibility[] {
 async function listBySurface(
   surface: 'public' | 'portal',
   filter: PublicListFilter,
+  userId?: string,
 ): Promise<{ items: Course[]; total: number }> {
   const page = filter.page ?? 1
   const limit = filter.limit ?? 20
@@ -52,6 +54,9 @@ async function listBySurface(
     inArray(courses.visibility, visibilitySet(surface)),
   ]
   if (filter.q) conds.push(ilike(courses.title, `%${filter.q}%`))
+  if (surface === 'portal' && userId) {
+    conds.push(CourseAccessService.accessibleCondition(userId))
+  }
   const where = and(...conds)
 
   const [items, totalRows] = await Promise.all([
@@ -64,6 +69,7 @@ async function listBySurface(
 async function getBySurfaceAndSlug(
   surface: 'public' | 'portal',
   slug: string,
+  userId?: string,
 ): Promise<PublicCourseDetail | null> {
   const conds = [
     eq(courses.slug, slug),
@@ -72,6 +78,11 @@ async function getBySurfaceAndSlug(
   ]
   const [course] = await db.select().from(courses).where(and(...conds)).limit(1)
   if (!course) return null
+
+  if (surface === 'portal' && userId) {
+    const allowed = await CourseAccessService.canAccess(userId, course.id)
+    if (!allowed) return null
+  }
 
   const [modules, lessons] = await Promise.all([
     db.select().from(courseModules).where(eq(courseModules.courseId, course.id)),
@@ -86,7 +97,7 @@ async function getLessonBySurface(
   lessonSlug: string,
   userId?: string,
 ): Promise<PublicLessonContext | null> {
-  const detail = await getBySurfaceAndSlug(surface, courseSlug)
+  const detail = await getBySurfaceAndSlug(surface, courseSlug, userId)
   if (!detail) return null
 
   const lesson = detail.lessons.find((l) => l.slug === lessonSlug)
@@ -150,9 +161,9 @@ async function getLessonBySurface(
 
 export const CoursePublicService = {
   listPublic: (filter: PublicListFilter = {}) => listBySurface('public', filter),
-  listPortal: (filter: PublicListFilter = {}) => listBySurface('portal', filter),
+  listPortal: (filter: PublicListFilter = {}, userId?: string) => listBySurface('portal', filter, userId),
   getPublicBySlug: (slug: string) => getBySurfaceAndSlug('public', slug),
-  getPortalBySlug: (slug: string) => getBySurfaceAndSlug('portal', slug),
+  getPortalBySlug: (slug: string, userId?: string) => getBySurfaceAndSlug('portal', slug, userId),
   getPublicLesson: (courseSlug: string, lessonSlug: string) => getLessonBySurface('public', courseSlug, lessonSlug),
   getPortalLesson: (courseSlug: string, lessonSlug: string, userId?: string) =>
     getLessonBySurface('portal', courseSlug, lessonSlug, userId),

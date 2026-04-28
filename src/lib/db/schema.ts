@@ -3309,3 +3309,53 @@ export const courseCertificates = pgTable('course_certificates', {
 
 export type CourseCertificate = typeof courseCertificates.$inferSelect
 export type NewCourseCertificate = typeof courseCertificates.$inferInsert
+
+// ============================================
+// User Groups (tenant-global, used for permission grants)
+// ============================================
+export const userGroups = pgTable('user_groups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 200 }).notNull(),
+  description: text('description'),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('uq_user_groups_name').on(table.name),
+])
+
+export const userGroupMembers = pgTable('user_group_members', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  groupId: uuid('group_id').notNull().references(() => userGroups.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  addedAt: timestamp('added_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('uq_user_group_members_group_user').on(table.groupId, table.userId),
+  index('idx_user_group_members_user').on(table.userId),
+])
+
+export type UserGroup = typeof userGroups.$inferSelect
+export type NewUserGroup = typeof userGroups.$inferInsert
+export type UserGroupMember = typeof userGroupMembers.$inferSelect
+export type NewUserGroupMember = typeof userGroupMembers.$inferInsert
+
+// ============================================
+// Course Access Grants (allowlist per course; empty list = open to all portal users)
+// ============================================
+export const courseAccessSubjectKind = pgEnum('course_access_subject_kind', ['user', 'group'])
+
+export const courseAccessGrants = pgTable('course_access_grants', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  courseId: uuid('course_id').notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  subjectKind: courseAccessSubjectKind('subject_kind').notNull(),
+  subjectId: uuid('subject_id').notNull(),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('uq_course_access_grants').on(table.courseId, table.subjectKind, table.subjectId),
+  index('idx_course_access_grants_course').on(table.courseId),
+  index('idx_course_access_grants_subject').on(table.subjectKind, table.subjectId),
+])
+
+export type CourseAccessGrant = typeof courseAccessGrants.$inferSelect
+export type NewCourseAccessGrant = typeof courseAccessGrants.$inferInsert

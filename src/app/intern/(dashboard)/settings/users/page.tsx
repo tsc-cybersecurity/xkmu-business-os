@@ -27,9 +27,11 @@ import { Select,
   SelectValue,
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import { ArrowLeft, Plus, Search, Users } from 'lucide-react'
 import { logger } from '@/lib/utils/logger'
+import { UserGroupsTab } from './_components/UserGroupsTab'
 
 interface User {
   id: string
@@ -149,27 +151,35 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" aria-label="Zurück" asChild>
-            <Link href="/intern/settings">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold">Benutzerverwaltung</h1>
-            <p className="text-muted-foreground">
-              Verwalten Sie die Benutzer Ihrer Organisation
-            </p>
-          </div>
-        </div>
-        <Button onClick={() => setCreateDialogOpen(true)} className="self-start sm:self-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          Neuer Benutzer
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" aria-label="Zurück" asChild>
+          <Link href="/intern/settings">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
         </Button>
+        <div>
+          <h1 className="text-3xl font-bold">Benutzerverwaltung</h1>
+          <p className="text-muted-foreground">
+            Verwalten Sie Benutzer und Benutzergruppen Ihrer Organisation
+          </p>
+        </div>
       </div>
 
-      <Card>
+      <Tabs defaultValue="users">
+        <TabsList>
+          <TabsTrigger value="users">Benutzer</TabsTrigger>
+          <TabsTrigger value="groups">Benutzergruppen</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users" className="mt-6 space-y-6">
+          <div className="flex justify-end">
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Neuer Benutzer
+            </Button>
+          </div>
+
+          <Card>
         <CardHeader>
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
@@ -250,6 +260,12 @@ export default function UsersPage() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="groups" className="mt-6">
+          <UserGroupsTab />
+        </TabsContent>
+      </Tabs>
 
       {/* Create User Dialog */}
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>

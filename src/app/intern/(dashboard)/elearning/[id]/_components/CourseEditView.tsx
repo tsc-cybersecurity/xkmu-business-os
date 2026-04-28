@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { LoadingSpinner } from '@/components/shared/loading-states'
 import { CourseStammdatenForm } from '../../_components/CourseStammdatenForm'
 import { CourseContentTree } from './CourseContentTree'
+import { CourseAccessTab } from './CourseAccessTab'
 import {
   PublishValidationDialog,
   type PublishProblem,
@@ -240,6 +241,7 @@ export function CourseEditView({ courseId }: { courseId: string }) {
         <TabsList>
           <TabsTrigger value="stammdaten">Stammdaten</TabsTrigger>
           <TabsTrigger value="inhalt">Inhalt</TabsTrigger>
+          <TabsTrigger value="berechtigungen">Berechtigungen</TabsTrigger>
           <TabsTrigger value="vorschau">Vorschau</TabsTrigger>
         </TabsList>
 
@@ -255,6 +257,10 @@ export function CourseEditView({ courseId }: { courseId: string }) {
             lessons={course.lessons}
             onChange={load}
           />
+        </TabsContent>
+
+        <TabsContent value="berechtigungen" className="mt-6">
+          <CourseAccessTab courseId={course.id} />
         </TabsContent>
 
         <TabsContent value="vorschau" className="mt-6 space-y-4">

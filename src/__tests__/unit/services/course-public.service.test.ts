@@ -181,6 +181,7 @@ describe('CoursePublicService', () => {
     it('getPortalLesson with userId returns progress for that user', async () => {
       const userId = '00000000-0000-0000-0000-0000000000a1'
       dbMock.mockSelect.mockResolvedValueOnce([courseFixture({ visibility: 'portal' })])  // course
+      dbMock.mockSelect.mockResolvedValueOnce([])                                          // access grants (none → open)
       dbMock.mockSelect.mockResolvedValueOnce([])                                          // modules
       dbMock.mockSelect.mockResolvedValueOnce([                                            // lessons
         { id: lessonId1, courseId: COURSE_ID, moduleId: null, position: 1, slug: 'a',

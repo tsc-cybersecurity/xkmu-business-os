@@ -3,6 +3,7 @@ import { CoursePublicService } from '@/lib/services/course-public.service'
 import { CourseListGrid } from '@/components/elearning/CourseListGrid'
 import { EmptyState } from '@/components/shared/empty-state'
 import { GraduationCap } from 'lucide-react'
+import { getSession } from '@/lib/auth/session'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
 }
 
 export default async function PortalCoursesIndexPage() {
-  const { items } = await CoursePublicService.listPortal({ limit: 60 })
+  const session = await getSession()
+  const { items } = await CoursePublicService.listPortal({ limit: 60 }, session?.user.id)
   return (
     <div className="space-y-6">
       <header>
