@@ -3,6 +3,7 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
 } from '@react-pdf/renderer'
 
@@ -105,6 +106,10 @@ export interface CertificatePDFProps {
   courseTitle: string
   issuedAt: Date
   identifier: string
+  /** Branding (Sub-3d): hex color string like "#1d4ed8" */
+  brandColor?: string | null
+  /** Branding (Sub-3d): pre-fetched logo as data URL or http URL @react-pdf can resolve */
+  logoSrc?: string | null
 }
 
 export function CertificatePDF({
@@ -113,14 +118,21 @@ export function CertificatePDF({
   courseTitle,
   issuedAt,
   identifier,
+  brandColor,
+  logoSrc,
 }: CertificatePDFProps) {
+  const accent = brandColor || '#0f172a'
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
-        <View style={styles.border}>
+        <View style={[styles.border, { borderColor: accent }]}>
           <View style={styles.topBlock}>
+            {logoSrc ? (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image src={logoSrc} style={{ height: 60, marginBottom: 20, objectFit: 'contain' }} />
+            ) : null}
             <Text style={styles.brand}>{organizationName}</Text>
-            <Text style={styles.title}>Zertifikat</Text>
+            <Text style={[styles.title, { color: accent }]}>Zertifikat</Text>
             <Text style={styles.subtitle}>
               wird hiermit verliehen an
             </Text>

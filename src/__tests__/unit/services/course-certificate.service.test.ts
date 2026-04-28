@@ -153,4 +153,57 @@ describe('CourseCertificateService', () => {
       expect(result.reviewComment).toBe('incomplete')
     })
   })
+
+  describe('revoke', () => {
+    it('sets status=revoked + reviewedBy + comment when issued', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([certFixture({ status: 'issued', issuedAt: new Date() })])
+      dbMock.mockUpdate.mockResolvedValue([certFixture({ status: 'revoked', reviewedBy: ADMIN_ID, reviewComment: 'fraud' })])
+      const svc = await getSvc()
+      const result = await svc.revoke(CERT_ID, ADMIN_ID, 'fraud')
+      expect(result.status).toBe('revoked')
+      expect(result.reviewComment).toBe('fraud')
+    })
+
+    it('throws NOT_FOUND when missing', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      const svc = await getSvc()
+      await expect(svc.revoke(CERT_ID, ADMIN_ID))
+        .rejects.toMatchObject({ code: 'NOT_FOUND' })
+    })
+
+    it('throws BAD_STATE when not in issued state', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([certFixture({ status: 'requested' })])
+      const svc = await getSvc()
+      await expect(svc.revoke(CERT_ID, ADMIN_ID))
+        .rejects.toMatchObject({ code: 'BAD_STATE' })
+    })
+  })
+
+  describe('listByStatus', () => {
+    it('returns certs with given status', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([
+        certFixture({ status: 'issued' }),
+        certFixture({ id: 'c2', status: 'issued' }),
+      ])
+      const svc = await getSvc()
+      const result = await svc.listByStatus('issued')
+      expect(result).toHaveLength(2)
+    })
+  })
+
+  describe('findByIdentifier', () => {
+    it('returns cert when identifier matches', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([certFixture({ status: 'issued' })])
+      const svc = await getSvc()
+      const result = await svc.findByIdentifier('00000000-0000-0000-0000-0000000000ff')
+      expect(result?.status).toBe('issued')
+    })
+
+    it('returns null when not found', async () => {
+      dbMock.mockSelect.mockResolvedValueOnce([])
+      const svc = await getSvc()
+      const result = await svc.findByIdentifier('nope')
+      expect(result).toBeNull()
+    })
+  })
 })
