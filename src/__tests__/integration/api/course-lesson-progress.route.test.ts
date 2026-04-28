@@ -7,11 +7,20 @@ import { authFixture, TEST_USER_ID } from '../../helpers/fixtures'
 const COURSE_ID = '00000000-0000-0000-0000-0000000000c1'
 const LESSON_ID = '00000000-0000-0000-0000-0000000000e1'
 
+function mockSession() {
+  vi.doMock('@/lib/auth/session', () => ({
+    getSession: vi.fn().mockResolvedValue({
+      user: { id: TEST_USER_ID, email: 'test@example.com', role: 'portal_user' },
+    }),
+  }))
+}
+
 describe('POST /api/v1/courses/[id]/lessons/[lessonId]/complete', () => {
   beforeEach(() => {
     vi.resetModules()
     setupDbMock()
     mockAuthContext(authFixture())
+    mockSession()
     vi.doMock('@/lib/services/course-lesson-progress.service', () => ({
       CourseLessonProgressService: {
         markCompleted: vi.fn().mockResolvedValue({
@@ -39,6 +48,7 @@ describe('DELETE /api/v1/courses/[id]/lessons/[lessonId]/complete', () => {
     vi.resetModules()
     setupDbMock()
     mockAuthContext(authFixture())
+    mockSession()
     vi.doMock('@/lib/services/course-lesson-progress.service', () => ({
       CourseLessonProgressService: {
         markUncompleted: vi.fn().mockResolvedValue(undefined),
