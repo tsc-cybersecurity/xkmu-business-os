@@ -301,6 +301,34 @@ async function seedNavigation(db: ReturnType<typeof drizzle>) {
   return items.length
 }
 
+/**
+ * Idempotent: ergaenzt einen Header-Eintrag fuer "Kurse" (/kurse), falls
+ * dieser nicht existiert. Vorher war der Link in landing-navbar.tsx
+ * hartkodiert; jetzt CMS-editierbar.
+ */
+async function ensureCoursesNavItem(db: ReturnType<typeof drizzle>) {
+  const existing = await db
+    .select({ id: cmsNavigationItems.id })
+    .from(cmsNavigationItems)
+    .where(and(
+      eq(cmsNavigationItems.location, 'header'),
+      eq(cmsNavigationItems.href, '/kurse'),
+    ))
+    .limit(1)
+  if (existing.length > 0) return 0
+
+  await db.insert(cmsNavigationItems).values({
+    location: 'header',
+    label: 'Kurse',
+    href: '/kurse',
+    sortOrder: 100,
+    openInNewTab: false,
+    isVisible: true,
+  })
+  logger.info('Added "Kurse" navigation item to header (CMS-editable)')
+  return 1
+}
+
 // ============================================
 // Blog Seed Data
 // ============================================
@@ -1043,6 +1071,10 @@ async function seedCheck() {
 
   // 4. Seed CMS navigation
   await seedNavigation(db)
+
+  // 4.5 Ensure CMS-editable "Kurse" header link (idempotent — runs even on
+  // already-seeded DBs to retroactively add the link).
+  await ensureCoursesNavItem(db)
 
   // 5. Seed blog posts
   if (adminUserId) {
