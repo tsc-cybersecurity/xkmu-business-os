@@ -307,4 +307,27 @@ export const CalendarGoogleClient = {
     if (res.status === 204 || res.status === 410) return
     await ensureOk(res)
   },
+
+  async eventsPatch(input: {
+    accessToken: string
+    calendarId: string
+    eventId: string
+    startUtc: Date
+    endUtc: Date
+    timeZone: string  // canonical IANA TZ for display
+    sendUpdates?: 'none' | 'all'
+  }): Promise<void> {
+    const sendUpdates = input.sendUpdates ?? 'all'
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}?sendUpdates=${sendUpdates}`
+    const body = {
+      start: { dateTime: input.startUtc.toISOString(), timeZone: input.timeZone },
+      end:   { dateTime: input.endUtc.toISOString(),   timeZone: input.timeZone },
+    }
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${input.accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    await ensureOk(res)
+  },
 }

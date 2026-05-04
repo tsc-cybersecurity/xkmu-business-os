@@ -241,6 +241,48 @@ export const AppointmentMailService = {
   },
 
   /**
+   * Queue reschedule emails for an appointment.
+   * - Customer gets `appointment.customer.rescheduled`
+   * - Staff (the user owning the calendar) gets `appointment.staff.rescheduled`
+   *
+   * Side-effect: `loadContext` regenerates fresh cancel/reschedule token hashes
+   * via `ensureTokensAndUrls`, so the URLs in the email reflect the new times.
+   */
+  async queueReschedule(appointmentId: string): Promise<void> {
+    const { appt, user, ctx } = await loadContext(appointmentId)
+
+    await db.insert(taskQueue).values({
+      type: 'email',
+      status: 'pending',
+      priority: 1,
+      payload: {
+        templateSlug: 'appointment.customer.rescheduled',
+        to: appt.customerEmail,
+        placeholders: buildPlaceholders(ctx),
+        leadId: appt.leadId,
+        personId: appt.personId,
+      },
+      referenceType: 'appointment',
+      referenceId: appt.id,
+    })
+
+    if (user.email) {
+      await db.insert(taskQueue).values({
+        type: 'email',
+        status: 'pending',
+        priority: 2,
+        payload: {
+          templateSlug: 'appointment.staff.rescheduled',
+          to: user.email,
+          placeholders: buildPlaceholders(ctx),
+        },
+        referenceType: 'appointment',
+        referenceId: appt.id,
+      })
+    }
+  },
+
+  /**
    * Mark all pending `appointment_reminder` tasks for the given appointment
    * as cancelled. Returns the count of tasks affected.
    */

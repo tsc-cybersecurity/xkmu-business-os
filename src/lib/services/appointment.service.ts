@@ -300,6 +300,173 @@ export const AppointmentService = {
     return { id: appt.id, status: 'confirmed', startAt: startAtUtc, endAt: endAtUtc }
   },
 
+  async reschedule(args: { token: string; newStartAtUtc: Date }): Promise<{ startAt: Date; endAt: Date }> {
+    const { verifyAppointmentToken, hashOf } = await import('@/lib/utils/appointment-token.util')
+    const v = verifyAppointmentToken(args.token)
+    if (!v.ok) {
+      if (v.reason === 'expired') throw new AppointmentTokenError('expired')
+      throw new AppointmentTokenError('invalid')
+    }
+    if (v.payload.p !== 'reschedule') throw new AppointmentTokenError('wrong_purpose')
+
+    const [appt] = await db.select().from(appointments).where(eq(appointments.id, v.payload.a)).limit(1)
+    if (!appt) throw new AppointmentTokenError('invalid')
+    if (appt.rescheduleTokenHash !== hashOf(args.token)) throw new AppointmentTokenError('revoked')
+    if (appt.status === 'cancelled') throw new AppointmentTokenError('invalid', 'appointment is cancelled')
+
+    // Load slot type for duration
+    const slotType = await SlotTypeService.getById(appt.slotTypeId)
+    if (!slotType || !slotType.isActive) throw new Error('slot_type_invalid')
+    const newEndAtUtc = new Date(args.newStartAtUtc.getTime() + slotType.durationMinutes * 60_000)
+
+    // Load user timezone
+    const userRows = await db
+      .select({ timezone: users.timezone })
+      .from(users)
+      .where(eq(users.id, appt.userId))
+      .limit(1)
+    const userTimezone = userRows[0]?.timezone ?? 'Europe/Berlin'
+
+    // Re-check local availability — same window logic as book(), but EXCLUDE this appointment
+    const windowStart = new Date(args.newStartAtUtc.getTime() - 86_400_000)
+    const windowEnd   = new Date(args.newStartAtUtc.getTime() + 86_400_000)
+
+    const [rules, overrides] = await Promise.all([
+      AvailabilityService.listRules(appt.userId),
+      AvailabilityService.listOverrides(appt.userId, windowStart, windowEnd),
+    ])
+
+    // CRITICAL: filter out the appointment we're rescheduling — else it blocks itself
+    const existingAppts = await db
+      .select({ id: appointments.id, startAt: appointments.startAt, endAt: appointments.endAt })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.userId, appt.userId),
+          inArray(appointments.status, ['pending', 'confirmed']),
+          gte(appointments.endAt, windowStart),
+          lte(appointments.startAt, windowEnd),
+        ),
+      )
+    const apptIntervals = existingAppts
+      .filter(a => a.id !== appt.id)
+      .map(a => ({ startAt: a.startAt, endAt: a.endAt, bufferBeforeMinutes: 0, bufferAfterMinutes: 0 }))
+
+    const account = await CalendarAccountService.getActiveAccount(appt.userId)
+    const watchedCalendars = account ? await CalendarAccountService.listWatchedCalendars(account.id) : []
+    const busyCalIds = watchedCalendars.filter(w => w.readForBusy).map(w => w.googleCalendarId)
+
+    let externalBusyIntervals: { startAt: Date; endAt: Date }[] = []
+    if (account && busyCalIds.length > 0) {
+      const busyRows = await db
+        .select({ startAt: externalBusy.startAt, endAt: externalBusy.endAt })
+        .from(externalBusy)
+        .where(
+          and(
+            eq(externalBusy.accountId, account.id),
+            inArray(externalBusy.googleCalendarId, busyCalIds),
+            eq(externalBusy.transparency, 'opaque'),
+            gte(externalBusy.endAt, windowStart),
+            lte(externalBusy.startAt, windowEnd),
+          ),
+        )
+      externalBusyIntervals = busyRows
+    }
+
+    const freeSlots = AvailabilityCalcService.computeFreeSlots({
+      slotType: {
+        durationMinutes: slotType.durationMinutes,
+        bufferBeforeMinutes: slotType.bufferBeforeMinutes,
+        bufferAfterMinutes: slotType.bufferAfterMinutes,
+        minNoticeHours: slotType.minNoticeHours,
+        maxAdvanceDays: slotType.maxAdvanceDays,
+      },
+      rangeStart: windowStart,
+      rangeEnd: windowEnd,
+      rules: rules.map(r => ({ dayOfWeek: r.dayOfWeek, startTime: r.startTime, endTime: r.endTime, isActive: r.isActive })),
+      overrides: overrides.map(o => ({ startAt: o.startAt, endAt: o.endAt, kind: o.kind as 'free' | 'block' })),
+      appointments: apptIntervals,
+      externalBusy: externalBusyIntervals,
+      userTimezone,
+      now: new Date(),
+    })
+
+    const slotMs = args.newStartAtUtc.getTime()
+    if (!freeSlots.some(s => s.getTime() === slotMs)) {
+      throw new SlotNoLongerAvailableError()
+    }
+
+    // Live FreeBusy check (same fail-open pattern as book())
+    if (account && busyCalIds.length > 0) {
+      try {
+        const accessToken = await CalendarAccountService.getValidAccessToken(account.id)
+        const fb = await Promise.race([
+          CalendarGoogleClient.freeBusyQuery({
+            accessToken,
+            calendarIds: busyCalIds,
+            timeMin: args.newStartAtUtc,
+            timeMax: newEndAtUtc,
+          }),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000)),
+        ])
+        const overlaps = fb.busy.some(b => b.start < newEndAtUtc && b.end > args.newStartAtUtc)
+        if (overlaps && appt.googleEventId) {
+          // Could be our own existing event — Google's freeBusyQuery doesn't tell us.
+          // Approximate self-detection: a single busy interval matching the OLD appt range
+          // is almost certainly our own event before the patch.
+          const isOnlyOurOldSelf = fb.busy.length === 1
+            && fb.busy[0].start.getTime() === appt.startAt.getTime()
+            && fb.busy[0].end.getTime() === appt.endAt.getTime()
+          if (!isOnlyOurOldSelf) throw new SlotNoLongerAvailableError('busy_in_google')
+        } else if (overlaps) {
+          throw new SlotNoLongerAvailableError('busy_in_google')
+        }
+      } catch (err) {
+        if (err instanceof SlotNoLongerAvailableError) throw err
+        console.warn('FreeBusy check failed during reschedule, proceeding optimistically:', err)
+      }
+    }
+
+    // 1. UPDATE DB row (new times). Token hashes will be regenerated by queueReschedule via loadContext.
+    await db.update(appointments).set({
+      startAt: args.newStartAtUtc,
+      endAt: newEndAtUtc,
+      updatedAt: new Date(),
+    }).where(eq(appointments.id, appt.id))
+
+    // 2. Cancel old pending reminders (the times have changed)
+    const { AppointmentMailService } = await import('./appointment-mail.service')
+    await AppointmentMailService.cancelPendingReminders(appt.id)
+
+    // 3. Queue reschedule mails (loadContext also regenerates token hashes)
+    try { await AppointmentMailService.queueReschedule(appt.id) }
+    catch (err) { console.error('Failed to queue reschedule mails:', err) }
+
+    // 4. Queue new reminders for the new time
+    try { await AppointmentMailService.queueReminders(appt.id) }
+    catch (err) { console.error('Failed to queue new reminders:', err) }
+
+    // 5. Patch Google event (best-effort)
+    if (appt.googleEventId && appt.googleCalendarId && account) {
+      try {
+        const accessToken = await CalendarAccountService.getValidAccessToken(account.id)
+        await CalendarGoogleClient.eventsPatch({
+          accessToken,
+          calendarId: appt.googleCalendarId,
+          eventId: appt.googleEventId,
+          startUtc: args.newStartAtUtc,
+          endUtc: newEndAtUtc,
+          timeZone: userTimezone,
+          sendUpdates: 'all',
+        })
+      } catch (err) {
+        console.warn('Google event patch failed:', err)
+      }
+    }
+
+    return { startAt: args.newStartAtUtc, endAt: newEndAtUtc }
+  },
+
   async cancel(args: { token: string; reason?: string }): Promise<{ alreadyCancelled: boolean }> {
     const { verifyAppointmentToken, hashOf } = await import('@/lib/utils/appointment-token.util')
     const v = verifyAppointmentToken(args.token)

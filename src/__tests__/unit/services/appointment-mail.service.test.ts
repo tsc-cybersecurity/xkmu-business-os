@@ -262,6 +262,61 @@ describe('AppointmentMailService.queueCancellation', () => {
   })
 })
 
+describe('AppointmentMailService.queueReschedule', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    process.env.APPOINTMENT_TOKEN_SECRET = 'a'.repeat(64)
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://www.xkmu.de'
+  })
+
+  it('queues both customer and staff reschedule mails', async () => {
+    const helper = setupDbMock()
+    helper.selectMock.mockResolvedValueOnce([{
+      id: 'a-1', userId: 'u-1', slotTypeId: 'st-1',
+      startAt: new Date('2026-05-04T09:00:00Z'),
+      endAt: new Date('2026-05-04T09:30:00Z'),
+      customerName: 'Anna', customerEmail: 'anna@example.com',
+      customerPhone: '+491', customerMessage: null,
+      leadId: 'l-1', personId: 'p-1',
+    }])
+    helper.selectMock.mockResolvedValueOnce([{
+      id: 'st-1', name: 'Erstgespräch', durationMinutes: 30,
+      location: 'phone', locationDetails: null,
+    }])
+    helper.selectMock.mockResolvedValueOnce([{
+      email: 'tino@xkmu.de', firstName: 'Tino', lastName: 'S', timezone: 'Europe/Berlin',
+    }])
+    helper.updateMock.mockResolvedValueOnce(undefined)
+    helper.insertMock.mockResolvedValueOnce(undefined)
+    helper.insertMock.mockResolvedValueOnce(undefined)
+
+    const insertedPayloads: unknown[] = []
+    const originalInsert = helper.db.insert
+    helper.db.insert = vi.fn().mockImplementation((...insertArgs: unknown[]) => {
+      const chain = (originalInsert as unknown as (...a: unknown[]) => Record<string, unknown>)(...insertArgs)
+      const originalValues = chain.values as (...a: unknown[]) => unknown
+      chain.values = vi.fn().mockImplementation((payload: unknown) => {
+        insertedPayloads.push(payload)
+        return (originalValues as (...a: unknown[]) => unknown)(payload)
+      })
+      return chain
+    }) as unknown as typeof helper.db.insert
+
+    vi.doMock('@/lib/db', () => ({ db: helper.db }))
+
+    const { AppointmentMailService } = await import('@/lib/services/appointment-mail.service')
+    await AppointmentMailService.queueReschedule('a-1')
+
+    expect(helper.db.insert).toHaveBeenCalledTimes(2)
+    type Payload = { payload: { templateSlug: string } }
+    const slugs = (insertedPayloads as Payload[]).map(p => p.payload.templateSlug).sort()
+    expect(slugs).toEqual([
+      'appointment.customer.rescheduled',
+      'appointment.staff.rescheduled',
+    ])
+  })
+})
+
 describe('AppointmentMailService.cancelPendingReminders', () => {
   beforeEach(() => {
     vi.resetModules()
