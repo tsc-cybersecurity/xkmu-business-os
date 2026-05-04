@@ -187,3 +187,88 @@ describe('CalendarGoogleClient.channelsStop', () => {
     ).rejects.toThrow()
   })
 })
+
+describe('CalendarGoogleClient.freeBusyQuery', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock)
+    fetchMock.mockReset()
+    vi.resetModules()
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('flattens busy intervals from multiple calendars', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      calendars: {
+        'primary': {
+          busy: [
+            { start: '2026-05-04T09:00:00Z', end: '2026-05-04T10:00:00Z' },
+            { start: '2026-05-04T14:00:00Z', end: '2026-05-04T15:00:00Z' },
+          ],
+        },
+        'foo@cal': {
+          busy: [{ start: '2026-05-04T11:00:00Z', end: '2026-05-04T12:00:00Z' }],
+        },
+      },
+    })))
+    const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
+    const out = await CalendarGoogleClient.freeBusyQuery({
+      accessToken: 'AT',
+      calendarIds: ['primary', 'foo@cal'],
+      timeMin: new Date('2026-05-04T00:00:00Z'),
+      timeMax: new Date('2026-05-05T00:00:00Z'),
+    })
+    expect(out.busy).toHaveLength(3)
+    expect(out.busy[0].calendarId).toBe('primary')
+    expect(out.busy[2].calendarId).toBe('foo@cal')
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string)
+    expect(body.items).toEqual([{ id: 'primary' }, { id: 'foo@cal' }])
+  })
+})
+
+describe('CalendarGoogleClient.eventsInsert', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock)
+    fetchMock.mockReset()
+    vi.resetModules()
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('posts event with extendedProperties + sendUpdates=none default', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      id: 'event-123', htmlLink: 'https://cal/abc',
+    })))
+    const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
+    const out = await CalendarGoogleClient.eventsInsert({
+      accessToken: 'AT',
+      calendarId: 'primary',
+      summary: 'Erstgespräch – Anna',
+      description: 'Notes',
+      startUtc: new Date('2026-05-04T09:00:00Z'),
+      endUtc: new Date('2026-05-04T09:30:00Z'),
+      attendeeEmail: 'anna@example.com',
+      attendeeName: 'Anna',
+      appointmentId: 'appt-1',
+    })
+    expect(out.id).toBe('event-123')
+    const url = fetchMock.mock.calls[0][0] as string
+    expect(url).toContain('sendUpdates=none')
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body as string)
+    expect(body.summary).toBe('Erstgespräch – Anna')
+    expect(body.attendees[0].email).toBe('anna@example.com')
+    expect(body.extendedProperties.private.xkmu_appointment_id).toBe('appt-1')
+  })
+
+  it('passes sendUpdates=all when specified', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ id: 'e', htmlLink: '' })))
+    const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
+    await CalendarGoogleClient.eventsInsert({
+      accessToken: 'AT', calendarId: 'primary',
+      summary: 's', description: 'd',
+      startUtc: new Date(), endUtc: new Date(),
+      attendeeEmail: 'a@b', attendeeName: 'A',
+      appointmentId: 'id', sendUpdates: 'all',
+    })
+    const url = fetchMock.mock.calls[0][0] as string
+    expect(url).toContain('sendUpdates=all')
+  })
+})
