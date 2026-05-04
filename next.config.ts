@@ -2,10 +2,16 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === 'development'
 
+// 'unsafe-inline' fuer style-src ist bei Next.js/React-Apps Standard:
+// Next injiziert Inline-Styles fuer Font-Loading, Hydration und dynamische
+// Werte (z.B. Slot-Type-Farben im Wochenkalender). XSS-Risiko via Style ist
+// gering im Vergleich zu Script.
+// 'upgrade-insecure-requests' wird in Report-Only-Policies vom Browser
+// ignoriert (Konsolen-Warnung) und erst beim Wechsel auf enforce sinnvoll.
 const cspDirectives = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
-  `style-src 'self'${isDev ? " 'unsafe-inline'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self'",
   `connect-src 'self'${isDev ? ' ws://localhost:*' : ''}`,
@@ -13,7 +19,6 @@ const cspDirectives = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "upgrade-insecure-requests",
 ].join('; ')
 
 const nextConfig: NextConfig = {

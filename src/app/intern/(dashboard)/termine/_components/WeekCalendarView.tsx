@@ -1,8 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import type { AvailabilityRule } from '@/lib/db/schema'
 
 interface OverrideLite {
@@ -25,6 +33,9 @@ interface AppointmentLite {
   startAt: string
   endAt: string
   customerName: string
+  customerEmail: string
+  customerPhone: string
+  customerMessage: string | null
   slotTypeName: string
   color: string
   status: string
@@ -46,6 +57,7 @@ export function WeekCalendarView(props: {
   appointments?: AppointmentLite[]
 }) {
   const router = useRouter()
+  const [selectedAppt, setSelectedAppt] = useState<AppointmentLite | null>(null)
   const monday = new Date(props.monday)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -178,12 +190,26 @@ export function WeekCalendarView(props: {
                       ? `${appt.slotTypeName} — ${appt.customerName}`
                       : busy?.summary ?? undefined
                     const inlineStyle = appt ? { backgroundColor: appt.color } : undefined
+                    const baseClass = `h-3.5 w-full ${cellClass(state, appt)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`
+                    if (appt) {
+                      return (
+                        <button
+                          key={min}
+                          type="button"
+                          title={tooltip}
+                          style={inlineStyle}
+                          onClick={() => setSelectedAppt(appt)}
+                          className={`${baseClass} cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring`}
+                          aria-label={`Termin: ${appt.slotTypeName} mit ${appt.customerName}`}
+                        />
+                      )
+                    }
                     return (
                       <div
                         key={min}
                         title={tooltip}
                         style={inlineStyle}
-                        className={`h-3.5 ${cellClass(state, appt)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`}
+                        className={baseClass}
                       />
                     )
                   })}
@@ -195,9 +221,92 @@ export function WeekCalendarView(props: {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Hinweis: Eigene Buchungen werden in Phase 4 ergänzt. Externe Google-Events werden bei jedem Webhook-Call automatisch synchronisiert.
+        Hinweis: Externe Google-Events werden bei jedem Webhook-Call automatisch synchronisiert. Klicke auf eine Buchung, um Details zu sehen.
       </p>
+
+      <AppointmentDetailsDialog
+        appt={selectedAppt}
+        onClose={() => setSelectedAppt(null)}
+      />
     </div>
+  )
+}
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Ausstehend',
+  confirmed: 'Bestätigt',
+  completed: 'Abgeschlossen',
+  cancelled: 'Storniert',
+}
+
+function formatRange(startIso: string, endIso: string): string {
+  const start = new Date(startIso)
+  const end = new Date(endIso)
+  const date = start.toLocaleDateString('de-DE', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
+  const t = (d: Date) => d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  return `${date} · ${t(start)} – ${t(end)}`
+}
+
+function AppointmentDetailsDialog({ appt, onClose }: { appt: AppointmentLite | null; onClose: () => void }) {
+  return (
+    <Dialog open={appt !== null} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="sm:max-w-md">
+        {appt ? (
+          <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="inline-block h-3 w-3 rounded-sm border"
+                  style={{ backgroundColor: appt.color }}
+                />
+                {appt.slotTypeName}
+              </DialogTitle>
+              <DialogDescription>{formatRange(appt.startAt, appt.endAt)}</DialogDescription>
+            </DialogHeader>
+            <dl className="space-y-2 text-sm">
+              <div className="grid grid-cols-[110px_1fr] gap-1">
+                <dt className="text-muted-foreground">Status</dt>
+                <dd>{STATUS_LABELS[appt.status] ?? appt.status}</dd>
+              </div>
+              <div className="grid grid-cols-[110px_1fr] gap-1">
+                <dt className="text-muted-foreground">Kunde</dt>
+                <dd>{appt.customerName}</dd>
+              </div>
+              <div className="grid grid-cols-[110px_1fr] gap-1">
+                <dt className="text-muted-foreground">E-Mail</dt>
+                <dd>
+                  <a className="underline hover:no-underline" href={`mailto:${appt.customerEmail}`}>
+                    {appt.customerEmail}
+                  </a>
+                </dd>
+              </div>
+              {appt.customerPhone ? (
+                <div className="grid grid-cols-[110px_1fr] gap-1">
+                  <dt className="text-muted-foreground">Telefon</dt>
+                  <dd>
+                    <a className="underline hover:no-underline" href={`tel:${appt.customerPhone}`}>
+                      {appt.customerPhone}
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
+              {appt.customerMessage ? (
+                <div className="grid grid-cols-[110px_1fr] gap-1">
+                  <dt className="text-muted-foreground">Nachricht</dt>
+                  <dd className="whitespace-pre-wrap">{appt.customerMessage}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </>
+        ) : null}
+      </DialogContent>
+    </Dialog>
   )
 }
 
