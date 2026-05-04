@@ -203,6 +203,12 @@ export const CronService = {
           msg = `Reminders: ${result.sent} sent, ${result.skipped} skipped`
           break
         }
+        case 'calendar_sync': {
+          const { runCalendarSyncMaintenance } = await import('./calendar-cron.handler')
+          const result = await runCalendarSyncMaintenance()
+          msg = `Calendar maintenance: ${result.total} accounts, ${result.refreshed} refreshed, ${result.renewed} renewed, ${result.failed} failed`
+          break
+        }
         default:
           msg = `Unknown action type: ${job.actionType}`
       }
