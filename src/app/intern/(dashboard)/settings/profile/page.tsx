@@ -13,6 +13,7 @@ import { ArrowLeft, Save, Lock, Eye, EyeOff } from 'lucide-react'
 import { LoadingSpinner } from '@/components/shared/loading-states'
 import { logger } from '@/lib/utils/logger'
 import { CalendarConnectCard } from './_components/CalendarConnectCard'
+import { BookingPageCard } from './_components/BookingPageCard'
 
 interface UserProfile {
   id: string
@@ -358,6 +359,9 @@ export default function ProfilePage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Booking Page */}
+        <BookingPageCard />
 
         {/* Google Calendar */}
         <Suspense>

@@ -1,4 +1,5 @@
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
+const FREEBUSY_URL = 'https://www.googleapis.com/calendar/v3/freeBusy'
 const REVOKE_URL = 'https://oauth2.googleapis.com/revoke'
 const CALENDAR_LIST_URL = 'https://www.googleapis.com/calendar/v3/users/me/calendarList'
 const EVENTS_LIST_URL = (calendarId: string) =>
@@ -225,5 +226,67 @@ export const CalendarGoogleClient = {
     })
     if (res.status === 200 || res.status === 404) return
     await ensureOk(res)
+  },
+
+  async freeBusyQuery(input: {
+    accessToken: string
+    calendarIds: string[]
+    timeMin: Date
+    timeMax: Date
+  }): Promise<{ busy: { calendarId: string; start: Date; end: Date }[] }> {
+    const res = await fetch(FREEBUSY_URL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${input.accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        timeMin: input.timeMin.toISOString(),
+        timeMax: input.timeMax.toISOString(),
+        items: input.calendarIds.map(id => ({ id })),
+      }),
+    })
+    await ensureOk(res)
+    const json = await res.json() as {
+      calendars?: Record<string, { busy?: { start: string; end: string }[] }>
+    }
+    const out: { calendarId: string; start: Date; end: Date }[] = []
+    for (const cid of input.calendarIds) {
+      const busy = json.calendars?.[cid]?.busy ?? []
+      for (const b of busy) {
+        out.push({ calendarId: cid, start: new Date(b.start), end: new Date(b.end) })
+      }
+    }
+    return { busy: out }
+  },
+
+  async eventsInsert(input: {
+    accessToken: string
+    calendarId: string
+    summary: string
+    description: string
+    startUtc: Date
+    endUtc: Date
+    attendeeEmail: string
+    attendeeName: string
+    appointmentId: string
+    sendUpdates?: 'none' | 'all'
+  }): Promise<{ id: string; htmlLink: string }> {
+    const sendUpdates = input.sendUpdates ?? 'none'
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events?sendUpdates=${sendUpdates}`
+    const body = {
+      summary: input.summary,
+      description: input.description,
+      start: { dateTime: input.startUtc.toISOString(), timeZone: 'UTC' },
+      end:   { dateTime: input.endUtc.toISOString(),   timeZone: 'UTC' },
+      attendees: [{ email: input.attendeeEmail, displayName: input.attendeeName }],
+      extendedProperties: { private: { xkmu_appointment_id: input.appointmentId } },
+      reminders: { useDefault: true },
+    }
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${input.accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    await ensureOk(res)
+    const json = await res.json() as { id: string; htmlLink?: string }
+    return { id: json.id, htmlLink: json.htmlLink ?? '' }
   },
 }
