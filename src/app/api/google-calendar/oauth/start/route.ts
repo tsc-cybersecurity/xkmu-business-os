@@ -15,7 +15,10 @@ export async function GET(request: NextRequest) {
   if (!auth || auth.role === 'api') {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   }
-  const env = getCalendarEnv()
+  let env
+  try { env = getCalendarEnv() } catch {
+    return NextResponse.json({ error: 'feature_disabled' }, { status: 503 })
+  }
 
   const nonce = randomBytes(16).toString('hex')
   const ts = Date.now()

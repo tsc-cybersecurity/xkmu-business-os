@@ -4,6 +4,7 @@ vi.mock('@/lib/services/calendar-google.client', () => ({
   CalendarGoogleClient: {
     exchangeCode: vi.fn(),
     listCalendars: vi.fn(),
+    revokeToken: vi.fn(),
   },
 }))
 vi.mock('@/lib/services/calendar-account.service', () => ({
@@ -54,6 +55,39 @@ describe('GET /api/google-calendar/oauth/callback', () => {
     expect(res.status).toBe(302)
     expect(res.headers.get('location')).toContain('/intern/termine/calendar-connect?connected=1')
     expect(CalendarAccountService.storeNewAccount).toHaveBeenCalled()
+  })
+
+  it('redirects with store_failed when storeNewAccount throws', async () => {
+    const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
+    const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
+    vi.mocked(CalendarGoogleClient.exchangeCode).mockResolvedValueOnce({
+      accessToken: 'AT', refreshToken: 'RT', expiresInSec: 3600,
+      scopes: ['https://www.googleapis.com/auth/calendar'],
+    })
+    vi.mocked(CalendarGoogleClient.listCalendars).mockResolvedValueOnce([
+      { id: 'primary', summary: 'X', isPrimary: true },
+    ])
+    vi.mocked(CalendarAccountService.getActiveAccount).mockResolvedValueOnce(null)
+    vi.mocked(CalendarAccountService.storeNewAccount).mockRejectedValueOnce(new Error('db error'))
+
+    const { cookieValue, queryState } = makeStateCookie('S'.repeat(40))
+    const { GET } = await import('@/app/api/google-calendar/oauth/callback/route')
+    const req = new Request(`https://app.x/cb?code=CODE&state=${encodeURIComponent(queryState)}`, {
+      headers: { cookie: `calendar_oauth_state=${cookieValue}` },
+    })
+    const res = await GET(req as never)
+    expect(res.status).toBe(302)
+    expect(res.headers.get('location')).toContain('error=store_failed')
+    expect(CalendarGoogleClient.revokeToken).toHaveBeenCalledWith('RT')
+  })
+
+  it('returns 302 feature_disabled redirect when env vars missing', async () => {
+    delete process.env.GOOGLE_CALENDAR_CLIENT_ID
+    const { GET } = await import('@/app/api/google-calendar/oauth/callback/route')
+    const req = new Request(`https://app.x/cb?code=CODE&state=anything`)
+    const res = await GET(req as never)
+    expect(res.status).toBe(302)
+    expect(res.headers.get('location')).toContain('error=feature_disabled')
   })
 
   it('rejects mismatched state', async () => {

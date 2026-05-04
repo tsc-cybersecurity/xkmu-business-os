@@ -35,7 +35,10 @@ function errRedirect(request: NextRequest, reason: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const env = getCalendarEnv()
+  let env
+  try { env = getCalendarEnv() } catch {
+    return errRedirect(request, 'feature_disabled')
+  }
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const queryState = url.searchParams.get('state')
@@ -79,15 +82,21 @@ export async function GET(request: NextRequest) {
   const primary = calendars.find(c => c.isPrimary)
   const googleEmail = primary?.id ?? 'unknown'
 
-  await CalendarAccountService.storeNewAccount({
-    userId: verified.uid,
-    googleEmail,
-    accessToken: exchange.accessToken,
-    refreshToken: exchange.refreshToken,
-    expiresInSec: exchange.expiresInSec,
-    scopes: exchange.scopes,
-    calendars,
-  })
+  try {
+    await CalendarAccountService.storeNewAccount({
+      userId: verified.uid,
+      googleEmail,
+      accessToken: exchange.accessToken,
+      refreshToken: exchange.refreshToken,
+      expiresInSec: exchange.expiresInSec,
+      scopes: exchange.scopes,
+      calendars,
+    })
+  } catch (err) {
+    // Best-effort revoke so the issued token doesn't sit unused upstream
+    try { await CalendarGoogleClient.revokeToken(exchange.refreshToken) } catch {}
+    return errRedirect(request, 'store_failed')
+  }
 
   const successUrl = new URL('/intern/termine/calendar-connect', request.url)
   successUrl.searchParams.set('connected', '1')
