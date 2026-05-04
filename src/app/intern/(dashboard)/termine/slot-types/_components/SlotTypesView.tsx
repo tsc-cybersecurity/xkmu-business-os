@@ -91,7 +91,7 @@ export function SlotTypesView({ initialSlotTypes }: { initialSlotTypes: SlotType
       {items.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            Noch keine Termin-Arten angelegt. Lege z. B. ein „Erstgespräch 30 min" an.
+            Noch keine Termin-Arten angelegt. Lege z. B. ein „Erstgespräch 30 min&ldquo; an.
           </CardContent>
         </Card>
       ) : (
