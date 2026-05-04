@@ -4,13 +4,25 @@ import Link from 'next/link'
 export default function TermineLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col gap-4 p-6">
-      <header className="flex items-center justify-between">
+      <header>
         <h1 className="text-2xl font-semibold">Termine</h1>
-        <nav className="flex gap-3 text-sm">
-          <Link href="/intern/termine" className="text-muted-foreground hover:text-foreground">Übersicht</Link>
-        </nav>
       </header>
-      {children}
+      <nav className="flex gap-1 border-b">
+        {[
+          { href: '/intern/termine', label: 'Übersicht' },
+          { href: '/intern/termine/slot-types', label: 'Termin-Arten' },
+          { href: '/intern/termine/availability', label: 'Verfügbarkeit' },
+        ].map(({ href, label }) => (
+          <Link
+            key={href}
+            href={href}
+            className="px-4 py-2 text-sm font-medium border-b-2 border-transparent hover:border-primary/50 hover:text-foreground text-muted-foreground"
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+      <div>{children}</div>
     </div>
   )
 }
