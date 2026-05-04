@@ -14,6 +14,7 @@ import { UserCog,
   Download,
   Upload,
   Book,
+  CalendarDays,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -202,6 +203,14 @@ export default async function SettingsPage() {
               <div>
                 <p className="text-sm font-medium">App-Dokumentation</p>
                 <p className="text-xs text-muted-foreground">Technische Dokumentation und Architektur</p>
+              </div>
+            </Link>
+
+            <Link href="/intern/settings/integrations/google-calendar" className="group flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/50">
+              <CalendarDays className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="text-sm font-medium">Integrationen / Google Calendar</p>
+                <p className="text-xs text-muted-foreground">OAuth-Credentials für die Terminbuchung konfigurieren</p>
               </div>
             </Link>
           </div>

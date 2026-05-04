@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/shared/loading-states'
 
@@ -23,6 +25,7 @@ interface AccountInfo {
 interface CalendarAccountResponse {
   account: AccountInfo | null
   calendars: CalendarRow[]
+  configured: boolean
 }
 
 export function CalendarConnectCard() {
@@ -31,6 +34,7 @@ export function CalendarConnectCard() {
   const flashError = searchParams.get('calendar_error')
 
   const [loading, setLoading] = useState(true)
+  const [configured, setConfigured] = useState(true)
   const [account, setAccount] = useState<AccountInfo | null>(null)
   const [calendars, setCalendars] = useState<CalendarRow[]>([])
   const [primary, setPrimary] = useState<string | null>(null)
@@ -41,6 +45,7 @@ export function CalendarConnectCard() {
       .then(async res => {
         if (!res.ok) return
         const data: CalendarAccountResponse = await res.json()
+        setConfigured(data.configured ?? true)
         setAccount(data.account)
         setCalendars(data.calendars ?? [])
         setPrimary(data.account?.primaryCalendarId ?? null)
@@ -93,6 +98,25 @@ export function CalendarConnectCard() {
       toast.error(e instanceof Error ? e.message : 'Fehler')
       setBusy(false)
     }
+  }
+
+  if (!configured) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Google Kalender</CardTitle>
+          <CardDescription>Die Google-Calendar-Integration ist noch nicht konfiguriert.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-3">
+            Ein Administrator muss die OAuth-Credentials hinterlegen, bevor du deinen Account verbinden kannst.
+          </p>
+          <Button asChild variant="outline">
+            <Link href="/intern/settings/integrations/google-calendar">Zur Konfiguration →</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

@@ -12,6 +12,33 @@ vi.mock('@/lib/services/calendar-account.service', () => ({
     listWatchedCalendars: vi.fn(),
   },
 }))
+vi.mock('@/lib/services/calendar-config.service', () => ({
+  CalendarConfigService: {
+    getConfig: vi.fn(),
+    isConfigured: vi.fn(),
+  },
+}))
+
+describe('GET /api/v1/calendar-account', () => {
+  beforeEach(() => vi.resetModules())
+
+  it('includes configured field in response', async () => {
+    const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
+    const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
+    vi.mocked(CalendarConfigService.getConfig).mockResolvedValueOnce({
+      id: 'cfg-1', clientId: 'cid', clientSecret: 'sec', redirectUri: 'https://x/cb',
+      appPublicUrl: 'https://x', tokenEncryptionKeyHex: '0'.repeat(64), appointmentTokenSecret: '0'.repeat(96),
+    } as never)
+    vi.mocked(CalendarConfigService.isConfigured).mockReturnValueOnce(true)
+    vi.mocked(CalendarAccountService.getActiveAccount).mockResolvedValueOnce(null)
+    const { GET } = await import('@/app/api/v1/calendar-account/route')
+    const req = new Request('https://x/api/v1/calendar-account')
+    const res = await GET(req as never)
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.configured).toBe(true)
+  })
+})
 
 describe('PATCH /api/v1/calendar-account', () => {
   beforeEach(() => vi.resetModules())

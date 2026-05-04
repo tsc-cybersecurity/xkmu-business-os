@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withPermission } from '@/lib/auth/require-permission'
 import { CalendarAccountService } from '@/lib/services/calendar-account.service'
+import { CalendarConfigService } from '@/lib/services/calendar-config.service'
 
 const PatchSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('setPrimary'), googleCalendarId: z.string().min(1) }),
@@ -11,8 +12,10 @@ const PatchSchema = z.discriminatedUnion('action', [
 export async function GET(request: NextRequest) {
   return withPermission(request, 'appointments', 'read', async (auth) => {
     if (!auth.userId) return NextResponse.json({ error: 'no_user_context' }, { status: 401 })
+    const cfg = await CalendarConfigService.getConfig()
+    const configured = CalendarConfigService.isConfigured(cfg)
     const account = await CalendarAccountService.getActiveAccount(auth.userId)
-    if (!account) return NextResponse.json({ account: null, calendars: [] })
+    if (!account) return NextResponse.json({ account: null, calendars: [], configured })
     const calendars = await CalendarAccountService.listWatchedCalendars(account.id)
     return NextResponse.json({
       account: {
@@ -22,6 +25,7 @@ export async function GET(request: NextRequest) {
         connectedAt: account.createdAt,
       },
       calendars,
+      configured,
     })
   })
 }

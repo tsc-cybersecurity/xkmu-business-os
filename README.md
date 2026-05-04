@@ -134,27 +134,21 @@ Ablage-Verzeichnis für Course-Assets ist standardmäßig
 `public/uploads/courses/` und kann via `COURSE_ASSET_DIR` env überschrieben
 werden (sinnvoll für Persistent-Volumes außerhalb des Containers).
 
-### Terminbuchung / Google Calendar (Phase 1)
+### Terminbuchung / Google Calendar
 
-**Setup einmalig:**
+Konfiguration läuft komplett über die App — keine Env-Variablen nötig.
 
-1. In [Google Cloud Console](https://console.cloud.google.com/) ein Projekt anlegen (oder existierendes wählen).
-2. Calendar API aktivieren (`APIs & Services → Library → Google Calendar API → Enable`).
-3. OAuth-Consent-Screen konfigurieren: User Type = External (oder Internal bei Workspace),
-   Scopes hinzufügen: `https://www.googleapis.com/auth/calendar`.
-4. OAuth-Client-Credentials erstellen (`APIs & Services → Credentials → Create Credentials → OAuth client ID`):
-   - Application type: Web application
-   - Authorized redirect URI: `${APP_PUBLIC_URL}/api/google-calendar/oauth/callback`
-5. Client-ID und Client-Secret in `.env` als `GOOGLE_CALENDAR_CLIENT_ID` / `_SECRET` setzen.
-6. `CALENDAR_TOKEN_KEY` generieren:
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   ```
-7. `APPOINTMENT_TOKEN_SECRET` zufällig generieren (≥ 32 chars).
-8. App neu starten.
-9. In der App: `/intern/settings/profile` → „Google Kalender" → „Mit Google verbinden".
+**Setup:**
 
-**In Phase 1 implementiert:** OAuth-Flow, Token-Verschlüsselung, Kalender-Liste, Primär-Kalender, „belegt"-Toggle, Disconnect.
+1. In [Google Cloud Console](https://console.cloud.google.com/) Projekt anlegen, **Google Calendar API** aktivieren, OAuth-Consent-Screen konfigurieren (Scope: `https://www.googleapis.com/auth/calendar`).
+2. OAuth-Client-ID erstellen (Web Application). Authorized redirect URI: `https://<deine-domain>/api/google-calendar/oauth/callback`.
+3. JSON mit den Credentials herunterladen.
+4. In der App: `/intern/settings/integrations/google-calendar` öffnen → JSON in das Import-Feld einfügen → „Werte übernehmen" → „Konfiguration speichern".
+5. Im Profil (`/intern/settings/profile`) → Karte „Google Kalender" → „Mit Google verbinden".
+
+**Crypto-Material:** AES-256-GCM-Schlüssel und HMAC-Secret werden bei der ersten DB-Initialisierung automatisch generiert (Migration `0040_google_calendar_config.sql`). Sie liegen in der DB und werden nicht über die UI rotiert.
+
+**In Phase 1 implementiert:** OAuth-Flow, DB-basierte Konfiguration, Token-Verschlüsselung, Kalender-Liste, Primär-Kalender, „belegt"-Toggle, Disconnect.
 **Noch nicht in Phase 1:** Buchung, Slot-Typen, Sync-Webhook, Mails — siehe Folge-Phasen.
 
 ## Environment Variables
