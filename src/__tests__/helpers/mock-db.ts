@@ -48,11 +48,14 @@ export function setupDbMock() {
   const updateMock = createChainMockManager()
   const deleteMock = createChainMockManager()
 
+  const executeMock = vi.fn().mockResolvedValue(undefined)
+
   const db = {
     insert: vi.fn().mockImplementation(() => insertMock.createFreshChain()),
     select: vi.fn().mockImplementation(() => selectMock.createFreshChain()),
     update: vi.fn().mockImplementation(() => updateMock.createFreshChain()),
     delete: vi.fn().mockImplementation(() => deleteMock.createFreshChain()),
+    execute: executeMock,
   }
 
   const mockTransaction = vi.fn().mockImplementation(async (cb: (tx: unknown) => unknown) => cb(db))
@@ -62,6 +65,13 @@ export function setupDbMock() {
 
   return {
     db,
+    // Primary names (used by newer tests)
+    insertMock,
+    selectMock,
+    updateMock,
+    deleteMock,
+    executeMock,
+    // Legacy aliases (used by older tests)
     mockInsert: insertMock,
     mockSelect: selectMock,
     mockUpdate: updateMock,
