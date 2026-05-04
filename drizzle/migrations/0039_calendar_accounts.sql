@@ -40,6 +40,6 @@ CREATE TABLE user_calendars_watched (
   display_name        varchar(255) NOT NULL,
   read_for_busy       boolean NOT NULL DEFAULT true,
   created_at          timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (account_id, google_calendar_id)
+  CONSTRAINT uq_user_calendars_watched_account_calendar UNIQUE (account_id, google_calendar_id)
 );
 CREATE INDEX idx_user_calendars_watched_account ON user_calendars_watched(account_id);

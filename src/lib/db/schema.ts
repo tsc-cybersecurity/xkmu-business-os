@@ -3499,7 +3499,9 @@ export const userCalendarsWatched = pgTable('user_calendars_watched', {
   readForBusy: boolean('read_for_busy').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
-  uniqAccountCalendar: unique().on(table.accountId, table.googleCalendarId),
+  uniqAccountCalendar: uniqueIndex('uq_user_calendars_watched_account_calendar')
+    .on(table.accountId, table.googleCalendarId),
+  accountIdx: index('idx_user_calendars_watched_account').on(table.accountId),
 }))
 
 export const userCalendarsWatchedRelations = relations(userCalendarsWatched, ({ one }) => ({
