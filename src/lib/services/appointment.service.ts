@@ -327,6 +327,11 @@ export const AppointmentService = {
       .limit(1)
     const userTimezone = userRows[0]?.timezone ?? 'Europe/Berlin'
 
+    // KNOWN GAP (same as book() lines 188-193): no DB transaction wraps recheck
+    // → live FreeBusy → UPDATE. Two concurrent reschedules of the same
+    // appointment can both pass and both update — last write wins, mails get
+    // queued twice. Acceptable for low-traffic single-instance V1; harden later.
+    //
     // Re-check local availability — same window logic as book(), but EXCLUDE this appointment
     const windowStart = new Date(args.newStartAtUtc.getTime() - 86_400_000)
     const windowEnd   = new Date(args.newStartAtUtc.getTime() + 86_400_000)
@@ -489,6 +494,8 @@ export const AppointmentService = {
       rescheduleTokenHash: null,
       cancelledAt: new Date(),
       cancelledBy: 'customer',
+      // cancellationReason is plain user text from the public cancel form.
+      // It must be HTML-escaped on render in any future template that displays it.
       cancellationReason: args.reason ?? null,
       updatedAt: new Date(),
     }).where(eq(appointments.id, appt.id))

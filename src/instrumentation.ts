@@ -49,6 +49,18 @@ export async function register() {
     logger.error('Auto-Migration Fehler (App startet trotzdem)', err, { module: 'Startup' })
   }
 
+  // Boot-time check: APPOINTMENT_TOKEN_SECRET. Soft-warn instead of hard-fail
+  // — apps that don't use the booking feature should still boot.
+  const apptSecret = process.env.APPOINTMENT_TOKEN_SECRET
+  if (!apptSecret || apptSecret.length < 32) {
+    logger.warn(
+      'APPOINTMENT_TOKEN_SECRET fehlt oder ist zu kurz (<32 Zeichen). ' +
+        'Bestaetigungsmails fuer Termine koennen keine Storno-/Umbuchungs-Links enthalten — Buchungen werden trotzdem akzeptiert, ' +
+        'aber Customer-Self-Service-Aktionen (Cancel/Reschedule) schlagen fehl, bis das Secret gesetzt ist.',
+      { module: 'Startup' },
+    )
+  }
+
   logger.info('In-process cron ticker starting (60s interval)', { module: 'CronTicker' })
 
   // Stagger the first tick by 30s so we don't race with startup migrations.
