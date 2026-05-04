@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac, timingSafeEqual } from 'node:crypto'
 import { db } from '@/lib/db'
 import { userCalendarAccounts } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import { CalendarConfigService } from '@/lib/services/calendar-config.service'
 import { CalendarSyncService } from '@/lib/services/calendar-sync.service'
 import { logger } from '@/lib/utils/logger'
+
+function deriveChannelToken(masterSecret: string): string {
+  // Domain-separated sub-key so the watch token sent to Google is not the
+  // same value used for OAuth-state HMAC and cancel/reschedule tokens.
+  return createHmac('sha256', masterSecret).update('watch-channel').digest('hex')
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -28,9 +35,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'channel_not_found' }, { status: 404 })
   }
 
-  // Validate channel token
+  // Validate channel token (timing-safe; derived sub-key, not raw master secret)
   const cfg = await CalendarConfigService.getConfig()
-  if (channelToken !== cfg.appointmentTokenSecret) {
+  const expected = deriveChannelToken(cfg.appointmentTokenSecret)
+  const got = channelToken ?? ''
+  const a = Buffer.from(got, 'utf8')
+  const b = Buffer.from(expected, 'utf8')
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
     return NextResponse.json({ error: 'invalid_token' }, { status: 401 })
   }
 

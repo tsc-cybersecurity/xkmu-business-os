@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { createHmac } from 'node:crypto'
 import { setupDbMock } from '@/__tests__/helpers/mock-db'
 
 vi.mock('@/lib/services/calendar-config.service', () => ({
@@ -14,6 +15,12 @@ const mockConfig = {
   tokenEncryptionKeyHex: '0'.repeat(64),
   appointmentTokenSecret: 'CHANNEL-SECRET',
 }
+
+// Webhook validates a derived sub-key (domain-separated from the master
+// secret used elsewhere). Tests must compute the same value.
+const VALID_CHANNEL_TOKEN = createHmac('sha256', mockConfig.appointmentTokenSecret)
+  .update('watch-channel')
+  .digest('hex')
 
 function makeRequest(headers: Record<string, string>): Request {
   return new Request('https://app.x/api/google-calendar/webhook', { method: 'POST', headers })
@@ -32,7 +39,7 @@ describe('POST /api/google-calendar/webhook', () => {
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
       'X-Goog-Channel-Id': 'ch-1',
-      'X-Goog-Channel-Token': 'CHANNEL-SECRET',
+      'X-Goog-Channel-Token': VALID_CHANNEL_TOKEN,
       'X-Goog-Resource-State': 'sync',
       'X-Goog-Resource-Id': 'res-1',
       'X-Goog-Message-Number': '1',
@@ -53,7 +60,7 @@ describe('POST /api/google-calendar/webhook', () => {
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
       'X-Goog-Channel-Id': 'ch-1',
-      'X-Goog-Channel-Token': 'CHANNEL-SECRET',
+      'X-Goog-Channel-Token': VALID_CHANNEL_TOKEN,
       'X-Goog-Resource-State': 'exists',
       'X-Goog-Resource-Id': 'res-1',
       'X-Goog-Message-Number': '5',
@@ -72,7 +79,7 @@ describe('POST /api/google-calendar/webhook', () => {
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
       'X-Goog-Channel-Id': 'ch-unknown',
-      'X-Goog-Channel-Token': 'CHANNEL-SECRET',
+      'X-Goog-Channel-Token': VALID_CHANNEL_TOKEN,
       'X-Goog-Resource-State': 'exists',
       'X-Goog-Resource-Id': 'res-1',
       'X-Goog-Message-Number': '1',
@@ -109,7 +116,7 @@ describe('POST /api/google-calendar/webhook', () => {
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
       'X-Goog-Channel-Id': 'ch-1',
-      'X-Goog-Channel-Token': 'CHANNEL-SECRET',
+      'X-Goog-Channel-Token': VALID_CHANNEL_TOKEN,
       'X-Goog-Resource-State': 'exists',
       'X-Goog-Resource-Id': 'res-1',
       'X-Goog-Message-Number': '8',  // older than 10

@@ -1,10 +1,16 @@
 import { db } from '@/lib/db'
 import { externalBusy, userCalendarAccounts } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
-import { randomUUID } from 'node:crypto'
+import { createHmac, randomUUID } from 'node:crypto'
 import { CalendarAccountService } from './calendar-account.service'
 import { CalendarConfigService } from './calendar-config.service'
 import { CalendarGoogleClient, type ExternalEvent } from './calendar-google.client'
+
+function deriveChannelToken(masterSecret: string): string {
+  // Domain-separated sub-key — must match the verification in
+  // /api/google-calendar/webhook/route.ts
+  return createHmac('sha256', masterSecret).update('watch-channel').digest('hex')
+}
 
 export const CalendarSyncService = {
   async fullSync(accountId: string, calendarId: string): Promise<{ syncToken: string | null; eventCount: number }> {
@@ -60,7 +66,11 @@ export const CalendarSyncService = {
   async upsertEvents(accountId: string, calendarId: string, events: ExternalEvent[]): Promise<{ inserted: number; deleted: number; skipped: number }> {
     let inserted = 0, deleted = 0, skipped = 0
     for (const ev of events) {
-      // Skip our own bookings (created with the extended property)
+      // Skip our own bookings (created with the extended property).
+      // TODO Phase 4: when ev.status === 'cancelled' AND extendedXkmuAppointmentId
+      // is set, the corresponding appointment in our DB should be cancelled too.
+      // Currently we drop the cancellation signal entirely. Restructure to
+      // check status === 'cancelled' first, then handle own-booking case.
       if (ev.extendedXkmuAppointmentId) {
         skipped++
         continue
@@ -119,7 +129,7 @@ export const CalendarSyncService = {
       calendarId: acc.primaryCalendarId,
       channelId,
       webhookUrl,
-      channelToken: cfg.appointmentTokenSecret,
+      channelToken: deriveChannelToken(cfg.appointmentTokenSecret),
       ttlSeconds: 7 * 24 * 3600,
     })
     await db.update(userCalendarAccounts).set({

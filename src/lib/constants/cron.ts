@@ -12,5 +12,6 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'api_call', label: 'API-Endpoint aufrufen' },
   { value: 'process_queue', label: 'Task-Queue abarbeiten (ausstehende Tasks)' },
   { value: 'course_assignment_reminders', label: 'Pflichtkurs-Erinnerungen versenden' },
+  { value: 'calendar_sync', label: 'Google Calendar Sync (Token + Channel)' },
   { value: 'custom', label: 'Benutzerdefiniert' },
 ]
