@@ -24,6 +24,7 @@ import { LayoutDashboard,
   ListOrdered,
   MessageCircle,
   GraduationCap,
+  CalendarDays,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -187,6 +188,13 @@ const navigation: NavItem[] = [
     href: '/intern/elearning',
     icon: GraduationCap,
     requiredModule: 'courses',
+  },
+  // ── Termine (standalone) ──
+  {
+    name: 'Termine',
+    href: '/intern/termine',
+    icon: CalendarDays,
+    requiredModule: 'appointments',
   },
   // ── E-Mail Inbox (standalone) ──
   {

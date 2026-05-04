@@ -14,12 +14,13 @@ import { pgTable,
   inet,
   index,
   uniqueIndex,
+  unique,
   serial,
   smallint,
   char,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 
 // ============================================
 // Organization (singleton — this app serves one organization)
@@ -163,6 +164,13 @@ export const users = pgTable('users', {
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  // Terminbuchung Phase 1
+  bookingSlug: varchar('booking_slug', { length: 60 }).unique(),
+  bookingPageActive: boolean('booking_page_active').notNull().default(false),
+  bookingPageTitle: varchar('booking_page_title', { length: 255 }),
+  bookingPageSubtitle: varchar('booking_page_subtitle', { length: 255 }),
+  bookingPageIntro: text('booking_page_intro'),
+  timezone: varchar('timezone', { length: 64 }).notNull().default('Europe/Berlin'),
 }, (table) => [
   index('idx_users_email').on(table.email),
   index('idx_users_company_id').on(table.companyId),
@@ -182,6 +190,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   createdPersons: many(persons),
   assignedLeads: many(leads),
   apiKeys: many(apiKeys),
+  calendarAccounts: many(userCalendarAccounts),
 }))
 
 // ============================================
@@ -3446,3 +3455,58 @@ export const courseAssignments = pgTable('course_assignments', {
 
 export type CourseAssignment = typeof courseAssignments.$inferSelect
 export type NewCourseAssignment = typeof courseAssignments.$inferInsert
+
+// ============================================================================
+// Terminbuchung Phase 1 — Calendar-Account-Verknüpfungen
+// ============================================================================
+
+export const userCalendarAccounts = pgTable('user_calendar_accounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  provider: varchar('provider', { length: 20 }).notNull().default('google'),
+  googleEmail: varchar('google_email', { length: 255 }).notNull(),
+  accessTokenEnc: text('access_token_enc').notNull(),
+  refreshTokenEnc: text('refresh_token_enc').notNull(),
+  tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }).notNull(),
+  scopes: text('scopes').array().notNull().default(sql`'{}'::text[]`),
+  primaryCalendarId: varchar('primary_calendar_id', { length: 255 }),
+  watchChannelId: uuid('watch_channel_id'),
+  watchResourceId: varchar('watch_resource_id', { length: 255 }),
+  watchExpiresAt: timestamp('watch_expires_at', { withTimezone: true }),
+  syncToken: text('sync_token'),
+  lastMessageNumber: bigint('last_message_number', { mode: 'number' }),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  userIdx: index('idx_user_calendar_accounts_user').on(table.userId).where(sql`revoked_at IS NULL`),
+  activeUniq: uniqueIndex('idx_user_calendar_accounts_active').on(table.userId, table.provider).where(sql`revoked_at IS NULL`),
+}))
+
+export const userCalendarAccountsRelations = relations(userCalendarAccounts, ({ one, many }) => ({
+  user: one(users, { fields: [userCalendarAccounts.userId], references: [users.id] }),
+  watchedCalendars: many(userCalendarsWatched),
+}))
+
+export type UserCalendarAccount = typeof userCalendarAccounts.$inferSelect
+export type NewUserCalendarAccount = typeof userCalendarAccounts.$inferInsert
+
+export const userCalendarsWatched = pgTable('user_calendars_watched', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => userCalendarAccounts.id, { onDelete: 'cascade' }),
+  googleCalendarId: varchar('google_calendar_id', { length: 255 }).notNull(),
+  displayName: varchar('display_name', { length: 255 }).notNull(),
+  readForBusy: boolean('read_for_busy').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => ({
+  uniqAccountCalendar: uniqueIndex('uq_user_calendars_watched_account_calendar')
+    .on(table.accountId, table.googleCalendarId),
+  accountIdx: index('idx_user_calendars_watched_account').on(table.accountId),
+}))
+
+export const userCalendarsWatchedRelations = relations(userCalendarsWatched, ({ one }) => ({
+  account: one(userCalendarAccounts, { fields: [userCalendarsWatched.accountId], references: [userCalendarAccounts.id] }),
+}))
+
+export type UserCalendarWatched = typeof userCalendarsWatched.$inferSelect
+export type NewUserCalendarWatched = typeof userCalendarsWatched.$inferInsert

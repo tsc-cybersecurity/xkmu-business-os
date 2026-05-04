@@ -139,6 +139,8 @@ export const TENANT_TABLES = [
   'portal_document_categories',
   'portal_documents',
   'portal_messages',
+  'user_calendar_accounts',
+  'user_calendars_watched',
 ]
 
 // Join/child tables that reference a parent (exported via JOIN)
