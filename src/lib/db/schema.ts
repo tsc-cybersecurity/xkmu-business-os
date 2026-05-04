@@ -3478,7 +3478,10 @@ export const userCalendarAccounts = pgTable('user_calendar_accounts', {
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-})
+}, (table) => ({
+  userIdx: index('idx_user_calendar_accounts_user').on(table.userId).where(sql`revoked_at IS NULL`),
+  activeUniq: uniqueIndex('idx_user_calendar_accounts_active').on(table.userId, table.provider).where(sql`revoked_at IS NULL`),
+}))
 
 export const userCalendarAccountsRelations = relations(userCalendarAccounts, ({ one, many }) => ({
   user: one(users, { fields: [userCalendarAccounts.userId], references: [users.id] }),
