@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, Save, Lock, Eye, EyeOff } from 'lucide-react'
 import { LoadingSpinner } from '@/components/shared/loading-states'
 import { logger } from '@/lib/utils/logger'
+import { CalendarConnectCard } from './_components/CalendarConnectCard'
 
 interface UserProfile {
   id: string
@@ -357,6 +358,11 @@ export default function ProfilePage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Google Calendar */}
+        <Suspense>
+          <CalendarConnectCard />
+        </Suspense>
 
         {/* Account Info */}
         <Card className="md:col-span-2">

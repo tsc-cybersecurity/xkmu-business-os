@@ -152,7 +152,7 @@ werden (sinnvoll für Persistent-Volumes außerhalb des Containers).
    ```
 7. `APPOINTMENT_TOKEN_SECRET` zufällig generieren (≥ 32 chars).
 8. App neu starten.
-9. In der App: `/intern/termine/calendar-connect` → „Mit Google verbinden".
+9. In der App: `/intern/settings/profile` → „Google Kalender" → „Mit Google verbinden".
 
 **In Phase 1 implementiert:** OAuth-Flow, Token-Verschlüsselung, Kalender-Liste, Primär-Kalender, „belegt"-Toggle, Disconnect.
 **Noch nicht in Phase 1:** Buchung, Slot-Typen, Sync-Webhook, Mails — siehe Folge-Phasen.

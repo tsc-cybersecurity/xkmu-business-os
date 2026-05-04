@@ -53,7 +53,7 @@ describe('GET /api/google-calendar/oauth/callback', () => {
     })
     const res = await GET(req as never)
     expect(res.status).toBe(302)
-    expect(res.headers.get('location')).toContain('/intern/termine/calendar-connect?connected=1')
+    expect(res.headers.get('location')).toContain('/intern/settings/profile?calendar=connected')
     expect(CalendarAccountService.storeNewAccount).toHaveBeenCalled()
   })
 
@@ -77,7 +77,7 @@ describe('GET /api/google-calendar/oauth/callback', () => {
     })
     const res = await GET(req as never)
     expect(res.status).toBe(302)
-    expect(res.headers.get('location')).toContain('error=store_failed')
+    expect(res.headers.get('location')).toContain('calendar_error=store_failed')
     expect(CalendarGoogleClient.revokeToken).toHaveBeenCalledWith('RT')
   })
 
@@ -87,7 +87,7 @@ describe('GET /api/google-calendar/oauth/callback', () => {
     const req = new Request(`https://app.x/cb?code=CODE&state=anything`)
     const res = await GET(req as never)
     expect(res.status).toBe(302)
-    expect(res.headers.get('location')).toContain('error=feature_disabled')
+    expect(res.headers.get('location')).toContain('calendar_error=feature_disabled')
   })
 
   it('rejects mismatched state', async () => {

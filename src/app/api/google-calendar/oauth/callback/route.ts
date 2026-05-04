@@ -29,8 +29,8 @@ function verifyState(state: string, secret: string): StatePayload | null {
 }
 
 function errRedirect(request: NextRequest, reason: string) {
-  const url = new URL('/intern/termine/calendar-connect', request.url)
-  url.searchParams.set('error', reason)
+  const url = new URL('/intern/settings/profile', request.url)
+  url.searchParams.set('calendar_error', reason)
   return NextResponse.redirect(url.toString(), 302)
 }
 
@@ -98,8 +98,8 @@ export async function GET(request: NextRequest) {
     return errRedirect(request, 'store_failed')
   }
 
-  const successUrl = new URL('/intern/termine/calendar-connect', request.url)
-  successUrl.searchParams.set('connected', '1')
+  const successUrl = new URL('/intern/settings/profile', request.url)
+  successUrl.searchParams.set('calendar', 'connected')
   const res = NextResponse.redirect(successUrl.toString(), 302)
   res.cookies.delete(STATE_COOKIE)
   return res

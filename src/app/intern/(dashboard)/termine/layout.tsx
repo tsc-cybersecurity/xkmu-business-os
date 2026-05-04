@@ -8,7 +8,6 @@ export default function TermineLayout({ children }: { children: ReactNode }) {
         <h1 className="text-2xl font-semibold">Termine</h1>
         <nav className="flex gap-3 text-sm">
           <Link href="/intern/termine" className="text-muted-foreground hover:text-foreground">Übersicht</Link>
-          <Link href="/intern/termine/calendar-connect" className="text-muted-foreground hover:text-foreground">Google Calendar</Link>
         </nav>
       </header>
       {children}
