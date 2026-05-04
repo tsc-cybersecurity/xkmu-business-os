@@ -43,7 +43,11 @@ export function RulesEditor({ rules, onChange }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
       })
-      if (!res.ok) throw new Error((await res.json()).error ?? 'Update fehlgeschlagen')
+      if (!res.ok) {
+        const err = (await res.json().catch(() => ({}))).error ?? 'Update fehlgeschlagen'
+        if (err === 'end_time_before_start') throw new Error('Endzeit muss nach Startzeit liegen')
+        throw new Error(String(err))
+      }
       const { rule } = await res.json()
       onChange(rules.map(r => r.id === id ? rule : r))
     } catch (e) {
