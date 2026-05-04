@@ -43,10 +43,22 @@ interface AppointmentLite {
 
 const DAYS_DE_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 const HOURS = Array.from({ length: 17 }, (_, i) => 6 + i)
+const SLOT_PX = 14 // h-3.5
+const HOUR_PX = SLOT_PX * 4 // 56
+const DAY_START_MIN = HOURS[0] * 60 // 06:00 → 360
+const DAY_END_MIN = (HOURS[HOURS.length - 1] + 1) * 60 // 23:00 → 1380
 
 function ruleTimeToMinutes(t: string): number {
   const [h, m] = t.split(':').map(Number)
   return h * 60 + m
+}
+
+function dateMinutesFromMidnight(d: Date): number {
+  return d.getHours() * 60 + d.getMinutes()
+}
+
+function sameLocalDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
 
 export function WeekCalendarView(props: {
@@ -84,19 +96,9 @@ export function WeekCalendarView(props: {
     return null
   }
 
-  function findAppointment(cellStart: Date, cellEnd: Date) {
-    const appts = props.appointments ?? []
-    for (const a of appts) {
-      const s = new Date(a.startAt)
-      const en = new Date(a.endAt)
-      if (cellStart < en && cellEnd > s) return a
-    }
-    return null
-  }
+  type CellState = 'available' | 'blocked' | 'free-override' | 'busy-external' | 'idle'
 
-  type CellState = 'available' | 'blocked' | 'free-override' | 'busy-external' | 'own-booking' | 'idle'
-
-  function cellState(dayIdx: number, hourMinute: number): { state: CellState; busy: ExternalBusyLite | null; appt: AppointmentLite | null } {
+  function cellState(dayIdx: number, hourMinute: number): { state: CellState; busy: ExternalBusyLite | null } {
     const day = days[dayIdx]
     const cellStart = new Date(day)
     cellStart.setHours(0, 0, 0, 0)
@@ -104,19 +106,15 @@ export function WeekCalendarView(props: {
     const cellEnd = new Date(cellStart)
     cellEnd.setMinutes(cellEnd.getMinutes() + 15)
 
-    // Own bookings take highest precedence
-    const appt = findAppointment(cellStart, cellEnd)
-    if (appt) return { state: 'own-booking', busy: null, appt }
-
     // External Google events take precedence — even if rules would say "available"
     const busy = findExternalBusy(cellStart, cellEnd)
-    if (busy) return { state: 'busy-external', busy, appt: null }
+    if (busy) return { state: 'busy-external', busy }
 
     for (const o of props.overrides) {
       const oStart = new Date(o.startAt)
       const oEnd = new Date(o.endAt)
       if (cellStart < oEnd && cellEnd > oStart) {
-        return { state: o.kind === 'block' ? 'blocked' : 'free-override', busy: null, appt: null }
+        return { state: o.kind === 'block' ? 'blocked' : 'free-override', busy: null }
       }
     }
 
@@ -126,20 +124,36 @@ export function WeekCalendarView(props: {
     for (const r of matching) {
       const start = ruleTimeToMinutes(r.startTime)
       const end = ruleTimeToMinutes(r.endTime)
-      if (hourMinute >= start && hourMinute + 15 <= end) return { state: 'available', busy: null, appt: null }
+      if (hourMinute >= start && hourMinute + 15 <= end) return { state: 'available', busy: null }
     }
-    return { state: 'idle', busy: null, appt: null }
+    return { state: 'idle', busy: null }
   }
 
-  const cellClass = (state: CellState, appt: AppointmentLite | null): string => {
+  const cellClass = (state: CellState): string => {
     switch (state) {
       case 'available': return 'bg-emerald-50 dark:bg-emerald-950/40'
       case 'blocked': return 'bg-red-100 dark:bg-red-950/50 [background-image:repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(0,0,0,0.05)_4px,rgba(0,0,0,0.05)_8px)]'
       case 'free-override': return 'bg-emerald-200 dark:bg-emerald-900/60'
       case 'busy-external': return 'bg-slate-300 dark:bg-slate-700'
-      case 'own-booking': return appt ? '' : 'bg-blue-200'
       default: return ''
     }
+  }
+
+  function appointmentsForDay(dayIdx: number): { appt: AppointmentLite; topPx: number; heightPx: number }[] {
+    const day = days[dayIdx]
+    const result: { appt: AppointmentLite; topPx: number; heightPx: number }[] = []
+    for (const a of props.appointments ?? []) {
+      const s = new Date(a.startAt)
+      const e = new Date(a.endAt)
+      if (!sameLocalDay(s, day) && !sameLocalDay(e, day)) continue
+      const startMin = sameLocalDay(s, day) ? Math.max(DAY_START_MIN, dateMinutesFromMidnight(s)) : DAY_START_MIN
+      const endMin = sameLocalDay(e, day) ? Math.min(DAY_END_MIN, dateMinutesFromMidnight(e)) : DAY_END_MIN
+      if (endMin <= startMin) continue
+      const topPx = ((startMin - DAY_START_MIN) / 15) * SLOT_PX
+      const heightPx = ((endMin - startMin) / 15) * SLOT_PX
+      result.push({ appt: a, topPx, heightPx })
+    }
+    return result
   }
 
   return (
@@ -161,62 +175,78 @@ export function WeekCalendarView(props: {
       </div>
 
       <div className="overflow-x-auto rounded-lg border">
-        <div className="grid grid-cols-[60px_repeat(7,1fr)] min-w-[700px]">
-          <div className="border-b bg-muted/40 p-2 text-xs font-medium" />
-          {days.map((d, i) => {
-            const isToday = d.getTime() === today.getTime()
-            return (
-              <div
-                key={i}
-                className={`border-b border-l bg-muted/40 p-2 text-xs font-medium text-center ${isToday ? 'bg-primary/10' : ''}`}
-              >
-                <div>{DAYS_DE_SHORT[i]}</div>
-                <div className="text-muted-foreground">{d.getDate()}.{d.getMonth() + 1}.</div>
-              </div>
-            )
-          })}
+        <div className="min-w-[700px]">
+          {/* Header row */}
+          <div className="grid grid-cols-[60px_repeat(7,1fr)]">
+            <div className="border-b bg-muted/40 p-2 text-xs font-medium" />
+            {days.map((d, i) => {
+              const isToday = d.getTime() === today.getTime()
+              return (
+                <div
+                  key={i}
+                  className={`border-b border-l bg-muted/40 p-2 text-xs font-medium text-center ${isToday ? 'bg-primary/10' : ''}`}
+                >
+                  <div>{DAYS_DE_SHORT[i]}</div>
+                  <div className="text-muted-foreground">{d.getDate()}.{d.getMonth() + 1}.</div>
+                </div>
+              )
+            })}
+          </div>
 
-          {HOURS.map(h => (
-            <div key={`row-${h}`} className="contents">
-              <div className="border-r border-b p-1 text-xs text-muted-foreground text-right pr-2">
-                {String(h).padStart(2, '0')}:00
-              </div>
-              {days.map((_, dayIdx) => (
-                <div key={`cell-${h}-${dayIdx}`} className="border-l border-b">
-                  {[0, 15, 30, 45].map(min => {
-                    const hourMinute = h * 60 + min
-                    const { state, busy, appt } = cellState(dayIdx, hourMinute)
-                    const tooltip = appt
-                      ? `${appt.slotTypeName} — ${appt.customerName}`
-                      : busy?.summary ?? undefined
-                    const inlineStyle = appt ? { backgroundColor: appt.color } : undefined
-                    const baseClass = `h-3.5 w-full ${cellClass(state, appt)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`
-                    if (appt) {
-                      return (
-                        <button
-                          key={min}
-                          type="button"
-                          title={tooltip}
-                          style={inlineStyle}
-                          onClick={() => setSelectedAppt(appt)}
-                          className={`${baseClass} cursor-pointer hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring`}
-                          aria-label={`Termin: ${appt.slotTypeName} mit ${appt.customerName}`}
-                        />
-                      )
-                    }
-                    return (
-                      <div
-                        key={min}
-                        title={tooltip}
-                        style={inlineStyle}
-                        className={baseClass}
-                      />
-                    )
-                  })}
+          {/* Body row: time column + 7 day columns (each is its own positioning context for appointment overlays) */}
+          <div className="grid grid-cols-[60px_repeat(7,1fr)]">
+            {/* Time column */}
+            <div className="border-r">
+              {HOURS.map(h => (
+                <div
+                  key={h}
+                  style={{ height: HOUR_PX }}
+                  className="border-b p-1 text-xs text-muted-foreground text-right pr-2"
+                >
+                  {String(h).padStart(2, '0')}:00
                 </div>
               ))}
             </div>
-          ))}
+
+            {/* Day columns */}
+            {days.map((_, dayIdx) => (
+              <div key={dayIdx} className="relative border-l">
+                {HOURS.map(h => (
+                  <div key={h} className="border-b">
+                    {[0, 15, 30, 45].map(min => {
+                      const hourMinute = h * 60 + min
+                      const { state, busy } = cellState(dayIdx, hourMinute)
+                      return (
+                        <div
+                          key={min}
+                          title={busy?.summary ?? undefined}
+                          className={`h-3.5 w-full ${cellClass(state)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`}
+                        />
+                      )
+                    })}
+                  </div>
+                ))}
+
+                {/* Appointment overlays — one button per appointment, sized to its duration */}
+                {appointmentsForDay(dayIdx).map(({ appt, topPx, heightPx }) => (
+                  <button
+                    key={appt.id}
+                    type="button"
+                    onClick={() => setSelectedAppt(appt)}
+                    style={{ top: topPx, height: heightPx, backgroundColor: appt.color }}
+                    className="absolute inset-x-0.5 rounded-sm border border-black/15 px-1 py-0 text-left text-[10px] leading-tight text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring overflow-hidden cursor-pointer"
+                    aria-label={`Termin: ${appt.slotTypeName} mit ${appt.customerName}`}
+                    title={`${appt.slotTypeName} — ${appt.customerName}`}
+                  >
+                    <div className="truncate font-semibold">{appt.slotTypeName}</div>
+                    {heightPx >= SLOT_PX * 2 ? (
+                      <div className="truncate opacity-95">{appt.customerName}</div>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
