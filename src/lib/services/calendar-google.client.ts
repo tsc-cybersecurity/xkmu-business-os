@@ -290,4 +290,21 @@ export const CalendarGoogleClient = {
     const json = await res.json() as { id: string; htmlLink?: string }
     return { id: json.id, htmlLink: json.htmlLink ?? '' }
   },
+
+  async eventsDelete(input: {
+    accessToken: string
+    calendarId: string
+    eventId: string
+    sendUpdates?: 'none' | 'all'
+  }): Promise<void> {
+    const sendUpdates = input.sendUpdates ?? 'all'
+    const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}?sendUpdates=${sendUpdates}`
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${input.accessToken}` },
+    })
+    // Google returns 204 on success, 410 if already deleted (treat as success)
+    if (res.status === 204 || res.status === 410) return
+    await ensureOk(res)
+  },
 }

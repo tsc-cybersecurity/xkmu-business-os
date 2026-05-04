@@ -19,6 +19,13 @@ export class SlotNoLongerAvailableError extends Error {
   }
 }
 
+export class AppointmentTokenError extends Error {
+  constructor(public reason: 'expired' | 'invalid' | 'revoked' | 'wrong_purpose', message?: string) {
+    super(message ?? reason)
+    this.name = 'AppointmentTokenError'
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Input / output types
 // ---------------------------------------------------------------------------
@@ -291,5 +298,60 @@ export const AppointmentService = {
     // 9. Return
     // -------------------------------------------------------------------------
     return { id: appt.id, status: 'confirmed', startAt: startAtUtc, endAt: endAtUtc }
+  },
+
+  async cancel(args: { token: string; reason?: string }): Promise<{ alreadyCancelled: boolean }> {
+    const { verifyAppointmentToken, hashOf } = await import('@/lib/utils/appointment-token.util')
+    const v = verifyAppointmentToken(args.token)
+    if (!v.ok) {
+      if (v.reason === 'expired') throw new AppointmentTokenError('expired')
+      throw new AppointmentTokenError('invalid')
+    }
+    if (v.payload.p !== 'cancel') throw new AppointmentTokenError('wrong_purpose')
+
+    const [appt] = await db.select().from(appointments).where(eq(appointments.id, v.payload.a)).limit(1)
+    if (!appt) throw new AppointmentTokenError('invalid')
+    if (appt.cancelTokenHash !== hashOf(args.token)) throw new AppointmentTokenError('revoked')
+
+    if (appt.status === 'cancelled') return { alreadyCancelled: true }
+
+    // 1. DB update first (revoke tokens + status)
+    await db.update(appointments).set({
+      status: 'cancelled',
+      cancelTokenHash: null,
+      rescheduleTokenHash: null,
+      cancelledAt: new Date(),
+      cancelledBy: 'customer',
+      cancellationReason: args.reason ?? null,
+      updatedAt: new Date(),
+    }).where(eq(appointments.id, appt.id))
+
+    // 2. Cancel pending reminders
+    const { AppointmentMailService } = await import('./appointment-mail.service')
+    await AppointmentMailService.cancelPendingReminders(appt.id)
+
+    // 3. Queue cancel mails (customer + staff)
+    try { await AppointmentMailService.queueCancellation(appt.id) }
+    catch (err) { console.error('Failed to queue cancel mails:', err) }
+
+    // 4. Google delete (best-effort — don't throw if it fails, the local DB is the source of truth)
+    if (appt.googleEventId && appt.googleCalendarId) {
+      try {
+        const account = await CalendarAccountService.getActiveAccount(appt.userId)
+        if (account) {
+          const accessToken = await CalendarAccountService.getValidAccessToken(account.id)
+          await CalendarGoogleClient.eventsDelete({
+            accessToken,
+            calendarId: appt.googleCalendarId,
+            eventId: appt.googleEventId,
+            sendUpdates: 'all',
+          })
+        }
+      } catch (err) {
+        console.warn('Google event delete failed:', err)
+      }
+    }
+
+    return { alreadyCancelled: false }
   },
 }

@@ -276,3 +276,23 @@ describe('CalendarGoogleClient.eventsInsert', () => {
     expect(url).toContain('sendUpdates=all')
   })
 })
+
+describe('CalendarGoogleClient.eventsDelete', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock)
+    fetchMock.mockReset()
+    vi.resetModules()
+  })
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('returns void on 204 success', async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }))
+    const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
+    await expect(CalendarGoogleClient.eventsDelete({
+      accessToken: 'AT', calendarId: 'primary', eventId: 'event-123',
+    })).resolves.toBeUndefined()
+    const call = fetchMock.mock.calls[0]
+    expect(call[1].method).toBe('DELETE')
+    expect(call[0]).toContain('sendUpdates=all')
+  })
+})
