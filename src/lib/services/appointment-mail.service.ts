@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { appointments, slotTypes, taskQueue, users } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { generateAppointmentToken } from '@/lib/utils/appointment-token.util'
 
 interface RenderContext {
@@ -9,6 +9,22 @@ interface RenderContext {
   appointment: { start_local: string; end_local: string; timezone: string }
   links: { cancel_url: string; reschedule_url: string }
   org: { name: string }
+}
+
+interface LoadedContext {
+  appt: {
+    id: string
+    userId: string
+    startAt: Date
+    endAt: Date
+    customerEmail: string
+    leadId: string | null
+    personId: string | null
+  }
+  user: { email: string | null }
+  ctx: RenderContext
+  cancelUrl: string
+  rescheduleUrl: string
 }
 
 const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')) || 'https://www.xkmu.de'
@@ -65,6 +81,51 @@ const LOCATION_LABELS: Record<string, string> = {
   custom: 'Sonstiges',
 }
 
+async function loadContext(appointmentId: string): Promise<LoadedContext> {
+  const [appt] = await db.select().from(appointments).where(eq(appointments.id, appointmentId)).limit(1)
+  if (!appt) throw new Error(`Appointment ${appointmentId} not found`)
+
+  const [slotType] = await db.select().from(slotTypes).where(eq(slotTypes.id, appt.slotTypeId)).limit(1)
+  if (!slotType) throw new Error(`SlotType ${appt.slotTypeId} not found`)
+
+  const [user] = await db.select({
+    email: users.email, firstName: users.firstName, lastName: users.lastName, timezone: users.timezone,
+  }).from(users).where(eq(users.id, appt.userId)).limit(1)
+  if (!user) throw new Error(`User ${appt.userId} not found`)
+
+  const { cancelUrl, rescheduleUrl } = await ensureTokensAndUrls({
+    appointmentId: appt.id,
+    startAt: appt.startAt,
+  })
+
+  const tz = user.timezone || 'Europe/Berlin'
+  const ctx: RenderContext = {
+    customer: {
+      name: appt.customerName,
+      email: appt.customerEmail,
+      phone: appt.customerPhone,
+      message: appt.customerMessage ?? '',
+    },
+    slot: {
+      type_name: slotType.name,
+      duration_minutes: String(slotType.durationMinutes),
+      location: LOCATION_LABELS[slotType.location] ?? slotType.location,
+      location_details: slotType.locationDetails ?? '',
+    },
+    appointment: {
+      start_local: formatLocal(appt.startAt, tz),
+      end_local: formatLocal(appt.endAt, tz),
+      timezone: tz,
+    },
+    links: { cancel_url: cancelUrl, reschedule_url: rescheduleUrl },
+    org: {
+      name: 'xKMU',  // TODO Phase 8: read from organization table
+    },
+  }
+
+  return { appt, user, ctx, cancelUrl, rescheduleUrl }
+}
+
 export const AppointmentMailService = {
   /**
    * Queue confirmation emails for an appointment.
@@ -72,46 +133,7 @@ export const AppointmentMailService = {
    * - Staff (the user owning the calendar) gets `appointment.staff.notification`
    */
   async queueConfirmation(appointmentId: string): Promise<void> {
-    const [appt] = await db.select().from(appointments).where(eq(appointments.id, appointmentId)).limit(1)
-    if (!appt) throw new Error(`Appointment ${appointmentId} not found`)
-
-    const [slotType] = await db.select().from(slotTypes).where(eq(slotTypes.id, appt.slotTypeId)).limit(1)
-    if (!slotType) throw new Error(`SlotType ${appt.slotTypeId} not found`)
-
-    const [user] = await db.select({
-      email: users.email, firstName: users.firstName, lastName: users.lastName, timezone: users.timezone,
-    }).from(users).where(eq(users.id, appt.userId)).limit(1)
-    if (!user) throw new Error(`User ${appt.userId} not found`)
-
-    const { cancelUrl, rescheduleUrl } = await ensureTokensAndUrls({
-      appointmentId: appt.id,
-      startAt: appt.startAt,
-    })
-
-    const tz = user.timezone || 'Europe/Berlin'
-    const ctx: RenderContext = {
-      customer: {
-        name: appt.customerName,
-        email: appt.customerEmail,
-        phone: appt.customerPhone,
-        message: appt.customerMessage ?? '',
-      },
-      slot: {
-        type_name: slotType.name,
-        duration_minutes: String(slotType.durationMinutes),
-        location: LOCATION_LABELS[slotType.location] ?? slotType.location,
-        location_details: slotType.locationDetails ?? '',
-      },
-      appointment: {
-        start_local: formatLocal(appt.startAt, tz),
-        end_local: formatLocal(appt.endAt, tz),
-        timezone: tz,
-      },
-      links: { cancel_url: cancelUrl, reschedule_url: rescheduleUrl },
-      org: {
-        name: 'xKMU',  // TODO Phase 8: read from organization table
-      },
-    }
+    const { appt, user, ctx } = await loadContext(appointmentId)
 
     // Queue customer mail
     await db.insert(taskQueue).values({
@@ -144,5 +166,54 @@ export const AppointmentMailService = {
         referenceId: appt.id,
       })
     }
+  },
+
+  /**
+   * Queue 24h-before and 1h-before reminder tasks for an appointment.
+   * Skips reminders whose scheduled time is already in the past
+   * (e.g., bookings made <24h before start get no 24h reminder).
+   */
+  async queueReminders(appointmentId: string): Promise<void> {
+    const { appt, ctx } = await loadContext(appointmentId)
+    const startMs = appt.startAt.getTime()
+    const reminders = [
+      { templateSlug: 'appointment.customer.reminder_24h', scheduledFor: new Date(startMs - 24 * 60 * 60 * 1000) },
+      { templateSlug: 'appointment.customer.reminder_1h', scheduledFor: new Date(startMs - 60 * 60 * 1000) },
+    ]
+    const now = Date.now()
+    for (const r of reminders) {
+      if (r.scheduledFor.getTime() <= now) continue
+      await db.insert(taskQueue).values({
+        type: 'appointment_reminder',
+        status: 'pending',
+        priority: 4,
+        scheduledFor: r.scheduledFor,
+        payload: {
+          templateSlug: r.templateSlug,
+          to: appt.customerEmail,
+          placeholders: buildPlaceholders(ctx),
+          leadId: appt.leadId,
+          personId: appt.personId,
+        },
+        referenceType: 'appointment',
+        referenceId: appt.id,
+      })
+    }
+  },
+
+  /**
+   * Mark all pending `appointment_reminder` tasks for the given appointment
+   * as cancelled. Returns the count of tasks affected.
+   */
+  async cancelPendingReminders(appointmentId: string): Promise<number> {
+    const result = await db.update(taskQueue)
+      .set({ status: 'cancelled', updatedAt: new Date() })
+      .where(and(
+        eq(taskQueue.type, 'appointment_reminder'),
+        eq(taskQueue.referenceId, appointmentId),
+        eq(taskQueue.status, 'pending'),
+      ))
+      .returning({ id: taskQueue.id })
+    return result.length
   },
 }
