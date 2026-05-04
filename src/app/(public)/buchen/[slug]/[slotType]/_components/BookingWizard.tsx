@@ -88,9 +88,14 @@ export function BookingWizard({ slug, timezone, slotType }: { slug: string; time
     return new Intl.DateTimeFormat('de-DE', { timeZone: timezone, hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
+  async function submit(e?: React.FormEvent | React.MouseEvent) {
+    e?.preventDefault?.()
     if (!selectedSlot) { toast.error('Bitte einen Slot auswählen'); return }
+    if (!form.customerName.trim()) { toast.error('Bitte Name angeben'); return }
+    if (!form.customerEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.customerEmail)) {
+      toast.error('Bitte gültige E-Mail-Adresse angeben'); return
+    }
+    if (!form.customerPhone.trim()) { toast.error('Bitte Telefonnummer angeben'); return }
     if (!form.consentDsgvo) { toast.error('Bitte Datenschutz zustimmen'); return }
     setSubmitting(true)
     try {
@@ -253,21 +258,21 @@ export function BookingWizard({ slug, timezone, slotType }: { slug: string; time
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={submit} className="space-y-4">
+            <div className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="name">Name *</Label>
-                <Input id="name" required value={form.customerName}
+                <Input id="name" value={form.customerName}
                   onChange={e => setForm({ ...form, customerName: e.target.value })} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="email">E-Mail *</Label>
-                  <Input id="email" type="email" required value={form.customerEmail}
+                  <Input id="email" type="email" value={form.customerEmail}
                     onChange={e => setForm({ ...form, customerEmail: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="phone">Telefon *</Label>
-                  <Input id="phone" type="tel" required value={form.customerPhone}
+                  <Input id="phone" type="tel" value={form.customerPhone}
                     onChange={e => setForm({ ...form, customerPhone: e.target.value })} />
                 </div>
               </div>
@@ -277,7 +282,7 @@ export function BookingWizard({ slug, timezone, slotType }: { slug: string; time
                   onChange={e => setForm({ ...form, customerMessage: e.target.value })} />
               </div>
               <div className="flex items-start gap-2">
-                <input id="dsgvo" type="checkbox" required checked={form.consentDsgvo}
+                <input id="dsgvo" type="checkbox" checked={form.consentDsgvo}
                   onChange={e => setForm({ ...form, consentDsgvo: e.target.checked })}
                   className="mt-1" />
                 <Label htmlFor="dsgvo" className="font-normal">
@@ -286,10 +291,10 @@ export function BookingWizard({ slug, timezone, slotType }: { slug: string; time
                   zu. *
                 </Label>
               </div>
-              <Button type="submit" disabled={submitting} className="w-full">
+              <Button type="button" onClick={submit} disabled={submitting} className="w-full">
                 {submitting ? 'Wird gebucht…' : 'Verbindlich buchen'}
               </Button>
-            </form>
+            </div>
           </CardContent>
         </Card>
       )}
