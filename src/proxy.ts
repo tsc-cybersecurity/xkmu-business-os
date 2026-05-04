@@ -28,6 +28,9 @@ const PUBLIC_PATHS = [
   '/api/v1/media/serve',
   '/api/health',
   '/portal/accept-invite',
+  '/buchen',
+  '/api/buchen',
+  '/api/google-calendar/webhook',
 ]
 
 const CSRF_COOKIE = 'csrf_token'
