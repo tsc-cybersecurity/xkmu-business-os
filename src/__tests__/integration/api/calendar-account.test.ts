@@ -30,16 +30,17 @@ describe('PATCH /api/v1/calendar-account', () => {
   })
 
   it('toggles read_for_busy', async () => {
+    const watchedId = crypto.randomUUID()
     const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
     vi.mocked(CalendarAccountService.getActiveAccount).mockResolvedValueOnce({ id: 'acc-1' } as never)
     const { PATCH } = await import('@/app/api/v1/calendar-account/route')
     const req = new Request('https://x/api/v1/calendar-account', {
       method: 'PATCH',
-      body: JSON.stringify({ action: 'setReadForBusy', watchedId: '00000000-0000-0000-0000-000000000001', readForBusy: false }),
+      body: JSON.stringify({ action: 'setReadForBusy', watchedId, readForBusy: false }),
     })
     const res = await PATCH(req as never)
     expect(res.status).toBe(200)
-    expect(CalendarAccountService.setReadForBusy).toHaveBeenCalledWith('00000000-0000-0000-0000-000000000001', false)
+    expect(CalendarAccountService.setReadForBusy).toHaveBeenCalledWith(watchedId, false)
   })
 
   it('returns 404 when no active account', async () => {

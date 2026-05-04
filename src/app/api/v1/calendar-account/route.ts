@@ -5,7 +5,7 @@ import { CalendarAccountService } from '@/lib/services/calendar-account.service'
 
 const PatchSchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('setPrimary'), googleCalendarId: z.string().min(1) }),
-  z.object({ action: z.literal('setReadForBusy'), watchedId: z.string().min(1), readForBusy: z.boolean() }),
+  z.object({ action: z.literal('setReadForBusy'), watchedId: z.string().uuid(), readForBusy: z.boolean() }),
 ])
 
 export async function GET(request: NextRequest) {
