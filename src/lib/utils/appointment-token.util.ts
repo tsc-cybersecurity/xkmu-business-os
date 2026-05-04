@@ -64,7 +64,7 @@ export function verifyAppointmentToken(token: string): VerifyResult {
   } catch {
     return { ok: false, reason: 'malformed' }
   }
-  if (typeof payload?.a !== 'string' || typeof payload?.e !== 'number' || typeof payload?.n !== 'string'
+  if (typeof payload?.a !== 'string' || typeof payload?.e !== 'number' || !Number.isFinite(payload.e) || typeof payload?.n !== 'string'
       || (payload.p !== 'cancel' && payload.p !== 'reschedule')) {
     return { ok: false, reason: 'malformed' }
   }
