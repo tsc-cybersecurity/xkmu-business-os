@@ -145,6 +145,7 @@ export const TENANT_TABLES = [
   'slot_types',
   'availability_rules',
   'availability_overrides',
+  'external_busy',
 ]
 
 // Join/child tables that reference a parent (exported via JOIN)
