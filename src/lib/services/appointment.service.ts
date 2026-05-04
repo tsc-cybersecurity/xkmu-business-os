@@ -279,7 +279,18 @@ export const AppointmentService = {
     }
 
     // -------------------------------------------------------------------------
-    // 8. Return
+    // 8. Queue confirmation mails (fail-open)
+    // -------------------------------------------------------------------------
+    try {
+      const { AppointmentMailService } = await import('./appointment-mail.service')
+      await AppointmentMailService.queueConfirmation(appt.id)
+    } catch (err) {
+      // Log but don't fail the booking — mail can be retried via task_queue
+      console.error('Failed to queue confirmation mails:', err)
+    }
+
+    // -------------------------------------------------------------------------
+    // 9. Return
     // -------------------------------------------------------------------------
     return { id: appt.id, status: 'confirmed', startAt: startAtUtc, endAt: endAtUtc }
   },
