@@ -251,6 +251,7 @@ export const AppointmentService = {
           description: buildDescription(input),
           startUtc: startAtUtc,
           endUtc: endAtUtc,
+          timeZone: userTimezone,
           attendeeEmail: input.customerEmail,
           attendeeName: input.customerName,
           appointmentId: appt.id,

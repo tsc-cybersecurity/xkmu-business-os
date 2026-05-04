@@ -264,6 +264,7 @@ export const CalendarGoogleClient = {
     description: string
     startUtc: Date
     endUtc: Date
+    timeZone: string  // canonical IANA TZ for display + .ics export (e.g. 'Europe/Berlin')
     attendeeEmail: string
     attendeeName: string
     appointmentId: string
@@ -274,8 +275,8 @@ export const CalendarGoogleClient = {
     const body = {
       summary: input.summary,
       description: input.description,
-      start: { dateTime: input.startUtc.toISOString(), timeZone: 'UTC' },
-      end:   { dateTime: input.endUtc.toISOString(),   timeZone: 'UTC' },
+      start: { dateTime: input.startUtc.toISOString(), timeZone: input.timeZone },
+      end:   { dateTime: input.endUtc.toISOString(),   timeZone: input.timeZone },
       attendees: [{ email: input.attendeeEmail, displayName: input.attendeeName }],
       extendedProperties: { private: { xkmu_appointment_id: input.appointmentId } },
       reminders: { useDefault: true },

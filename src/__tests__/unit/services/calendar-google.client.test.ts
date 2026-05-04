@@ -245,6 +245,7 @@ describe('CalendarGoogleClient.eventsInsert', () => {
       description: 'Notes',
       startUtc: new Date('2026-05-04T09:00:00Z'),
       endUtc: new Date('2026-05-04T09:30:00Z'),
+      timeZone: 'Europe/Berlin',
       attendeeEmail: 'anna@example.com',
       attendeeName: 'Anna',
       appointmentId: 'appt-1',
@@ -256,6 +257,8 @@ describe('CalendarGoogleClient.eventsInsert', () => {
     expect(body.summary).toBe('Erstgespräch – Anna')
     expect(body.attendees[0].email).toBe('anna@example.com')
     expect(body.extendedProperties.private.xkmu_appointment_id).toBe('appt-1')
+    expect(body.start.timeZone).toBe('Europe/Berlin')
+    expect(body.end.timeZone).toBe('Europe/Berlin')
   })
 
   it('passes sendUpdates=all when specified', async () => {
@@ -265,6 +268,7 @@ describe('CalendarGoogleClient.eventsInsert', () => {
       accessToken: 'AT', calendarId: 'primary',
       summary: 's', description: 'd',
       startUtc: new Date(), endUtc: new Date(),
+      timeZone: 'Europe/Berlin',
       attendeeEmail: 'a@b', attendeeName: 'A',
       appointmentId: 'id', sendUpdates: 'all',
     })
