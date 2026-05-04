@@ -39,4 +39,15 @@ describe('GET /api/google-calendar/oauth/start', () => {
     const res = await GET(new Request('https://app.x/api/google-calendar/oauth/start') as never)
     expect(res.status).toBe(401)
   })
+
+  it('returns 503 feature_disabled when env vars missing', async () => {
+    delete process.env.GOOGLE_CALENDAR_CLIENT_ID
+    const { getAuthContext } = await import('@/lib/auth/auth-context')
+    vi.mocked(getAuthContext).mockResolvedValueOnce({ userId: 'u-1', role: 'owner' } as never)
+    const { GET } = await import('@/app/api/google-calendar/oauth/start/route')
+    const res = await GET(new Request('https://app.x/api/google-calendar/oauth/start') as never)
+    expect(res.status).toBe(503)
+    const body = await res.json()
+    expect(body.error).toBe('feature_disabled')
+  })
 })
