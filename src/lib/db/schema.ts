@@ -3603,4 +3603,32 @@ export const availabilityOverridesRelations = relations(availabilityOverrides, (
 export type AvailabilityOverride = typeof availabilityOverrides.$inferSelect
 export type NewAvailabilityOverride = typeof availabilityOverrides.$inferInsert
 
+// ============================================================================
+// Terminbuchung Phase 3 — externe Google-Events (Spiegel)
+// ============================================================================
+
+export const externalBusy = pgTable('external_busy', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  accountId: uuid('account_id').notNull().references(() => userCalendarAccounts.id, { onDelete: 'cascade' }),
+  googleCalendarId: varchar('google_calendar_id', { length: 255 }).notNull(),
+  googleEventId: varchar('google_event_id', { length: 255 }).notNull(),
+  startAt: timestamp('start_at', { withTimezone: true }).notNull(),
+  endAt: timestamp('end_at', { withTimezone: true }).notNull(),
+  etag: varchar('etag', { length: 255 }),
+  transparency: varchar('transparency', { length: 15 }).notNull().default('opaque'),
+  isAllDay: boolean('is_all_day').notNull().default(false),
+  summary: varchar('summary', { length: 500 }),
+  lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  uniqEvent: uniqueIndex('uq_external_busy_event').on(t.googleCalendarId, t.googleEventId),
+  accountTimeIdx: index('idx_external_busy_account_time').on(t.accountId, t.startAt, t.endAt),
+}))
+
+export const externalBusyRelations = relations(externalBusy, ({ one }) => ({
+  account: one(userCalendarAccounts, { fields: [externalBusy.accountId], references: [userCalendarAccounts.id] }),
+}))
+
+export type ExternalBusy = typeof externalBusy.$inferSelect
+export type NewExternalBusy = typeof externalBusy.$inferInsert
+
 export type GoogleCalendarConfig = typeof googleCalendarConfig.$inferSelect

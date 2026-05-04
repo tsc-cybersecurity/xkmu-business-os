@@ -3,6 +3,8 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { CalendarConfigService } from '@/lib/services/calendar-config.service'
 import { CalendarGoogleClient } from '@/lib/services/calendar-google.client'
 import { CalendarAccountService } from '@/lib/services/calendar-account.service'
+import { CalendarSyncService } from '@/lib/services/calendar-sync.service'
+import { logger } from '@/lib/utils/logger'
 
 const STATE_COOKIE = 'calendar_oauth_state'
 const STATE_MAX_AGE_MS = 5 * 60_000
@@ -94,8 +96,9 @@ export async function GET(request: NextRequest) {
   const primary = calendars.find(c => c.isPrimary)
   const googleEmail = primary?.id ?? 'unknown'
 
+  let accountId: string
   try {
-    await CalendarAccountService.storeNewAccount({
+    const stored = await CalendarAccountService.storeNewAccount({
       userId: verified.uid,
       googleEmail,
       accessToken: exchange.accessToken,
@@ -104,14 +107,36 @@ export async function GET(request: NextRequest) {
       scopes: exchange.scopes,
       calendars,
     })
+    accountId = stored.id
   } catch (err) {
     // Best-effort revoke so the issued token doesn't sit unused upstream
     try { await CalendarGoogleClient.revokeToken(exchange.refreshToken) } catch {}
     return errRedirect(request, 'store_failed', cfg.appPublicUrl)
   }
 
+  // Best-effort initial sync + watch setup. Failures here don't break the connection
+  // — the user's account is stored and the cron will retry. We only log and surface
+  // a soft warning via query param.
+  let syncWarn: string | null = null
+  const primaryCalendarId = calendars.find(c => c.isPrimary)?.id ?? calendars[0]?.id
+  if (primaryCalendarId) {
+    try {
+      await CalendarSyncService.fullSync(accountId, primaryCalendarId)
+    } catch (err) {
+      logger.error('Initial fullSync failed during OAuth callback', err, { accountId })
+      syncWarn = 'sync_failed'
+    }
+    try {
+      await CalendarSyncService.setupWatch(accountId)
+    } catch (err) {
+      logger.error('setupWatch failed during OAuth callback', err, { accountId })
+      syncWarn = syncWarn ?? 'watch_failed'
+    }
+  }
+
   const successUrl = new URL('/intern/settings/profile', resolveBaseUrl(request, cfg.appPublicUrl))
   successUrl.searchParams.set('calendar', 'connected')
+  if (syncWarn) successUrl.searchParams.set('sync_warn', syncWarn)
   const res = NextResponse.redirect(successUrl.toString(), 302)
   res.cookies.delete(STATE_COOKIE)
   return res
