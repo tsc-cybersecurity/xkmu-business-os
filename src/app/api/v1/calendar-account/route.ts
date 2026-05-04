@@ -29,14 +29,18 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   return withPermission(request, 'appointments', 'update', async (auth) => {
     if (!auth.userId) return NextResponse.json({ error: 'no_user_context' }, { status: 401 })
-    const body = PatchSchema.parse(await request.json())
+    const parsed = PatchSchema.safeParse(await request.json())
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'invalid_body', details: parsed.error.flatten() }, { status: 400 })
+    }
+    const body = parsed.data
     const account = await CalendarAccountService.getActiveAccount(auth.userId)
     if (!account) return NextResponse.json({ error: 'no_active_account' }, { status: 404 })
 
     if (body.action === 'setPrimary') {
       await CalendarAccountService.setPrimaryCalendar(account.id, body.googleCalendarId)
     } else {
-      await CalendarAccountService.setReadForBusy(body.watchedId, body.readForBusy)
+      await CalendarAccountService.setReadForBusy(body.watchedId, account.id, body.readForBusy)
     }
     return NextResponse.json({ ok: true })
   })

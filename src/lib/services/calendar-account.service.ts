@@ -122,9 +122,12 @@ export const CalendarAccountService = {
     }).where(eq(userCalendarAccounts.id, accountId))
   },
 
-  async setReadForBusy(watchedId: string, readForBusy: boolean) {
+  async setReadForBusy(watchedId: string, accountId: string, readForBusy: boolean) {
     await db.update(userCalendarsWatched).set({ readForBusy })
-      .where(eq(userCalendarsWatched.id, watchedId))
+      .where(and(
+        eq(userCalendarsWatched.id, watchedId),
+        eq(userCalendarsWatched.accountId, accountId),
+      ))
   },
 }
 
