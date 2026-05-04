@@ -317,6 +317,39 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
       return { skipped: true, reason: 'Missing templateSlug or to' }
     }
 
+    case 'appointment_reminder': {
+      const apptId = item.referenceId ?? (payload.appointmentId as string | undefined)
+      if (!apptId) {
+        return { skipped: true, reason: 'no_appointment_id' }
+      }
+      const { db } = await import('@/lib/db')
+      const { appointments } = await import('@/lib/db/schema')
+      const { eq } = await import('drizzle-orm')
+      const [appt] = await db
+        .select({ status: appointments.status })
+        .from(appointments)
+        .where(eq(appointments.id, apptId))
+        .limit(1)
+      if (!appt || appt.status === 'cancelled') {
+        return { skipped: true, reason: 'appointment_cancelled_or_missing' }
+      }
+      if (!payload.templateSlug || !payload.to) {
+        return { skipped: true, reason: 'no_template_or_to' }
+      }
+      const { EmailService } = await import('@/lib/services/email.service')
+      const result = await EmailService.sendWithTemplate(
+        String(payload.templateSlug),
+        String(payload.to),
+        (payload.placeholders || {}) as Record<string, string>,
+        {
+          leadId: payload.leadId ? String(payload.leadId) : undefined,
+          personId: payload.personId ? String(payload.personId) : undefined,
+        },
+      )
+      if (!result.success) throw new Error(result.error || 'E-Mail-Versand fehlgeschlagen')
+      return { sent: true, to: payload.to, template: payload.templateSlug }
+    }
+
     default:
       logger.warn(`Unknown task type: ${item.type}`, { module: 'TaskQueue' })
       return { skipped: true, reason: `Unknown type: ${item.type}` }
