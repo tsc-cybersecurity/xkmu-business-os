@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { userCalendarAccounts, userCalendarsWatched } from '@/lib/db/schema'
+import { userCalendarAccounts, userCalendarsWatched, type UserCalendarAccount } from '@/lib/db/schema'
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { encryptToken, decryptToken } from './calendar-token-crypto'
 import { CalendarGoogleClient, type CalendarListEntry } from './calendar-google.client'
@@ -15,14 +15,14 @@ export interface StoreNewAccountInput {
 }
 
 export const CalendarAccountService = {
-  async getActiveAccount(userId: string) {
+  async getActiveAccount(userId: string): Promise<UserCalendarAccount | null> {
     const rows = await db.select().from(userCalendarAccounts).where(
       and(eq(userCalendarAccounts.userId, userId), isNull(userCalendarAccounts.revokedAt)),
     ).limit(1)
     return rows[0] ?? null
   },
 
-  async getById(accountId: string) {
+  async getById(accountId: string): Promise<UserCalendarAccount | null> {
     const rows = await db.select().from(userCalendarAccounts).where(eq(userCalendarAccounts.id, accountId)).limit(1)
     return rows[0] ?? null
   },

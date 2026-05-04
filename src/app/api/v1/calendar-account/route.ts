@@ -10,6 +10,7 @@ const PatchSchema = z.discriminatedUnion('action', [
 
 export async function GET(request: NextRequest) {
   return withPermission(request, 'appointments', 'read', async (auth) => {
+    if (!auth.userId) return NextResponse.json({ error: 'no_user_context' }, { status: 401 })
     const account = await CalendarAccountService.getActiveAccount(auth.userId)
     if (!account) return NextResponse.json({ account: null, calendars: [] })
     const calendars = await CalendarAccountService.listWatchedCalendars(account.id)
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   return withPermission(request, 'appointments', 'update', async (auth) => {
+    if (!auth.userId) return NextResponse.json({ error: 'no_user_context' }, { status: 401 })
     const body = PatchSchema.parse(await request.json())
     const account = await CalendarAccountService.getActiveAccount(auth.userId)
     if (!account) return NextResponse.json({ error: 'no_active_account' }, { status: 404 })
@@ -42,6 +44,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   return withPermission(request, 'appointments', 'delete', async (auth) => {
+    if (!auth.userId) return NextResponse.json({ error: 'no_user_context' }, { status: 401 })
     const account = await CalendarAccountService.getActiveAccount(auth.userId)
     if (!account) return NextResponse.json({ error: 'no_active_account' }, { status: 404 })
     await CalendarAccountService.revoke(account.id)
