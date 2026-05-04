@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
-import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm'
+import { and, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm'
 import { getSession } from '@/lib/auth/session'
 import { db } from '@/lib/db'
-import { externalBusy, userCalendarAccounts, userCalendarsWatched } from '@/lib/db/schema'
+import { appointments, externalBusy, slotTypes, userCalendarAccounts, userCalendarsWatched } from '@/lib/db/schema'
 import { AvailabilityService } from '@/lib/services/availability.service'
 import { WeekCalendarView } from './_components/WeekCalendarView'
 
@@ -21,10 +21,11 @@ export default async function TermineOverviewPage({ searchParams }: PageProps) {
   sunday.setDate(sunday.getDate() + 6)
   sunday.setHours(23, 59, 59, 999)
 
-  const [rules, overrides, busy] = await Promise.all([
+  const [rules, overrides, busy, appts] = await Promise.all([
     AvailabilityService.listRules(session.user.id),
     AvailabilityService.listOverrides(session.user.id, monday, sunday),
     fetchExternalBusy(session.user.id, monday, sunday),
+    fetchAppointments(session.user.id, monday, sunday),
   ])
 
   return (
@@ -44,8 +45,36 @@ export default async function TermineOverviewPage({ searchParams }: PageProps) {
         endAt: e.endAt.toISOString(),
         summary: e.summary,
       }))}
+      appointments={appts.map(a => ({
+        id: a.id,
+        startAt: a.startAt.toISOString(),
+        endAt: a.endAt.toISOString(),
+        customerName: a.customerName,
+        slotTypeName: a.slotTypeName,
+        color: a.color,
+        status: a.status,
+      }))}
     />
   )
+}
+
+async function fetchAppointments(userId: string, from: Date, to: Date) {
+  return db.select({
+    id: appointments.id,
+    startAt: appointments.startAt,
+    endAt: appointments.endAt,
+    customerName: appointments.customerName,
+    status: appointments.status,
+    slotTypeName: slotTypes.name,
+    color: slotTypes.color,
+  }).from(appointments)
+    .innerJoin(slotTypes, eq(appointments.slotTypeId, slotTypes.id))
+    .where(and(
+      eq(appointments.userId, userId),
+      or(eq(appointments.status, 'pending'), eq(appointments.status, 'confirmed'), eq(appointments.status, 'completed')),
+      gte(appointments.endAt, from),
+      lte(appointments.startAt, to),
+    ))
 }
 
 async function fetchExternalBusy(userId: string, from: Date, to: Date) {

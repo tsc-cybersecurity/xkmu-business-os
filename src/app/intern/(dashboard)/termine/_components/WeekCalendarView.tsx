@@ -20,6 +20,16 @@ interface ExternalBusyLite {
   summary: string | null
 }
 
+interface AppointmentLite {
+  id: string
+  startAt: string
+  endAt: string
+  customerName: string
+  slotTypeName: string
+  color: string
+  status: string
+}
+
 const DAYS_DE_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 const HOURS = Array.from({ length: 17 }, (_, i) => 6 + i)
 
@@ -33,6 +43,7 @@ export function WeekCalendarView(props: {
   rules: AvailabilityRule[]
   overrides: OverrideLite[]
   externalBusy?: ExternalBusyLite[]
+  appointments?: AppointmentLite[]
 }) {
   const router = useRouter()
   const monday = new Date(props.monday)
@@ -61,9 +72,19 @@ export function WeekCalendarView(props: {
     return null
   }
 
-  type CellState = 'available' | 'blocked' | 'free-override' | 'busy-external' | 'idle'
+  function findAppointment(cellStart: Date, cellEnd: Date) {
+    const appts = props.appointments ?? []
+    for (const a of appts) {
+      const s = new Date(a.startAt)
+      const en = new Date(a.endAt)
+      if (cellStart < en && cellEnd > s) return a
+    }
+    return null
+  }
 
-  function cellState(dayIdx: number, hourMinute: number): { state: CellState; busy: ExternalBusyLite | null } {
+  type CellState = 'available' | 'blocked' | 'free-override' | 'busy-external' | 'own-booking' | 'idle'
+
+  function cellState(dayIdx: number, hourMinute: number): { state: CellState; busy: ExternalBusyLite | null; appt: AppointmentLite | null } {
     const day = days[dayIdx]
     const cellStart = new Date(day)
     cellStart.setHours(0, 0, 0, 0)
@@ -71,15 +92,19 @@ export function WeekCalendarView(props: {
     const cellEnd = new Date(cellStart)
     cellEnd.setMinutes(cellEnd.getMinutes() + 15)
 
+    // Own bookings take highest precedence
+    const appt = findAppointment(cellStart, cellEnd)
+    if (appt) return { state: 'own-booking', busy: null, appt }
+
     // External Google events take precedence — even if rules would say "available"
     const busy = findExternalBusy(cellStart, cellEnd)
-    if (busy) return { state: 'busy-external', busy }
+    if (busy) return { state: 'busy-external', busy, appt: null }
 
     for (const o of props.overrides) {
       const oStart = new Date(o.startAt)
       const oEnd = new Date(o.endAt)
       if (cellStart < oEnd && cellEnd > oStart) {
-        return { state: o.kind === 'block' ? 'blocked' : 'free-override', busy: null }
+        return { state: o.kind === 'block' ? 'blocked' : 'free-override', busy: null, appt: null }
       }
     }
 
@@ -89,17 +114,18 @@ export function WeekCalendarView(props: {
     for (const r of matching) {
       const start = ruleTimeToMinutes(r.startTime)
       const end = ruleTimeToMinutes(r.endTime)
-      if (hourMinute >= start && hourMinute + 15 <= end) return { state: 'available', busy: null }
+      if (hourMinute >= start && hourMinute + 15 <= end) return { state: 'available', busy: null, appt: null }
     }
-    return { state: 'idle', busy: null }
+    return { state: 'idle', busy: null, appt: null }
   }
 
-  const cellClass = (state: CellState): string => {
+  const cellClass = (state: CellState, appt: AppointmentLite | null): string => {
     switch (state) {
       case 'available': return 'bg-emerald-50 dark:bg-emerald-950/40'
       case 'blocked': return 'bg-red-100 dark:bg-red-950/50 [background-image:repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(0,0,0,0.05)_4px,rgba(0,0,0,0.05)_8px)]'
       case 'free-override': return 'bg-emerald-200 dark:bg-emerald-900/60'
       case 'busy-external': return 'bg-slate-300 dark:bg-slate-700'
+      case 'own-booking': return appt ? '' : 'bg-blue-200'
       default: return ''
     }
   }
@@ -147,12 +173,17 @@ export function WeekCalendarView(props: {
                 <div key={`cell-${h}-${dayIdx}`} className="border-l border-b">
                   {[0, 15, 30, 45].map(min => {
                     const hourMinute = h * 60 + min
-                    const { state, busy } = cellState(dayIdx, hourMinute)
+                    const { state, busy, appt } = cellState(dayIdx, hourMinute)
+                    const tooltip = appt
+                      ? `${appt.slotTypeName} — ${appt.customerName}`
+                      : busy?.summary ?? undefined
+                    const inlineStyle = appt ? { backgroundColor: appt.color } : undefined
                     return (
                       <div
                         key={min}
-                        title={busy?.summary ?? undefined}
-                        className={`h-3.5 ${cellClass(state)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`}
+                        title={tooltip}
+                        style={inlineStyle}
+                        className={`h-3.5 ${cellClass(state, appt)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`}
                       />
                     )
                   })}
@@ -184,6 +215,10 @@ function Legend() {
       <span className="flex items-center gap-1.5">
         <span className="inline-block h-3 w-3 rounded-sm bg-slate-300 border" />
         extern belegt
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="inline-block h-3 w-3 rounded-sm bg-blue-400 border" />
+        Buchung
       </span>
       <span className="flex items-center gap-1.5">
         <span className="inline-block h-3 w-3 rounded-sm bg-red-100 border" />
