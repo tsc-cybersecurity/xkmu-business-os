@@ -28,8 +28,15 @@ function verifyState(state: string, secret: string): StatePayload | null {
   }
 }
 
-function errRedirect(request: NextRequest, reason: string) {
-  const url = new URL('/intern/settings/profile', request.url)
+function resolveBaseUrl(request: NextRequest, appPublicUrl: string | null): string {
+  // Prefer admin-configured public URL — handles reverse-proxy setups where
+  // request.url reports the internal bind host (e.g. 0.0.0.0:3000).
+  if (appPublicUrl) return appPublicUrl
+  return request.url
+}
+
+function errRedirect(request: NextRequest, reason: string, appPublicUrl: string | null) {
+  const url = new URL('/intern/settings/profile', resolveBaseUrl(request, appPublicUrl))
   url.searchParams.set('calendar_error', reason)
   return NextResponse.redirect(url.toString(), 302)
 }
@@ -37,7 +44,7 @@ function errRedirect(request: NextRequest, reason: string) {
 export async function GET(request: NextRequest) {
   const cfg = await CalendarConfigService.getConfig()
   if (!CalendarConfigService.isConfigured(cfg)) {
-    return errRedirect(request, 'feature_disabled')
+    return errRedirect(request, 'feature_disabled', cfg.appPublicUrl)
   }
 
   const url = new URL(request.url)
@@ -62,7 +69,7 @@ export async function GET(request: NextRequest) {
   // Existierenden aktiven Account prüfen — bei Reconnect erst alten revoken (kommt in V2; in V1 abbrechen)
   const existing = await CalendarAccountService.getActiveAccount(verified.uid)
   if (existing) {
-    return errRedirect(request, 'already_connected')
+    return errRedirect(request, 'already_connected', cfg.appPublicUrl)
   }
 
   let exchange
@@ -73,14 +80,14 @@ export async function GET(request: NextRequest) {
       redirectUri: cfg.redirectUri!,
     })
   } catch (err) {
-    return errRedirect(request, err instanceof Error ? err.message.slice(0, 80) : 'exchange_failed')
+    return errRedirect(request, err instanceof Error ? err.message.slice(0, 80) : 'exchange_failed', cfg.appPublicUrl)
   }
 
   let calendars
   try {
     calendars = await CalendarGoogleClient.listCalendars(exchange.accessToken)
   } catch {
-    return errRedirect(request, 'calendar_list_failed')
+    return errRedirect(request, 'calendar_list_failed', cfg.appPublicUrl)
   }
 
   // E-Mail des Users aus calendar list (primary.id ist meist gleich der E-Mail)
@@ -100,10 +107,10 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     // Best-effort revoke so the issued token doesn't sit unused upstream
     try { await CalendarGoogleClient.revokeToken(exchange.refreshToken) } catch {}
-    return errRedirect(request, 'store_failed')
+    return errRedirect(request, 'store_failed', cfg.appPublicUrl)
   }
 
-  const successUrl = new URL('/intern/settings/profile', request.url)
+  const successUrl = new URL('/intern/settings/profile', resolveBaseUrl(request, cfg.appPublicUrl))
   successUrl.searchParams.set('calendar', 'connected')
   const res = NextResponse.redirect(successUrl.toString(), 302)
   res.cookies.delete(STATE_COOKIE)
