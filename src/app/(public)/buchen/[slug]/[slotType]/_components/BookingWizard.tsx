@@ -119,6 +119,11 @@ export function BookingWizard({ slug, timezone, slotType }: { slug: string; time
         setSubmitting(false)
         return
       }
+      if (res.status === 429) {
+        toast.error('Zu viele Buchungsversuche von dieser Adresse. Bitte später erneut versuchen.')
+        setSubmitting(false)
+        return
+      }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.error ?? 'Buchung fehlgeschlagen')

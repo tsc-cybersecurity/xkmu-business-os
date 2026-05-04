@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { appointments, users, externalBusy, userCalendarsWatched } from '@/lib/db/schema'
+import { appointments, users, externalBusy } from '@/lib/db/schema'
 import { and, eq, gte, inArray, lte } from 'drizzle-orm'
 import { SlotTypeService } from './slot-type.service'
 import { AvailabilityService } from './availability.service'
@@ -96,13 +96,11 @@ export const AppointmentService = {
       AvailabilityService.listOverrides(userId, windowStart, windowEnd),
     ])
 
-    // Fetch existing appointments in window (pending/confirmed), including their buffers
+    // KNOWN GAP: existing appointments are passed without their own slot-type
+    // buffers (we'd need a join to slot_types). Conservative under-blocking is
+    // accepted for V1 — fix in Phase 5.
     const existingAppts = await db
-      .select({
-        startAt: appointments.startAt,
-        endAt: appointments.endAt,
-        bufferBeforeMinutes: appointments.slotTypeId, // placeholder — see below
-      })
+      .select({ startAt: appointments.startAt, endAt: appointments.endAt })
       .from(appointments)
       .where(
         and(
@@ -112,11 +110,6 @@ export const AppointmentService = {
           lte(appointments.startAt, windowEnd),
         ),
       )
-
-    // We can't join slotTypes easily here without complexity — pass 0 buffers for
-    // existing appointments (conservative; the slot type buffer is applied to the
-    // NEW booking slot, not the existing ones in the calc).
-    // The AvailabilityCalcService.computeFreeSlots expects {startAt, endAt, bufferBeforeMinutes, bufferAfterMinutes}.
     const apptIntervals = existingAppts.map(a => ({
       startAt: a.startAt,
       endAt: a.endAt,
@@ -130,25 +123,27 @@ export const AppointmentService = {
     // The externalBusy table has accountId → we need the account for this user.
     const account = await CalendarAccountService.getActiveAccount(userId)
 
+    // Fetch watched calendars once and reuse for both externalBusy + live FreeBusy below
+    const watchedCalendars = account
+      ? await CalendarAccountService.listWatchedCalendars(account.id)
+      : []
+    const busyCalIds = watchedCalendars.filter(w => w.readForBusy).map(w => w.googleCalendarId)
+
     let externalBusyIntervals: { startAt: Date; endAt: Date }[] = []
-    if (account) {
-      const watched = await CalendarAccountService.listWatchedCalendars(account.id)
-      const busyCalIds = watched.filter(w => w.readForBusy).map(w => w.googleCalendarId)
-      if (busyCalIds.length > 0) {
-        const busyRows = await db
-          .select({ startAt: externalBusy.startAt, endAt: externalBusy.endAt })
-          .from(externalBusy)
-          .where(
-            and(
-              eq(externalBusy.accountId, account.id),
-              inArray(externalBusy.googleCalendarId, busyCalIds),
-              eq(externalBusy.transparency, 'opaque'),
-              gte(externalBusy.endAt, windowStart),
-              lte(externalBusy.startAt, windowEnd),
-            ),
-          )
-        externalBusyIntervals = busyRows
-      }
+    if (account && busyCalIds.length > 0) {
+      const busyRows = await db
+        .select({ startAt: externalBusy.startAt, endAt: externalBusy.endAt })
+        .from(externalBusy)
+        .where(
+          and(
+            eq(externalBusy.accountId, account.id),
+            inArray(externalBusy.googleCalendarId, busyCalIds),
+            eq(externalBusy.transparency, 'opaque'),
+            gte(externalBusy.endAt, windowStart),
+            lte(externalBusy.startAt, windowEnd),
+          ),
+        )
+      externalBusyIntervals = busyRows
     }
 
     const freeSlots = AvailabilityCalcService.computeFreeSlots({
@@ -185,12 +180,13 @@ export const AppointmentService = {
 
     // -------------------------------------------------------------------------
     // 4. Live FreeBusy check (best-effort, fail-open on Google errors)
+    // KNOWN GAP: no DB transaction wraps recheck → live FreeBusy → INSERT.
+    // Concurrent bookings of the same slot can both pass and both insert.
+    // Acceptable for low-traffic single-instance V1; harden in Phase 5.
     // -------------------------------------------------------------------------
-    // account was already fetched above — reuse it
-    if (account) {
-      const watched = await CalendarAccountService.listWatchedCalendars(account.id)
-      const calIds = watched.filter(w => w.readForBusy).map(w => w.googleCalendarId)
-      if (calIds.length > 0) {
+    if (account && busyCalIds.length > 0) {
+      const calIds = busyCalIds  // reused from above
+      {
         try {
           const accessToken = await CalendarAccountService.getValidAccessToken(account.id)
           const fb = await Promise.race([
