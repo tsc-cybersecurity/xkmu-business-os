@@ -18,6 +18,7 @@ import { pgTable,
   serial,
   smallint,
   char,
+  time,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 import { relations, sql } from 'drizzle-orm'
@@ -3529,5 +3530,77 @@ export const googleCalendarConfig = pgTable('google_calendar_config', {
 }, (t) => ({
   singletonUnique: unique('google_calendar_config_singleton').on(t.isSingleton),
 }))
+
+// ============================================================================
+// Terminbuchung Phase 2 — Slot-Typen + Verfügbarkeit
+// ============================================================================
+
+export const slotTypes = pgTable('slot_types', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  slug: varchar('slug', { length: 100 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  durationMinutes: integer('duration_minutes').notNull(),
+  bufferBeforeMinutes: integer('buffer_before_minutes').notNull().default(0),
+  bufferAfterMinutes: integer('buffer_after_minutes').notNull().default(0),
+  minNoticeHours: integer('min_notice_hours').notNull().default(24),
+  maxAdvanceDays: integer('max_advance_days').notNull().default(60),
+  color: varchar('color', { length: 7 }).notNull().default('#3b82f6'),
+  isActive: boolean('is_active').notNull().default(true),
+  location: varchar('location', { length: 20 }).notNull().default('phone'),
+  locationDetails: text('location_details'),
+  displayOrder: integer('display_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  uniqUserSlug: uniqueIndex('uq_slot_types_user_slug').on(t.userId, t.slug),
+  userActiveIdx: index('idx_slot_types_user_active').on(t.userId, t.isActive),
+}))
+
+export const slotTypesRelations = relations(slotTypes, ({ one }) => ({
+  user: one(users, { fields: [slotTypes.userId], references: [users.id] }),
+}))
+
+export type SlotType = typeof slotTypes.$inferSelect
+export type NewSlotType = typeof slotTypes.$inferInsert
+
+export const availabilityRules = pgTable('availability_rules', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  dayOfWeek: smallint('day_of_week').notNull(),
+  startTime: time('start_time').notNull(),
+  endTime: time('end_time').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  userIdx: index('idx_availability_rules_user').on(t.userId),
+}))
+
+export const availabilityRulesRelations = relations(availabilityRules, ({ one }) => ({
+  user: one(users, { fields: [availabilityRules.userId], references: [users.id] }),
+}))
+
+export type AvailabilityRule = typeof availabilityRules.$inferSelect
+export type NewAvailabilityRule = typeof availabilityRules.$inferInsert
+
+export const availabilityOverrides = pgTable('availability_overrides', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  startAt: timestamp('start_at', { withTimezone: true }).notNull(),
+  endAt: timestamp('end_at', { withTimezone: true }).notNull(),
+  kind: varchar('kind', { length: 10 }).notNull(),
+  reason: varchar('reason', { length: 255 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  userStartIdx: index('idx_availability_overrides_user_start').on(t.userId, t.startAt),
+}))
+
+export const availabilityOverridesRelations = relations(availabilityOverrides, ({ one }) => ({
+  user: one(users, { fields: [availabilityOverrides.userId], references: [users.id] }),
+}))
+
+export type AvailabilityOverride = typeof availabilityOverrides.$inferSelect
+export type NewAvailabilityOverride = typeof availabilityOverrides.$inferInsert
 
 export type GoogleCalendarConfig = typeof googleCalendarConfig.$inferSelect

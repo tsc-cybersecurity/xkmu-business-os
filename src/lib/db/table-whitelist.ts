@@ -142,6 +142,9 @@ export const TENANT_TABLES = [
   'user_calendar_accounts',
   'user_calendars_watched',
   'google_calendar_config',
+  'slot_types',
+  'availability_rules',
+  'availability_overrides',
 ]
 
 // Join/child tables that reference a parent (exported via JOIN)

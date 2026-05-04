@@ -1,19 +1,48 @@
-import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth/session'
+import { AvailabilityService } from '@/lib/services/availability.service'
+import { WeekCalendarView } from './_components/WeekCalendarView'
 
-export default function TermineIndexPage() {
+interface PageProps {
+  searchParams: Promise<{ week?: string }>
+}
+
+export default async function TermineOverviewPage({ searchParams }: PageProps) {
+  const session = await getSession()
+  if (!session) redirect('/intern/login')
+  const { week } = await searchParams
+
+  const anchor = week ? new Date(week) : new Date()
+  const monday = startOfWeek(anchor)
+  const sunday = new Date(monday)
+  sunday.setDate(sunday.getDate() + 6)
+  sunday.setHours(23, 59, 59, 999)
+
+  const [rules, overrides] = await Promise.all([
+    AvailabilityService.listRules(session.user.id),
+    AvailabilityService.listOverrides(session.user.id, monday, sunday),
+  ])
+
   return (
-    <div className="rounded-lg border p-6">
-      <h2 className="text-lg font-medium">Terminbuchung — Setup</h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Dieses Modul ist gerade im Aufbau. Phase 1 ermöglicht das Verbinden deines
-        Google-Kalenders — die Anbindung verwaltest du in deinem Profil.
-      </p>
-      <Link
-        href="/intern/settings/profile"
-        className="mt-4 inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
-      >
-        Google Kalender im Profil verbinden →
-      </Link>
-    </div>
+    <WeekCalendarView
+      monday={monday.toISOString()}
+      rules={rules}
+      overrides={overrides.map(o => ({
+        id: o.id,
+        startAt: o.startAt.toISOString(),
+        endAt: o.endAt.toISOString(),
+        kind: o.kind as 'free' | 'block',
+        reason: o.reason,
+      }))}
+    />
   )
+}
+
+function startOfWeek(d: Date): Date {
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  const monday = new Date(d)
+  monday.setDate(d.getDate() + diff)
+  monday.setHours(0, 0, 0, 0)
+  return monday
 }
