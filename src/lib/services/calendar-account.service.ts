@@ -3,6 +3,7 @@ import { userCalendarAccounts, userCalendarsWatched, type UserCalendarAccount } 
 import { and, eq, isNull, sql } from 'drizzle-orm'
 import { encryptToken, decryptToken } from './calendar-token-crypto'
 import { CalendarGoogleClient, type CalendarListEntry } from './calendar-google.client'
+import { CalendarConfigService } from './calendar-config.service'
 
 export interface StoreNewAccountInput {
   userId: string
@@ -12,6 +13,14 @@ export interface StoreNewAccountInput {
   expiresInSec: number
   scopes: string[]
   calendars: CalendarListEntry[]
+}
+
+async function requireOauthConfig() {
+  const cfg = await CalendarConfigService.getConfig()
+  if (!CalendarConfigService.isConfigured(cfg)) {
+    throw new Error('Google Calendar integration not configured — set credentials under Einstellungen → Integrations')
+  }
+  return cfg as typeof cfg & { clientId: string; clientSecret: string; redirectUri: string; appPublicUrl: string }
 }
 
 export const CalendarAccountService = {
@@ -28,14 +37,15 @@ export const CalendarAccountService = {
   },
 
   async storeNewAccount(input: StoreNewAccountInput) {
+    const cfg = await CalendarConfigService.getConfig()
     const expiresAt = new Date(Date.now() + input.expiresInSec * 1000)
     const primary = input.calendars.find(c => c.isPrimary)
     const [acc] = await db.insert(userCalendarAccounts).values({
       userId: input.userId,
       provider: 'google',
       googleEmail: input.googleEmail,
-      accessTokenEnc: encryptToken(input.accessToken),
-      refreshTokenEnc: encryptToken(input.refreshToken),
+      accessTokenEnc: encryptToken(input.accessToken, cfg.tokenEncryptionKeyHex),
+      refreshTokenEnc: encryptToken(input.refreshToken, cfg.tokenEncryptionKeyHex),
       tokenExpiresAt: expiresAt,
       scopes: input.scopes,
       primaryCalendarId: primary?.id ?? input.calendars[0]?.id ?? null,
@@ -62,9 +72,11 @@ export const CalendarAccountService = {
     const acc = await this.getById(accountId)
     if (!acc || acc.revokedAt) throw new Error(`Account ${accountId} not active`)
 
+    const cfg = await CalendarConfigService.getConfig()
+
     const expiresAtMs = acc.tokenExpiresAt.getTime()
     if (expiresAtMs > Date.now() + 60_000) {
-      return decryptToken(acc.accessTokenEnc)
+      return decryptToken(acc.accessTokenEnc, cfg.tokenEncryptionKeyHex)
     }
 
     // Refresh nötig — advisory lock setzen
@@ -74,13 +86,17 @@ export const CalendarAccountService = {
       // Re-read nach Lock — vielleicht hat anderer Worker schon refreshed
       const fresh = await this.getById(accountId)
       if (fresh && fresh.tokenExpiresAt.getTime() > Date.now() + 60_000) {
-        return decryptToken(fresh.accessTokenEnc)
+        return decryptToken(fresh.accessTokenEnc, cfg.tokenEncryptionKeyHex)
       }
+      const oauthCfg = await requireOauthConfig()
       try {
-        const refreshed = await CalendarGoogleClient.refreshAccessToken(decryptToken(acc.refreshTokenEnc))
+        const refreshed = await CalendarGoogleClient.refreshAccessToken(
+          decryptToken(acc.refreshTokenEnc, cfg.tokenEncryptionKeyHex),
+          { clientId: oauthCfg.clientId, clientSecret: oauthCfg.clientSecret },
+        )
         const newExpires = new Date(Date.now() + refreshed.expiresInSec * 1000)
         await db.update(userCalendarAccounts).set({
-          accessTokenEnc: encryptToken(refreshed.accessToken),
+          accessTokenEnc: encryptToken(refreshed.accessToken, cfg.tokenEncryptionKeyHex),
           tokenExpiresAt: newExpires,
           updatedAt: new Date(),
         }).where(eq(userCalendarAccounts.id, accountId))
@@ -102,8 +118,9 @@ export const CalendarAccountService = {
   async revoke(accountId: string) {
     const acc = await this.getById(accountId)
     if (!acc || acc.revokedAt) return
+    const cfg = await CalendarConfigService.getConfig()
     try {
-      await CalendarGoogleClient.revokeToken(decryptToken(acc.refreshTokenEnc))
+      await CalendarGoogleClient.revokeToken(decryptToken(acc.refreshTokenEnc, cfg.tokenEncryptionKeyHex))
     } catch {
       // best-effort — wenn Google nicht erreichbar, lokal trotzdem revoken
     }

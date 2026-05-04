@@ -3510,3 +3510,24 @@ export const userCalendarsWatchedRelations = relations(userCalendarsWatched, ({ 
 
 export type UserCalendarWatched = typeof userCalendarsWatched.$inferSelect
 export type NewUserCalendarWatched = typeof userCalendarsWatched.$inferInsert
+
+// ============================================================================
+// Google Calendar Config — singleton row (admin-editable via UI in Pass 2)
+// ============================================================================
+
+export const googleCalendarConfig = pgTable('google_calendar_config', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: varchar('client_id', { length: 255 }),
+  clientSecret: text('client_secret'),
+  redirectUri: varchar('redirect_uri', { length: 500 }),
+  appPublicUrl: varchar('app_public_url', { length: 255 }),
+  tokenEncryptionKeyHex: varchar('token_encryption_key_hex', { length: 64 }).notNull(),
+  appointmentTokenSecret: varchar('appointment_token_secret', { length: 128 }).notNull(),
+  isSingleton: boolean('is_singleton').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  singletonUnique: unique('google_calendar_config_singleton').on(t.isSingleton),
+}))
+
+export type GoogleCalendarConfig = typeof googleCalendarConfig.$inferSelect

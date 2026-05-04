@@ -141,6 +141,7 @@ export const TENANT_TABLES = [
   'portal_messages',
   'user_calendar_accounts',
   'user_calendars_watched',
+  'google_calendar_config',
 ]
 
 // Join/child tables that reference a parent (exported via JOIN)

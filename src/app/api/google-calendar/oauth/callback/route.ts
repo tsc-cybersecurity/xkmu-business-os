@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { getCalendarEnv } from '@/lib/services/calendar-env'
+import { CalendarConfigService } from '@/lib/services/calendar-config.service'
 import { CalendarGoogleClient } from '@/lib/services/calendar-google.client'
 import { CalendarAccountService } from '@/lib/services/calendar-account.service'
 
@@ -35,10 +35,11 @@ function errRedirect(request: NextRequest, reason: string) {
 }
 
 export async function GET(request: NextRequest) {
-  let env
-  try { env = getCalendarEnv() } catch {
+  const cfg = await CalendarConfigService.getConfig()
+  if (!CalendarConfigService.isConfigured(cfg)) {
     return errRedirect(request, 'feature_disabled')
   }
+
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const queryState = url.searchParams.get('state')
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
   if (!code || !queryState || !cookieState || queryState !== cookieState) {
     return NextResponse.json({ error: 'invalid_state' }, { status: 400 })
   }
-  const verified = verifyState(queryState, env.appointmentTokenSecret)
+  const verified = verifyState(queryState, cfg.appointmentTokenSecret)
   if (!verified) {
     return NextResponse.json({ error: 'invalid_state_signature' }, { status: 400 })
   }
@@ -66,7 +67,11 @@ export async function GET(request: NextRequest) {
 
   let exchange
   try {
-    exchange = await CalendarGoogleClient.exchangeCode(code)
+    exchange = await CalendarGoogleClient.exchangeCode(code, {
+      clientId: cfg.clientId!,
+      clientSecret: cfg.clientSecret!,
+      redirectUri: cfg.redirectUri!,
+    })
   } catch (err) {
     return errRedirect(request, err instanceof Error ? err.message.slice(0, 80) : 'exchange_failed')
   }

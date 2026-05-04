@@ -3,15 +3,23 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 vi.mock('@/lib/auth/auth-context', () => ({
   getAuthContext: vi.fn(),
 }))
+vi.mock('@/lib/services/calendar-config.service', () => ({
+  CalendarConfigService: {
+    getConfig: vi.fn().mockResolvedValue({
+      id: 'cfg-1',
+      clientId: 'cid',
+      clientSecret: 'secret',
+      redirectUri: 'https://app.x/cb',
+      appPublicUrl: 'https://app.x',
+      tokenEncryptionKeyHex: '0'.repeat(64),
+      appointmentTokenSecret: '0'.repeat(40),
+    }),
+    isConfigured: vi.fn().mockReturnValue(true),
+  },
+}))
 
 describe('GET /api/google-calendar/oauth/start', () => {
   beforeEach(() => {
-    process.env.GOOGLE_CALENDAR_CLIENT_ID = 'cid'
-    process.env.GOOGLE_CALENDAR_CLIENT_SECRET = 'secret'
-    process.env.GOOGLE_CALENDAR_REDIRECT_URI = 'https://app.x/cb'
-    process.env.CALENDAR_TOKEN_KEY = '0'.repeat(64)
-    process.env.APPOINTMENT_TOKEN_SECRET = '0'.repeat(40)
-    process.env.APP_PUBLIC_URL = 'https://app.x'
     vi.resetModules()
   })
 
@@ -40,14 +48,15 @@ describe('GET /api/google-calendar/oauth/start', () => {
     expect(res.status).toBe(401)
   })
 
-  it('returns 503 feature_disabled when env vars missing', async () => {
-    delete process.env.GOOGLE_CALENDAR_CLIENT_ID
+  it('returns 503 feature_not_configured when credentials missing', async () => {
+    const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
+    vi.mocked(CalendarConfigService.isConfigured).mockReturnValueOnce(false)
     const { getAuthContext } = await import('@/lib/auth/auth-context')
     vi.mocked(getAuthContext).mockResolvedValueOnce({ userId: 'u-1', role: 'owner' } as never)
     const { GET } = await import('@/app/api/google-calendar/oauth/start/route')
     const res = await GET(new Request('https://app.x/api/google-calendar/oauth/start') as never)
     expect(res.status).toBe(503)
     const body = await res.json()
-    expect(body.error).toBe('feature_disabled')
+    expect(body.error).toBe('feature_not_configured')
   })
 })

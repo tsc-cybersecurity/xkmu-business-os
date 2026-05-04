@@ -13,6 +13,20 @@ vi.mock('@/lib/services/calendar-account.service', () => ({
     getActiveAccount: vi.fn(),
   },
 }))
+vi.mock('@/lib/services/calendar-config.service', () => ({
+  CalendarConfigService: {
+    getConfig: vi.fn().mockResolvedValue({
+      id: 'cfg-1',
+      clientId: 'cid',
+      clientSecret: 'secret',
+      redirectUri: 'https://app.x/cb',
+      appPublicUrl: 'https://app.x',
+      tokenEncryptionKeyHex: '0'.repeat(64),
+      appointmentTokenSecret: 'S'.repeat(40),
+    }),
+    isConfigured: vi.fn().mockReturnValue(true),
+  },
+}))
 
 function makeStateCookie(secret: string, userId = 'u-1'): { cookieValue: string; queryState: string } {
   const { createHmac } = require('node:crypto')
@@ -24,12 +38,6 @@ function makeStateCookie(secret: string, userId = 'u-1'): { cookieValue: string;
 
 describe('GET /api/google-calendar/oauth/callback', () => {
   beforeEach(() => {
-    process.env.GOOGLE_CALENDAR_CLIENT_ID = 'cid'
-    process.env.GOOGLE_CALENDAR_CLIENT_SECRET = 'secret'
-    process.env.GOOGLE_CALENDAR_REDIRECT_URI = 'https://app.x/cb'
-    process.env.CALENDAR_TOKEN_KEY = '0'.repeat(64)
-    process.env.APPOINTMENT_TOKEN_SECRET = 'S'.repeat(40)
-    process.env.APP_PUBLIC_URL = 'https://app.x'
     vi.resetModules()
   })
 
@@ -81,8 +89,9 @@ describe('GET /api/google-calendar/oauth/callback', () => {
     expect(CalendarGoogleClient.revokeToken).toHaveBeenCalledWith('RT')
   })
 
-  it('returns 302 feature_disabled redirect when env vars missing', async () => {
-    delete process.env.GOOGLE_CALENDAR_CLIENT_ID
+  it('returns 302 feature_disabled redirect when not configured', async () => {
+    const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
+    vi.mocked(CalendarConfigService.isConfigured).mockReturnValueOnce(false)
     const { GET } = await import('@/app/api/google-calendar/oauth/callback/route')
     const req = new Request(`https://app.x/cb?code=CODE&state=anything`)
     const res = await GET(req as never)

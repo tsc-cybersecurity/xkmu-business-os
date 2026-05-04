@@ -10,10 +10,23 @@ vi.mock('@/lib/services/calendar-google.client', () => ({
     listCalendars: vi.fn(),
   },
 }))
+vi.mock('@/lib/services/calendar-config.service', () => ({
+  CalendarConfigService: {
+    getConfig: vi.fn().mockResolvedValue({
+      id: 'cfg-1',
+      clientId: 'cid',
+      clientSecret: 'sec',
+      redirectUri: 'https://x/cb',
+      appPublicUrl: 'https://x',
+      tokenEncryptionKeyHex: '0'.repeat(64),
+      appointmentTokenSecret: '0'.repeat(96),
+    }),
+    isConfigured: vi.fn().mockReturnValue(true),
+  },
+}))
 
 describe('CalendarAccountService', () => {
   beforeEach(() => {
-    process.env.CALENDAR_TOKEN_KEY = '0'.repeat(64)
     vi.resetModules()
   })
 
@@ -42,8 +55,8 @@ describe('CalendarAccountService', () => {
     const { encryptToken } = await import('@/lib/services/calendar-token-crypto')
     helper.selectMock.mockResolvedValueOnce([{
       id: 'acc-1',
-      accessTokenEnc: encryptToken('AT_VALID'),
-      refreshTokenEnc: encryptToken('RT'),
+      accessTokenEnc: encryptToken('AT_VALID', '0'.repeat(64)),
+      refreshTokenEnc: encryptToken('RT', '0'.repeat(64)),
       tokenExpiresAt: new Date(Date.now() + 10 * 60_000), // 10 min in Zukunft
       revokedAt: null,
     }])
@@ -58,8 +71,8 @@ describe('CalendarAccountService', () => {
     const { encryptToken } = await import('@/lib/services/calendar-token-crypto')
     helper.selectMock.mockResolvedValueOnce([{
       id: 'acc-1',
-      accessTokenEnc: encryptToken('AT_OLD'),
-      refreshTokenEnc: encryptToken('RT'),
+      accessTokenEnc: encryptToken('AT_OLD', '0'.repeat(64)),
+      refreshTokenEnc: encryptToken('RT', '0'.repeat(64)),
       tokenExpiresAt: new Date(Date.now() + 30_000), // 30s
       revokedAt: null,
     }])
@@ -80,7 +93,7 @@ describe('CalendarAccountService', () => {
     const { encryptToken } = await import('@/lib/services/calendar-token-crypto')
     helper.selectMock.mockResolvedValueOnce([{
       id: 'acc-1',
-      refreshTokenEnc: encryptToken('RT'),
+      refreshTokenEnc: encryptToken('RT', '0'.repeat(64)),
       revokedAt: null,
     }])
     helper.updateMock.mockResolvedValueOnce(undefined)

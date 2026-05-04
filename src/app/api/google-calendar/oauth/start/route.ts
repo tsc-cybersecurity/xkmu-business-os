@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, randomBytes } from 'node:crypto'
 import { getAuthContext } from '@/lib/auth/auth-context'
-import { getCalendarEnv } from '@/lib/services/calendar-env'
+import { CalendarConfigService } from '@/lib/services/calendar-config.service'
 
 const STATE_COOKIE = 'calendar_oauth_state'
 const STATE_TTL_MS = 5 * 60_000
@@ -15,20 +15,21 @@ export async function GET(request: NextRequest) {
   if (!auth || auth.role === 'api') {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
   }
-  let env
-  try { env = getCalendarEnv() } catch {
-    return NextResponse.json({ error: 'feature_disabled' }, { status: 503 })
+
+  const cfg = await CalendarConfigService.getConfig()
+  if (!CalendarConfigService.isConfigured(cfg)) {
+    return NextResponse.json({ error: 'feature_not_configured' }, { status: 503 })
   }
 
   const nonce = randomBytes(16).toString('hex')
   const ts = Date.now()
   const stateRaw = JSON.stringify({ uid: auth.userId, n: nonce, t: ts })
-  const sig = signState(stateRaw, env.appointmentTokenSecret)
+  const sig = signState(stateRaw, cfg.appointmentTokenSecret)
   const state = `${Buffer.from(stateRaw).toString('base64url')}.${sig}`
 
   const params = new URLSearchParams({
-    client_id: env.clientId,
-    redirect_uri: env.redirectUri,
+    client_id: cfg.clientId!,
+    redirect_uri: cfg.redirectUri!,
     response_type: 'code',
     scope: 'https://www.googleapis.com/auth/calendar',
     access_type: 'offline',

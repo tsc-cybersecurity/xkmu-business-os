@@ -1,8 +1,12 @@
-import { getCalendarEnv } from './calendar-env'
-
 const TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const REVOKE_URL = 'https://oauth2.googleapis.com/revoke'
 const CALENDAR_LIST_URL = 'https://www.googleapis.com/calendar/v3/users/me/calendarList'
+
+export interface OauthClientConfig {
+  clientId: string
+  clientSecret: string
+  redirectUri: string
+}
 
 export interface ExchangeResult {
   accessToken: string
@@ -37,13 +41,12 @@ async function ensureOk(res: Response): Promise<void> {
 }
 
 export const CalendarGoogleClient = {
-  async exchangeCode(code: string): Promise<ExchangeResult> {
-    const env = getCalendarEnv()
+  async exchangeCode(code: string, config: OauthClientConfig): Promise<ExchangeResult> {
     const res = await postForm(TOKEN_URL, new URLSearchParams({
       code,
-      client_id: env.clientId,
-      client_secret: env.clientSecret,
-      redirect_uri: env.redirectUri,
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      redirect_uri: config.redirectUri,
       grant_type: 'authorization_code',
     }))
     await ensureOk(res)
@@ -61,12 +64,11 @@ export const CalendarGoogleClient = {
     }
   },
 
-  async refreshAccessToken(refreshToken: string): Promise<RefreshResult> {
-    const env = getCalendarEnv()
+  async refreshAccessToken(refreshToken: string, config: { clientId: string; clientSecret: string }): Promise<RefreshResult> {
     const res = await postForm(TOKEN_URL, new URLSearchParams({
       refresh_token: refreshToken,
-      client_id: env.clientId,
-      client_secret: env.clientSecret,
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
       grant_type: 'refresh_token',
     }))
     await ensureOk(res)

@@ -1,17 +1,18 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 
+const CONFIG = {
+  clientId: 'cid',
+  clientSecret: 'secret',
+  redirectUri: 'https://app.x/cb',
+}
+
 describe('calendar-google.client', () => {
   const fetchMock = vi.fn()
 
   beforeEach(() => {
     vi.stubGlobal('fetch', fetchMock)
     fetchMock.mockReset()
-    process.env.GOOGLE_CALENDAR_CLIENT_ID = 'cid'
-    process.env.GOOGLE_CALENDAR_CLIENT_SECRET = 'secret'
-    process.env.GOOGLE_CALENDAR_REDIRECT_URI = 'https://app.x/cb'
-    process.env.CALENDAR_TOKEN_KEY = '0'.repeat(64)
-    process.env.APPOINTMENT_TOKEN_SECRET = '0'.repeat(40)
-    process.env.APP_PUBLIC_URL = 'https://app.x'
+    vi.resetModules()
   })
   afterEach(() => vi.unstubAllGlobals())
 
@@ -20,7 +21,7 @@ describe('calendar-google.client', () => {
       access_token: 'AT', refresh_token: 'RT', expires_in: 3600, scope: 'https://www.googleapis.com/auth/calendar',
     })))
     const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
-    const tokens = await CalendarGoogleClient.exchangeCode('CODE')
+    const tokens = await CalendarGoogleClient.exchangeCode('CODE', CONFIG)
     expect(tokens.accessToken).toBe('AT')
     expect(tokens.refreshToken).toBe('RT')
     expect(tokens.expiresInSec).toBe(3600)
@@ -34,7 +35,7 @@ describe('calendar-google.client', () => {
       access_token: 'NEW_AT', expires_in: 3600,
     })))
     const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
-    const out = await CalendarGoogleClient.refreshAccessToken('RT')
+    const out = await CalendarGoogleClient.refreshAccessToken('RT', { clientId: 'cid', clientSecret: 'secret' })
     expect(out.accessToken).toBe('NEW_AT')
     const body = fetchMock.mock.calls[0][1].body as URLSearchParams
     expect(body.get('grant_type')).toBe('refresh_token')
@@ -58,7 +59,7 @@ describe('calendar-google.client', () => {
   it('throws on non-2xx response with body excerpt', async () => {
     fetchMock.mockResolvedValueOnce(new Response('{"error":"invalid_grant"}', { status: 400 }))
     const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
-    await expect(CalendarGoogleClient.refreshAccessToken('bad')).rejects.toThrow(/invalid_grant/)
+    await expect(CalendarGoogleClient.refreshAccessToken('bad', { clientId: 'cid', clientSecret: 'secret' })).rejects.toThrow(/invalid_grant/)
   })
 
   it('revokeToken posts to revoke endpoint', async () => {
