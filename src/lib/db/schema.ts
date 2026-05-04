@@ -3631,4 +3631,50 @@ export const externalBusyRelations = relations(externalBusy, ({ one }) => ({
 export type ExternalBusy = typeof externalBusy.$inferSelect
 export type NewExternalBusy = typeof externalBusy.$inferInsert
 
+// ============================================================================
+// Terminbuchung Phase 4 — Buchungen
+// ============================================================================
+
+export const appointments = pgTable('appointments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  slotTypeId: uuid('slot_type_id').notNull().references(() => slotTypes.id, { onDelete: 'restrict' }),
+  startAt: timestamp('start_at', { withTimezone: true }).notNull(),
+  endAt: timestamp('end_at', { withTimezone: true }).notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  customerName: varchar('customer_name', { length: 255 }).notNull(),
+  customerEmail: varchar('customer_email', { length: 255 }).notNull(),
+  customerPhone: varchar('customer_phone', { length: 50 }).notNull(),
+  customerMessage: text('customer_message'),
+  leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  personId: uuid('person_id').references(() => persons.id, { onDelete: 'set null' }),
+  source: varchar('source', { length: 20 }).notNull(),
+  cancelTokenHash: varchar('cancel_token_hash', { length: 64 }),
+  rescheduleTokenHash: varchar('reschedule_token_hash', { length: 64 }),
+  googleEventId: varchar('google_event_id', { length: 255 }),
+  googleCalendarId: varchar('google_calendar_id', { length: 255 }),
+  syncError: text('sync_error'),
+  staffNotes: text('staff_notes'),
+  cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+  cancelledBy: varchar('cancelled_by', { length: 20 }),
+  cancellationReason: text('cancellation_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  userStartIdx: index('idx_appointments_user_start').on(t.userId, t.startAt),
+  statusIdx: index('idx_appointments_status').on(t.status),
+  googleEventIdx: index('idx_appointments_google_event').on(t.googleEventId).where(sql`google_event_id IS NOT NULL`),
+  emailIdx: index('idx_appointments_email').on(t.customerEmail),
+}))
+
+export const appointmentsRelations = relations(appointments, ({ one }) => ({
+  user: one(users, { fields: [appointments.userId], references: [users.id] }),
+  slotType: one(slotTypes, { fields: [appointments.slotTypeId], references: [slotTypes.id] }),
+  lead: one(leads, { fields: [appointments.leadId], references: [leads.id] }),
+  person: one(persons, { fields: [appointments.personId], references: [persons.id] }),
+}))
+
+export type Appointment = typeof appointments.$inferSelect
+export type NewAppointment = typeof appointments.$inferInsert
+
 export type GoogleCalendarConfig = typeof googleCalendarConfig.$inferSelect
