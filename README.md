@@ -134,6 +134,29 @@ Ablage-Verzeichnis für Course-Assets ist standardmäßig
 `public/uploads/courses/` und kann via `COURSE_ASSET_DIR` env überschrieben
 werden (sinnvoll für Persistent-Volumes außerhalb des Containers).
 
+### Terminbuchung / Google Calendar (Phase 1)
+
+**Setup einmalig:**
+
+1. In [Google Cloud Console](https://console.cloud.google.com/) ein Projekt anlegen (oder existierendes wählen).
+2. Calendar API aktivieren (`APIs & Services → Library → Google Calendar API → Enable`).
+3. OAuth-Consent-Screen konfigurieren: User Type = External (oder Internal bei Workspace),
+   Scopes hinzufügen: `https://www.googleapis.com/auth/calendar`.
+4. OAuth-Client-Credentials erstellen (`APIs & Services → Credentials → Create Credentials → OAuth client ID`):
+   - Application type: Web application
+   - Authorized redirect URI: `${APP_PUBLIC_URL}/api/google-calendar/oauth/callback`
+5. Client-ID und Client-Secret in `.env` als `GOOGLE_CALENDAR_CLIENT_ID` / `_SECRET` setzen.
+6. `CALENDAR_TOKEN_KEY` generieren:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+7. `APPOINTMENT_TOKEN_SECRET` zufällig generieren (≥ 32 chars).
+8. App neu starten.
+9. In der App: `/intern/termine/calendar-connect` → „Mit Google verbinden".
+
+**In Phase 1 implementiert:** OAuth-Flow, Token-Verschlüsselung, Kalender-Liste, Primär-Kalender, „belegt"-Toggle, Disconnect.
+**Noch nicht in Phase 1:** Buchung, Slot-Typen, Sync-Webhook, Mails — siehe Folge-Phasen.
+
 ## Environment Variables
 
 | Variable | Required | Description |
