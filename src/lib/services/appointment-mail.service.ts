@@ -1,13 +1,17 @@
 import { db } from '@/lib/db'
 import { appointments, slotTypes, taskQueue, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { generateAppointmentToken } from '@/lib/utils/appointment-token.util'
 
 interface RenderContext {
   customer: { name: string; email: string; phone: string; message: string }
   slot: { type_name: string; duration_minutes: string; location: string; location_details: string }
   appointment: { start_local: string; end_local: string; timezone: string }
+  links: { cancel_url: string; reschedule_url: string }
   org: { name: string }
 }
+
+const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')) || 'https://www.xkmu.de'
 
 function buildPlaceholders(ctx: RenderContext): Record<string, string> {
   return {
@@ -22,7 +26,26 @@ function buildPlaceholders(ctx: RenderContext): Record<string, string> {
     'appointment.start_local': ctx.appointment.start_local,
     'appointment.end_local': ctx.appointment.end_local,
     'appointment.timezone': ctx.appointment.timezone,
+    'links.cancel_url': ctx.links.cancel_url,
+    'links.reschedule_url': ctx.links.reschedule_url,
     'org.name': ctx.org.name,
+  }
+}
+
+async function ensureTokensAndUrls(args: {
+  appointmentId: string
+  startAt: Date
+}): Promise<{ cancelUrl: string; rescheduleUrl: string }> {
+  const cancel = generateAppointmentToken({ appointmentId: args.appointmentId, purpose: 'cancel', expiresAt: args.startAt })
+  const reschedule = generateAppointmentToken({ appointmentId: args.appointmentId, purpose: 'reschedule', expiresAt: args.startAt })
+  await db.update(appointments).set({
+    cancelTokenHash: cancel.hash,
+    rescheduleTokenHash: reschedule.hash,
+    updatedAt: new Date(),
+  }).where(eq(appointments.id, args.appointmentId))
+  return {
+    cancelUrl: `${PUBLIC_SITE_URL}/buchen/cancel?token=${encodeURIComponent(cancel.token)}`,
+    rescheduleUrl: `${PUBLIC_SITE_URL}/buchen/reschedule?token=${encodeURIComponent(reschedule.token)}`,
   }
 }
 
@@ -60,6 +83,11 @@ export const AppointmentMailService = {
     }).from(users).where(eq(users.id, appt.userId)).limit(1)
     if (!user) throw new Error(`User ${appt.userId} not found`)
 
+    const { cancelUrl, rescheduleUrl } = await ensureTokensAndUrls({
+      appointmentId: appt.id,
+      startAt: appt.startAt,
+    })
+
     const tz = user.timezone || 'Europe/Berlin'
     const ctx: RenderContext = {
       customer: {
@@ -79,6 +107,7 @@ export const AppointmentMailService = {
         end_local: formatLocal(appt.endAt, tz),
         timezone: tz,
       },
+      links: { cancel_url: cancelUrl, reschedule_url: rescheduleUrl },
       org: {
         name: 'xKMU',  // TODO Phase 8: read from organization table
       },
