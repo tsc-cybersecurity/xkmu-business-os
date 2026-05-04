@@ -13,6 +13,13 @@ interface OverrideLite {
   reason: string | null
 }
 
+interface ExternalBusyLite {
+  id: string
+  startAt: string
+  endAt: string
+  summary: string | null
+}
+
 const DAYS_DE_SHORT = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So']
 const HOURS = Array.from({ length: 17 }, (_, i) => 6 + i)
 
@@ -25,6 +32,7 @@ export function WeekCalendarView(props: {
   monday: string
   rules: AvailabilityRule[]
   overrides: OverrideLite[]
+  externalBusy?: ExternalBusyLite[]
 }) {
   const router = useRouter()
   const monday = new Date(props.monday)
@@ -43,7 +51,19 @@ export function WeekCalendarView(props: {
     router.push(`/intern/termine?week=${next.toISOString().slice(0, 10)}`)
   }
 
-  function cellState(dayIdx: number, hourMinute: number): 'available' | 'blocked' | 'free-override' | 'idle' {
+  function findExternalBusy(cellStart: Date, cellEnd: Date) {
+    const busy = props.externalBusy ?? []
+    for (const e of busy) {
+      const s = new Date(e.startAt)
+      const en = new Date(e.endAt)
+      if (cellStart < en && cellEnd > s) return e
+    }
+    return null
+  }
+
+  type CellState = 'available' | 'blocked' | 'free-override' | 'busy-external' | 'idle'
+
+  function cellState(dayIdx: number, hourMinute: number): { state: CellState; busy: ExternalBusyLite | null } {
     const day = days[dayIdx]
     const cellStart = new Date(day)
     cellStart.setHours(0, 0, 0, 0)
@@ -51,11 +71,15 @@ export function WeekCalendarView(props: {
     const cellEnd = new Date(cellStart)
     cellEnd.setMinutes(cellEnd.getMinutes() + 15)
 
+    // External Google events take precedence — even if rules would say "available"
+    const busy = findExternalBusy(cellStart, cellEnd)
+    if (busy) return { state: 'busy-external', busy }
+
     for (const o of props.overrides) {
       const oStart = new Date(o.startAt)
       const oEnd = new Date(o.endAt)
       if (cellStart < oEnd && cellEnd > oStart) {
-        return o.kind === 'block' ? 'blocked' : 'free-override'
+        return { state: o.kind === 'block' ? 'blocked' : 'free-override', busy: null }
       }
     }
 
@@ -65,16 +89,17 @@ export function WeekCalendarView(props: {
     for (const r of matching) {
       const start = ruleTimeToMinutes(r.startTime)
       const end = ruleTimeToMinutes(r.endTime)
-      if (hourMinute >= start && hourMinute + 15 <= end) return 'available'
+      if (hourMinute >= start && hourMinute + 15 <= end) return { state: 'available', busy: null }
     }
-    return 'idle'
+    return { state: 'idle', busy: null }
   }
 
-  const cellClass = (state: ReturnType<typeof cellState>): string => {
+  const cellClass = (state: CellState): string => {
     switch (state) {
       case 'available': return 'bg-emerald-50 dark:bg-emerald-950/40'
       case 'blocked': return 'bg-red-100 dark:bg-red-950/50 [background-image:repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(0,0,0,0.05)_4px,rgba(0,0,0,0.05)_8px)]'
       case 'free-override': return 'bg-emerald-200 dark:bg-emerald-900/60'
+      case 'busy-external': return 'bg-slate-300 dark:bg-slate-700'
       default: return ''
     }
   }
@@ -122,10 +147,11 @@ export function WeekCalendarView(props: {
                 <div key={`cell-${h}-${dayIdx}`} className="border-l border-b">
                   {[0, 15, 30, 45].map(min => {
                     const hourMinute = h * 60 + min
-                    const state = cellState(dayIdx, hourMinute)
+                    const { state, busy } = cellState(dayIdx, hourMinute)
                     return (
                       <div
                         key={min}
+                        title={busy?.summary ?? undefined}
                         className={`h-3.5 ${cellClass(state)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`}
                       />
                     )
@@ -138,7 +164,7 @@ export function WeekCalendarView(props: {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Hinweis: Termine und externe Google-Events werden in den Phasen 3 und 4 ergänzt. Aktuell siehst du nur dein Wochenraster und Ausnahmen.
+        Hinweis: Eigene Buchungen werden in Phase 4 ergänzt. Externe Google-Events werden bei jedem Webhook-Call automatisch synchronisiert.
       </p>
     </div>
   )
@@ -146,7 +172,7 @@ export function WeekCalendarView(props: {
 
 function Legend() {
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
       <span className="flex items-center gap-1.5">
         <span className="inline-block h-3 w-3 rounded-sm bg-emerald-50 border" />
         verfügbar
@@ -154,6 +180,10 @@ function Legend() {
       <span className="flex items-center gap-1.5">
         <span className="inline-block h-3 w-3 rounded-sm bg-emerald-200 border" />
         zusätzlich frei
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span className="inline-block h-3 w-3 rounded-sm bg-slate-300 border" />
+        extern belegt
       </span>
       <span className="flex items-center gap-1.5">
         <span className="inline-block h-3 w-3 rounded-sm bg-red-100 border" />
