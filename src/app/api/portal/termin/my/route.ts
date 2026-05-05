@@ -26,6 +26,8 @@ export async function GET() {
     location: slotTypes.location,
     locationDetails: slotTypes.locationDetails,
     durationMinutes: slotTypes.durationMinutes,
+    minNoticeHours: slotTypes.minNoticeHours,
+    maxAdvanceDays: slotTypes.maxAdvanceDays,
     staffFirstName: users.firstName,
     staffLastName: users.lastName,
     staffTimezone: users.timezone,

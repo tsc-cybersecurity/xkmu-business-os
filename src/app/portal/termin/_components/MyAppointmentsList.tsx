@@ -20,6 +20,8 @@ type Appointment = {
   location: string
   locationDetails: string | null
   durationMinutes: number
+  minNoticeHours: number
+  maxAdvanceDays: number
   staffFirstName: string | null
   staffLastName: string | null
   staffTimezone: string

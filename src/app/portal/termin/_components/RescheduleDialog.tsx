@@ -13,15 +13,13 @@ interface Props {
     slotTypeId: string
     slotTypeName: string
     durationMinutes: number
+    minNoticeHours: number
+    maxAdvanceDays: number
     staffTimezone: string
   } | null
   onClose: () => void
   onRescheduled?: () => void
 }
-
-// Sensible defaults — server will reject out-of-range slots anyway
-const MIN_NOTICE_HOURS = 2
-const MAX_ADVANCE_DAYS = 60
 
 export function RescheduleDialog({ appt, onClose, onRescheduled }: Props) {
   const today = new Date()
@@ -66,8 +64,8 @@ export function RescheduleDialog({ appt, onClose, onRescheduled }: Props) {
       .finally(() => setSlotsLoading(false))
   }, [selectedDate, appt])
 
-  const minDate = new Date(today.getTime() + MIN_NOTICE_HOURS * 3600_000)
-  const maxDate = new Date(today.getTime() + MAX_ADVANCE_DAYS * 86400_000)
+  const minDate = new Date(today.getTime() + (appt?.minNoticeHours ?? 0) * 3600_000)
+  const maxDate = new Date(today.getTime() + (appt?.maxAdvanceDays ?? 60) * 86400_000)
 
   function dayKey(y: number, m: number, d: number): string {
     return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`

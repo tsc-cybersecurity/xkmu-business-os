@@ -45,6 +45,9 @@ export async function POST(req: NextRequest) {
       if (err.message === 'slot_type_invalid') {
         return NextResponse.json({ error: 'slot_type_invalid' }, { status: 404 })
       }
+      if (err.message === 'staff_not_bookable') {
+        return NextResponse.json({ error: 'staff_not_bookable' }, { status: 404 })
+      }
     }
     console.error('Portal book error:', err)
     return NextResponse.json({ error: 'book_failed' }, { status: 500 })

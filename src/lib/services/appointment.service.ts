@@ -591,6 +591,16 @@ export const AppointmentService = {
     if (!person) throw new Error('person_not_linked')
     if (!person.email) throw new Error('person_missing_email')
 
+    // Reject bookings against staff who haven't enabled their booking page —
+    // matches the public flow's slug-lookup precondition. Without this, a
+    // portal user could craft a POST with any userId, including admin users.
+    const [staffUser] = await db
+      .select({ bookingPageActive: users.bookingPageActive })
+      .from(users)
+      .where(eq(users.id, args.userId))
+      .limit(1)
+    if (!staffUser || !staffUser.bookingPageActive) throw new Error('staff_not_bookable')
+
     const fullName = `${person.firstName} ${person.lastName}`.trim()
     return AppointmentService.book({
       userId: args.userId,

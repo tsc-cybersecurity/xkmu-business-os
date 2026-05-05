@@ -17,6 +17,7 @@ describe('AppointmentService.bookForPortal', () => {
       mobile: '+49 170 9999999',
       portalUserId: 'pu-1',
     }])
+    helper.selectMock.mockResolvedValueOnce([{ bookingPageActive: true }])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
 
     const { AppointmentService } = await import('@/lib/services/appointment.service')
@@ -92,6 +93,27 @@ describe('AppointmentService.bookForPortal', () => {
         startAtUtc: FUTURE_DATE,
       }),
     ).rejects.toThrow('person_missing_email')
+  })
+
+  it('throws staff_not_bookable when target user has booking_page_active=false', async () => {
+    const helper = setupDbMock()
+    helper.selectMock.mockResolvedValueOnce([{
+      id: 'person-1', firstName: 'Erika', lastName: 'Mustermann',
+      email: 'erika@example.com', phone: null, mobile: null, portalUserId: 'pu-1',
+    }])
+    helper.selectMock.mockResolvedValueOnce([{ bookingPageActive: false }])
+    vi.doMock('@/lib/db', () => ({ db: helper.db }))
+
+    const { AppointmentService } = await import('@/lib/services/appointment.service')
+
+    await expect(
+      AppointmentService.bookForPortal({
+        portalUserId: 'pu-1',
+        userId: 'u-disabled',
+        slotTypeId: 'st-1',
+        startAtUtc: FUTURE_DATE,
+      }),
+    ).rejects.toThrow('staff_not_bookable')
   })
 })
 
