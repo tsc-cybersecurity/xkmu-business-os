@@ -293,7 +293,7 @@ describe('CalendarGoogleClient.eventsDelete', () => {
     })).resolves.toBeUndefined()
     const call = fetchMock.mock.calls[0]
     expect(call[1].method).toBe('DELETE')
-    expect(call[0]).toContain('sendUpdates=all')
+    expect(call[0]).toContain('sendUpdates=none')
   })
 })
 
@@ -305,7 +305,7 @@ describe('CalendarGoogleClient.eventsPatch', () => {
   })
   afterEach(() => vi.unstubAllGlobals())
 
-  it('PATCHes start/end with timezone and sendUpdates=all by default', async () => {
+  it('PATCHes start/end with timezone and sendUpdates=none by default', async () => {
     fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({ id: 'event-123' })))
     const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
     await CalendarGoogleClient.eventsPatch({
@@ -319,7 +319,7 @@ describe('CalendarGoogleClient.eventsPatch', () => {
     const call = fetchMock.mock.calls[0]
     expect(call[1].method).toBe('PATCH')
     expect(call[0]).toContain('/events/event-123')
-    expect(call[0]).toContain('sendUpdates=all')
+    expect(call[0]).toContain('sendUpdates=none')
     const body = JSON.parse(call[1].body as string)
     expect(body.start.dateTime).toBe('2026-05-04T10:00:00.000Z')
     expect(body.start.timeZone).toBe('Europe/Berlin')

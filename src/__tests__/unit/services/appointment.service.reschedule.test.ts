@@ -151,7 +151,7 @@ describe('AppointmentService.reschedule', () => {
       startUtc: NEW_START,
       endUtc: NEW_END,
       timeZone: 'Europe/Berlin',
-      sendUpdates: 'all',
+      sendUpdates: 'none',
     })
   })
 

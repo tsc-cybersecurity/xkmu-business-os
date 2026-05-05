@@ -116,7 +116,7 @@ describe('AppointmentService.cancel', () => {
       accessToken: 'AT',
       calendarId: 'primary',
       eventId: 'gevent-1',
-      sendUpdates: 'all',
+      sendUpdates: 'none',
     })
   })
 

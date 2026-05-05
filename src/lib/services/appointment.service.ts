@@ -114,7 +114,10 @@ async function _applyCancelMutation(args: {
           accessToken,
           calendarId: args.appt.googleCalendarId,
           eventId: args.appt.googleEventId,
-          sendUpdates: 'all',
+          // 'none' — app sends its own cancellation mail via the configured
+          // email_account; Google must not send duplicates from the calendar
+          // owner's address.
+          sendUpdates: 'none',
         })
       }
     } catch (err) {
@@ -160,7 +163,10 @@ async function _applyRescheduleMutation(args: {
           startUtc: args.newStartAtUtc,
           endUtc: args.newEndAtUtc,
           timeZone: args.userTimezone,
-          sendUpdates: 'all',
+          // 'none' — app sends its own reschedule mail via the configured
+          // email_account; Google must not send duplicates from the calendar
+          // owner's address.
+          sendUpdates: 'none',
         })
       }
     } catch (err) {

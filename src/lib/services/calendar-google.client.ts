@@ -297,7 +297,9 @@ export const CalendarGoogleClient = {
     eventId: string
     sendUpdates?: 'none' | 'all'
   }): Promise<void> {
-    const sendUpdates = input.sendUpdates ?? 'all'
+    // Default 'none' — Google must not send notifications from the calendar
+    // owner's address; the app handles cancellation mail itself.
+    const sendUpdates = input.sendUpdates ?? 'none'
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}?sendUpdates=${sendUpdates}`
     const res = await fetch(url, {
       method: 'DELETE',
@@ -317,7 +319,9 @@ export const CalendarGoogleClient = {
     timeZone: string  // canonical IANA TZ for display
     sendUpdates?: 'none' | 'all'
   }): Promise<void> {
-    const sendUpdates = input.sendUpdates ?? 'all'
+    // Default 'none' — Google must not send notifications from the calendar
+    // owner's address; the app handles reschedule mail itself.
+    const sendUpdates = input.sendUpdates ?? 'none'
     const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(input.calendarId)}/events/${encodeURIComponent(input.eventId)}?sendUpdates=${sendUpdates}`
     const body = {
       start: { dateTime: input.startUtc.toISOString(), timeZone: input.timeZone },
