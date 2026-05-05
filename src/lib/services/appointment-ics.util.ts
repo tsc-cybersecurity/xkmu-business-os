@@ -99,3 +99,21 @@ export function buildIcs(args: IcsArgs): string {
   ]
   return lines.map(foldLine).join('\r\n') + '\r\n'
 }
+
+/**
+ * Build the standard DESCRIPTION text used inside both the mail-attachment
+ * .ics and the download endpoint. Single source of truth so the two paths
+ * stay byte-identical for the same appointment.
+ */
+export function buildIcsDescription(args: {
+  customerPhone: string
+  customerEmail: string
+  customerMessage: string | null
+}): string {
+  const parts = [
+    `Telefon: ${args.customerPhone}`,
+    `E-Mail: ${args.customerEmail}`,
+  ]
+  if (args.customerMessage) parts.push('', 'Nachricht:', args.customerMessage)
+  return parts.join('\n')
+}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { appointments, slotTypes, users } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
-import { buildIcs } from '@/lib/services/appointment-ics.util'
+import { buildIcs, buildIcsDescription } from '@/lib/services/appointment-ics.util'
 
 export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params
@@ -36,16 +36,23 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 
   if (!row) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 
-  const description = [
-    `Telefon: ${row.customerPhone}`,
-    `E-Mail: ${row.customerEmail}`,
-    row.customerMessage ? `\nNachricht:\n${row.customerMessage}` : '',
-  ].filter(Boolean).join('\n')
+  const description = buildIcsDescription({
+    customerPhone: row.customerPhone,
+    customerEmail: row.customerEmail,
+    customerMessage: row.customerMessage,
+  })
+
+  // Status mapping:
+  //  - cancelled → METHOD:CANCEL (so calendar clients remove the event on import)
+  //  - pending or confirmed → METHOD:REQUEST (Google-sync race window is tiny;
+  //    emitting REQUEST while pending is acceptable since the bestaetigt page
+  //    only surfaces the download link after booking returns success)
+  const method: 'REQUEST' | 'CANCEL' = row.status === 'cancelled' ? 'CANCEL' : 'REQUEST'
 
   const ics = buildIcs({
     uid: row.apptId,
     sequence: row.icsSequence,
-    method: row.status === 'cancelled' ? 'CANCEL' : 'REQUEST',
+    method,
     startUtc: row.startAt,
     endUtc: row.endAt,
     summary: row.slotTypeName,
@@ -60,7 +67,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
   return new NextResponse(ics, {
     status: 200,
     headers: {
-      'Content-Type': 'text/calendar; charset=utf-8',
+      'Content-Type': `text/calendar; charset=utf-8; method=${method}`,
       'Content-Disposition': 'attachment; filename="termin.ics"',
       'Cache-Control': 'no-store',
     },

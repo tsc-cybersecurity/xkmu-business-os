@@ -42,7 +42,7 @@ describe('GET /api/v1/appointments/[id]/ics', () => {
     } as never)
 
     expect(res.status).toBe(200)
-    expect(res.headers.get('Content-Type')).toBe('text/calendar; charset=utf-8')
+    expect(res.headers.get('Content-Type')).toBe('text/calendar; charset=utf-8; method=REQUEST')
     expect(res.headers.get('Content-Disposition')).toContain('termin.ics')
 
     const body = await res.text()
@@ -63,9 +63,29 @@ describe('GET /api/v1/appointments/[id]/ics', () => {
     } as never)
 
     expect(res.status).toBe(200)
+    expect(res.headers.get('Content-Type')).toBe('text/calendar; charset=utf-8; method=CANCEL')
     const body = await res.text()
     expect(body).toContain('METHOD:CANCEL')
     expect(body).toContain('STATUS:CANCELLED')
+  })
+
+  it('returns METHOD:REQUEST for pending status', async () => {
+    const helper = setupDbMock()
+    helper.selectMock.mockResolvedValueOnce([baseRow({ status: 'pending' })])
+    vi.doMock('@/lib/db', () => ({ db: helper.db }))
+
+    const { GET } = await import('@/app/api/v1/appointments/[id]/ics/route')
+    const res = await GET(makeReq() as never, {
+      params: Promise.resolve({ id: APPT_ID }),
+    } as never)
+
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Content-Type')).toBe('text/calendar; charset=utf-8; method=REQUEST')
+    const body = await res.text()
+    expect(body).toContain('METHOD:REQUEST')
+    // STATUS:CONFIRMED is correct here — buildIcs's default for REQUEST is
+    // CONFIRMED; the `pending` DB status doesn't propagate to the .ics STATUS field.
+    expect(body).toContain('STATUS:CONFIRMED')
   })
 
   it('returns 404 when no appointment row found', async () => {

@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { appointments, slotTypes, taskQueue, users } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 import { generateAppointmentToken } from '@/lib/utils/appointment-token.util'
-import { buildIcs } from './appointment-ics.util'
+import { buildIcs, buildIcsDescription } from './appointment-ics.util'
 
 interface RenderContext {
   customer: { name: string; email: string; phone: string; message: string }
@@ -87,22 +87,17 @@ function customerIcsAttachment(
     startUtc: appt.startAt,
     endUtc: appt.endAt,
     summary: ctx.slot.type_name,
-    description: buildIcsDescription(ctx),
+    description: buildIcsDescription({
+      customerPhone: ctx.customer.phone,
+      customerEmail: ctx.customer.email,
+      customerMessage: ctx.customer.message || null,
+    }),
     location: ctx.slot.location_details || ctx.slot.location,
     organizerEmail: user.email ?? 'noreply@xkmu.de',
     organizerName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'xKMU',
     attendeeEmail: appt.customerEmail,
     attendeeName: appt.customerName,
   })
-}
-
-function buildIcsDescription(ctx: RenderContext): string {
-  const parts = [
-    `Telefon: ${ctx.customer.phone}`,
-    `E-Mail: ${ctx.customer.email}`,
-  ]
-  if (ctx.customer.message) parts.push('', 'Nachricht:', ctx.customer.message)
-  return parts.join('\n')
 }
 
 const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')) || 'https://www.xkmu.de'
