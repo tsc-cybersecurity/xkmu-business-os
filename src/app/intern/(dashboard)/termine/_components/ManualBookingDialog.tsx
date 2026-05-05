@@ -104,23 +104,31 @@ export function ManualBookingDialog(props: Props) {
       setSearchResults([])
       return
     }
+    const controller = new AbortController()
     const timer = setTimeout(async () => {
       setSearching(true)
       try {
-        const res = await fetch(`/api/v1/persons/search?q=${encodeURIComponent(searchQ.trim())}`)
+        const res = await fetch(
+          `/api/v1/persons/search?q=${encodeURIComponent(searchQ.trim())}`,
+          { signal: controller.signal },
+        )
         if (res.ok) {
           const json = (await res.json()) as { success: boolean; data?: Person[] }
           setSearchResults(json.data ?? [])
         } else {
           setSearchResults([])
         }
-      } catch {
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return
         setSearchResults([])
       } finally {
-        setSearching(false)
+        if (!controller.signal.aborted) setSearching(false)
       }
     }, 250)
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
   }, [searchQ, tab])
 
   function handleTabChange(next: string) {
@@ -272,6 +280,12 @@ export function ManualBookingDialog(props: Props) {
           </DialogDescription>
         </DialogHeader>
 
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleSubmit()
+          }}
+        >
         <div className="space-y-4">
           {/* Slot-Typ */}
           <div className="space-y-1.5">
@@ -463,10 +477,11 @@ export function ManualBookingDialog(props: Props) {
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
             Abbrechen
           </Button>
-          <Button type="button" onClick={handleSubmit} disabled={submitting}>
+          <Button type="submit" disabled={submitting}>
             {submitting ? 'Speichere…' : 'Termin anlegen'}
           </Button>
         </div>
+        </form>
       </DialogContent>
     </Dialog>
   )
