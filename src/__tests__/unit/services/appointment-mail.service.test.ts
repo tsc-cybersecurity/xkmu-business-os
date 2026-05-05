@@ -114,6 +114,55 @@ describe('AppointmentMailService.queueConfirmation', () => {
     expect(placeholders['links.cancel_url']).toMatch(/^https:\/\/www\.xkmu\.de\/buchen\/cancel\?token=/)
     expect(placeholders['links.reschedule_url']).toMatch(/^https:\/\/www\.xkmu\.de\/buchen\/reschedule\?token=/)
   })
+
+  it('still queues mail when APPOINTMENT_TOKEN_SECRET is missing (links empty)', async () => {
+    delete process.env.APPOINTMENT_TOKEN_SECRET
+    const helper = setupDbMock()
+    helper.selectMock.mockResolvedValueOnce([{
+      id: 'a-1', userId: 'u-1', slotTypeId: 'st-1',
+      startAt: new Date('2026-05-04T09:00:00Z'),
+      endAt: new Date('2026-05-04T09:30:00Z'),
+      customerName: 'Anna', customerEmail: 'anna@example.com',
+      customerPhone: '+491', customerMessage: null,
+      leadId: 'l-1', personId: 'p-1',
+    }])
+    helper.selectMock.mockResolvedValueOnce([{
+      id: 'st-1', name: 'Erstgespräch', durationMinutes: 30,
+      location: 'phone', locationDetails: null,
+    }])
+    helper.selectMock.mockResolvedValueOnce([{
+      email: 'tino@xkmu.de', firstName: 'Tino', lastName: 'S', timezone: 'Europe/Berlin',
+    }])
+    // No update mock — graceful degradation must skip the hash UPDATE on token failure
+    const insertedPayloads: unknown[] = []
+    const originalInsert = helper.db.insert
+    helper.db.insert = vi.fn().mockImplementation((...insertArgs: unknown[]) => {
+      const chain = originalInsert(...insertArgs as [unknown])
+      const originalValues = chain.values
+      chain.values = (v: unknown) => { insertedPayloads.push(v); return originalValues(v) }
+      return chain
+    })
+    helper.insertMock.mockResolvedValueOnce(undefined)
+    helper.insertMock.mockResolvedValueOnce(undefined)
+    vi.doMock('@/lib/db', () => ({ db: helper.db }))
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const { AppointmentMailService } = await import('@/lib/services/appointment-mail.service')
+    await AppointmentMailService.queueConfirmation('a-1')
+
+    expect(helper.db.insert).toHaveBeenCalledTimes(2)
+    expect(helper.db.update).not.toHaveBeenCalled()
+    expect(warnSpy).toHaveBeenCalled()
+
+    const customerPayload = insertedPayloads.find((p): p is { payload: { templateSlug: string; placeholders: Record<string, string> } } => {
+      const obj = p as { payload?: { templateSlug?: string } }
+      return obj?.payload?.templateSlug === 'appointment.customer.confirmation'
+    })
+    expect(customerPayload).toBeDefined()
+    expect(customerPayload!.payload.placeholders['links.cancel_url']).toBe('')
+    expect(customerPayload!.payload.placeholders['links.reschedule_url']).toBe('')
+    warnSpy.mockRestore()
+  })
 })
 
 describe('AppointmentMailService.queueReminders', () => {

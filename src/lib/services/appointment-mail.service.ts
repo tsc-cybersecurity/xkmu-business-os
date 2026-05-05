@@ -52,8 +52,22 @@ async function ensureTokensAndUrls(args: {
   appointmentId: string
   startAt: Date
 }): Promise<{ cancelUrl: string; rescheduleUrl: string }> {
-  const cancel = generateAppointmentToken({ appointmentId: args.appointmentId, purpose: 'cancel', expiresAt: args.startAt })
-  const reschedule = generateAppointmentToken({ appointmentId: args.appointmentId, purpose: 'reschedule', expiresAt: args.startAt })
+  // Graceful degradation when APPOINTMENT_TOKEN_SECRET is missing:
+  // generateAppointmentToken throws — we still want the confirmation/reminder
+  // mail to go out (just without self-service links), rather than failing
+  // mail-queue inserts entirely.
+  let cancel: { token: string; hash: string }
+  let reschedule: { token: string; hash: string }
+  try {
+    cancel = generateAppointmentToken({ appointmentId: args.appointmentId, purpose: 'cancel', expiresAt: args.startAt })
+    reschedule = generateAppointmentToken({ appointmentId: args.appointmentId, purpose: 'reschedule', expiresAt: args.startAt })
+  } catch (err) {
+    console.warn(
+      'Could not generate appointment tokens — sending mail without cancel/reschedule URLs:',
+      err instanceof Error ? err.message : err,
+    )
+    return { cancelUrl: '', rescheduleUrl: '' }
+  }
   await db.update(appointments).set({
     cancelTokenHash: cancel.hash,
     rescheduleTokenHash: reschedule.hash,
