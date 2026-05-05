@@ -538,7 +538,7 @@ export const AppointmentService = {
     return { id: appt.id, status: 'confirmed', startAt: startAtUtc, endAt: endAtUtc }
   },
 
-  async reschedule(args: { token: string; newStartAtUtc: Date }): Promise<{ startAt: Date; endAt: Date }> {
+  async reschedule(args: { token: string; newStartAtUtc: Date }): Promise<{ startAt: Date; endAt: Date; appointmentId: string; oldStartAt: Date }> {
     const { verifyAppointmentToken, hashOf } = await import('@/lib/utils/appointment-token.util')
     const v = verifyAppointmentToken(args.token)
     if (!v.ok) {
@@ -552,6 +552,8 @@ export const AppointmentService = {
     if (appt.rescheduleTokenHash !== hashOf(args.token)) throw new AppointmentTokenError('revoked')
     if (appt.status === 'cancelled') throw new AppointmentTokenError('invalid', 'appointment is cancelled')
 
+    const oldStartAt = appt.startAt
+
     const { newEndAtUtc, userTimezone } = await _validateNewSlot({ appt, newStartAtUtc: args.newStartAtUtc })
 
     await _applyRescheduleMutation({
@@ -561,10 +563,10 @@ export const AppointmentService = {
       newEndAtUtc,
       userTimezone,
     })
-    return { startAt: args.newStartAtUtc, endAt: newEndAtUtc }
+    return { startAt: args.newStartAtUtc, endAt: newEndAtUtc, appointmentId: appt.id, oldStartAt }
   },
 
-  async cancel(args: { token: string; reason?: string }): Promise<{ alreadyCancelled: boolean }> {
+  async cancel(args: { token: string; reason?: string }): Promise<{ alreadyCancelled: boolean; appointmentId: string }> {
     const { verifyAppointmentToken, hashOf } = await import('@/lib/utils/appointment-token.util')
     const v = verifyAppointmentToken(args.token)
     if (!v.ok) {
@@ -577,7 +579,7 @@ export const AppointmentService = {
     if (!appt) throw new AppointmentTokenError('invalid')
     if (appt.cancelTokenHash !== hashOf(args.token)) throw new AppointmentTokenError('revoked')
 
-    if (appt.status === 'cancelled') return { alreadyCancelled: true }
+    if (appt.status === 'cancelled') return { alreadyCancelled: true, appointmentId: appt.id }
 
     await _applyCancelMutation({
       appointmentId: appt.id,
@@ -585,7 +587,7 @@ export const AppointmentService = {
       cancelledBy: 'customer',
       appt,
     })
-    return { alreadyCancelled: false }
+    return { alreadyCancelled: false, appointmentId: appt.id }
   },
 
   async bookForPortal(args: {
@@ -665,7 +667,7 @@ export const AppointmentService = {
     appointmentId: string
     portalUserId: string
     reason?: string | null
-  }): Promise<{ alreadyCancelled: boolean }> {
+  }): Promise<{ alreadyCancelled: boolean; appointmentId: string }> {
     const [appt] = await db.select().from(appointments).where(eq(appointments.id, args.appointmentId)).limit(1)
     if (!appt) throw new Error('appointment_not_found')
     if (!appt.personId) throw new Error('not_owned')
@@ -674,7 +676,7 @@ export const AppointmentService = {
       .from(persons).where(eq(persons.id, appt.personId)).limit(1)
     if (!person || person.portalUserId !== args.portalUserId) throw new Error('not_owned')
 
-    if (appt.status === 'cancelled') return { alreadyCancelled: true }
+    if (appt.status === 'cancelled') return { alreadyCancelled: true, appointmentId: appt.id }
 
     await _applyCancelMutation({
       appointmentId: appt.id,
@@ -682,14 +684,14 @@ export const AppointmentService = {
       cancelledBy: 'customer',
       appt,
     })
-    return { alreadyCancelled: false }
+    return { alreadyCancelled: false, appointmentId: appt.id }
   },
 
   async rescheduleByOwner(args: {
     appointmentId: string
     portalUserId: string
     newStartAtUtc: Date
-  }): Promise<{ startAt: Date; endAt: Date }> {
+  }): Promise<{ startAt: Date; endAt: Date; appointmentId: string; oldStartAt: Date }> {
     // 1. Load appointment + verify ownership
     const [appt] = await db.select().from(appointments).where(eq(appointments.id, args.appointmentId)).limit(1)
     if (!appt) throw new Error('appointment_not_found')
@@ -698,6 +700,8 @@ export const AppointmentService = {
       .from(persons).where(eq(persons.id, appt.personId)).limit(1)
     if (!person || person.portalUserId !== args.portalUserId) throw new Error('not_owned')
     if (appt.status === 'cancelled') throw new Error('appointment_cancelled')
+
+    const oldStartAt = appt.startAt
 
     // 2. Validate new slot
     const { newEndAtUtc, userTimezone } = await _validateNewSlot({ appt, newStartAtUtc: args.newStartAtUtc })
@@ -710,6 +714,6 @@ export const AppointmentService = {
       newEndAtUtc,
       userTimezone,
     })
-    return { startAt: args.newStartAtUtc, endAt: newEndAtUtc }
+    return { startAt: args.newStartAtUtc, endAt: newEndAtUtc, appointmentId: appt.id, oldStartAt }
   },
 }

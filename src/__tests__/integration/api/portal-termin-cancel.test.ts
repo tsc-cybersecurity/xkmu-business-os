@@ -6,6 +6,10 @@ vi.mock('@/lib/services/appointment.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/audit-log.service', () => ({
+  AuditLogService: { log: vi.fn() },
+}))
+
 function mockSession(value: unknown) {
   vi.doMock('@/lib/auth/session', () => ({
     getSession: vi.fn().mockResolvedValue(value),
@@ -54,7 +58,7 @@ describe('POST /api/portal/termin/[id]/cancel', () => {
   it('returns 200 on happy path', async () => {
     mockSession({ user: { id: 'pu-1', email: 'p@example.com', role: 'portal_user' } })
     const { AppointmentService } = await import('@/lib/services/appointment.service')
-    vi.mocked(AppointmentService.cancelByOwner).mockResolvedValueOnce({ alreadyCancelled: false })
+    vi.mocked(AppointmentService.cancelByOwner).mockResolvedValueOnce({ alreadyCancelled: false, appointmentId: VALID_APPT_ID })
 
     const { POST } = await import('@/app/api/portal/termin/[id]/cancel/route')
     const res = await POST(makeReq({ reason: 'no longer needed' }) as never, makeCtx(VALID_APPT_ID))
@@ -70,7 +74,7 @@ describe('POST /api/portal/termin/[id]/cancel', () => {
   it('returns 200 with alreadyCancelled=true when service reports idempotent cancel', async () => {
     mockSession({ user: { id: 'pu-1', email: 'p@example.com', role: 'portal_user' } })
     const { AppointmentService } = await import('@/lib/services/appointment.service')
-    vi.mocked(AppointmentService.cancelByOwner).mockResolvedValueOnce({ alreadyCancelled: true })
+    vi.mocked(AppointmentService.cancelByOwner).mockResolvedValueOnce({ alreadyCancelled: true, appointmentId: VALID_APPT_ID })
 
     const { POST } = await import('@/app/api/portal/termin/[id]/cancel/route')
     const res = await POST(makeReq({}) as never, makeCtx(VALID_APPT_ID))

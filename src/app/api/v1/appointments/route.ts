@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withPermission } from '@/lib/auth/require-permission'
 import { AppointmentService, SlotNoLongerAvailableError } from '@/lib/services/appointment.service'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 
 // SECURITY: callers with `appointments.create` may target any user's calendar via the
 // `userId` body field. The slot-type ownership check inside `book()` (slotType.userId
@@ -20,7 +21,7 @@ const BodySchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  return withPermission(request, 'appointments', 'create', async () => {
+  return withPermission(request, 'appointments', 'create', async (auth) => {
     let raw: unknown
     try {
       raw = await request.json()
@@ -48,6 +49,25 @@ export async function POST(request: NextRequest) {
         personId: parsed.data.personId,
         suppressCustomerMail: parsed.data.suppressCustomerMail,
       })
+      try {
+        await AuditLogService.log({
+          userId: auth.userId,
+          userRole: 'staff',
+          action: 'appointment.create',
+          entityType: 'appointment',
+          entityId: result.id,
+          payload: {
+            source: 'manual',
+            slotTypeId: parsed.data.slotTypeId,
+            startAt: result.startAt.toISOString(),
+            customerEmail: parsed.data.customerEmail,
+          },
+          request,
+        })
+      } catch (err) {
+        console.error('Audit-log write failed for appointment.create:', err)
+        return NextResponse.json({ error: 'audit_log_failed' }, { status: 500 })
+      }
       return NextResponse.json({ appointment: result }, { status: 201 })
     } catch (err) {
       if (err instanceof SlotNoLongerAvailableError) {

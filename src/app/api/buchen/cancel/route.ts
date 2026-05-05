@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { AppointmentService, AppointmentTokenError } from '@/lib/services/appointment.service'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 
 const Body = z.object({
   token: z.string().min(10),
@@ -46,10 +47,30 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { alreadyCancelled } = await AppointmentService.cancel({
+    const { alreadyCancelled, appointmentId } = await AppointmentService.cancel({
       token: parsed.data.token,
       reason: parsed.data.reason,
     })
+    if (!alreadyCancelled) {
+      try {
+        await AuditLogService.log({
+          userId: null,
+          userRole: 'customer',
+          action: 'appointment.cancel',
+          entityType: 'appointment',
+          entityId: appointmentId,
+          payload: {
+            cancelledBy: 'customer',
+            reason: parsed.data.reason?.slice(0, 200) ?? null,
+            alreadyCancelled,
+          },
+          request,
+        })
+      } catch (err) {
+        console.error('Audit-log write failed for appointment.cancel:', err)
+        return NextResponse.json({ error: 'audit_log_failed' }, { status: 500 })
+      }
+    }
     return NextResponse.json({ success: true, alreadyCancelled })
   } catch (err) {
     if (err instanceof AppointmentTokenError) {

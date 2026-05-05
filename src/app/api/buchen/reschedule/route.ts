@@ -5,6 +5,7 @@ import {
   AppointmentTokenError,
   SlotNoLongerAvailableError,
 } from '@/lib/services/appointment.service'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 
 const Body = z.object({
   token: z.string().min(10),
@@ -49,6 +50,23 @@ export async function POST(request: NextRequest) {
       token: parsed.data.token,
       newStartAtUtc: new Date(parsed.data.startAtUtc),
     })
+    try {
+      await AuditLogService.log({
+        userId: null,
+        userRole: 'customer',
+        action: 'appointment.reschedule',
+        entityType: 'appointment',
+        entityId: result.appointmentId,
+        payload: {
+          oldStartAt: result.oldStartAt.toISOString(),
+          newStartAt: result.startAt.toISOString(),
+        },
+        request,
+      })
+    } catch (err) {
+      console.error('Audit-log write failed for appointment.reschedule:', err)
+      return NextResponse.json({ error: 'audit_log_failed' }, { status: 500 })
+    }
     return NextResponse.json({
       success: true,
       startAt: result.startAt.toISOString(),

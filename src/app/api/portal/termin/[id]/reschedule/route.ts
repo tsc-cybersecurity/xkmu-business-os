@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { AppointmentService, SlotNoLongerAvailableError } from '@/lib/services/appointment.service'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 import { getSession } from '@/lib/auth/session'
 
 const BodySchema = z.object({
@@ -29,6 +30,23 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       portalUserId: session.user.id,
       newStartAtUtc: new Date(parsed.data.startAtUtc),
     })
+    try {
+      await AuditLogService.log({
+        userId: session.user.id,
+        userRole: 'portal_user',
+        action: 'appointment.reschedule',
+        entityType: 'appointment',
+        entityId: result.appointmentId,
+        payload: {
+          oldStartAt: result.oldStartAt.toISOString(),
+          newStartAt: result.startAt.toISOString(),
+        },
+        request: req,
+      })
+    } catch (err) {
+      console.error('Audit-log write failed for appointment.reschedule:', err)
+      return NextResponse.json({ error: 'audit_log_failed' }, { status: 500 })
+    }
     return NextResponse.json({
       success: true,
       startAt: result.startAt.toISOString(),

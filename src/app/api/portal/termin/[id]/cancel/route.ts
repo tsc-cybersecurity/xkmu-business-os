@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { AppointmentService } from '@/lib/services/appointment.service'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 import { getSession } from '@/lib/auth/session'
 
 const BodySchema = z.object({ reason: z.string().max(500).nullable().optional() })
@@ -21,11 +22,31 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!parsed.success) return NextResponse.json({ error: 'invalid_body' }, { status: 400 })
 
   try {
-    const { alreadyCancelled } = await AppointmentService.cancelByOwner({
+    const { alreadyCancelled, appointmentId } = await AppointmentService.cancelByOwner({
       appointmentId: id,
       portalUserId: session.user.id,
       reason: parsed.data.reason ?? null,
     })
+    if (!alreadyCancelled) {
+      try {
+        await AuditLogService.log({
+          userId: session.user.id,
+          userRole: 'portal_user',
+          action: 'appointment.cancel',
+          entityType: 'appointment',
+          entityId: appointmentId,
+          payload: {
+            cancelledBy: 'portal',
+            reason: parsed.data.reason?.slice(0, 200) ?? null,
+            alreadyCancelled,
+          },
+          request: req,
+        })
+      } catch (err) {
+        console.error('Audit-log write failed for appointment.cancel:', err)
+        return NextResponse.json({ error: 'audit_log_failed' }, { status: 500 })
+      }
+    }
     return NextResponse.json({ success: true, alreadyCancelled })
   } catch (err) {
     if (err instanceof Error) {

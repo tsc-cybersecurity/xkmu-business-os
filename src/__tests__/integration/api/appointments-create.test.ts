@@ -14,6 +14,10 @@ vi.mock('@/lib/services/appointment.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/audit-log.service', () => ({
+  AuditLogService: { log: vi.fn() },
+}))
+
 const VALID_USER_ID = 'a0000000-0000-4000-8000-000000000001'
 const VALID_SLOT_TYPE_ID = 'a0000000-0000-4000-8000-000000000002'
 const VALID_PERSON_ID = 'a0000000-0000-4000-8000-000000000003'

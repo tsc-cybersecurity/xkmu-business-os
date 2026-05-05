@@ -10,6 +10,10 @@ vi.mock('@/lib/services/appointment.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/audit-log.service', () => ({
+  AuditLogService: { log: vi.fn() },
+}))
+
 const VALID_TOKEN = 'a'.repeat(40)
 
 function makeReq(body: unknown, headers: Record<string, string> = {}, opts: { rawText?: string } = {}): Request {
@@ -26,7 +30,7 @@ describe('POST /api/buchen/cancel', () => {
 
   it('returns 200 with success on valid cancel', async () => {
     const { AppointmentService } = await import('@/lib/services/appointment.service')
-    vi.mocked(AppointmentService.cancel).mockResolvedValueOnce({ alreadyCancelled: false })
+    vi.mocked(AppointmentService.cancel).mockResolvedValueOnce({ alreadyCancelled: false, appointmentId: 'appt-1' })
 
     const { POST } = await import('@/app/api/buchen/cancel/route')
     const res = await POST(makeReq(
@@ -43,7 +47,7 @@ describe('POST /api/buchen/cancel', () => {
 
   it('returns 200 with alreadyCancelled=true when service reports idempotent cancel', async () => {
     const { AppointmentService } = await import('@/lib/services/appointment.service')
-    vi.mocked(AppointmentService.cancel).mockResolvedValueOnce({ alreadyCancelled: true })
+    vi.mocked(AppointmentService.cancel).mockResolvedValueOnce({ alreadyCancelled: true, appointmentId: 'appt-1' })
 
     const { POST } = await import('@/app/api/buchen/cancel/route')
     const res = await POST(makeReq(
@@ -145,7 +149,7 @@ describe('POST /api/buchen/cancel', () => {
 
   it('returns 429 after rate limit threshold from same IP', async () => {
     const { AppointmentService } = await import('@/lib/services/appointment.service')
-    vi.mocked(AppointmentService.cancel).mockResolvedValue({ alreadyCancelled: false })
+    vi.mocked(AppointmentService.cancel).mockResolvedValue({ alreadyCancelled: false, appointmentId: 'appt-1' })
 
     const { POST } = await import('@/app/api/buchen/cancel/route')
     const ip = '9.9.9.9'

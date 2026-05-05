@@ -12,6 +12,10 @@ vi.mock('@/lib/services/appointment.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/audit-log.service', () => ({
+  AuditLogService: { log: vi.fn() },
+}))
+
 function mockSession(value: unknown) {
   vi.doMock('@/lib/auth/session', () => ({
     getSession: vi.fn().mockResolvedValue(value),
@@ -72,7 +76,7 @@ describe('POST /api/portal/termin/[id]/reschedule', () => {
     const { AppointmentService } = await import('@/lib/services/appointment.service')
     const startAt = new Date(VALID_START)
     const endAt = new Date('2026-09-01T09:30:00.000Z')
-    vi.mocked(AppointmentService.rescheduleByOwner).mockResolvedValueOnce({ startAt, endAt })
+    vi.mocked(AppointmentService.rescheduleByOwner).mockResolvedValueOnce({ startAt, endAt, appointmentId: VALID_APPT_ID, oldStartAt: new Date('2026-04-01T08:00:00.000Z') })
 
     const { POST } = await import('@/app/api/portal/termin/[id]/reschedule/route')
     const res = await POST(makeReq({ startAtUtc: VALID_START }) as never, makeCtx(VALID_APPT_ID))

@@ -10,6 +10,10 @@ vi.mock('@/lib/services/appointment.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/audit-log.service', () => ({
+  AuditLogService: { log: vi.fn() },
+}))
+
 function mockSession(value: unknown) {
   vi.doMock('@/lib/auth/session', () => ({
     getSession: vi.fn().mockResolvedValue(value),

@@ -187,6 +187,10 @@ vi.mock('@/lib/services/appointment.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/audit-log.service', () => ({
+  AuditLogService: { log: vi.fn() },
+}))
+
 const VALID_TOKEN = 'a'.repeat(40)
 
 function makePostReq(body: unknown, headers: Record<string, string> = {}, opts: { rawText?: string } = {}): Request {
@@ -205,7 +209,7 @@ describe('POST /api/buchen/reschedule', () => {
     const { AppointmentService } = await import('@/lib/services/appointment.service')
     const startAt = new Date('2026-05-05T08:00:00.000Z')
     const endAt = new Date('2026-05-05T08:30:00.000Z')
-    vi.mocked(AppointmentService.reschedule).mockResolvedValueOnce({ startAt, endAt })
+    vi.mocked(AppointmentService.reschedule).mockResolvedValueOnce({ startAt, endAt, appointmentId: 'appt-1', oldStartAt: new Date('2026-04-01T08:00:00.000Z') })
 
     const { POST } = await import('@/app/api/buchen/reschedule/route')
     const res = await POST(makePostReq(
@@ -328,6 +332,8 @@ describe('POST /api/buchen/reschedule', () => {
     vi.mocked(AppointmentService.reschedule).mockResolvedValue({
       startAt: new Date('2026-05-05T08:00:00.000Z'),
       endAt: new Date('2026-05-05T08:30:00.000Z'),
+      appointmentId: 'appt-1',
+      oldStartAt: new Date('2026-04-01T08:00:00.000Z'),
     })
 
     const { POST } = await import('@/app/api/buchen/reschedule/route')

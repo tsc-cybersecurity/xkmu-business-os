@@ -4,6 +4,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
 import { AppointmentService, SlotNoLongerAvailableError } from '@/lib/services/appointment.service'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 
 interface RouteContext { params: Promise<{ slug: string }> }
 
@@ -79,6 +80,25 @@ export async function POST(request: NextRequest, ctx: RouteContext) {
       customerMessage: parsed.data.customerMessage ?? null,
       source: 'public',
     })
+    try {
+      await AuditLogService.log({
+        userId: null,
+        userRole: 'customer',
+        action: 'appointment.create',
+        entityType: 'appointment',
+        entityId: appt.id,
+        payload: {
+          source: 'public',
+          slotTypeId: parsed.data.slotTypeId,
+          startAt: appt.startAt.toISOString(),
+          customerEmail: parsed.data.customerEmail,
+        },
+        request,
+      })
+    } catch (err) {
+      console.error('Audit-log write failed for appointment.create:', err)
+      return NextResponse.json({ error: 'audit_log_failed' }, { status: 500 })
+    }
     return NextResponse.json({
       appointmentId: appt.id,
       redirectUrl: `/buchen/${slug}/bestaetigt?id=${appt.id}`,
