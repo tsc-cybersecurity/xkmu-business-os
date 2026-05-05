@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmDialog } from '@/components/shared'
 import { DocumentStatusBadge } from '../../_components/status-badge'
+import { LineItemsEditor } from '../../_components/line-items-editor'
 import { toast } from 'sonner'
 import { FileSignature,
   ArrowLeft,
@@ -551,68 +552,19 @@ export default function ContractDetailPage() {
         {/* Tab: Positionen */}
         <TabsContent value="positionen" className="mt-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle>Positionen</CardTitle>
-              <Can module="documents" action="update">
-                <Button size="sm" variant="outline" asChild>
-                  <Link href={`/intern/finance/contracts/${contract.id}/edit`}>
-                    Positionen bearbeiten
-                  </Link>
-                </Button>
-              </Can>
             </CardHeader>
             <CardContent>
-              {contract.items.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Keine Positionen vorhanden.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left">
-                        <th className="pb-2 font-medium text-muted-foreground">Pos.</th>
-                        <th className="pb-2 font-medium text-muted-foreground">Bezeichnung</th>
-                        <th className="pb-2 font-medium text-muted-foreground text-right">Menge</th>
-                        <th className="pb-2 font-medium text-muted-foreground">Einheit</th>
-                        <th className="pb-2 font-medium text-muted-foreground text-right">Einzelpreis</th>
-                        <th className="pb-2 font-medium text-muted-foreground text-right">Gesamt</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {contract.items
-                        .sort((a, b) => a.position - b.position)
-                        .map((item) => (
-                          <tr key={item.id} className="border-b last:border-0">
-                            <td className="py-2 text-muted-foreground">{item.position}</td>
-                            <td className="py-2">
-                              <div>{item.name}</div>
-                              {item.description && (
-                                <div className="text-xs text-muted-foreground">{item.description}</div>
-                              )}
-                            </td>
-                            <td className="py-2 text-right">{Number(item.quantity).toLocaleString('de-DE')}</td>
-                            <td className="py-2">{item.unit}</td>
-                            <td className="py-2 text-right">{formatCurrency(item.unitPrice)}</td>
-                            <td className="py-2 text-right font-medium">{formatCurrency(item.lineTotal)}</td>
-                          </tr>
-                        ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="border-t">
-                        <td colSpan={5} className="pt-3 text-right text-muted-foreground">Netto</td>
-                        <td className="pt-3 text-right font-medium">{formatCurrency(contract.subtotal)}</td>
-                      </tr>
-                      <tr>
-                        <td colSpan={5} className="py-1 text-right text-muted-foreground">MwSt</td>
-                        <td className="py-1 text-right">{formatCurrency(contract.taxTotal)}</td>
-                      </tr>
-                      <tr className="border-t">
-                        <td colSpan={5} className="pt-2 text-right font-bold">Gesamt</td>
-                        <td className="pt-2 text-right font-bold text-lg">{formatCurrency(contract.total)}</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              )}
+              <LineItemsEditor
+                documentId={contract.id}
+                items={contract.items}
+                readonly={false}
+                onItemsChanged={fetchContract}
+                subtotal={contract.subtotal}
+                taxTotal={contract.taxTotal}
+                total={contract.total}
+              />
             </CardContent>
           </Card>
         </TabsContent>
