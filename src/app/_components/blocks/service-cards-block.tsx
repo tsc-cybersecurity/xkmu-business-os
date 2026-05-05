@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Check } from 'lucide-react'
 import { InlineMarkdown } from '../markdown-renderer'
 
 interface Deliverable {
@@ -84,23 +84,23 @@ export function ServiceCardsBlock({ content, settings }: ServiceCardsBlockProps)
                 </ul>
               )}
 
-              {/* Deliverables */}
+              {/* Deliverables – Checklist-Style (Variante A) */}
               {item.deliverables && item.deliverables.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Was Sie erhalten</p>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Was Sie erhalten</p>
+                  <ul className="space-y-2">
                     {item.deliverables.map((tag, k) => {
                       const label = typeof tag === 'string' ? tag : tag.label
                       return (
-                        <span
-                          key={k}
-                          className="inline-flex items-center whitespace-nowrap rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 px-3 py-1 text-xs font-light text-white"
-                        >
-                          {label}
-                        </span>
+                        <li key={k} className="flex items-center gap-2.5">
+                          <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                            <Check className="h-3 w-3" strokeWidth={3} />
+                          </span>
+                          <span className="text-sm text-foreground">{label}</span>
+                        </li>
                       )
                     })}
-                  </div>
+                  </ul>
                 </div>
               )}
             </div>
