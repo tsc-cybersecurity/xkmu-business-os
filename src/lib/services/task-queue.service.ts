@@ -285,6 +285,7 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
             leadId: payload.leadId ? String(payload.leadId) : undefined,
             companyId: payload.companyId ? String(payload.companyId) : undefined,
             personId: payload.personId ? String(payload.personId) : undefined,
+            attachments: payload.attachments as Array<{ filename: string; content: string; contentType?: string }> | undefined,
           }
         )
         if (!result.success) throw new Error(result.error || 'E-Mail-Versand fehlgeschlagen')
@@ -296,6 +297,7 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
         subject: String(payload.subject || ''),
         body: String(payload.body || ''),
         html: payload.html ? String(payload.html) : undefined,
+        attachments: payload.attachments as Array<{ filename: string; content: string; contentType?: string }> | undefined,
       })
       if (!result.success) throw new Error(result.error || 'E-Mail-Versand fehlgeschlagen')
       return { sent: true, to: payload.to, messageId: result.messageId }

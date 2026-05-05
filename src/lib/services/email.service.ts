@@ -190,6 +190,7 @@ export const EmailService = {
         subject: input.subject,
         bodyHtml: html,
         bodyText,
+        attachments: input.attachments,
       })
 
       if (result.success) {

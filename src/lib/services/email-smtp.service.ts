@@ -13,6 +13,7 @@ interface SendEmailInput {
   bodyText?: string
   inReplyTo?: string
   references?: string[]
+  attachments?: Array<{ filename: string; content: Buffer | string; contentType?: string }>
 }
 
 interface SendEmailResult {
@@ -85,6 +86,9 @@ export const EmailSmtpService = {
       }
       if (references && references.length > 0) {
         mailOptions.references = references.join(' ')
+      }
+      if (input.attachments && input.attachments.length > 0) {
+        mailOptions.attachments = input.attachments
       }
 
       const info = await transport.sendMail(mailOptions)
