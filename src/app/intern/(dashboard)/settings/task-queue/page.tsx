@@ -46,6 +46,20 @@ const STATUS_CONFIG: Record<string, { label: string; variant: 'default' | 'secon
 const TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   email: { label: 'E-Mail', icon: <Mail className="h-4 w-4" />, color: 'text-blue-600 bg-blue-50 dark:bg-blue-950' },
   ai: { label: 'KI-Aufgabe', icon: <Bot className="h-4 w-4" />, color: 'text-purple-600 bg-purple-50 dark:bg-purple-950' },
+  cron: { label: 'Cron', icon: <Clock className="h-4 w-4" />, color: 'text-slate-600 bg-slate-100 dark:bg-slate-800' },
+}
+
+function formatTime(dateStr: string | null): string {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+}
+
+function getDisplayLabel(item: QueueItem, fallbackLabel: string): string {
+  if (item.type === 'cron') {
+    const at = (item.payload?.actionType as string) || ''
+    if (at) return at
+  }
+  return fallbackLabel
 }
 
 const PRIORITY_CONFIG: Record<number, { label: string; color: string }> = {
@@ -72,6 +86,14 @@ function getPayloadSummary(item: QueueItem): string {
     const action = (p.action as string) || ''
     const name = (p.companyName as string) || ''
     return `${action === 'company_research' ? 'Firmenrecherche' : action}${name ? `: ${name}` : ''}`
+  }
+  if (item.type === 'cron') {
+    const name = (p.cronJobName as string) || ''
+    const message = (p.message as string)
+      || (item.result as Record<string, unknown> | null)?.message as string
+      || ''
+    const at = formatTime(item.executedAt) || formatTime(item.scheduledFor)
+    return [at && `[${at}]`, name, message].filter(Boolean).join(' · ')
   }
   return JSON.stringify(p).substring(0, 100)
 }
@@ -430,13 +452,13 @@ export default function TaskQueuePage() {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-sm">{tc.label}</span>
+                      <span className="font-medium text-sm">{getDisplayLabel(item, tc.label)}</span>
                       <Badge variant={sc.variant} className="text-xs gap-1">
                         {sc.icon}{sc.label}
                       </Badge>
                       <span className={`text-xs font-medium ${pc.color}`}>{pc.label}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    <p className={`text-xs text-muted-foreground mt-0.5 truncate ${item.type === 'cron' ? 'font-mono' : ''}`}>
                       {getPayloadSummary(item)}
                     </p>
                   </div>
