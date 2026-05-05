@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { appointments, users, externalBusy } from '@/lib/db/schema'
+import { appointments, users, externalBusy, persons } from '@/lib/db/schema'
 import { and, eq, gte, inArray, lte } from 'drizzle-orm'
 import { SlotTypeService } from './slot-type.service'
 import { AvailabilityService } from './availability.service'
@@ -39,6 +39,7 @@ export interface BookInput {
   customerPhone: string
   customerMessage: string | null
   source: 'public' | 'portal' | 'manual'
+  personIdOverride?: string  // when set: skip LeadMatchService, use this personId directly
 }
 
 export interface BookResult {
@@ -321,12 +322,14 @@ export const AppointmentService = {
     // -------------------------------------------------------------------------
     // 5. Lead-Match (outside any TX)
     // -------------------------------------------------------------------------
-    const { leadId, personId } = await LeadMatchService.findOrCreate({
-      email: input.customerEmail,
-      name: input.customerName,
-      phone: input.customerPhone,
-      source: 'public_booking',
-    })
+    const { leadId, personId } = input.personIdOverride
+      ? { leadId: null, personId: input.personIdOverride }
+      : await LeadMatchService.findOrCreate({
+          email: input.customerEmail,
+          name: input.customerName,
+          phone: input.customerPhone,
+          source: 'public_booking',
+        })
 
     // -------------------------------------------------------------------------
     // 6. INSERT appointment (status='pending', googleEventId=null)
@@ -565,5 +568,34 @@ export const AppointmentService = {
       appt,
     })
     return { alreadyCancelled: false }
+  },
+
+  async bookForPortal(args: {
+    portalUserId: string
+    userId: string
+    slotTypeId: string
+    startAtUtc: Date
+    message?: string | null
+  }): Promise<BookResult> {
+    const [person] = await db
+      .select()
+      .from(persons)
+      .where(eq(persons.portalUserId, args.portalUserId))
+      .limit(1)
+    if (!person) throw new Error('person_not_linked')
+    if (!person.email) throw new Error('person_missing_email')
+
+    const fullName = `${person.firstName} ${person.lastName}`.trim()
+    return AppointmentService.book({
+      userId: args.userId,
+      slotTypeId: args.slotTypeId,
+      startAtUtc: args.startAtUtc,
+      customerName: fullName,
+      customerEmail: person.email,
+      customerPhone: person.phone ?? person.mobile ?? '',
+      customerMessage: args.message ?? null,
+      source: 'portal',
+      personIdOverride: person.id,
+    })
   },
 }
