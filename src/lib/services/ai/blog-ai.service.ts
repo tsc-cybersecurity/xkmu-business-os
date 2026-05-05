@@ -11,6 +11,7 @@ export interface GeneratedPost {
   seoDescription: string
   seoKeywords: string
   tags: string[]
+  /** Detaillierter AI-Bildgenerierungs-Prompt (Englisch). Kein Unsplash-Search-Term mehr. */
   featuredImage: string
   featuredImageAlt: string
 }
@@ -125,37 +126,23 @@ export const BlogAIService = {
     const tone = toneGuide[options.tone] || 'professionell'
     const length = lengthGuide[options.length] || 'circa 1000 Woerter'
 
-    const prompt = `Du bist ein erfahrener Fachautor fuer IT-Themen. Erstelle einen kompletten Blogbeitrag.
+    // Template aus DB laden (Fallback auf hartcodierte Defaults)
+    const template = await AiPromptTemplateService.getOrDefault('blog_post_generation')
 
-Thema: ${topic}
-Sprache: ${lang}
-Tonalität: ${tone}
-Laenge: ${length}
+    const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, {
+      topic,
+      language: lang,
+      tone,
+      length,
+    })
+    const fullPrompt = template.outputFormat
+      ? `${userPrompt}\n\n${template.outputFormat}`
+      : userPrompt
 
-Erstelle einen vollstaendigen Blogbeitrag im Markdown-Format mit:
-- Einleitungsabsatz
-- Mehrere Abschnitte mit Ueberschriften (## H2)
-- Aufzaehlungen wo sinnvoll
-- Fazit
-
-Antworte NUR als JSON:
-{
-  "title": "Aussagekraeftiger Titel",
-  "slug": "url-freundlicher-slug",
-  "content": "# Ueberschrift\\n\\nMarkdown-Inhalt...",
-  "excerpt": "Kurze Zusammenfassung in 1-2 Saetzen",
-  "seoTitle": "SEO-Titel (max 60 Zeichen)",
-  "seoDescription": "Meta-Description (max 155 Zeichen)",
-  "seoKeywords": "keyword1, keyword2, keyword3",
-  "tags": ["tag1", "tag2", "tag3"],
-  "featuredImage": "2-4 englische Keywords fuer Unsplash-Bildsuche, z.B. 'technology server network'",
-  "featuredImageAlt": "Beschreibender Alt-Text für das Bild auf Deutsch"
-}`
-
-    const response = await AIService.completeWithContext(prompt, context, {
+    const response = await AIService.completeWithContext(fullPrompt, context, {
       maxTokens: 8000,
       temperature: 0.7,
-      systemPrompt: `Du bist ein professioneller IT-Fachautor. Schreibe ${tone} auf ${lang}. Antworte NUR als valides JSON ohne Markdown-Code-Bloecke.`,
+      systemPrompt: template.systemPrompt,
     })
 
     let parsed: GeneratedPost

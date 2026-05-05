@@ -66,6 +66,12 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'title', label: 'Beitragstitel', description: 'Titel des Blogbeitrags' },
     { key: 'content', label: 'Beitragsinhalt', description: 'Inhalt des Blogbeitrags (Auszug)' },
   ],
+  blog_post_generation: [
+    { key: 'topic', label: 'Thema', description: 'Hauptthema des Blogbeitrags' },
+    { key: 'language', label: 'Sprache', description: 'Sprache, z.B. "Deutsch" oder "Englisch"' },
+    { key: 'tone', label: 'Tonalität', description: 'z.B. professionell, locker, technisch' },
+    { key: 'length', label: 'Länge', description: 'z.B. circa 1000 Woerter' },
+  ],
   business_profile_analysis: [
     { key: 'documentTexts', label: 'Dokumentinhalte', description: 'Extrahierte Texte aus den hochgeladenen Dokumenten' },
   ],
@@ -562,6 +568,47 @@ Erstelle SEO-Titel, Meta-Description und Keywords im vorgegebenen JSON-Format.`,
   "seoTitle": "<max 60 Zeichen, praegnant mit Hauptkeyword>",
   "seoDescription": "<max 155 Zeichen, mit Call-to-Action>",
   "seoKeywords": "<keyword1, keyword2, keyword3, ... (5-8 Keywords)>"
+}`,
+  },
+  blog_post_generation: {
+    name: 'Blog-Beitrag Generierung',
+    description: 'Generiert einen kompletten Blogbeitrag inkl. SEO-Metadaten und passendem AI-Bildgenerierungs-Prompt.',
+    systemPrompt: `Du bist ein erfahrener Fachautor fuer IT-, Cybersicherheit- und KI-Themen mit Fokus auf KMU. Du schreibst praezise, praxisnah und gut strukturiert.
+
+KERNREGELN:
+1. Schreibe vollstaendige, eigenstaendig lesbare Beitraege im Markdown-Format
+2. H2-Ueberschriften (##) fuer alle Hauptabschnitte, H3 (###) optional fuer Unterabschnitte
+3. Aufzaehlungen, kurze Absaetze, konkrete Beispiele wo sinnvoll
+4. Einleitung (1 Absatz, ohne H2) und Fazit-Abschnitt am Ende
+5. Halte SEO-Titel <= 60 und SEO-Description <= 155 Zeichen — niemals laenger
+6. featuredImage = AI-Bildgenerierungs-Prompt auf Englisch, fotorealistisch, B2B-tauglich, ohne Text/Logos/Wasserzeichen
+7. Sprache des Beitrags wie angegeben; Image-Prompt immer Englisch
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- KEINE Markdown-Codebloecke
+- Beginne deine Antwort direkt mit { und ende mit }`,
+    userPrompt: `Erstelle einen kompletten Blogbeitrag.
+
+Thema: {{topic}}
+Sprache: {{language}}
+Tonalität: {{tone}}
+Laenge: {{length}}
+
+Generiere alle Felder im vorgegebenen JSON-Format. featuredImage muss ein detaillierter, eigenstaendiger Bildgenerierungs-Prompt sein (NICHT Suchkeywords) — beschreibend, fotorealistisch, mit Bildkomposition, Stimmung, Beleuchtung. Ziel-Aspect-Ratio 16:9 fuer Blog-Hero-Bild.`,
+    outputFormat: `Antworte NUR mit diesem JSON-Format:
+{
+  "title": "<aussagekraeftiger Titel>",
+  "slug": "<url-freundlicher-slug-mit-bindestrichen>",
+  "content": "<kompletter Markdown-Inhalt mit Einleitung, ## H2-Abschnitten und Fazit>",
+  "excerpt": "<Kurze Zusammenfassung in 1-2 Saetzen>",
+  "seoTitle": "<max 60 Zeichen, mit Hauptkeyword>",
+  "seoDescription": "<max 155 Zeichen, mit Call-to-Action>",
+  "seoKeywords": "<keyword1, keyword2, keyword3, ... (5-8 Keywords kommagetrennt)>",
+  "tags": ["tag1", "tag2", "tag3"],
+  "featuredImage": "<detaillierter englischer AI-Bildgenerierungs-Prompt — fotorealistisch, B2B, 16:9, ohne Text/Logos. z.B. 'Photorealistic editorial photograph of a small business owner reviewing security checklists on a tablet in a modern office, soft natural daylight, shallow depth of field, professional B2B aesthetic, 16:9'>",
+  "featuredImageAlt": "<Beschreibender deutscher Alt-Text fuer Barrierefreiheit, max 200 Zeichen>"
 }`,
   },
   marketing_email: {

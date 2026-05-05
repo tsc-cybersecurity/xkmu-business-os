@@ -3,7 +3,7 @@ import { apiSuccess, apiValidationError, apiServerError } from '@/lib/utils/api-
 import { generateBlogPostSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { BlogAIService } from '@/lib/services/ai/blog-ai.service'
 import { BlogPostService } from '@/lib/services/blog-post.service'
-import { UnsplashService } from '@/lib/services/unsplash.service'
+import { ImageGenerationService } from '@/lib/services/ai/image-generation.service'
 import { withPermission } from '@/lib/auth/require-permission'
 import { logger } from '@/lib/utils/logger'
 
@@ -26,25 +26,34 @@ export async function POST(request: NextRequest) {
       })
       logger.info('Step 2: AI responded after', { module: 'BlogPostsGenerateAPI' })
 
-      // Fetch featured image from Unsplash (non-blocking, with timeout)
+      // Generate featured image via AI (Gemini default, 16:9). Non-blocking on failure.
       let featuredImage = ''
-      let featuredImageAlt = generated.featuredImageAlt || ''
+      const featuredImageAlt = generated.featuredImageAlt || ''
+      const imagePrompt = generated.featuredImage
 
-      if (generated.featuredImage) {
+      if (imagePrompt) {
         try {
-          const photo = await Promise.race([
-            UnsplashService.searchPhoto(generated.featuredImage),
-            new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+          const result = await Promise.race([
+            ImageGenerationService.generate(auth.userId ?? null, {
+              prompt: imagePrompt,
+              provider: 'gemini',
+              aspectRatio: '16:9',
+              category: 'blog',
+              tags: generated.tags?.slice(0, 5) ?? [],
+            }),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 60_000)),
           ])
-          if (photo) {
-            featuredImage = photo.url
-            featuredImageAlt = generated.featuredImageAlt || photo.alt
+          if (result && result.imageUrl) {
+            featuredImage = result.imageUrl
+          } else {
+            logger.warn('Image generation timed out or returned empty', { module: 'BlogPostsGenerateAPI' })
           }
         } catch (error) {
-          logger.warn('Unsplash failed', { module: 'BlogPostsGenerateAPI' })
+          // Non-fatal: post wird ohne Bild gespeichert, Operator kann nachtraeglich generieren
+          logger.warn(`Image generation failed: ${error instanceof Error ? error.message : String(error)}`, { module: 'BlogPostsGenerateAPI' })
         }
       }
-      logger.info('Step 3: Unsplash done after', { module: 'BlogPostsGenerateAPI' })
+      logger.info('Step 3: Image generation done', { module: 'BlogPostsGenerateAPI' })
 
       // Save as draft — handle duplicate slugs
       let slug = generated.slug
