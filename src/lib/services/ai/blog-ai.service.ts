@@ -139,8 +139,12 @@ export const BlogAIService = {
       ? `${userPrompt}\n\n${template.outputFormat}`
       : userPrompt
 
+    // Token-Budget abhaengig von der gewuenschten Laenge: long-Inhalte lassen
+    // sonst keinen Platz fuer die Metadaten-Felder am Ende des JSONs.
+    const maxTokensByLength: Record<string, number> = { short: 6000, medium: 12000, long: 20000 }
+    const maxTokens = maxTokensByLength[options.length] ?? 12000
     const response = await AIService.completeWithContext(fullPrompt, context, {
-      maxTokens: 8000,
+      maxTokens,
       temperature: 0.7,
       systemPrompt: template.systemPrompt,
     })
