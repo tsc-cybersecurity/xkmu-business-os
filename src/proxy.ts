@@ -142,20 +142,28 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Portal gate: /portal requires session with role=portal_user + companyId
-  if (pathname.startsWith('/portal')) {
+  // Portal gate: /portal and /api/portal/* require session with role=portal_user + companyId
+  if (pathname.startsWith('/portal') || pathname.startsWith('/api/portal')) {
+    const isApi = pathname.startsWith('/api/')
+
     // CSRF-Schutz fuer session-basierte Mutation-Routes (portal)
     const csrfResult = csrfCheck(request)
     if (csrfResult) return csrfResult
 
     const sessionToken = request.cookies.get('xkmu_session')?.value
     if (!sessionToken) {
+      if (isApi) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       const loginUrl = new URL('/intern/login', request.url)
       loginUrl.searchParams.set('next', pathname)
       return NextResponse.redirect(loginUrl)
     }
     const sessionInfo = await verifySession(sessionToken)
     if (!sessionInfo) {
+      if (isApi) {
+        const response = NextResponse.json({ error: 'Session expired' }, { status: 401 })
+        response.cookies.delete('xkmu_session')
+        return response
+      }
       const loginUrl = new URL('/intern/login', request.url)
       loginUrl.searchParams.set('next', pathname)
       const response = NextResponse.redirect(loginUrl)
@@ -163,6 +171,7 @@ export async function proxy(request: NextRequest) {
       return response
     }
     if (sessionInfo.role !== 'portal_user' || !sessionInfo.companyId) {
+      if (isApi) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       return new NextResponse('Forbidden', { status: 403 })
     }
     return NextResponse.next({ request: { headers: requestHeaders } })
