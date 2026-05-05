@@ -14,6 +14,7 @@
     "db:seed": "npx tsx src/lib/db/seed.ts",
     "db:seed:din": "npx tsx --env-file=.env src/lib/db/seeds/din-seed.ts",
     "db:seed:wiba": "npx tsx --env-file=.env src/lib/db/seeds/wiba-seed.ts",
+    "db:seed:sop-steps": "npx tsx --env-file=.env src/lib/db/seeds/sop-steps-backfill.seed.ts",
     "test": "vitest run",
     "test:unit": "vitest run src/__tests__/unit",
     "test:integration": "vitest run src/__tests__/integration",

@@ -66,7 +66,7 @@ export const SopService = {
     const [doc] = await db.select().from(sopDocuments)
       .where(and(eq(sopDocuments.id, id), isNull(sopDocuments.deletedAt)))
     if (!doc) return null
-    const steps = await db.select().from(sopSteps)
+    const persistedSteps = await db.select().from(sopSteps)
       .where(eq(sopSteps.sopId, id)).orderBy(asc(sopSteps.sequence))
     const versions = await db.select().from(sopVersions)
       .where(eq(sopVersions.sopId, id)).orderBy(desc(sopVersions.createdAt))
@@ -91,7 +91,16 @@ export const SopService = {
         linkedProcess = { key: taskRow.process.key, name: taskRow.process.name }
       }
     }
-    return { ...doc, steps, versions, producesDeliverable, linkedTask, linkedProcess }
+    // Read-through fallback: wenn sop_steps leer ist, aber process_tasks.steps
+    // existiert (JSONB), synthesisiere Steps zur Anzeige (kein DB-Write).
+    // Sobald sop_steps befuellt sind (durch Backfill oder UI-Edit), greift dies nicht mehr.
+    let steps: Array<Record<string, unknown>> = persistedSteps
+    let stepsSynthesized = false
+    if (persistedSteps.length === 0 && Array.isArray(linkedTask?.steps) && (linkedTask!.steps as unknown[]).length > 0) {
+      steps = mapJsonbStepsToSopSteps(id, linkedTask!.steps as JsonbStep[])
+      stepsSynthesized = true
+    }
+    return { ...doc, steps, versions, producesDeliverable, linkedTask, linkedProcess, stepsSynthesized }
   },
 
   async create(data: Record<string, unknown>) {
@@ -366,6 +375,40 @@ function incrementVersion(v: string): string {
   const parts = v.split('.').map(Number)
   parts[2] = (parts[2] || 0) + 1
   return parts.join('.')
+}
+
+// JSONB-Form aus process_tasks.steps (vom Seed in dieser Form abgelegt)
+type JsonbStep = {
+  nr?: string | number
+  action?: string
+  tool?: string
+  hint?: string
+}
+
+// Mappt process_tasks.steps (JSONB) auf sop_steps-kompatible Anzeigeobjekte.
+// id wird synthetisch erzeugt — ist nur fuer den Frontend-React-Key relevant.
+export function mapJsonbStepsToSopSteps(sopId: string, raw: JsonbStep[]) {
+  return raw.map((s, idx) => {
+    const seq = typeof s.nr === 'number'
+      ? s.nr
+      : (typeof s.nr === 'string' && /^\d+$/.test(s.nr) ? parseInt(s.nr, 10) : idx + 1)
+    const desc = [s.tool ? `Tool: ${s.tool}` : null, s.hint ?? null]
+      .filter((x): x is string => !!x && x.trim().length > 0)
+      .join('\n')
+    const title = (s.action ?? '').slice(0, 255)
+    return {
+      id: `${sopId}:synth:${idx}`,
+      sopId,
+      sequence: seq,
+      title,
+      description: desc || null,
+      responsible: null,
+      estimatedMinutes: null,
+      checklistItems: [] as string[],
+      warnings: [] as string[],
+      executor: null,
+    }
+  })
 }
 
 // Coverage-Klassifikation:
