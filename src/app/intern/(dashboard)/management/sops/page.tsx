@@ -1,16 +1,16 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
-import { Loader2, Plus, Search, FileText, Clock, Bot, User, Shuffle,
-  PanelLeftClose, PanelLeft, Package, ExternalLink,
+import {
+  Loader2, Plus, Search, FileText, Clock, Bot, User, Shuffle,
+  PanelLeftClose, PanelLeft, Package, ExternalLink, Code2,
+  AlertTriangle, Wrench, ListChecks, Zap, CircleDot, Info,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -18,6 +18,9 @@ import Link from 'next/link'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// ============================================
+// Constants
+// ============================================
 const STATUS_LABELS: Record<string, string> = { draft: 'Entwurf', review: 'Review', approved: 'Freigegeben', archived: 'Archiviert' }
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700', review: 'bg-yellow-100 text-yellow-700',
@@ -36,17 +39,52 @@ const MATURITY_LABELS: Record<number, string> = {
 }
 const EXECUTOR_ICONS: Record<string, typeof Bot> = { agent: Bot, human: User, flex: Shuffle }
 
-const DEFAULT_CATEGORIES = [
-  'Vertrieb', 'Marketing', 'Projektmanagement', 'IT & Cybersicherheit',
-  'Finanzen & Buchhaltung', 'HR & Onboarding', 'Kundenservice', 'Compliance & DSGVO',
-]
+const APP_STATUS_LABELS: Record<string, string> = { full: 'App: Voll', partial: 'App: Teilweise', none: 'App: Fehlt' }
+const APP_STATUS_COLORS: Record<string, string> = {
+  full: 'bg-green-100 text-green-700',
+  partial: 'bg-amber-100 text-amber-700',
+  none: 'bg-red-100 text-red-700',
+}
+const APP_STATUS_DOT: Record<string, string> = {
+  full: 'bg-green-500', partial: 'bg-amber-500', none: 'bg-red-500',
+}
 
 // ============================================
-// SOP Detail Component (inline, no navigation)
+// Types
+// ============================================
+type ConsolidatedRow = {
+  kind: 'sop' | 'task-only'
+  sopId: string | null
+  taskId: string | null
+  taskKey: string | null
+  title: string
+  category: string | null
+  subprocess: string | null
+  processKey: string | null
+  processName: string | null
+  status: string | null
+  version: string | null
+  automationLevel: string | null
+  aiCapable: boolean | null
+  maturityLevel: number | null
+  estimatedDurationMinutes: number | null
+  appStatus: string | null
+  appModule: string | null
+  appNotes: string | null
+  devRequirementCount: number
+  coverage: 'automated' | 'progress' | 'gap'
+  updatedAt: string | null
+}
+
+// ============================================
+// SOP Detail (extended: Prozess-Kontext + Dev-Requirements)
 // ============================================
 function SopDetail({ sop }: { sop: any }) {
   const s = sop
   const steps: any[] = s.steps || []
+  const task = s.linkedTask
+  const proc = s.linkedProcess
+  const devReqs: any[] = Array.isArray(task?.devRequirements) ? task.devRequirements : []
 
   return (
     <div className="space-y-6">
@@ -54,6 +92,7 @@ function SopDetail({ sop }: { sop: any }) {
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
           {s.source_task_id || s.sourceTaskId}
+          {proc && <span className="text-muted-foreground"> · {proc.key} {proc.name}</span>}
         </div>
         <h1 className="text-2xl font-bold">{s.title}</h1>
         {s.subprocess && <p className="text-sm text-muted-foreground">{s.subprocess}</p>}
@@ -81,6 +120,11 @@ function SopDetail({ sop }: { sop: any }) {
               <Bot className="h-3 w-3 mr-1" />KI-faehig
             </Badge>
           )}
+          {task?.appStatus && (
+            <Badge className={cn('text-xs', APP_STATUS_COLORS[task.appStatus])}>
+              {APP_STATUS_LABELS[task.appStatus]}
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -89,6 +133,8 @@ function SopDetail({ sop }: { sop: any }) {
         <TabsList className="flex-wrap">
           <TabsTrigger value="overview">Uebersicht</TabsTrigger>
           <TabsTrigger value="steps">Schritte ({steps.length})</TabsTrigger>
+          {task && <TabsTrigger value="process">Prozess-Kontext</TabsTrigger>}
+          {devReqs.length > 0 && <TabsTrigger value="dev">Dev ({devReqs.length})</TabsTrigger>}
           {s.producesDeliverable && <TabsTrigger value="deliverable">Deliverable</TabsTrigger>}
         </TabsList>
 
@@ -180,6 +226,98 @@ function SopDetail({ sop }: { sop: any }) {
           )}
         </TabsContent>
 
+        {/* Prozess-Kontext */}
+        {task && (
+          <TabsContent value="process" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CircleDot className="h-4 w-4" />App-Abdeckung
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-3">
+                  {task.appStatus && (
+                    <Badge className={cn('text-xs', APP_STATUS_COLORS[task.appStatus])}>
+                      {APP_STATUS_LABELS[task.appStatus]}
+                    </Badge>
+                  )}
+                  {task.appModule && (
+                    <span className="text-xs text-muted-foreground font-mono">Modul: {task.appModule}</span>
+                  )}
+                </div>
+                {task.appNotes && (
+                  <p className="text-sm whitespace-pre-wrap">{task.appNotes}</p>
+                )}
+                {!task.appNotes && !task.appStatus && (
+                  <p className="text-sm text-muted-foreground italic">Keine App-Abdeckung dokumentiert</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {task.trigger && (
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><Zap className="h-4 w-4" />Trigger</CardTitle></CardHeader>
+                <CardContent><p className="text-sm whitespace-pre-wrap">{task.trigger}</p></CardContent>
+              </Card>
+            )}
+            {task.expectedOutput && (
+              <Card>
+                <CardHeader><CardTitle className="text-base">Erwarteter Output</CardTitle></CardHeader>
+                <CardContent><p className="text-sm whitespace-pre-wrap">{task.expectedOutput}</p></CardContent>
+              </Card>
+            )}
+            {task.errorEscalation && (
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4" />Fehler & Eskalation</CardTitle></CardHeader>
+                <CardContent><p className="text-sm whitespace-pre-wrap">{task.errorEscalation}</p></CardContent>
+              </Card>
+            )}
+            {Array.isArray(task.checklist) && task.checklist.length > 0 && (
+              <Card>
+                <CardHeader><CardTitle className="text-base flex items-center gap-2"><ListChecks className="h-4 w-4" />Erfolgskontrolle</CardTitle></CardHeader>
+                <CardContent>
+                  <ul className="space-y-1">
+                    {task.checklist.map((item: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-sm">
+                        <span className="mt-0.5">&#9744;</span>{item}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        )}
+
+        {/* Dev-Requirements */}
+        {devReqs.length > 0 && (
+          <TabsContent value="dev" className="space-y-3">
+            {devReqs.map((req: any, i: number) => (
+              <Card key={i}>
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Code2 className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-sm">{req.tool}</span>
+                    {req.priority && (
+                      <Badge variant="outline" className="text-[10px] ml-auto">Prio: {req.priority}</Badge>
+                    )}
+                    {req.effort && (
+                      <Badge variant="outline" className="text-[10px]">Aufwand: {req.effort}</Badge>
+                    )}
+                  </div>
+                  {req.neededFunction && (
+                    <div className="text-sm"><span className="text-muted-foreground">Funktion: </span>{req.neededFunction}</div>
+                  )}
+                  {req.approach && (
+                    <div className="text-sm text-muted-foreground italic">{req.approach}</div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+        )}
+
         {/* Deliverable */}
         {s.producesDeliverable && (
           <TabsContent value="deliverable">
@@ -207,25 +345,197 @@ function SopDetail({ sop }: { sop: any }) {
 }
 
 // ============================================
-// Main Page — Split Layout
+// Task-only Detail (Process-Task ohne SOP)
+// ============================================
+function TaskOnlyDetail({ task, processKey, processName, onCreateSop }: {
+  task: any
+  processKey: string | null
+  processName: string | null
+  onCreateSop: () => void
+}) {
+  const steps: any[] = Array.isArray(task.steps) ? task.steps : []
+  const checklist: string[] = Array.isArray(task.checklist) ? task.checklist : []
+  const tools: string[] = Array.isArray(task.tools) ? task.tools : []
+  const devReqs: any[] = Array.isArray(task.devRequirements) ? task.devRequirements : []
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
+          {task.taskKey}
+          {processKey && <span> · {processKey} {processName}</span>}
+        </div>
+        <div className="flex items-start gap-3">
+          <h1 className="text-2xl font-bold flex-1">{task.title}</h1>
+          <Button onClick={onCreateSop} size="sm" className="shrink-0">
+            <Plus className="h-3.5 w-3.5 mr-1" />SOP erstellen
+          </Button>
+        </div>
+        {task.subprocess && <p className="text-sm text-muted-foreground">{task.subprocess}</p>}
+
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className="text-xs border-dashed">Keine SOP</Badge>
+          {task.appStatus && (
+            <Badge className={cn('text-xs', APP_STATUS_COLORS[task.appStatus])}>
+              {APP_STATUS_LABELS[task.appStatus]}
+            </Badge>
+          )}
+          {task.timeEstimate && (
+            <Badge variant="outline" className="text-xs">
+              <Clock className="h-3 w-3 mr-1" />{task.timeEstimate}
+            </Badge>
+          )}
+          {task.automationPotential && (
+            <Badge variant="outline" className="text-xs">{task.automationPotential}</Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Hint */}
+      <Card className="border-dashed bg-muted/30">
+        <CardContent className="p-4 flex items-start gap-3 text-sm">
+          <Info className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="font-medium">Diese Aufgabe ist im Prozesshandbuch erfasst, hat aber noch keine ausfuehrbare SOP.</p>
+            <p className="text-muted-foreground text-xs">
+              Erstelle eine SOP, um Schritte, Verantwortliche, Reife-Level und Versionierung zu hinterlegen.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Process-Task Felder */}
+      {task.purpose && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Zweck</CardTitle></CardHeader>
+          <CardContent><p className="text-sm whitespace-pre-wrap">{task.purpose}</p></CardContent>
+        </Card>
+      )}
+      {task.trigger && (
+        <Card>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Zap className="h-4 w-4" />Trigger</CardTitle></CardHeader>
+          <CardContent><p className="text-sm whitespace-pre-wrap">{task.trigger}</p></CardContent>
+        </Card>
+      )}
+      {tools.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Wrench className="h-4 w-4" />Tools</CardTitle></CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {tools.map((t: string) => <Badge key={t} variant="secondary">{t}</Badge>)}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      {steps.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Schritte</CardTitle></CardHeader>
+          <CardContent>
+            <ol className="space-y-2">
+              {steps.map((s: any, i: number) => (
+                <li key={i} className="flex items-start gap-3 text-sm">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{s.nr ?? i + 1}</span>
+                  <div className="flex-1">
+                    <div>{s.action}</div>
+                    {s.tool && <div className="text-xs text-muted-foreground mt-0.5">Tool: {s.tool}</div>}
+                    {s.hint && <div className="text-xs text-muted-foreground italic mt-0.5">{s.hint}</div>}
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+      )}
+      {checklist.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><ListChecks className="h-4 w-4" />Erfolgskontrolle</CardTitle></CardHeader>
+          <CardContent>
+            <ul className="space-y-1">
+              {checklist.map((item: string, i: number) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <span className="mt-0.5">&#9744;</span>{item}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+      {task.expectedOutput && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">Erwarteter Output</CardTitle></CardHeader>
+          <CardContent><p className="text-sm whitespace-pre-wrap">{task.expectedOutput}</p></CardContent>
+        </Card>
+      )}
+      {task.errorEscalation && (
+        <Card>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4" />Fehler & Eskalation</CardTitle></CardHeader>
+          <CardContent><p className="text-sm whitespace-pre-wrap">{task.errorEscalation}</p></CardContent>
+        </Card>
+      )}
+
+      {/* App-Coverage */}
+      {(task.appStatus || task.appNotes || task.appModule) && (
+        <Card>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><CircleDot className="h-4 w-4" />App-Abdeckung</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center gap-3">
+              {task.appStatus && (
+                <Badge className={cn('text-xs', APP_STATUS_COLORS[task.appStatus])}>
+                  {APP_STATUS_LABELS[task.appStatus]}
+                </Badge>
+              )}
+              {task.appModule && (
+                <span className="text-xs text-muted-foreground font-mono">Modul: {task.appModule}</span>
+              )}
+            </div>
+            {task.appNotes && <p className="text-sm whitespace-pre-wrap">{task.appNotes}</p>}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dev-Requirements */}
+      {devReqs.length > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Code2 className="h-4 w-4" />Dev-Requirements</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {devReqs.map((req: any, i: number) => (
+              <div key={i} className="border-l-2 border-muted pl-3 py-1 space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm">{req.tool}</span>
+                  {req.priority && <Badge variant="outline" className="text-[10px]">Prio: {req.priority}</Badge>}
+                  {req.effort && <Badge variant="outline" className="text-[10px]">Aufwand: {req.effort}</Badge>}
+                </div>
+                {req.neededFunction && <div className="text-sm"><span className="text-muted-foreground">Funktion: </span>{req.neededFunction}</div>}
+                {req.approach && <div className="text-sm text-muted-foreground italic">{req.approach}</div>}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+// ============================================
+// Main Page
 // ============================================
 export default function SopsPage() {
-  const [sops, setSops] = useState<any[]>([])
+  const [rows, setRows] = useState<ConsolidatedRow[]>([])
   const [loading, setLoading] = useState(true)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+
+  // Filters
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [catFilter, setCatFilter] = useState('all')
+  const [processFilter, setProcessFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [automationFilter, setAutomationFilter] = useState('all')
+  const [automationFilter, setAutomationFilter] = useState<'all' | 'automated' | 'progress' | 'gap'>('all')
   const [maturityFilter, setMaturityFilter] = useState('all')
-  const [showCreate, setShowCreate] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ title: '', category: 'Vertrieb', purpose: '', scope: '' })
 
   // Layout
   const [showSidebar, setShowSidebar] = useState(true)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selected, setSelected] = useState<{ kind: 'sop' | 'task-only'; id: string } | null>(null)
   const [detail, setDetail] = useState<any>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
 
@@ -235,56 +545,94 @@ export default function SopsPage() {
     return () => clearTimeout(t)
   }, [search])
 
-  const categories = [...new Set(sops.map(s => s.category))].filter(Boolean).sort()
-
+  // Load consolidated rows
   const load = useCallback(async () => {
     setLoading(true)
-    const params = new URLSearchParams()
-    if (catFilter !== 'all') params.set('category', catFilter)
+    const params = new URLSearchParams({ view: 'consolidated' })
+    if (processFilter !== 'all') params.set('processKey', processFilter)
     if (statusFilter !== 'all') params.set('status', statusFilter)
+    if (automationFilter !== 'all') params.set('automation', automationFilter)
     if (debouncedSearch.trim()) params.set('q', debouncedSearch.trim())
-    if (automationFilter !== 'all') params.set('automation_level', automationFilter)
-    if (maturityFilter !== 'all') params.set('maturity_level', maturityFilter)
-    params.set('limit', '500')
     const res = await fetch(`/api/v1/sops?${params}`)
     const d = await res.json()
-    if (d.success) setSops(d.data)
+    if (d.success) {
+      let data: ConsolidatedRow[] = d.data
+      if (maturityFilter !== 'all') {
+        const m = parseInt(maturityFilter, 10)
+        data = data.filter(r => r.maturityLevel === m)
+      }
+      setRows(data)
+    }
     setLoading(false)
     setHasLoadedOnce(true)
-  }, [catFilter, statusFilter, debouncedSearch, automationFilter, maturityFilter])
+  }, [processFilter, statusFilter, automationFilter, debouncedSearch, maturityFilter])
 
   useEffect(() => { load() }, [load])
 
-  // Fetch detail
-  const fetchDetail = useCallback(async (id: string) => {
+  // Fetch detail when selection changes
+  const fetchDetail = useCallback(async (sel: { kind: 'sop' | 'task-only'; id: string }) => {
     setLoadingDetail(true)
-    const res = await fetch(`/api/v1/sops/${id}`)
+    const url = sel.kind === 'sop' ? `/api/v1/sops/${sel.id}` : `/api/v1/processes/tasks/${sel.id}`
+    const res = await fetch(url)
     const d = await res.json()
     if (d.success) setDetail(d.data)
     setLoadingDetail(false)
   }, [])
 
   useEffect(() => {
-    if (selectedId) fetchDetail(selectedId)
+    if (selected) fetchDetail(selected)
     else setDetail(null)
-  }, [selectedId, fetchDetail])
+  }, [selected, fetchDetail])
 
-  // Group SOPs by category for sidebar
-  const grouped = sops.reduce<Record<string, any[]>>((acc, s) => {
-    const cat = s.category || 'Ohne Kategorie'
-    if (!acc[cat]) acc[cat] = []
-    acc[cat].push(s)
-    return acc
-  }, {})
+  // Group rows by process for sidebar
+  const grouped = useMemo(() => {
+    return rows.reduce<Record<string, ConsolidatedRow[]>>((acc, r) => {
+      const key = r.processKey ? `${r.processKey} ${r.processName ?? ''}`.trim() : 'Ohne Prozess'
+      if (!acc[key]) acc[key] = []
+      acc[key].push(r)
+      return acc
+    }, {})
+  }, [rows])
 
-  const createSop = async () => {
-    if (!form.title.trim()) return
-    setCreating(true)
-    const res = await fetch('/api/v1/sops', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+  const allProcessKeys = useMemo(
+    () => Array.from(new Set(rows.map(r => r.processKey).filter((k): k is string => !!k))).sort(),
+    [rows],
+  )
+
+  // Header stats
+  const stats = useMemo(() => {
+    const total = rows.length
+    const sops = rows.filter(r => r.kind === 'sop').length
+    const taskOnly = rows.filter(r => r.kind === 'task-only').length
+    const automated = rows.filter(r => r.coverage === 'automated').length
+    const gaps = rows.filter(r => r.coverage === 'gap').length
+    const pct = total > 0 ? Math.round((automated / total) * 100) : 0
+    return { total, sops, taskOnly, automated, gaps, pct }
+  }, [rows])
+
+  // Create SOP from task
+  const createSopFromTask = async (task: any) => {
+    const res = await fetch('/api/v1/sops', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: task.title,
+        category: task.subprocess || 'Allgemein',
+        purpose: task.purpose ?? '',
+        scope: task.subprocess ?? '',
+        sourceTaskId: task.taskKey,
+        subprocess: task.subprocess,
+        status: 'draft',
+      }),
+    })
     const d = await res.json()
-    if (d.success) { toast.success('SOP erstellt'); setShowCreate(false); setForm({ title: '', category: 'Vertrieb', purpose: '', scope: '' }); load() }
-    else toast.error('Fehler beim Erstellen')
-    setCreating(false)
+    if (d.success) {
+      toast.success('SOP erstellt')
+      load()
+      setSelected({ kind: 'sop', id: d.data.id })
+    } else {
+      toast.error('Fehler beim Erstellen')
+    }
   }
 
   if (loading && !hasLoadedOnce) {
@@ -300,19 +648,14 @@ export default function SopsPage() {
           <div className="p-4 border-b">
             <div className="flex items-center justify-between mb-1">
               <h2 className="font-semibold flex items-center gap-2">
-                <FileText className="h-4 w-4" />SOPs
+                <FileText className="h-4 w-4" />Prozesse & SOPs
               </h2>
-              <div className="flex items-center gap-1">
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowCreate(true)}>
-                  <Plus className="h-3.5 w-3.5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSidebar(false)}>
-                  <PanelLeftClose className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSidebar(false)}>
+                <PanelLeftClose className="h-3.5 w-3.5" />
+              </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              {sops.length} Prozesse in {Object.keys(grouped).length} Kategorien
+              {stats.total} Eintraege ({stats.sops} SOPs, {stats.taskOnly} ohne SOP)
             </p>
           </div>
 
@@ -323,67 +666,88 @@ export default function SopsPage() {
               <Input placeholder="Suchen..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-sm" />
             </div>
             <div className="flex gap-2">
-              <Select value={catFilter} onValueChange={setCatFilter}>
+              <Select value={processFilter} onValueChange={setProcessFilter}>
                 <SelectTrigger className="h-7 text-xs flex-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Alle Kategorien</SelectItem>
-                  {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  <SelectItem value="all">Alle Prozesse</SelectItem>
+                  {allProcessKeys.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Select value={automationFilter} onValueChange={setAutomationFilter}>
-                <SelectTrigger className="h-7 text-xs w-24"><SelectValue /></SelectTrigger>
+              <Select value={automationFilter} onValueChange={(v: any) => setAutomationFilter(v)}>
+                <SelectTrigger className="h-7 text-xs w-28"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Alle</SelectItem>
-                  <SelectItem value="manual">Manuell</SelectItem>
-                  <SelectItem value="semi">Semi</SelectItem>
-                  <SelectItem value="full">Voll</SelectItem>
+                  <SelectItem value="automated">Automatisiert</SelectItem>
+                  <SelectItem value="progress">In Arbeit</SelectItem>
+                  <SelectItem value="gap">Luecke</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          {/* SOP List grouped by category */}
+          {/* List grouped by process */}
           <div className="flex-1 overflow-y-auto relative">
             {loading && (
               <div className="absolute right-3 top-2 z-10">
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
               </div>
             )}
-            {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([category, items]) => (
-              <div key={category}>
+            {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([groupName, items]) => (
+              <div key={groupName}>
                 <div className="px-4 py-1.5 bg-muted/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0">
-                  {category} ({items.length})
+                  {groupName} ({items.length})
                 </div>
-                {items.map((s: any) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedId(s.id)}
-                    className={cn(
-                      'w-full flex items-center gap-2 px-4 py-2 text-left text-xs hover:bg-accent transition-colors border-b border-border/40',
-                      selectedId === s.id && 'bg-accent font-medium')}
-                  >
-                    <span className="shrink-0 text-muted-foreground font-mono w-14 text-[10px]">
-                      {s.source_task_id || s.sourceTaskId || '—'}
-                    </span>
-                    <span className="truncate flex-1">{s.title}</span>
-                    <span className="shrink-0 flex items-center gap-1">
-                      {s.maturity_level && (
-                        <span className={cn('w-2 h-2 rounded-full', {
-                          'bg-red-500': s.maturity_level === 1,
-                          'bg-orange-500': s.maturity_level === 2,
-                          'bg-yellow-500': s.maturity_level === 3,
-                          'bg-blue-500': s.maturity_level === 4,
-                          'bg-green-500': s.maturity_level === 5,
-                        })} title={`Reife ${s.maturity_level}/5`} />
+                {items.map((r) => {
+                  const id = r.kind === 'sop' ? r.sopId! : r.taskId!
+                  const isSelected = selected?.kind === r.kind && selected.id === id
+                  return (
+                    <button
+                      key={`${r.kind}-${id}`}
+                      onClick={() => setSelected({ kind: r.kind, id })}
+                      className={cn(
+                        'w-full flex items-center gap-2 px-4 py-2 text-left text-xs hover:bg-accent transition-colors border-b border-border/40',
+                        isSelected && 'bg-accent font-medium',
+                        r.kind === 'task-only' && 'bg-muted/20',
                       )}
-                      {s.automation_level === 'full' && <Bot className="h-3 w-3 text-purple-500" />}
-                    </span>
-                  </button>
-                ))}
+                    >
+                      <span className={cn(
+                        'shrink-0 text-muted-foreground font-mono w-14 text-[10px]',
+                        r.kind === 'task-only' && 'italic',
+                      )}>
+                        {r.taskKey || '—'}
+                      </span>
+                      <span className={cn(
+                        'truncate flex-1',
+                        r.kind === 'task-only' && 'text-muted-foreground',
+                      )}>{r.title}</span>
+                      <span className="shrink-0 flex items-center gap-1">
+                        {r.kind === 'task-only' && (
+                          <span className="text-[9px] text-muted-foreground border border-dashed border-muted-foreground/40 rounded px-1">
+                            kein SOP
+                          </span>
+                        )}
+                        {r.maturityLevel && (
+                          <span className={cn('w-2 h-2 rounded-full', {
+                            'bg-red-500': r.maturityLevel === 1,
+                            'bg-orange-500': r.maturityLevel === 2,
+                            'bg-yellow-500': r.maturityLevel === 3,
+                            'bg-blue-500': r.maturityLevel === 4,
+                            'bg-green-500': r.maturityLevel === 5,
+                          })} title={`Reife ${r.maturityLevel}/5`} />
+                        )}
+                        {r.appStatus && (
+                          <span className={cn('w-2 h-2 rounded-full', APP_STATUS_DOT[r.appStatus])}
+                            title={APP_STATUS_LABELS[r.appStatus]} />
+                        )}
+                        {r.coverage === 'automated' && <Bot className="h-3 w-3 text-green-600" />}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             ))}
-            {sops.length === 0 && !loading && (
-              <div className="px-4 py-6 text-center text-xs text-muted-foreground">Keine SOPs gefunden</div>
+            {rows.length === 0 && !loading && (
+              <div className="px-4 py-6 text-center text-xs text-muted-foreground">Keine Eintraege gefunden</div>
             )}
           </div>
         </div>
@@ -391,40 +755,51 @@ export default function SopsPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Toolbar */}
-        <div className="border-b bg-muted/30 px-6 py-3 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-3">
-            {!showSidebar && (
-              <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)}>
-                <PanelLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-primary" />
-              <span className="font-semibold">Standard Operating Procedures</span>
-              {detail && (
-                <span className="text-sm text-muted-foreground hidden md:inline">— {detail.title}</span>
+        {/* Toolbar with Stats */}
+        <div className="border-b bg-muted/30 px-6 py-3 shrink-0 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {!showSidebar && (
+                <Button variant="ghost" size="icon" onClick={() => setShowSidebar(true)}>
+                  <PanelLeft className="h-4 w-4" />
+                </Button>
               )}
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <span className="font-semibold">Prozesse & SOPs</span>
+                {detail && (
+                  <span className="text-sm text-muted-foreground hidden md:inline">— {detail.title}</span>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle Status</SelectItem>
+                  <SelectItem value="draft">Entwurf</SelectItem>
+                  <SelectItem value="approved">Freigegeben</SelectItem>
+                  <SelectItem value="archived">Archiviert</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={maturityFilter} onValueChange={setMaturityFilter}>
+                <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle Reife</SelectItem>
+                  {[1, 2, 3, 4, 5].map(l => <SelectItem key={l} value={String(l)}>Reife {l}/5</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-8 text-xs w-36"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle Status</SelectItem>
-                <SelectItem value="draft">Entwurf</SelectItem>
-                <SelectItem value="approved">Freigegeben</SelectItem>
-                <SelectItem value="archived">Archiviert</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={maturityFilter} onValueChange={setMaturityFilter}>
-              <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle Reife</SelectItem>
-                {[1,2,3,4,5].map(l => <SelectItem key={l} value={String(l)}>Reife {l}/5</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Button size="sm" onClick={() => setShowCreate(true)}><Plus className="h-3.5 w-3.5 mr-1" />Neu</Button>
+          {/* Stats line */}
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <span><strong className="text-foreground">{stats.sops}</strong> SOPs</span>
+            <span>·</span>
+            <span><strong className="text-foreground">{stats.taskOnly}</strong> ohne SOP</span>
+            <span>·</span>
+            <span className="text-green-700"><strong>{stats.automated}</strong> automatisiert ({stats.pct}%)</span>
+            <span>·</span>
+            <span className="text-red-700"><strong>{stats.gaps}</strong> Luecken</span>
           </div>
         </div>
 
@@ -434,41 +809,24 @@ export default function SopsPage() {
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          ) : detail ? (
+          ) : detail && selected?.kind === 'sop' ? (
             <SopDetail sop={detail} />
+          ) : detail && selected?.kind === 'task-only' ? (
+            <TaskOnlyDetail
+              task={detail}
+              processKey={rows.find(r => r.taskId === selected.id)?.processKey ?? null}
+              processName={rows.find(r => r.taskId === selected.id)?.processName ?? null}
+              onCreateSop={() => createSopFromTask(detail)}
+            />
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <FileText className="h-12 w-12 mb-4 opacity-30" />
-              <p className="text-sm">SOP aus der Seitenleiste auswaehlen</p>
-              <p className="text-xs mt-1">{sops.length} Prozesse verfuegbar</p>
+              <p className="text-sm">Eintrag aus der Seitenleiste auswaehlen</p>
+              <p className="text-xs mt-1">{stats.total} Prozesse & SOPs verfuegbar</p>
             </div>
           )}
         </div>
       </div>
-
-      {/* Create Dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Neue SOP erstellen</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div><label className="text-sm font-medium block mb-1">Titel *</label><Input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="z.B. Kunden-Onboarding" /></div>
-            <div><label className="text-sm font-medium block mb-1">Kategorie</label>
-              <Select value={form.category} onValueChange={v => setForm({ ...form, category: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{(categories.length > 0 ? categories : DEFAULT_CATEGORIES).map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><label className="text-sm font-medium block mb-1">Zweck</label><Textarea value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} rows={2} /></div>
-            <div><label className="text-sm font-medium block mb-1">Geltungsbereich</label><Textarea value={form.scope} onChange={e => setForm({ ...form, scope: e.target.value })} rows={2} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Abbrechen</Button>
-            <Button onClick={createSop} disabled={creating || !form.title.trim()}>
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Erstellen'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

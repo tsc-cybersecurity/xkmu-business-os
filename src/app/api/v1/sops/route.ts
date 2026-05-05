@@ -8,6 +8,20 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined
     const status = searchParams.get('status') || undefined
     const search = searchParams.get('q') || searchParams.get('search') || undefined
+    const view = searchParams.get('view') || undefined
+
+    if (view === 'consolidated') {
+      const automationParam = searchParams.get('automation') || undefined
+      const automation = (['all', 'automated', 'progress', 'gap'].includes(automationParam ?? '')
+        ? automationParam
+        : undefined) as 'all' | 'automated' | 'progress' | 'gap' | undefined
+      const processKey = searchParams.get('processKey') || undefined
+      const rows = await SopService.listConsolidated({
+        category, status, search, automation, processKey,
+      })
+      return apiSuccess(rows)
+    }
+
     const sops = await SopService.list({ category, status, search })
     return apiSuccess(sops)
   })
