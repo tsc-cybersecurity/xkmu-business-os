@@ -61,7 +61,12 @@ export class GeminiProvider implements AIProvider {
       throw new Error(`Gemini API error: ${error}`)
     }
 
-    const data = await response.json()
+    // Body als UTF-8 dekodieren statt response.json() — Gemini liefert
+    // Content-Type ohne charset, undici hat in einigen Konstellationen
+    // Mojibake produziert (UTF-8-Bytes als Latin-1 interpretiert).
+    const buffer = await response.arrayBuffer()
+    const decoded = new TextDecoder('utf-8').decode(buffer)
+    const data = JSON.parse(decoded)
 
     // Gemini 2.5+ models have built-in "thinking" — the response contains
     // multiple parts: thinking parts (with thought:true) and the actual response.
