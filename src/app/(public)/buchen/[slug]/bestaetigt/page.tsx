@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { appointments, slotTypes, users } from '@/lib/db/schema'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Download, Calendar } from 'lucide-react'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -63,8 +63,53 @@ export default async function BookingConfirmation({ params, searchParams }: Prop
             Wir haben Ihnen eine Bestätigungs-Mail an <strong>{appt.customerEmail}</strong> gesendet.
             Bei Fragen antworten Sie einfach auf diese Mail.
           </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <a
+              href={`/api/v1/appointments/${appt.id}/ics`}
+              className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm hover:bg-muted"
+            >
+              <Download className="h-4 w-4" />
+              Termin als .ics herunterladen
+            </a>
+            <a
+              href={buildGoogleCalendarUrl({
+                title: slotType.name,
+                startUtc: appt.startAt,
+                endUtc: appt.endAt,
+                details: appt.customerMessage ?? '',
+                location: slotType.locationDetails || slotType.location,
+              })}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md border bg-card px-3 py-2 text-sm hover:bg-muted"
+            >
+              <Calendar className="h-4 w-4" />
+              Zu Google Kalender hinzufügen
+            </a>
+          </div>
         </CardContent>
       </Card>
     </div>
   )
+}
+
+function buildGoogleCalendarUrl(args: {
+  title: string
+  startUtc: Date
+  endUtc: Date
+  details: string
+  location: string
+}): string {
+  const fmt = (d: Date) => {
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`
+  }
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: args.title,
+    dates: `${fmt(args.startUtc)}/${fmt(args.endUtc)}`,
+    details: args.details,
+    location: args.location,
+  })
+  return `https://calendar.google.com/calendar/render?${params.toString()}`
 }
