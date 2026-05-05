@@ -294,16 +294,15 @@ export default function ContractDetailPage() {
               Rechnung erstellen
             </Button>
           </Can>
-          {status === 'draft' && (
-            <Can module="documents" action="update">
-              <Button variant="outline" asChild>
-                <Link href={`/intern/finance/contracts/${contract.id}/edit`}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Bearbeiten
-                </Link>
-              </Button>
-            </Can>
-          )}
+          {/* Contracts editable in any status; delete still draft-only */}
+          <Can module="documents" action="update">
+            <Button variant="outline" asChild>
+              <Link href={`/intern/finance/contracts/${contract.id}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Bearbeiten
+              </Link>
+            </Button>
+          </Can>
           {status === 'draft' && (
             <Can module="documents" action="delete">
               <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
@@ -508,8 +507,7 @@ export default function ContractDetailPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Vertragstext</CardTitle>
-              {status === 'draft' && (
-                <Can module="documents" action="update">
+              <Can module="documents" action="update">
                   {editingBody ? (
                     <div className="flex gap-2">
                       <Button size="sm" onClick={handleSaveBody}>Speichern</Button>
@@ -529,8 +527,7 @@ export default function ContractDetailPage() {
                       Bearbeiten
                     </Button>
                   )}
-                </Can>
-              )}
+              </Can>
             </CardHeader>
             <CardContent>
               {editingBody ? (
@@ -556,15 +553,13 @@ export default function ContractDetailPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Positionen</CardTitle>
-              {status === 'draft' && (
-                <Can module="documents" action="update">
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href={`/intern/finance/contracts/${contract.id}/edit`}>
-                      Positionen bearbeiten
-                    </Link>
-                  </Button>
-                </Can>
-              )}
+              <Can module="documents" action="update">
+                <Button size="sm" variant="outline" asChild>
+                  <Link href={`/intern/finance/contracts/${contract.id}/edit`}>
+                    Positionen bearbeiten
+                  </Link>
+                </Button>
+              </Can>
             </CardHeader>
             <CardContent>
               {contract.items.length === 0 ? (

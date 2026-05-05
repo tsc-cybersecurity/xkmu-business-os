@@ -175,16 +175,18 @@ export const DocumentService = {
   async update(docId: string,
     data: UpdateDocumentInput
   ): Promise<Document | null> {
-    // Check document exists and is in draft status
+    // Check document exists. Draft-only guard applies to invoices/offers
+    // (legal/accounting implications once sent). Contracts can be edited
+    // in any status — workflow may still go on after they were sent/signed.
     const existing = await db
-      .select({ status: documents.status })
+      .select({ status: documents.status, type: documents.type })
       .from(documents)
       .where(eq(documents.id, docId))
       .limit(1)
       .then(r => r[0])
 
     if (!existing) return null
-    if (existing.status !== 'draft') {
+    if (existing.type !== 'contract' && existing.status !== 'draft') {
       throw new Error('Nur Dokumente im Status "Entwurf" können bearbeitet werden')
     }
 

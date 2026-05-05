@@ -80,11 +80,8 @@ export default function EditContractPage() {
       }
       const c = contractJson.data
 
-      if (c.status !== 'draft') {
-        setError('Nur Vertraege im Status "Entwurf" koennen bearbeitet werden.')
-        return
-      }
-
+      // Contracts can be edited in any status (sent, signed, active, etc.)
+      // — service still enforces draft-only for invoices/offers.
       setCompanyId(c.companyId || '')
       setProjectId(c.projectId || '')
       setContractStartDate(toDateInput(c.contractStartDate))
