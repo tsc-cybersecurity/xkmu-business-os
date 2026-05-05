@@ -5,12 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Loader2, Plus, Search, FileText, Clock, Bot, User, Shuffle,
   PanelLeftClose, PanelLeft, Package, ExternalLink, Code2,
-  AlertTriangle, Wrench, ListChecks, Zap, CircleDot, Info,
+  AlertTriangle, Wrench, ListChecks, Zap, CircleDot, Info, Pencil,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -79,23 +80,110 @@ type ConsolidatedRow = {
 // ============================================
 // SOP Detail (extended: Prozess-Kontext + Dev-Requirements)
 // ============================================
-function SopDetail({ sop }: { sop: any }) {
+function SopDetail({ sop, onSaved, allDeliverables }: {
+  sop: any
+  onSaved: () => void
+  allDeliverables: Array<{ id: string; name: string; moduleCode?: string | null }>
+}) {
   const s = sop
   const steps: any[] = s.steps || []
   const task = s.linkedTask
   const proc = s.linkedProcess
   const devReqs: any[] = Array.isArray(task?.devRequirements) ? task.devRequirements : []
 
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState<Record<string, any>>({})
+
+  function startEdit() {
+    setForm({
+      title: s.title ?? '',
+      purpose: s.purpose ?? '',
+      scope: s.scope ?? '',
+      status: s.status ?? 'draft',
+      automationLevel: s.automationLevel ?? '',
+      aiCapable: !!s.aiCapable,
+      maturityLevel: s.maturityLevel ?? '',
+      estimatedDurationMinutes: s.estimatedDurationMinutes ?? '',
+      producesDeliverableId: s.producesDeliverableId ?? '',
+      subprocess: s.subprocess ?? '',
+    })
+    setEditing(true)
+  }
+
+  async function save() {
+    setSaving(true)
+    const payload: Record<string, any> = {
+      title: form.title,
+      purpose: form.purpose || null,
+      scope: form.scope || null,
+      status: form.status,
+      automationLevel: form.automationLevel || null,
+      aiCapable: !!form.aiCapable,
+      maturityLevel: form.maturityLevel === '' ? null : Number(form.maturityLevel),
+      estimatedDurationMinutes: form.estimatedDurationMinutes === '' ? null : Number(form.estimatedDurationMinutes),
+      producesDeliverableId: form.producesDeliverableId || null,
+      subprocess: form.subprocess || null,
+    }
+    const res = await fetch(`/api/v1/sops/${s.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const d = await res.json()
+    setSaving(false)
+    if (d.success) {
+      toast.success('SOP gespeichert')
+      setEditing(false)
+      onSaved()
+    } else {
+      toast.error('Speichern fehlgeschlagen')
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {/* Edit-Toolbar */}
+      <div className="flex items-center justify-end gap-2">
+        {!editing ? (
+          <Button variant="outline" size="sm" onClick={startEdit}>
+            <Pencil className="h-3.5 w-3.5 mr-1" />Bearbeiten
+          </Button>
+        ) : (
+          <>
+            <Button variant="ghost" size="sm" onClick={() => setEditing(false)} disabled={saving}>Abbrechen</Button>
+            <Button size="sm" onClick={save} disabled={saving}>
+              {saving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : null}Speichern
+            </Button>
+          </>
+        )}
+      </div>
+
       {/* Header */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">
           {s.source_task_id || s.sourceTaskId}
           {proc && <span className="text-muted-foreground"> · {proc.key} {proc.name}</span>}
         </div>
-        <h1 className="text-2xl font-bold">{s.title}</h1>
-        {s.subprocess && <p className="text-sm text-muted-foreground">{s.subprocess}</p>}
+        {editing ? (
+          <Input
+            value={form.title ?? ''}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            className="text-2xl font-bold h-auto py-1"
+          />
+        ) : (
+          <h1 className="text-2xl font-bold">{s.title}</h1>
+        )}
+        {editing ? (
+          <Input
+            value={form.subprocess ?? ''}
+            onChange={(e) => setForm({ ...form, subprocess: e.target.value })}
+            placeholder="Subprocess (optional)"
+            className="text-sm h-8"
+          />
+        ) : (
+          s.subprocess && <p className="text-sm text-muted-foreground">{s.subprocess}</p>
+        )}
 
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline" className="text-xs">{s.category}</Badge>
@@ -140,19 +228,41 @@ function SopDetail({ sop }: { sop: any }) {
 
         {/* Uebersicht */}
         <TabsContent value="overview" className="space-y-4">
-          {s.purpose && (
+          {(editing || s.purpose) && (
             <Card>
               <CardHeader><CardTitle className="text-base">Zweck</CardTitle></CardHeader>
-              <CardContent><p className="text-sm whitespace-pre-wrap">{s.purpose}</p></CardContent>
+              <CardContent>
+                {editing ? (
+                  <Textarea
+                    value={form.purpose ?? ''}
+                    onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+                    rows={3}
+                    placeholder="Zweck der SOP"
+                  />
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{s.purpose}</p>
+                )}
+              </CardContent>
             </Card>
           )}
-          {s.scope && (
+          {(editing || s.scope) && (
             <Card>
               <CardHeader><CardTitle className="text-base">Geltungsbereich</CardTitle></CardHeader>
-              <CardContent><p className="text-sm whitespace-pre-wrap">{s.scope}</p></CardContent>
+              <CardContent>
+                {editing ? (
+                  <Textarea
+                    value={form.scope ?? ''}
+                    onChange={(e) => setForm({ ...form, scope: e.target.value })}
+                    rows={2}
+                    placeholder="Wofuer gilt die SOP?"
+                  />
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{s.scope}</p>
+                )}
+              </CardContent>
             </Card>
           )}
-          {s.tools?.length > 0 && (
+          {s.tools?.length > 0 && !editing && (
             <Card>
               <CardHeader><CardTitle className="text-base">Tools</CardTitle></CardHeader>
               <CardContent>
@@ -162,6 +272,88 @@ function SopDetail({ sop }: { sop: any }) {
               </CardContent>
             </Card>
           )}
+
+          {/* Metadaten — editierbar */}
+          {editing && (
+            <Card>
+              <CardHeader><CardTitle className="text-base">Metadaten</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Status</label>
+                    <Select value={form.status ?? 'draft'} onValueChange={(v) => setForm({ ...form, status: v })}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Entwurf</SelectItem>
+                        <SelectItem value="review">Review</SelectItem>
+                        <SelectItem value="approved">Freigegeben</SelectItem>
+                        <SelectItem value="archived">Archiviert</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Automation</label>
+                    <Select value={form.automationLevel || 'none'} onValueChange={(v) => setForm({ ...form, automationLevel: v === 'none' ? '' : v })}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— nicht gesetzt —</SelectItem>
+                        <SelectItem value="manual">Manuell</SelectItem>
+                        <SelectItem value="semi">Semi-Auto</SelectItem>
+                        <SelectItem value="full">Vollautomatisch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Reife (1-5)</label>
+                    <Select value={String(form.maturityLevel || 'none')} onValueChange={(v) => setForm({ ...form, maturityLevel: v === 'none' ? '' : v })}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— nicht gesetzt —</SelectItem>
+                        {[1, 2, 3, 4, 5].map(l => <SelectItem key={l} value={String(l)}>Reife {l}/5</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">Dauer (Min)</label>
+                    <Input
+                      type="number"
+                      value={form.estimatedDurationMinutes ?? ''}
+                      onChange={(e) => setForm({ ...form, estimatedDurationMinutes: e.target.value })}
+                      className="h-8 text-sm"
+                      placeholder="z.B. 30"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="aiCapable"
+                    checked={!!form.aiCapable}
+                    onChange={(e) => setForm({ ...form, aiCapable: e.target.checked })}
+                  />
+                  <label htmlFor="aiCapable" className="text-sm">KI-faehig</label>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Verknuepftes Deliverable</label>
+                  <Select
+                    value={form.producesDeliverableId || 'none'}
+                    onValueChange={(v) => setForm({ ...form, producesDeliverableId: v === 'none' ? '' : v })}
+                  >
+                    <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Deliverable waehlen" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— keines —</SelectItem>
+                      {allDeliverables.map(d => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.moduleCode ? `${d.moduleCode} · ` : ''}{d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardContent className="p-4">
@@ -538,6 +730,22 @@ export default function SopsPage() {
   const [selected, setSelected] = useState<{ kind: 'sop' | 'task-only'; id: string } | null>(null)
   const [detail, setDetail] = useState<any>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+  const [allDeliverables, setAllDeliverables] = useState<Array<{ id: string; name: string; moduleCode?: string | null }>>([])
+
+  // Load deliverables once for combobox
+  useEffect(() => {
+    fetch('/api/v1/deliverables?limit=200')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          const list = (d.data as Array<Record<string, unknown>>)
+            .map(x => ({ id: String(x.id), name: String(x.name), moduleCode: (x.moduleCode as string) ?? null }))
+            .sort((a, b) => (a.moduleCode ?? '').localeCompare(b.moduleCode ?? '') || a.name.localeCompare(b.name))
+          setAllDeliverables(list)
+        }
+      })
+      .catch(() => { /* non-fatal */ })
+  }, [])
 
   // Debounce search
   useEffect(() => {
@@ -810,7 +1018,11 @@ export default function SopsPage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : detail && selected?.kind === 'sop' ? (
-            <SopDetail sop={detail} />
+            <SopDetail
+              sop={detail}
+              allDeliverables={allDeliverables}
+              onSaved={() => { if (selected) fetchDetail(selected); load() }}
+            />
           ) : detail && selected?.kind === 'task-only' ? (
             <TaskOnlyDetail
               task={detail}

@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Search, Package, PanelLeftClose, PanelLeft,
-  FileText, ExternalLink, Clock, Bot, User, Shuffle,
+  FileText, ExternalLink, Pencil,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { ExecutionLogPanel } from '@/components/management/execution-log-panel'
 
@@ -27,62 +29,149 @@ const MATURITY_COLORS: Record<number, string> = {
 }
 
 // ============================================
-// Deliverable Detail (inline)
+// Deliverable Detail (inline, editierbar)
 // ============================================
-function DeliverableDetail({ deliverable }: { deliverable: any }) {
+function DeliverableDetail({ deliverable, onSaved }: { deliverable: any; onSaved: () => void }) {
   const d = deliverable
   const sops: any[] = d.producingSops || d.sops || []
 
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState<Record<string, any>>({})
+
+  function startEdit() {
+    setForm({
+      name: d.name ?? '',
+      description: d.description ?? '',
+      format: d.format ?? '',
+      umfang: d.umfang ?? '',
+      trigger: d.trigger ?? '',
+      status: d.status ?? 'draft',
+      category: d.category ?? '',
+    })
+    setEditing(true)
+  }
+
+  async function save() {
+    setSaving(true)
+    const res = await fetch(`/api/v1/deliverables/${d.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: form.name,
+        description: form.description || null,
+        format: form.format || null,
+        umfang: form.umfang || null,
+        trigger: form.trigger || null,
+        status: form.status,
+        category: form.category || null,
+      }),
+    })
+    const j = await res.json()
+    setSaving(false)
+    if (j.success) {
+      toast.success('Deliverable gespeichert')
+      setEditing(false)
+      onSaved()
+    } else {
+      toast.error('Speichern fehlgeschlagen')
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {/* Edit-Toolbar */}
+      <div className="flex items-center justify-end gap-2">
+        {!editing ? (
+          <Button variant="outline" size="sm" onClick={startEdit}>
+            <Pencil className="h-3.5 w-3.5 mr-1" />Bearbeiten
+          </Button>
+        ) : (
+          <>
+            <Button variant="ghost" size="sm" onClick={() => setEditing(false)} disabled={saving}>Abbrechen</Button>
+            <Button size="sm" onClick={save} disabled={saving}>
+              {saving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : null}Speichern
+            </Button>
+          </>
+        )}
+      </div>
+
       {/* Header */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           {d.module?.code && (
             <Badge variant="outline" className="font-mono text-sm font-bold">{d.module.code}</Badge>
           )}
-          <Badge className={cn('text-xs', STATUS_COLORS[d.status])}>{STATUS_LABELS[d.status] || d.status}</Badge>
+          {!editing ? (
+            <Badge className={cn('text-xs', STATUS_COLORS[d.status])}>{STATUS_LABELS[d.status] || d.status}</Badge>
+          ) : (
+            <Select value={form.status ?? 'draft'} onValueChange={(v) => setForm({ ...form, status: v })}>
+              <SelectTrigger className="h-7 text-xs w-32"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Entwurf</SelectItem>
+                <SelectItem value="review">Review</SelectItem>
+                <SelectItem value="approved">Freigegeben</SelectItem>
+                <SelectItem value="archived">Archiviert</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
           <span className="text-xs text-muted-foreground">v{d.version}</span>
         </div>
-        <h1 className="text-2xl font-bold">{d.name}</h1>
+        {editing ? (
+          <Input value={form.name ?? ''} onChange={(e) => setForm({ ...form, name: e.target.value })} className="text-2xl font-bold h-auto py-1" />
+        ) : (
+          <h1 className="text-2xl font-bold">{d.name}</h1>
+        )}
         {d.module?.name && (
           <p className="text-sm text-muted-foreground">Modul: {d.module.name}</p>
         )}
       </div>
 
-      {/* Details */}
-      {d.description && (
+      {/* Beschreibung */}
+      {(editing || d.description) && (
         <Card>
           <CardHeader><CardTitle className="text-base">Beschreibung</CardTitle></CardHeader>
-          <CardContent><p className="text-sm whitespace-pre-wrap">{d.description}</p></CardContent>
+          <CardContent>
+            {editing ? (
+              <Textarea value={form.description ?? ''} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+            ) : (
+              <p className="text-sm whitespace-pre-wrap">{d.description}</p>
+            )}
+          </CardContent>
         </Card>
       )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {d.format && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Format</div>
-              <div className="text-sm font-medium mt-0.5">{d.format}</div>
-            </CardContent>
-          </Card>
-        )}
-        {d.umfang && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Umfang</div>
-              <div className="text-sm font-medium mt-0.5">{d.umfang}</div>
-            </CardContent>
-          </Card>
-        )}
-        {d.trigger && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-xs text-muted-foreground">Trigger</div>
-              <div className="text-sm font-medium mt-0.5">{d.trigger}</div>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground mb-1">Format</div>
+            {editing ? (
+              <Input value={form.format ?? ''} onChange={(e) => setForm({ ...form, format: e.target.value })} className="h-8 text-sm" />
+            ) : (
+              <div className="text-sm font-medium">{d.format || <span className="text-muted-foreground italic">—</span>}</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground mb-1">Umfang</div>
+            {editing ? (
+              <Input value={form.umfang ?? ''} onChange={(e) => setForm({ ...form, umfang: e.target.value })} className="h-8 text-sm" />
+            ) : (
+              <div className="text-sm font-medium">{d.umfang || <span className="text-muted-foreground italic">—</span>}</div>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-xs text-muted-foreground mb-1">Trigger</div>
+            {editing ? (
+              <Input value={form.trigger ?? ''} onChange={(e) => setForm({ ...form, trigger: e.target.value })} className="h-8 text-sm" />
+            ) : (
+              <div className="text-sm font-medium">{d.trigger || <span className="text-muted-foreground italic">—</span>}</div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {d.module?.ziel && (
@@ -327,7 +416,10 @@ export default function DeliverablesPage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : detail ? (
-            <DeliverableDetail deliverable={detail} />
+            <DeliverableDetail
+              deliverable={detail}
+              onSaved={() => { if (selectedId) fetchDetail(selectedId); load() }}
+            />
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Package className="h-12 w-12 mb-4 opacity-30" />

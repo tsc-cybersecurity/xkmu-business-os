@@ -132,6 +132,13 @@ export const SopService = {
     if (data.tags !== undefined) updates.tags = data.tags
     if (data.ownerId !== undefined) updates.ownerId = data.ownerId
     if (data.reviewDate !== undefined) updates.reviewDate = data.reviewDate ? new Date(data.reviewDate as string) : null
+    if (data.subprocess !== undefined) updates.subprocess = data.subprocess
+    if (data.sourceTaskId !== undefined) updates.sourceTaskId = data.sourceTaskId
+    if (data.automationLevel !== undefined) updates.automationLevel = data.automationLevel
+    if (data.aiCapable !== undefined) updates.aiCapable = data.aiCapable
+    if (data.maturityLevel !== undefined) updates.maturityLevel = data.maturityLevel
+    if (data.estimatedDurationMinutes !== undefined) updates.estimatedDurationMinutes = data.estimatedDurationMinutes
+    if (data.producesDeliverableId !== undefined) updates.producesDeliverableId = data.producesDeliverableId || null
     const [doc] = await db.update(sopDocuments).set(updates)
       .where(eq(sopDocuments.id, id)).returning()
     return doc ?? null
