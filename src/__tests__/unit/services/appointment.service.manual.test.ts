@@ -133,6 +133,7 @@ describe('AppointmentService.bookManual — delegation', () => {
       source: 'manual',
       personIdOverride: 'person-42',
       suppressCustomerMail: true,
+      leadSource: 'manual_booking',
     })
   })
 
@@ -366,7 +367,7 @@ describe('AppointmentService.bookManual — mail queueing behaviour', () => {
       email: 'anna@example.com',
       name: 'Anna',
       phone: '+491',
-      source: 'public_booking',
+      source: 'manual_booking',
     })
 
     const apptInsert = insertedRows.find(r => 'source' in r) as Record<string, unknown> | undefined

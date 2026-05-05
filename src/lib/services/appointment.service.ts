@@ -41,6 +41,7 @@ export interface BookInput {
   source: 'public' | 'portal' | 'manual'
   personIdOverride?: string  // when set: skip LeadMatchService, use this personId directly
   suppressCustomerMail?: boolean  // when true: skip customer confirmation + reminders (staff mail still sent)
+  leadSource?: string  // override for LeadMatchService.findOrCreate; defaults to 'public_booking' for back-compat
 }
 
 export interface BookResult {
@@ -451,7 +452,7 @@ export const AppointmentService = {
           email: input.customerEmail,
           name: input.customerName,
           phone: input.customerPhone,
-          source: 'public_booking',
+          source: input.leadSource ?? 'public_booking',
         })
 
     // -------------------------------------------------------------------------
@@ -648,6 +649,7 @@ export const AppointmentService = {
       source: 'manual',
       personIdOverride: args.personId,
       suppressCustomerMail: args.suppressCustomerMail,
+      leadSource: 'manual_booking',
     })
   },
 
