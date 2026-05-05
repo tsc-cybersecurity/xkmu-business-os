@@ -62,7 +62,6 @@ export async function POST(request: NextRequest) {
           payload: {
             cancelledBy: 'customer',
             reason: parsed.data.reason?.slice(0, 200) ?? null,
-            alreadyCancelled,
           },
           request,
         })

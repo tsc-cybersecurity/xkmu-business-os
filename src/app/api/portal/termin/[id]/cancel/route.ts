@@ -38,7 +38,6 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
           payload: {
             cancelledBy: 'portal',
             reason: parsed.data.reason?.slice(0, 200) ?? null,
-            alreadyCancelled,
           },
           request: req,
         })

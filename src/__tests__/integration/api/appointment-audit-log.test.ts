@@ -88,7 +88,7 @@ describe('Audit-log: appointment routes', () => {
     )
   })
 
-  it('manual booking via /api/v1/appointments → audit-log with userRole=staff, userId=u-1', async () => {
+  it('manual booking via /api/v1/appointments → audit-log with userRole=owner, userId=u-1', async () => {
     const startAt = new Date('2026-09-01T09:00:00.000Z')
     const { AppointmentService } = await import('@/lib/services/appointment.service')
     vi.mocked(AppointmentService.bookManual).mockResolvedValueOnce({
@@ -120,7 +120,7 @@ describe('Audit-log: appointment routes', () => {
     expect(AuditLogService.log).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: 'u-1',
-        userRole: 'staff',
+        userRole: 'owner',
         action: 'appointment.create',
         entityType: 'appointment',
         entityId: 'appt-2',
@@ -164,7 +164,6 @@ describe('Audit-log: appointment routes', () => {
         payload: expect.objectContaining({
           cancelledBy: 'customer',
           reason: 'no longer needed',
-          alreadyCancelled: false,
         }),
       }),
     )

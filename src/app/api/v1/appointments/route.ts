@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       try {
         await AuditLogService.log({
           userId: auth.userId,
-          userRole: 'staff',
+          userRole: auth.role ?? 'staff',
           action: 'appointment.create',
           entityType: 'appointment',
           entityId: result.id,
