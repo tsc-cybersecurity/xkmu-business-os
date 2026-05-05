@@ -56,7 +56,7 @@ export default function DeliverableDetailPage() {
           <h1 className="text-2xl font-bold">{deliverable.name}</h1>
           <div className="flex items-center gap-2 mt-1">
             <Badge variant="outline" className="font-mono text-xs">{deliverable.module?.code}</Badge>
-            <Badge variant="secondary">{getCategoryLabel(deliverable.category_code) || deliverable.category}</Badge>
+            <Badge variant="secondary">{getCategoryLabel(deliverable.categoryCode) || deliverable.category}</Badge>
             <Badge variant={deliverable.status === 'approved' ? 'default' : 'secondary'}>
               {STATUS_LABELS[deliverable.status] || deliverable.status}
             </Badge>
@@ -123,50 +123,62 @@ export default function DeliverableDetailPage() {
 
       {/* Verknuepfte SOPs */}
       <div>
-        <h2 className="text-lg font-semibold flex items-center gap-2 mb-3">
-          <FileText className="h-5 w-5" />
-          Produzierende SOPs
-          <Badge variant="outline">{deliverable.sops?.length ?? 0}</Badge>
-        </h2>
-        {!deliverable.sops?.length ? (
-          <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
-              Keine SOPs verknuepft
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-2">
-            {deliverable.sops.map((sop: any) => (
-              <Link key={sop.id} href={`/intern/management/sops/${sop.id}`}>
-                <Card className="hover:shadow-sm transition-shadow cursor-pointer">
-                  <CardContent className="py-3 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {sop.source_task_id && (
-                        <Badge variant="outline" className="font-mono text-xs shrink-0">
-                          {sop.source_task_id}
-                        </Badge>
-                      )}
-                      <span className="text-sm font-medium truncate">{sop.title}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {sop.automation_level && (
-                        <Badge variant={AUTOMATION_LEVEL_VARIANT[sop.automation_level] || 'secondary'} className="text-xs">
-                          {AUTOMATION_LEVEL_LABELS[sop.automation_level] || sop.automation_level}
-                        </Badge>
-                      )}
-                      {sop.maturity_level && (
-                        <Badge variant="outline" className="text-xs">
-                          Reife {sop.maturity_level}/5
-                        </Badge>
-                      )}
-                      <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
-                    </div>
+        {(() => {
+          const linkedSops: any[] = deliverable.producingSops ?? deliverable.sops ?? []
+          return (
+            <>
+              <h2 className="text-lg font-semibold flex items-center gap-2 mb-3">
+                <FileText className="h-5 w-5" />
+                Produzierende SOPs
+                <Badge variant="outline">{linkedSops.length}</Badge>
+              </h2>
+              {linkedSops.length === 0 ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    Keine SOPs verknuepft
                   </CardContent>
                 </Card>
-              </Link>
-            ))}
-          </div>
-        )}
+              ) : (
+                <div className="space-y-2">
+                  {linkedSops.map((sop: any) => {
+                    const taskKey = sop.sourceTaskId ?? sop.source_task_id
+                    const automationLevel = sop.automationLevel ?? sop.automation_level
+                    const maturityLevel = sop.maturityLevel ?? sop.maturity_level
+                    return (
+                      <Link key={sop.id} href={`/intern/management/sops`}>
+                        <Card className="hover:shadow-sm transition-shadow cursor-pointer">
+                          <CardContent className="py-3 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {taskKey && (
+                                <Badge variant="outline" className="font-mono text-xs shrink-0">
+                                  {taskKey}
+                                </Badge>
+                              )}
+                              <span className="text-sm font-medium truncate">{sop.title}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {automationLevel && (
+                                <Badge variant={AUTOMATION_LEVEL_VARIANT[automationLevel] || 'secondary'} className="text-xs">
+                                  {AUTOMATION_LEVEL_LABELS[automationLevel] || automationLevel}
+                                </Badge>
+                              )}
+                              {maturityLevel && (
+                                <Badge variant="outline" className="text-xs">
+                                  Reife {maturityLevel}/5
+                                </Badge>
+                              )}
+                              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </>
+          )
+        })()}
       </div>
 
       {/* Execution Log */}
