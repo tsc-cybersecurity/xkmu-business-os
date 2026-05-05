@@ -234,7 +234,7 @@ export function WeekCalendarView(props: {
                             key={min}
                             type="button"
                             onClick={() => setManualOpen({ open: true, preset: { startAtUtc: cellStart } })}
-                            title={`${cellStart.toLocaleString('de-DE')} — Termin hier anlegen`}
+                            title={`${cellStart.toLocaleString('de-DE', { timeZone: props.userTimezone })} — Termin hier anlegen`}
                             className={`${baseClass} cursor-pointer hover:opacity-70 focus:outline-none focus:ring-1 focus:ring-ring`}
                           />
                         )
