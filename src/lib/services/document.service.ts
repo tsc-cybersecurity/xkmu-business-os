@@ -219,6 +219,22 @@ export const DocumentService = {
     if ('customerCountry' in data) updateData.customerCountry = emptyToNull(data.customerCountry)
     if ('customerVatId' in data) updateData.customerVatId = emptyToNull(data.customerVatId)
 
+    // Contract-specific fields
+    if ('contractStartDate' in data) {
+      updateData.contractStartDate = data.contractStartDate ? new Date(data.contractStartDate) : null
+    }
+    if ('contractEndDate' in data) {
+      updateData.contractEndDate = data.contractEndDate ? new Date(data.contractEndDate) : null
+    }
+    if ('contractRenewalType' in data) updateData.contractRenewalType = (data.contractRenewalType as 'none'|'manual'|'auto') ?? null
+    if ('contractRenewalPeriod' in data) updateData.contractRenewalPeriod = (data.contractRenewalPeriod as 'monthly'|'quarterly'|'yearly') ?? null
+    if ('contractNoticePeriodDays' in data) {
+      updateData.contractNoticePeriodDays = typeof data.contractNoticePeriodDays === 'number' ? data.contractNoticePeriodDays : null
+    }
+    if ('contractTemplateId' in data) updateData.contractTemplateId = emptyToNull(data.contractTemplateId)
+    if ('projectId' in data) updateData.projectId = emptyToNull(data.projectId)
+    if ('contractBodyHtml' in data) updateData.contractBodyHtml = emptyToNull(data.contractBodyHtml)
+
     const [doc] = await db
       .update(documents)
       .set(updateData)

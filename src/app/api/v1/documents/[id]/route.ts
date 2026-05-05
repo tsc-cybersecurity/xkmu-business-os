@@ -4,7 +4,7 @@ import { apiSuccess,
   apiNotFound,
   apiError,
 } from '@/lib/utils/api-response'
-import { updateDocumentSchema,
+import { updateContractSchema,
   validateAndParse,
   formatZodErrors,
 } from '@/lib/utils/validation'
@@ -40,7 +40,7 @@ export async function PUT(
 
     try {
       const body = await request.json()
-      const validation = validateAndParse(updateDocumentSchema, body)
+      const validation = validateAndParse(updateContractSchema, body)
 
       if (!validation.success) {
         return apiValidationError(formatZodErrors(validation.errors))

@@ -22,6 +22,7 @@ import { FileSignature,
   Play,
   Ban,
   Clock,
+  Pencil,
 } from 'lucide-react'
 import { Can } from '@/hooks/use-permissions'
 import { logger } from '@/lib/utils/logger'
@@ -293,6 +294,16 @@ export default function ContractDetailPage() {
               Rechnung erstellen
             </Button>
           </Can>
+          {status === 'draft' && (
+            <Can module="documents" action="update">
+              <Button variant="outline" asChild>
+                <Link href={`/intern/finance/contracts/${contract.id}/edit`}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Bearbeiten
+                </Link>
+              </Button>
+            </Can>
+          )}
           {status === 'draft' && (
             <Can module="documents" action="delete">
               <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
