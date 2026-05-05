@@ -3651,6 +3651,7 @@ export const appointments = pgTable('appointments', {
   source: varchar('source', { length: 20 }).notNull(),
   cancelTokenHash: varchar('cancel_token_hash', { length: 64 }),
   rescheduleTokenHash: varchar('reschedule_token_hash', { length: 64 }),
+  icsSequence: integer('ics_sequence').notNull().default(0),
   googleEventId: varchar('google_event_id', { length: 255 }),
   googleCalendarId: varchar('google_calendar_id', { length: 255 }),
   syncError: text('sync_error'),
