@@ -49,6 +49,29 @@ function extractJson(text: string): string | null {
   return null
 }
 
+// Hartes Kuerzen am Zeichen (fuer slugs/URLs).
+function hardTruncate(s: string, max: number): string {
+  return s.length > max ? s.slice(0, max) : s
+}
+
+// Sanftes Kuerzen am letzten Wortende. Schneidet zusaetzlich Trailing-
+// Punctuation/Whitespace und haengt einen Ellipsis-Marker an, wenn ueberhaupt
+// gekuerzt wurde — alles innerhalb der max-Laenge.
+function truncateAtWord(s: string, max: number, opts?: { suffix?: string }): string {
+  if (s.length <= max) return s
+  const suffix = opts?.suffix ?? '…'
+  const budget = Math.max(0, max - suffix.length)
+  let cut = s.slice(0, budget)
+  // Letztes Whitespace vor budget suchen; falls keines, hart cutten.
+  const lastSpace = cut.lastIndexOf(' ')
+  if (lastSpace > budget * 0.6) {
+    cut = cut.slice(0, lastSpace)
+  }
+  // Trailing Satzzeichen/Whitespace abschneiden, damit "…", nicht ", …" rauskommt.
+  cut = cut.replace(/[\s,;:.\-–—]+$/u, '')
+  return cut + suffix
+}
+
 export const BlogAIService = {
   /**
    * Parse AI response text into a GeneratedPost, with robust error handling
@@ -71,18 +94,18 @@ export const BlogAIService = {
 
       // Schema-Limits aus blog_posts (varchar-Laengen) — KI ueberschiesst gelegentlich,
       // also defensiv kuerzen damit der Insert nicht mit "value too long" kippt.
-      const truncate = (s: string, max: number) => s.length > max ? s.slice(0, max) : s
+      // Slugs werden hart gecut (kein Whitespace), prosaische Felder am Wortende.
       return {
-        title: truncate(String(parsed.title || ''), 255),
-        slug: truncate(String(parsed.slug || ''), 255),
+        title: truncateAtWord(String(parsed.title || ''), 255),
+        slug: hardTruncate(String(parsed.slug || ''), 255),
         content: String(parsed.content || ''),
         excerpt: String(parsed.excerpt || ''),
-        seoTitle: truncate(String(parsed.seoTitle || ''), 70),
-        seoDescription: truncate(String(parsed.seoDescription || ''), 160),
-        seoKeywords: truncate(String(parsed.seoKeywords || ''), 255),
+        seoTitle: truncateAtWord(String(parsed.seoTitle || ''), 70),
+        seoDescription: truncateAtWord(String(parsed.seoDescription || ''), 160),
+        seoKeywords: truncateAtWord(String(parsed.seoKeywords || ''), 255, { suffix: '' }),
         tags: Array.isArray(parsed.tags) ? parsed.tags.map(String) : [],
-        featuredImage: truncate(String(parsed.featuredImage || ''), 500),
-        featuredImageAlt: truncate(String(parsed.featuredImageAlt || ''), 255),
+        featuredImage: hardTruncate(String(parsed.featuredImage || ''), 500),
+        featuredImageAlt: truncateAtWord(String(parsed.featuredImageAlt || ''), 255),
       }
     } catch (error) {
       if (error instanceof SyntaxError) {
