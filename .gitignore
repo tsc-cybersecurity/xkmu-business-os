@@ -58,8 +58,8 @@ credentials.txt
 # superpowers brainstorm companion
 .superpowers/
 
-# Google OAuth client_secret JSON files (NEVER commit)
-temp/client_secret*.json
-temp/*credentials*.json
+# Local scratch / experiments / credentials — NEVER commit
+# (cred.txt, bug-reports, raw exports, etc. live here)
+temp/
 
 
