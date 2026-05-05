@@ -3,6 +3,10 @@ import { z } from 'zod'
 import { withPermission } from '@/lib/auth/require-permission'
 import { AppointmentService, SlotNoLongerAvailableError } from '@/lib/services/appointment.service'
 
+// SECURITY: callers with `appointments.create` may target any user's calendar via the
+// `userId` body field. The slot-type ownership check inside `book()` (slotType.userId
+// === userId) is the only structural guard. Acceptable for the current single-tenant
+// staff topology; revisit when introducing low-privilege roles or multi-staff isolation.
 const BodySchema = z.object({
   userId: z.string().uuid(),
   slotTypeId: z.string().uuid(),
