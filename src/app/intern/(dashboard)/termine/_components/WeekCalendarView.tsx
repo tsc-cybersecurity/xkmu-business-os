@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { AvailabilityRule } from '@/lib/db/schema'
+import { ManualBookingDialog } from './ManualBookingDialog'
 
 interface OverrideLite {
   id: string
@@ -67,9 +68,13 @@ export function WeekCalendarView(props: {
   overrides: OverrideLite[]
   externalBusy?: ExternalBusyLite[]
   appointments?: AppointmentLite[]
+  slotTypes: { id: string; name: string; durationMinutes: number; color: string }[]
+  userTimezone: string
+  userId: string
 }) {
   const router = useRouter()
   const [selectedAppt, setSelectedAppt] = useState<AppointmentLite | null>(null)
+  const [manualOpen, setManualOpen] = useState<{ open: boolean; preset?: { startAtUtc?: Date } }>({ open: false })
   const monday = new Date(props.monday)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -98,7 +103,7 @@ export function WeekCalendarView(props: {
 
   type CellState = 'available' | 'blocked' | 'free-override' | 'busy-external' | 'idle'
 
-  function cellState(dayIdx: number, hourMinute: number): { state: CellState; busy: ExternalBusyLite | null } {
+  function cellState(dayIdx: number, hourMinute: number): { state: CellState; busy: ExternalBusyLite | null; cellStart: Date } {
     const day = days[dayIdx]
     const cellStart = new Date(day)
     cellStart.setHours(0, 0, 0, 0)
@@ -108,13 +113,13 @@ export function WeekCalendarView(props: {
 
     // External Google events take precedence — even if rules would say "available"
     const busy = findExternalBusy(cellStart, cellEnd)
-    if (busy) return { state: 'busy-external', busy }
+    if (busy) return { state: 'busy-external', busy, cellStart }
 
     for (const o of props.overrides) {
       const oStart = new Date(o.startAt)
       const oEnd = new Date(o.endAt)
       if (cellStart < oEnd && cellEnd > oStart) {
-        return { state: o.kind === 'block' ? 'blocked' : 'free-override', busy: null }
+        return { state: o.kind === 'block' ? 'blocked' : 'free-override', busy: null, cellStart }
       }
     }
 
@@ -124,9 +129,9 @@ export function WeekCalendarView(props: {
     for (const r of matching) {
       const start = ruleTimeToMinutes(r.startTime)
       const end = ruleTimeToMinutes(r.endTime)
-      if (hourMinute >= start && hourMinute + 15 <= end) return { state: 'available', busy: null }
+      if (hourMinute >= start && hourMinute + 15 <= end) return { state: 'available', busy: null, cellStart }
     }
-    return { state: 'idle', busy: null }
+    return { state: 'idle', busy: null, cellStart }
   }
 
   const cellClass = (state: CellState): string => {
@@ -171,7 +176,12 @@ export function WeekCalendarView(props: {
             KW {weekNumber(monday)} · {monday.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} – {days[6].toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}
           </span>
         </div>
-        <Legend />
+        <div className="flex items-center gap-3 flex-wrap">
+          <Legend />
+          <Button onClick={() => setManualOpen({ open: true })}>
+            <Plus className="h-4 w-4" /> Termin anlegen
+          </Button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border">
@@ -215,12 +225,25 @@ export function WeekCalendarView(props: {
                   <div key={h} className="border-b">
                     {[0, 15, 30, 45].map(min => {
                       const hourMinute = h * 60 + min
-                      const { state, busy } = cellState(dayIdx, hourMinute)
+                      const { state, busy, cellStart } = cellState(dayIdx, hourMinute)
+                      const isClickable = state === 'available' || state === 'free-override'
+                      const baseClass = `h-3.5 w-full ${cellClass(state)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`
+                      if (isClickable) {
+                        return (
+                          <button
+                            key={min}
+                            type="button"
+                            onClick={() => setManualOpen({ open: true, preset: { startAtUtc: cellStart } })}
+                            title={`${cellStart.toLocaleString('de-DE')} — Termin hier anlegen`}
+                            className={`${baseClass} cursor-pointer hover:opacity-70 focus:outline-none focus:ring-1 focus:ring-ring`}
+                          />
+                        )
+                      }
                       return (
                         <div
                           key={min}
                           title={busy?.summary ?? undefined}
-                          className={`h-3.5 w-full ${cellClass(state)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`}
+                          className={baseClass}
                         />
                       )
                     })}
@@ -257,6 +280,16 @@ export function WeekCalendarView(props: {
       <AppointmentDetailsDialog
         appt={selectedAppt}
         onClose={() => setSelectedAppt(null)}
+      />
+
+      <ManualBookingDialog
+        open={manualOpen.open}
+        onClose={() => setManualOpen({ open: false })}
+        onCreated={() => { setManualOpen({ open: false }); router.refresh() }}
+        preset={manualOpen.preset}
+        slotTypes={props.slotTypes}
+        userTimezone={props.userTimezone}
+        userId={props.userId}
       />
     </div>
   )

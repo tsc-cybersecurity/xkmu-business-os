@@ -2,8 +2,9 @@ import { redirect } from 'next/navigation'
 import { and, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm'
 import { getSession } from '@/lib/auth/session'
 import { db } from '@/lib/db'
-import { appointments, externalBusy, slotTypes, userCalendarAccounts, userCalendarsWatched } from '@/lib/db/schema'
+import { appointments, externalBusy, slotTypes, userCalendarAccounts, userCalendarsWatched, users } from '@/lib/db/schema'
 import { AvailabilityService } from '@/lib/services/availability.service'
+import { SlotTypeService } from '@/lib/services/slot-type.service'
 import { WeekCalendarView } from './_components/WeekCalendarView'
 
 interface PageProps {
@@ -21,12 +22,15 @@ export default async function TermineOverviewPage({ searchParams }: PageProps) {
   sunday.setDate(sunday.getDate() + 6)
   sunday.setHours(23, 59, 59, 999)
 
-  const [rules, overrides, busy, appts] = await Promise.all([
+  const [rules, overrides, busy, appts, activeSlotTypes, userTzRows] = await Promise.all([
     AvailabilityService.listRules(session.user.id),
     AvailabilityService.listOverrides(session.user.id, monday, sunday),
     fetchExternalBusy(session.user.id, monday, sunday),
     fetchAppointments(session.user.id, monday, sunday),
+    SlotTypeService.listActive(session.user.id),
+    db.select({ timezone: users.timezone }).from(users).where(eq(users.id, session.user.id)).limit(1),
   ])
+  const userTimezone = userTzRows[0]?.timezone ?? 'Europe/Berlin'
 
   return (
     <WeekCalendarView
@@ -57,6 +61,14 @@ export default async function TermineOverviewPage({ searchParams }: PageProps) {
         color: a.color,
         status: a.status,
       }))}
+      slotTypes={activeSlotTypes.map(st => ({
+        id: st.id,
+        name: st.name,
+        durationMinutes: st.durationMinutes,
+        color: st.color,
+      }))}
+      userTimezone={userTimezone}
+      userId={session.user.id}
     />
   )
 }
