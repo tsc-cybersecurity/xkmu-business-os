@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { appointments, users, externalBusy, persons } from '@/lib/db/schema'
-import { and, eq, gte, inArray, lte } from 'drizzle-orm'
+import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm'
 import { SlotTypeService } from './slot-type.service'
 import { AvailabilityService } from './availability.service'
 import { AvailabilityCalcService } from './availability-calc.service'
@@ -93,6 +93,7 @@ async function _applyCancelMutation(args: {
     // cancellationReason is plain user text from the public cancel form.
     // It must be HTML-escaped on render in any future template that displays it.
     cancellationReason: args.reason,
+    icsSequence: sql`${appointments.icsSequence} + 1`,
     updatedAt: new Date(),
   }).where(eq(appointments.id, args.appointmentId))
 
@@ -137,6 +138,7 @@ async function _applyRescheduleMutation(args: {
   await db.update(appointments).set({
     startAt: args.newStartAtUtc,
     endAt: args.newEndAtUtc,
+    icsSequence: sql`${appointments.icsSequence} + 1`,
     updatedAt: new Date(),
   }).where(eq(appointments.id, args.appointmentId))
 

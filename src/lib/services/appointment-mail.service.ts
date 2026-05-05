@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { appointments, slotTypes, taskQueue, users } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 import { generateAppointmentToken } from '@/lib/utils/appointment-token.util'
+import { buildIcs } from './appointment-ics.util'
 
 interface RenderContext {
   customer: { name: string; email: string; phone: string; message: string }
@@ -17,14 +18,69 @@ interface LoadedContext {
     userId: string
     startAt: Date
     endAt: Date
+    customerName: string
     customerEmail: string
+    customerPhone: string
+    customerMessage: string | null
     leadId: string | null
     personId: string | null
+    icsSequence: number
+    status: string
   }
-  user: { email: string | null }
+  user: {
+    email: string | null
+    firstName: string | null
+    lastName: string | null
+  }
   ctx: RenderContext
   cancelUrl: string
   rescheduleUrl: string
+}
+
+interface IcsAttachmentArgs {
+  appointmentId: string
+  sequence: number
+  method: 'REQUEST' | 'CANCEL'
+  startUtc: Date
+  endUtc: Date
+  summary: string
+  description: string
+  location: string
+  organizerEmail: string
+  organizerName: string
+  attendeeEmail: string
+  attendeeName: string
+}
+
+function buildIcsAttachment(args: IcsAttachmentArgs): { filename: string; content: string; contentType: string } {
+  const ics = buildIcs({
+    uid: args.appointmentId,
+    sequence: args.sequence,
+    method: args.method,
+    startUtc: args.startUtc,
+    endUtc: args.endUtc,
+    summary: args.summary,
+    description: args.description,
+    location: args.location,
+    organizerEmail: args.organizerEmail,
+    organizerName: args.organizerName,
+    attendeeEmail: args.attendeeEmail,
+    attendeeName: args.attendeeName,
+  })
+  return {
+    filename: 'termin.ics',
+    content: ics,
+    contentType: `text/calendar; charset=utf-8; method=${args.method}`,
+  }
+}
+
+function buildIcsDescription(ctx: RenderContext): string {
+  const parts = [
+    `Telefon: ${ctx.customer.phone}`,
+    `E-Mail: ${ctx.customer.email}`,
+  ]
+  if (ctx.customer.message) parts.push('', 'Nachricht:', ctx.customer.message)
+  return parts.join('\n')
 }
 
 const PUBLIC_SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')) || 'https://www.xkmu.de'
@@ -137,7 +193,30 @@ async function loadContext(appointmentId: string): Promise<LoadedContext> {
     },
   }
 
-  return { appt, user, ctx, cancelUrl, rescheduleUrl }
+  return {
+    appt: {
+      id: appt.id,
+      userId: appt.userId,
+      startAt: appt.startAt,
+      endAt: appt.endAt,
+      customerName: appt.customerName,
+      customerEmail: appt.customerEmail,
+      customerPhone: appt.customerPhone,
+      customerMessage: appt.customerMessage,
+      leadId: appt.leadId,
+      personId: appt.personId,
+      icsSequence: appt.icsSequence ?? 0,
+      status: appt.status,
+    },
+    user: {
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    },
+    ctx,
+    cancelUrl,
+    rescheduleUrl,
+  }
 }
 
 export const AppointmentMailService = {
@@ -168,6 +247,20 @@ export const AppointmentMailService = {
           placeholders: buildPlaceholders(ctx),
           leadId: appt.leadId,
           personId: appt.personId,
+          attachments: [buildIcsAttachment({
+            appointmentId: appt.id,
+            sequence: appt.icsSequence,
+            method: 'REQUEST',
+            startUtc: appt.startAt,
+            endUtc: appt.endAt,
+            summary: ctx.slot.type_name,
+            description: buildIcsDescription(ctx),
+            location: ctx.slot.location_details || ctx.slot.location,
+            organizerEmail: user.email ?? 'noreply@xkmu.de',
+            organizerName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'xKMU',
+            attendeeEmail: appt.customerEmail,
+            attendeeName: appt.customerName,
+          })],
         },
         referenceType: 'appointment',
         referenceId: appt.id,
@@ -242,6 +335,20 @@ export const AppointmentMailService = {
         placeholders: buildPlaceholders(ctx),
         leadId: appt.leadId,
         personId: appt.personId,
+        attachments: [buildIcsAttachment({
+          appointmentId: appt.id,
+          sequence: appt.icsSequence,
+          method: 'CANCEL',
+          startUtc: appt.startAt,
+          endUtc: appt.endAt,
+          summary: ctx.slot.type_name,
+          description: buildIcsDescription(ctx),
+          location: ctx.slot.location_details || ctx.slot.location,
+          organizerEmail: user.email ?? 'noreply@xkmu.de',
+          organizerName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'xKMU',
+          attendeeEmail: appt.customerEmail,
+          attendeeName: appt.customerName,
+        })],
       },
       referenceType: 'appointment',
       referenceId: appt.id,
@@ -284,6 +391,20 @@ export const AppointmentMailService = {
         placeholders: buildPlaceholders(ctx),
         leadId: appt.leadId,
         personId: appt.personId,
+        attachments: [buildIcsAttachment({
+          appointmentId: appt.id,
+          sequence: appt.icsSequence,
+          method: 'REQUEST',
+          startUtc: appt.startAt,
+          endUtc: appt.endAt,
+          summary: ctx.slot.type_name,
+          description: buildIcsDescription(ctx),
+          location: ctx.slot.location_details || ctx.slot.location,
+          organizerEmail: user.email ?? 'noreply@xkmu.de',
+          organizerName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || 'xKMU',
+          attendeeEmail: appt.customerEmail,
+          attendeeName: appt.customerName,
+        })],
       },
       referenceType: 'appointment',
       referenceId: appt.id,
