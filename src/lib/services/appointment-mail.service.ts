@@ -143,27 +143,36 @@ async function loadContext(appointmentId: string): Promise<LoadedContext> {
 export const AppointmentMailService = {
   /**
    * Queue confirmation emails for an appointment.
-   * - Customer gets `appointment.customer.confirmation`
+   * - Customer gets `appointment.customer.confirmation` (unless `opts.skipCustomer`)
    * - Staff (the user owning the calendar) gets `appointment.staff.notification`
+   *
+   * When `opts.skipCustomer === true` the customer mail row is NOT inserted,
+   * but the staff notification is still queued. Used by manual backend booking
+   * where staff already informed the customer through another channel.
    */
-  async queueConfirmation(appointmentId: string): Promise<void> {
+  async queueConfirmation(
+    appointmentId: string,
+    opts?: { skipCustomer?: boolean },
+  ): Promise<void> {
     const { appt, user, ctx } = await loadContext(appointmentId)
 
-    // Queue customer mail
-    await db.insert(taskQueue).values({
-      type: 'email',
-      status: 'pending',
-      priority: 1,
-      payload: {
-        templateSlug: 'appointment.customer.confirmation',
-        to: appt.customerEmail,
-        placeholders: buildPlaceholders(ctx),
-        leadId: appt.leadId,
-        personId: appt.personId,
-      },
-      referenceType: 'appointment',
-      referenceId: appt.id,
-    })
+    // Queue customer mail (unless caller asked to skip it)
+    if (!opts?.skipCustomer) {
+      await db.insert(taskQueue).values({
+        type: 'email',
+        status: 'pending',
+        priority: 1,
+        payload: {
+          templateSlug: 'appointment.customer.confirmation',
+          to: appt.customerEmail,
+          placeholders: buildPlaceholders(ctx),
+          leadId: appt.leadId,
+          personId: appt.personId,
+        },
+        referenceType: 'appointment',
+        referenceId: appt.id,
+      })
+    }
 
     // Queue staff mail (if the user has an email — which they should)
     if (user.email) {

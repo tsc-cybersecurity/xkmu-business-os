@@ -40,6 +40,7 @@ export interface BookInput {
   customerMessage: string | null
   source: 'public' | 'portal' | 'manual'
   personIdOverride?: string  // when set: skip LeadMatchService, use this personId directly
+  suppressCustomerMail?: boolean  // when true: skip customer confirmation + reminders (staff mail still sent)
 }
 
 export interface BookResult {
@@ -513,8 +514,10 @@ export const AppointmentService = {
     // -------------------------------------------------------------------------
     try {
       const { AppointmentMailService } = await import('./appointment-mail.service')
-      await AppointmentMailService.queueConfirmation(appt.id)
-      await AppointmentMailService.queueReminders(appt.id)
+      await AppointmentMailService.queueConfirmation(appt.id, { skipCustomer: input.suppressCustomerMail })
+      if (!input.suppressCustomerMail) {
+        await AppointmentMailService.queueReminders(appt.id)
+      }
     } catch (err) {
       // Log but don't fail the booking — mail can be retried via task_queue
       console.error('Failed to queue confirmation mails / reminders:', err)
@@ -612,6 +615,39 @@ export const AppointmentService = {
       customerMessage: args.message ?? null,
       source: 'portal',
       personIdOverride: person.id,
+    })
+  },
+
+  /**
+   * Manually book an appointment from the backend (staff-initiated).
+   * Delegates to `book()` with `source: 'manual'`. When `suppressCustomerMail`
+   * is true, the customer-facing confirmation + reminders are skipped while
+   * the staff notification is still sent.
+   */
+  async bookManual(args: {
+    userId: string
+    slotTypeId: string
+    startAtUtc: Date
+    customer: {
+      name: string
+      email: string
+      phone: string
+      message?: string | null
+    }
+    personId?: string
+    suppressCustomerMail?: boolean
+  }): Promise<BookResult> {
+    return AppointmentService.book({
+      userId: args.userId,
+      slotTypeId: args.slotTypeId,
+      startAtUtc: args.startAtUtc,
+      customerName: args.customer.name,
+      customerEmail: args.customer.email,
+      customerPhone: args.customer.phone,
+      customerMessage: args.customer.message ?? null,
+      source: 'manual',
+      personIdOverride: args.personId,
+      suppressCustomerMail: args.suppressCustomerMail,
     })
   },
 
