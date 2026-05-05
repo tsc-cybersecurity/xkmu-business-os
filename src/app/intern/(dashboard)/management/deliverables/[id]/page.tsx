@@ -145,7 +145,7 @@ export default function DeliverableDetailPage() {
                     const automationLevel = sop.automationLevel ?? sop.automation_level
                     const maturityLevel = sop.maturityLevel ?? sop.maturity_level
                     return (
-                      <Link key={sop.id} href={`/intern/management/sops`}>
+                      <Link key={sop.id} href={`/intern/management/sops?selected=${sop.id}`}>
                         <Card className="hover:shadow-sm transition-shadow cursor-pointer">
                           <CardContent className="py-3 flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2 min-w-0">

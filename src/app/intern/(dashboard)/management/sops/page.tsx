@@ -732,6 +732,13 @@ export default function SopsPage() {
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [allDeliverables, setAllDeliverables] = useState<Array<{ id: string; name: string; moduleCode?: string | null }>>([])
 
+  // ?selected=<id> -> Detail oeffnen (Deep-Link von Deliverable-Detail-Seite)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const id = new URLSearchParams(window.location.search).get('selected')
+    if (id) setSelected({ kind: 'sop', id })
+  }, [])
+
   // Load deliverables once for combobox
   useEffect(() => {
     fetch('/api/v1/deliverables?limit=200')

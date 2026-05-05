@@ -192,7 +192,7 @@ function DeliverableDetail({ deliverable, onSaved }: { deliverable: any; onSaved
         ) : (
           <div className="space-y-2">
             {sops.map((sop: any) => (
-              <Link key={sop.id} href={`/intern/management/sops`}>
+              <Link key={sop.id} href={`/intern/management/sops?selected=${sop.id}`}>
                 <Card className="hover:shadow-sm transition-shadow cursor-pointer">
                   <CardContent className="py-3 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
