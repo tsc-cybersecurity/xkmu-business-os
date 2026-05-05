@@ -40,8 +40,7 @@ export const APPOINTMENT_TEMPLATES: AppointmentTemplateDefault[] = [
   <li><strong>Dauer:</strong> {{slot.duration_minutes}} Minuten</li>
   <li><strong>Ort/Form:</strong> {{slot.location}}{{slot.location_details}}</li>
 </ul>
-<p>Sie können den Termin <a href="{{links.reschedule_url}}">umbuchen</a> oder <a href="{{links.cancel_url}}">stornieren</a>, falls erforderlich.</p>
-<p>Bis bald,<br>{{org.name}}</p>`,
+<p>Sie können den Termin <a href="{{links.reschedule_url}}">umbuchen</a> oder <a href="{{links.cancel_url}}">stornieren</a>, falls erforderlich.</p>`,
     variables: SHARED_VARIABLES,
   },
   {
@@ -66,8 +65,7 @@ export const APPOINTMENT_TEMPLATES: AppointmentTemplateDefault[] = [
   <li><strong>Datum/Uhrzeit:</strong> {{appointment.start_local}} ({{appointment.timezone}})</li>
   <li><strong>Ort/Form:</strong> {{slot.location}}{{slot.location_details}}</li>
 </ul>
-<p>Falls Sie nicht teilnehmen können: <a href="{{links.cancel_url}}">stornieren</a> oder <a href="{{links.reschedule_url}}">umbuchen</a>.</p>
-<p>Bis morgen,<br>{{org.name}}</p>`,
+<p>Falls Sie nicht teilnehmen können: <a href="{{links.cancel_url}}">stornieren</a> oder <a href="{{links.reschedule_url}}">umbuchen</a>.</p>`,
     variables: SHARED_VARIABLES,
   },
   {
@@ -75,8 +73,7 @@ export const APPOINTMENT_TEMPLATES: AppointmentTemplateDefault[] = [
     subject: 'Ihr Termin in einer Stunde',
     bodyHtml: `<p>Hallo {{customer.name}},</p>
 <p>Ihr Termin <strong>{{slot.type_name}}</strong> beginnt in einer Stunde um {{appointment.start_local}}.</p>
-<p>Ort/Form: {{slot.location}}{{slot.location_details}}</p>
-<p>Bis gleich,<br>{{org.name}}</p>`,
+<p>Ort/Form: {{slot.location}}{{slot.location_details}}</p>`,
     variables: SHARED_VARIABLES,
   },
   {
@@ -84,8 +81,7 @@ export const APPOINTMENT_TEMPLATES: AppointmentTemplateDefault[] = [
     subject: 'Ihr Termin am {{appointment.start_local}} wurde storniert',
     bodyHtml: `<p>Hallo {{customer.name}},</p>
 <p>Ihr Termin <strong>{{slot.type_name}}</strong> am {{appointment.start_local}} wurde storniert.</p>
-<p>Falls Sie einen neuen Termin möchten, buchen Sie gerne wieder über unsere Website.</p>
-<p>Viele Grüße,<br>{{org.name}}</p>`,
+<p>Falls Sie einen neuen Termin möchten, buchen Sie gerne wieder über unsere Website.</p>`,
     variables: SHARED_VARIABLES,
   },
   {
@@ -98,8 +94,7 @@ export const APPOINTMENT_TEMPLATES: AppointmentTemplateDefault[] = [
   <li><strong>Dauer:</strong> {{slot.duration_minutes}} Minuten</li>
   <li><strong>Ort/Form:</strong> {{slot.location}}{{slot.location_details}}</li>
 </ul>
-<p>Sie können den neuen Termin weiterhin <a href="{{links.reschedule_url}}">umbuchen</a> oder <a href="{{links.cancel_url}}">stornieren</a>.</p>
-<p>Viele Grüße,<br>{{org.name}}</p>`,
+<p>Sie können den neuen Termin weiterhin <a href="{{links.reschedule_url}}">umbuchen</a> oder <a href="{{links.cancel_url}}">stornieren</a>.</p>`,
     variables: SHARED_VARIABLES,
   },
   {

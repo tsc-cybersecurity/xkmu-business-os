@@ -141,8 +141,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     subject: 'Ihr Zugang zum Kundenportal von {{firma}}',
     bodyHtml: `<p>Hallo {{name}},</p>
 <p>Sie wurden als Zugang zum Kundenportal von <strong>{{firma}}</strong> angelegt. Klicken Sie auf den folgenden Link, um Ihr Passwort festzulegen und den Zugang zu aktivieren. Der Link ist 7 Tage gültig.</p>
-<p><a href="{{inviteUrl}}">Zugang aktivieren</a></p>
-<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+<p><a href="{{inviteUrl}}">Zugang aktivieren</a></p>`,
     placeholders: [
       { key: 'name', label: 'Name', description: 'Name des Portal-Nutzers' },
       { key: 'firma', label: 'Firma', description: 'Name der Firma' },
@@ -157,8 +156,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     bodyHtml: `<p>Hallo {{name}},</p>
 <p>Im Kundenportal von <strong>{{firma}}</strong> wurde ein neues Dokument für Sie bereitgestellt:</p>
 <p><strong>{{fileName}}</strong></p>
-<p><a href="{{portalUrl}}">Zum Dokument im Portal</a></p>
-<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+<p><a href="{{portalUrl}}">Zum Dokument im Portal</a></p>`,
     placeholders: [
       { key: 'name', label: 'Name', description: 'Name des Portal-Nutzers' },
       { key: 'firma', label: 'Firma', description: 'Name der Firma' },
@@ -174,8 +172,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     bodyHtml: `<p>Hallo {{empfaenger}},</p>
 <p>Von der Firma <strong>{{firma}}</strong> wurde ein neues Dokument im Kundenportal hochgeladen:</p>
 <p><strong>{{fileName}}</strong></p>
-<p><a href="{{adminUrl}}">In Admin-Oberfläche ansehen</a></p>
-<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+<p><a href="{{adminUrl}}">In Admin-Oberfläche ansehen</a></p>`,
     placeholders: [
       { key: 'empfaenger', label: 'Empfänger', description: 'Name des internen Empfängers' },
       { key: 'firma', label: 'Firma', description: 'Name der sendenden Firma' },
@@ -210,8 +207,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     bodyHtml: `<p>Hallo {{name}},</p>
 <p>Ihr Antrag auf Änderung der Firmendaten von <strong>{{firma}}</strong> vom {{datum}} wurde <strong>{{entscheidung}}</strong>.</p>
 {{kommentarBlock}}
-<p><a href="{{portalUrl}}">Zum Kundenportal</a></p>
-<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+<p><a href="{{portalUrl}}">Zum Kundenportal</a></p>`,
     placeholders: [
       { key: 'name', label: 'Name', description: 'Name des Portal-Nutzers' },
       { key: 'firma', label: 'Firma', description: 'Firmenname' },
@@ -252,8 +248,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
 <p><strong>Neuer Status:</strong> {{statusNeu}}<br>
 <strong>Vorheriger Status:</strong> {{statusAlt}}</p>
 {{rejectReasonBlock}}
-<p><a href="{{portalUrl}}">Auftrag im Kundenportal öffnen</a></p>
-<p>Mit freundlichen Grüßen<br>{{absender}}</p>`,
+<p><a href="{{portalUrl}}">Auftrag im Kundenportal öffnen</a></p>`,
     placeholders: [
       { key: 'name', label: 'Name', description: 'Name des Portal-Nutzers' },
       { key: 'firma', label: 'Firma', description: 'Firmenname' },
@@ -271,8 +266,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     subject: 'Vielen Dank fuer Ihre Anfrage, {{name}}!',
     bodyHtml: `<p>Hallo {{name}},</p>
 <p>vielen Dank fuer Ihre Anfrage bei {{firma}}. Wir haben Ihre Nachricht erhalten und melden uns innerhalb von 24 Stunden bei Ihnen.</p>
-<p>Moechten Sie direkt einen Termin vereinbaren? <a href="{{calendlyLink}}">Hier klicken</a></p>
-<p>Mit freundlichen Gruessen<br>{{absender}}</p>`,
+<p>Moechten Sie direkt einen Termin vereinbaren? <a href="{{calendlyLink}}">Hier klicken</a></p>`,
     placeholders: [
       { key: 'name', label: 'Name', description: 'Name des Anfragenden' },
       { key: 'firma', label: 'Unsere Firma', description: 'Eigener Firmenname' },
@@ -287,8 +281,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     bodyHtml: `<p>Hallo {{name}},</p>
 <p>anbei erhalten Sie unser Angebot <strong>{{angebotNr}}</strong> ueber <strong>{{betrag}}</strong>.</p>
 <p>Das Angebot ist gueltig bis zum {{gueltigBis}}.</p>
-<p>Bei Fragen stehen wir Ihnen gerne zur Verfuegung.</p>
-<p>Mit freundlichen Gruessen<br>{{absender}}</p>`,
+<p>Bei Fragen stehen wir Ihnen gerne zur Verfuegung.</p>`,
     placeholders: [
       { key: 'name', label: 'Empfaenger', description: 'Name des Empfaengers' },
       { key: 'angebotNr', label: 'Angebotsnr.', description: 'Angebotsnummer' },
@@ -318,8 +311,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     subject: 'Willkommen bei {{firma}}, {{name}}!',
     bodyHtml: `<p>Hallo {{name}},</p>
 <p>herzlich willkommen! Wir freuen uns auf die Zusammenarbeit mit Ihnen.</p>
-<p>Als naechstes planen wir einen Kick-off-Termin. <a href="{{calendlyLink}}">Hier koennen Sie direkt einen Termin buchen</a>.</p>
-<p>Mit freundlichen Gruessen<br>{{absender}}</p>`,
+<p>Als naechstes planen wir einen Kick-off-Termin. <a href="{{calendlyLink}}">Hier koennen Sie direkt einen Termin buchen</a>.</p>`,
     placeholders: [
       { key: 'name', label: 'Name', description: 'Name des Kunden' },
       { key: 'firma', label: 'Firma', description: 'Eigener Firmenname' },
@@ -333,8 +325,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     subject: 'Erinnerung: Rechnung {{rechnungNr}} faellig',
     bodyHtml: `<p>Hallo {{name}},</p>
 <p>wir moechten Sie freundlich daran erinnern, dass die Rechnung <strong>{{rechnungNr}}</strong> ueber <strong>{{betrag}}</strong> seit dem {{faelligAm}} faellig ist.</p>
-<p>Falls die Zahlung bereits unterwegs ist, betrachten Sie diese Nachricht bitte als gegenstandslos.</p>
-<p>Mit freundlichen Gruessen<br>{{absender}}</p>`,
+<p>Falls die Zahlung bereits unterwegs ist, betrachten Sie diese Nachricht bitte als gegenstandslos.</p>`,
     placeholders: [
       { key: 'name', label: 'Empfaenger', description: 'Name des Rechnungsempfaengers' },
       { key: 'rechnungNr', label: 'Rechnungsnr.', description: 'Rechnungsnummer' },
@@ -350,8 +341,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     bodyHtml: `<p>Sehr geehrte/r {{name}},</p>
 <p>trotz unserer Erinnerung konnten wir leider keinen Zahlungseingang fuer die Rechnung <strong>{{rechnungNr}}</strong> ueber <strong>{{betrag}}</strong> (faellig am {{faelligAm}}) feststellen.</p>
 <p>Wir bitten Sie, den offenen Betrag innerhalb von 7 Tagen zu ueberweisen.</p>
-<p>Sollte die Zahlung bereits erfolgt sein, bitten wir um kurze Rueckmeldung.</p>
-<p>Mit freundlichen Gruessen<br>{{absender}}</p>`,
+<p>Sollte die Zahlung bereits erfolgt sein, bitten wir um kurze Rueckmeldung.</p>`,
     placeholders: [
       { key: 'name', label: 'Empfaenger', description: 'Name' },
       { key: 'rechnungNr', label: 'Rechnungsnr.', description: 'Rechnungsnummer' },
@@ -367,8 +357,7 @@ const DEFAULT_EMAIL_TEMPLATES = [
     bodyHtml: `<p>Sehr geehrte/r {{name}},</p>
 <p>leider ist die Rechnung <strong>{{rechnungNr}}</strong> ueber <strong>{{betrag}}</strong> trotz Mahnung weiterhin unbezahlt.</p>
 <p>Wir bitten Sie dringend, den Betrag innerhalb von 5 Werktagen zu begleichen. Andernfalls muessen wir weitere Schritte einleiten.</p>
-<p>Fuer Rueckfragen stehen wir unter {{telefon}} zur Verfuegung.</p>
-<p>Mit freundlichen Gruessen<br>{{absender}}</p>`,
+<p>Fuer Rueckfragen stehen wir unter {{telefon}} zur Verfuegung.</p>`,
     placeholders: [
       { key: 'name', label: 'Empfaenger', description: 'Name' },
       { key: 'rechnungNr', label: 'Rechnungsnr.', description: 'Rechnungsnummer' },

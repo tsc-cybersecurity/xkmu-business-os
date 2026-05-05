@@ -35,10 +35,14 @@ export const CmsDesignService = {
    */
   async getAppUrl(): Promise<string> {
     const design = await getDesign()
+    // Precedence: cms design setting → NEXT_PUBLIC_SITE_URL (public canonical
+    // host, e.g. www.xkmu.de) → NEXT_PUBLIC_APP_URL (deploy host, may differ
+    // in dev/staging) → NEXTAUTH_URL → safe public default.
     const raw = design.appUrl?.trim()
+      || process.env.NEXT_PUBLIC_SITE_URL
       || process.env.NEXT_PUBLIC_APP_URL
       || process.env.NEXTAUTH_URL
-      || 'http://localhost:3000'
+      || 'https://www.xkmu.de'
     return raw.replace(/\/+$/, '')
   },
 
