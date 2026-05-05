@@ -69,17 +69,20 @@ export const BlogAIService = {
         throw new Error('KI-Antwort unvollstaendig (Titel oder Inhalt fehlt). Bitte erneut versuchen.')
       }
 
+      // Schema-Limits aus blog_posts (varchar-Laengen) — KI ueberschiesst gelegentlich,
+      // also defensiv kuerzen damit der Insert nicht mit "value too long" kippt.
+      const truncate = (s: string, max: number) => s.length > max ? s.slice(0, max) : s
       return {
-        title: String(parsed.title || ''),
-        slug: String(parsed.slug || ''),
+        title: truncate(String(parsed.title || ''), 255),
+        slug: truncate(String(parsed.slug || ''), 255),
         content: String(parsed.content || ''),
         excerpt: String(parsed.excerpt || ''),
-        seoTitle: String(parsed.seoTitle || ''),
-        seoDescription: String(parsed.seoDescription || ''),
-        seoKeywords: String(parsed.seoKeywords || ''),
+        seoTitle: truncate(String(parsed.seoTitle || ''), 70),
+        seoDescription: truncate(String(parsed.seoDescription || ''), 160),
+        seoKeywords: truncate(String(parsed.seoKeywords || ''), 255),
         tags: Array.isArray(parsed.tags) ? parsed.tags.map(String) : [],
-        featuredImage: String(parsed.featuredImage || ''),
-        featuredImageAlt: String(parsed.featuredImageAlt || ''),
+        featuredImage: truncate(String(parsed.featuredImage || ''), 500),
+        featuredImageAlt: truncate(String(parsed.featuredImageAlt || ''), 255),
       }
     } catch (error) {
       if (error instanceof SyntaxError) {
