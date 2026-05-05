@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 } from '@/components/ui/dialog'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { ListTodo, Loader2, Play, Trash2, XCircle, CheckCircle2, Clock,
@@ -121,6 +122,7 @@ export default function TaskQueuePage() {
   const [loading, setLoading] = useState(true)
   const [executing, setExecuting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<'pending' | 'archive'>('pending')
   const [statusFilter, setStatusFilter] = useState('all')
   const [typeFilter, setTypeFilter] = useState('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -144,7 +146,12 @@ export default function TaskQueuePage() {
         limit: String(pageSize),
         page: String(page),
       })
-      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (activeTab === 'pending') {
+        params.set('status', 'pending')
+      } else {
+        params.set('excludePending', '1')
+        if (statusFilter !== 'all') params.set('status', statusFilter)
+      }
       if (typeFilter !== 'all') params.set('type', typeFilter)
       const response = await fetch(`/api/v1/task-queue?${params}`)
       const data = await response.json()
@@ -161,7 +168,7 @@ export default function TaskQueuePage() {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, typeFilter, page, pageSize])
+  }, [activeTab, statusFilter, typeFilter, page, pageSize])
 
   useEffect(() => { fetchItems() }, [fetchItems])
 
@@ -169,7 +176,14 @@ export default function TaskQueuePage() {
   // on an out-of-range page after narrowing the result set.
   useEffect(() => {
     setPage(1)
-  }, [statusFilter, typeFilter, pageSize])
+  }, [activeTab, statusFilter, typeFilter, pageSize])
+
+  // Switching tabs resets per-row selection and any leftover archive-only
+  // status filter, so the user always lands on a clean view.
+  useEffect(() => {
+    setSelected(new Set())
+    if (activeTab === 'pending') setStatusFilter('all')
+  }, [activeTab])
 
   const toggleSelect = (id: string) => {
     setSelected(prev => {
@@ -388,18 +402,28 @@ export default function TaskQueuePage() {
         </Card>
       </div>
 
+      {/* Tabs: separate "Wartend" from the historical archive */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pending' | 'archive')}>
+        <TabsList>
+          <TabsTrigger value="pending">Wartend ({stats.pending})</TabsTrigger>
+          <TabsTrigger value="archive">Verlauf ({Math.max(0, stats.total - stats.pending)})</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Filters */}
       <div className="flex gap-3">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle Status</SelectItem>
-            <SelectItem value="pending">Wartend</SelectItem>
-            <SelectItem value="running">Läuft</SelectItem>
-            <SelectItem value="completed">Erledigt</SelectItem>
-            <SelectItem value="failed">Fehler</SelectItem>
-          </SelectContent>
-        </Select>
+        {activeTab === 'archive' && (
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Status</SelectItem>
+              <SelectItem value="running">Läuft</SelectItem>
+              <SelectItem value="completed">Erledigt</SelectItem>
+              <SelectItem value="failed">Fehler</SelectItem>
+              <SelectItem value="cancelled">Storniert</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-40"><SelectValue placeholder="Typ" /></SelectTrigger>
           <SelectContent>
@@ -623,21 +647,23 @@ export default function TaskQueuePage() {
             <DialogDescription>
               {bulkDeleteScope === 'all' && (
                 <>
-                  Möchtest du <strong>alle {stats.total} Tasks</strong> der Organisation
-                  unwiderruflich löschen? Diese Aktion kann nicht rückgängig gemacht werden.
+                  Möchtest du <strong>alle erledigten/fehlgeschlagenen Tasks</strong>
+                  {' '}({Math.max(0, stats.total - stats.pending)}) unwiderruflich löschen?
+                  {' '}Wartende Tasks bleiben erhalten.
                 </>
               )}
               {bulkDeleteScope === 'older-than' && (
                 <>
-                  Möchtest du alle Tasks löschen, die <strong>älter als 24 Stunden</strong> sind?
-                  Neuere Tasks bleiben unberührt.
+                  Möchtest du alle nicht-wartenden Tasks löschen, die
+                  {' '}<strong>älter als 24 Stunden</strong> sind?
+                  Neuere und wartende Tasks bleiben unberührt.
                 </>
               )}
               {bulkDeleteScope === 'without-error' && (
                 <>
                   Möchtest du alle Tasks <strong>ohne Fehler</strong> löschen
-                  (erledigt, wartend, läuft, storniert)? Fehlgeschlagene Tasks
-                  bleiben für die Fehleranalyse erhalten.
+                  (erledigt, läuft, storniert)? Wartende und fehlgeschlagene
+                  Tasks bleiben erhalten.
                 </>
               )}
             </DialogDescription>

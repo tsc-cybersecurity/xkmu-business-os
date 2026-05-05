@@ -13,19 +13,21 @@ export interface TaskQueueFilters {
   status?: string
   type?: string
   scheduledBefore?: Date
+  excludePending?: boolean
   page?: number
   limit?: number
 }
 
 export const TaskQueueService = {
   async list(filters: TaskQueueFilters = {}) {
-    const { status, type, scheduledBefore, page = 1, limit = 50 } = filters
+    const { status, type, scheduledBefore, excludePending, page = 1, limit = 50 } = filters
     const offset = (page - 1) * limit
 
     const conditions: ReturnType<typeof eq>[] = []
     if (status) conditions.push(eq(taskQueue.status, status))
     if (type) conditions.push(eq(taskQueue.type, type))
     if (scheduledBefore) conditions.push(lte(taskQueue.scheduledFor, scheduledBefore))
+    if (excludePending) conditions.push(ne(taskQueue.status, 'pending'))
 
     const whereClause = conditions.length ? and(...conditions) : undefined
 
@@ -138,17 +140,22 @@ export const TaskQueueService = {
    * Bulk-delete tasks.
    *
    * scope:
-   *  - 'all'           → every task (use with care)
-   *  - 'older-than'    → tasks whose createdAt is older than maxAgeMs
-   *  - 'without-error' → tasks whose status is not 'failed' (i.e. completed,
-   *                       cancelled, pending, running with no error column).
-   *                       Useful for clearing successful runs while keeping
-   *                       failures around for debugging.
+   *  - 'all'           → every task except pending
+   *  - 'older-than'    → non-pending tasks whose createdAt is older than maxAgeMs
+   *  - 'without-error' → non-pending tasks whose status is not 'failed'
+   *                       (i.e. completed, cancelled, running with no error
+   *                       column). Useful for clearing successful runs while
+   *                       keeping failures for debugging.
+   *
+   * Pending tasks are never bulk-deleted — they represent unfinished work and
+   * must be reviewed individually before removal.
    */
   async deleteBulk(scope: 'all' | 'older-than' | 'without-error',
     options: { maxAgeMs?: number } = {}
   ): Promise<number> {
-    const conditions: ReturnType<typeof eq>[] = []
+    // Pending tasks are never bulk-deleted — they represent unfinished work
+    // and should only be removed individually after review.
+    const conditions: ReturnType<typeof eq>[] = [ne(taskQueue.status, 'pending')]
 
     if (scope === 'older-than') {
       const maxAgeMs = options.maxAgeMs ?? 24 * 60 * 60 * 1000
@@ -157,11 +164,11 @@ export const TaskQueueService = {
     } else if (scope === 'without-error') {
       conditions.push(ne(taskQueue.status, 'failed'))
     }
-    // scope === 'all' has no extra conditions
+    // scope === 'all' still respects the pending guard above.
 
     const result = await db
       .delete(taskQueue)
-      .where(conditions.length ? and(...conditions) : undefined)
+      .where(and(...conditions))
       .returning({ id: taskQueue.id })
 
     logger.info(

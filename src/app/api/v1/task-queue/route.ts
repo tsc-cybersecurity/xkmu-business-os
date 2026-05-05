@@ -18,12 +18,14 @@ export async function GET(request: NextRequest) {
 
     const status = searchParams.get('status') || undefined
     const type = searchParams.get('type') || undefined
+    const excludePending = searchParams.get('excludePending') === '1'
 
     const result = await TaskQueueService.list({
       page,
       limit,
       status,
       type,
+      excludePending,
     })
     return apiSuccess(result.items, { ...result.meta, stats: result.stats })
   })
