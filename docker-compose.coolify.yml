@@ -53,7 +53,9 @@ services:
       - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD}@postgres:5432/xkmu_business_os
       - DATABASE_SSL=false
       - JWT_SECRET=${JWT_SECRET}
+      - APPOINTMENT_TOKEN_SECRET=${APPOINTMENT_TOKEN_SECRET:-}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-https://boss.xkmu.de}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-}
       # AI Providers (optional - configure in app settings or here)
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}

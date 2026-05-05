@@ -21,6 +21,8 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD}@postgres:5432/xkmu_business_os
       - JWT_SECRET=${JWT_SECRET}
+      - APPOINTMENT_TOKEN_SECRET=${APPOINTMENT_TOKEN_SECRET:-}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-}
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OLLAMA_BASE_URL=http://ollama:11434

@@ -20,6 +20,8 @@ services:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://xkmu:${DB_PASSWORD:-xkmu_dev_password}@postgres:5432/xkmu_business_os
       - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_in_production_min_32_chars}
+      - APPOINTMENT_TOKEN_SECRET=${APPOINTMENT_TOKEN_SECRET:-dev_appointment_token_secret_change_in_production_min_32}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-}
       # AI Provider Keys werden jetzt ueber die Datenbank verwaltet (Einstellungen > Integrations)
       - OLLAMA_BASE_URL=http://ollama:11434
       - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_dev_2024}@redis:6379

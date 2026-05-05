@@ -37,7 +37,9 @@ services:
       - DATABASE_URL=postgresql://postgres:${SUPABASE_DB_PASSWORD:?SUPABASE_DB_PASSWORD must be set}@supabase-db:5432/postgres
       - DATABASE_SSL=false
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set (min 32 chars)}
+      - APPOINTMENT_TOKEN_SECRET=${APPOINTMENT_TOKEN_SECRET:-}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-https://bos.dev.xkmu.de}
       # AI Providers (optional)
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
