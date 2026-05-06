@@ -101,7 +101,10 @@ export function WeekCalendarView(props: {
     return null
   }
 
-  type CellState = 'available' | 'blocked' | 'free-override' | 'busy-external' | 'idle'
+  type CellState = 'available' | 'blocked' | 'free-override' | 'busy-external' | 'idle' | 'past'
+
+  // "now" einmal pro Render festhalten — sonst springt die "past"-Grenze beim Re-Render.
+  const now = new Date()
 
   function cellState(dayIdx: number, hourMinute: number): { state: CellState; busy: ExternalBusyLite | null; cellStart: Date } {
     const day = days[dayIdx]
@@ -110,6 +113,9 @@ export function WeekCalendarView(props: {
     cellStart.setMinutes(hourMinute)
     const cellEnd = new Date(cellStart)
     cellEnd.setMinutes(cellEnd.getMinutes() + 15)
+
+    // Vergangene Zeitfenster sind nicht buchbar — auch wenn Regeln sie freigeben.
+    if (cellEnd <= now) return { state: 'past', busy: null, cellStart }
 
     // External Google events take precedence — even if rules would say "available"
     const busy = findExternalBusy(cellStart, cellEnd)
@@ -140,6 +146,7 @@ export function WeekCalendarView(props: {
       case 'blocked': return 'bg-red-100 dark:bg-red-950/50 [background-image:repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(0,0,0,0.05)_4px,rgba(0,0,0,0.05)_8px)]'
       case 'free-override': return 'bg-emerald-300 dark:bg-emerald-900/70'
       case 'busy-external': return 'bg-slate-300 dark:bg-slate-700'
+      case 'past': return 'bg-zinc-200/60 dark:bg-zinc-800/40'
       default: return 'bg-zinc-100 dark:bg-zinc-900/40 [background-image:repeating-linear-gradient(45deg,transparent,transparent_5px,rgba(0,0,0,0.03)_5px,rgba(0,0,0,0.03)_10px)]'
     }
   }
