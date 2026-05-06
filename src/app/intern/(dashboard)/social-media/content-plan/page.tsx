@@ -58,6 +58,14 @@ export default function ContentPlanPage() {
     topicId: topicIdFromQuery,
     count: 7,
     tone: 'professional',
+    autoSchedule: false,
+    startDate: (() => {
+      // Default: morgen
+      const d = new Date()
+      d.setDate(d.getDate() + 1)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    })(),
+    dailyHour: '09:00',
   });
 
   const fetchTopics = useCallback(async () => {
@@ -123,8 +131,24 @@ export default function ContentPlanPage() {
     if (plan.length === 0) return;
     setSaving(true);
     try {
+      // Wenn autoSchedule: scheduledAt pro Item berechnen aus startDate +
+      // (scheduledDay-1) Tagen + dailyHour. Items ohne scheduledDay bekommen
+      // index-basiert (1, 2, 3, ...) — damit nichts auf demselben Slot landet.
+      const [hh, mm] = form.dailyHour.split(':').map(Number)
+      const baseDate = new Date(`${form.startDate}T00:00:00`)
       let savedCount = 0;
-      for (const item of plan) {
+      for (let i = 0; i < plan.length; i++) {
+        const item = plan[i]
+        let scheduledAt: string | undefined
+        let status = 'draft'
+        if (form.autoSchedule) {
+          const dayOffset = (item.scheduledDay && item.scheduledDay > 0 ? item.scheduledDay : i + 1) - 1
+          const d = new Date(baseDate)
+          d.setDate(d.getDate() + dayOffset)
+          d.setHours(hh ?? 9, mm ?? 0, 0, 0)
+          scheduledAt = d.toISOString()
+          status = 'scheduled'
+        }
         const response = await fetch('/api/v1/social-media/posts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -134,15 +158,19 @@ export default function ContentPlanPage() {
             content: item.content,
             hashtags: item.hashtags,
             aiGenerated: true,
-            status: 'draft',
+            status,
+            scheduledAt,
             topicId: form.topicId || null,
           }),
         });
         const data = await response.json();
         if (data.success) savedCount++;
       }
-      toast.success(`${savedCount} Beitraege gespeichert`);
-      router.push('/intern/social-media');
+      const target = form.autoSchedule ? '/intern/social-media/kalender' : '/intern/social-media'
+      toast.success(form.autoSchedule
+        ? `${savedCount} Beiträge eingeplant`
+        : `${savedCount} Beiträge gespeichert`);
+      router.push(target);
     } catch {
       toast.error('Fehler beim Speichern');
     } finally {
@@ -251,6 +279,40 @@ export default function ContentPlanPage() {
               </div>
             </div>
           </div>
+          <div className="space-y-3 rounded-md border p-3 bg-muted/20">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={form.autoSchedule}
+                onChange={(e) => setForm((f) => ({ ...f, autoSchedule: e.target.checked }))}
+                className="h-4 w-4"
+              />
+              <span className="font-medium">Beiträge direkt einplanen (Auto-Schedule)</span>
+            </label>
+            {form.autoSchedule && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-6">
+                <div className="space-y-1">
+                  <Label className="text-xs">Start-Datum</Label>
+                  <Input
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Tägliche Uhrzeit</Label>
+                  <Input
+                    type="time"
+                    value={form.dailyHour}
+                    onChange={(e) => setForm((f) => ({ ...f, dailyHour: e.target.value }))}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground sm:col-span-2">
+                  Beiträge werden auf aufeinanderfolgenden Tagen ab Start-Datum eingeplant (1 Beitrag/Tag, jeweils zur angegebenen Uhrzeit). Auto-Posting greift via Cron-Job „Task-Queue abarbeiten".
+                </p>
+              </div>
+            )}
+          </div>
           <Button onClick={handleGenerate} disabled={generating}>
             {generating ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -272,7 +334,7 @@ export default function ContentPlanPage() {
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              Alle als Entwürfe speichern
+              {form.autoSchedule ? 'Alle einplanen + speichern' : 'Alle als Entwürfe speichern'}
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
