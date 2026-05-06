@@ -3,12 +3,11 @@ import { socialOauthAccounts } from '@/lib/db/schema'
 import { and, eq, isNull } from 'drizzle-orm'
 import { encryptToken } from '@/lib/crypto/token-crypto'
 import { getSocialTokenKey } from './crypto-config'
-import { MetaOAuthClient } from './meta-oauth.client'
+import type { MetaPageWithIg } from './meta-oauth.client'
 
 export interface ConnectMetaInput {
-  longUserToken: string
+  page: MetaPageWithIg
   expiresInSec: number
-  selectedPageId: string
   userId: string
 }
 
@@ -36,12 +35,7 @@ export const SocialAccountService = {
   },
 
   async connectMeta(input: ConnectMetaInput): Promise<{ connected: ConnectedAccountSummary[] }> {
-    // Re-fetch pages via the already-exchanged long user token so page-selection
-    // validation stays atomic with the DB insert (idempotent read-only call).
-    const pages = await MetaOAuthClient.listPagesWithIg(input.longUserToken)
-    const page = pages.find(p => p.pageId === input.selectedPageId)
-    if (!page) throw new Error('page_not_found')
-
+    const page = input.page
     const key = await getSocialTokenKey()
     const expiresAt = input.expiresInSec > 0 ? new Date(Date.now() + input.expiresInSec * 1000) : null
 

@@ -61,7 +61,9 @@ describe('GET /api/social/meta/oauth/callback', () => {
     expect(res.status).toBe(302)
     expect(res.headers.get('location')).toContain('connected=meta')
     expect(accountSvc.connectMeta).toHaveBeenCalledWith({
-      longUserToken: 'l', expiresInSec: 5184000, selectedPageId: 'p1', userId: 'u1',
+      page: { pageId: 'p1', pageName: 'X', pageAccessToken: 't', igUserId: null, igUsername: null },
+      expiresInSec: 5184000,
+      userId: 'u1',
     })
   })
 
@@ -88,5 +90,20 @@ describe('GET /api/social/meta/oauth/callback', () => {
     const { GET } = await import('@/app/api/social/meta/oauth/callback/route')
     const res = await GET(new Request(`https://app/x?code=CODE&state=${encodeURIComponent(validState)}`) as any)
     expect(res.headers.get('location')).toContain('error=multiple_pages_unsupported_v1')
+  })
+
+  it('sanitizes raw error messages before redirecting', async () => {
+    meta.exchangeCode.mockRejectedValue(new Error('Token "abc:secret-leak" failed at https://graph.facebook.com'))
+    const validState = buildValidState('s'.repeat(64))
+    const { GET } = await import('@/app/api/social/meta/oauth/callback/route')
+    const res = await GET(new Request(`https://app/x?code=CODE&state=${encodeURIComponent(validState)}`) as any)
+    const loc = res.headers.get('location') ?? ''
+    const errorParam = new URL(loc).searchParams.get('error') ?? ''
+    // secret-leak must not appear verbatim
+    expect(errorParam).not.toContain('secret-leak')
+    // raw URL syntax must not appear verbatim
+    expect(errorParam).not.toContain('://')
+    // error value must be alphanumeric + underscore only
+    expect(errorParam).toMatch(/^[a-zA-Z0-9_]+$/)
   })
 })

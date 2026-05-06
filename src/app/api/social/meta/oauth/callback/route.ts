@@ -35,15 +35,16 @@ export async function GET(request: NextRequest) {
     if (pages.length > 1) return redirect({ error: 'multiple_pages_unsupported_v1' })
 
     await SocialAccountService.connectMeta({
-      longUserToken: long.accessToken,
+      page: pages[0],
       expiresInSec: long.expiresInSec,
-      selectedPageId: pages[0].pageId,
       userId: parsed.uid,
     })
 
     return redirect({ connected: 'meta' })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'oauth_failed'
+    const raw = e instanceof Error ? e.message : 'oauth_failed'
+    // Sanitize: alphanumerics + underscore only, capped at 60 chars
+    const msg = raw.replace(/[^a-z0-9_]/gi, '_').slice(0, 60) || 'oauth_failed'
     return redirect({ error: msg })
   }
 }
