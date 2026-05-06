@@ -50,11 +50,14 @@ export default function NewSocialMediaPostPage() {
     tone: 'professional',
     includeHashtags: true,
     includeEmoji: true,
+    includeImage: true,
   });
   const [generatedContent, setGeneratedContent] = useState<{
     title: string;
     content: string;
     hashtags: string[];
+    imagePrompt?: string;
+    imageAlt?: string;
   } | null>(null);
 
   const fetchTopics = useCallback(async () => {
@@ -123,7 +126,14 @@ export default function NewSocialMediaPostPage() {
       const data = await response.json();
       if (data.success) {
         setGeneratedContent(data.data);
-        toast.success('Beitrag generiert');
+        // Bild-URL ins shared state uebernehmen, falls die KI-Pipeline ein Bild
+        // gerendert hat. ImageField unten zeigt es dann an, Save uebernimmt es.
+        if (data.data?.imageUrl) {
+          setImageUrl(data.data.imageUrl);
+          toast.success('Beitrag und Bild generiert');
+        } else {
+          toast.success('Beitrag generiert');
+        }
       } else {
         toast.error(data.error?.message || 'Generierung fehlgeschlagen');
       }
@@ -330,6 +340,32 @@ export default function NewSocialMediaPostPage() {
                   placeholder="Worüber soll der Beitrag handeln?"
                   rows={3}
                 />
+              </div>
+              <div className="flex flex-wrap gap-4 text-sm">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={aiForm.includeHashtags}
+                    onChange={(e) => setAiForm((f) => ({ ...f, includeHashtags: e.target.checked }))}
+                  />
+                  Hashtags
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={aiForm.includeEmoji}
+                    onChange={(e) => setAiForm((f) => ({ ...f, includeEmoji: e.target.checked }))}
+                  />
+                  Emojis
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={aiForm.includeImage}
+                    onChange={(e) => setAiForm((f) => ({ ...f, includeImage: e.target.checked }))}
+                  />
+                  Bild generieren
+                </label>
               </div>
               <Button onClick={handleGenerate} disabled={generating}>
                 {generating ? (

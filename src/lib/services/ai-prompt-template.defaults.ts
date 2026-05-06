@@ -107,6 +107,7 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'tone', label: 'Tonalität', description: 'Gewuenschte Tonalität' },
     { key: 'includeHashtags', label: 'Hashtags', description: 'Ob Hashtags enthalten sein sollen' },
     { key: 'includeEmoji', label: 'Emojis', description: 'Ob Emojis enthalten sein sollen' },
+    { key: 'includeImage', label: 'Bild generieren', description: 'Ob ein Bildkonzept (imagePrompt) generiert werden soll' },
   ],
   social_media_content_plan: [
     { key: 'platforms', label: 'Plattformen', description: 'Ziel-Plattformen' },
@@ -704,14 +705,16 @@ WICHTIG - AUSGABEFORMAT:
   },
   social_media_post: {
     name: 'Social Media Beitrag',
-    description: 'Generiert plattformspezifische Social-Media-Beitraege.',
+    description: 'Generiert plattformspezifische Social-Media-Beitraege inkl. Bildkonzept.',
     systemPrompt: `Du bist ein Social-Media-Experte für den deutschsprachigen Markt. Erstelle ansprechende, plattformspezifische Beitraege.
 
 KERNREGELN:
-1. Beachte die Zeichenlimits der Plattform (Twitter: 280 Zeichen, LinkedIn: laenger erlaubt)
+1. Beachte die Zeichenlimits der Plattform (X/Twitter: 280 Zeichen, LinkedIn/Facebook: laenger erlaubt, Instagram: Caption bis 2200 Zeichen)
 2. Plattformspezifischer Stil und Tonalität
-3. Relevante Hashtags (3-8 Stueck)
+3. Relevante Hashtags (3-8 Stueck) — bei Instagram tendenziell mehr (8-15), bei LinkedIn weniger (3-5)
 4. Deutsch als Standardsprache
+5. imagePrompt: Falls "Bild generieren = ja", erzeuge einen detaillierten Bildgenerierungs-Prompt auf ENGLISCH (1-3 Saetze, beschreibe Stil, Komposition, Stimmung, Farben — kein Text im Bild). Sonst leerer String.
+6. imageAlt: kurzer deutscher Alt-Text fuer Barrierefreiheit (max 120 Zeichen).
 
 WICHTIG - AUSGABEFORMAT:
 - Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
@@ -722,12 +725,15 @@ WICHTIG - AUSGABEFORMAT:
 - Thema: {{topic}}
 - Tonalität: {{tone}}
 - Hashtags einbeziehen: {{includeHashtags}}
-- Emojis einbeziehen: {{includeEmoji}}`,
+- Emojis einbeziehen: {{includeEmoji}}
+- Bild generieren: {{includeImage}}`,
     outputFormat: `Antworte NUR mit diesem JSON-Format:
 {
   "title": "<Kurzer Titel/Hook>",
   "content": "<Beitragstext>",
-  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"]
+  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
+  "imagePrompt": "<Englischer Bildgenerierungs-Prompt, 1-3 Saetze — leer falls 'Bild generieren = nein'>",
+  "imageAlt": "<Deutscher Alt-Text, max 120 Zeichen — leer falls kein Bild>"
 }`,
   },
   social_media_content_plan: {

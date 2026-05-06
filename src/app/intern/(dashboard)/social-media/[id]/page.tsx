@@ -287,13 +287,17 @@ export default function EditSocialMediaPostPage() {
             )}
             Speichern
           </Button>
-          <Button onClick={handlePublish} disabled={saving || publishing || showMetaWarning}>
+          <Button
+            onClick={handlePublish}
+            disabled={saving || publishing || showMetaWarning || post.status === 'posted'}
+            title={post.status === 'posted' ? 'Beitrag wurde bereits veröffentlicht' : undefined}
+          >
             {publishing ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Send className="h-4 w-4 mr-2" />
             )}
-            Jetzt posten
+            {post.status === 'posted' ? 'Bereits veröffentlicht' : 'Jetzt posten'}
           </Button>
         </div>
       </div>

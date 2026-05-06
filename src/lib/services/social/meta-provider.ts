@@ -19,6 +19,21 @@ async function toAbsoluteImageUrl(imageUrl: string | null | undefined): Promise<
   return `${origin.replace(/\/+$/, '')}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
 }
 
+/**
+ * Haengt Hashtags an den Body, wenn sie nicht schon im content stehen.
+ * FB/IG zeigen Hashtags nur an, wenn sie wirklich im Post-Text sind — die DB-
+ * `hashtags`-Spalte wird sonst beim Publish ignoriert.
+ */
+function composeBody(content: string, hashtags: unknown): string {
+  const list = Array.isArray(hashtags) ? hashtags.map(String).filter(Boolean) : []
+  if (list.length === 0) return content
+  // Hash sicherstellen + Duplikate gegen content vermeiden
+  const tags = list.map((h) => (h.startsWith('#') ? h : `#${h}`))
+  const missing = tags.filter((t) => !content.includes(t))
+  if (missing.length === 0) return content
+  return `${content}\n\n${missing.join(' ')}`
+}
+
 async function loadAccount(provider: 'facebook' | 'instagram') {
   const [row] = await db.select().from(socialOauthAccounts)
     .where(and(eq(socialOauthAccounts.provider, provider), eq(socialOauthAccounts.status, 'connected')))
@@ -40,7 +55,7 @@ export const MetaProvider: SocialProvider = {
 
     const key = await getSocialTokenKey()
     const pageAccessToken = decryptToken(account.accessTokenEnc, key)
-    const body = post.content
+    const body = composeBody(post.content, post.hashtags)
     const imageUrl = await toAbsoluteImageUrl(post.imageUrl)
 
     if (platform === 'facebook') {

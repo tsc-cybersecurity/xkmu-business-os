@@ -5,6 +5,10 @@ export interface GeneratedPost {
   title: string
   content: string
   hashtags: string[]
+  /** Englischer AI-Bildgenerierungs-Prompt. Leer wenn includeImage=false oder KI nichts liefert. */
+  imagePrompt: string
+  /** Deutscher Alt-Text fuer Barrierefreiheit. */
+  imageAlt: string
 }
 
 export interface ContentPlanItem {
@@ -32,6 +36,7 @@ export const SocialMediaAIService = {
       language?: string
       includeHashtags?: boolean
       includeEmoji?: boolean
+      includeImage?: boolean
     },
     context: AIRequestContext
   ): Promise<GeneratedPost> {
@@ -43,6 +48,7 @@ export const SocialMediaAIService = {
       tone: params.tone || 'professional',
       includeHashtags: params.includeHashtags !== false ? 'ja' : 'nein',
       includeEmoji: params.includeEmoji !== false ? 'ja' : 'nein',
+      includeImage: params.includeImage !== false ? 'ja' : 'nein',
     })
 
     const fullPrompt = template.outputFormat
@@ -66,6 +72,8 @@ export const SocialMediaAIService = {
         title: String(parsed.title || ''),
         content: String(parsed.content || ''),
         hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags.map(String) : [],
+        imagePrompt: String(parsed.imagePrompt || ''),
+        imageAlt: String(parsed.imageAlt || '').slice(0, 120),
       }
     } catch {
       throw new Error('KI-Antwort war kein gültiges JSON. Bitte erneut versuchen.')

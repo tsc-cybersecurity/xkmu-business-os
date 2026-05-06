@@ -602,6 +602,7 @@ export const generateSocialPostSchema = z.object({
   language: z.enum(['de', 'en']).default('de'),
   includeHashtags: z.boolean().default(true),
   includeEmoji: z.boolean().default(true),
+  includeImage: z.boolean().default(true),
 })
 
 export const generateContentPlanSchema = z.object({

@@ -14,6 +14,15 @@ async function toAbsoluteImageUrl(imageUrl: string | null | undefined): Promise<
   return `${origin.replace(/\/+$/, '')}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
 }
 
+function composeBody(content: string, hashtags: unknown): string {
+  const list = Array.isArray(hashtags) ? hashtags.map(String).filter(Boolean) : []
+  if (list.length === 0) return content
+  const tags = list.map((h) => (h.startsWith('#') ? h : `#${h}`))
+  const missing = tags.filter((t) => !content.includes(t))
+  if (missing.length === 0) return content
+  return `${content}\n\n${missing.join(' ')}`
+}
+
 async function loadIgAccount() {
   const [row] = await db.select().from(socialOauthAccounts)
     .where(and(eq(socialOauthAccounts.provider, 'instagram'), eq(socialOauthAccounts.status, 'connected')))
@@ -32,7 +41,7 @@ export const InstagramProvider: SocialProvider = {
     return InstagramPublishClient.publishImage({
       igUserId: account.externalAccountId,
       accessToken: token,
-      caption: post.content,
+      caption: composeBody(post.content, post.hashtags),
       imageUrl: await toAbsoluteImageUrl(post.imageUrl),
     })
   },
