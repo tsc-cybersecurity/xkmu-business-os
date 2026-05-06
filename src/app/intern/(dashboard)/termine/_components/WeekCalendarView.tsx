@@ -222,12 +222,12 @@ export function WeekCalendarView(props: {
             {days.map((_, dayIdx) => (
               <div key={dayIdx} className="relative border-l">
                 {HOURS.map(h => (
-                  <div key={h} className="border-b">
+                  <div key={h} className="border-b flex flex-col" style={{ height: HOUR_PX }}>
                     {[0, 15, 30, 45].map(min => {
                       const hourMinute = h * 60 + min
                       const { state, busy, cellStart } = cellState(dayIdx, hourMinute)
                       const isClickable = state === 'available' || state === 'free-override'
-                      const baseClass = `h-3.5 w-full ${cellClass(state)} ${min === 30 ? 'border-t border-dotted border-muted-foreground/15' : ''}`
+                      const baseClass = `flex-1 w-full ${cellClass(state)} ${min === 30 ? 'border-t border-dotted border-muted-foreground/15' : ''}`
                       if (isClickable) {
                         return (
                           <button
