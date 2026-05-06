@@ -31,15 +31,18 @@ function createChainMockManager() {
     return chain
   }
 
-  return {
+  const manager = {
     createFreshChain,
     mockResolvedValue(value: unknown) {
       defaultResolveValue = value
+      return manager
     },
     mockResolvedValueOnce(value: unknown) {
       resolveQueue.push(value)
+      return manager
     },
   }
+  return manager
 }
 
 export function setupDbMock() {
