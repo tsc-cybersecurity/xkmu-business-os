@@ -20,7 +20,7 @@ import { Dialog,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Save, Brain } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Brain, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageField } from '@/components/shared'
 import { logger } from '@/lib/utils/logger'
@@ -43,6 +43,7 @@ export default function EditSocialMediaPostPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [improving, setImproving] = useState(false);
   const [showImproveDialog, setShowImproveDialog] = useState(false);
   const [improveInstructions, setImproveInstructions] = useState('');
@@ -77,6 +78,47 @@ export default function EditSocialMediaPostPage() {
   useEffect(() => {
     fetchPost();
   }, [fetchPost]);
+
+  const handlePublish = async () => {
+    if (!post) return;
+    if (!confirm(`Beitrag jetzt auf ${post.platform} veröffentlichen?`)) return;
+    // First save current edits, then publish
+    setPublishing(true);
+    try {
+      await fetch(`/api/v1/social-media/posts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: post.title,
+          content: post.content,
+          hashtags: post.hashtags,
+          imageUrl: post.imageUrl || undefined,
+          status: post.status,
+          platform: post.platform,
+        }),
+      });
+      const res = await fetch(`/api/v1/social-media/posts/${id}/publish`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.data?.result?.ok) {
+        toast.success('Beitrag veröffentlicht');
+        const url = data.data.result.externalUrl;
+        if (url) window.open(url, '_blank');
+        router.push('/intern/social-media');
+      } else {
+        const err = data.data?.result?.error || data.error?.message || 'Fehler beim Posten';
+        toast.error(`Posten fehlgeschlagen: ${err}`);
+      }
+    } catch (e) {
+      logger.error('Failed to publish post', e, { module: 'SocialMediaEdit' });
+      toast.error('Posten fehlgeschlagen');
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!post) return;
@@ -237,13 +279,21 @@ export default function EditSocialMediaPostPage() {
               </div>
             </DialogContent>
           </Dialog>
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving || publishing} variant="outline">
             {saving ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Save className="h-4 w-4 mr-2" />
             )}
             Speichern
+          </Button>
+          <Button onClick={handlePublish} disabled={saving || publishing || showMetaWarning}>
+            {publishing ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4 mr-2" />
+            )}
+            Jetzt posten
           </Button>
         </div>
       </div>
@@ -265,7 +315,7 @@ export default function EditSocialMediaPostPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="linkedin">LinkedIn</SelectItem>
-                  <SelectItem value="twitter">Twitter/X</SelectItem>
+                  <SelectItem value="x">X</SelectItem>
                   <SelectItem value="instagram">Instagram</SelectItem>
                   <SelectItem value="facebook">Facebook</SelectItem>
                   <SelectItem value="xing">XING</SelectItem>
