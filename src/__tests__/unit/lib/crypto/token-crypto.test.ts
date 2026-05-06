@@ -34,7 +34,9 @@ describe('token-crypto', () => {
 
   it('round-trips empty plaintext', () => {
     const key = generateKeyHex()
-    expect(decryptToken(encryptToken('', key), key)).toBe('')
+    const ct = encryptToken('', key)
+    expect(ct.split(':')[1]).toBe('')   // ctHex empty — pins decrypt's relaxed guard
+    expect(decryptToken(ct, key)).toBe('')
   })
 
   it('throws on ciphertext with extra colons (not exactly 3 parts)', () => {
