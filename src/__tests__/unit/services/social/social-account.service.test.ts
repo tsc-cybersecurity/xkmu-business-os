@@ -37,6 +37,7 @@ describe('SocialAccountService.connectMeta', () => {
       expect.objectContaining({ provider: 'instagram', externalAccountId: 'ig1' }),
     ])
     expect(dbMock.db.insert).toHaveBeenCalledTimes(2)
+    expect(dbMock.db.update).toHaveBeenCalledTimes(2)  // revoke fb + revoke ig
   })
 
   it('persists only fb when no ig is linked', async () => {
@@ -52,6 +53,7 @@ describe('SocialAccountService.connectMeta', () => {
     const r = await SocialAccountService.connectMeta({ code: 'C', selectedPageId: 'p1', userId: 'u1' })
     expect(r.connected).toHaveLength(1)
     expect(r.connected[0].provider).toBe('facebook')
+    expect(dbMock.db.update).toHaveBeenCalledTimes(2)  // revoke fb + revoke ig (always both)
   })
 
   it('throws when selectedPageId not found in user pages', async () => {

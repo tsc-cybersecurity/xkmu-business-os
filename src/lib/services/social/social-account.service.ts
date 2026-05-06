@@ -44,50 +44,57 @@ export const SocialAccountService = {
     const key = await getSocialTokenKey()
     const expiresAt = long.expiresInSec > 0 ? new Date(Date.now() + long.expiresInSec * 1000) : null
 
-    // Revoke any existing 'connected' rows for these providers, then insert fresh.
-    await db.update(socialOauthAccounts)
-      .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(socialOauthAccounts.provider, 'facebook'), eq(socialOauthAccounts.status, 'connected')))
-    await db.update(socialOauthAccounts)
-      .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
-      .where(and(eq(socialOauthAccounts.provider, 'instagram'), eq(socialOauthAccounts.status, 'connected')))
+    // Wrap all 4 DB ops in a transaction: revoke then insert is atomic.
+    // Token exchange and getSocialTokenKey remain outside — they are network/config
+    // reads with no DB writes and should not hold a DB connection open.
+    const inserted = await db.transaction(async (tx) => {
+      // Revoke any existing 'connected' rows for these providers, then insert fresh.
+      await tx.update(socialOauthAccounts)
+        .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(socialOauthAccounts.provider, 'facebook'), eq(socialOauthAccounts.status, 'connected')))
+      await tx.update(socialOauthAccounts)
+        .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(socialOauthAccounts.provider, 'instagram'), eq(socialOauthAccounts.status, 'connected')))
 
-    const inserted: ConnectedAccountSummary[] = []
+      const rows: ConnectedAccountSummary[] = []
 
-    const fbRow = await db.insert(socialOauthAccounts).values({
-      provider: 'facebook',
-      externalAccountId: page.pageId,
-      accountName: page.pageName,
-      accessTokenEnc: encryptToken(page.pageAccessToken, key),
-      tokenExpiresAt: expiresAt,
-      scopes: ['pages_manage_posts', 'pages_read_engagement', 'pages_show_list'],
-      meta: { igLinked: !!page.igUserId },
-      connectedBy: input.userId,
-    }).returning()
-    inserted.push({
-      id: fbRow[0].id, provider: 'facebook',
-      externalAccountId: page.pageId, accountName: page.pageName,
-      status: 'connected', tokenExpiresAt: expiresAt,
-    })
-
-    if (page.igUserId) {
-      const igName = page.igUsername ? `@${page.igUsername}` : `IG (${page.pageName})`
-      const igRow = await db.insert(socialOauthAccounts).values({
-        provider: 'instagram',
-        externalAccountId: page.igUserId,
-        accountName: igName,
+      const fbRow = await tx.insert(socialOauthAccounts).values({
+        provider: 'facebook',
+        externalAccountId: page.pageId,
+        accountName: page.pageName,
         accessTokenEnc: encryptToken(page.pageAccessToken, key),
         tokenExpiresAt: expiresAt,
-        scopes: ['instagram_basic', 'instagram_content_publish'],
-        meta: { fbPageId: page.pageId, igUsername: page.igUsername },
+        scopes: ['pages_manage_posts', 'pages_read_engagement', 'pages_show_list'],
+        meta: { igLinked: !!page.igUserId },
         connectedBy: input.userId,
       }).returning()
-      inserted.push({
-        id: igRow[0].id, provider: 'instagram',
-        externalAccountId: page.igUserId, accountName: igName,
+      rows.push({
+        id: fbRow[0].id, provider: 'facebook',
+        externalAccountId: page.pageId, accountName: page.pageName,
         status: 'connected', tokenExpiresAt: expiresAt,
       })
-    }
+
+      if (page.igUserId) {
+        const igName = page.igUsername ? `@${page.igUsername}` : `IG (${page.pageName})`
+        const igRow = await tx.insert(socialOauthAccounts).values({
+          provider: 'instagram',
+          externalAccountId: page.igUserId,
+          accountName: igName,
+          accessTokenEnc: encryptToken(page.pageAccessToken, key),
+          tokenExpiresAt: expiresAt,
+          scopes: ['instagram_basic', 'instagram_content_publish'],
+          meta: { fbPageId: page.pageId, igUsername: page.igUsername },
+          connectedBy: input.userId,
+        }).returning()
+        rows.push({
+          id: igRow[0].id, provider: 'instagram',
+          externalAccountId: page.igUserId, accountName: igName,
+          status: 'connected', tokenExpiresAt: expiresAt,
+        })
+      }
+
+      return rows
+    })
 
     return { connected: inserted }
   },
