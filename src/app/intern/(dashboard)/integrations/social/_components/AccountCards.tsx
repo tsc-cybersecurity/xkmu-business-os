@@ -11,7 +11,7 @@ const PROVIDERS: Array<{
   connectHref?: string
 }> = [
   { key: 'facebook', label: 'Facebook', available: true, connectHref: '/api/social/meta/oauth/start' },
-  { key: 'instagram', label: 'Instagram', available: true, connectHref: '/api/social/meta/oauth/start' },
+  { key: 'instagram', label: 'Instagram', available: true, connectHref: '/api/social/instagram/oauth/start' },
   { key: 'x', label: 'X', available: false },
   { key: 'linkedin', label: 'LinkedIn', available: false },
 ]
@@ -24,6 +24,7 @@ const ERROR_LABELS: Record<string, string> = {
   invalid_state: 'Sicherheitsprüfung fehlgeschlagen — bitte Connect erneut starten.',
   missing_code_or_state: 'OAuth-Antwort unvollständig — bitte erneut versuchen.',
   meta_not_configured: 'Meta-App nicht konfiguriert — META_APP_ID/META_APP_SECRET/META_OAUTH_REDIRECT_URI im Server setzen.',
+  instagram_not_configured: 'Instagram-App nicht konfiguriert — INSTAGRAM_APP_ID/INSTAGRAM_APP_SECRET/INSTAGRAM_OAUTH_REDIRECT_URI im Server setzen.',
 }
 
 interface ConnectedAccount {
@@ -41,6 +42,7 @@ export function AccountCards({
 }) {
   useEffect(() => {
     if (flash.connected === 'meta') toast.success('Meta-Account verbunden')
+    else if (flash.connected === 'instagram') toast.success('Instagram-Account verbunden')
     else if (flash.error) toast.error(ERROR_LABELS[flash.error] ?? `Fehler: ${flash.error}`)
   }, [flash.connected, flash.error])
 
