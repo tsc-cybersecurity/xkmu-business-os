@@ -34,6 +34,7 @@ interface ContentPlanItem {
 
 const platformLabels: Record<string, string> = {
   linkedin: 'LinkedIn',
+  x: 'X',
   twitter: 'Twitter/X',
   instagram: 'Instagram',
   facebook: 'Facebook',

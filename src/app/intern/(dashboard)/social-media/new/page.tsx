@@ -307,7 +307,7 @@ export default function NewSocialMediaPostPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="linkedin">LinkedIn</SelectItem>
-                      <SelectItem value="twitter">Twitter/X</SelectItem>
+                      <SelectItem value="x">X</SelectItem>
                       <SelectItem value="instagram">Instagram</SelectItem>
                       <SelectItem value="facebook">Facebook</SelectItem>
                       <SelectItem value="xing">XING</SelectItem>
