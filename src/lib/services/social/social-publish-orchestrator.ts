@@ -3,6 +3,7 @@ import { socialMediaPosts, socialOauthAccounts } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 import { MetaProvider } from './meta-provider'
 import { InstagramProvider } from './instagram-provider'
+import { XProvider } from './x-provider'
 import { SocialPublishingService } from '@/lib/services/social-publishing.service'
 import type { PublishResult } from './social-provider'
 import { logger } from '@/lib/utils/logger'
@@ -38,7 +39,7 @@ export const SocialPublishOrchestrator = {
     if (!post) throw new Error('post_not_found')
 
     const platform = post.platform
-    const isOAuth = platform === 'facebook' || platform === 'instagram'
+    const isOAuth = platform === 'facebook' || platform === 'instagram' || platform === 'x'
     const postedVia: 'oauth' | 'legacy' = isOAuth ? 'oauth' : 'legacy'
 
     let result: PublishResult
@@ -47,6 +48,8 @@ export const SocialPublishOrchestrator = {
       result = await MetaProvider.publish(post)
     } else if (platform === 'instagram') {
       result = await InstagramProvider.publish(post)
+    } else if (platform === 'x') {
+      result = await XProvider.publish(post)
     } else {
       const legacyResults = await SocialPublishingService.publish(
         [platform],
@@ -82,7 +85,7 @@ export const SocialPublishOrchestrator = {
         updatedAt: new Date(),
       }).where(eq(socialMediaPosts.id, postId))
 
-      if (result.revokeAccount && (platform === 'facebook' || platform === 'instagram')) {
+      if (result.revokeAccount && (platform === 'facebook' || platform === 'instagram' || platform === 'x')) {
         await db.update(socialOauthAccounts).set({
           status: 'revoked',
           revokedAt: new Date(),

@@ -136,6 +136,49 @@ export const SocialAccountService = {
     return { connected: inserted }
   },
 
+  async connectX(input: {
+    userId: string
+    xUserId: string
+    xUsername: string
+    xName: string | null
+    accessToken: string
+    refreshToken: string | null
+    expiresInSec: number
+  }): Promise<{ connected: ConnectedAccountSummary[] }> {
+    const key = await getSocialTokenKey()
+    const expiresAt = input.expiresInSec > 0 ? new Date(Date.now() + input.expiresInSec * 1000) : null
+
+    const inserted = await db.transaction(async (tx) => {
+      await tx.update(socialOauthAccounts)
+        .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(socialOauthAccounts.provider, 'x'), eq(socialOauthAccounts.status, 'connected')))
+
+      const xRow = await tx.insert(socialOauthAccounts).values({
+        provider: 'x',
+        externalAccountId: input.xUserId,
+        accountName: `@${input.xUsername}`,
+        accessTokenEnc: encryptToken(input.accessToken, key),
+        refreshTokenEnc: input.refreshToken ? encryptToken(input.refreshToken, key) : null,
+        tokenExpiresAt: expiresAt,
+        scopes: ['tweet.read', 'tweet.write', 'users.read', 'offline.access'],
+        meta: { source: 'x_oauth2_pkce', xUsername: input.xUsername, xName: input.xName },
+        connectedBy: input.userId,
+      }).returning()
+
+      const summary: ConnectedAccountSummary = {
+        id: xRow[0].id,
+        provider: 'x',
+        externalAccountId: input.xUserId,
+        accountName: `@${input.xUsername}`,
+        status: 'connected',
+        tokenExpiresAt: expiresAt,
+      }
+      return [summary]
+    })
+
+    return { connected: inserted }
+  },
+
   async disconnect(id: string): Promise<{ revoked: boolean }> {
     const rows = await db.update(socialOauthAccounts)
       .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })

@@ -12,7 +12,7 @@ const PROVIDERS: Array<{
 }> = [
   { key: 'facebook', label: 'Facebook', available: true, connectHref: '/api/social/meta/oauth/start' },
   { key: 'instagram', label: 'Instagram', available: true, connectHref: '/api/social/instagram/oauth/start' },
-  { key: 'x', label: 'X', available: false },
+  { key: 'x', label: 'X', available: true, connectHref: '/api/social/x/oauth/start' },
   { key: 'linkedin', label: 'LinkedIn', available: false },
 ]
 
@@ -25,6 +25,9 @@ const ERROR_LABELS: Record<string, string> = {
   missing_code_or_state: 'OAuth-Antwort unvollständig — bitte erneut versuchen.',
   meta_not_configured: 'Meta-App nicht konfiguriert — META_APP_ID/META_APP_SECRET/META_OAUTH_REDIRECT_URI im Server setzen.',
   instagram_not_configured: 'Instagram-App nicht konfiguriert — INSTAGRAM_APP_ID/INSTAGRAM_APP_SECRET/INSTAGRAM_OAUTH_REDIRECT_URI im Server setzen.',
+  x_not_configured: 'X-App nicht konfiguriert — X_CLIENT_ID/X_CLIENT_SECRET/X_OAUTH_REDIRECT_URI im Server setzen.',
+  pkce_verifier_missing: 'PKCE-Verifier-Cookie fehlt — Connect erneut starten (innerhalb von 10 Minuten abschließen).',
+  access_denied: 'Du hast die Verknüpfung abgelehnt.',
 }
 
 interface ConnectedAccount {
@@ -43,6 +46,7 @@ export function AccountCards({
   useEffect(() => {
     if (flash.connected === 'meta') toast.success('Meta-Account verbunden')
     else if (flash.connected === 'instagram') toast.success('Instagram-Account verbunden')
+    else if (flash.connected === 'x') toast.success('X-Account verbunden')
     else if (flash.error) toast.error(ERROR_LABELS[flash.error] ?? `Fehler: ${flash.error}`)
   }, [flash.connected, flash.error])
 

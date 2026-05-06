@@ -65,7 +65,7 @@ export default function EditSocialMediaPostPage() {
       if (data.success) {
         const loadedPost: Post = data.data;
         setPost(loadedPost);
-        if (loadedPost.platform === 'facebook' || loadedPost.platform === 'instagram') {
+        if (loadedPost.platform === 'facebook' || loadedPost.platform === 'instagram' || loadedPost.platform === 'x') {
           try {
             const csRes = await fetch(
               `/api/v1/social/connection-status?provider=${loadedPost.platform}`,
@@ -161,7 +161,7 @@ export default function EditSocialMediaPostPage() {
   };
 
   const checkMetaConnection = useCallback(async (platform: string) => {
-    if (platform === 'facebook' || platform === 'instagram') {
+    if (platform === 'facebook' || platform === 'instagram' || platform === 'x') {
       try {
         const res = await fetch(`/api/v1/social/connection-status?provider=${platform}`);
         const data = await res.json();
@@ -237,7 +237,10 @@ export default function EditSocialMediaPostPage() {
     <div className="space-y-6">
       {showMetaWarning && (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm dark:bg-amber-950/40 dark:border-amber-800">
-          <strong>Meta-Account nicht verbunden.</strong> Posten wird fehlschlagen.{' '}
+          <strong>
+            {post.platform === 'x' ? 'X-Account' : 'Meta-Account'} nicht verbunden.
+          </strong>{' '}
+          Posten wird fehlschlagen.{' '}
           <a href="/intern/integrations/social" className="underline">
             Jetzt verbinden →
           </a>
