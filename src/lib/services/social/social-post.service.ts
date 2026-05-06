@@ -1,10 +1,11 @@
 // src/lib/services/social/social-post.service.ts
+// NOTE: This service is the Phase 2A implementation and is DEPRECATED as of Phase 2B.
+// The active publish path is the legacy route at src/app/api/v1/social-media/posts/[id]/publish/route.ts.
+// Will be cleaned up in a future phase.
 import { db } from '@/lib/db'
-import { socialPosts, socialPostTargets, socialOauthAccounts } from '@/lib/db/schema'
-import { and, eq } from 'drizzle-orm'
-import { PostStatus, TargetStatus, canTransition, deriveOverallStatus } from './post-status'
-import { MetaProvider } from './meta-provider'
-import type { PublishResult } from './social-provider'
+import { socialPosts, socialPostTargets } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
+import { PostStatus, canTransition } from './post-status'
 import { AuditLogService } from '@/lib/services/audit-log.service'
 
 type ProviderName = 'facebook' | 'instagram' | 'x' | 'linkedin'
@@ -97,98 +98,9 @@ export const SocialPostService = {
     })
   },
 
-  async publish(postId: string, actor: Actor): Promise<{ status: string }> {
-    const [post] = await db.select().from(socialPosts).where(eq(socialPosts.id, postId)).limit(1)
-    if (!post) throw new Error('not_found')
-    if (post.status !== PostStatus.Approved) throw new Error('invalid_state_for_publish')
-
-    const targets = await db.select().from(socialPostTargets)
-      .where(eq(socialPostTargets.postId, postId))
-    if (targets.length === 0) throw new Error('no_targets')
-
-    const results = await Promise.all(targets.map(async (t) => {
-      await db.update(socialPostTargets)
-        .set({ publishStatus: TargetStatus.Publishing, updatedAt: new Date() })
-        .where(eq(socialPostTargets.id, t.id))
-      try {
-        const r: PublishResult = await MetaProvider.publish(t, post)
-        if (r.ok) {
-          await db.update(socialPostTargets).set({
-            publishStatus: TargetStatus.Posted,
-            externalPostId: r.externalPostId,
-            externalUrl: r.externalUrl,
-            postedAt: new Date(),
-            updatedAt: new Date(),
-            lastError: null,
-          }).where(eq(socialPostTargets.id, t.id))
-          return { provider: t.provider, status: TargetStatus.Posted, externalPostId: r.externalPostId, externalUrl: r.externalUrl, error: undefined }
-        }
-        await db.update(socialPostTargets).set({
-          publishStatus: TargetStatus.Failed,
-          retryCount: (t.retryCount ?? 0) + 1,
-          lastError: r.error,
-          updatedAt: new Date(),
-        }).where(eq(socialPostTargets.id, t.id))
-        if (r.revokeAccount) {
-          await db.update(socialOauthAccounts).set({
-            status: 'revoked',
-            revokedAt: new Date(),
-            updatedAt: new Date(),
-          }).where(and(
-            eq(socialOauthAccounts.provider, t.provider),
-            eq(socialOauthAccounts.status, 'connected'),
-          ))
-        }
-        return { provider: t.provider, status: TargetStatus.Failed, externalPostId: undefined, externalUrl: undefined, error: r.error }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'unknown_error'
-        await db.update(socialPostTargets).set({
-          publishStatus: TargetStatus.Failed,
-          retryCount: (t.retryCount ?? 0) + 1,
-          lastError: msg,
-          updatedAt: new Date(),
-        }).where(eq(socialPostTargets.id, t.id))
-        return { provider: t.provider, status: TargetStatus.Failed, externalPostId: undefined, externalUrl: undefined, error: msg }
-      }
-    }))
-
-    const overall = deriveOverallStatus(results.map(r => r.status as TargetStatus)) ?? PostStatus.Failed
-    await db.update(socialPosts).set({
-      status: overall,
-      updatedAt: new Date(),
-    }).where(eq(socialPosts.id, postId))
-
-    if (overall === PostStatus.Posted) {
-      await AuditLogService.log({
-        userId: actor.userId,
-        userRole: actor.userRole,
-        action: 'social_post_published',
-        entityType: 'social_posts',
-        entityId: postId,
-        payload: {
-          targets: results
-            .filter(r => r.status === TargetStatus.Posted)
-            .map(r => ({ provider: r.provider, externalPostId: r.externalPostId, externalUrl: r.externalUrl })),
-        },
-        request: actor.request as never,
-      })
-    } else {
-      await AuditLogService.log({
-        userId: actor.userId,
-        userRole: actor.userRole,
-        action: 'social_post_failed',
-        entityType: 'social_posts',
-        entityId: postId,
-        payload: {
-          overallStatus: overall,
-          failedProviders: results
-            .filter(r => r.status === TargetStatus.Failed)
-            .map(r => ({ provider: r.provider, error: r.error })),
-        },
-        request: actor.request as never,
-      })
-    }
-
-    return { status: overall }
+  async publish(_postId: string, _actor: Actor): Promise<{ status: string }> {
+    // DEPRECATED as of Phase 2B — use the legacy publish route instead.
+    // MetaProvider.publish signature changed to take SocialMediaPost directly.
+    throw new Error('deprecated_use_legacy_publish_route')
   },
 }

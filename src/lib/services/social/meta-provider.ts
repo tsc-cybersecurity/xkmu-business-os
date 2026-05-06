@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { socialOauthAccounts, type SocialPost, type SocialPostTarget } from '@/lib/db/schema'
+import { socialOauthAccounts, type SocialMediaPost } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 import { decryptToken } from '@/lib/crypto/token-crypto'
 import { getSocialTokenKey } from './crypto-config'
@@ -14,24 +14,23 @@ async function loadAccount(provider: 'facebook' | 'instagram') {
 }
 
 export const MetaProvider: SocialProvider = {
-  // Note: this provider serves both 'facebook' and 'instagram' targets.
-  // The dispatcher in SocialPostService.publish uses target.provider, not provider.name.
+  // Note: this provider serves both 'facebook' and 'instagram' via post.platform.
   name: 'facebook',
 
-  async publish(target: SocialPostTarget, post: SocialPost): Promise<PublishResult> {
-    const provider = target.provider
-    if (provider !== 'facebook' && provider !== 'instagram') {
+  async publish(post: SocialMediaPost): Promise<PublishResult> {
+    const platform = post.platform
+    if (platform !== 'facebook' && platform !== 'instagram') {
       throw new Error('unsupported_provider_for_meta')
     }
-    const account = await loadAccount(provider)
+    const account = await loadAccount(platform)
     if (!account) return { ok: false, error: 'no_connected_account', revokeAccount: false }
 
     const key = await getSocialTokenKey()
     const pageAccessToken = decryptToken(account.accessTokenEnc, key)
-    const body = target.bodyOverride ?? post.masterBody
-    const imageUrl = post.masterImagePath
+    const body = post.content
+    const imageUrl = post.imageUrl ?? null
 
-    if (provider === 'facebook') {
+    if (platform === 'facebook') {
       return MetaPublishClient.publishToFacebookPage({
         pageId: account.externalAccountId,
         pageAccessToken,

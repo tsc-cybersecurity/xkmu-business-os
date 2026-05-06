@@ -1,4 +1,4 @@
-import type { SocialPost, SocialPostTarget } from '@/lib/db/schema'
+import type { SocialMediaPost } from '@/lib/db/schema'
 
 export interface PublishSuccess {
   ok: true
@@ -20,12 +20,11 @@ export interface SocialProvider {
   readonly name: 'facebook' | 'instagram' | 'x' | 'linkedin'
 
   /**
-   * Publish the target's body (or `post.masterBody` if no override) plus the
-   * `post.masterImagePath` to the provider's API. Returns PublishResult — the
-   * caller persists status + external IDs.
+   * Publish `post.content` (and optionally `post.imageUrl`) to the provider's
+   * API. Returns PublishResult — the caller persists status + external IDs.
    *
    * Implementations must NOT throw on API errors; failures are returned as
    * PublishFailure with `revokeAccount` set when the credentials are dead.
    */
-  publish(target: SocialPostTarget, post: SocialPost): Promise<PublishResult>
+  publish(post: SocialMediaPost): Promise<PublishResult>
 }
