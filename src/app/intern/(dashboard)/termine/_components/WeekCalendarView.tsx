@@ -136,11 +136,11 @@ export function WeekCalendarView(props: {
 
   const cellClass = (state: CellState): string => {
     switch (state) {
-      case 'available': return 'bg-emerald-50 dark:bg-emerald-950/40'
+      case 'available': return 'bg-emerald-100 dark:bg-emerald-950/50'
       case 'blocked': return 'bg-red-100 dark:bg-red-950/50 [background-image:repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(0,0,0,0.05)_4px,rgba(0,0,0,0.05)_8px)]'
       case 'free-override': return 'bg-emerald-200 dark:bg-emerald-900/60'
       case 'busy-external': return 'bg-slate-300 dark:bg-slate-700'
-      default: return ''
+      default: return 'bg-muted/30 dark:bg-muted/20'
     }
   }
 
