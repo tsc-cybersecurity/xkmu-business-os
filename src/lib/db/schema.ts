@@ -3697,7 +3697,22 @@ export const socialOauthAccounts = pgTable('social_oauth_accounts', {
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-})
+}, (t) => ({
+  oneActivePerProvider: uniqueIndex('idx_social_oauth_one_active_per_provider')
+    .on(t.provider)
+    .where(sql`status = 'connected'`),
+  statusIdx: index('idx_social_oauth_status').on(t.status),
+  tokenExpiryIdx: index('idx_social_oauth_token_expiry')
+    .on(t.tokenExpiresAt)
+    .where(sql`status = 'connected' AND token_expires_at IS NOT NULL`),
+}))
+
+export const socialOauthAccountsRelations = relations(socialOauthAccounts, ({ one }) => ({
+  connectedByUser: one(users, {
+    fields: [socialOauthAccounts.connectedBy],
+    references: [users.id],
+  }),
+}))
 
 export type SocialOauthAccount = typeof socialOauthAccounts.$inferSelect
 export type NewSocialOauthAccount = typeof socialOauthAccounts.$inferInsert
