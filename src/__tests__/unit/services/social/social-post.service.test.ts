@@ -4,7 +4,12 @@ import { setupDbMock } from '@/__tests__/helpers/mock-db'
 const metaProvider = { publish: vi.fn() }
 vi.mock('@/lib/services/social/meta-provider', () => ({ MetaProvider: metaProvider }))
 
-beforeEach(() => { vi.resetModules() })
+const audit = { log: vi.fn() }
+vi.mock('@/lib/services/audit-log.service', () => ({ AuditLogService: audit }))
+
+const actor = { userId: 'u1', userRole: 'owner' }
+
+beforeEach(() => { vi.resetModules(); audit.log.mockReset() })
 
 describe('SocialPostService.create', () => {
   it('inserts post with provided body + creates one target per provider', async () => {
@@ -20,16 +25,24 @@ describe('SocialPostService.create', () => {
       masterImagePath: null,
       providers: ['facebook', 'instagram'],
       createdBy: 'u1',
+      actor,
     })
     expect(r).toEqual({ id: 'post1' })
     expect(dbMock.db.insert).toHaveBeenCalledTimes(3)
+    expect(audit.log).toHaveBeenCalledOnce()
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'social_post_created',
+      entityType: 'social_posts',
+      entityId: 'post1',
+      payload: expect.objectContaining({ providers: ['facebook', 'instagram'], hasImage: false }),
+    }))
   })
 
   it('rejects when providers array is empty', async () => {
     setupDbMock()
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
     await expect(SocialPostService.create({
-      masterBody: 'x', masterImagePath: null, providers: [], createdBy: 'u1',
+      masterBody: 'x', masterImagePath: null, providers: [], createdBy: 'u1', actor,
     })).rejects.toThrow(/at_least_one_provider/)
   })
 })
@@ -41,8 +54,14 @@ describe('SocialPostService.approve', () => {
     dbMock.updateMock.mockResolvedValue([{ id: 'p1', status: 'approved' }])
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    await SocialPostService.approve('p1', 'u1')
+    await SocialPostService.approve('p1', actor)
     expect(dbMock.db.update).toHaveBeenCalledOnce()
+    expect(audit.log).toHaveBeenCalledOnce()
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'social_post_approved',
+      entityType: 'social_posts',
+      entityId: 'p1',
+    }))
   })
 
   it('rejects when post is already approved', async () => {
@@ -50,7 +69,7 @@ describe('SocialPostService.approve', () => {
     dbMock.selectMock.mockResolvedValue([{ id: 'p1', status: 'approved' }])
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    await expect(SocialPostService.approve('p1', 'u1')).rejects.toThrow(/invalid_transition/)
+    await expect(SocialPostService.approve('p1', actor)).rejects.toThrow(/invalid_transition/)
   })
 
   it('rejects when post not found', async () => {
@@ -58,7 +77,7 @@ describe('SocialPostService.approve', () => {
     dbMock.selectMock.mockResolvedValue([])
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    await expect(SocialPostService.approve('p1', 'u1')).rejects.toThrow(/not_found/)
+    await expect(SocialPostService.approve('p1', actor)).rejects.toThrow(/not_found/)
   })
 })
 
@@ -69,8 +88,15 @@ describe('SocialPostService.discard', () => {
     dbMock.deleteMock.mockResolvedValue([{ id: 'p1' }])
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    await SocialPostService.discard('p1')
+    await SocialPostService.discard('p1', actor)
     expect(dbMock.db.delete).toHaveBeenCalledOnce()
+    expect(audit.log).toHaveBeenCalledOnce()
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'social_post_discarded',
+      entityType: 'social_posts',
+      entityId: 'p1',
+      payload: { status: 'draft' },
+    }))
   })
 
   it('rejects discard on non-draft post', async () => {
@@ -78,7 +104,7 @@ describe('SocialPostService.discard', () => {
     dbMock.selectMock.mockResolvedValue([{ id: 'p1', status: 'posted' }])
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    await expect(SocialPostService.discard('p1')).rejects.toThrow(/only_drafts/)
+    await expect(SocialPostService.discard('p1', actor)).rejects.toThrow(/only_drafts/)
   })
 })
 
@@ -98,10 +124,22 @@ describe('SocialPostService.publish', () => {
       .mockResolvedValueOnce({ ok: true, externalPostId: 'ig_1', externalUrl: null })
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    const r = await SocialPostService.publish('p1')
+    const r = await SocialPostService.publish('p1', actor)
     expect(r.status).toBe('posted')
     expect(metaProvider.publish).toHaveBeenCalledTimes(2)
     expect(dbMock.db.update).toHaveBeenCalled()
+    expect(audit.log).toHaveBeenCalledOnce()
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'social_post_published',
+      entityType: 'social_posts',
+      entityId: 'p1',
+      payload: expect.objectContaining({
+        targets: expect.arrayContaining([
+          expect.objectContaining({ provider: 'facebook', externalPostId: 'fb_1' }),
+          expect.objectContaining({ provider: 'instagram', externalPostId: 'ig_1' }),
+        ]),
+      }),
+    }))
   })
 
   it('partial failure → post status partially_failed', async () => {
@@ -117,8 +155,18 @@ describe('SocialPostService.publish', () => {
       .mockResolvedValueOnce({ ok: false, error: 'rate_limited', revokeAccount: false })
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    const r = await SocialPostService.publish('p1')
+    const r = await SocialPostService.publish('p1', actor)
     expect(r.status).toBe('partially_failed')
+    expect(audit.log).toHaveBeenCalledOnce()
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'social_post_failed',
+      payload: expect.objectContaining({
+        overallStatus: 'partially_failed',
+        failedProviders: expect.arrayContaining([
+          expect.objectContaining({ provider: 'instagram', error: 'rate_limited' }),
+        ]),
+      }),
+    }))
   })
 
   it('all targets fail → post status failed', async () => {
@@ -129,8 +177,18 @@ describe('SocialPostService.publish', () => {
     metaProvider.publish.mockResolvedValueOnce({ ok: false, error: 'server_down', revokeAccount: false })
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    const r = await SocialPostService.publish('p1')
+    const r = await SocialPostService.publish('p1', actor)
     expect(r.status).toBe('failed')
+    expect(audit.log).toHaveBeenCalledOnce()
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'social_post_failed',
+      payload: expect.objectContaining({
+        overallStatus: 'failed',
+        failedProviders: expect.arrayContaining([
+          expect.objectContaining({ provider: 'facebook', error: 'server_down' }),
+        ]),
+      }),
+    }))
   })
 
   it('marks oauth-account revoked when revokeAccount=true', async () => {
@@ -141,7 +199,7 @@ describe('SocialPostService.publish', () => {
     metaProvider.publish.mockResolvedValueOnce({ ok: false, error: 'token expired', revokeAccount: true })
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    await SocialPostService.publish('p1')
+    await SocialPostService.publish('p1', actor)
     // multiple update calls expected: target 'publishing', target 'failed', oauth-account 'revoked', post 'failed'
     expect(dbMock.db.update.mock.calls.length).toBeGreaterThanOrEqual(3)
   })
@@ -150,14 +208,14 @@ describe('SocialPostService.publish', () => {
     const dbMock = setupDbMock()
     dbMock.selectMock.mockResolvedValueOnce([{ id: 'p1', status: 'draft' }])
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    await expect(SocialPostService.publish('p1')).rejects.toThrow(/invalid_state_for_publish/)
+    await expect(SocialPostService.publish('p1', actor)).rejects.toThrow(/invalid_state_for_publish/)
   })
 
   it('rejects when post is already posted', async () => {
     const dbMock = setupDbMock()
     dbMock.selectMock.mockResolvedValueOnce([{ id: 'p1', status: 'posted' }])
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    await expect(SocialPostService.publish('p1')).rejects.toThrow(/invalid_state_for_publish/)
+    await expect(SocialPostService.publish('p1', actor)).rejects.toThrow(/invalid_state_for_publish/)
   })
 
   it('handles unexpected provider throw as target failure', async () => {
@@ -168,7 +226,7 @@ describe('SocialPostService.publish', () => {
     metaProvider.publish.mockRejectedValueOnce(new Error('connection refused'))
 
     const { SocialPostService } = await import('@/lib/services/social/social-post.service')
-    const r = await SocialPostService.publish('p1')
+    const r = await SocialPostService.publish('p1', actor)
     expect(r.status).toBe('failed')
   })
 })
