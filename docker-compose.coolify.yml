@@ -61,6 +61,10 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       # Ollama (optional - only if you want local AI)
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-}
+      # Social Media (Meta OAuth: Facebook + Instagram)
+      - META_APP_ID=${META_APP_ID:-}
+      - META_APP_SECRET=${META_APP_SECRET:-}
+      - META_OAUTH_REDIRECT_URI=${META_OAUTH_REDIRECT_URI:-}
       # Redis for session caching
       - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_secret_2024}@redis:6379
       # Next.js standalone binds to HOSTNAME; Docker sets it to container ID.
