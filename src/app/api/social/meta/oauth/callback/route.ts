@@ -33,11 +33,18 @@ export async function GET(request: NextRequest) {
     const long = await MetaOAuthClient.exchangeForLongLived(short.accessToken)
     const pages = await MetaOAuthClient.listPagesWithIg(long.accessToken)
 
+    // Diagnose-Log: Anzahl + Namen der gefundenen Pages
+    console.log('[meta-oauth-callback] /me/accounts returned pages:', pages.length, pages.map(p => `${p.pageId}:${p.pageName}`))
+
     if (pages.length === 0) return await redirect({ error: 'no_pages_found' })
-    if (pages.length > 1) return await redirect({ error: 'multiple_pages_unsupported_v1' })
+
+    // Bei mehreren Pages: bevorzugt die mit "xkmu" im Namen (case-insensitive),
+    // sonst die erste. Multi-Page-Picker-UI wäre eine spätere Phase.
+    const xkmuMatch = pages.find(p => /xkmu/i.test(p.pageName))
+    const selectedPage = xkmuMatch ?? pages[0]
 
     const result = await SocialAccountService.connectMeta({
-      page: pages[0],
+      page: selectedPage,
       expiresInSec: long.expiresInSec,
       userId: parsed.uid,
     })

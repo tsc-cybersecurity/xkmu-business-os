@@ -95,18 +95,41 @@ describe('GET /api/social/meta/oauth/callback', () => {
     expect(res.headers.get('location')).toContain('error=no_pages_found')
   })
 
-  it('redirects with multiple_pages_unsupported_v1 when >1 page', async () => {
+  it('with >1 page, prefers a page whose name matches /xkmu/i', async () => {
     meta.exchangeCode.mockResolvedValue({ accessToken: 's', expiresInSec: 3600 })
     meta.exchangeForLongLived.mockResolvedValue({ accessToken: 'l', expiresInSec: 5184000 })
     meta.listPagesWithIg.mockResolvedValue([
-      { pageId: 'p1', pageName: 'A', pageAccessToken: 't1', igUserId: null, igUsername: null },
-      { pageId: 'p2', pageName: 'B', pageAccessToken: 't2', igUserId: null, igUsername: null },
+      { pageId: 'p1', pageName: 'YABIS AI', pageAccessToken: 't1', igUserId: null, igUsername: null },
+      { pageId: 'p2', pageName: 'XKMU', pageAccessToken: 't2', igUserId: null, igUsername: null },
+      { pageId: 'p3', pageName: 'pc-helpline.me', pageAccessToken: 't3', igUserId: null, igUsername: null },
     ])
+    accountSvc.connectMeta.mockResolvedValue({ connected: [{ id: 'acc1', provider: 'facebook', externalAccountId: 'p2', accountName: 'XKMU', status: 'connected', tokenExpiresAt: null }] })
     const validState = buildValidState('s'.repeat(64))
 
     const { GET } = await import('@/app/api/social/meta/oauth/callback/route')
     const res = await GET(new Request(`https://app/x?code=CODE&state=${encodeURIComponent(validState)}`) as any)
-    expect(res.headers.get('location')).toContain('error=multiple_pages_unsupported_v1')
+    expect(res.headers.get('location')).toContain('connected=meta')
+    expect(accountSvc.connectMeta).toHaveBeenCalledWith(expect.objectContaining({
+      page: expect.objectContaining({ pageId: 'p2', pageName: 'XKMU' }),
+    }))
+  })
+
+  it('with >1 page and no xkmu match, falls back to the first page', async () => {
+    meta.exchangeCode.mockResolvedValue({ accessToken: 's', expiresInSec: 3600 })
+    meta.exchangeForLongLived.mockResolvedValue({ accessToken: 'l', expiresInSec: 5184000 })
+    meta.listPagesWithIg.mockResolvedValue([
+      { pageId: 'p1', pageName: 'Page A', pageAccessToken: 't1', igUserId: null, igUsername: null },
+      { pageId: 'p2', pageName: 'Page B', pageAccessToken: 't2', igUserId: null, igUsername: null },
+    ])
+    accountSvc.connectMeta.mockResolvedValue({ connected: [{ id: 'acc1', provider: 'facebook', externalAccountId: 'p1', accountName: 'Page A', status: 'connected', tokenExpiresAt: null }] })
+    const validState = buildValidState('s'.repeat(64))
+
+    const { GET } = await import('@/app/api/social/meta/oauth/callback/route')
+    const res = await GET(new Request(`https://app/x?code=CODE&state=${encodeURIComponent(validState)}`) as any)
+    expect(res.headers.get('location')).toContain('connected=meta')
+    expect(accountSvc.connectMeta).toHaveBeenCalledWith(expect.objectContaining({
+      page: expect.objectContaining({ pageId: 'p1' }),
+    }))
   })
 
   it('does not call audit.log when no pages found (error path)', async () => {
