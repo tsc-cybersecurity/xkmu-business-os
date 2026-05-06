@@ -359,6 +359,12 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
       return { sent: true, to: payload.to, template: payload.templateSlug }
     }
 
+    case 'social_token_refresh': {
+      // Phase 1 placeholder — refresh logic implemented in Phase 2/3 when first posts exist.
+      console.log(`[task-queue] social_token_refresh tick — skeleton only (no refresh in phase 1)`)
+      return { skipped: true, reason: 'phase_1_placeholder' }
+    }
+
     default:
       logger.warn(`Unknown task type: ${item.type}`, { module: 'TaskQueue' })
       return { skipped: true, reason: `Unknown type: ${item.type}` }
