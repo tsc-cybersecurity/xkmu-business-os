@@ -2,14 +2,13 @@ const GRAPH_BASE = 'https://graph.facebook.com/v19.0'
 const DIALOG_BASE = 'https://www.facebook.com/v19.0/dialog/oauth'
 
 // FB-Page permissions only (V1).
-// Instagram-Posten kommt in einer späteren Phase, wenn Meta-Use-Cases / App-Review
-// klar sind. Aktuelles Setup: nur FB-Page-Connect (instagram_business_basic /
-// instagram_business_content_publish werden von Meta für unsere App-Konfiguration
-// nicht akzeptiert; der IG-Lookup unten funktioniert mit den page_*-Scopes).
+// `business_management` ist nötig, um Pages aufzulisten, die der User über den
+// Business-Manager verwaltet (nicht in `/me/accounts` enthalten).
 const SCOPES = [
   'pages_show_list',
   'pages_manage_posts',
   'pages_read_engagement',
+  'business_management',
 ]
 
 export interface MetaPageWithIg {
@@ -76,8 +75,41 @@ export const MetaOAuthClient = {
   },
 
   async listPagesWithIg(longUserToken: string): Promise<MetaPageWithIg[]> {
+    // Pfad 1: direkte Page-Admin-Pages (Personal-Account-Setup)
     const me = await metaFetchJson(`${GRAPH_BASE}/me/accounts?access_token=${encodeURIComponent(longUserToken)}`)
-    const pages = (me.data ?? []) as Array<{ id: string; name: string; access_token: string }>
+    const directPages = (me.data ?? []) as Array<{ id: string; name: string; access_token: string }>
+
+    // Pfad 2: Business-Manager-verwaltete Pages (owned + client) — fail-soft falls
+    // business_management permission fehlt oder kein Business-Account existiert.
+    const businessPages: Array<{ id: string; name: string; access_token: string }> = []
+    try {
+      const businesses = await metaFetchJson(
+        `${GRAPH_BASE}/me/businesses?fields=id,name&access_token=${encodeURIComponent(longUserToken)}`
+      )
+      const bizList = (businesses.data ?? []) as Array<{ id: string; name: string }>
+      for (const biz of bizList) {
+        for (const path of ['owned_pages', 'client_pages']) {
+          try {
+            const pageRes = await metaFetchJson(
+              `${GRAPH_BASE}/${biz.id}/${path}?fields=id,name,access_token&access_token=${encodeURIComponent(longUserToken)}`
+            )
+            const items = (pageRes.data ?? []) as Array<{ id: string; name: string; access_token?: string }>
+            for (const it of items) {
+              // access_token ist nur enthalten, wenn der User Admin der Page ist
+              if (it.access_token) businessPages.push({ id: it.id, name: it.name, access_token: it.access_token })
+            }
+          } catch { /* fail-soft per business path */ }
+        }
+      }
+    } catch (e) {
+      console.log('[meta-oauth] /me/businesses skipped:', e instanceof Error ? e.message : e)
+    }
+
+    // Merge + dedupe by page id (direct pages haben Vorrang, weil access_token zuverlässiger)
+    const seen = new Set(directPages.map(p => p.id))
+    const pages = [...directPages, ...businessPages.filter(p => !seen.has(p.id))]
+
+    console.log('[meta-oauth] page sources — direct:', directPages.length, 'business:', businessPages.length, 'total:', pages.length)
 
     // Phase 1: fetch instagram_business_account for every page.
     // IG lookups may fail if the app lacks instagram_* permissions — treat those

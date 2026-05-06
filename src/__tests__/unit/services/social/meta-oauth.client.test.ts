@@ -58,6 +58,8 @@ describe('MetaOAuthClient.listPagesWithIg', () => {
       { id: 'p1', name: 'Page One', access_token: 'tok_p1' },
       { id: 'p2', name: 'Page Two', access_token: 'tok_p2' },
     ] }) })
+    // /me/businesses (no business — empty)
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ data: [] }) })
     // /{p1}?fields=instagram_business_account
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ instagram_business_account: { id: 'ig1' } }) })
     // /{p2}?fields=instagram_business_account
