@@ -3717,4 +3717,59 @@ export const socialOauthAccountsRelations = relations(socialOauthAccounts, ({ on
 export type SocialOauthAccount = typeof socialOauthAccounts.$inferSelect
 export type NewSocialOauthAccount = typeof socialOauthAccounts.$inferInsert
 
+// ============================================================================
+// Social-Media Phase 2A — Posts + Targets
+// ============================================================================
+
+export const socialPosts = pgTable('social_posts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  status: varchar('status', { length: 20 }).notNull().default('draft'),
+  masterBody: text('master_body').notNull().default(''),
+  masterImagePath: varchar('master_image_path', { length: 500 }),
+  scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
+  createdBy: uuid('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  approvedBy: uuid('approved_by').references(() => users.id, { onDelete: 'set null' }),
+  approvedAt: timestamp('approved_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  statusIdx: index('idx_social_posts_status').on(t.status),
+  scheduledIdx: index('idx_social_posts_scheduled').on(t.scheduledFor).where(sql`status = 'scheduled'`),
+  createdByIdx: index('idx_social_posts_created_by').on(t.createdBy),
+}))
+
+export const socialPostsRelations = relations(socialPosts, ({ one, many }) => ({
+  creator: one(users, { fields: [socialPosts.createdBy], references: [users.id] }),
+  approver: one(users, { fields: [socialPosts.approvedBy], references: [users.id] }),
+  targets: many(socialPostTargets),
+}))
+
+export const socialPostTargets = pgTable('social_post_targets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  postId: uuid('post_id').notNull().references(() => socialPosts.id, { onDelete: 'cascade' }),
+  provider: varchar('provider', { length: 20 }).notNull(),
+  bodyOverride: text('body_override'),
+  publishStatus: varchar('publish_status', { length: 20 }).notNull().default('pending'),
+  externalPostId: varchar('external_post_id', { length: 255 }),
+  externalUrl: varchar('external_url', { length: 500 }),
+  retryCount: integer('retry_count').notNull().default(0),
+  lastError: text('last_error'),
+  postedAt: timestamp('posted_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  postIdx: index('idx_social_post_targets_post').on(t.postId),
+  statusIdx: index('idx_social_post_targets_status').on(t.publishStatus).where(sql`publish_status IN ('pending','publishing','failed')`),
+  uniquePostProvider: uniqueIndex('uq_social_post_targets_post_provider').on(t.postId, t.provider),
+}))
+
+export const socialPostTargetsRelations = relations(socialPostTargets, ({ one }) => ({
+  post: one(socialPosts, { fields: [socialPostTargets.postId], references: [socialPosts.id] }),
+}))
+
+export type SocialPost = typeof socialPosts.$inferSelect
+export type NewSocialPost = typeof socialPosts.$inferInsert
+export type SocialPostTarget = typeof socialPostTargets.$inferSelect
+export type NewSocialPostTarget = typeof socialPostTargets.$inferInsert
+
 export type GoogleCalendarConfig = typeof googleCalendarConfig.$inferSelect

@@ -148,6 +148,8 @@ export const TENANT_TABLES = [
   'external_busy',
   'appointments',
   'social_oauth_accounts',
+  'social_posts',
+  'social_post_targets',
 ]
 
 // Join/child tables that reference a parent (exported via JOIN)
