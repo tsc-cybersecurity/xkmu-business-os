@@ -32,6 +32,8 @@ import { ImageIcon,
   Wand2,
   CheckCircle2,
 } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import UploadsTab from './_components/UploadsTab'
 
 // ============================================
 // Types
@@ -382,6 +384,13 @@ export default function ImagesPage() {
         </Dialog>
       </div>
 
+      <Tabs defaultValue="generated" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="generated">Generierte Bilder</TabsTrigger>
+          <TabsTrigger value="uploads">Uploads</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="generated" className="space-y-4">
       {/* Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1 max-w-sm">
@@ -530,6 +539,12 @@ export default function ImagesPage() {
           )}
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="uploads">
+          <UploadsTab />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
