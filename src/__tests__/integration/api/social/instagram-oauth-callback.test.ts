@@ -13,6 +13,10 @@ vi.mock('@/lib/services/calendar-config.service', () => ({
   CalendarConfigService: { getConfig: vi.fn().mockResolvedValue({ appointmentTokenSecret: 's'.repeat(64) }) },
 }))
 
+vi.mock('@/lib/services/cms-design.service', () => ({
+  CmsDesignService: { getAppUrl: vi.fn().mockResolvedValue('https://app.example.com') },
+}))
+
 beforeEach(() => {
   vi.resetModules()
   accountSvc.connectInstagram.mockReset()

@@ -15,6 +15,10 @@ vi.mock('@/lib/services/calendar-config.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/cms-design.service', () => ({
+  CmsDesignService: { getAppUrl: vi.fn().mockResolvedValue('https://app.example.com') },
+}))
+
 describe('GET /api/social/instagram/oauth/start', () => {
   beforeEach(() => {
     process.env.INSTAGRAM_APP_ID = 'ig_app_1'

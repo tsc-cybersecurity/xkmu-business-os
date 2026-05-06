@@ -15,6 +15,10 @@ vi.mock('@/lib/services/calendar-config.service', () => ({
   },
 }))
 
+vi.mock('@/lib/services/cms-design.service', () => ({
+  CmsDesignService: { getAppUrl: vi.fn().mockResolvedValue('https://app.example.com') },
+}))
+
 describe('GET /api/social/meta/oauth/start', () => {
   beforeEach(() => {
     process.env.META_APP_ID = 'app1'
