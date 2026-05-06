@@ -44,6 +44,7 @@ interface Topic {
 
 const platformLabels: Record<string, string> = {
   linkedin: 'LinkedIn',
+  x: 'X',
   twitter: 'Twitter/X',
   instagram: 'Instagram',
   facebook: 'Facebook',
@@ -203,7 +204,7 @@ export default function SocialMediaPage() {
           <SelectContent>
             <SelectItem value="all">Alle Plattformen</SelectItem>
             <SelectItem value="linkedin">LinkedIn</SelectItem>
-            <SelectItem value="twitter">Twitter/X</SelectItem>
+            <SelectItem value="x">X</SelectItem>
             <SelectItem value="instagram">Instagram</SelectItem>
             <SelectItem value="facebook">Facebook</SelectItem>
             <SelectItem value="xing">XING</SelectItem>
