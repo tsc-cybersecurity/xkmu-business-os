@@ -94,9 +94,11 @@ export const SocialAccountService = {
     return { connected: inserted }
   },
 
-  async disconnect(id: string): Promise<void> {
-    await db.update(socialOauthAccounts)
+  async disconnect(id: string): Promise<{ revoked: boolean }> {
+    const rows = await db.update(socialOauthAccounts)
       .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
       .where(and(eq(socialOauthAccounts.id, id), isNull(socialOauthAccounts.revokedAt)))
+      .returning({ id: socialOauthAccounts.id })
+    return { revoked: rows.length > 0 }
   },
 }

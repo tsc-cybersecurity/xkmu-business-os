@@ -14,7 +14,11 @@ export async function DELETE(request: NextRequest, ctx: { params: Promise<{ id: 
       .limit(1)
     if (!existing) return NextResponse.json({ error: 'not_found' }, { status: 404 })
 
-    await SocialAccountService.disconnect(id)
+    const result = await SocialAccountService.disconnect(id)
+    if (!result.revoked) {
+      // Concurrent DELETE already revoked this account — return success but skip audit log.
+      return NextResponse.json({ ok: true, alreadyRevoked: true })
+    }
     await AuditLogService.log({
       userId: auth.userId, userRole: auth.role,
       action: 'social_account_revoked',

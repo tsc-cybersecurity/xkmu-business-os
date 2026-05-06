@@ -21,7 +21,7 @@ describe('DELETE /api/v1/social/accounts/[id]', () => {
   it('marks account as revoked and writes audit log on success', async () => {
     const dbMock = setupDbMock()
     dbMock.selectMock.mockResolvedValue([{ id: 'acc1', provider: 'facebook', externalAccountId: 'p1', status: 'connected' }])
-    accountSvc.disconnect.mockResolvedValue(undefined)
+    accountSvc.disconnect.mockResolvedValue({ revoked: true })
     audit.log.mockResolvedValue(undefined)
 
     const { DELETE } = await import('@/app/api/v1/social/accounts/[id]/route')
@@ -53,10 +53,28 @@ describe('DELETE /api/v1/social/accounts/[id]', () => {
     expect(audit.log).not.toHaveBeenCalled()
   })
 
+  it('returns 403 when permission check rejects', async () => {
+    // Override withPermission for this test only
+    const { withPermission } = await import('@/lib/auth/require-permission')
+    vi.mocked(withPermission).mockImplementationOnce(async () =>
+      new Response(JSON.stringify({ error: 'forbidden' }), { status: 403 }) as any
+    )
+    setupDbMock()
+
+    const { DELETE } = await import('@/app/api/v1/social/accounts/[id]/route')
+    const res = await DELETE(
+      new Request('https://app/api/v1/social/accounts/acc1', { method: 'DELETE' }) as any,
+      { params: Promise.resolve({ id: 'acc1' }) }
+    )
+    expect(res.status).toBe(403)
+    expect(accountSvc.disconnect).not.toHaveBeenCalled()
+    expect(audit.log).not.toHaveBeenCalled()
+  })
+
   it('audit log payload includes provider and externalAccountId for instagram accounts', async () => {
     const dbMock = setupDbMock()
     dbMock.selectMock.mockResolvedValue([{ id: 'acc2', provider: 'instagram', externalAccountId: 'ig_42', status: 'connected' }])
-    accountSvc.disconnect.mockResolvedValue(undefined)
+    accountSvc.disconnect.mockResolvedValue({ revoked: true })
     audit.log.mockResolvedValue(undefined)
 
     const { DELETE } = await import('@/app/api/v1/social/accounts/[id]/route')
@@ -70,5 +88,21 @@ describe('DELETE /api/v1/social/accounts/[id]', () => {
       entityId: 'acc2',
       payload: expect.objectContaining({ provider: 'instagram', externalAccountId: 'ig_42' }),
     }))
+  })
+
+  it('skips audit log when disconnect was a no-op (concurrent revocation)', async () => {
+    const dbMock = setupDbMock()
+    dbMock.selectMock.mockResolvedValue([{ id: 'acc1', provider: 'facebook', externalAccountId: 'p1', status: 'connected' }])
+    accountSvc.disconnect.mockResolvedValue({ revoked: false })
+
+    const { DELETE } = await import('@/app/api/v1/social/accounts/[id]/route')
+    const res = await DELETE(
+      new Request('https://app/api/v1/social/accounts/acc1', { method: 'DELETE' }) as any,
+      { params: Promise.resolve({ id: 'acc1' }) }
+    )
+    const body = await res.json()
+    expect(res.status).toBe(200)
+    expect(body.alreadyRevoked).toBe(true)
+    expect(audit.log).not.toHaveBeenCalled()
   })
 })
