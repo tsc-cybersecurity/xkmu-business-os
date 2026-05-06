@@ -46,12 +46,27 @@ export default function EditSocialMediaPostPage() {
   const [improving, setImproving] = useState(false);
   const [showImproveDialog, setShowImproveDialog] = useState(false);
   const [improveInstructions, setImproveInstructions] = useState('');
+  const [showMetaWarning, setShowMetaWarning] = useState(false);
 
   const fetchPost = useCallback(async () => {
     try {
       const response = await fetch(`/api/v1/social-media/posts/${id}`);
       const data = await response.json();
-      if (data.success) setPost(data.data);
+      if (data.success) {
+        const loadedPost: Post = data.data;
+        setPost(loadedPost);
+        if (loadedPost.platform === 'facebook' || loadedPost.platform === 'instagram') {
+          try {
+            const csRes = await fetch(
+              `/api/v1/social/connection-status?provider=${loadedPost.platform}`,
+            );
+            const csData = await csRes.json();
+            setShowMetaWarning(!csData.connected);
+          } catch {
+            // silently ignore — don't block editing if status check fails
+          }
+        }
+      }
     } catch (error) {
       logger.error('Failed to fetch post', error, { module: 'SocialMediaPage' });
     } finally {
@@ -91,6 +106,25 @@ export default function EditSocialMediaPostPage() {
       setSaving(false);
     }
   };
+
+  const checkMetaConnection = useCallback(async (platform: string) => {
+    if (platform === 'facebook' || platform === 'instagram') {
+      try {
+        const res = await fetch(`/api/v1/social/connection-status?provider=${platform}`);
+        const data = await res.json();
+        setShowMetaWarning(!data.connected);
+      } catch {
+        // silently ignore
+      }
+    } else {
+      setShowMetaWarning(false);
+    }
+  }, []);
+
+  const handlePlatformChange = useCallback(async (v: string) => {
+    setPost((p) => (p ? { ...p, platform: v } : p));
+    await checkMetaConnection(v);
+  }, [checkMetaConnection]);
 
   const handleImprove = async () => {
     if (!improveInstructions.trim()) {
@@ -148,6 +182,14 @@ export default function EditSocialMediaPostPage() {
 
   return (
     <div className="space-y-6">
+      {showMetaWarning && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm dark:bg-amber-950/40 dark:border-amber-800">
+          <strong>Meta-Account nicht verbunden.</strong> Posten wird fehlschlagen.{' '}
+          <a href="/intern/integrations/social" className="underline">
+            Jetzt verbinden →
+          </a>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link href="/intern/social-media">
@@ -216,7 +258,7 @@ export default function EditSocialMediaPostPage() {
               <Label>Plattform</Label>
               <Select
                 value={post.platform}
-                onValueChange={(v) => setPost((p) => (p ? { ...p, platform: v } : p))}
+                onValueChange={handlePlatformChange}
               >
                 <SelectTrigger>
                   <SelectValue />
