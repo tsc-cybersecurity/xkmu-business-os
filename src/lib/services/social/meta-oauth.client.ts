@@ -1,16 +1,15 @@
 const GRAPH_BASE = 'https://graph.facebook.com/v19.0'
 const DIALOG_BASE = 'https://www.facebook.com/v19.0/dialog/oauth'
 
-// Meta renamed Instagram permissions in 2024:
-//   instagram_basic           → instagram_business_basic
-//   instagram_content_publish → instagram_business_content_publish
-// Both must be enabled in the Meta App's "Berechtigungen und Features" page.
+// FB-Page permissions only (V1).
+// Instagram-Posten kommt in einer späteren Phase, wenn Meta-Use-Cases / App-Review
+// klar sind. Aktuelles Setup: nur FB-Page-Connect (instagram_business_basic /
+// instagram_business_content_publish werden von Meta für unsere App-Konfiguration
+// nicht akzeptiert; der IG-Lookup unten funktioniert mit den page_*-Scopes).
 const SCOPES = [
   'pages_show_list',
   'pages_manage_posts',
   'pages_read_engagement',
-  'instagram_business_basic',
-  'instagram_business_content_publish',
 ]
 
 export interface MetaPageWithIg {
@@ -80,12 +79,15 @@ export const MetaOAuthClient = {
     const me = await metaFetchJson(`${GRAPH_BASE}/me/accounts?access_token=${encodeURIComponent(longUserToken)}`)
     const pages = (me.data ?? []) as Array<{ id: string; name: string; access_token: string }>
 
-    // Phase 1: fetch instagram_business_account for every page
+    // Phase 1: fetch instagram_business_account for every page.
+    // IG lookups may fail if the app lacks instagram_* permissions — treat those
+    // as "no IG linked" instead of bubbling the error up. Connect should still
+    // succeed with FB-only when IG isn't accessible.
     const igLinks = await Promise.all(
       pages.map((p) =>
         metaFetchJson(
           `${GRAPH_BASE}/${p.id}?fields=instagram_business_account&access_token=${encodeURIComponent(p.access_token)}`
-        )
+        ).catch(() => ({}))
       )
     )
 
@@ -96,10 +98,9 @@ export const MetaOAuthClient = {
       const igId: string | null = igLinks[i]?.instagram_business_account?.id ?? null
       let igUsername: string | null = null
       if (igId) {
-        const ig = await metaFetchJson(
+        igUsername = await metaFetchJson(
           `${GRAPH_BASE}/${igId}?fields=username&access_token=${encodeURIComponent(p.access_token)}`
-        )
-        igUsername = ig?.username ?? null
+        ).then((ig) => ig?.username ?? null).catch(() => null)
       }
       out.push({
         pageId: p.id, pageName: p.name, pageAccessToken: p.access_token,
