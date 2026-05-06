@@ -71,9 +71,9 @@ export const APPOINTMENT_TEMPLATES: AppointmentTemplateDefault[] = [
   {
     slug: 'appointment.customer.reminder_1h',
     subject: 'Ihr Termin in einer Stunde',
-    bodyHtml: `<p>Hallo {{customer.name}},</p>
-<p>Ihr Termin <strong>{{slot.type_name}}</strong> beginnt in einer Stunde um {{appointment.start_local}}.</p>
-<p>Ort/Form: {{slot.location}}{{slot.location_details}}</p>`,
+    bodyHtml: `<p>Eine kleine Erinnerung: Ihr Termin <strong>{{slot.type_name}}</strong> beginnt in 1 Stunde ({{appointment.start_local}}).</p>
+<p>Ort/Form: {{slot.location}}{{slot.location_details}}</p>
+<p>Wir freuen uns auf das Gespräch.</p>`,
     variables: SHARED_VARIABLES,
   },
   {

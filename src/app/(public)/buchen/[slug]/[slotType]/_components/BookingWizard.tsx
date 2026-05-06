@@ -41,6 +41,8 @@ export function BookingWizard({ slug, timezone, slotType }: { slug: string; time
   const [slots, setSlots] = useState<string[]>([])  // ISO UTC strings
   const [slotsLoading, setSlotsLoading] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [dayCounts, setDayCounts] = useState<Record<string, number>>({})
+  const [countsLoaded, setCountsLoaded] = useState(false)
 
   const [form, setForm] = useState({
     customerName: '', customerEmail: '', customerPhone: '', customerMessage: '',
@@ -61,6 +63,22 @@ export function BookingWizard({ slug, timezone, slotType }: { slug: string; time
       .catch(() => toast.error('Fehler beim Laden der Slots'))
       .finally(() => setSlotsLoading(false))
   }, [selectedDate, slotType.id, slug])
+
+  // Per-month slot counts → Tag-Einfärbung (grau/rot/gelb/grün)
+  useEffect(() => {
+    const monthParam = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`
+    let cancelled = false
+    setCountsLoaded(false)
+    fetch(`/api/buchen/${slug}/availability/month?slotTypeId=${slotType.id}&month=${monthParam}`)
+      .then(r => r.json())
+      .then(d => {
+        if (cancelled) return
+        setDayCounts(d.counts ?? {})
+        setCountsLoaded(true)
+      })
+      .catch(() => { /* still allow date selection — no toast spam on month nav */ })
+    return () => { cancelled = true }
+  }, [viewYear, viewMonth, slotType.id, slug])
 
   function dayKey(y: number, m: number, d: number): string {
     return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
@@ -187,14 +205,28 @@ export function BookingWizard({ slug, timezone, slotType }: { slug: string; time
                 const inRange = isInRange(viewYear, viewMonth, d)
                 const key = dayKey(viewYear, viewMonth, d)
                 const isSelected = selectedDate === key
+                const count = dayCounts[key]
+                // Counts noch nicht geladen → neutral lassen (klickbar im Range);
+                // sonst: 0=ausgegraut/disabled, 1=hellrot, 2-4=hellgelb, ≥5=hellgrün
+                const fullyBooked = countsLoaded && inRange && (count ?? 0) === 0
+                const clickable = inRange && !fullyBooked
+                let availabilityClass = ''
+                if (countsLoaded && inRange && !isSelected && count !== undefined && count > 0) {
+                  if (count === 1) availabilityClass = 'bg-red-100 hover:bg-red-200 dark:bg-red-950/50 dark:hover:bg-red-900/60'
+                  else if (count <= 4) availabilityClass = 'bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-950/50 dark:hover:bg-yellow-900/60'
+                  else availabilityClass = 'bg-green-100 hover:bg-green-200 dark:bg-green-950/50 dark:hover:bg-green-900/60'
+                }
                 return (
                   <button
                     key={i}
-                    disabled={!inRange}
+                    disabled={!clickable}
                     onClick={() => setSelectedDate(key)}
+                    title={countsLoaded && inRange ? `${count ?? 0} freie Termine` : undefined}
                     className={[
                       'h-9 rounded text-sm transition-colors',
-                      inRange ? 'hover:bg-muted cursor-pointer' : 'text-muted-foreground/30 cursor-not-allowed',
+                      clickable ? 'cursor-pointer' : 'text-muted-foreground/30 cursor-not-allowed',
+                      clickable && !isSelected && !availabilityClass ? 'hover:bg-muted' : '',
+                      availabilityClass,
                       isSelected ? 'bg-primary text-primary-foreground hover:bg-primary' : '',
                     ].join(' ')}
                   >
