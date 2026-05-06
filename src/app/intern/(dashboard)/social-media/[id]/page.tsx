@@ -37,6 +37,15 @@ interface Post {
   topicId: string | null;
 }
 
+// ISO-UTC-String ('2026-05-06T18:00:00.000Z') → 'YYYY-MM-DDTHH:MM' fuer datetime-local Input.
+// datetime-local rendert in Browser-Lokal-TZ; ohne diese Umrechnung wuerde der Input
+// die UTC-Zeit zeigen und beim Save wieder aus UTC-Lokal-Mismatch driften.
+function toLocalDateTimeInput(iso: string): string {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export default function EditSocialMediaPostPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -95,6 +104,7 @@ export default function EditSocialMediaPostPage() {
           imageUrl: post.imageUrl || undefined,
           status: post.status,
           platform: post.platform,
+          scheduledAt: post.scheduledAt,
         }),
       });
       const res = await fetch(`/api/v1/social-media/posts/${id}/publish`, {
@@ -134,6 +144,7 @@ export default function EditSocialMediaPostPage() {
           imageUrl: post.imageUrl || undefined,
           status: post.status,
           platform: post.platform,
+          scheduledAt: post.scheduledAt,
         }),
       });
       const data = await response.json();
@@ -342,6 +353,28 @@ export default function EditSocialMediaPostPage() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Geplant für</Label>
+            <Input
+              type="datetime-local"
+              value={post.scheduledAt ? toLocalDateTimeInput(post.scheduledAt) : ''}
+              onChange={(e) =>
+                setPost((p) =>
+                  p
+                    ? {
+                        ...p,
+                        scheduledAt: e.target.value
+                          ? new Date(e.target.value).toISOString()
+                          : null,
+                      }
+                    : p)
+              }
+              className="max-w-xs"
+            />
+            <p className="text-xs text-muted-foreground">
+              Lokale Zeitzone des Browsers. Damit Auto-Posting greift, Status auf „Geplant" setzen und einen Cron-Job vom Typ „Task-Queue abarbeiten" aktivieren.
+            </p>
           </div>
           <div className="space-y-2">
             <Label>Titel</Label>
