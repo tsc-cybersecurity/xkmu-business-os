@@ -26,6 +26,53 @@ function makeAuthContext(overrides: Partial<AuthContext> = {}): AuthContext {
   }
 }
 
+describe('withPermission() — social_media module', () => {
+  let getAuthContextMock: ReturnType<typeof vi.fn>
+
+  beforeEach(async () => {
+    vi.resetModules()
+    vi.doMock('@/lib/auth/permissions', () => ({
+      hasPermission: vi.fn().mockResolvedValue(false),
+    }))
+    const authContextModule = await import('@/lib/auth/auth-context')
+    getAuthContextMock = vi.mocked(authContextModule.getAuthContext)
+  })
+
+  it('owner can social_media:update (returns 200)', async () => {
+    const { withPermission } = await import('@/lib/auth/require-permission')
+    const auth: AuthContext = {
+      userId: '00000000-0000-0000-0000-000000000002',
+      role: 'owner',
+      roleId: null,
+      apiKeyPermissions: null,
+    }
+    getAuthContextMock.mockResolvedValueOnce(auth)
+
+    const handler = vi.fn().mockResolvedValue(new Response('ok', { status: 200 }))
+    const response = await withPermission(makeRequest(), 'social_media', 'update', handler)
+
+    expect(handler).toHaveBeenCalledWith(auth)
+    expect(response.status).toBe(200)
+  })
+
+  it('viewer cannot social_media:update (returns 403)', async () => {
+    const { withPermission } = await import('@/lib/auth/require-permission')
+    const auth: AuthContext = {
+      userId: '00000000-0000-0000-0000-000000000002',
+      role: 'viewer',
+      roleId: null,
+      apiKeyPermissions: null,
+    }
+    getAuthContextMock.mockResolvedValueOnce(auth)
+
+    const handler = vi.fn().mockResolvedValue(new Response('ok', { status: 200 }))
+    const response = await withPermission(makeRequest(), 'social_media', 'update', handler)
+
+    expect(handler).not.toHaveBeenCalled()
+    expect(response.status).toBe(403)
+  })
+})
+
 describe('withPermission() — API key scope enforcement', () => {
   let getAuthContextMock: ReturnType<typeof vi.fn>
 
