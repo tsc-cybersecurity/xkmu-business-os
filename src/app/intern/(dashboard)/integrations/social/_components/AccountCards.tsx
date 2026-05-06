@@ -23,6 +23,7 @@ const ERROR_LABELS: Record<string, string> = {
     'Mehrere FB-Pages gefunden — die App muss derzeit für genau eine Page autorisiert werden.',
   invalid_state: 'Sicherheitsprüfung fehlgeschlagen — bitte Connect erneut starten.',
   missing_code_or_state: 'OAuth-Antwort unvollständig — bitte erneut versuchen.',
+  meta_not_configured: 'Meta-App nicht konfiguriert — META_APP_ID/META_APP_SECRET/META_OAUTH_REDIRECT_URI im Server setzen.',
 }
 
 interface ConnectedAccount {
