@@ -528,6 +528,150 @@ const ACTIONS: Record<string, ActionDefinition> = {
       return { success: false, error: lastError }
     },
   },
+
+  // ─── Social Media Actions (Phase 5: Generator + Pipeline) ──────────────────
+
+  generate_social_post: {
+    name: 'generate_social_post',
+    label: 'Social-Media-Beitrag generieren (KI)',
+    description: 'Erstellt einen plattformspezifischen Beitrag inkl. Hashtags und optional KI-Bild. Speichert als Draft (oder direkt scheduled).',
+    category: 'ai',
+    icon: 'Share2',
+    configFields: [
+      { key: 'platform', label: 'Plattform', type: 'select', options: ['linkedin', 'x', 'instagram', 'facebook', 'xing'] },
+      { key: 'topic', label: 'Thema', type: 'string' },
+      { key: 'tone', label: 'Tonalität', type: 'select', options: ['professional', 'casual', 'humorous', 'inspirational'] },
+      { key: 'includeHashtags', label: 'Hashtags', type: 'boolean' },
+      { key: 'includeEmoji', label: 'Emojis', type: 'boolean' },
+      { key: 'includeImage', label: 'Bild generieren', type: 'boolean' },
+      { key: 'scheduledAt', label: 'Geplant für (ISO oder leer = Draft)', type: 'string' },
+    ],
+    execute: async (ctx, config) => {
+      const resolved = resolveTemplate(config, ctx) as Record<string, unknown>
+      const platform = String(resolved.platform || 'linkedin')
+      const topic = String(resolved.topic || '').trim()
+      if (!topic) return { success: false, error: 'topic fehlt' }
+      try {
+        const { SocialMediaAIService } = await import('@/lib/services/ai/social-media-ai.service')
+        const { SocialMediaPostService } = await import('@/lib/services/social-media-post.service')
+        const { ImageGenerationService } = await import('@/lib/services/ai/image-generation.service')
+
+        const generated = await SocialMediaAIService.generatePost({
+          platform,
+          topic,
+          tone: resolved.tone ? String(resolved.tone) : 'professional',
+          includeHashtags: resolved.includeHashtags !== false,
+          includeEmoji: resolved.includeEmoji !== false,
+          includeImage: resolved.includeImage !== false,
+        }, { feature: 'social_media_workflow', entityType: 'social_media_post' })
+
+        let imageUrl: string | null = null
+        if (resolved.includeImage !== false && generated.imagePrompt) {
+          const aspect: '1:1' | '16:9' = platform === 'instagram' ? '1:1' : '16:9'
+          try {
+            const imgResult = await Promise.race([
+              ImageGenerationService.generate(null, {
+                prompt: generated.imagePrompt,
+                provider: 'gemini',
+                aspectRatio: aspect,
+                category: 'social_media',
+                tags: generated.hashtags?.slice(0, 5).map((h) => h.replace(/^#/, '')) ?? [],
+              }),
+              new Promise<null>((resolve) => setTimeout(() => resolve(null), 60_000)),
+            ])
+            if (imgResult && imgResult.imageUrl) imageUrl = imgResult.imageUrl
+          } catch { /* non-fatal */ }
+        }
+
+        const scheduledAt = resolved.scheduledAt ? String(resolved.scheduledAt) : undefined
+        const status = scheduledAt ? 'scheduled' : 'draft'
+        const post = await SocialMediaPostService.create({
+          platform,
+          title: generated.title,
+          content: generated.content,
+          hashtags: generated.hashtags,
+          imageUrl: imageUrl ?? undefined,
+          scheduledAt,
+          status,
+          aiGenerated: true,
+        })
+
+        return {
+          success: true,
+          data: {
+            postId: post.id,
+            platform: post.platform,
+            status: post.status,
+            scheduledAt: post.scheduledAt?.toISOString() ?? null,
+            imageUrl: post.imageUrl,
+          },
+        }
+      } catch (err) {
+        return { success: false, error: `Generierung fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}` }
+      }
+    },
+  },
+
+  schedule_social_post: {
+    name: 'schedule_social_post',
+    label: 'Social-Media-Beitrag schedulen',
+    description: 'Setzt scheduledAt + status=scheduled auf einen bestehenden Post (postId aus Trigger oder vorigem Step).',
+    category: 'data',
+    icon: 'CalendarClock',
+    configFields: [
+      { key: 'postId', label: 'Post-ID', type: 'string' },
+      { key: 'scheduledAt', label: 'Zeit (ISO)', type: 'string' },
+    ],
+    execute: async (ctx, config) => {
+      const resolved = resolveTemplate(config, ctx) as Record<string, unknown>
+      const postId = String(resolved.postId || '').trim()
+      const scheduledAt = String(resolved.scheduledAt || '').trim()
+      if (!postId) return { success: false, error: 'postId fehlt' }
+      if (!scheduledAt) return { success: false, error: 'scheduledAt fehlt' }
+      try {
+        const { SocialMediaPostService } = await import('@/lib/services/social-media-post.service')
+        const post = await SocialMediaPostService.update(postId, { scheduledAt, status: 'scheduled' })
+        if (!post) return { success: false, error: 'Post nicht gefunden' }
+        return { success: true, data: { postId, scheduledAt: post.scheduledAt?.toISOString() ?? null, status: post.status } }
+      } catch (err) {
+        return { success: false, error: `Schedule fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}` }
+      }
+    },
+  },
+
+  publish_social_post: {
+    name: 'publish_social_post',
+    label: 'Social-Media-Beitrag sofort posten',
+    description: 'Veröffentlicht den Post direkt über den passenden Provider (FB/IG/X/LinkedIn).',
+    category: 'communication',
+    icon: 'Send',
+    configFields: [
+      { key: 'postId', label: 'Post-ID', type: 'string' },
+    ],
+    execute: async (ctx, config) => {
+      const resolved = resolveTemplate(config, ctx) as Record<string, unknown>
+      const postId = String(resolved.postId || '').trim()
+      if (!postId) return { success: false, error: 'postId fehlt' }
+      try {
+        const { SocialPublishOrchestrator } = await import('@/lib/services/social/social-publish-orchestrator')
+        const outcome = await SocialPublishOrchestrator.publishById(postId)
+        if (!outcome.result.ok) {
+          return { success: false, error: `Publish fehlgeschlagen: ${outcome.result.error}` }
+        }
+        return {
+          success: true,
+          data: {
+            postId,
+            platform: outcome.platform,
+            externalPostId: outcome.result.externalPostId,
+            externalUrl: outcome.result.externalUrl,
+          },
+        }
+      } catch (err) {
+        return { success: false, error: `Publish-Aufruf fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}` }
+      }
+    },
+  },
 }
 
 // ─── Registry API ──────────────────────────────────────────────────────────────

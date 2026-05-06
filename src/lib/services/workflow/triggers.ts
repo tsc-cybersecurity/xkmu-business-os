@@ -82,6 +82,18 @@ export const WORKFLOW_TRIGGERS: TriggerDefinition[] = [
     description: 'Workflow läuft auf Zeitplan. Konfiguration im Bereich „Zeitplan" oben am Workflow.',
     dataShape: ['scheduledAt', 'workflowId', 'cronJobId'],
   },
+  {
+    key: 'social.post.published',
+    label: 'Social-Media: Post veröffentlicht',
+    description: 'Wird gefeuert nach erfolgreichem Publish (manuell oder via Cron).',
+    dataShape: ['postId', 'platform', 'externalPostId', 'externalUrl', 'postedVia'],
+  },
+  {
+    key: 'social.post.failed',
+    label: 'Social-Media: Post fehlgeschlagen',
+    description: 'Wird gefeuert wenn der Publish-Versuch scheitert (Token, Rate-Limit, API-Fehler).',
+    dataShape: ['postId', 'platform', 'error', 'postedVia'],
+  },
 ]
 
 export const TRIGGER_LABELS: Record<string, string> = Object.fromEntries(
