@@ -186,6 +186,7 @@ Siehe separater Plan. Liefert: verbundener FB-Page-Account + IG-Business-Account
 - "Jetzt posten"-Button (synchroner Test, kein Schedule)
 - Audit-Logs: created/approved/published/failed
 - Tests: `MetaProvider.publish` mit gemockter `fetch`, `SocialPostService.publish` mit happy + partial-failure
+- **Cleanup:** `google_calendar_config` umbenennen → z.B. `app_secrets` (Naming-Issue aus Phase 1: Tabelle hält jetzt auch Social-Media-Token-Encryption-Key + appointmentTokenSecret, der für alle OAuth-Flows als HMAC-Key dient — der Name ist semantisch falsch). Migration: rename table + alle Imports (`googleCalendarConfig` → `appSecrets` in `schema.ts`, `CalendarConfigService` → `AppSecretsService`, alle ~15 Call-Sites). Reine Refactoring, kein Datenverlust. Bietet sich an, da Phase 2 sowieso Schema-Migrationen anlegt.
 
 ### 6.3 Phase 3 — Kalender + Cron-Auto-Posting (Skizze)
 
