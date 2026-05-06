@@ -94,7 +94,7 @@ const navigation: NavItem[] = [
       { name: 'Blogartikel', href: '/intern/blog', requiredModule: 'blog' },
       { name: 'Blog-Kategorien', href: '/intern/cms/blog-categories', requiredModule: 'blog' },
       { name: 'Kampagnen', href: '/intern/marketing', requiredModule: 'marketing' },
-      { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
+      { name: 'Social Media', href: '/intern/integrations/social', requiredModule: 'social_media' },
       { name: 'Newsletter', href: '/intern/marketing/newsletter', requiredModule: 'marketing' },
       { name: 'Bildgenerierung', href: '/intern/images', requiredModule: 'media' },
     ],
