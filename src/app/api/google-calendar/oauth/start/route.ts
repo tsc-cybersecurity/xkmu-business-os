@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac, randomBytes } from 'node:crypto'
+import { randomBytes } from 'node:crypto'
 import { getAuthContext } from '@/lib/auth/auth-context'
 import { CalendarConfigService } from '@/lib/services/calendar-config.service'
+import { signState } from '@/lib/utils/oauth-state'
 
 const STATE_COOKIE = 'calendar_oauth_state'
 const STATE_TTL_MS = 5 * 60_000
-
-function signState(payload: string, secret: string): string {
-  return createHmac('sha256', secret).update(payload).digest('hex')
-}
 
 export async function GET(request: NextRequest) {
   const auth = await getAuthContext(request)
@@ -22,10 +19,8 @@ export async function GET(request: NextRequest) {
   }
 
   const nonce = randomBytes(16).toString('hex')
-  const ts = Date.now()
-  const stateRaw = JSON.stringify({ uid: auth.userId, n: nonce, t: ts })
-  const sig = signState(stateRaw, cfg.appointmentTokenSecret)
-  const state = `${Buffer.from(stateRaw).toString('base64url')}.${sig}`
+  const payload = { uid: auth.userId, n: nonce, t: Date.now() }
+  const state = signState(payload, cfg.appointmentTokenSecret)
 
   const params = new URLSearchParams({
     client_id: cfg.clientId!,

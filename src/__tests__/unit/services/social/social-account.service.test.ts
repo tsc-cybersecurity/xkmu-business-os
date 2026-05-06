@@ -20,8 +20,6 @@ beforeEach(() => {
 describe('SocialAccountService.connectMeta', () => {
   it('happy path: persists 1 fb + 1 ig row when ig is linked', async () => {
     const dbMock = setupDbMock()
-    meta.exchangeCode.mockResolvedValue({ accessToken: 'short', expiresInSec: 3600 })
-    meta.exchangeForLongLived.mockResolvedValue({ accessToken: 'longUser', expiresInSec: 5184000 })
     meta.listPagesWithIg.mockResolvedValue([
       { pageId: 'p1', pageName: 'xKMU FB', pageAccessToken: 'pageTok', igUserId: 'ig1', igUsername: 'xkmu_ig' },
     ])
@@ -29,7 +27,7 @@ describe('SocialAccountService.connectMeta', () => {
 
     const { SocialAccountService } = await import('@/lib/services/social/social-account.service')
     const r = await SocialAccountService.connectMeta({
-      code: 'CODE', selectedPageId: 'p1', userId: 'u1',
+      longUserToken: 'longUser', expiresInSec: 5184000, selectedPageId: 'p1', userId: 'u1',
     })
 
     expect(r.connected).toEqual([
@@ -42,15 +40,15 @@ describe('SocialAccountService.connectMeta', () => {
 
   it('persists only fb when no ig is linked', async () => {
     const dbMock = setupDbMock()
-    meta.exchangeCode.mockResolvedValue({ accessToken: 'short', expiresInSec: 3600 })
-    meta.exchangeForLongLived.mockResolvedValue({ accessToken: 'longUser', expiresInSec: 5184000 })
     meta.listPagesWithIg.mockResolvedValue([
       { pageId: 'p1', pageName: 'xKMU FB', pageAccessToken: 'pageTok', igUserId: null, igUsername: null },
     ])
     dbMock.insertMock.mockResolvedValue([{ id: 'row1' }])
 
     const { SocialAccountService } = await import('@/lib/services/social/social-account.service')
-    const r = await SocialAccountService.connectMeta({ code: 'C', selectedPageId: 'p1', userId: 'u1' })
+    const r = await SocialAccountService.connectMeta({
+      longUserToken: 'longUser', expiresInSec: 5184000, selectedPageId: 'p1', userId: 'u1',
+    })
     expect(r.connected).toHaveLength(1)
     expect(r.connected[0].provider).toBe('facebook')
     expect(dbMock.db.update).toHaveBeenCalledTimes(2)  // revoke fb + revoke ig (always both)
@@ -58,12 +56,13 @@ describe('SocialAccountService.connectMeta', () => {
 
   it('throws when selectedPageId not found in user pages', async () => {
     setupDbMock()
-    meta.exchangeCode.mockResolvedValue({ accessToken: 'short', expiresInSec: 3600 })
-    meta.exchangeForLongLived.mockResolvedValue({ accessToken: 'longUser', expiresInSec: 5184000 })
-    meta.listPagesWithIg.mockResolvedValue([{ pageId: 'pX', pageName: 'X', pageAccessToken: 't', igUserId: null, igUsername: null }])
+    meta.listPagesWithIg.mockResolvedValue([
+      { pageId: 'pX', pageName: 'X', pageAccessToken: 't', igUserId: null, igUsername: null },
+    ])
 
     const { SocialAccountService } = await import('@/lib/services/social/social-account.service')
-    await expect(SocialAccountService.connectMeta({ code: 'C', selectedPageId: 'p1', userId: 'u1' }))
-      .rejects.toThrow(/page_not_found/)
+    await expect(SocialAccountService.connectMeta({
+      longUserToken: 'longUser', expiresInSec: 5184000, selectedPageId: 'p1', userId: 'u1',
+    })).rejects.toThrow(/page_not_found/)
   })
 })

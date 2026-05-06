@@ -6,7 +6,8 @@ import { getSocialTokenKey } from './crypto-config'
 import { MetaOAuthClient } from './meta-oauth.client'
 
 export interface ConnectMetaInput {
-  code: string
+  longUserToken: string
+  expiresInSec: number
   selectedPageId: string
   userId: string
 }
@@ -35,14 +36,14 @@ export const SocialAccountService = {
   },
 
   async connectMeta(input: ConnectMetaInput): Promise<{ connected: ConnectedAccountSummary[] }> {
-    const short = await MetaOAuthClient.exchangeCode(input.code)
-    const long = await MetaOAuthClient.exchangeForLongLived(short.accessToken)
-    const pages = await MetaOAuthClient.listPagesWithIg(long.accessToken)
+    // Re-fetch pages via the already-exchanged long user token so page-selection
+    // validation stays atomic with the DB insert (idempotent read-only call).
+    const pages = await MetaOAuthClient.listPagesWithIg(input.longUserToken)
     const page = pages.find(p => p.pageId === input.selectedPageId)
     if (!page) throw new Error('page_not_found')
 
     const key = await getSocialTokenKey()
-    const expiresAt = long.expiresInSec > 0 ? new Date(Date.now() + long.expiresInSec * 1000) : null
+    const expiresAt = input.expiresInSec > 0 ? new Date(Date.now() + input.expiresInSec * 1000) : null
 
     // Wrap all 4 DB ops in a transaction: revoke then insert is atomic.
     // Token exchange and getSocialTokenKey remain outside — they are network/config
