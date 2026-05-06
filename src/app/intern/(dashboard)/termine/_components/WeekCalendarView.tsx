@@ -136,11 +136,11 @@ export function WeekCalendarView(props: {
 
   const cellClass = (state: CellState): string => {
     switch (state) {
-      case 'available': return 'bg-emerald-100 dark:bg-emerald-950/50'
+      case 'available': return 'bg-emerald-200/80 dark:bg-emerald-900/50'
       case 'blocked': return 'bg-red-100 dark:bg-red-950/50 [background-image:repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(0,0,0,0.05)_4px,rgba(0,0,0,0.05)_8px)]'
-      case 'free-override': return 'bg-emerald-200 dark:bg-emerald-900/60'
+      case 'free-override': return 'bg-emerald-300 dark:bg-emerald-900/70'
       case 'busy-external': return 'bg-slate-300 dark:bg-slate-700'
-      default: return 'bg-muted/30 dark:bg-muted/20'
+      default: return 'bg-zinc-100 dark:bg-zinc-900/40 [background-image:repeating-linear-gradient(45deg,transparent,transparent_5px,rgba(0,0,0,0.03)_5px,rgba(0,0,0,0.03)_10px)]'
     }
   }
 
@@ -227,7 +227,7 @@ export function WeekCalendarView(props: {
                       const hourMinute = h * 60 + min
                       const { state, busy, cellStart } = cellState(dayIdx, hourMinute)
                       const isClickable = state === 'available' || state === 'free-override'
-                      const baseClass = `h-3.5 w-full ${cellClass(state)} ${min === 0 ? '' : 'border-t border-dashed border-muted-foreground/10'}`
+                      const baseClass = `h-3.5 w-full ${cellClass(state)} ${min === 30 ? 'border-t border-dotted border-muted-foreground/15' : ''}`
                       if (isClickable) {
                         return (
                           <button
