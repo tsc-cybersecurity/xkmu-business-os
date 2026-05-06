@@ -74,6 +74,7 @@ export default function SocialMediaPage() {
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [topicFilter, setTopicFilter] = useState<string>('all');
+  const [hidePosted, setHidePosted] = useState<boolean>(true);
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -123,7 +124,13 @@ export default function SocialMediaPage() {
     }
   };
 
-  const sortedPosts = [...posts].sort((a, b) => {
+  // Client-seitiger Filter "Gepostete ausblenden" — laeuft zusaetzlich zum
+  // Server-Status-Filter, damit der User "alle Status" + "ohne Gepostete"
+  // kombinieren kann (Server-Filter kennt nur einen einzelnen Status-Wert).
+  const visiblePosts = hidePosted ? posts.filter((p) => p.status !== 'posted') : posts
+  const postedCount = posts.filter((p) => p.status === 'posted').length
+
+  const sortedPosts = [...visiblePosts].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
     switch (sortField) {
       case 'platform':
@@ -233,6 +240,18 @@ export default function SocialMediaPage() {
             ))}
           </SelectContent>
         </Select>
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={hidePosted}
+            onChange={(e) => setHidePosted(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Gepostete ausblenden
+          {postedCount > 0 && (
+            <span className="text-xs text-muted-foreground">({postedCount})</span>
+          )}
+        </label>
       </div>
 
       <div className="rounded-md border overflow-x-auto">
