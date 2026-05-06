@@ -2,9 +2,17 @@ import { db } from '@/lib/db'
 import { socialOauthAccounts, type SocialMediaPost } from '@/lib/db/schema'
 import { and, eq } from 'drizzle-orm'
 import { decryptToken } from '@/lib/crypto/token-crypto'
+import { CmsDesignService } from '@/lib/services/cms-design.service'
 import { getSocialTokenKey } from './crypto-config'
 import { InstagramPublishClient } from './instagram-publish.client'
 import type { SocialProvider, PublishResult } from './social-provider'
+
+async function toAbsoluteImageUrl(imageUrl: string | null | undefined): Promise<string | null> {
+  if (!imageUrl) return null
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl
+  const origin = await CmsDesignService.getAppUrl()
+  return `${origin.replace(/\/+$/, '')}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
+}
 
 async function loadIgAccount() {
   const [row] = await db.select().from(socialOauthAccounts)
@@ -25,7 +33,7 @@ export const InstagramProvider: SocialProvider = {
       igUserId: account.externalAccountId,
       accessToken: token,
       caption: post.content,
-      imageUrl: post.imageUrl ?? null,
+      imageUrl: await toAbsoluteImageUrl(post.imageUrl),
     })
   },
 }
