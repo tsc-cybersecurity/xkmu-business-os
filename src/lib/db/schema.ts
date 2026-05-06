@@ -1751,6 +1751,10 @@ export const socialMediaPosts = pgTable('social_media_posts', {
   imageUrl: varchar('image_url', { length: 500 }),
   scheduledAt: timestamp('scheduled_at', { withTimezone: true }),
   postedAt: timestamp('posted_at', { withTimezone: true }),
+  externalPostId: varchar('external_post_id', { length: 255 }),
+  externalUrl: varchar('external_url', { length: 500 }),
+  lastError: text('last_error'),
+  postedVia: varchar('posted_via', { length: 20 }), // 'oauth' | 'legacy'
   status: varchar('status', { length: 20 }).default('draft'), // draft | scheduled | posted | failed
   aiGenerated: boolean('ai_generated').default(false),
   createdBy: uuid('created_by').references(() => users.id),
