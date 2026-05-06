@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
     const cfg = await CalendarConfigService.getConfig()
     const nonce = randomBytes(16).toString('hex')
     const stateRaw = JSON.stringify({ uid: auth.userId, n: nonce, t: Date.now() })
+    // appointmentTokenSecret is the shared OAuth-state HMAC key (same key used by
+    // google-calendar oauth start). Extract to a dedicated field if secrets ever rotate independently.
     const sig = signState(stateRaw, cfg.appointmentTokenSecret)
     const state = `${Buffer.from(stateRaw).toString('base64url')}.${sig}`
     const url = MetaOAuthClient.buildAuthorizeUrl(state)
