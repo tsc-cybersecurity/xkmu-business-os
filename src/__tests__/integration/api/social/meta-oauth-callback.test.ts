@@ -4,6 +4,9 @@ import { createHmac } from 'node:crypto'
 const accountSvc = { connectMeta: vi.fn() }
 vi.mock('@/lib/services/social/social-account.service', () => ({ SocialAccountService: accountSvc }))
 
+const audit = { log: vi.fn() }
+vi.mock('@/lib/services/audit-log.service', () => ({ AuditLogService: audit }))
+
 const meta = { exchangeCode: vi.fn(), exchangeForLongLived: vi.fn(), listPagesWithIg: vi.fn() }
 vi.mock('@/lib/services/social/meta-oauth.client', () => ({ MetaOAuthClient: meta }))
 
@@ -14,6 +17,7 @@ vi.mock('@/lib/services/calendar-config.service', () => ({
 beforeEach(() => {
   vi.resetModules()
   accountSvc.connectMeta.mockReset()
+  audit.log.mockReset()
   meta.exchangeCode.mockReset()
   meta.exchangeForLongLived.mockReset()
   meta.listPagesWithIg.mockReset()
@@ -53,7 +57,9 @@ describe('GET /api/social/meta/oauth/callback', () => {
     meta.listPagesWithIg.mockResolvedValue([
       { pageId: 'p1', pageName: 'X', pageAccessToken: 't', igUserId: null, igUsername: null },
     ])
-    accountSvc.connectMeta.mockResolvedValue({ connected: [{ provider: 'facebook' }] })
+    accountSvc.connectMeta.mockResolvedValue({ connected: [
+      { id: 'acc1', provider: 'facebook', externalAccountId: 'p1', accountName: 'Test FB', status: 'connected', tokenExpiresAt: null }
+    ] })
     const validState = buildValidState('s'.repeat(64))
 
     const { GET } = await import('@/app/api/social/meta/oauth/callback/route')
@@ -65,6 +71,13 @@ describe('GET /api/social/meta/oauth/callback', () => {
       expiresInSec: 5184000,
       userId: 'u1',
     })
+    expect(audit.log).toHaveBeenCalledTimes(1)
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
+      action: 'social_account_connected',
+      entityType: 'social_oauth_accounts',
+      entityId: 'acc1',
+      payload: expect.objectContaining({ provider: 'facebook', externalAccountId: 'p1' }),
+    }))
   })
 
   it('redirects with no_pages_found when 0 pages', async () => {
@@ -90,6 +103,18 @@ describe('GET /api/social/meta/oauth/callback', () => {
     const { GET } = await import('@/app/api/social/meta/oauth/callback/route')
     const res = await GET(new Request(`https://app/x?code=CODE&state=${encodeURIComponent(validState)}`) as any)
     expect(res.headers.get('location')).toContain('error=multiple_pages_unsupported_v1')
+  })
+
+  it('does not call audit.log when no pages found (error path)', async () => {
+    meta.exchangeCode.mockResolvedValue({ accessToken: 's', expiresInSec: 3600 })
+    meta.exchangeForLongLived.mockResolvedValue({ accessToken: 'l', expiresInSec: 5184000 })
+    meta.listPagesWithIg.mockResolvedValue([])
+    const validState = buildValidState('s'.repeat(64))
+
+    const { GET } = await import('@/app/api/social/meta/oauth/callback/route')
+    const res = await GET(new Request(`https://app/x?code=CODE&state=${encodeURIComponent(validState)}`) as any)
+    expect(res.headers.get('location')).toContain('error=no_pages_found')
+    expect(audit.log).not.toHaveBeenCalled()
   })
 
   it('sanitizes raw error messages before redirecting', async () => {

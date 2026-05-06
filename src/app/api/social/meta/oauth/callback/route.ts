@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 import { CalendarConfigService } from '@/lib/services/calendar-config.service'
 import { MetaOAuthClient } from '@/lib/services/social/meta-oauth.client'
 import { SocialAccountService } from '@/lib/services/social/social-account.service'
@@ -34,11 +35,23 @@ export async function GET(request: NextRequest) {
     if (pages.length === 0) return redirect({ error: 'no_pages_found' })
     if (pages.length > 1) return redirect({ error: 'multiple_pages_unsupported_v1' })
 
-    await SocialAccountService.connectMeta({
+    const result = await SocialAccountService.connectMeta({
       page: pages[0],
       expiresInSec: long.expiresInSec,
       userId: parsed.uid,
     })
+
+    for (const acc of result.connected) {
+      await AuditLogService.log({
+        userId: parsed.uid,
+        userRole: 'owner',
+        action: 'social_account_connected',
+        entityType: 'social_oauth_accounts',
+        entityId: acc.id,
+        payload: { provider: acc.provider, externalAccountId: acc.externalAccountId, accountName: acc.accountName },
+        request,
+      })
+    }
 
     return redirect({ connected: 'meta' })
   } catch (e) {
