@@ -31,4 +31,14 @@ describe('token-crypto', () => {
     const k1 = generateKeyHex(), k2 = generateKeyHex()
     expect(() => decryptToken(encryptToken('x', k1), k2)).toThrow()
   })
+
+  it('round-trips empty plaintext', () => {
+    const key = generateKeyHex()
+    expect(decryptToken(encryptToken('', key), key)).toBe('')
+  })
+
+  it('throws on ciphertext with extra colons (not exactly 3 parts)', () => {
+    const key = generateKeyHex()
+    expect(() => decryptToken('a:b:c:d', key)).toThrow(/invalid_ciphertext_format/)
+  })
 })

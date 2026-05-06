@@ -21,8 +21,11 @@ export function encryptToken(plaintext: string, keyHex: string): string {
 export function decryptToken(ciphertext: string, keyHex: string): string {
   const key = Buffer.from(keyHex, 'hex')
   if (key.length !== KEY_LENGTH) throw new Error('invalid_key_length')
-  const [ivHex, ctHex, tagHex] = ciphertext.split(':')
-  if (!ivHex || !ctHex || !tagHex) throw new Error('invalid_ciphertext_format')
+  const parts = ciphertext.split(':')
+  if (parts.length !== 3) throw new Error('invalid_ciphertext_format')
+  const [ivHex, ctHex, tagHex] = parts
+  // ctHex may be '' for empty plaintext — AES-GCM auth tag still protects it
+  if (!ivHex || !tagHex) throw new Error('invalid_ciphertext_format')
   const iv = Buffer.from(ivHex, 'hex')
   const ct = Buffer.from(ctHex, 'hex')
   const tag = Buffer.from(tagHex, 'hex')
