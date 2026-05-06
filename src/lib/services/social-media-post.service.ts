@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { socialMediaPosts, socialMediaTopics } from '@/lib/db/schema'
-import { eq, and, count, desc } from 'drizzle-orm'
+import { eq, and, count, desc, gte, lt, isNull, asc } from 'drizzle-orm'
 import type { SocialMediaPost, NewSocialMediaPost } from '@/lib/db/schema'
 
 export interface PostFilters {
@@ -141,5 +141,44 @@ export const SocialMediaPostService = {
       .where(eq(socialMediaPosts.id, id))
       .returning({ id: socialMediaPosts.id })
     return result.length > 0
+  },
+
+  async listForCalendar(range: { from: Date; to: Date }) {
+    const baseFields = {
+      id: socialMediaPosts.id,
+      topicId: socialMediaPosts.topicId,
+      platform: socialMediaPosts.platform,
+      title: socialMediaPosts.title,
+      content: socialMediaPosts.content,
+      hashtags: socialMediaPosts.hashtags,
+      imageUrl: socialMediaPosts.imageUrl,
+      scheduledAt: socialMediaPosts.scheduledAt,
+      postedAt: socialMediaPosts.postedAt,
+      status: socialMediaPosts.status,
+      topicName: socialMediaTopics.name,
+      topicColor: socialMediaTopics.color,
+    }
+
+    const [scheduled, backlog] = await Promise.all([
+      db.select(baseFields)
+        .from(socialMediaPosts)
+        .leftJoin(socialMediaTopics, eq(socialMediaPosts.topicId, socialMediaTopics.id))
+        .where(and(
+          gte(socialMediaPosts.scheduledAt, range.from),
+          lt(socialMediaPosts.scheduledAt, range.to),
+        ))
+        .orderBy(asc(socialMediaPosts.scheduledAt)),
+      db.select(baseFields)
+        .from(socialMediaPosts)
+        .leftJoin(socialMediaTopics, eq(socialMediaPosts.topicId, socialMediaTopics.id))
+        .where(and(
+          isNull(socialMediaPosts.scheduledAt),
+          eq(socialMediaPosts.status, 'draft'),
+        ))
+        .orderBy(desc(socialMediaPosts.createdAt))
+        .limit(50),
+    ])
+
+    return { scheduled, backlog }
   },
 }
