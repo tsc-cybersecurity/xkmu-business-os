@@ -132,7 +132,8 @@ function buildMemberAccess(): Record<Module, Record<Action, boolean>> {
     'roles',
     'cms',
   ]
-  const hiddenModules: Module[] = ['database']
+  // Phase 1: social_media ist owner-only; kein Zugriff fuer andere Rollen
+  const hiddenModules: Module[] = ['database', 'social_media']
   return Object.fromEntries(
     MODULES.map((m) => {
       if (hiddenModules.includes(m)) return [m, { ...allFalse }]
@@ -144,7 +145,8 @@ function buildMemberAccess(): Record<Module, Record<Action, boolean>> {
 }
 
 function buildViewerAccess(): Record<Module, Record<Action, boolean>> {
-  const hiddenModules: Module[] = ['roles', 'api_keys', 'database']
+  // Phase 1: social_media ist owner-only; kein Zugriff fuer andere Rollen
+  const hiddenModules: Module[] = ['roles', 'api_keys', 'database', 'social_media']
   return Object.fromEntries(
     MODULES.map((m) => {
       if (hiddenModules.includes(m)) return [m, { ...allFalse }]

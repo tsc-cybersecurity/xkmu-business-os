@@ -41,16 +41,26 @@ async function checkPermission(
     return { allowed: true, auth }
   }
 
-  // member: Lesen, Erstellen und Bearbeiten erlaubt
+  // Phase 1: social_media ist owner-only — member/viewer haben keinen Zugriff
+  // (Spiegelt buildMemberAccess/buildViewerAccess hiddenModules)
+  const ownerOnlyModules = ['social_media'] as const
+
+  // member: Lesen, Erstellen und Bearbeiten erlaubt (ausser owner-only Module)
   if (auth.role === 'member') {
+    if ((ownerOnlyModules as readonly string[]).includes(module)) {
+      return { allowed: false, reason: 'forbidden' }
+    }
     if (action === 'read' || action === 'create' || action === 'update') {
       return { allowed: true, auth }
     }
     return { allowed: false, reason: 'forbidden' }
   }
 
-  // viewer: Nur Lesen erlaubt
+  // viewer: Nur Lesen erlaubt (ausser owner-only Module)
   if (auth.role === 'viewer') {
+    if ((ownerOnlyModules as readonly string[]).includes(module)) {
+      return { allowed: false, reason: 'forbidden' }
+    }
     if (action === 'read') return { allowed: true, auth }
     return { allowed: false, reason: 'forbidden' }
   }
