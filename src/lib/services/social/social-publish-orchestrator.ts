@@ -59,10 +59,14 @@ export const SocialPublishOrchestrator = {
         : { ok: false, error: r?.error ?? 'legacy_publish_failed', revokeAccount: false }
     }
 
-    // Persist publish metadata
+    // Persist publish metadata. scheduledAt wird auf null gesetzt — der Post
+    // ist veroeffentlicht, der Plan-Slot ist obsolet (postedAt traegt die
+    // tatsaechliche Zeit). Verhindert ausserdem dass der Post weiter im
+    // Kalender als 'geplant' erscheint.
     if (result.ok) {
       await db.update(socialMediaPosts).set({
         status: 'posted',
+        scheduledAt: null,
         postedAt: new Date(),
         externalPostId: result.externalPostId,
         externalUrl: result.externalUrl,

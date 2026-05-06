@@ -359,6 +359,7 @@ export default function EditSocialMediaPostPage() {
             <Input
               type="datetime-local"
               value={post.scheduledAt ? toLocalDateTimeInput(post.scheduledAt) : ''}
+              disabled={post.status === 'posted'}
               onChange={(e) =>
                 setPost((p) =>
                   p
@@ -373,7 +374,9 @@ export default function EditSocialMediaPostPage() {
               className="max-w-xs"
             />
             <p className="text-xs text-muted-foreground">
-              Lokale Zeitzone des Browsers. Damit Auto-Posting greift, Status auf „Geplant" setzen und einen Cron-Job vom Typ „Task-Queue abarbeiten" aktivieren.
+              {post.status === 'posted'
+                ? 'Beitrag wurde bereits veröffentlicht — Planung nicht mehr aktiv.'
+                : 'Lokale Zeitzone des Browsers. Damit Auto-Posting greift, Status auf „Geplant" setzen und einen Cron-Job vom Typ „Task-Queue abarbeiten" aktivieren.'}
             </p>
           </div>
           <div className="space-y-2">
