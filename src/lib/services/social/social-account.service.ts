@@ -77,7 +77,7 @@ export const SocialAccountService = {
           accountName: igName,
           accessTokenEnc: encryptToken(page.pageAccessToken, key),
           tokenExpiresAt: expiresAt,
-          scopes: ['instagram_basic', 'instagram_content_publish'],
+          scopes: ['instagram_business_basic', 'instagram_business_content_publish'],
           meta: { fbPageId: page.pageId, igUsername: page.igUsername },
           connectedBy: input.userId,
         }).returning()

@@ -1,12 +1,16 @@
 const GRAPH_BASE = 'https://graph.facebook.com/v19.0'
 const DIALOG_BASE = 'https://www.facebook.com/v19.0/dialog/oauth'
 
+// Meta renamed Instagram permissions in 2024:
+//   instagram_basic           → instagram_business_basic
+//   instagram_content_publish → instagram_business_content_publish
+// Both must be enabled in the Meta App's "Berechtigungen und Features" page.
 const SCOPES = [
   'pages_show_list',
   'pages_manage_posts',
   'pages_read_engagement',
-  'instagram_basic',
-  'instagram_content_publish',
+  'instagram_business_basic',
+  'instagram_business_content_publish',
 ]
 
 export interface MetaPageWithIg {
