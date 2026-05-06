@@ -365,6 +365,40 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
       return { skipped: true, reason: 'phase_1_placeholder' }
     }
 
+    case 'social_post_publish': {
+      const postId = item.referenceId ?? (payload.postId as string | undefined)
+      if (!postId) return { skipped: true, reason: 'no_post_id' }
+
+      // Sicherheitsnetz: wenn der Post inzwischen storniert/gepostet/draft wurde
+      // oder das scheduledAt wegradiert wurde, fuehren wir nicht aus.
+      const { db: dbInst } = await import('@/lib/db')
+      const { socialMediaPosts: smTable } = await import('@/lib/db/schema')
+      const { eq: eqDr } = await import('drizzle-orm')
+      const [row] = await dbInst.select({
+        status: smTable.status,
+        scheduledAt: smTable.scheduledAt,
+      }).from(smTable).where(eqDr(smTable.id, postId)).limit(1)
+      if (!row) return { skipped: true, reason: 'post_not_found' }
+      if (row.status === 'posted') return { skipped: true, reason: 'already_posted' }
+      if (row.status === 'draft' || !row.scheduledAt) {
+        return { skipped: true, reason: 'no_longer_scheduled' }
+      }
+
+      const { SocialPublishOrchestrator } = await import('@/lib/services/social/social-publish-orchestrator')
+      const outcome = await SocialPublishOrchestrator.publishById(postId)
+      if (!outcome.result.ok) {
+        // Throw, damit task_queue.status='failed' und item.error gesetzt wird.
+        throw new Error(`publish_failed: ${outcome.result.error}`)
+      }
+      return {
+        published: true,
+        postId,
+        platform: outcome.platform,
+        externalPostId: outcome.result.externalPostId,
+        externalUrl: outcome.result.externalUrl,
+      }
+    }
+
     default:
       logger.warn(`Unknown task type: ${item.type}`, { module: 'TaskQueue' })
       return { skipped: true, reason: `Unknown type: ${item.type}` }

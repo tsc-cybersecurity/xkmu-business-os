@@ -1,7 +1,43 @@
 import { db } from '@/lib/db'
-import { socialMediaPosts, socialMediaTopics } from '@/lib/db/schema'
-import { eq, and, count, desc, gte, lt, isNull, asc } from 'drizzle-orm'
+import { socialMediaPosts, socialMediaTopics, taskQueue } from '@/lib/db/schema'
+import { eq, and, count, desc, gte, lt, isNull, asc, inArray } from 'drizzle-orm'
 import type { SocialMediaPost, NewSocialMediaPost } from '@/lib/db/schema'
+
+// ──────────────────────────────────────────────────────────────────────────
+// Auto-publish scheduling helpers
+// ──────────────────────────────────────────────────────────────────────────
+
+/**
+ * Stellt sicher, dass genau ein 'social_post_publish' task_queue-Item fuer
+ * diesen Post existiert, sofern Post 'scheduled' ist und scheduledAt
+ * in der Zukunft liegt. Bestehende pending/running Tasks werden zu
+ * 'cancelled' geflaggt, damit kein Doppel-Posting passiert.
+ */
+async function reconcilePublishTask(postId: string, scheduledAt: Date | null, status: string | null): Promise<void> {
+  // Vorhandene aktive Tasks fuer diesen Post canceln
+  await db.update(taskQueue).set({
+    status: 'cancelled',
+    updatedAt: new Date(),
+  }).where(and(
+    eq(taskQueue.referenceType, 'social_media_posts'),
+    eq(taskQueue.referenceId, postId),
+    eq(taskQueue.type, 'social_post_publish'),
+    inArray(taskQueue.status, ['pending', 'running']),
+  ))
+
+  if (status !== 'scheduled' || !scheduledAt) return
+  if (scheduledAt.getTime() <= Date.now()) return
+
+  await db.insert(taskQueue).values({
+    type: 'social_post_publish',
+    status: 'pending',
+    priority: 2,
+    scheduledFor: scheduledAt,
+    payload: { postId },
+    referenceType: 'social_media_posts',
+    referenceId: postId,
+  })
+}
 
 export interface PostFilters {
   platform?: string
@@ -96,6 +132,7 @@ export const SocialMediaPostService = {
         createdBy: createdBy || undefined,
       })
       .returning()
+    await reconcilePublishTask(post.id, post.scheduledAt, post.status)
     return post
   },
 
@@ -132,10 +169,14 @@ export const SocialMediaPostService = {
       .set(updateData)
       .where(eq(socialMediaPosts.id, id))
       .returning()
+    if (post) await reconcilePublishTask(post.id, post.scheduledAt, post.status)
     return post ?? null
   },
 
   async delete(id: string): Promise<boolean> {
+    // Pending publish-tasks vor dem Delete canceln, damit der Worker nicht ins
+    // Leere greift wenn er die ID spaeter pickt.
+    await reconcilePublishTask(id, null, null)
     const result = await db
       .delete(socialMediaPosts)
       .where(eq(socialMediaPosts.id, id))

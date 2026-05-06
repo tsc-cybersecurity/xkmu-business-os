@@ -1,14 +1,8 @@
 import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
-import { SocialPublishingService } from '@/lib/services/social-publishing.service'
-import { MetaProvider } from '@/lib/services/social/meta-provider'
-import { InstagramProvider } from '@/lib/services/social/instagram-provider'
 import { withPermission } from '@/lib/auth/require-permission'
 import { AuditLogService } from '@/lib/services/audit-log.service'
-import { db } from '@/lib/db'
-import { socialMediaPosts, socialOauthAccounts } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
-import type { PublishResult } from '@/lib/services/social/social-provider'
+import { SocialPublishOrchestrator } from '@/lib/services/social/social-publish-orchestrator'
 
 type Params = Promise<{ id: string }>
 
@@ -17,70 +11,17 @@ export async function POST(request: NextRequest, { params }: { params: Params })
   return withPermission(request, 'social_media', 'update', async (auth) => {
     try {
       const { id } = await params
-
-      const [post] = await db
-        .select()
-        .from(socialMediaPosts)
-        .where(eq(socialMediaPosts.id, id))
-        .limit(1)
-
-      if (!post) return apiNotFound('Post nicht gefunden')
-
-      const platform = post.platform
-      const isOAuth = platform === 'facebook' || platform === 'instagram'
-      const postedVia: 'oauth' | 'legacy' = isOAuth ? 'oauth' : 'legacy'
-
-      let result: PublishResult
-
-      if (platform === 'facebook') {
-        result = await MetaProvider.publish(post)
-      } else if (platform === 'instagram') {
-        result = await InstagramProvider.publish(post)
-      } else {
-        const body = await request.json().catch(() => ({})) as { imageUrl?: string; link?: string }
-        const legacyResults = await SocialPublishingService.publish(
-          [platform],
-          post.content || '',
-          { imageUrl: body.imageUrl || (post.imageUrl ?? undefined), link: body.link },
-        )
-        const r = legacyResults[platform]
-        result = r?.success
-          ? { ok: true, externalPostId: r.postId ?? '', externalUrl: r.postUrl ?? null }
-          : { ok: false, error: r?.error ?? 'legacy_publish_failed', revokeAccount: false }
+      let outcome
+      try {
+        outcome = await SocialPublishOrchestrator.publishById(id)
+      } catch (e) {
+        if (e instanceof Error && e.message === 'post_not_found') return apiNotFound('Post nicht gefunden')
+        throw e
       }
+      const { result, postedVia } = outcome
 
-      // Persist publish metadata
-      if (result.ok) {
-        await db.update(socialMediaPosts).set({
-          status: 'posted',
-          postedAt: new Date(),
-          externalPostId: result.externalPostId,
-          externalUrl: result.externalUrl,
-          lastError: null,
-          postedVia,
-          updatedAt: new Date(),
-        }).where(eq(socialMediaPosts.id, id))
-      } else {
-        await db.update(socialMediaPosts).set({
-          status: 'failed',
-          lastError: result.error,
-          postedVia,
-          updatedAt: new Date(),
-        }).where(eq(socialMediaPosts.id, id))
-
-        if (result.revokeAccount) {
-          await db.update(socialOauthAccounts).set({
-            status: 'revoked',
-            revokedAt: new Date(),
-            updatedAt: new Date(),
-          }).where(and(
-            eq(socialOauthAccounts.provider, platform as 'facebook' | 'instagram'),
-            eq(socialOauthAccounts.status, 'connected'),
-          ))
-        }
-      }
-
-      // Audit log (one entry total)
+      // Audit log nur fuer den HTTP-Pfad — der task_queue-Handler logged ueber
+      // task_queue.error/result selbst, ohne user-context fuer AuditLog.
       await AuditLogService.log({
         userId: auth.userId,
         userRole: auth.role,
@@ -88,8 +29,8 @@ export async function POST(request: NextRequest, { params }: { params: Params })
         entityType: 'social_media_posts',
         entityId: id,
         payload: result.ok
-          ? { platform, postedVia, externalPostId: result.externalPostId, externalUrl: result.externalUrl }
-          : { platform, postedVia, error: result.error },
+          ? { platform: outcome.platform, postedVia, externalPostId: result.externalPostId, externalUrl: result.externalUrl }
+          : { platform: outcome.platform, postedVia, error: result.error },
         request,
       })
 
