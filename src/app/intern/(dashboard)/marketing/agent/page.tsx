@@ -81,7 +81,7 @@ interface AgentResult {
 
 const PLATFORMS = [
   { value: 'linkedin', label: 'LinkedIn' },
-  { value: 'twitter', label: 'Twitter/X' },
+  { value: 'x', label: 'Twitter/X' },
   { value: 'instagram', label: 'Instagram' },
   { value: 'facebook', label: 'Facebook' },
   { value: 'xing', label: 'XING' },
@@ -96,7 +96,7 @@ const TONES = [
 
 const platformIcons: Record<string, string> = {
   linkedin: 'in',
-  twitter: '𝕏',
+  x: '𝕏',
   instagram: '📷',
   facebook: 'f',
   xing: 'X',
@@ -108,7 +108,7 @@ const platformIcons: Record<string, string> = {
 
 export default function MarketingAgentPage() {
   const [url, setUrl] = useState('')
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['linkedin', 'twitter', 'instagram'])
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['linkedin', 'x', 'instagram'])
   const [tone, setTone] = useState('professional')
   const [additionalContext, setAdditionalContext] = useState('')
   const [loading, setLoading] = useState(false)

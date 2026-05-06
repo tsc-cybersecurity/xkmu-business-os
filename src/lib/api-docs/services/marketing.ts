@@ -256,7 +256,7 @@ export const marketingService: ApiService = {
       requestBody: {
         url: 'https://blog.example.com/neuer-artikel',
         language: 'de',
-        platforms: ['linkedin', 'twitter'],
+        platforms: ['linkedin', 'x'],
         tone: 'professional',
         additionalContext: 'Fokus auf B2B-Aspekte',
       },
@@ -264,7 +264,7 @@ export const marketingService: ApiService = {
         success: true,
         data: {
           linkedin: { content: '...', hashtags: [] },
-          twitter: { content: '...', hashtags: [] },
+          x: { content: '...', hashtags: [] },
         },
       },
       curl: `curl -X POST https://example.com/api/v1/marketing/agent/analyze \\

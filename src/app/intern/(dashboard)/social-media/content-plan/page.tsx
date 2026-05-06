@@ -149,7 +149,7 @@ export default function ContentPlanPage() {
     }
   };
 
-  const allPlatforms = ['linkedin', 'twitter', 'instagram', 'facebook', 'xing'];
+  const allPlatforms = ['linkedin', 'x', 'instagram', 'facebook', 'xing'];
 
   return (
     <div className="space-y-6">

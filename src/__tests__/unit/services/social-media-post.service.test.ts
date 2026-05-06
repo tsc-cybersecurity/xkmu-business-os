@@ -62,8 +62,8 @@ describe('SocialMediaPostService', () => {
 
       const service = await getService()
       const result = await service.create({
-        platform: 'twitter',
-        content: 'Hello Twitter!',
+        platform: 'x',
+        content: 'Hello X!',
       })
 
       expect(result.status).toBe('draft')
@@ -145,15 +145,15 @@ describe('SocialMediaPostService', () => {
     })
 
     it('can update platform', async () => {
-      const fixture = postFixture({ platform: 'twitter' })
+      const fixture = postFixture({ platform: 'x' })
       dbMock.mockUpdate.mockResolvedValue([fixture])
 
       const service = await getService()
       const result = await service.update(TEST_POST_ID, {
-        platform: 'twitter',
+        platform: 'x',
       })
 
-      expect(result!.platform).toBe('twitter')
+      expect(result!.platform).toBe('x')
     })
   })
 
@@ -185,7 +185,7 @@ describe('SocialMediaPostService', () => {
     it('returns paginated results with meta', async () => {
       const fixtures = [
         postFixture(),
-        postFixture({ id: TEST_POST_ID_2, platform: 'twitter' }),
+        postFixture({ id: TEST_POST_ID_2, platform: 'x' }),
       ]
 
       dbMock.mockSelect.mockResolvedValueOnce(fixtures)
@@ -264,7 +264,7 @@ describe('SocialMediaPostService', () => {
       const service = await getService()
       const result = await service.bulkCreate([
         { platform: 'linkedin', content: 'Post 1' },
-        { platform: 'twitter', content: 'Post 2' },
+        { platform: 'x', content: 'Post 2' },
       ])
 
       expect(result).toHaveLength(2)

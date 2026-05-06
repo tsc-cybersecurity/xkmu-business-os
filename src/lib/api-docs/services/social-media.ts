@@ -180,7 +180,7 @@ export const socialMediaService: ApiService = {
         'Generiert einen vollstaendigen Content-Plan mit mehreren Beitraegen ueber verschiedene Plattformen und Zeitraeume.',
       requestBody: {
         topics: ['KI', 'Digitalisierung'],
-        platforms: ['linkedin', 'twitter'],
+        platforms: ['linkedin', 'x'],
         postsPerWeek: 3,
         weeks: 4,
       },
@@ -200,7 +200,7 @@ export const socialMediaService: ApiService = {
         { name: 'id', in: 'path', required: true, type: 'string', description: 'UUID des Beitrags' },
       ],
       requestBody: {
-        platforms: ['linkedin', 'twitter'],
+        platforms: ['linkedin', 'x'],
         imageUrl: 'https://example.com/image.jpg',
         link: 'https://example.com/artikel',
       },
@@ -208,7 +208,7 @@ export const socialMediaService: ApiService = {
         success: true,
         data: {
           postId: 'uuid',
-          results: { linkedin: { success: true }, twitter: { success: true } },
+          results: { linkedin: { success: true }, x: { success: true } },
         },
       },
       curl: `curl -X POST https://example.com/api/v1/social-media/posts/POST_ID/publish \\

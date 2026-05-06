@@ -219,7 +219,7 @@ describe('generateSocialPostSchema', () => {
   })
 
   it('accepts all valid platform values', () => {
-    for (const platform of ['linkedin', 'twitter', 'instagram', 'facebook', 'xing']) {
+    for (const platform of ['linkedin', 'x', 'instagram', 'facebook', 'xing']) {
       const result = generateSocialPostSchema.safeParse({ ...validBase, platform })
       expect(result.success).toBe(true)
     }
@@ -321,7 +321,7 @@ describe('generateContentPlanSchema', () => {
 
   it('accepts valid full input', () => {
     const result = generateContentPlanSchema.safeParse({
-      platforms: ['linkedin', 'twitter', 'instagram'],
+      platforms: ['linkedin', 'x', 'instagram'],
       topicIds: [VALID_UUID],
       topics: ['AI trends', 'Product updates'],
       count: 14,
@@ -342,7 +342,7 @@ describe('generateContentPlanSchema', () => {
   })
 
   it('accepts all valid platform values', () => {
-    for (const platform of ['linkedin', 'twitter', 'instagram', 'facebook', 'xing']) {
+    for (const platform of ['linkedin', 'x', 'instagram', 'facebook', 'xing']) {
       const result = generateContentPlanSchema.safeParse({ platforms: [platform] })
       expect(result.success).toBe(true)
     }

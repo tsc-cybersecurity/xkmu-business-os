@@ -138,7 +138,7 @@ describe('createSocialMediaPostSchema', () => {
   })
 
   it('accepts all valid platform values', () => {
-    for (const platform of ['linkedin', 'twitter', 'instagram', 'facebook', 'xing']) {
+    for (const platform of ['linkedin', 'x', 'instagram', 'facebook', 'xing']) {
       const result = createSocialMediaPostSchema.safeParse({ platform, content: 'Hello!' })
       expect(result.success).toBe(true)
     }

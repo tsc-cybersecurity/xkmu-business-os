@@ -1744,7 +1744,7 @@ export const socialMediaTopicsRelations = relations(socialMediaTopics, ({ one, m
 export const socialMediaPosts = pgTable('social_media_posts', {
   id: uuid('id').primaryKey().defaultRandom(),
   topicId: uuid('topic_id').references(() => socialMediaTopics.id, { onDelete: 'set null' }),
-  platform: varchar('platform', { length: 30 }).notNull(), // linkedin | twitter | instagram | facebook | xing
+  platform: varchar('platform', { length: 30 }).notNull(), // linkedin | x | instagram | facebook | xing
   title: varchar('title', { length: 255 }),
   content: text('content').notNull(),
   hashtags: text('hashtags').array().default([]),

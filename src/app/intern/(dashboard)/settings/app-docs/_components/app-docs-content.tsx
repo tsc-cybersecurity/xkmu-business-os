@@ -861,7 +861,7 @@ withPermission(request, 'companies', 'read', async (auth) => {
                 { name: 'Social-Media-Entwürfe', desc: 'Plattformspezifische Posts (LinkedIn, X, Instagram, Facebook, XING) mit Hashtags und Call-to-Action.' },
                 { name: 'Post speichern', desc: 'Generierte Posts direkt als Social-Media-Entwürfe in die Social-Media-Verwaltung übernehmen.' },
               ]} />
-              <EndpointDoc method="POST" path="/api/v1/marketing/agent/analyze" description="AI Marketing Agent starten." requestBody={{ url: 'https://firma.de', language: 'de', platforms: ['linkedin', 'twitter', 'instagram'], tone: 'professional', additionalContext: 'Fokus auf Cybersecurity' }} responseExample={{ research: { companyName: 'Firma GmbH', industry: 'IT', uniqueSellingPoints: ['USP 1'] }, seoAnalysis: { primaryKeywords: ['keyword1'], searchVisibilityScore: 72 }, socialMediaDrafts: [{ platform: 'linkedin', content: '...', hashtags: ['#IT'] }], executiveSummary: '...' }} />
+              <EndpointDoc method="POST" path="/api/v1/marketing/agent/analyze" description="AI Marketing Agent starten." requestBody={{ url: 'https://firma.de', language: 'de', platforms: ['linkedin', 'x', 'instagram'], tone: 'professional', additionalContext: 'Fokus auf Cybersecurity' }} responseExample={{ research: { companyName: 'Firma GmbH', industry: 'IT', uniqueSellingPoints: ['USP 1'] }, seoAnalysis: { primaryKeywords: ['keyword1'], searchVisibilityScore: 72 }, socialMediaDrafts: [{ platform: 'linkedin', content: '...', hashtags: ['#IT'] }], executiveSummary: '...' }} />
             </SectionBlock>
 
             <SectionBlock title="Datenmodell - Kampagne">
@@ -924,7 +924,7 @@ withPermission(request, 'companies', 'read', async (auth) => {
             <SectionBlock title="Datenmodell">
               <FieldTable fields={[
                 { name: 'content', type: 'text', required: true, desc: 'Beitragstext' },
-                { name: 'platform', type: 'enum', required: true, desc: 'linkedin | facebook | instagram | twitter | xing' },
+                { name: 'platform', type: 'enum', required: true, desc: 'linkedin | facebook | instagram | x | xing' },
                 { name: 'status', type: 'enum', required: false, desc: 'draft | scheduled | published' },
                 { name: 'scheduledAt', type: 'datetime', required: false, desc: 'Geplanter Veröffentlichungszeitpunkt' },
                 { name: 'topicId', type: 'uuid', required: false, desc: 'Zugehoeriges Thema' },

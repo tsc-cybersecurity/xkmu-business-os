@@ -570,7 +570,7 @@ export const generateMarketingContentSchema = z.object({
 // ============================================
 // Social Media Schemas
 // ============================================
-export const socialPlatformSchema = z.enum(['linkedin', 'twitter', 'instagram', 'facebook', 'xing'])
+export const socialPlatformSchema = z.enum(['linkedin', 'x', 'instagram', 'facebook', 'xing'])
 export const socialPostStatusSchema = z.enum(['draft', 'scheduled', 'posted', 'failed'])
 
 export const createSocialMediaTopicSchema = z.object({
