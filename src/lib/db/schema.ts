@@ -3678,4 +3678,28 @@ export const appointmentsRelations = relations(appointments, ({ one }) => ({
 export type Appointment = typeof appointments.$inferSelect
 export type NewAppointment = typeof appointments.$inferInsert
 
+// ============================================================================
+// Social-Media Phase 1 — OAuth-Account-Verknüpfungen
+// ============================================================================
+
+export const socialOauthAccounts = pgTable('social_oauth_accounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  provider: varchar('provider', { length: 20 }).notNull(),
+  externalAccountId: varchar('external_account_id', { length: 255 }).notNull(),
+  accountName: varchar('account_name', { length: 255 }).notNull(),
+  accessTokenEnc: text('access_token_enc').notNull(),
+  refreshTokenEnc: text('refresh_token_enc'),
+  tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }),
+  scopes: text('scopes').array().notNull().default(sql`'{}'::text[]`),
+  meta: jsonb('meta').notNull().default(sql`'{}'::jsonb`),
+  status: varchar('status', { length: 20 }).notNull().default('connected'),
+  connectedBy: uuid('connected_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type SocialOauthAccount = typeof socialOauthAccounts.$inferSelect
+export type NewSocialOauthAccount = typeof socialOauthAccounts.$inferInsert
+
 export type GoogleCalendarConfig = typeof googleCalendarConfig.$inferSelect
