@@ -179,6 +179,49 @@ export const SocialAccountService = {
     return { connected: inserted }
   },
 
+  async connectLinkedIn(input: {
+    userId: string
+    memberId: string
+    memberName: string
+    email: string | null
+    accessToken: string
+    refreshToken: string | null
+    expiresInSec: number
+  }): Promise<{ connected: ConnectedAccountSummary[] }> {
+    const key = await getSocialTokenKey()
+    const expiresAt = input.expiresInSec > 0 ? new Date(Date.now() + input.expiresInSec * 1000) : null
+
+    const inserted = await db.transaction(async (tx) => {
+      await tx.update(socialOauthAccounts)
+        .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(socialOauthAccounts.provider, 'linkedin'), eq(socialOauthAccounts.status, 'connected')))
+
+      const liRow = await tx.insert(socialOauthAccounts).values({
+        provider: 'linkedin',
+        externalAccountId: input.memberId,
+        accountName: input.memberName || input.email || `member_${input.memberId.slice(0, 8)}`,
+        accessTokenEnc: encryptToken(input.accessToken, key),
+        refreshTokenEnc: input.refreshToken ? encryptToken(input.refreshToken, key) : null,
+        tokenExpiresAt: expiresAt,
+        scopes: ['openid', 'profile', 'email', 'w_member_social'],
+        meta: { source: 'linkedin_oidc', memberName: input.memberName, email: input.email },
+        connectedBy: input.userId,
+      }).returning()
+
+      const summary: ConnectedAccountSummary = {
+        id: liRow[0].id,
+        provider: 'linkedin',
+        externalAccountId: input.memberId,
+        accountName: input.memberName || input.email || `member_${input.memberId.slice(0, 8)}`,
+        status: 'connected',
+        tokenExpiresAt: expiresAt,
+      }
+      return [summary]
+    })
+
+    return { connected: inserted }
+  },
+
   async disconnect(id: string): Promise<{ revoked: boolean }> {
     const rows = await db.update(socialOauthAccounts)
       .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })

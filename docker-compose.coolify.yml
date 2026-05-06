@@ -71,6 +71,9 @@ services:
       - X_CLIENT_ID=${X_CLIENT_ID:-}
       - X_CLIENT_SECRET=${X_CLIENT_SECRET:-}
       - X_OAUTH_REDIRECT_URI=${X_OAUTH_REDIRECT_URI:-}
+      - LINKEDIN_CLIENT_ID=${LINKEDIN_CLIENT_ID:-}
+      - LINKEDIN_CLIENT_SECRET=${LINKEDIN_CLIENT_SECRET:-}
+      - LINKEDIN_OAUTH_REDIRECT_URI=${LINKEDIN_OAUTH_REDIRECT_URI:-}
       # Redis for session caching
       - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_secret_2024}@redis:6379
       # Next.js standalone binds to HOSTNAME; Docker sets it to container ID.
