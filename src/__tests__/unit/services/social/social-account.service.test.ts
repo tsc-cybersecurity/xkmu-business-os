@@ -61,3 +61,46 @@ describe('SocialAccountService.connectMeta', () => {
     expect(r.connected[0].tokenExpiresAt).toBeNull()
   })
 })
+
+describe('SocialAccountService.connectInstagram', () => {
+  it('persists instagram row with encrypted long-lived token', async () => {
+    const dbMock = setupDbMock()
+    dbMock.insertMock.mockResolvedValue([{ id: 'ig_row_1' }])
+
+    const { SocialAccountService } = await import('@/lib/services/social/social-account.service')
+    const r = await SocialAccountService.connectInstagram({
+      longLivedToken: 'long_ig_token',
+      expiresInSec: 5184000,
+      igUserId: 'ig_user_42',
+      igUsername: 'xkmu_official',
+      userId: 'u1',
+    })
+
+    expect(r.connected).toHaveLength(1)
+    expect(r.connected[0]).toEqual(expect.objectContaining({
+      provider: 'instagram',
+      externalAccountId: 'ig_user_42',
+      accountName: '@xkmu_official',
+      status: 'connected',
+    }))
+    expect(dbMock.db.update).toHaveBeenCalled()  // revoke prior
+    expect(dbMock.db.insert).toHaveBeenCalledOnce()
+  })
+
+  it('sets tokenExpiresAt to null when expiresInSec is 0', async () => {
+    const dbMock = setupDbMock()
+    dbMock.insertMock.mockResolvedValue([{ id: 'ig_row_2' }])
+
+    const { SocialAccountService } = await import('@/lib/services/social/social-account.service')
+    const r = await SocialAccountService.connectInstagram({
+      longLivedToken: 'long_ig_token',
+      expiresInSec: 0,
+      igUserId: 'ig_user_99',
+      igUsername: 'xkmu_test',
+      userId: 'u2',
+    })
+
+    expect(r.connected).toHaveLength(1)
+    expect(r.connected[0].tokenExpiresAt).toBeNull()
+  })
+})

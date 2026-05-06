@@ -11,6 +11,14 @@ export interface ConnectMetaInput {
   userId: string
 }
 
+export interface ConnectInstagramInput {
+  longLivedToken: string
+  expiresInSec: number
+  igUserId: string
+  igUsername: string
+  userId: string
+}
+
 export interface ConnectedAccountSummary {
   id: string
   provider: 'facebook' | 'instagram' | 'x' | 'linkedin'
@@ -89,6 +97,40 @@ export const SocialAccountService = {
       }
 
       return rows
+    })
+
+    return { connected: inserted }
+  },
+
+  async connectInstagram(input: ConnectInstagramInput): Promise<{ connected: ConnectedAccountSummary[] }> {
+    const key = await getSocialTokenKey()
+    const expiresAt = input.expiresInSec > 0 ? new Date(Date.now() + input.expiresInSec * 1000) : null
+
+    const inserted = await db.transaction(async (tx) => {
+      await tx.update(socialOauthAccounts)
+        .set({ status: 'revoked', revokedAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(socialOauthAccounts.provider, 'instagram'), eq(socialOauthAccounts.status, 'connected')))
+
+      const igRow = await tx.insert(socialOauthAccounts).values({
+        provider: 'instagram',
+        externalAccountId: input.igUserId,
+        accountName: `@${input.igUsername}`,
+        accessTokenEnc: encryptToken(input.longLivedToken, key),
+        tokenExpiresAt: expiresAt,
+        scopes: ['instagram_business_basic', 'instagram_business_content_publish'],
+        meta: { source: 'instagram_direct', igUsername: input.igUsername },
+        connectedBy: input.userId,
+      }).returning()
+
+      const summary: ConnectedAccountSummary = {
+        id: igRow[0].id,
+        provider: 'instagram',
+        externalAccountId: input.igUserId,
+        accountName: `@${input.igUsername}`,
+        status: 'connected',
+        tokenExpiresAt: expiresAt,
+      }
+      return [summary]
     })
 
     return { connected: inserted }
