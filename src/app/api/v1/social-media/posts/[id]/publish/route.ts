@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { apiSuccess, apiNotFound, apiServerError } from '@/lib/utils/api-response'
 import { SocialPublishingService } from '@/lib/services/social-publishing.service'
 import { MetaProvider } from '@/lib/services/social/meta-provider'
+import { InstagramProvider } from '@/lib/services/social/instagram-provider'
 import { withPermission } from '@/lib/auth/require-permission'
 import { AuditLogService } from '@/lib/services/audit-log.service'
 import { db } from '@/lib/db'
@@ -31,8 +32,10 @@ export async function POST(request: NextRequest, { params }: { params: Params })
 
       let result: PublishResult
 
-      if (isOAuth) {
+      if (platform === 'facebook') {
         result = await MetaProvider.publish(post)
+      } else if (platform === 'instagram') {
+        result = await InstagramProvider.publish(post)
       } else {
         const body = await request.json().catch(() => ({})) as { imageUrl?: string; link?: string }
         const legacyResults = await SocialPublishingService.publish(

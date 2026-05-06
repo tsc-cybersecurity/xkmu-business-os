@@ -11,6 +11,9 @@ vi.mock('@/lib/auth/require-permission', () => ({
 const meta = { publish: vi.fn() }
 vi.mock('@/lib/services/social/meta-provider', () => ({ MetaProvider: meta }))
 
+const ig = { publish: vi.fn() }
+vi.mock('@/lib/services/social/instagram-provider', () => ({ InstagramProvider: ig }))
+
 const legacy = { publish: vi.fn() }
 vi.mock('@/lib/services/social-publishing.service', () => ({ SocialPublishingService: legacy }))
 
@@ -38,6 +41,7 @@ const liPost = {
 beforeEach(() => {
   vi.resetModules()
   meta.publish.mockReset()
+  ig.publish.mockReset()
   legacy.publish.mockReset()
   audit.log.mockReset()
 })
@@ -186,5 +190,20 @@ describe('POST /api/v1/social-media/posts/[id]/publish', () => {
     expect(meta.publish).not.toHaveBeenCalled()
     expect(legacy.publish).not.toHaveBeenCalled()
     expect(audit.log).not.toHaveBeenCalled()
+  })
+
+  it('routes instagram posts to InstagramProvider', async () => {
+    const dbMock = setupDbMock()
+    dbMock.selectMock.mockResolvedValueOnce([{ id: 'p1', platform: 'instagram', content: 'IG post', imageUrl: 'https://cdn/x.jpg' }])
+    dbMock.updateMock.mockResolvedValue([])
+    ig.publish.mockResolvedValue({ ok: true, externalPostId: 'media_99', externalUrl: null })
+    audit.log.mockResolvedValue(undefined)
+
+    const { POST } = await import('@/app/api/v1/social-media/posts/[id]/publish/route')
+    const res = await POST(new Request('https://app/x', { method: 'POST', body: JSON.stringify({}) }) as any, { params: Promise.resolve({ id: 'p1' }) })
+    expect(res.status).toBe(200)
+    expect(ig.publish).toHaveBeenCalledWith(expect.objectContaining({ platform: 'instagram' }))
+    expect(meta.publish).not.toHaveBeenCalled()
+    expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'social_media_post_published', payload: expect.objectContaining({ platform: 'instagram', postedVia: 'oauth' }) }))
   })
 })
