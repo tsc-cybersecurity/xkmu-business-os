@@ -588,7 +588,7 @@ export const createSocialMediaPostSchema = z.object({
   content: z.string().min(1, 'Inhalt ist erforderlich'),
   hashtags: z.array(z.string()).default([]),
   imageUrl: z.string().max(500).optional().or(z.literal("")),
-  scheduledAt: z.string().optional().or(z.literal("")),
+  scheduledAt: z.string().nullable().optional().or(z.literal("")),
   status: socialPostStatusSchema.default('draft'),
 })
 

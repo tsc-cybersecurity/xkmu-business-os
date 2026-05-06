@@ -54,7 +54,7 @@ export interface CreatePostInput {
   content: string
   hashtags?: string[]
   imageUrl?: string
-  scheduledAt?: string
+  scheduledAt?: string | null
   status?: string
   aiGenerated?: boolean
 }
