@@ -14,6 +14,12 @@ vi.mock('@/lib/services/social/meta-provider', () => ({ MetaProvider: meta }))
 const ig = { publish: vi.fn() }
 vi.mock('@/lib/services/social/instagram-provider', () => ({ InstagramProvider: ig }))
 
+const linkedin = { publish: vi.fn() }
+vi.mock('@/lib/services/social/linkedin-provider', () => ({ LinkedInProvider: linkedin }))
+
+const xprov = { publish: vi.fn() }
+vi.mock('@/lib/services/social/x-provider', () => ({ XProvider: xprov }))
+
 const legacy = { publish: vi.fn() }
 vi.mock('@/lib/services/social-publishing.service', () => ({ SocialPublishingService: legacy }))
 
@@ -42,6 +48,8 @@ beforeEach(() => {
   vi.resetModules()
   meta.publish.mockReset()
   ig.publish.mockReset()
+  linkedin.publish.mockReset()
+  xprov.publish.mockReset()
   legacy.publish.mockReset()
   audit.log.mockReset()
 })
@@ -85,12 +93,14 @@ describe('POST /api/v1/social-media/posts/[id]/publish', () => {
     expect(legacy.publish).not.toHaveBeenCalled()
   })
 
-  it('LinkedIn happy path: SocialPublishingService success → status=posted, postedVia=legacy, audit logged', async () => {
+  it('LinkedIn happy path: LinkedInProvider success → status=posted, postedVia=oauth, audit logged', async () => {
     const dbMock = setupDbMock()
     dbMock.selectMock.mockResolvedValue([liPost])
     dbMock.updateMock.mockResolvedValue([])
-    legacy.publish.mockResolvedValue({
-      linkedin: { success: true, postId: 'li_123', postUrl: 'https://linkedin.com/post/li_123' },
+    linkedin.publish.mockResolvedValue({
+      ok: true,
+      externalPostId: 'urn:li:share:li_123',
+      externalUrl: 'https://www.linkedin.com/feed/update/urn%3Ali%3Ashare%3Ali_123/',
     })
     audit.log.mockResolvedValue(undefined)
 
@@ -103,16 +113,17 @@ describe('POST /api/v1/social-media/posts/[id]/publish', () => {
     expect(res.status).toBe(200)
     const body = await res.json()
     expect(body.data.result.ok).toBe(true)
-    expect(body.data.result.externalPostId).toBe('li_123')
+    expect(body.data.result.externalPostId).toBe('urn:li:share:li_123')
 
     expect(audit.log).toHaveBeenCalledWith(expect.objectContaining({
       action: 'social_media_post_published',
       payload: expect.objectContaining({
         platform: 'linkedin',
-        postedVia: 'legacy',
+        postedVia: 'oauth',
       }),
     }))
     expect(meta.publish).not.toHaveBeenCalled()
+    expect(legacy.publish).not.toHaveBeenCalled()
   })
 
   it('FB failure (revokeAccount=false): status=failed, lastError set, audit social_media_post_failed, no oauth-account changes', async () => {
