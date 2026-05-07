@@ -1,7 +1,7 @@
 # xKMU BusinessOS - Vollständige Anwendungsdokumentation
 
-> **Version:** 1.2.211
-> **Stand:** 2026-03-23
+> **Version:** 1.5.625+
+> **Stand:** 2026-05-07
 > **Stack:** Next.js 16 App Router, React 19, Drizzle ORM, PostgreSQL
 > **Sprache:** Deutsch (UI), Englisch (API/Code)
 
@@ -488,27 +488,73 @@ Kategorien sind nach BSI-Empfehlung in 4 Prioritätsgruppen sortiert:
 
 | Seite | URL | Funktion |
 |-------|-----|----------|
-| Beiträge | `/intern/social-media` | Social-Media-Beiträge verwalten |
-| Neuer Beitrag | `/intern/social-media/new` | Beitrag erstellen |
-| Beitragsdetail | `/intern/social-media/[id]` | Beitrag bearbeiten |
-| Content-Plan | `/intern/social-media/content-plan` | Redaktionsplanung |
+| Beiträge | `/intern/social-media` | Beiträge-Übersicht (Filter: Plattform, Status, Thema, „Gepostete ausblenden"-Toggle) |
+| Neuer Beitrag | `/intern/social-media/new` | Manuell oder per KI generiert (Tab-Wahl) |
+| Beitragsdetail | `/intern/social-media/[id]` | Bearbeiten, datetime-Picker für scheduledAt, „Jetzt posten"-Button |
+| Content-Plan | `/intern/social-media/content-plan` | Bulk-KI-Generierung mit optionalem Auto-Schedule |
+| Posting-Kalender | `/intern/social-media/kalender` | Monatsansicht mit Drag-Drop, Backlog-Sidebar |
 | Themen | `/intern/social-media/topics` | Themen verwalten |
+| Account-Connectoren | `/intern/integrations/social` | OAuth-Connect für FB/IG/X/LinkedIn |
 
-**Felder eines Social-Media-Beitrags:**
+**Felder eines Social-Media-Beitrags (`social_media_posts`):**
 | Feld | Typ | Beschreibung |
 |------|-----|-------------|
 | `content` | text | Beitragstext |
-| `platform` | enum | `linkedin`, `facebook`, `instagram`, `twitter`, `xing` |
-| `status` | enum | `draft`, `scheduled`, `published` |
-| `scheduledAt` | datetime | Geplanter Veröffentlichungszeitpunkt |
+| `platform` | enum | `linkedin`, `facebook`, `instagram`, `x`, `xing` |
+| `status` | enum | `draft`, `scheduled`, `posted`, `failed` |
+| `scheduledAt` | timestamptz | Geplanter Veröffentlichungszeitpunkt (wird nach Posten auf NULL gesetzt) |
+| `postedAt` | timestamptz | Tatsächlicher Veröffentlichungszeitpunkt |
+| `externalPostId` | varchar | Plattform-eigene Post-ID (FB-Post, Tweet-ID, LinkedIn-URN) |
+| `externalUrl` | varchar | Direkter Link zum veröffentlichten Post |
+| `lastError` | text | Letzte Fehlermeldung beim Publish (Token, Rate-Limit, API) |
+| `postedVia` | enum | `oauth` (FB/IG/X/LinkedIn) oder `legacy` (XING) |
 | `topicId` | uuid | Zugehöriges Thema |
-| `hashtags` | string[] | Hashtags |
-| `mediaUrl` | string | Medien-URL |
+| `hashtags` | string[] | Hashtags (werden beim Publish an content angehängt) |
+| `imageUrl` | string | Bild-Pfad (lokal `/api/v1/media/serve/...` oder absolut) |
+| `aiGenerated` | boolean | Markierung für KI-erstellte Posts |
+
+**Plattform-Connect (OAuth):**
+
+| Plattform | OAuth-Flow | Required ENV | Posting-Code-Pfad |
+|-----------|-----------|--------------|--------------------|
+| Facebook | Facebook-Login (Page-Token via `business_management`) | `META_APP_ID`, `META_APP_SECRET`, `META_OAUTH_REDIRECT_URI` | `MetaProvider` → Graph API `/feed` |
+| Instagram | Instagram-Direct-Login (separat von FB) | `INSTAGRAM_APP_ID`, `INSTAGRAM_APP_SECRET`, `INSTAGRAM_OAUTH_REDIRECT_URI` | `InstagramProvider` → 2-step container/publish |
+| X (Twitter) | OAuth 2.0 with PKCE | `X_CLIENT_ID`, `X_CLIENT_SECRET`, `X_OAUTH_REDIRECT_URI` | `XProvider` → POST `/2/tweets` (Free-Tier text-only, max 280 Zeichen) |
+| LinkedIn | OAuth 2.0 + OIDC userinfo | `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_OAUTH_REDIRECT_URI` | `LinkedInProvider` → POST `/rest/posts` als Person |
+
+Tokens liegen verschlüsselt (AES-256-GCM) in `social_oauth_accounts.access_token_enc` / `refresh_token_enc`.
 
 **KI-Funktionen:**
-- **Beitrag generieren:** KI-generierter Social-Media-Post (`POST /api/v1/social-media/posts/generate`)
-- **Beitrag verbessern:** KI-Optimierung eines bestehenden Posts (`POST /api/v1/social-media/posts/[id]/improve`)
-- **Content-Plan generieren:** Automatischer Redaktionsplan (`POST /api/v1/social-media/posts/generate-plan`)
+- **Beitrag generieren** (`POST /api/v1/social-media/posts/generate`): Text + Hashtags + optional Bild (KI-Bild via Gemini, Aspect-Ratio plattformspezifisch — IG=1:1, FB/X/LinkedIn=16:9)
+- **Beitrag verbessern** (`POST /api/v1/social-media/posts/[id]/improve`): Refinement bestehender Posts
+- **Content-Plan generieren** (`POST /api/v1/social-media/posts/generate-plan`): Mehrtägiger Redaktionsplan, optional direkt scheduled
+
+**Auto-Posting (Cron):**
+1. Post mit `status='scheduled'` + `scheduledAt` anlegen
+2. `SocialMediaPostService.update` ruft `reconcilePublishTask` → legt `task_queue`-Item mit `type='social_post_publish'` und `scheduledFor=scheduledAt` an
+3. Cron-Job vom Typ „Task-Queue abarbeiten" (process_queue) ruft alle 5/15 min `TaskQueueService.executeAllPending()`
+4. Handler ruft `SocialPublishOrchestrator.publishById(postId)` → Provider → DB-Update (`status=posted`, `scheduledAt=NULL`, `postedAt=now`)
+5. Workflow-Trigger `social.post.published` (oder `social.post.failed`) wird gefeuert für nachgelagerte Workflows
+
+**Kalender-UI (`/intern/social-media/kalender`):**
+- Monats-Grid mit 6 Wochen
+- Posts plattform-farbcodiert (FB=blau, IG=pink, LinkedIn=sky, X=grau, XING=grün)
+- Drag-Drop zwischen Tagen → setzt `scheduledAt` neu (Uhrzeit bleibt erhalten)
+- Drop in **Backlog**-Sidebar → entplant (`scheduledAt=NULL, status='draft'`)
+- Gepostete Posts erscheinen nicht im Kalender (nur in der Liste-Übersicht)
+
+**API-Endpoints (Auswahl):**
+| Methode | Pfad | Beschreibung |
+|---------|------|-------------|
+| GET | `/api/v1/social-media/posts` | Liste mit Filtern (platform, status, topicId) |
+| POST | `/api/v1/social-media/posts` | Neuer Post |
+| PUT | `/api/v1/social-media/posts/[id]` | Update (löst reconcilePublishTask aus) |
+| DELETE | `/api/v1/social-media/posts/[id]` | Löscht + cancelt pending tasks |
+| GET | `/api/v1/social-media/posts/calendar?from=&to=` | Kalender-Range (scheduled + backlog) |
+| POST | `/api/v1/social-media/posts/[id]/publish` | Manuell sofort posten |
+| GET | `/api/v1/social/connection-status?provider=x` | OAuth-Connection-Check |
+| GET | `/api/v1/social/diagnose` | Diagnose-Endpoint (Tokens, Audit) |
+| DELETE | `/api/v1/social/accounts/[id]` | Account trennen (revoke) |
 
 ---
 
@@ -1931,16 +1977,75 @@ newLeads, wonLeads, conversionRate, revenue, openInvoices, overdueInvoices
 
 ## 22. Social Media Publishing
 
-Direktes Posten auf LinkedIn und Twitter/X.
+Direktes Posten auf **Facebook**, **Instagram**, **X (Twitter)** und **LinkedIn** über OAuth-basierte Provider. Plus Cron-gesteuertes Auto-Posting für geplante Beiträge.
 
-### API-Endpoints
+### Architektur
+
+```
+social_media_posts (DB) → SocialPublishOrchestrator.publishById(postId)
+                              ↓
+                    Plattform-Dispatch:
+                      facebook  → MetaProvider      → Graph API /feed
+                      instagram → InstagramProvider → Graph IG 2-step
+                      x         → XProvider         → POST /2/tweets
+                      linkedin  → LinkedInProvider  → POST /rest/posts
+                      xing      → SocialPublishingService (legacy)
+                              ↓
+                    DB-Update (posted/failed) + Workflow-Fire
+                      'social.post.published' / 'social.post.failed'
+```
+
+### OAuth-Connection-Layer
+
+Tokens werden verschlüsselt (AES-256-GCM, Key aus `APPOINTMENT_TOKEN_SECRET`) in `social_oauth_accounts` gespeichert.
+
+| Plattform | Auth-Methode | Token-Lifetime | Refresh |
+|-----------|--------------|----------------|---------|
+| Facebook  | FB-Login + Long-Lived Page-Token | 60 Tage | Auto via Cron-Skeleton (`social_token_refresh`) |
+| Instagram | IG-Direct-Login (separate App!) | 60 Tage | Long-Lived-Exchange |
+| X         | OAuth 2.0 PKCE (httpOnly-Cookie für Verifier) | 2h Access + Refresh-Token | Lazy-Refresh 60s vor Ablauf in `XProvider` |
+| LinkedIn  | OAuth 2.0 + OIDC userinfo | 60 Tage | Refresh nur bei Marketing-API-Apps |
+
+Connect-Routes:
+| Pfad | Plattform |
+|------|-----------|
+| `/api/social/meta/oauth/start` + `/callback` | Facebook |
+| `/api/social/instagram/oauth/start` + `/callback` | Instagram |
+| `/api/social/x/oauth/start` + `/callback` | X (PKCE) |
+| `/api/social/linkedin/oauth/start` + `/callback` | LinkedIn |
+
+UI: `/intern/integrations/social` — `AccountCards` mit Connect-/Trennen-Buttons je Plattform.
+
+### Posting-API
+
 | Methode | Pfad | Beschreibung |
 |---------|------|-------------|
-| POST | `/api/v1/social-media/posts/[id]/publish` | Post auf Plattform(en) veroeffentlichen |
+| POST | `/api/v1/social-media/posts/[id]/publish` | Manuell sofort posten (mit Audit-Log + Workflow-Fire) |
+| POST | `/api/v1/task-queue/execute` (mit `{all:true}`) | Cron-Tick — pickt fällige `social_post_publish` Tasks |
 
-### Konfiguration
-LinkedIn: AI-Provider type=`linkedin`, apiKey=`accessToken|authorUrn`
-Twitter: AI-Provider type=`twitter`, apiKey=`bearerToken`
+### Cron-Auto-Posting
+
+1. Post mit `status='scheduled'` + `scheduledAt` anlegen oder via Drag-Drop im Kalender setzen
+2. `SocialMediaPostService.update` ruft `reconcilePublishTask` → cancelt alte pending Tasks für den Post + legt neuen `task_queue`-Item an
+3. Cron-Job vom Typ **„Task-Queue abarbeiten"** (Action `process_queue`) ruft alle 5/15 min `TaskQueueService.executeAllPending()`
+4. Handler `social_post_publish` prüft `status='scheduled'` (Sicherheits-Check), ruft `SocialPublishOrchestrator.publishById`
+5. Bei Erfolg: `status=posted`, `scheduledAt=NULL`, `externalPostId/Url` gesetzt
+6. Workflow-Engine-Trigger `social.post.published` / `social.post.failed` (fail-soft)
+
+### Plattform-Caveats
+
+- **X Free Tier**: Text-only (kein media-upload), max 280 Zeichen — `XProvider.truncateForTweet` schneidet automatisch am letzten Wort
+- **LinkedIn**: Posting als Person (Member-URN), nicht als Company-Page (würde Marketing-Suite + `r_organization_admin` erfordern). Bilder noch nicht implementiert (3-stufiger asset-upload-Flow nötig)
+- **Instagram**: Erfordert IG-Business- oder Creator-Account, App im Development-Mode braucht Tester-Invite (`/accounts/manage_access/`)
+- **Facebook**: Page-Posts; XKMU-Page muss als Tester der App eingetragen sein bei Development-Mode-App
+
+### Hashtag-Handling
+
+Provider hängen `post.hashtags`-Array beim Publish an den Body an (composeBody-Helper), wenn nicht schon im Content enthalten. `#`-Präfix wird automatisch ergänzt.
+
+### Image-Handling
+
+`MetaProvider` und `InstagramProvider` konvertieren relative Image-URLs (`/api/v1/media/serve/...`) zu absoluten URLs via `CmsDesignService.getAppUrl()`, weil Meta-API absolute URLs verlangt. Free-Tier-X überspringt Bilder. LinkedIn unterstützt Bilder im MVP nicht.
 
 ---
 
@@ -2021,8 +2126,13 @@ Trigger sind System-Events. Wenn ein Trigger feuert, werden alle aktiven Workflo
 | `portal.message_sent` | Portal-Chat-Nachricht | `messageId`, `companyId`, `senderId`, `senderRole`, `bodyPreview` |
 | `portal.document_uploaded` | Portal-Dokument hochgeladen | `documentId`, `companyId`, `direction`, `fileName`, `sizeBytes`, `uploaderRole` |
 | `portal.change_request_created` | Firmendaten-Änderungsantrag im Portal | `changeRequestId`, `companyId`, `requestedBy`, `proposedChanges` |
+| `__scheduled__` | Cron-getriggert (Konfiguration im Bereich „Zeitplan" am Workflow) | `scheduledAt`, `workflowId`, `cronJobId` |
+| `social.post.published` | Social-Media-Post erfolgreich veröffentlicht | `postId`, `platform`, `externalPostId`, `externalUrl`, `postedVia` |
+| `social.post.failed` | Social-Media-Publish-Versuch fehlgeschlagen | `postId`, `platform`, `error`, `postedVia` |
 
 Zentrale Source of Truth: `src/lib/services/workflow/triggers.ts`.
+
+> Ausführliche Trigger-/Action-Referenz inkl. End-to-End-Workflow-Beispielen: siehe `docs/WORKFLOW_ENGINE.md`.
 
 ---
 
@@ -2072,9 +2182,23 @@ Führt alle `steps` parallel aus (`Promise.allSettled`). Sub-Steps haben isolier
 
 Ein fehlgeschlagener Sub-Step bricht den Workflow nicht ab — `failedCount` im Summary zeigt, wieviele scheiterten.
 
+#### `kind: 'for_each'` (Iteration über Array)
+
+Iteriert über ein Array aus `data.*` oder `steps.*.*` und führt die `steps`-Liste pro Element aus. Innerhalb der Schleife steht das aktuelle Element als `{{item}}` zur Verfügung.
+
+```json
+{ "id": "loop1", "kind": "for_each",
+  "source": "data.platforms",
+  "steps": [
+    { "id": "gen", "kind": "action", "action": "generate_social_post",
+      "config": { "platform": "{{item}}", "topic": "{{data.topic}}" } }
+  ] }
+```
+
 #### Limits (defensiv)
-- `MAX_DEPTH = 10` — maximale Verschachtelungstiefe (branch/parallel ineinander)
+- `MAX_DEPTH = 10` — maximale Verschachtelungstiefe (branch/parallel/for_each ineinander)
 - `MAX_PARALLEL_FANOUT = 100` — maximale Sub-Step-Anzahl pro `parallel`
+- `MAX_LOOP_ITERATIONS = 100` — maximale Iterationen pro `for_each`
 
 Bei Überschreitung wird der entsprechende Step mit Status `failed` markiert; der Workflow läuft weiter.
 
@@ -2155,6 +2279,32 @@ Alle Actions sind in `src/lib/services/workflow/action-registry.ts` registriert.
   - `timeoutMs` (number, default `10000`)
 - Liefert: `{ status, body }` (Body ist JSON wenn parsebar, sonst String)
 - 4xx wird als Fehler behandelt **ohne** Retry; 5xx und Netzwerkfehler werden mit exponentiell wachsendem Delay (1s, 2s, 3s, …) wiederholt.
+
+#### Social-Media-Actions
+
+**`generate_social_post`** — KI-Generierung eines plattformspezifischen Beitrags
+- Config:
+  - `platform` (`linkedin` | `x` | `instagram` | `facebook` | `xing`)
+  - `topic` (string, supports `{{data.x}}`)
+  - `tone` (`professional` | `casual` | `humorous` | `inspirational`)
+  - `includeHashtags` (boolean)
+  - `includeEmoji` (boolean)
+  - `includeImage` (boolean) — generiert KI-Bild via Gemini, Aspect 1:1 für IG, sonst 16:9
+  - `scheduledAt` (string, leer = Draft / gesetzt = direkt scheduled)
+- Liefert: `{ postId, platform, status, scheduledAt, imageUrl }`
+- Speichert direkt in `social_media_posts`; bei `scheduledAt` greift `reconcilePublishTask` für Auto-Posting
+
+**`schedule_social_post`** — Bestehenden Post auf Datum + scheduled status setzen
+- Config: `postId` (string, supports Templating), `scheduledAt` (ISO-string)
+- Liefert: `{ postId, scheduledAt, status }`
+- Reuse von `SocialMediaPostService.update` — `task_queue`-Item wird automatisch angelegt
+
+**`publish_social_post`** — Sofortiges Posten (umgeht Cron)
+- Config: `postId` (string, supports Templating)
+- Liefert: `{ postId, platform, externalPostId, externalUrl }`
+- Ruft `SocialPublishOrchestrator.publishById` direkt; Workflow-Trigger `social.post.published`/`.failed` wird gefeuert
+
+> Vollständige Action- und Trigger-Referenz mit Beispielen: siehe `docs/WORKFLOW_ENGINE.md`.
 
 ---
 

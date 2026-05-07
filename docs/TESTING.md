@@ -349,6 +349,16 @@ Kopiere `companies.route.test.ts` und ersetze:
 | MarketingTask | 16 | create, getById, update, delete, list, listByCampaign |
 | SocialMediaPost | 19 | create, getById, update, delete, list, bulkCreate |
 | SocialMediaTopic | 14 | list, getById, create, update, delete |
+| Social/CryptoConfig | 4 | getSocialTokenKey (env-fallback, validation) |
+| Social/PostStatus | 4 | status state-machine helpers |
+| Social/MetaOAuthClient | 6 | buildAuthorizeUrl, exchangeCode, exchangeForLongLived, listPagesWithIg |
+| Social/MetaPublishClient | 6 | publishToFacebookPage, publishToInstagram (2-step) |
+| Social/MetaProvider | 5 | publish (FB/IG dispatch, account-loading, error-handling) |
+| Social/InstagramOAuthClient | 4 | buildAuthorizeUrl, exchangeCode, getUserInfo |
+| Social/InstagramPublishClient | 5 | publishImage (container + publish) |
+| Social/InstagramProvider | 4 | publish, hashtag-compose, image-url-absolutize |
+| Social/SocialAccountService | 8 | connectMeta, connectInstagram, connectX, connectLinkedIn, list, disconnect |
+| Social/SocialPostService | 8 | listForCalendar, reconcilePublishTask, status-transitions |
 
 ### API Route Integration Tests
 
