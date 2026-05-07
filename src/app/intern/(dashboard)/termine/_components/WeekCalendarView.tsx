@@ -86,8 +86,19 @@ export function WeekCalendarView(props: {
   })
 
   function navigate(weeks: number) {
-    const next = new Date(monday)
-    next.setDate(next.getDate() + weeks * 7)
+    let next: Date
+    if (weeks === 0) {
+      // "Heute" → Montag der AKTUELLEN Woche (nicht der gerade angezeigten).
+      const t = new Date()
+      const dow = t.getDay() // 0=So, 1=Mo, ..., 6=Sa
+      const diffToMon = dow === 0 ? -6 : 1 - dow
+      t.setDate(t.getDate() + diffToMon)
+      t.setHours(0, 0, 0, 0)
+      next = t
+    } else {
+      next = new Date(monday)
+      next.setDate(next.getDate() + weeks * 7)
+    }
     router.push(`/intern/termine?week=${next.toISOString().slice(0, 10)}`)
   }
 
