@@ -41,6 +41,10 @@ services:
       target: production
     container_name: xkmu-app
     restart: unless-stopped
+    # Label opt-in fuer Watchtower — nur dieser Container wird auto-aktualisiert,
+    # nicht z.B. Redis (das brauchen wir versionspinned).
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
@@ -118,6 +122,36 @@ services:
       retries: 3
     networks:
       - internal
+
+  # ============================================
+  # Watchtower (Auto-Update fuer App-Container)
+  # ============================================
+  # Pollt alle 5 Min GHCR auf neue Images des app-Containers (nur per Label
+  # opt-in). Bei Update: pull → stop alt → start neu. Healthcheck der App
+  # sorgt dafuer, dass der NPM-Reverse-Proxy erst routet wenn ready.
+  #
+  # Voraussetzung: einmaliger "sudo docker login ghcr.io" auf dem Host —
+  # die credentials liegen dann in /root/.docker/config.json und werden
+  # readonly in den watchtower-Container gemountet.
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # GHCR-Credentials vom Host (sudo docker login ghcr.io)
+      - /root/.docker/config.json:/config.json:ro
+    environment:
+      # Nur Container mit Label com.centurylinklabs.watchtower.enable=true updaten
+      - WATCHTOWER_LABEL_ENABLE=true
+      # Poll-Intervall: 5 Min (300s)
+      - WATCHTOWER_POLL_INTERVAL=${WATCHTOWER_POLL_INTERVAL:-300}
+      # Alte Images nach erfolgreichem Update aufraeumen (kein Disk-Bloat)
+      - WATCHTOWER_CLEANUP=true
+      # Restarting Container nicht anfassen (verhindert Race-Conditions)
+      - WATCHTOWER_INCLUDE_RESTARTING=false
+      # Zeitzone fuer Logs
+      - TZ=${TZ:-Europe/Berlin}
 
 networks:
   # Connect to Supabase's Docker network (where supabase-db lives)
