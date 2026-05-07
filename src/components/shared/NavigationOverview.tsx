@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, Compass } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -102,23 +102,24 @@ export function NavigationOverview() {
         </button>
       </CardHeader>
       {open && (
-        <CardContent className="pt-0 space-y-4">
-          {visibleSections.map(({ section, allChildren }) => {
-            const Icon = section.icon
-            return (
-              <div key={section.name} className="space-y-2">
-                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  <Icon className="h-4 w-4" />
-                  {section.href ? (
-                    <Link href={section.href} className="hover:text-foreground transition-colors">
-                      {section.name}
-                    </Link>
-                  ) : (
-                    <span>{section.name}</span>
-                  )}
-                </div>
-                {allChildren.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pl-6">
+        <CardContent className="pt-0">
+          {/* 2-Spalten-Grid: links Bereichs-Header, rechts Pill-Liste — spart vertikalen Platz. */}
+          <div className="grid items-center gap-x-4 gap-y-1.5 [grid-template-columns:minmax(140px,max-content)_1fr]">
+            {visibleSections.map(({ section, allChildren }) => {
+              const Icon = section.icon
+              return (
+                <Fragment key={section.name}>
+                  <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {section.href ? (
+                      <Link href={section.href} className="hover:text-foreground transition-colors">
+                        {section.name}
+                      </Link>
+                    ) : (
+                      <span>{section.name}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 min-w-0">
                     {allChildren.map((child) => (
                       <Button
                         key={child.href}
@@ -131,10 +132,10 @@ export function NavigationOverview() {
                       </Button>
                     ))}
                   </div>
-                )}
-              </div>
-            )
-          })}
+                </Fragment>
+              )
+            })}
+          </div>
         </CardContent>
       )}
     </Card>
