@@ -1,0 +1,103 @@
+# ============================================
+# Matomo Analytics Stack
+# ============================================
+# Eigenstaendiger Stack — laeuft parallel zur xKMU-App im selben
+# externen Docker-Netzwerk (supabase_default), damit der Nginx Proxy
+# Manager (NPM) Matomo erreichen kann ohne extra Netzwerk-Bruecken.
+#
+# Voraussetzungen:
+#   - Externes Netzwerk "supabase_default" existiert (von der App genutzt)
+#   - .env enthaelt MARIADB_PASSWORD und MARIADB_ROOT_PASSWORD
+#
+# Starten:
+#   docker compose -f docker-compose.matomo.yml --env-file .env up -d
+#
+# Erstinbetriebnahme:
+#   1. Stack starten
+#   2. NPM: Proxy Host fuer matomo.xkmu.de anlegen,
+#      Forward Hostname: matomo-web, Forward Port: 80
+#      (NPM muss im gleichen Netzwerk supabase_default sein)
+#   3. https://matomo.xkmu.de oeffnen → Matomo-Web-Installer durchklicken
+#      Datenbank: Host=matomo-db, User=matomo, DB=matomo,
+#                 Passwort=$MARIADB_PASSWORD, Tables Prefix=matomo_
+#   4. JS-Tracker-Snippet in xKMU-App einbauen (CMS-Settings)
+#
+# Stoppen:
+#   docker compose -f docker-compose.matomo.yml down
+#   (Volumes bleiben — komplett loeschen mit -v, Achtung!)
+# ============================================
+
+services:
+  matomo-db:
+    image: mariadb:lts
+    container_name: matomo-db
+    command: --max-allowed-packet=64MB
+    restart: unless-stopped
+    environment:
+      - MARIADB_AUTO_UPGRADE=1
+      - MARIADB_DATABASE=matomo
+      - MARIADB_DISABLE_UPGRADE_BACKUP=1
+      - MARIADB_INITDB_SKIP_TZINFO=1
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD:?MARIADB_PASSWORD must be set}
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD:?MARIADB_ROOT_PASSWORD must be set}
+      - MARIADB_USER=matomo
+    volumes:
+      - matomo_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - matomo-internal
+
+  matomo:
+    image: matomo:fpm-alpine
+    container_name: matomo
+    restart: unless-stopped
+    depends_on:
+      matomo-db:
+        condition: service_healthy
+    environment:
+      - MATOMO_DATABASE_ADAPTER=mysql
+      - MATOMO_DATABASE_DBNAME=matomo
+      - MATOMO_DATABASE_HOST=matomo-db
+      - MATOMO_DATABASE_PASSWORD=${MARIADB_PASSWORD:?MARIADB_PASSWORD must be set}
+      - MATOMO_DATABASE_TABLES_PREFIX=matomo_
+      - MATOMO_DATABASE_USERNAME=matomo
+      - PHP_MEMORY_LIMIT=2048M
+    volumes:
+      - matomo_data:/var/www/html
+    networks:
+      - matomo-internal
+
+  matomo-web:
+    image: nginx:alpine-slim
+    container_name: matomo-web
+    restart: unless-stopped
+    depends_on:
+      - matomo
+    volumes:
+      - matomo_data:/var/www/html:ro
+      - ./docker/matomo/matomo.conf:/etc/nginx/conf.d/default.conf:ro
+    # Kein Host-Port-Bind — NPM erreicht uns ueber das supabase_default Netzwerk
+    # per Service-Name "matomo-web:80". Falls direkter Zugriff fuer Setup
+    # gewuenscht: ports auskommentieren.
+    # ports:
+    #   - "8081:80"
+    networks:
+      - matomo-internal
+      - supabase_default
+
+volumes:
+  matomo_db:
+  matomo_data:
+
+networks:
+  # Internes Netz: nur Matomo-Services untereinander (DB, FPM, nginx)
+  matomo-internal:
+    driver: bridge
+  # External: gleiches Netz wie die xKMU-App, damit NPM matomo-web erreicht
+  supabase_default:
+    external: true
