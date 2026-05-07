@@ -7,6 +7,7 @@ import type { CourseLessonBlock } from '@/lib/db/schema'
 
 export interface PreviewLesson {
   id: string
+  courseId: string
   title: string
   slug: string
   position: number
@@ -75,7 +76,7 @@ function renderLesson(
         />
       )}
       {l.blocks && l.blocks.length > 0 ? (
-        <LessonContentRenderer blocks={l.blocks} />
+        <LessonContentRenderer blocks={l.blocks} courseId={l.courseId} lessonId={l.id} />
       ) : (
         l.contentMarkdown && (
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{l.contentMarkdown}</ReactMarkdown>

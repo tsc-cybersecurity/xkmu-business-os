@@ -16,7 +16,11 @@ export function LessonContent({ lesson, assets, completion }: Props) {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">{lesson.title}</h1>
-      <LessonContentRenderer blocks={lesson.blocks ?? []} />
+      <LessonContentRenderer
+        blocks={lesson.blocks ?? []}
+        courseId={lesson.courseId}
+        lessonId={lesson.id}
+      />
       {completion && (
         <div className="flex justify-end">
           <LessonCompletionToggle
