@@ -1,14 +1,17 @@
-name: Docker Build & Push
+name: Release (Version Bump + Docker Build)
 
-# Baut das Production-Image und pusht es nach GHCR.
-# Coolify pullt anschliessend nur noch das fertige Image (kein Build mehr im
-# Coolify-Container) -> Zero-Downtime Rolling Deploy moeglich.
+# Vereinheitlichter Release-Workflow:
+#   1. Patch-Version in package.json bumpen + committen + pushen
+#   2. Production-Image mit der neuen Version-Tag bauen und nach GHCR pushen
 #
-# Trigger:
-#   - push auf main (ausser version-bump-Commits)
-#   - manuell via "workflow_dispatch"
+# Coolify/Server pullen anschliessend das fertige Image (kein Server-Build) -> Rolling Deploy.
+# Tags: latest, main, sha-<7>, v<neue-version>
 #
-# Tags: latest, main, sha-<7>, v<version-aus-package.json>
+# Hinweise:
+#   - Pushes via GITHUB_TOKEN triggern KEINEN weiteren Workflow (GitHub-Schutz vor
+#     Endlosschleifen) — keine [skip ci]-Marker noetig.
+#   - Skip-Logik fuer [skip ci]-Commits bleibt als Safety, falls jemand manuell pusht.
+#   - Manuell ausloesen via "workflow_dispatch".
 
 on:
   push:
@@ -20,26 +23,52 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  packages: write
+  contents: write    # fuer Version-Bump-Commit
+  packages: write    # fuer GHCR-Push
 
 concurrency:
-  group: docker-build-${{ github.ref }}
-  cancel-in-progress: true
+  group: release-${{ github.ref }}
+  cancel-in-progress: false   # Releases nicht abbrechen — sonst inkonsistente bumps
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-    # Skip bei automatischen Version-Bump-Commits (haben ihren eigenen Trigger)
+    # Skip bei [skip ci]-Commits (z.B. nicht-relevante Aenderungen)
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Read package version
-        id: pkg
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Bump patch version
+        id: bump
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          echo "Current: $CURRENT  →  New: $NEW_VERSION"
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '$NEW_VERSION';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Commit & push version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.version }} [skip ci]"
+          git push
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -60,7 +89,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=main,enable={{is_default_branch}}
             type=sha,prefix=sha-,format=short
-            type=raw,value=v${{ steps.pkg.outputs.version }}
+            type=raw,value=v${{ steps.bump.outputs.version }}
 
       - name: Build & Push
         uses: docker/build-push-action@v5
