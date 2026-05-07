@@ -25,6 +25,16 @@ SERVICE="app"
 HEALTH_URL="${HEALTH_URL:-http://localhost:3000/api/health}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-90}"
 
+# Docker ohne sudo verfuegbar? Sonst sudo -E davorhaengen (preserve env).
+# Sauberer waere: User in 'docker'-Gruppe (sudo usermod -aG docker $USER + relogin).
+if docker info >/dev/null 2>&1; then
+  DOCKER="docker"
+else
+  # -E: APP_IMAGE und andere env vars an docker durchreichen.
+  DOCKER="sudo -E docker"
+  echo "INFO: docker erfordert sudo — ggf. wirst du nach dem Passwort gefragt."
+fi
+
 # Tag-Override per CLI: ./deploy.sh v1.5.654
 if [ $# -ge 1 ]; then
   TAG="$1"
@@ -42,10 +52,10 @@ echo "Image:  ${APP_IMAGE:-<aus .env>}"
 echo "============================================"
 
 echo "→ 1/4  Pull image..."
-docker compose -f "$COMPOSE_FILE" pull "$SERVICE"
+$DOCKER compose -f "$COMPOSE_FILE" pull "$SERVICE"
 
 echo "→ 2/4  Stack starten / aktualisieren..."
-docker compose -f "$COMPOSE_FILE" up -d --no-build "$SERVICE"
+$DOCKER compose -f "$COMPOSE_FILE" up -d --no-build "$SERVICE"
 
 echo "→ 3/4  Warte auf Healthcheck (max ${HEALTH_TIMEOUT}s)..."
 deadline=$(( $(date +%s) + HEALTH_TIMEOUT ))
@@ -56,14 +66,14 @@ while true; do
   fi
   if [ "$(date +%s)" -ge "$deadline" ]; then
     echo "   ✗ Healthcheck-Timeout — letzte Logs:"
-    docker compose -f "$COMPOSE_FILE" logs --tail=50 "$SERVICE"
+    $DOCKER compose -f "$COMPOSE_FILE" logs --tail=50 "$SERVICE"
     exit 1
   fi
   sleep 3
 done
 
 echo "→ 4/4  Alte Images aufraeumen (dangling)..."
-docker image prune -f >/dev/null
+$DOCKER image prune -f >/dev/null
 
 echo "============================================"
 echo "Deploy erfolgreich."
