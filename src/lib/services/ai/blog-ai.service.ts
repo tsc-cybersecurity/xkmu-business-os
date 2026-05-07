@@ -225,7 +225,9 @@ export const BlogAIService = {
     }
 
     const cleanSiteUrl = options.siteUrl.replace(/\/$/, '')
-    const url = post.slug ? `${cleanSiteUrl}/blog/${post.slug}` : cleanSiteUrl
+    // Public-Route der Blog-Beitraege ist /it-news/<slug>; /blog/<slug> wird
+    // via next.config.ts redirects auf /it-news/<slug> umgeleitet (Bestandsschutz).
+    const url = post.slug ? `${cleanSiteUrl}/it-news/${post.slug}` : cleanSiteUrl
 
     const placeholders = {
       title: post.title,

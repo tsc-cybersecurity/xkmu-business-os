@@ -45,6 +45,15 @@ const nextConfig: NextConfig = {
     },
   },
 
+  // /blog/<slug> → /it-news/<slug> (permanent). Aliase fuer Bestands-Links;
+  // CMS publiziert intern unter /it-news, externe Links nutzen oft /blog.
+  async redirects() {
+    return [
+      { source: '/blog', destination: '/it-news', permanent: true },
+      { source: '/blog/:slug*', destination: '/it-news/:slug*', permanent: true },
+    ]
+  },
+
   // Security headers for all responses
   async headers() {
     return [
