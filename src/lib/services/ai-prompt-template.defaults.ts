@@ -1362,7 +1362,11 @@ KERNREGELN:
 
 WICHTIG - AUSGABEFORMAT:
 - Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
-- KEIN Text davor, KEIN Text danach, keine Markdown-Codeblocks`,
+- KEIN Text davor, KEIN Text danach, keine Markdown-Codeblocks
+- Im "content"-Feld KEINE Markdown-Formatierung verwenden:
+  KEINE **fett**-, _kursiv_-, # Heading- oder [Link](url)-Syntax,
+  KEINE Backticks, KEINE Listen mit "- " oder "1. ".
+  Stattdessen reiner Text mit Zeilenumbruechen (\n) und ggf. Emojis.`,
     userPrompt: `Wandle den folgenden Blogbeitrag in einen Instagram-Post-Entwurf um:
 
 Titel: {{title}}
@@ -1398,7 +1402,11 @@ KERNREGELN:
 
 WICHTIG - AUSGABEFORMAT:
 - Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
-- KEIN Text davor, KEIN Text danach`,
+- KEIN Text davor, KEIN Text danach
+- Im "content"-Feld KEINE Markdown-Formatierung verwenden:
+  KEINE **fett**-, _kursiv_-, # Heading- oder [Link](url)-Syntax,
+  KEINE Backticks, KEINE Listen mit "- " oder "1. ".
+  Stattdessen reiner Text mit Zeilenumbruechen (\n) und ggf. Emojis.`,
     userPrompt: `Wandle den folgenden Blogbeitrag in einen X-Post-Entwurf um (max. 280 Zeichen):
 
 Titel: {{title}}
@@ -1435,7 +1443,11 @@ KERNREGELN:
 
 WICHTIG - AUSGABEFORMAT:
 - Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
-- KEIN Text davor, KEIN Text danach`,
+- KEIN Text davor, KEIN Text danach
+- Im "content"-Feld KEINE Markdown-Formatierung verwenden:
+  KEINE **fett**-, _kursiv_-, # Heading- oder [Link](url)-Syntax,
+  KEINE Backticks, KEINE Listen mit "- " oder "1. ".
+  Stattdessen reiner Text mit Zeilenumbruechen (\n) und ggf. Emojis.`,
     userPrompt: `Wandle den folgenden Blogbeitrag in einen LinkedIn-Post-Entwurf um:
 
 Titel: {{title}}

@@ -62,12 +62,15 @@ export async function POST(
         return apiServerError('KI-Generierung lieferte keine verwertbaren Inhalte')
       }
 
-      // In social_media_posts inserten — Bild des Blogs uebernehmen
+      // In social_media_posts inserten — Bild des Blogs uebernehmen.
+      // title = Blog-Titel (max 255 Zeichen) — hilft beim Wiederfinden im Backend.
+      const titleForRecord = post.title.substring(0, 255)
       const inserted = await db
         .insert(socialMediaPosts)
         .values(
           ok.map((g) => ({
             platform: g.platform,
+            title: titleForRecord,
             content: g.content,
             hashtags: g.hashtags,
             imageUrl: post.featuredImage ?? null,

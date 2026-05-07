@@ -251,7 +251,7 @@ export const BlogAIService = {
         const jsonStr = extractJson(response.text)
         if (jsonStr) {
           const parsed = JSON.parse(jsonStr)
-          content = String(parsed.content ?? '').trim()
+          content = stripMarkdown(String(parsed.content ?? '').trim())
           hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags.map((h: unknown) => String(h)) : []
         }
       } catch (err) {
@@ -263,4 +263,39 @@ export const BlogAIService = {
 
     return Promise.all(tasks)
   },
+}
+
+// ============================================
+// Markdown-Sanitizer fuer Social-Posts
+// ============================================
+// Social-Plattformen rendern KEIN Markdown — Restbestaende aus AI-Outputs
+// (z.B. **fett**, # Headings, [Link](url)) wuerden als Plain-Text mit
+// Sonderzeichen erscheinen. Der Sanitizer entfernt die haeufigsten Konstrukte.
+function stripMarkdown(s: string): string {
+  return s
+    // Bilder vor Links: ![alt](url) → entfernt komplett
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    // Links: [text](url) → text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Headings: # / ## / ### am Zeilenanfang → weg
+    .replace(/^#{1,6}\s+/gm, '')
+    // Bold (** oder __): doppelt
+    .replace(/\*\*([^*\n]+)\*\*/g, '$1')
+    .replace(/__([^_\n]+)__/g, '$1')
+    // Italic (* oder _): einfach (lookahead/behind via simple regex)
+    .replace(/(^|[^*])\*([^*\n]+)\*([^*]|$)/g, '$1$2$3')
+    .replace(/(^|[^_])_([^_\n]+)_([^_]|$)/g, '$1$2$3')
+    // Inline-Code: `text` → text
+    .replace(/`([^`\n]+)`/g, '$1')
+    // Code-Blocks: ```...``` → Inhalt
+    .replace(/```[a-z]*\n?([\s\S]*?)\n?```/gi, '$1')
+    // Blockquotes: > text → text
+    .replace(/^>\s*/gm, '')
+    // Bullets: -, *, + → •
+    .replace(/^[-*+]\s+/gm, '• ')
+    // Nummerierte Listen: 1. → entfernen, lass Inhalt stehen
+    .replace(/^\d+\.\s+/gm, '')
+    // Doppel-Leerzeilen → einzelne (saubere Absatztrennung)
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
