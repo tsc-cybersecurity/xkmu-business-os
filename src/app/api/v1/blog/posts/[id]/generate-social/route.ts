@@ -7,7 +7,7 @@ import { db } from '@/lib/db'
 import { socialMediaPosts } from '@/lib/db/schema'
 import { logger } from '@/lib/utils/logger'
 
-const VALID_PLATFORMS = ['instagram', 'x', 'linkedin'] as const
+const VALID_PLATFORMS = ['instagram', 'x', 'linkedin', 'facebook'] as const
 type Platform = typeof VALID_PLATFORMS[number]
 
 /**
@@ -35,7 +35,7 @@ export async function POST(
           )
           if (filtered.length === 0) {
             return apiValidationError([
-              { field: 'platforms', message: 'Mindestens eine gueltige Plattform erforderlich (instagram/x/linkedin)' },
+              { field: 'platforms', message: 'Mindestens eine gueltige Plattform erforderlich (instagram/x/linkedin/facebook)' },
             ])
           }
           platforms = filtered

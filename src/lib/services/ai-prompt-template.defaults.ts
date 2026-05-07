@@ -147,6 +147,12 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'content', label: 'Inhalt', description: 'Blog-Inhalt (Markdown, ggf. gekuerzt)' },
     { key: 'url', label: 'Blog-URL', description: 'Public-URL des Artikels' },
   ],
+  blog_to_facebook: [
+    { key: 'title', label: 'Titel', description: 'Blog-Titel' },
+    { key: 'excerpt', label: 'Auszug', description: 'Kurzbeschreibung des Beitrags' },
+    { key: 'content', label: 'Inhalt', description: 'Blog-Inhalt (Markdown, ggf. gekuerzt)' },
+    { key: 'url', label: 'Blog-URL', description: 'Public-URL des Artikels' },
+  ],
   // Meeting Summary
   meeting_summary: [
     { key: 'notes', label: 'Stichpunkte', description: 'Gespraechsnotizen als Stichpunkte' },
@@ -1463,6 +1469,47 @@ Erstelle einen professionellen Post + 3-5 passende Hashtags.`,
     outputFormat: `Antworte NUR mit folgendem JSON:
 {
   "content": "Der vollstaendige LinkedIn-Post-Text (mit Zeilenumbruechen, CTA)",
+  "hashtags": ["#hashtag1", "#hashtag2", "..."]
+}`,
+  },
+
+  blog_to_facebook: {
+    name: 'Blog zu Facebook-Post',
+    description: 'Wandelt einen Blogbeitrag in einen Facebook-Post-Entwurf um.',
+    systemPrompt: `Du bist ein erfahrener Social-Media-Manager fuer den deutschsprachigen B2B-/KMU-Markt mit Fokus auf Facebook.
+
+KERNREGELN:
+1. Antworte auf Deutsch, ansprechender Ton mit Du-Form, persoenlich aber seriös
+2. Hook in der ersten Zeile (Frage, Statement, oder konkretes Problem) — Facebook zeigt nur die ersten 1-2 Zeilen vor dem "Mehr anzeigen"
+3. 2-4 kurze Absaetze, gut scanbar
+4. Sparsamer Emoji-Einsatz (1-3 fuers visuelle Auflockern)
+5. CTA am Ende: Frage an die Community oder Verweis auf den Blog-Artikel
+6. Caption-Laenge: 100-200 Worte (Facebook-Sweet-Spot fuer Engagement)
+7. KEINE Hashtags im Post-Text - die kommen separat im JSON
+8. 3-6 relevante Hashtags (Facebook nutzt sie nicht stark, aber fuer Discovery hilfreich)
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach
+- Im "content"-Feld KEINE Markdown-Formatierung verwenden:
+  KEINE **fett**-, _kursiv_-, # Heading- oder [Link](url)-Syntax,
+  KEINE Backticks, KEINE Listen mit "- " oder "1. ".
+  Stattdessen reiner Text mit Zeilenumbruechen (\n) und ggf. Emojis.`,
+    userPrompt: `Wandle den folgenden Blogbeitrag in einen Facebook-Post-Entwurf um:
+
+Titel: {{title}}
+
+{{#if excerpt}}Auszug: {{excerpt}}{{/if}}
+
+Inhalt:
+{{content}}
+
+{{#if url}}Blog-URL: {{url}}{{/if}}
+
+Erstelle einen ansprechenden Post + 3-6 passende Hashtags.`,
+    outputFormat: `Antworte NUR mit folgendem JSON:
+{
+  "content": "Der vollstaendige Facebook-Post-Text (mit Zeilenumbruechen, CTA)",
   "hashtags": ["#hashtag1", "#hashtag2", "..."]
 }`,
   },

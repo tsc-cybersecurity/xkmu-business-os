@@ -214,14 +214,15 @@ export const BlogAIService = {
    */
   async generateSocialPosts(
     post: { title: string; content: string | null; excerpt: string | null; slug: string },
-    options: { siteUrl: string; platforms?: Array<'instagram' | 'x' | 'linkedin'> },
+    options: { siteUrl: string; platforms?: Array<'instagram' | 'x' | 'linkedin' | 'facebook'> },
     context: AIRequestContext
-  ): Promise<Array<{ platform: 'instagram' | 'x' | 'linkedin'; content: string; hashtags: string[] }>> {
-    const platforms = options.platforms ?? ['instagram', 'x', 'linkedin']
-    const slugMap: Record<'instagram' | 'x' | 'linkedin', string> = {
+  ): Promise<Array<{ platform: 'instagram' | 'x' | 'linkedin' | 'facebook'; content: string; hashtags: string[] }>> {
+    const platforms = options.platforms ?? ['instagram', 'x', 'linkedin', 'facebook']
+    const slugMap: Record<'instagram' | 'x' | 'linkedin' | 'facebook', string> = {
       instagram: 'blog_to_instagram',
       x: 'blog_to_x',
       linkedin: 'blog_to_linkedin',
+      facebook: 'blog_to_facebook',
     }
 
     const cleanSiteUrl = options.siteUrl.replace(/\/$/, '')
