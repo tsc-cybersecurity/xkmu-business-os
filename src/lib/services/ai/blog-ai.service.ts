@@ -206,4 +206,61 @@ export const BlogAIService = {
 
     return { seoTitle: '', seoDescription: '', seoKeywords: '' }
   },
+
+  /**
+   * Wandelt einen Blogbeitrag in 3 Social-Media-Post-Entwuerfe um (Instagram, X, LinkedIn).
+   * Nutzt 3 separate, in der DB editierbare Prompt-Templates (Slugs blog_to_*) und
+   * laeuft die Plattformen parallel ab.
+   */
+  async generateSocialPosts(
+    post: { title: string; content: string | null; excerpt: string | null; slug: string },
+    options: { siteUrl: string; platforms?: Array<'instagram' | 'x' | 'linkedin'> },
+    context: AIRequestContext
+  ): Promise<Array<{ platform: 'instagram' | 'x' | 'linkedin'; content: string; hashtags: string[] }>> {
+    const platforms = options.platforms ?? ['instagram', 'x', 'linkedin']
+    const slugMap: Record<'instagram' | 'x' | 'linkedin', string> = {
+      instagram: 'blog_to_instagram',
+      x: 'blog_to_x',
+      linkedin: 'blog_to_linkedin',
+    }
+
+    const cleanSiteUrl = options.siteUrl.replace(/\/$/, '')
+    const url = post.slug ? `${cleanSiteUrl}/blog/${post.slug}` : cleanSiteUrl
+
+    const placeholders = {
+      title: post.title,
+      excerpt: post.excerpt ?? '',
+      content: (post.content ?? '').substring(0, 3000),
+      url,
+    }
+
+    const tasks = platforms.map(async (platform) => {
+      const template = await AiPromptTemplateService.getOrDefault(slugMap[platform])
+      const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, placeholders)
+      const fullPrompt = template.outputFormat ? `${userPrompt}\n\n${template.outputFormat}` : userPrompt
+
+      const response = await AIService.completeWithContext(fullPrompt, context, {
+        maxTokens: 1500,
+        temperature: 0.7,
+        systemPrompt: template.systemPrompt,
+      })
+
+      let content = ''
+      let hashtags: string[] = []
+      try {
+        const jsonStr = extractJson(response.text)
+        if (jsonStr) {
+          const parsed = JSON.parse(jsonStr)
+          content = String(parsed.content ?? '').trim()
+          hashtags = Array.isArray(parsed.hashtags) ? parsed.hashtags.map((h: unknown) => String(h)) : []
+        }
+      } catch (err) {
+        logger.warn(`Failed to parse social post JSON for ${platform}`, { module: 'BlogAIService', error: String(err) })
+      }
+
+      return { platform, content, hashtags }
+    })
+
+    return Promise.all(tasks)
+  },
 }

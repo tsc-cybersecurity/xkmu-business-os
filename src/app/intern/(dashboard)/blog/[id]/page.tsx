@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, Loader2, Save, Globe, EyeOff, Sparkles } from 'lucide-react'
+import { ArrowLeft, Loader2, Save, Globe, EyeOff, Sparkles, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImageField } from '@/components/shared'
 import { logger } from '@/lib/utils/logger'
@@ -56,6 +56,7 @@ export default function BlogPostEditorPage() {
   const [inSitemap, setInSitemap] = useState(true)
   const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; name: string }>>([])
   const [generatingSeo, setGeneratingSeo] = useState(false)
+  const [generatingSocial, setGeneratingSocial] = useState(false)
 
   useEffect(() => {
     fetch('/api/v1/blog-categories?active=true')
@@ -163,6 +164,33 @@ export default function BlogPostEditorPage() {
       toast.error('SEO-Generierung fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
     } finally {
       setGeneratingSeo(false)
+    }
+  }
+
+  const handleGenerateSocial = async () => {
+    setGeneratingSocial(true)
+    try {
+      const response = await fetch(`/api/v1/blog/posts/${postId}/generate-social`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const data = await response.json()
+      if (data.success && data.data?.created > 0) {
+        toast.success(`${data.data.created} Social-Media-Entwürfe erstellt`, {
+          action: {
+            label: 'Anzeigen',
+            onClick: () => router.push('/intern/social-media?status=draft'),
+          },
+        })
+      } else {
+        toast.error(data.error?.message || 'Generierung fehlgeschlagen')
+      }
+    } catch (error) {
+      logger.error('Failed to generate social posts', error, { module: 'BlogPage' })
+      toast.error('Generierung fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
+    } finally {
+      setGeneratingSocial(false)
     }
   }
 
@@ -321,6 +349,10 @@ export default function BlogPostEditorPage() {
               <Button variant="outline" className="w-full" onClick={handleGenerateSeo} disabled={generatingSeo}>
                 {generatingSeo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
                 {generatingSeo ? 'Generiere...' : 'SEO per KI generieren'}
+              </Button>
+              <Button variant="outline" className="w-full" onClick={handleGenerateSocial} disabled={generatingSocial}>
+                {generatingSocial ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
+                {generatingSocial ? 'Generiere Posts...' : 'Social-Media-Posts generieren'}
               </Button>
               <label className="flex items-center gap-2 text-sm cursor-pointer select-none pt-2 border-t">
                 <input

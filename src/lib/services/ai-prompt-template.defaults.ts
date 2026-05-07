@@ -128,6 +128,25 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'targetGroup', label: 'Zielgruppe', description: 'Informationen zur Zielgruppe' },
     { key: 'strengths', label: 'Stärken', description: 'Unternehmensstärken aus SWOT' },
   ],
+  // Blog → Social Media (3 Plattformen, gleiche Platzhalter)
+  blog_to_instagram: [
+    { key: 'title', label: 'Titel', description: 'Blog-Titel' },
+    { key: 'excerpt', label: 'Auszug', description: 'Kurzbeschreibung des Beitrags' },
+    { key: 'content', label: 'Inhalt', description: 'Blog-Inhalt (Markdown, ggf. gekuerzt)' },
+    { key: 'url', label: 'Blog-URL', description: 'Public-URL des Artikels' },
+  ],
+  blog_to_x: [
+    { key: 'title', label: 'Titel', description: 'Blog-Titel' },
+    { key: 'excerpt', label: 'Auszug', description: 'Kurzbeschreibung des Beitrags' },
+    { key: 'content', label: 'Inhalt', description: 'Blog-Inhalt (Markdown, ggf. gekuerzt)' },
+    { key: 'url', label: 'Blog-URL', description: 'Public-URL des Artikels' },
+  ],
+  blog_to_linkedin: [
+    { key: 'title', label: 'Titel', description: 'Blog-Titel' },
+    { key: 'excerpt', label: 'Auszug', description: 'Kurzbeschreibung des Beitrags' },
+    { key: 'content', label: 'Inhalt', description: 'Blog-Inhalt (Markdown, ggf. gekuerzt)' },
+    { key: 'url', label: 'Blog-URL', description: 'Public-URL des Artikels' },
+  ],
   // Meeting Summary
   meeting_summary: [
     { key: 'notes', label: 'Stichpunkte', description: 'Gespraechsnotizen als Stichpunkte' },
@@ -1321,5 +1340,118 @@ Erstelle basierend auf diesen Daten ein strukturiertes Unternehmenskonzept mit f
 
 Formatiere als ausfuehrlichen, gut lesbaren Text mit Markdown-Ueberschriften. Kein JSON, sondern Fliesstext mit Struktur.`,
     outputFormat: 'Markdown-formatierter Text mit Ueberschriften (## Abschnitt) und Aufzaehlungen.',
+  },
+
+  // ============================================
+  // Blog → Social Media (Repurposing)
+  // ============================================
+  blog_to_instagram: {
+    name: 'Blog zu Instagram-Post',
+    description: 'Wandelt einen Blogbeitrag in einen Instagram-Caption-Entwurf mit Emojis und Hashtags um.',
+    systemPrompt: `Du bist ein erfahrener Social-Media-Manager fuer den deutschsprachigen B2B-/KMU-Markt mit Fokus auf Instagram.
+
+KERNREGELN:
+1. Schreibe auf Deutsch, Du-Form, persoenlich aber professionell
+2. Nutze gezielt 2-4 passende Emojis als visuelle Anker (nicht ueberladen)
+3. Hook in der ersten Zeile (Frage, ueberraschende Aussage, oder konkretes Problem)
+4. Strukturiere mit Zeilenumbruechen (kein Markdown!) - kurze Absaetze, gut scanbar
+5. CTA am Ende (z.B. "Mehr im Blog: <url>" oder "Was meinst du? 👇")
+6. Caption-Laenge: 150-300 Worte (Instagram-Sweet-Spot)
+7. KEINE Hashtags im Caption-Text - die kommen separat im JSON
+8. 8-15 relevante Hashtags, Mix aus generisch + nischig + branded
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach, keine Markdown-Codeblocks`,
+    userPrompt: `Wandle den folgenden Blogbeitrag in einen Instagram-Post-Entwurf um:
+
+Titel: {{title}}
+
+{{#if excerpt}}Auszug: {{excerpt}}{{/if}}
+
+Inhalt:
+{{content}}
+
+{{#if url}}Blog-URL: {{url}}{{/if}}
+
+Erstelle einen prägnanten Caption-Text + passende Hashtags.`,
+    outputFormat: `Antworte NUR mit folgendem JSON:
+{
+  "content": "Der vollstaendige Caption-Text fuer Instagram (mit Emojis, Zeilenumbruechen, CTA)",
+  "hashtags": ["#hashtag1", "#hashtag2", "..."]
+}`,
+  },
+
+  blog_to_x: {
+    name: 'Blog zu X-Post (Twitter)',
+    description: 'Wandelt einen Blogbeitrag in einen X/Twitter-Post-Entwurf um (max. 280 Zeichen inkl. Link).',
+    systemPrompt: `Du bist ein erfahrener Social-Media-Manager mit Fokus auf X/Twitter.
+
+KERNREGELN:
+1. Antworte auf Deutsch, knapp und pointiert
+2. MAXIMALE LAENGE: 280 Zeichen INKLUSIVE Link und Hashtags - lieber kuerzer
+3. Hook: Provokativ, fragend oder zahlenbasiert
+4. Link am Ende, falls vorhanden
+5. KEINE Hashtags im Tweet-Text - die kommen separat im JSON
+6. Maximal 2-3 Hashtags, relevant und kurz
+7. Keine Emojis im Uebermass - 0-1 reicht meist
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach`,
+    userPrompt: `Wandle den folgenden Blogbeitrag in einen X-Post-Entwurf um (max. 280 Zeichen):
+
+Titel: {{title}}
+
+{{#if excerpt}}Auszug: {{excerpt}}{{/if}}
+
+Inhalt:
+{{content}}
+
+{{#if url}}Link: {{url}}{{/if}}
+
+Erstelle einen prägnanten Tweet + 2-3 passende Hashtags.`,
+    outputFormat: `Antworte NUR mit folgendem JSON:
+{
+  "content": "Der Tweet-Text (max 280 Zeichen inkl. Link, ohne Hashtags)",
+  "hashtags": ["#hashtag1", "#hashtag2"]
+}`,
+  },
+
+  blog_to_linkedin: {
+    name: 'Blog zu LinkedIn-Post',
+    description: 'Wandelt einen Blogbeitrag in einen professionellen LinkedIn-Post um.',
+    systemPrompt: `Du bist ein erfahrener LinkedIn-Content-Stratege fuer den deutschsprachigen B2B-Markt.
+
+KERNREGELN:
+1. Antworte auf Deutsch, professioneller aber persoenlicher Ton, Du-Form
+2. Hook in der ersten Zeile (Storytelling, Statement, Frage) - LinkedIn zeigt nur die ersten 2-3 Zeilen vor dem "mehr anzeigen"
+3. 3-5 kurze Absaetze, gut scanbar (LinkedIn liest man am Handy)
+4. Konkrete Insights, Zahlen oder eine kurze Story
+5. CTA am Ende: Frage an die Community oder Verweis auf den Blog-Artikel
+6. Caption-Laenge: 150-300 Worte (Engagement-Sweet-Spot)
+7. KEINE Hashtags im Post-Text - die kommen separat im JSON
+8. 3-5 relevante Hashtags, professionell (Branchen, Themen)
+
+WICHTIG - AUSGABEFORMAT:
+- Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
+- KEIN Text davor, KEIN Text danach`,
+    userPrompt: `Wandle den folgenden Blogbeitrag in einen LinkedIn-Post-Entwurf um:
+
+Titel: {{title}}
+
+{{#if excerpt}}Auszug: {{excerpt}}{{/if}}
+
+Inhalt:
+{{content}}
+
+{{#if url}}Blog-URL: {{url}}{{/if}}
+
+Erstelle einen professionellen Post + 3-5 passende Hashtags.`,
+    outputFormat: `Antworte NUR mit folgendem JSON:
+{
+  "content": "Der vollstaendige LinkedIn-Post-Text (mit Zeilenumbruechen, CTA)",
+  "hashtags": ["#hashtag1", "#hashtag2", "..."]
+}`,
   },
 }
