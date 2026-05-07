@@ -13,6 +13,7 @@ import { Table,
 } from '@/components/ui/table'
 import { Building2, Users, TrendingUp, Activity, Target, Globe } from 'lucide-react'
 import { LoadingCards } from '@/components/shared/loading-states'
+import { NavigationOverview } from '@/components/shared/NavigationOverview'
 import { logger } from '@/lib/utils/logger'
 
 interface DashboardData {
@@ -127,6 +128,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <NavigationOverview />
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>

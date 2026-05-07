@@ -35,13 +35,13 @@ import { useDesign } from '@/app/_components/design-provider'
 import type { Module } from '@/lib/types/permissions'
 import packageJson from '../../../package.json'
 
-interface NavChild {
+export interface NavChild {
   name: string
   href: string
   requiredModule?: Module
 }
 
-interface NavItem {
+export interface NavItem {
   name: string
   href?: string
   icon: typeof LayoutDashboard
@@ -49,7 +49,7 @@ interface NavItem {
   children?: NavChild[]
 }
 
-const navigation: NavItem[] = [
+export const navigation: NavItem[] = [
   {
     name: 'Dashboard',
     href: '/intern/dashboard',
