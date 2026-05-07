@@ -30,6 +30,7 @@ interface BlogPost {
   category: string | null
   status: string | null
   source: string | null
+  inSitemap: boolean | null
 }
 
 export default function BlogPostEditorPage() {
@@ -52,6 +53,7 @@ export default function BlogPostEditorPage() {
   const [seoKeywords, setSeoKeywords] = useState('')
   const [tagsStr, setTagsStr] = useState('')
   const [category, setCategory] = useState('')
+  const [inSitemap, setInSitemap] = useState(true)
   const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; name: string }>>([])
   const [generatingSeo, setGeneratingSeo] = useState(false)
 
@@ -80,6 +82,7 @@ export default function BlogPostEditorPage() {
         setSeoKeywords(p.seoKeywords || '')
         setTagsStr((p.tags || []).join(', '))
         setCategory(p.category || '')
+        setInSitemap(p.inSitemap ?? true)
       }
     } catch (error) {
       logger.error('Failed to fetch blog post', error, { module: 'BlogPage' })
@@ -110,6 +113,7 @@ export default function BlogPostEditorPage() {
           seoKeywords: seoKeywords || '',
           tags: tagsStr ? tagsStr.split(',').map((t) => t.trim()).filter(Boolean) : [],
           category: category || '',
+          inSitemap,
         }),
       })
       const data = await response.json()
@@ -318,6 +322,15 @@ export default function BlogPostEditorPage() {
                 {generatingSeo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
                 {generatingSeo ? 'Generiere...' : 'SEO per KI generieren'}
               </Button>
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none pt-2 border-t">
+                <input
+                  type="checkbox"
+                  checked={inSitemap}
+                  onChange={(e) => setInSitemap(e.target.checked)}
+                  className="h-4 w-4"
+                />
+                In Sitemap aufnehmen
+              </label>
             </CardContent>
           </Card>
         </div>

@@ -89,6 +89,7 @@ const navigation: NavItem[] = [
     children: [
       { name: 'Content', href: '/intern/cms', requiredModule: 'cms' },
       { name: 'Design', href: '/intern/cms/design', requiredModule: 'cms' },
+      { name: 'Sitemap', href: '/intern/cms/sitemap', requiredModule: 'cms' },
       { name: 'Vorlagen', href: '/intern/cms/templates', requiredModule: 'cms' },
       { name: 'Navigation', href: '/intern/cms/navigation', requiredModule: 'cms' },
       { name: 'Blogartikel', href: '/intern/blog', requiredModule: 'blog' },

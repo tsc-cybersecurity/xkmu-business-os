@@ -17,6 +17,7 @@ export interface CreateCmsPageInput {
   seoKeywords?: string
   ogImage?: string
   status?: string
+  inSitemap?: boolean
 }
 
 export type UpdateCmsPageInput = Partial<CreateCmsPageInput>
@@ -39,6 +40,7 @@ export const CmsPageService = {
         seoKeywords: data.seoKeywords || null,
         ogImage: data.ogImage || null,
         status: data.status || 'draft',
+        inSitemap: data.inSitemap ?? true,
         createdBy: createdBy || undefined,
       })
       .returning()
@@ -144,6 +146,7 @@ export const CmsPageService = {
     if (data.seoKeywords !== undefined) updateData.seoKeywords = data.seoKeywords || null
     if (data.ogImage !== undefined) updateData.ogImage = data.ogImage || null
     if (data.status !== undefined) updateData.status = data.status
+    if (data.inSitemap !== undefined) updateData.inSitemap = data.inSitemap
 
     if (existing?.status === 'published' && data.status === undefined) {
       updateData.hasDraftChanges = true

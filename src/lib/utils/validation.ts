@@ -421,6 +421,7 @@ export const createCmsPageSchema = z.object({
   seoKeywords: z.string().max(255).optional().or(z.literal("")),
   ogImage: z.string().max(500).optional().or(z.literal("")),
   status: cmsPageStatusSchema.default('draft'),
+  inSitemap: z.boolean().default(true),
 })
 
 export const updateCmsPageSchema = createCmsPageSchema.partial()
@@ -491,6 +492,7 @@ export const createBlogPostSchema = z.object({
   category: z.string().max(100).optional().or(z.literal("")),
   status: blogPostStatusSchema.default('draft'),
   source: blogPostSourceSchema.default('manual'),
+  inSitemap: z.boolean().default(true),
 })
 
 export const updateBlogPostSchema = createBlogPostSchema.partial()
