@@ -1,16 +1,15 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import bcrypt from 'bcryptjs'
-import { organization, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates, wibaRequirements } from './schema'
+import { organization, users, cmsPages, cmsBlocks, cmsNavigationItems, blogPosts, aiPromptTemplates, productCategories, dinRequirements, dinGrants, roles, rolePermissions, companies, persons, leads, products, activities, cmsBlockTypeDefinitions, cmsBlockTemplates, wibaRequirements, deliverableModules, sopDocuments } from './schema'
 import { eq, and, count, sql } from 'drizzle-orm'
-import { requirementsSeedData } from './seeds/din-requirements.seed'
-import { grantsSeedData } from './seeds/din-grants.seed'
-import { wibaRequirementsSeedData } from './seeds/wiba-requirements.seed'
+// HINWEIS: Grosse Seed-Datenmodule (din-requirements ~800, din-grants ~200,
+// wiba-requirements ~2600, management-framework ~280, deliverable-catalog ~740,
+// sop-catalog ~1550 LOC) werden NICHT mehr statisch importiert. Stattdessen
+// lazy via `await import(...)` erst nach Existenz-Check — spart bei Warm-Starts
+// das TS-Parsing von ~6000+ Zeilen Seed-Daten.
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
 import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.defaults'
-import { seedManagementFramework } from './seeds/management-framework.seed'
-import { seedDeliverableCatalog } from './seeds/deliverable-catalog.seed'
-import { seedSopCatalog } from './seeds/sop-catalog.seed'
 import { logger } from '@/lib/utils/logger'
 const adminEmail = process.env.SEED_ADMIN_EMAIL
 const adminPassword = process.env.SEED_ADMIN_PASSWORD
@@ -177,17 +176,19 @@ async function seedCmsPages(db: ReturnType<typeof drizzle>) {
 async function seedDinData(db: ReturnType<typeof drizzle>) {
   let seeded = false
 
-  // Seed Requirements
   const [{ total: reqCount }] = await db.select({ total: count() }).from(dinRequirements)
+  const [{ total: grantCount }] = await db.select({ total: count() }).from(dinGrants)
+
+  // Lazy import: ~1000 LOC nur laden, wenn tatsaechlich geseedet werden muss
   if (Number(reqCount) === 0) {
+    const { requirementsSeedData } = await import('./seeds/din-requirements.seed')
     await db.insert(dinRequirements).values(requirementsSeedData)
     logger.info(`Created ${requirementsSeedData.length} DIN SPEC 27076 requirements`)
     seeded = true
   }
 
-  // Seed Grants
-  const [{ total: grantCount }] = await db.select({ total: count() }).from(dinGrants)
   if (Number(grantCount) === 0) {
+    const { grantsSeedData } = await import('./seeds/din-grants.seed')
     await db.insert(dinGrants).values(grantsSeedData)
     logger.info(`Created ${grantsSeedData.length} Foerderprogramme`)
     seeded = true
@@ -205,6 +206,8 @@ async function seedWibaData(db: ReturnType<typeof drizzle>) {
     // Seed WiBA Requirements
     const [{ total: wibaReqCount }] = await db.select({ total: count() }).from(wibaRequirements)
     if (Number(wibaReqCount) === 0) {
+      // Lazy import: ~2600 LOC Daten — groesster Einzel-Hit beim Warm-Start
+      const { wibaRequirementsSeedData } = await import('./seeds/wiba-requirements.seed')
       for (let i = 0; i < wibaRequirementsSeedData.length; i += 50) {
         const batch = wibaRequirementsSeedData.slice(i, i + 50)
         await db.insert(wibaRequirements).values(batch)
@@ -1111,13 +1114,35 @@ async function seedCheck() {
   await seedCmsBlockTemplates(db)
 
   // 14. Seed Management Framework (VTO, Rocks, Scorecard, Issues, OKRs, SOPs)
-  await seedManagementFramework()
+  // Lazy import — Modul nur laden wenn aufgerufen.
+  {
+    const { seedManagementFramework } = await import('./seeds/management-framework.seed')
+    await seedManagementFramework()
+  }
 
   // 15. Seed Deliverable Catalog (16 Module + 70 Deliverables)
-  await seedDeliverableCatalog()
+  // Pre-Check: bei bevoelkerter Tabelle ueberspringen → ~740 LOC nicht parsen.
+  {
+    const [{ total: dmCount }] = await db.select({ total: count() }).from(deliverableModules)
+    if (Number(dmCount) === 0) {
+      const { seedDeliverableCatalog } = await import('./seeds/deliverable-catalog.seed')
+      await seedDeliverableCatalog()
+    } else {
+      logger.info('Deliverable catalog already exists, skipping...')
+    }
+  }
 
   // 16. Seed SOP Catalog (alle SOPs aus Framework v2)
-  await seedSopCatalog()
+  // Pre-Check: bei bevoelkerter Tabelle ueberspringen → ~1550 LOC nicht parsen.
+  {
+    const [{ total: sopCount }] = await db.select({ total: count() }).from(sopDocuments)
+    if (Number(sopCount) === 0) {
+      const { seedSopCatalog } = await import('./seeds/sop-catalog.seed')
+      await seedSopCatalog()
+    } else {
+      logger.info('SOP catalog already exists, skipping...')
+    }
+  }
 
   logger.info('Seed check completed!', { module: 'SeedCheck' })
   logger.info(`Login: ${SEED_DATA.user.email} / ${SEED_DATA.user.password}`, { module: 'SeedCheck' })

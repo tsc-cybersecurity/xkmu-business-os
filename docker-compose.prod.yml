@@ -40,6 +40,9 @@ services:
       - LINKEDIN_CLIENT_SECRET=${LINKEDIN_CLIENT_SECRET:-}
       - LINKEDIN_OAUTH_REDIRECT_URI=${LINKEDIN_OAUTH_REDIRECT_URI:-}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_secret_2024}@redis:6379
+      # Pre-migration pg_dump bei jedem Start (default an).
+      # BACKUP_ENABLED=false setzen, um den Dump zu ueberspringen (~30-60s schneller).
+      - BACKUP_ENABLED=${BACKUP_ENABLED:-true}
     volumes:
       - ./data/uploads:/app/data
       - db_backups:/backups

@@ -71,8 +71,12 @@ rotate_backups() {
   fi
 }
 
-# Check if backup directory is writable
-if [ -d "$BACKUP_DIR" ] && [ -w "$BACKUP_DIR" ]; then
+# Pre-migration backup gate: BACKUP_ENABLED=false ueberspringt den pg_dump
+# (spart 30-60 s pro Container-Start). Default ist "true" fuer Sicherheit;
+# in dev/local einfach BACKUP_ENABLED=false setzen.
+if [ "${BACKUP_ENABLED:-true}" != "true" ]; then
+  echo "INFO: BACKUP_ENABLED=${BACKUP_ENABLED}, skipping pre-migration backup"
+elif [ -d "$BACKUP_DIR" ] && [ -w "$BACKUP_DIR" ]; then
   # Check if database has any tables (skip backup for empty/new DB)
   TABLE_COUNT=$(PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null || echo "0")
 

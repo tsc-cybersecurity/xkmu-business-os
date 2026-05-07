@@ -85,6 +85,9 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASS=${SMTP_PASS:-}
       - SMTP_FROM=${SMTP_FROM:-}
+      # Pre-migration pg_dump bei jedem Start (default an).
+      # BACKUP_ENABLED=false in Coolify Env setzen, um den Dump zu ueberspringen (~30-60s schneller).
+      - BACKUP_ENABLED=${BACKUP_ENABLED:-true}
     volumes:
       - app_data:/app/data
       - db_backups:/backups

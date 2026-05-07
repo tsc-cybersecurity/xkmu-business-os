@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.6
 # ============================================
 # Base Stage
 # ============================================
@@ -10,7 +11,11 @@ RUN apk add --no-cache libc6-compat
 # ============================================
 FROM base AS deps
 COPY package.json package-lock.json* ./
-RUN npm ci || npm install
+# BuildKit cache-mount: persistiert npm-Cache zwischen Builds.
+# Bei unveraendertem package-lock.json springt Docker eh in den Layer-Cache;
+# bei Lock-Changes bleibt der npm-Download-Cache trotzdem warm → nur Delta wird geladen.
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline --no-audit --no-fund || npm install --prefer-offline --no-audit --no-fund
 
 # ============================================
 # Development Stage

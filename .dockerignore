@@ -1,16 +1,49 @@
+# ─── Build-Output / VCS ────────────────────────────
 node_modules
 .next
 .git
 .gitignore
-*.md
-.env*.local
-.env
-Dockerfile
 .dockerignore
+Dockerfile
+docker-compose*.yml
+
+# ─── Logs / OS / IDE ───────────────────────────────
+*.log
 npm-debug.log
 .DS_Store
-*.log
+.vscode
+.idea
+.cursor
+.gemini
+.claude
+
+# ─── Env (Secrets) ─────────────────────────────────
+.env
+.env*.local
+
+# ─── Tests / Coverage / Reports ────────────────────
 coverage
 .nyc_output
-dist
+playwright-report
+test-results
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# ─── Docs / Planning ───────────────────────────────
+*.md
+docs
+.planning
+.superpowers
+
+# ─── Lokale Daten / Backups ────────────────────────
 backups
+data/uploads
+dist
+
+# ─── Temp / Build-Artefakte ────────────────────────
+temp
+tmp
+*.tsbuildinfo
