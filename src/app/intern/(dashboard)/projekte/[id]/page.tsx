@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -390,7 +390,9 @@ function TimelineView({ tasks, columns, onClickTask }: { tasks: TaskItem[]; colu
 // ============================================
 export default function ProjectBoardPage() {
   const params = useParams()
+  const router = useRouter()
   const [project, setProject] = useState<ProjectData | null>(null)
+  const [projectDeleting, setProjectDeleting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [activeTask, setActiveTask] = useState<TaskItem | null>(null)
   const [newTaskColumn, setNewTaskColumn] = useState<string | null>(null)
@@ -468,6 +470,34 @@ export default function ProjectBoardPage() {
       tags: detailTags ? detailTags.split(',').map(t => t.trim()).filter(Boolean) : [],
     })
     setDetailsDirty(false)
+  }
+
+  const deleteProject = async () => {
+    if (!project) return
+    const confirmName = window.prompt(
+      `Projekt "${project.name}" und ALLE ${project.tasks.length} Aufgaben werden unwiderruflich geloescht.\n\n` +
+      `Zur Bestaetigung den Projektnamen exakt eingeben:`
+    )
+    if (confirmName === null) return
+    if (confirmName !== project.name) {
+      toast.error('Name stimmt nicht ueberein — Loeschvorgang abgebrochen')
+      return
+    }
+    setProjectDeleting(true)
+    try {
+      const res = await fetch(`/api/v1/projects/${project.id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (data.success) {
+        toast.success('Projekt geloescht')
+        router.push('/intern/projekte')
+      } else {
+        toast.error(data.error || 'Fehler beim Loeschen')
+        setProjectDeleting(false)
+      }
+    } catch {
+      toast.error('Fehler beim Loeschen')
+      setProjectDeleting(false)
+    }
   }
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
@@ -846,7 +876,7 @@ export default function ProjectBoardPage() {
             </Card>
           </div>
 
-          {/* Save button (sticky at bottom) */}
+          {/* Save button */}
           <div className="max-w-4xl mt-6 flex items-center gap-3">
             <Button onClick={saveAllDetails} disabled={!detailsDirty || projectSaving}>
               {projectSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
@@ -856,6 +886,30 @@ export default function ProjectBoardPage() {
               <span className="text-xs text-muted-foreground">Ungespeicherte Aenderungen</span>
             )}
           </div>
+
+          {/* Gefahrenzone — Projekt loeschen */}
+          <Card className="max-w-4xl mt-8 border-destructive/30">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base text-destructive">Gefahrenzone</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-between gap-4">
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium text-foreground">Projekt loeschen</p>
+                <p className="mt-0.5">
+                  Loescht das Projekt und alle {project.tasks.length} zugehoerigen Aufgaben unwiderruflich.
+                </p>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={deleteProject}
+                disabled={projectDeleting}
+                className="shrink-0"
+              >
+                {projectDeleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                Projekt loeschen
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
