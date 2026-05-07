@@ -246,6 +246,16 @@ export async function proxy(request: NextRequest) {
     )
   }
 
+  // SCORM-Iframe-Override: globaler X-Frame-Options=DENY aus next.config.ts
+  // wuerde Iframe blockieren. Hier explizit fuer scorm-serve-Pfade lockern,
+  // damit der Iframe auf gleicher Domain laden darf.
+  if (/^\/api\/v1\/courses\/[^/]+\/scorm\/[^/]+\/serve\//.test(pathname)) {
+    response.headers.delete('X-Frame-Options')
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN')
+    response.headers.delete('Content-Security-Policy-Report-Only')
+    response.headers.set('Content-Security-Policy', "frame-ancestors 'self'")
+  }
+
   return response
 }
 
