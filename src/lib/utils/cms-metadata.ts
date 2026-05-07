@@ -1,9 +1,16 @@
 import type { Metadata } from 'next'
 import { CmsPageService } from '@/lib/services/cms-page.service'
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')
-  ? process.env.NEXT_PUBLIC_APP_URL
-  : 'https://bos.dev.xkmu.de'
+// Reihenfolge: NEXT_PUBLIC_SITE_URL (vom root layout genutzt) > NEXT_PUBLIC_APP_URL > Production-Fallback.
+// 'localhost' wird ausgefiltert, weil OG-/Twitter-Image-URLs immer absolut auf die
+// oeffentliche Domain zeigen muessen (sonst zerlegen Crawler die Karten).
+const BASE_URL = (() => {
+  const candidates = [process.env.NEXT_PUBLIC_SITE_URL, process.env.NEXT_PUBLIC_APP_URL]
+  for (const c of candidates) {
+    if (c && !c.includes('localhost')) return c
+  }
+  return 'https://www.xkmu.de'
+})()
 
 /** Make relative URLs absolute for OG tags */
 export function toAbsoluteUrl(url: string): string {

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://bos.dev.xkmu.de')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'https://www.xkmu.de')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean)
