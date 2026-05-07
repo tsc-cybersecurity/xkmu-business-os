@@ -1,0 +1,35 @@
+#!/bin/sh
+# ============================================
+# Pre-Push Hook: TypeScript-Check
+# ============================================
+# Verhindert Push, wenn `tsc --noEmit` fehlschlaegt — spart die 5-Min
+# CI-Schleife bei trivialen Type-Fehlern.
+#
+# Aktivierung (einmalig nach git clone):
+#   npm run setup:hooks
+#
+# Hook umgehen (Notfall):
+#   SKIP_HOOKS=1 git push
+# ============================================
+
+set -e
+
+if [ "$SKIP_HOOKS" = "1" ]; then
+  echo "⚠ pre-push: skipped (SKIP_HOOKS=1)"
+  exit 0
+fi
+
+echo "→ pre-push: TypeScript-Check (tsc --noEmit)..."
+START=$(date +%s)
+
+if ! npx --no-install tsc --noEmit; then
+  END=$(date +%s)
+  echo ""
+  echo "✗ pre-push: TypeScript-Fehler nach $((END - START))s — Push abgebrochen."
+  echo "  Notfall-Bypass: SKIP_HOOKS=1 git push"
+  exit 1
+fi
+
+END=$(date +%s)
+echo "✓ pre-push: TypeScript ok ($((END - START))s)"
+exit 0
