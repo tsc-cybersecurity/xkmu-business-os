@@ -3,7 +3,16 @@
 # ============================================
 # Voraussetzung: Supabase Stack laeuft separat (supabase-db Container)
 #
-# Starten:
+# Empfohlener Deploy (Pre-built Image, ~5-10s Downtime):
+#   APP_IMAGE=ghcr.io/tsc-cybersecurity/xkmu-business-os:latest \
+#     docker compose -f docker-compose.local.yml pull
+#   APP_IMAGE=ghcr.io/tsc-cybersecurity/xkmu-business-os:latest \
+#     docker compose -f docker-compose.local.yml up -d
+#
+#   Oder bequemer ueber das mitgelieferte Skript:
+#   ./scripts/deploy.sh
+#
+# Lokaler Build (~3+ Min Downtime — nur Notfall/Erstinbetriebnahme):
 #   docker compose -f docker-compose.local.yml up -d --build
 #
 # Stoppen:
@@ -12,7 +21,7 @@
 # Logs:
 #   docker compose -f docker-compose.local.yml logs -f app
 #
-# Nach dem Start erreichbar unter: http://localhost:3000
+# Nach dem Start erreichbar unter: http://localhost:3000 (oder via NPM-Domain)
 # Login: siehe SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD in .env
 # Supabase Dashboard: https://db.xkmu.de
 # ============================================
@@ -22,6 +31,10 @@ services:
   # Next.js Application (Production Build)
   # ============================================
   app:
+    # Pre-built Image bevorzugt — kein Build mehr auf dem Server.
+    # APP_IMAGE in .env oder per Shell setzen, z.B.:
+    #   APP_IMAGE=ghcr.io/tsc-cybersecurity/xkmu-business-os:latest
+    image: ${APP_IMAGE:-xkmu-business-os:local}
     build:
       context: .
       dockerfile: docker/app/Dockerfile
