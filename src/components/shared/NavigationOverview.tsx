@@ -1,13 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, Compass } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from '@/components/ui/navigation-menu'
 import { navigation, type NavItem, type NavChild } from '@/components/layout/sidebar'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { Module } from '@/lib/types/permissions'
+import { cn } from '@/lib/utils'
 
 const STORAGE_KEY = 'xkmu_dashboard_nav_overview_open'
 
@@ -103,39 +112,72 @@ export function NavigationOverview() {
       </CardHeader>
       {open && (
         <CardContent className="pt-0">
-          {/* 2-Spalten-Grid: links Bereichs-Header, rechts Pill-Liste — spart vertikalen Platz. */}
-          <div className="grid items-center gap-x-4 gap-y-1.5 [grid-template-columns:minmax(140px,max-content)_1fr]">
-            {visibleSections.map(({ section, allChildren }) => {
-              const Icon = section.icon
-              return (
-                <Fragment key={section.name}>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {section.href ? (
-                      <Link href={section.href} className="hover:text-foreground transition-colors">
-                        {section.name}
-                      </Link>
-                    ) : (
-                      <span>{section.name}</span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 min-w-0">
-                    {allChildren.map((child) => (
-                      <Button
-                        key={child.href}
+          {/* shadcn NavigationMenu: Top-Level-Bereiche horizontal mit Wrap; Sub-Items als Dropdown.
+              viewport={false} — Dropdowns positionieren absolut unter dem jeweiligen Trigger,
+              damit flex-wrap mit 15+ Triggern korrekt funktioniert. */}
+          <NavigationMenu viewport={false} className="max-w-full">
+            <NavigationMenuList className="flex-wrap justify-start gap-x-1 gap-y-1.5">
+              {visibleSections.map(({ section, allChildren }) => {
+                const Icon = section.icon
+
+                // Bereich ohne Sub-Items → direkter Link
+                if (allChildren.length === 0 && section.href) {
+                  return (
+                    <NavigationMenuItem key={section.name}>
+                      <NavigationMenuLink
                         asChild
-                        variant="outline"
-                        size="sm"
-                        className="h-7 text-xs font-normal"
+                        className={cn(navigationMenuTriggerStyle(), 'h-8 px-3 text-xs font-medium')}
                       >
-                        <Link href={child.href}>{child.name}</Link>
-                      </Button>
-                    ))}
-                  </div>
-                </Fragment>
-              )
-            })}
-          </div>
+                        <Link href={section.href}>
+                          <Icon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+                          {section.name}
+                        </Link>
+                      </NavigationMenuLink>
+                    </NavigationMenuItem>
+                  )
+                }
+
+                // Bereich mit Sub-Items → Trigger + Dropdown
+                return (
+                  <NavigationMenuItem key={section.name}>
+                    <NavigationMenuTrigger className="h-8 px-3 text-xs font-medium">
+                      <Icon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+                      {section.name}
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ul className="grid w-[260px] gap-0.5 p-2">
+                        {section.href && (
+                          <li>
+                            <NavigationMenuLink asChild>
+                              <Link
+                                href={section.href}
+                                className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs font-semibold text-foreground hover:bg-accent"
+                              >
+                                <Icon className="h-3.5 w-3.5" />
+                                {section.name} – Übersicht
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        )}
+                        {allChildren.map((child) => (
+                          <li key={child.href}>
+                            <NavigationMenuLink asChild>
+                              <Link
+                                href={child.href}
+                                className="block rounded-sm px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                              >
+                                {child.name}
+                              </Link>
+                            </NavigationMenuLink>
+                          </li>
+                        ))}
+                      </ul>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                )
+              })}
+            </NavigationMenuList>
+          </NavigationMenu>
         </CardContent>
       )}
     </Card>
