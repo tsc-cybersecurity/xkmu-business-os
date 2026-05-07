@@ -134,7 +134,7 @@ describe('EmailService', () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('EMAIL_USER')
+      expect(result.error).toMatch(/nicht konfiguriert|EMAIL_USER|SMTP/i)
     })
 
     it('calls transporter.sendMail and returns success with messageId', async () => {

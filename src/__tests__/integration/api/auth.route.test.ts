@@ -202,8 +202,8 @@ describe('POST /api/v1/auth/register', () => {
       },
     }))
 
-    vi.doMock('@/lib/services/tenant-seed.service', () => ({
-      TenantSeedService: {
+    vi.doMock('@/lib/services/organization-seed.service', () => ({
+      OrganizationSeedService: {
         seedStructuralData: vi.fn().mockResolvedValue(undefined),
       },
     }))
@@ -227,7 +227,6 @@ describe('POST /api/v1/auth/register', () => {
     expect(res.status).toBe(201)
     expect(body.success).toBe(true)
     expect(body.data.user.email).toBe('new@test.de')
-    expect(body.data.tenant.name).toBe('Neue Firma GmbH')
     expect(mockCreateSession).toHaveBeenCalled()
   })
 
@@ -325,8 +324,8 @@ describe('POST /api/v1/auth/register', () => {
       },
     }))
 
-    vi.doMock('@/lib/services/tenant-seed.service', () => ({
-      TenantSeedService: {
+    vi.doMock('@/lib/services/organization-seed.service', () => ({
+      OrganizationSeedService: {
         seedStructuralData: vi.fn().mockResolvedValue(undefined),
       },
     }))

@@ -95,7 +95,9 @@ describe('POST /api/v1/import/database', () => {
   }
 
   // ─── Test 1: Cross-tenant isolation ─────────────────────────────────────────
-  it('cross-tenant isolation: tenant_id in uploaded SQL is overwritten with auth tenant', async () => {
+  // Skipped: Single-tenant-Migration entfernte tenant_id-Spalten — diese
+  // Cross-Tenant-Isolation gibt es nicht mehr.
+  it.skip('cross-tenant isolation: tenant_id in uploaded SQL is overwritten with auth tenant', async () => {
     const capturedSqlCalls: unknown[] = []
     mockAuthContext(TEST_AUTH)
     mockDbTransaction(capturedSqlCalls)

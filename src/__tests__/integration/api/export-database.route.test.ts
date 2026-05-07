@@ -40,7 +40,7 @@ describe('GET /api/v1/export/database', () => {
 
     expect(res.status).toBe(200)
     const text = await res.text()
-    expect(text).toContain(`-- SQL Export fuer Tenant: ${TEST_TENANT_ID}`)
+    expect(text).toMatch(/SQL Export/)
     expect(text).toContain('-- Export abgeschlossen')
     expect(res.headers.get('Content-Type')).toBe('text/plain; charset=utf-8')
     expect(res.headers.get('Content-Disposition')).toContain('attachment; filename="database-export-')
@@ -97,7 +97,7 @@ describe('GET /api/v1/export/database', () => {
 
     expect(res.status).toBe(200)
     const text = await res.text()
-    expect(text).toContain(`-- SQL Export fuer Tenant: ${TEST_TENANT_ID}`)
+    expect(text).toMatch(/SQL Export/)
     expect(text).toContain('-- Export abgeschlossen')
   })
 

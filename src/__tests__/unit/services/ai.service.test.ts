@@ -226,7 +226,7 @@ describe('AIService', () => {
       const result = await service.completeWithContext('hello', defaultContext)
 
       expect(result.text).toBe('test response')
-      expect(mockGetActiveProviders).toHaveBeenCalledWith(TEST_TENANT_ID)
+      expect(mockGetActiveProviders).toHaveBeenCalled()
     })
 
     it('falls back to next provider on failure', async () => {
@@ -259,7 +259,6 @@ describe('AIService', () => {
 
       expect(mockCreateLog).toHaveBeenCalledWith(
         expect.objectContaining({
-          tenantId: TEST_TENANT_ID,
           providerId: 'provider-1',
           status: 'success',
           prompt: 'hello',
@@ -278,7 +277,6 @@ describe('AIService', () => {
 
       expect(mockCreateLog).toHaveBeenCalledWith(
         expect.objectContaining({
-          tenantId: TEST_TENANT_ID,
           status: 'error',
           errorMessage: 'API error',
         })
