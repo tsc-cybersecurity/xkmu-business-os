@@ -99,7 +99,12 @@ export function WeekCalendarView(props: {
       next = new Date(monday)
       next.setDate(next.getDate() + weeks * 7)
     }
-    router.push(`/intern/termine?week=${next.toISOString().slice(0, 10)}`)
+    // LOKAL formatieren (nicht toISOString — sonst springt MESZ einen Tag zurueck
+    // und wir landen in der falschen KW).
+    const y = next.getFullYear()
+    const m = String(next.getMonth() + 1).padStart(2, '0')
+    const d = String(next.getDate()).padStart(2, '0')
+    router.push(`/intern/termine?week=${y}-${m}-${d}`)
   }
 
   function findExternalBusy(cellStart: Date, cellEnd: Date) {
