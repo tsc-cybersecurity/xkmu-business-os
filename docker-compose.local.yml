@@ -90,6 +90,11 @@ services:
       # Seed admin credentials
       - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:?SEED_ADMIN_EMAIL must be set for initial seed}
       - SEED_ADMIN_PASSWORD=${SEED_ADMIN_PASSWORD:?SEED_ADMIN_PASSWORD must be set for initial seed}
+      # SCORM- + Course-Asset-Storage in das gemountete Volume — sonst gehen
+      # Pakete bei Container-Restart verloren (Default-Pfad
+      # /app/public/uploads/courses ist nicht persistent gemountet).
+      - SCORM_PACKAGE_DIR=/app/data/scorm
+      - COURSE_ASSET_DIR=/app/data/courses
     volumes:
       - ./data/uploads:/app/data
     depends_on:
