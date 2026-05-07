@@ -34,7 +34,9 @@ export async function POST(
             typeof p === 'string' && (VALID_PLATFORMS as readonly string[]).includes(p)
           )
           if (filtered.length === 0) {
-            return apiValidationError('Mindestens eine gueltige Plattform erforderlich (instagram/x/linkedin)')
+            return apiValidationError([
+              { field: 'platforms', message: 'Mindestens eine gueltige Plattform erforderlich (instagram/x/linkedin)' },
+            ])
           }
           platforms = filtered
         }
