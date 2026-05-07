@@ -21,7 +21,6 @@
     "test:integration": "vitest run src/__tests__/integration",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "setup:hooks": "git config core.hooksPath scripts/git-hooks",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
