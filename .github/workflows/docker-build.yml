@@ -31,10 +31,35 @@ concurrency:
   cancel-in-progress: false   # Releases nicht abbrechen — sonst inkonsistente bumps
 
 jobs:
-  release:
+  # Job 1: Naechste Version berechnen (separater Job, damit Job 2 die
+  # Version in seinem Job-Name interpolieren kann via needs.*.outputs).
+  # Limitierung: run-name (= Titel der Run-Liste) wird vor den Jobs
+  # ausgewertet — die berechnete Version erscheint daher nicht dort,
+  # sondern als Job-Name im Run-Detail.
+  compute-version:
+    name: Compute next version
     runs-on: ubuntu-latest
-    # Skip bei [skip ci]-Commits (z.B. nicht-relevante Aenderungen)
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    outputs:
+      version: ${{ steps.calc.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Calculate next patch version
+        id: calc
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          echo "Current: $CURRENT  →  New: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+  # Job 2: Bump committen + pushen + Docker-Image bauen + nach GHCR pushen.
+  # Job-Name nutzt die im prepare-Job berechnete Version → in der Actions-UI
+  # sichtbar als "v1.5.673" sobald compute-version fertig ist.
+  release:
+    needs: compute-version
+    name: "v${{ needs.compute-version.outputs.version }}"
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -47,27 +72,22 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Bump patch version
-        id: bump
+      - name: Apply version bump
         run: |
-          CURRENT=$(node -p "require('./package.json').version")
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
-          NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
-          echo "Current: $CURRENT  →  New: $NEW_VERSION"
+          NEW_VERSION="${{ needs.compute-version.outputs.version }}"
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
             pkg.version = '$NEW_VERSION';
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
-          echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Commit & push version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add package.json
-          git commit -m "chore: bump version to ${{ steps.bump.outputs.version }} [skip ci]"
+          git commit -m "chore: bump version to ${{ needs.compute-version.outputs.version }} [skip ci]"
           git push
 
       - name: Set up Docker Buildx
@@ -89,7 +109,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=main,enable={{is_default_branch}}
             type=sha,prefix=sha-,format=short
-            type=raw,value=v${{ steps.bump.outputs.version }}
+            type=raw,value=v${{ needs.compute-version.outputs.version }}
 
       - name: Build & Push
         uses: docker/build-push-action@v5
@@ -105,3 +125,10 @@ jobs:
           cache-to: type=gha,mode=max
           # BuildKit cache-mounts (npm) sind im Dockerfile aktiv
           provenance: false
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo "## 🚀 Release v${{ needs.compute-version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Image: \`ghcr.io/${{ github.repository }}:v${{ needs.compute-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
