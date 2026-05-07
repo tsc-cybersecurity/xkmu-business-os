@@ -73,6 +73,17 @@ const nextConfig: NextConfig = {
           { key: 'Content-Security-Policy-Report-Only', value: cspDirectives },
         ],
       },
+      // SCORM-Iframe-Override: SCORM-Inhalte werden in einem Iframe der EIGENEN
+      // Domain geladen — der globale X-Frame-Options=DENY wuerde das blocken.
+      // Reihenfolge ist wichtig: dieser Eintrag MUSS nach dem globalen kommen,
+      // damit die Header bei Doppelung die strengere Variante ersetzen.
+      {
+        source: '/api/v1/courses/:courseId/scorm/:packageId/serve/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'self'" },
+        ],
+      },
       // NOTE: No CORS block here. CORS is handled in src/proxy.ts where
       // request headers (Origin) are readable. next.config.ts headers()
       // cannot read request headers — dynamic origin checks are impossible here.
