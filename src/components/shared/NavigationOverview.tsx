@@ -102,40 +102,35 @@ export function NavigationOverview() {
       </CardHeader>
       {open && (
         <CardContent className="pt-0">
-          {/* Pro Bereich eine Zeile: links Bereichs-Header (hellblauer Pill),
-              rechts daneben alle Links als Inline-Texte mit "·" als Trenner. */}
-          <div className="grid items-center gap-x-3 gap-y-1.5 [grid-template-columns:minmax(170px,max-content)_1fr]">
+          {/* Alles in einem flex-wrap Flow: Themen-Pill (sky) gefolgt von ihren
+              Sub-Links (slate/grau), durchgehend von links nach rechts. */}
+          <div className="flex flex-wrap items-center gap-1.5">
             {visibleSections.map(({ section, allChildren }) => {
               const Icon = section.icon
               const HeaderInner = (
-                <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-sky-900 dark:bg-sky-500/15 dark:text-sky-200">
+                <span className="inline-flex h-7 items-center gap-1.5 rounded-md bg-sky-100 px-2.5 text-xs font-semibold uppercase tracking-wide text-sky-900 dark:bg-sky-500/15 dark:text-sky-200">
                   <Icon className="h-3.5 w-3.5 shrink-0" />
                   {section.name}
                 </span>
               )
               return (
                 <Fragment key={section.name}>
-                  <div>
-                    {section.href ? (
-                      <Link href={section.href} className="hover:opacity-80 transition-opacity">
-                        {HeaderInner}
-                      </Link>
-                    ) : (
-                      HeaderInner
-                    )}
-                  </div>
-                  {/* Sub-Links rechts: shadcn-NavigationMenu-Stil — kompakte Pills mit hover:bg-accent. */}
-                  <div className="flex flex-wrap items-center gap-1 min-w-0">
-                    {allChildren.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className="inline-flex h-7 items-center rounded-md px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none"
-                      >
-                        {child.name}
-                      </Link>
-                    ))}
-                  </div>
+                  {section.href ? (
+                    <Link href={section.href} className="hover:opacity-80 transition-opacity">
+                      {HeaderInner}
+                    </Link>
+                  ) : (
+                    HeaderInner
+                  )}
+                  {allChildren.map((child) => (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className="inline-flex h-7 items-center rounded-md bg-slate-100 px-2.5 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                    >
+                      {child.name}
+                    </Link>
+                  ))}
                 </Fragment>
               )
             })}
