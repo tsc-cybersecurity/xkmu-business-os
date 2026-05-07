@@ -30,6 +30,11 @@ services:
   # Next.js Application
   # ============================================
   app:
+    # Pre-built Image bevorzugt (Zero-Downtime Deploy via Coolify Rolling).
+    # In Coolify: Deployment-Typ auf "Docker Image" stellen + APP_IMAGE in env setzen,
+    # z.B. APP_IMAGE=ghcr.io/tsc-cybersecurity/xkmu-business-os:latest
+    # Wenn build:-Block bleibt, fungiert der lokale Build als Fallback.
+    image: ${APP_IMAGE:-xkmu-business-os:local}
     build:
       context: .
       dockerfile: docker/app/Dockerfile
@@ -98,9 +103,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    # NOTE: No Docker healthcheck here - Coolify/Traefik handles health monitoring.
-    # A Docker healthcheck that marks the container "unhealthy" causes Traefik
-    # to return 503 "no available server" and refuse to route traffic.
+    # Healthcheck noetig fuer Rolling/Zero-Downtime Deploys: Coolify/Traefik routet
+    # erst auf den neuen Container, wenn er "healthy" meldet — alter Container bedient
+    # waehrenddessen den Traffic weiter. start_period 60s deckt Boot + Migration ab.
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   # ============================================
   # PostgreSQL Database

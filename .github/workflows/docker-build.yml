@@ -1,0 +1,78 @@
+name: Docker Build & Push
+
+# Baut das Production-Image und pusht es nach GHCR.
+# Coolify pullt anschliessend nur noch das fertige Image (kein Build mehr im
+# Coolify-Container) -> Zero-Downtime Rolling Deploy moeglich.
+#
+# Trigger:
+#   - push auf main (ausser version-bump-Commits)
+#   - manuell via "workflow_dispatch"
+#
+# Tags: latest, main, sha-<7>, v<version-aus-package.json>
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.planning/**'
+      - 'docs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # Skip bei automatischen Version-Bump-Commits (haben ihren eigenen Trigger)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read package version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=main,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+            type=raw,value=v${{ steps.pkg.outputs.version }}
+
+      - name: Build & Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/app/Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # GHA-Cache fuer Layer-Reuse zwischen Runs
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          # BuildKit cache-mounts (npm) sind im Dockerfile aktiv
+          provenance: false
