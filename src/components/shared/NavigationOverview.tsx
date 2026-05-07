@@ -124,17 +124,16 @@ export function NavigationOverview() {
                       HeaderInner
                     )}
                   </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0 text-sm">
-                    {allChildren.map((child, idx) => (
-                      <Fragment key={child.href}>
-                        {idx > 0 && <span className="text-muted-foreground/40 select-none">·</span>}
-                        <Link
-                          href={child.href}
-                          className="text-foreground hover:text-sky-700 hover:underline underline-offset-4 transition-colors dark:hover:text-sky-300"
-                        >
-                          {child.name}
-                        </Link>
-                      </Fragment>
+                  {/* Sub-Links rechts: shadcn-NavigationMenu-Stil — kompakte Pills mit hover:bg-accent. */}
+                  <div className="flex flex-wrap items-center gap-1 min-w-0">
+                    {allChildren.map((child) => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        className="inline-flex h-7 items-center rounded-md px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none"
+                      >
+                        {child.name}
+                      </Link>
                     ))}
                   </div>
                 </Fragment>
