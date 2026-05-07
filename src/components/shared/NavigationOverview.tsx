@@ -1,22 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { Fragment, useState, useEffect } from 'react'
 import { ChevronDown, ChevronRight, Compass } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu'
 import { navigation, type NavItem, type NavChild } from '@/components/layout/sidebar'
 import { usePermissions } from '@/hooks/use-permissions'
 import type { Module } from '@/lib/types/permissions'
-import { cn } from '@/lib/utils'
 
 const STORAGE_KEY = 'xkmu_dashboard_nav_overview_open'
 
@@ -112,72 +102,45 @@ export function NavigationOverview() {
       </CardHeader>
       {open && (
         <CardContent className="pt-0">
-          {/* shadcn NavigationMenu: Top-Level-Bereiche horizontal mit Wrap; Sub-Items als Dropdown.
-              viewport={false} — Dropdowns positionieren absolut unter dem jeweiligen Trigger,
-              damit flex-wrap mit 15+ Triggern korrekt funktioniert. */}
-          <NavigationMenu viewport={false} className="max-w-full">
-            <NavigationMenuList className="flex-wrap justify-start gap-x-1 gap-y-1.5">
-              {visibleSections.map(({ section, allChildren }) => {
-                const Icon = section.icon
-
-                // Bereich ohne Sub-Items → direkter Link
-                if (allChildren.length === 0 && section.href) {
-                  return (
-                    <NavigationMenuItem key={section.name}>
-                      <NavigationMenuLink
-                        asChild
-                        className={cn(navigationMenuTriggerStyle(), 'h-8 px-3 text-xs font-medium')}
-                      >
-                        <Link href={section.href}>
-                          <Icon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                          {section.name}
+          {/* Pro Bereich eine Zeile: links Bereichs-Header (hellblauer Pill),
+              rechts daneben alle Links als Inline-Texte mit "·" als Trenner. */}
+          <div className="grid items-center gap-x-3 gap-y-1.5 [grid-template-columns:minmax(170px,max-content)_1fr]">
+            {visibleSections.map(({ section, allChildren }) => {
+              const Icon = section.icon
+              const HeaderInner = (
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-100 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-sky-900 dark:bg-sky-500/15 dark:text-sky-200">
+                  <Icon className="h-3.5 w-3.5 shrink-0" />
+                  {section.name}
+                </span>
+              )
+              return (
+                <Fragment key={section.name}>
+                  <div>
+                    {section.href ? (
+                      <Link href={section.href} className="hover:opacity-80 transition-opacity">
+                        {HeaderInner}
+                      </Link>
+                    ) : (
+                      HeaderInner
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0 text-sm">
+                    {allChildren.map((child, idx) => (
+                      <Fragment key={child.href}>
+                        {idx > 0 && <span className="text-muted-foreground/40 select-none">·</span>}
+                        <Link
+                          href={child.href}
+                          className="text-foreground hover:text-sky-700 hover:underline underline-offset-4 transition-colors dark:hover:text-sky-300"
+                        >
+                          {child.name}
                         </Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  )
-                }
-
-                // Bereich mit Sub-Items → Trigger + Dropdown
-                return (
-                  <NavigationMenuItem key={section.name}>
-                    <NavigationMenuTrigger className="h-8 px-3 text-xs font-medium">
-                      <Icon className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                      {section.name}
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <ul className="grid w-[260px] gap-0.5 p-2">
-                        {section.href && (
-                          <li>
-                            <NavigationMenuLink asChild>
-                              <Link
-                                href={section.href}
-                                className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-xs font-semibold text-foreground hover:bg-accent"
-                              >
-                                <Icon className="h-3.5 w-3.5" />
-                                {section.name} – Übersicht
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
-                        )}
-                        {allChildren.map((child) => (
-                          <li key={child.href}>
-                            <NavigationMenuLink asChild>
-                              <Link
-                                href={child.href}
-                                className="block rounded-sm px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                              >
-                                {child.name}
-                              </Link>
-                            </NavigationMenuLink>
-                          </li>
-                        ))}
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                )
-              })}
-            </NavigationMenuList>
-          </NavigationMenu>
+                      </Fragment>
+                    ))}
+                  </div>
+                </Fragment>
+              )
+            })}
+          </div>
         </CardContent>
       )}
     </Card>
