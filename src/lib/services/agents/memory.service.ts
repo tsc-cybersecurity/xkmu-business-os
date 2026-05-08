@@ -36,8 +36,66 @@ export const MemoryService = {
     throw new Error('MemoryService.search: nicht implementiert (Phase 2)')
   },
 
-  async read(_idOrPath: string): Promise<MemoryReadResult> {
-    throw new Error('MemoryService.read: nicht implementiert (Phase 2)')
+  async read(idOrPath: string): Promise<MemoryReadResult> {
+    const fs = await import('node:fs/promises')
+    const { db } = await import('@/lib/db')
+    const { agentMemoryEntries } = await import('@/lib/db/schema')
+    const { eq } = await import('drizzle-orm')
+    const { scopeToFilePath, isPathInsideMemoryRoot } = await import('./memory/paths')
+    const { parseFrontmatter } = await import('./memory/frontmatter')
+    const { parseItems } = await import('./memory/items')
+
+    let scope: string
+    let id: string | null = null
+    let title: string | null = null
+
+    if (idOrPath.startsWith('memory://')) {
+      scope = idOrPath.slice('memory://'.length).split('#')[0]
+    } else if (/^[0-9a-f-]{36}$/i.test(idOrPath)) {
+      const [row] = await db
+        .select({
+          id: agentMemoryEntries.id,
+          scope: agentMemoryEntries.scope,
+          title: agentMemoryEntries.title,
+        })
+        .from(agentMemoryEntries)
+        .where(eq(agentMemoryEntries.id, idOrPath))
+        .limit(1)
+      if (!row) throw new Error(`Memory-Entry ${idOrPath} nicht gefunden`)
+      scope = row.scope
+      id = row.id
+      title = row.title
+    } else {
+      scope = idOrPath
+    }
+
+    const summaryPath = scopeToFilePath(scope, 'summary.md')
+    if (!isPathInsideMemoryRoot(summaryPath)) {
+      throw new Error('Pfad ausserhalb Memory-Root verboten')
+    }
+    const itemsPath = scopeToFilePath(scope, 'items.yaml')
+
+    let summaryRaw: string
+    try {
+      summaryRaw = await fs.readFile(summaryPath, 'utf8')
+    } catch {
+      throw new Error(`summary.md fuer scope='${scope}' nicht gefunden`)
+    }
+    const { frontmatter, body } = parseFrontmatter(summaryRaw)
+    if (!id) id = frontmatter.id
+    if (!title) title = frontmatter.title ?? null
+
+    let items: Array<{ id: string; fact: string; status: string; source: string }> = []
+    try {
+      const itemsRaw = await fs.readFile(itemsPath, 'utf8')
+      items = parseItems(itemsRaw).map((it) => ({
+        id: it.id, fact: it.fact, status: it.status, source: it.source,
+      }))
+    } catch {
+      // items.yaml ist optional
+    }
+
+    return { id, title, body, items }
   },
 
   async write(
