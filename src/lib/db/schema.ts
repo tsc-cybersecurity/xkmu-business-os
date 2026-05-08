@@ -3920,3 +3920,39 @@ export const agentRunsRelations = relations(agentRuns, ({ one }) => ({
 
 export type AgentRun = typeof agentRuns.$inferSelect
 export type NewAgentRun = typeof agentRuns.$inferInsert
+
+export const agentSteps = pgTable('agent_steps', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  runId: uuid('run_id').notNull().references(() => agentRuns.id, { onDelete: 'cascade' }),
+  goalId: uuid('goal_id').notNull().references(() => agentGoals.id, { onDelete: 'cascade' }),
+  stepKey: varchar('step_key', { length: 200 }).notNull(),
+  workerType: varchar('worker_type', { length: 200 }).notNull(),
+  config: jsonb('config').default({}).notNull(),
+  contextRefs: jsonb('context_refs').default([]).notNull(),
+  dependsOnStepKeys: text('depends_on_step_keys').array().default(sql`ARRAY[]::text[]`).notNull(),
+  status: varchar('status', { length: 30 }).default('pending').notNull(),
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+  resultJson: jsonb('result_json'),
+  resultSummary: varchar('result_summary', { length: 500 }),
+  resultDocumentId: uuid('result_document_id'),
+  inputTokens: bigint('input_tokens', { mode: 'number' }).default(0).notNull(),
+  outputTokens: bigint('output_tokens', { mode: 'number' }).default(0).notNull(),
+  costCents: integer('cost_cents').default(0).notNull(),
+  error: text('error'),
+  taskQueueId: uuid('task_queue_id').references(() => taskQueue.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('uq_agent_steps_run_step_key').on(table.runId, table.stepKey),
+  index('idx_agent_steps_run_status').on(table.runId, table.status),
+  index('idx_agent_steps_status_taskqueue').on(table.status, table.taskQueueId),
+])
+
+export const agentStepsRelations = relations(agentSteps, ({ one }) => ({
+  run: one(agentRuns, { fields: [agentSteps.runId], references: [agentRuns.id] }),
+  goal: one(agentGoals, { fields: [agentSteps.goalId], references: [agentGoals.id] }),
+}))
+
+export type AgentStep = typeof agentSteps.$inferSelect
+export type NewAgentStep = typeof agentSteps.$inferInsert
