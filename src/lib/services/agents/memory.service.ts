@@ -32,8 +32,83 @@ export interface MemoryFact {
 }
 
 export const MemoryService = {
-  async search(_query: string, _scope?: string, _limit = 5): Promise<MemorySearchHit[]> {
-    throw new Error('MemoryService.search: nicht implementiert (Phase 2)')
+  async search(query: string, scope?: string, limit = 5): Promise<MemorySearchHit[]> {
+    const { db } = await import('@/lib/db')
+    const { agentMemoryEntries } = await import('@/lib/db/schema')
+    const { and, eq, like, sql, desc } = await import('drizzle-orm')
+    const { embedText } = await import('./memory/embedding')
+
+    let queryEmbedding: number[] | null = null
+    try {
+      queryEmbedding = await embedText(query)
+    } catch {
+      // Falls Embedding nicht verfuegbar -> reine BM25-Suche
+    }
+
+    const baseFilter = and(
+      eq(agentMemoryEntries.status, 'active'),
+      ...(scope ? [like(agentMemoryEntries.scope, `${scope}%`)] : []),
+    )
+
+    if (queryEmbedding) {
+      const vectorLiteral = `[${queryEmbedding.join(',')}]`
+      const vecScoreExpr = sql<number>`(1 - (${agentMemoryEntries.embedding} <=> ${vectorLiteral}::vector))`
+      const bm25ScoreExpr = sql<number>`GREATEST(
+        similarity(coalesce(${agentMemoryEntries.title}, ''), ${query}),
+        similarity(coalesce(${agentMemoryEntries.contentTrgm}, ''), ${query})
+      )`
+      const combinedExpr = sql`0.5 * (1 - (${agentMemoryEntries.embedding} <=> ${vectorLiteral}::vector)) + 0.5 * GREATEST(
+        similarity(coalesce(${agentMemoryEntries.title}, ''), ${query}),
+        similarity(coalesce(${agentMemoryEntries.contentTrgm}, ''), ${query})
+      )`
+      const rows = await db
+        .select({
+          id: agentMemoryEntries.id,
+          scope: agentMemoryEntries.scope,
+          title: agentMemoryEntries.title,
+          summary: agentMemoryEntries.summary,
+          vecScore: vecScoreExpr,
+          bm25Score: bm25ScoreExpr,
+          snippet: sql<string>`left(coalesce(${agentMemoryEntries.contentTrgm}, ''), 240)`,
+        })
+        .from(agentMemoryEntries)
+        .where(and(baseFilter, sql`${agentMemoryEntries.embedding} IS NOT NULL`))
+        .orderBy(desc(combinedExpr))
+        .limit(limit)
+
+      return rows.map((r) => ({
+        id: r.id,
+        scope: r.scope,
+        title: r.title,
+        summary: r.summary,
+        snippet: r.snippet,
+        score: 0.5 * Number(r.vecScore) + 0.5 * Number(r.bm25Score),
+      }))
+    }
+
+    const bm25Expr = sql<number>`similarity(coalesce(${agentMemoryEntries.contentTrgm}, ''), ${query})`
+    const fallback = await db
+      .select({
+        id: agentMemoryEntries.id,
+        scope: agentMemoryEntries.scope,
+        title: agentMemoryEntries.title,
+        summary: agentMemoryEntries.summary,
+        bm25Score: bm25Expr,
+        snippet: sql<string>`left(coalesce(${agentMemoryEntries.contentTrgm}, ''), 240)`,
+      })
+      .from(agentMemoryEntries)
+      .where(baseFilter)
+      .orderBy(desc(bm25Expr))
+      .limit(limit)
+
+    return fallback.map((r) => ({
+      id: r.id,
+      scope: r.scope,
+      title: r.title,
+      summary: r.summary,
+      snippet: r.snippet,
+      score: Number(r.bm25Score),
+    }))
   },
 
   async read(idOrPath: string): Promise<MemoryReadResult> {

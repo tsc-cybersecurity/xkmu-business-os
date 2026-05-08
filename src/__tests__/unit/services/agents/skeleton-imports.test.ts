@@ -42,10 +42,6 @@ describe('Agent-Module Skeleton — Phase 1', () => {
     await expect(WorkerService.executeStep('step-1')).rejects.toThrow(/nicht implementiert/)
   })
 
-  it('MemoryService.search wirft "nicht implementiert"', async () => {
-    await expect(MemoryService.search('foo')).rejects.toThrow(/nicht implementiert/)
-  })
-
   it('CostTrackerService.record wirft "nicht implementiert"', async () => {
     await expect(
       CostTrackerService.record({
