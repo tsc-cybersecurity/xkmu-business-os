@@ -57,10 +57,26 @@ export const MemoryService = {
   },
 
   async list(
-    _para: 'projects' | 'areas' | 'resources' | 'archives',
-    _limit = 20,
+    para: 'projects' | 'areas' | 'resources' | 'archives',
+    limit = 20,
   ): Promise<Array<Pick<AgentMemoryEntry, 'id' | 'scope' | 'title' | 'summary'>>> {
-    throw new Error('MemoryService.list: nicht implementiert (Phase 2)')
+    const { db } = await import('@/lib/db')
+    const { agentMemoryEntries } = await import('@/lib/db/schema')
+    const { and, eq, desc } = await import('drizzle-orm')
+    return db
+      .select({
+        id: agentMemoryEntries.id,
+        scope: agentMemoryEntries.scope,
+        title: agentMemoryEntries.title,
+        summary: agentMemoryEntries.summary,
+      })
+      .from(agentMemoryEntries)
+      .where(and(
+        eq(agentMemoryEntries.para, para),
+        eq(agentMemoryEntries.status, 'active'),
+      ))
+      .orderBy(desc(agentMemoryEntries.updatedAt))
+      .limit(limit)
   },
 
   /** Expandiert MemoryRefs zu vollen Inhalten — wird beim Worker-Start aufgerufen. */
