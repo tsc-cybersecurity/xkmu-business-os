@@ -4007,3 +4007,25 @@ export const agentMemoryEntries = pgTable('agent_memory_entries', {
 
 export type AgentMemoryEntry = typeof agentMemoryEntries.$inferSelect
 export type NewAgentMemoryEntry = typeof agentMemoryEntries.$inferInsert
+
+export const agentCostEvents = pgTable('agent_cost_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  runId: uuid('run_id').references(() => agentRuns.id, { onDelete: 'set null' }),
+  stepId: uuid('step_id').references(() => agentSteps.id, { onDelete: 'set null' }),
+  goalId: uuid('goal_id').references(() => agentGoals.id, { onDelete: 'set null' }),
+  provider: varchar('provider', { length: 50 }).notNull(),
+  model: varchar('model', { length: 100 }).notNull(),
+  callRole: varchar('call_role', { length: 50 }).notNull(),
+  inputTokens: integer('input_tokens').default(0).notNull(),
+  cachedInputTokens: integer('cached_input_tokens').default(0).notNull(),
+  outputTokens: integer('output_tokens').default(0).notNull(),
+  costCents: integer('cost_cents').notNull(),
+  occurredAt: timestamp('occurred_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_cost_events_goal_occurred').on(table.goalId, table.occurredAt),
+  index('idx_agent_cost_events_run_occurred').on(table.runId, table.occurredAt),
+  index('idx_agent_cost_events_provider_occurred').on(table.provider, table.occurredAt),
+])
+
+export type AgentCostEvent = typeof agentCostEvents.$inferSelect
+export type NewAgentCostEvent = typeof agentCostEvents.$inferInsert
