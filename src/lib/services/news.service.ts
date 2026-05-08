@@ -3,13 +3,6 @@ import { newsTopics, newsItems } from '@/lib/db/schema'
 import { eq, and, desc, asc, inArray } from 'drizzle-orm'
 import type { NewsTopic, NewNewsTopic, NewsItem } from '@/lib/db/schema'
 
-// Mark as intentionally referenced for T6 (Items methods land in next task).
-void newsItems
-void desc
-void inArray
-void and
-void (null as NewsItem | null)
-
 export interface CreateTopicInput {
   name: string
   description?: string
@@ -78,5 +71,52 @@ export const NewsService = {
       .where(eq(newsTopics.id, id))
       .returning({ id: newsTopics.id })
     return result.length > 0
+  },
+
+  // ── Items ──────────────────────────────────────────────────
+
+  async listItemsByTopic(
+    topicId: string,
+    opts?: { hidden?: boolean; since?: Date },
+  ): Promise<NewsItem[]> {
+    const conditions = [eq(newsItems.topicId, topicId)]
+    if (!opts?.hidden) conditions.push(eq(newsItems.isHidden, false))
+    return db
+      .select()
+      .from(newsItems)
+      .where(and(...conditions))
+      .orderBy(desc(newsItems.publishedAt), desc(newsItems.createdAt))
+  },
+
+  async getItem(id: string): Promise<NewsItem | null> {
+    const [item] = await db.select().from(newsItems).where(eq(newsItems.id, id)).limit(1)
+    return item ?? null
+  },
+
+  async hideItem(id: string, hidden: boolean): Promise<boolean> {
+    const result = await db
+      .update(newsItems)
+      .set({ isHidden: hidden, updatedAt: new Date() })
+      .where(eq(newsItems.id, id))
+      .returning({ id: newsItems.id })
+    return result.length > 0
+  },
+
+  async listAllForDashboard(opts?: { hidden?: boolean }): Promise<{ topic: NewsTopic; items: NewsItem[] }[]> {
+    const topics = await this.listTopics({ activeOnly: true })
+    if (!topics.length) return []
+    const topicIds = topics.map((t) => t.id)
+    const conditions = [inArray(newsItems.topicId, topicIds)]
+    if (!opts?.hidden) conditions.push(eq(newsItems.isHidden, false))
+    const items = await db
+      .select()
+      .from(newsItems)
+      .where(and(...conditions))
+      .orderBy(desc(newsItems.publishedAt), desc(newsItems.createdAt))
+
+    return topics.map((topic) => ({
+      topic,
+      items: items.filter((i) => i.topicId === topic.id),
+    }))
   },
 }

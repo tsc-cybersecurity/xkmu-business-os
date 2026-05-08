@@ -87,3 +87,87 @@ describe('NewsService — Topics', () => {
     expect(ok).toBe(true)
   })
 })
+
+describe('NewsService — Items', () => {
+  let dbMock: ReturnType<typeof setupDbMock>
+
+  beforeEach(() => {
+    vi.resetModules()
+    dbMock = setupDbMock()
+  })
+
+  async function getService() {
+    const mod = await import('@/lib/services/news.service')
+    return mod.NewsService
+  }
+
+  const ITEM_ID = '00000000-0000-0000-0000-000000000b01'
+
+  function itemFixture(overrides: Record<string, unknown> = {}) {
+    return {
+      id: ITEM_ID,
+      topicId: '00000000-0000-0000-0000-000000000a01',
+      title: 'Test',
+      url: 'https://example.com/a',
+      snippet: null,
+      source: 'example.com',
+      imageUrl: null,
+      publishedAt: new Date('2026-05-07'),
+      urlHash: 'hash',
+      pipelineStatus: 'idle',
+      pipelineError: null,
+      pipelineTaskId: null,
+      researchData: null,
+      isHidden: false,
+      createdAt: new Date('2026-05-08'),
+      updatedAt: new Date('2026-05-08'),
+      ...overrides,
+    }
+  }
+
+  it('listItemsByTopic returns non-hidden items by default', async () => {
+    dbMock.mockSelect.mockResolvedValueOnce([itemFixture()])
+    const svc = await getService()
+    const items = await svc.listItemsByTopic('00000000-0000-0000-0000-000000000a01')
+    expect(items).toHaveLength(1)
+  })
+
+  it('listItemsByTopic includes hidden when hidden=true', async () => {
+    dbMock.mockSelect.mockResolvedValueOnce([itemFixture({ isHidden: true })])
+    const svc = await getService()
+    const items = await svc.listItemsByTopic('00000000-0000-0000-0000-000000000a01', { hidden: true })
+    expect(items).toHaveLength(1)
+  })
+
+  it('hideItem updates isHidden flag', async () => {
+    dbMock.mockUpdate.mockResolvedValueOnce([itemFixture({ isHidden: true })])
+    const svc = await getService()
+    const ok = await svc.hideItem(ITEM_ID, true)
+    expect(ok).toBe(true)
+  })
+
+  it('getItem returns null when not found', async () => {
+    dbMock.mockSelect.mockResolvedValueOnce([])
+    const svc = await getService()
+    const r = await svc.getItem(ITEM_ID)
+    expect(r).toBeNull()
+  })
+
+  it('getItem returns item when found', async () => {
+    dbMock.mockSelect.mockResolvedValueOnce([itemFixture()])
+    const svc = await getService()
+    const r = await svc.getItem(ITEM_ID)
+    expect(r?.id).toBe(ITEM_ID)
+  })
+
+  it('listAllForDashboard returns active topics with their items grouped', async () => {
+    dbMock.mockSelect
+      .mockResolvedValueOnce([{ id: 't1', name: 'IT', color: '#fff', sortOrder: 0, keywords: [], sourceType: 'serpapi_news', sourceConfig: {}, isActive: true, description: null, createdAt: new Date(), updatedAt: new Date() }])
+      .mockResolvedValueOnce([itemFixture({ topicId: 't1' })])
+    const svc = await getService()
+    const result = await svc.listAllForDashboard()
+    expect(result).toHaveLength(1)
+    expect(result[0].topic.id).toBe('t1')
+    expect(result[0].items).toHaveLength(1)
+  })
+})
