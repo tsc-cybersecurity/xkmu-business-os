@@ -2512,6 +2512,7 @@ export const taskQueue = pgTable('task_queue', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index('idx_task_queue_type_status_scheduled').on(table.type, table.status, table.scheduledFor),
 ])
 
 export const taskQueueRelations = relations(taskQueue, ({ one }) => ({
