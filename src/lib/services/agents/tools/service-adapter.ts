@@ -3,12 +3,6 @@
  * Anders als prompt/workflow-adapter ist die Liste hier statisch (Code-Whitelist),
  * weil Domain-Services TypeScript-Funktionen mit spezifischen Signaturen sind.
  * Spec: docs/superpowers/specs/2026-05-08-agent-system-design.md §5.1
- *
- * NOTE: Die Plan-Spec verwendet die Methodennamen `LeadResearchService.researchLead`
- * und `WebsiteScraperService.scrape` — die echten Services exportieren `research`
- * bzw. `scrapeCompanyWebsite`. Tests mocken den Plan-Namen, daher rufen wir den
- * Plan-Namen via `as any` auf. Follow-up-Task: Adapter an echte Signaturen
- * anpassen oder Service-Wrapper-Methoden ergaenzen.
  */
 
 import type { ToolAdapter, ToolDescriptor, ToolInvocation, ToolInvocationResult } from '../tool-registry'
@@ -23,33 +17,41 @@ interface ServiceEntry {
 const SERVICES: ServiceEntry[] = [
   {
     name: 'lead-research',
-    description: 'Tiefe Lead-Recherche (Firma + Kontaktperson) via AI + Web-Sources.',
+    description: 'Tiefe Lead-Recherche (Firma + Kontaktperson) via AI + Web-Sources. Mind. einer von companyName/personName/email muss gesetzt sein.',
     inputSchema: {
       type: 'object',
-      required: ['leadId'],
-      properties: { leadId: { type: 'string' }, depth: { type: 'string', enum: ['quick', 'deep'], default: 'deep' } },
+      properties: {
+        companyName: { type: 'string' },
+        personName: { type: 'string' },
+        email: { type: 'string' },
+        website: { type: 'string' },
+        depth: { type: 'string', enum: ['quick', 'deep'], default: 'deep' },
+      },
     },
     handler: async (input) => {
-      const aiModule = await import('@/lib/services/ai')
-      const svc = (aiModule as unknown as { LeadResearchService: { researchLead: (i: unknown) => Promise<unknown> } }).LeadResearchService
-      return svc.researchLead({
-        leadId: String(input.leadId),
-        depth: (input.depth as 'quick' | 'deep') ?? 'deep',
-      })
+      const { LeadResearchService } = await import('@/lib/services/ai')
+      // Cast: LeadResearchInput hat optionale Felder, das Tool reicht den Input
+      // 1:1 weiter — Validierung passiert in research() selbst.
+      const r = await LeadResearchService.research(input as Parameters<typeof LeadResearchService.research>[0])
+      return r as unknown as Record<string, unknown>
     },
   },
   {
     name: 'website-scraper',
-    description: 'Scraped eine URL und liefert Markdown + Metadaten zurueck.',
+    description: 'Scraped eine Firmen-Website (Hauptseite + Sub-Pages) und liefert kombinierten Text fuer AI-Analyse.',
     inputSchema: {
       type: 'object',
       required: ['url'],
-      properties: { url: { type: 'string' } },
+      properties: {
+        url: { type: 'string' },
+        firecrawlApiKey: { type: 'string', description: 'Optional: API-Key fuer Firecrawl-basiertes Scraping' },
+      },
     },
     handler: async (input) => {
-      const aiModule = await import('@/lib/services/ai')
-      const svc = (aiModule as unknown as { WebsiteScraperService: { scrape: (url: string) => Promise<unknown> } }).WebsiteScraperService
-      return svc.scrape(String(input.url))
+      const { WebsiteScraperService } = await import('@/lib/services/ai')
+      const url = String(input.url ?? '')
+      const firecrawlApiKey = typeof input.firecrawlApiKey === 'string' ? input.firecrawlApiKey : undefined
+      return WebsiteScraperService.scrapeCompanyWebsite(url, firecrawlApiKey)
     },
   },
 ]

@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const leadResearchMock = vi.fn()
 
 vi.mock('@/lib/services/ai', () => ({
-  LeadResearchService: { researchLead: leadResearchMock },
-  WebsiteScraperService: { scrape: vi.fn().mockResolvedValue({ markdown: '# Hello' }) },
+  LeadResearchService: { research: leadResearchMock },
+  WebsiteScraperService: { scrapeCompanyWebsite: vi.fn().mockResolvedValue({ mainPage: {}, subPages: [], combinedText: '# Hello', success: true }) },
 }))
 
 describe('Service-Tool-Adapter', () => {
@@ -29,7 +29,7 @@ describe('Service-Tool-Adapter', () => {
       context: { runId: 'r', stepId: 's', goalId: 'g' },
     })
     expect(r.status).toBe('succeeded')
-    expect(r.output).toEqual({ markdown: '# Hello' })
+    expect(r.output).toEqual({ mainPage: {}, subPages: [], combinedText: '# Hello', success: true })
   })
 
   it('invoke unbekannter service-Name liefert failed', async () => {
