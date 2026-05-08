@@ -3891,3 +3891,32 @@ export const agentGoals = pgTable('agent_goals', {
 
 export type AgentGoal = typeof agentGoals.$inferSelect
 export type NewAgentGoal = typeof agentGoals.$inferInsert
+
+export const agentRuns = pgTable('agent_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  goalId: uuid('goal_id').notNull().references(() => agentGoals.id, { onDelete: 'cascade' }),
+  attempt: integer('attempt').default(1).notNull(),
+  status: varchar('status', { length: 30 }).default('planning').notNull(),
+  planJson: jsonb('plan_json'),
+  contextSnapshotJson: jsonb('context_snapshot_json'),
+  startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+  inputTokens: bigint('input_tokens', { mode: 'number' }).default(0).notNull(),
+  outputTokens: bigint('output_tokens', { mode: 'number' }).default(0).notNull(),
+  cachedInputTokens: bigint('cached_input_tokens', { mode: 'number' }).default(0).notNull(),
+  costCents: integer('cost_cents').default(0).notNull(),
+  livenessCheckedAt: timestamp('liveness_checked_at', { withTimezone: true }),
+  lastError: text('last_error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_runs_goal_status').on(table.goalId, table.status),
+  index('idx_agent_runs_status_liveness').on(table.status, table.livenessCheckedAt),
+])
+
+export const agentRunsRelations = relations(agentRuns, ({ one }) => ({
+  goal: one(agentGoals, { fields: [agentRuns.goalId], references: [agentGoals.id] }),
+}))
+
+export type AgentRun = typeof agentRuns.$inferSelect
+export type NewAgentRun = typeof agentRuns.$inferInsert
