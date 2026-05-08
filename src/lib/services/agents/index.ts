@@ -3,6 +3,7 @@
  * Spec: docs/superpowers/specs/2026-05-08-agent-system-design.md
  */
 
+export { SmartWorkerService } from './smart-worker.service'
 export { OrchestratorService } from './orchestrator.service'
 export { GoalService } from './goal.service'
 export { WorkerService } from './worker.service'
