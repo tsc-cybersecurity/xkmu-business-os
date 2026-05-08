@@ -140,6 +140,31 @@ export default function NewsDashboardPage() {
     }
   }, [fetchData])
 
+  const handleDelete = useCallback(async (itemId: string) => {
+    if (!confirm('News-Eintrag wirklich loeschen? Verknuepfte Blog-/Social-Drafts bleiben erhalten.')) return
+    // Optimistic remove
+    setData((prev) =>
+      prev.map((group) => ({
+        ...group,
+        items: group.items.filter((i) => i.id !== itemId),
+      })),
+    )
+    try {
+      const response = await fetch(`/api/v1/news/items/${itemId}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const json = await response.json().catch(() => ({}))
+        toast.error(json.error?.message || 'Löschen fehlgeschlagen')
+        fetchData()
+      } else {
+        toast.success('Gelöscht')
+      }
+    } catch (error) {
+      logger.error('Failed to delete news item', error, { module: 'NewsDashboardPage' })
+      toast.error('Löschen fehlgeschlagen')
+      fetchData()
+    }
+  }, [fetchData])
+
   const handleOpenDetail = useCallback(
     (itemId: string) => {
       router.push(`/intern/news/${itemId}`)
@@ -298,6 +323,7 @@ export default function NewsDashboardPage() {
                         item={item}
                         onPipeline={handlePipeline}
                         onHide={handleHide}
+                        onDelete={handleDelete}
                         onOpenDetail={handleOpenDetail}
                         triggering={triggering.has(item.id)}
                       />

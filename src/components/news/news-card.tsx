@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ExternalLink, Play, EyeOff, FileText, Share2 } from 'lucide-react'
+import { ExternalLink, Play, EyeOff, FileText, Share2, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface NewsItemData {
@@ -51,11 +51,12 @@ interface Props {
   draftCounts?: { blog: number; social: number }
   onPipeline: (itemId: string) => void
   onHide: (itemId: string) => void
+  onDelete: (itemId: string) => void
   onOpenDetail: (itemId: string) => void
   triggering: boolean
 }
 
-export function NewsCard({ item, draftCounts, onPipeline, onHide, onOpenDetail, triggering }: Props) {
+export function NewsCard({ item, draftCounts, onPipeline, onHide, onDelete, onOpenDetail, triggering }: Props) {
   const status = item.pipelineStatus
   const isPulsing = status === 'queued' || status === 'researching' || status === 'generating'
   const canTrigger = status === 'idle' || status === 'failed'
@@ -125,6 +126,15 @@ export function NewsCard({ item, draftCounts, onPipeline, onHide, onOpenDetail, 
             className="h-7 w-7 p-0"
           >
             <EyeOff className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => onDelete(item.id)}
+            title="Löschen"
+            className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>

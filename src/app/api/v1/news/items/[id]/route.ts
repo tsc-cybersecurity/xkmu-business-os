@@ -36,3 +36,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return apiSuccess({ updated: true })
   })
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  return withPermission(request, 'news', 'delete', async () => {
+    const { id } = await params
+    const ok = await NewsService.deleteItem(id)
+    if (!ok) return apiNotFound('News-Item nicht gefunden')
+    return apiSuccess({ deleted: true })
+  })
+}

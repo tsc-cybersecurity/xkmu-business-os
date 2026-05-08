@@ -103,6 +103,14 @@ export const NewsService = {
     return result.length > 0
   },
 
+  async deleteItem(id: string): Promise<boolean> {
+    const result = await db
+      .delete(newsItems)
+      .where(eq(newsItems.id, id))
+      .returning({ id: newsItems.id })
+    return result.length > 0
+  },
+
   async updateItem(id: string, data: Partial<NewNewsItem>): Promise<void> {
     await db
       .update(newsItems)
