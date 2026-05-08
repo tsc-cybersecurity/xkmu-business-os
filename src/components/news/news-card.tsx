@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ExternalLink, Play, EyeOff, FileText, Share2, Trash2 } from 'lucide-react'
+import { ExternalLink, Play, EyeOff, Eye, FileText, Share2, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface NewsItemData {
@@ -16,6 +16,7 @@ export interface NewsItemData {
   publishedAt: string | null
   pipelineStatus: 'idle' | 'queued' | 'researching' | 'generating' | 'completed' | 'failed'
   pipelineError: string | null
+  isHidden?: boolean
 }
 
 const STATUS_LABELS: Record<NewsItemData['pipelineStatus'], string> = {
@@ -122,10 +123,10 @@ export function NewsCard({ item, draftCounts, onPipeline, onHide, onDelete, onOp
             size="sm"
             variant="ghost"
             onClick={() => onHide(item.id)}
-            title="Verbergen"
+            title={item.isHidden ? 'Wieder einblenden' : 'Verbergen'}
             className="h-7 w-7 p-0"
           >
-            <EyeOff className="h-4 w-4" />
+            {item.isHidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </Button>
           <Button
             size="sm"
