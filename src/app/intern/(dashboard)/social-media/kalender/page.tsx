@@ -4,9 +4,10 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ChevronLeft, ChevronRight, Loader2, ExternalLink } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Loader2, ExternalLink, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
+import { WeekView } from './_components/WeekView'
 
 // ----------------------------------------------------------------------------
 // Types
@@ -98,6 +99,7 @@ function isToday(d: Date): boolean {
 // ----------------------------------------------------------------------------
 
 export default function SocialMediaCalendarPage() {
+  const [view, setView] = useState<'month' | 'week'>('month')
   const [month, setMonth] = useState<Date>(() => startOfMonth(new Date()))
   const [scheduled, setScheduled] = useState<CalendarPost[]>([])
   const [backlog, setBacklog] = useState<CalendarPost[]>([])
@@ -108,10 +110,19 @@ export default function SocialMediaCalendarPage() {
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const grid = buildMonthGrid(month)
-      const from = grid[0][0]
-      const to = new Date(grid[grid.length - 1][6])
-      to.setDate(to.getDate() + 1)
+      // Window: bei Monatsansicht das Monatsgrid, bei Wochenansicht +/- 4 Wochen.
+      let from: Date
+      let to: Date
+      if (view === 'week') {
+        const now = new Date()
+        from = new Date(now); from.setDate(from.getDate() - 28)
+        to = new Date(now); to.setDate(to.getDate() + 28)
+      } else {
+        const grid = buildMonthGrid(month)
+        from = grid[0][0]
+        to = new Date(grid[grid.length - 1][6])
+        to.setDate(to.getDate() + 1)
+      }
       const params = new URLSearchParams({ from: from.toISOString(), to: to.toISOString() })
       const res = await fetch(`/api/v1/social-media/posts/calendar?${params}`)
       const data = await res.json()
@@ -124,7 +135,7 @@ export default function SocialMediaCalendarPage() {
     } finally {
       setLoading(false)
     }
-  }, [month])
+  }, [month, view])
 
   useEffect(() => {
     fetchData()
@@ -226,26 +237,53 @@ export default function SocialMediaCalendarPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" aria-label="Vorheriger Monat"
-            onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="min-w-[160px] text-center font-medium">{monthLabel}</div>
-          <Button variant="outline" size="icon" aria-label="Nächster Monat"
-            onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMonth(startOfMonth(today))}
-            disabled={isSameMonth(today, month)}
-          >
-            Heute
-          </Button>
+          <div className="flex rounded-md border overflow-hidden">
+            <button
+              onClick={() => setView('month')}
+              className={`px-3 py-1 text-xs ${view === 'month' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            >
+              Monat
+            </button>
+            <button
+              onClick={() => setView('week')}
+              className={`px-3 py-1 text-xs border-l ${view === 'week' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
+            >
+              Woche
+            </button>
+          </div>
+          {view === 'month' && (
+            <>
+              <Button variant="outline" size="icon" aria-label="Vorheriger Monat"
+                onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="min-w-[160px] text-center font-medium">{monthLabel}</div>
+              <Button variant="outline" size="icon" aria-label="Nächster Monat"
+                onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMonth(startOfMonth(today))}
+                disabled={isSameMonth(today, month)}
+              >
+                Heute
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
+      {view === 'week' ? (
+        loading ? (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <WeekView scheduled={scheduled} backlog={backlog} onChanged={fetchData} />
+        )
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-4">
         <div>
           {loading ? (
@@ -318,6 +356,7 @@ export default function SocialMediaCalendarPage() {
           </CardContent>
         </Card>
       </div>
+      )}
     </div>
   )
 }
@@ -351,13 +390,14 @@ function PostCard({
       onDragStart={() => onDragStart(post.id)}
       onDragEnd={onDragEnd}
       className={`group rounded border ${platformClass} ${
-        isPosted ? 'opacity-60' : ''
+        isPosted ? 'opacity-50 grayscale' : ''
       } ${isFailed ? 'border-destructive' : ''} ${
         compact ? 'px-1.5 py-0.5 text-[11px]' : 'px-2 py-1.5 text-xs'
-      } cursor-${isPosted ? 'default' : 'grab'} active:cursor-grabbing relative`}
+      } ${isPosted ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'} relative`}
       title={`${post.platform} · ${STATUS_LABELS[post.status ?? 'draft'] ?? post.status} · ${titleText}`}
     >
       <div className="flex items-center gap-1">
+        {isPosted && <Lock className="h-3 w-3" aria-label="gepostet" />}
         <span className="capitalize font-medium">{post.platform}</span>
         {time && <span className="opacity-70">{time}</span>}
       </div>
