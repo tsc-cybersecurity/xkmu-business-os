@@ -22,6 +22,7 @@ import { ArrowLeft,
   Search,
   Save,
   ChevronRight,
+  Zap,
 } from 'lucide-react'
 import Link from 'next/link'
 import { logger } from '@/lib/utils/logger'
@@ -34,6 +35,7 @@ interface AiPromptTemplate {
   systemPrompt: string
   userPrompt: string
   outputFormat: string | null
+  triggerInfo: string | null
   isActive: boolean
   isDefault: boolean
   version: number
@@ -500,6 +502,23 @@ export default function AiPromptsPage() {
 
                   {selectedTemplate.description && (
                     <p className="text-muted-foreground">{selectedTemplate.description}</p>
+                  )}
+
+                  {/* Trigger / App-Aktion */}
+                  {selectedTemplate.triggerInfo && (
+                    <div className="rounded-md border border-amber-200 bg-amber-50 dark:border-amber-900/50 dark:bg-amber-950/20 p-3">
+                      <div className="flex items-start gap-2">
+                        <Zap className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                        <div className="space-y-0.5">
+                          <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-300">
+                            Wird aufgerufen durch
+                          </h3>
+                          <p className="text-sm text-amber-900 dark:text-amber-100 leading-relaxed">
+                            {selectedTemplate.triggerInfo}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   )}
 
                   {/* Platzhalter */}

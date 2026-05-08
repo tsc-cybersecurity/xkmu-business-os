@@ -54,6 +54,7 @@ export const COMPANY_ACTION_TEMPLATES: Record<string, {
   systemPrompt: string
   userPrompt: string
   outputFormat: string
+  triggerInfo?: string  // Wann / wo wird dieser Prompt in der App aufgerufen
 }> = {
 
   // ============================================

@@ -534,6 +534,8 @@ export const aiPromptTemplates = pgTable('ai_prompt_templates', {
   systemPrompt: text('system_prompt').notNull(),       // Rolle & Regeln
   userPrompt: text('user_prompt').notNull(),           // Aufgabe mit {{Platzhaltern}}
   outputFormat: text('output_format'),                  // JSON-Schema / Formatvorgabe
+  // Doku
+  triggerInfo: text('trigger_info'),                    // Wann/wo wird dieser Prompt aufgerufen (App-Aktion / Endpoint / UI-Stelle)
   // Status
   isActive: boolean('is_active').default(true),
   isDefault: boolean('is_default').default(false),     // System-Default (nicht löschbar)

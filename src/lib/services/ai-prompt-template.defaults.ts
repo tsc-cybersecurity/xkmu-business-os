@@ -222,6 +222,92 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
 }
 
 // ============================================
+// Trigger-Info pro Slug — wann / wo feuert der Prompt in der App?
+// ============================================
+// Wird beim Seeding in ai_prompt_templates.trigger_info uebernommen und im
+// Settings-UI (/intern/settings/ai-prompts) angezeigt. Eine zentrale Map
+// erspart 35x Inline-Eintraege in DEFAULT_TEMPLATES — der Service mergt das
+// in seed-check.ts.
+export const TRIGGER_INFO: Record<string, string> = {
+  // --- Mainline ---
+  lead_research:
+    'Lead-Detail-Page (/intern/leads/[id]) → Button "KI-Recherche". Nutzt Firmen- + Personendaten und gescrapte Website-Inhalte zur strukturierten Lead-Bewertung.',
+  company_research:
+    'Firmen-Detail-Page (/intern/contacts/companies/[id]) → KI-Recherche-Aktion. Reichert Firmen-Stammdaten mit Branche, Mitarbeiter, Newsfunden an.',
+  person_research:
+    'Personen-Detail-Page (/intern/contacts/persons/[id]) → KI-Recherche. Recherchiert die Person via Name, Position, Firma.',
+  quick_score:
+    'Lead-Detail-Page (/intern/leads/[id]) → "Quick Score" Button. Liefert ein 0-100 Lead-Score-Fast-Urteil ohne tiefe Recherche.',
+  idea_processing:
+    'Ideen-Modul (/intern/ideas) → "Idee strukturieren" beim Erstellen/Bearbeiten. Wandelt rohen Text/Transkript in strukturierte Idee mit Tags und Zusammenfassung.',
+  outreach_email:
+    'Lead-Detail-Page (/intern/leads/[id]) → "Outreach-Mail generieren". Erstellt personalisierte B2B-Erstansprache.',
+  cms_seo_generation:
+    'CMS-Seiten-Editor (/intern/cms/pages/[id]) → "SEO-Vorschlag generieren". Erzeugt Meta-Titel, -Description, -Keywords aus Seiteninhalt.',
+  blog_seo_generation:
+    'Blog-Editor (/intern/blog/[id]) → "SEO-Vorschlag generieren". Wie cms_seo_generation, aber fuer Blog-Beitraege.',
+  blog_post_generation:
+    'Blog-Editor (/intern/blog/new) → "Beitrag generieren" via Topic-Eingabe. Erzeugt vollstaendigen Blog-Artikel mit Markdown-Struktur.',
+  marketing_email:
+    'Marketing-Modul → Marketing-Asset-Generator (Variante "Email"). Erstellt Marketing-Mail-Texte fuer Kampagnen.',
+  marketing_call_script:
+    'Marketing-Modul → Marketing-Asset-Generator (Variante "Anruf"). Erstellt Telefon-Skript fuer Outbound-Calls.',
+  marketing_sms:
+    'Marketing-Modul → Marketing-Asset-Generator (Variante "SMS"). Erstellt SMS-Text fuer Kampagnen.',
+  social_media_post:
+    'Social-Media-Editor (/intern/social-media/new) → "Beitrag generieren". Erzeugt Plattform-spezifischen Post-Text aus Topic + Tonalitaet.',
+  social_media_content_plan:
+    'Content-Plan-Generator (/intern/social-media/content-plan) → "Plan generieren". Erstellt mehrwoechigen Content-Plan mit Themen + Plattformen.',
+  social_media_improve:
+    'Social-Media-Post-Detail (/intern/social-media/[id]) → "Beitrag verbessern". Optimiert bestehenden Post-Text auf Engagement.',
+  social_media_topic_generation:
+    'Topic-Liste (/intern/social-media/topics) → "Themen generieren". Schlaegt neue Content-Themen passend zum Profil vor.',
+  business_profile_analysis:
+    'Settings → Business-Profile → "KI-Analyse starten". Analysiert hochgeladene Geschaefts-Dokumente und erstellt SWOT + Kennzahlen.',
+  document_analysis:
+    'Dokument-Upload (z.B. /intern/documents) → automatischer KI-Run beim Verarbeiten. Extrahiert Kernaussagen + Finanz-KPIs aus PDFs/Word.',
+  n8n_workflow_builder:
+    'Workflow-Modul → "n8n-Workflow generieren". Erzeugt JSON fuer n8n aus Beschreibung des gewuenschten Ablaufs.',
+  process_dev_analysis:
+    'Prozess-Modul (/intern/management/processes) → "Dev-Tasks generieren". Leitet aus einer SOP konkrete Engineering-Tasks ab. (POST /api/v1/processes/dev-tasks/generate)',
+  meeting_summary:
+    'Meeting-Notizen → "Protokoll erzeugen". Fasst Meeting-Notizen in strukturiertes Protokoll mit Action-Items zusammen.',
+  blog_review:
+    'Blog-Editor (/intern/blog/[id]) → "Beitrag pruefen". Inhaltliches + sprachliches Review mit Verbesserungsvorschlaegen. (POST /api/v1/blog/posts/[id]/review)',
+  seo_keywords:
+    'SEO-Tool (/api/v1/seo/keywords) → "Keywords vorschlagen". Liefert relevante SEO-Keywords zu einem Thema/URL.',
+  meeting_prep:
+    'Firmen-Detail-Page (/intern/contacts/companies/[id]) → "Meeting-Vorbereitung". Erstellt Briefing fuer ein anstehendes Meeting. (POST /api/v1/companies/[id]/prep)',
+  security_roadmap:
+    'DIN-Audit-Detail (/intern/cybersecurity/din/audits/[id]) → "Roadmap generieren". Erzeugt priorisierte Massnahmen-Roadmap aus Audit-Ergebnissen. (POST /api/v1/din/audits/[id]/roadmap)',
+  receipt_ocr:
+    'Beleg-Upload (Finanzen) → automatische KI-Extraktion. Liest Datum, Betrag, USt, Lieferant aus Belegfotos/PDFs.',
+  document_template_fill:
+    'Document-Templates → "Vorlage befuellen". Erzeugt befuelltes Dokument aus Template + Daten-Kontext.',
+  firecrawl_smart_filter:
+    'Website-Scraper-Service → KI-Filter beim Crawlen. Extrahiert relevante Inhalte aus Roh-HTML, verwirft Boilerplate.',
+  marketing_agent_research:
+    'Marketing-Agent-Workflow → Phase 1 (Research). Sammelt Markt-/Wettbewerberinfos zum gegebenen Thema.',
+  marketing_agent_seo:
+    'Marketing-Agent-Workflow → Phase 2 (SEO). Erstellt SEO-Strategie + Keyword-Set aus der Research-Phase.',
+  marketing_agent_content:
+    'Marketing-Agent-Workflow → Phase 3 (Content). Erzeugt finalen Marketing-Content basierend auf SEO + Research.',
+  company_knowledge_analysis:
+    'Settings → Firmenwissen → "Analyse starten". Aggregiert Firmen-internes Wissen zu strukturiertem Profil. (POST /api/v1/organization/analyze)',
+  blog_to_instagram:
+    'Blog-Detail (/intern/blog/[id]) → "Social Posts generieren" → Plattform Instagram. (POST /api/v1/blog/posts/[id]/generate-social)',
+  blog_to_x:
+    'Blog-Detail (/intern/blog/[id]) → "Social Posts generieren" → Plattform X.',
+  blog_to_linkedin:
+    'Blog-Detail (/intern/blog/[id]) → "Social Posts generieren" → Plattform LinkedIn.',
+  blog_to_facebook:
+    'Blog-Detail (/intern/blog/[id]) → "Social Posts generieren" → Plattform Facebook.',
+  // --- Company-Actions (alle company_*) ---
+  // Generischer Fallback fuer alle 30+ company_*-Slugs: kontextueller Action-Button
+  // im Firmen-Detail-View. Konkrete Aktion ergibt sich aus dem Slug-Namen.
+}
+
+// ============================================
 // Default-Prompts (Fallback & Seed)
 // ============================================
 export const DEFAULT_TEMPLATES: Record<string, {
@@ -230,6 +316,7 @@ export const DEFAULT_TEMPLATES: Record<string, {
   systemPrompt: string
   userPrompt: string
   outputFormat: string
+  triggerInfo?: string  // Wann / wo wird dieser Prompt in der App aufgerufen
 }> = {
   ...COMPANY_ACTION_TEMPLATES,
   lead_research: {

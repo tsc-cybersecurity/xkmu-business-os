@@ -576,6 +576,9 @@ WHERE u.role = 'portal_user'
   AND LOWER(p.email) = LOWER(u.email)
   AND p.portal_user_id IS NULL;
 
+-- ── ai_prompt_templates: trigger_info Spalte (Doku wann Prompt feuert) ─
+ALTER TABLE ai_prompt_templates ADD COLUMN IF NOT EXISTS trigger_info TEXT;
+
 -- ── scorecard_entries dirty-data cleanup ───────────────────────────────
 -- Vor drizzle-push die orphaned entries killen, sonst schlaegt der
 -- ADD CONSTRAINT scorecard_entries_metric_id_fk fehl, expect-Wrapper
