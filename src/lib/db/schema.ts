@@ -3779,3 +3779,17 @@ export type SocialPostTarget = typeof socialPostTargets.$inferSelect
 export type NewSocialPostTarget = typeof socialPostTargets.$inferInsert
 
 export type GoogleCalendarConfig = typeof googleCalendarConfig.$inferSelect
+
+// ============================================
+// app_meta — Marker-Store fuer Boot-Hash-Gates
+// (Schema-Sync + Seed-Check Hashes liegen hier; siehe entrypoint.prod.sh)
+// MUSS im Schema stehen, sonst dropped drizzle-kit push --force die Tabelle.
+// ============================================
+export const appMeta = pgTable('app_meta', {
+  key: varchar('key', { length: 64 }).primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type AppMeta = typeof appMeta.$inferSelect
+export type NewAppMeta = typeof appMeta.$inferInsert
