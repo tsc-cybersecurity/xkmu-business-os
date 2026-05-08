@@ -4,6 +4,7 @@
  */
 
 export { OrchestratorService } from './orchestrator.service'
+export { GoalService } from './goal.service'
 export { WorkerService } from './worker.service'
 export { MemoryService } from './memory.service'
 export { CostTrackerService } from './cost-tracker.service'
@@ -52,3 +53,5 @@ export type {
 export type {
   ReplanDecision,
 } from './orchestrator.service'
+
+export type { CreateGoalInput, GoalListItem } from './goal.service'
