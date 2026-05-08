@@ -109,11 +109,47 @@ export function WeekView({ scheduled, backlog, onChanged }: {
   const gridRef = useRef<HTMLDivElement>(null)
 
   const positions = useMemo(() => {
-    const arr: Array<{ post: WeekPost; dayIdx: number; topSlot: number }> = []
+    const arr: Array<{ post: WeekPost; dayIdx: number; topSlot: number; lane: number; totalLanes: number }> = []
     for (const p of scheduled) {
       const pos = postPosition(p, weekStart)
-      if (pos) arr.push({ post: p, ...pos })
+      if (pos) arr.push({ post: p, ...pos, lane: 0, totalLanes: 1 })
     }
+
+    // Lane-Assignment pro Tag: ueberlappende Posts nebeneinander statt uebereinander.
+    // Ein Post belegt POST_HEIGHT_SLOTS = POST_DEFAULT_SLOTS * 2 Slots. Greedy:
+    // erste freie Lane (alte endet vor neuem Start). totalLanes pro Post = max
+    // simultane Lane-Anzahl waehrend seiner Laufzeit.
+    const POST_HEIGHT_SLOTS = POST_DEFAULT_SLOTS * 2
+    for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
+      const dayPosts = arr.filter((x) => x.dayIdx === dayIdx).sort((a, b) => a.topSlot - b.topSlot)
+      const laneEnds: number[] = [] // pro Lane: end-Slot des letzten zugewiesenen Posts
+      for (const p of dayPosts) {
+        const start = p.topSlot
+        const end = start + POST_HEIGHT_SLOTS
+        let laneIdx = laneEnds.findIndex((e) => e <= start)
+        if (laneIdx === -1) {
+          laneIdx = laneEnds.length
+          laneEnds.push(end)
+        } else {
+          laneEnds[laneIdx] = end
+        }
+        p.lane = laneIdx
+      }
+      // totalLanes pro Post = hoechste Lane unter ueberlappenden Nachbarn + 1
+      for (const p of dayPosts) {
+        const start = p.topSlot
+        const end = start + POST_HEIGHT_SLOTS
+        let highestLane = p.lane
+        for (const q of dayPosts) {
+          if (q === p) continue
+          const qStart = q.topSlot
+          const qEnd = qStart + POST_HEIGHT_SLOTS
+          if (qEnd > start && qStart < end && q.lane > highestLane) highestLane = q.lane
+        }
+        p.totalLanes = highestLane + 1
+      }
+    }
+
     return arr
   }, [scheduled, weekStart])
 
@@ -313,7 +349,7 @@ export function WeekView({ scheduled, backlog, onChanged }: {
                       className="absolute left-0 right-0 border-t border-muted/40 pointer-events-none" />
                   ))}
 
-                  {dayPositions.map(({ post, topSlot }) => {
+                  {dayPositions.map(({ post, topSlot, lane, totalLanes }) => {
                     const locked = isLocked(post.status)
                     const isDragged = drag?.postId === post.id
                     if (isDragged) return null
@@ -323,17 +359,26 @@ export function WeekView({ scheduled, backlog, onChanged }: {
                     const time = effectiveAt
                       ? new Date(effectiveAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
                       : null
+                    // Lane-basierte horizontale Verteilung: ueberlappende Posts
+                    // teilen sich die Spalte (totalLanes Bahnen, lane = eigene Position).
+                    const widthPct = 100 / totalLanes
+                    const leftPct = lane * widthPct
                     return (
                       <button
                         key={post.id}
                         onPointerDown={(e) => onPostPointerDown(e, post, dayIdx, topSlot)}
-                        style={{ top: topSlot * SLOT_HEIGHT, height: POST_DEFAULT_SLOTS * SLOT_HEIGHT * 2 }}
-                        className={`absolute left-0.5 right-0.5 rounded border text-left text-[10px] px-1.5 py-0.5 ${platformClass} ${
+                        style={{
+                          top: topSlot * SLOT_HEIGHT,
+                          height: POST_DEFAULT_SLOTS * SLOT_HEIGHT * 2,
+                          left: `calc(${leftPct}% + 2px)`,
+                          width: `calc(${widthPct}% - 4px)`,
+                        }}
+                        className={`absolute rounded border text-left text-[10px] px-1.5 py-0.5 ${platformClass} ${
                           locked
                             ? 'opacity-50 grayscale cursor-not-allowed'
-                            : 'cursor-grab active:cursor-grabbing hover:shadow-md'
+                            : 'cursor-grab active:cursor-grabbing hover:shadow-md hover:z-10'
                         }`}
-                        title={`${post.platform} · ${post.status} · ${titleText}`}
+                        title={`${post.platform} · ${post.status} · ${time ?? ''} · ${titleText}`}
                       >
                         <div className="flex items-center gap-1 font-medium">
                           {locked && <Lock className="h-3 w-3" />}
