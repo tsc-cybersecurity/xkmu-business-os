@@ -128,7 +128,7 @@ describe('OrchestratorService.replan', () => {
       .mockReturnValueOnce({ limit: selectLimitMock }) // goal
       .mockResolvedValueOnce([                          // allSteps: alle succeeded -> LLM-Pfad
         { id: 'step-old', stepKey: 'old-step', status: 'succeeded', workerType: 'memory:list', dependsOnStepKeys: [] },
-      ])
+      ] as never)
 
     // LLM antwortet continue mit 1 neuem Step + nextStepMode=immediate
     aiCompleteMock.mockResolvedValueOnce({

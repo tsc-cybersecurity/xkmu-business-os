@@ -101,8 +101,8 @@ describe('GoalService', () => {
     planMock.mockResolvedValueOnce({ runId: 'run-1', steps: [{ stepKey: 'step-a', dependsOnStepKeys: [] }] })
     // select-Aufruf 2: agentSteps.where(and(...)) -> direkt awaited ohne .limit()
     selectWhereMock
-      .mockReturnValueOnce({ limit: selectLimitMock })   // erster Aufruf: goal
-      .mockResolvedValueOnce([{ id: 'step-1' }])         // zweiter Aufruf: readySteps
+      .mockReturnValueOnce({ limit: selectLimitMock, orderBy: vi.fn().mockResolvedValue([]) })  // erster Aufruf: goal
+      .mockResolvedValueOnce([{ id: 'step-1' }] as never)                                       // zweiter Aufruf: readySteps
     runImmediateMock.mockResolvedValueOnce({ iterations: 1, terminalReason: 'goal_complete' })
 
     const { GoalService } = await import('@/lib/services/agents/goal.service')
