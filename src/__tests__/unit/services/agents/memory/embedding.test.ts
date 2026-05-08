@@ -60,4 +60,43 @@ describe('Memory Embedding', () => {
     expect(String(url)).not.toContain('key=')
     expect((init as RequestInit).headers).toMatchObject({ 'x-goog-api-key': 'test-key' })
   })
+
+  it('embedText ruft CostTrackerService.record wenn costContext gesetzt', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ embedding: { values: Array.from({ length: 768 }, () => 0) } }),
+    }) as unknown as typeof fetch
+    const recordMock = vi.fn().mockResolvedValue(undefined)
+    vi.doMock('@/lib/services/agents/cost-tracker.service', () => ({
+      CostTrackerService: { record: recordMock },
+    }))
+    vi.resetModules()
+    const { embedText } = await import('@/lib/services/agents/memory/embedding')
+    await embedText('hello world', { costContext: { runId: 'r1', goalId: 'g1' } })
+    expect(recordMock).toHaveBeenCalledTimes(1)
+    expect(recordMock.mock.calls[0][0]).toMatchObject({
+      runId: 'r1',
+      goalId: 'g1',
+      provider: 'gemini',
+      model: 'text-embedding-004',
+      callRole: 'memory_embed',
+    })
+    vi.doUnmock('@/lib/services/agents/cost-tracker.service')
+  })
+
+  it('embedText ohne costContext ruft CostTrackerService nicht', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ embedding: { values: Array.from({ length: 768 }, () => 0) } }),
+    }) as unknown as typeof fetch
+    const recordMock = vi.fn().mockResolvedValue(undefined)
+    vi.doMock('@/lib/services/agents/cost-tracker.service', () => ({
+      CostTrackerService: { record: recordMock },
+    }))
+    vi.resetModules()
+    const { embedText } = await import('@/lib/services/agents/memory/embedding')
+    await embedText('hello world')
+    expect(recordMock).not.toHaveBeenCalled()
+    vi.doUnmock('@/lib/services/agents/cost-tracker.service')
+  })
 })
