@@ -43,6 +43,11 @@ function mapResult(r: SerpApiNewsResult): NewsSearchResult | null {
   }
 }
 
+// Hard-Cutoff für News-Alter — defensiv, unabhängig vom SerpAPI when-Parameter.
+// Items ohne publishedAt werden durchgelassen (Adapter kann das Datum nicht immer extrahieren).
+const MAX_AGE_HOURS = 48
+const MAX_AGE_MS = MAX_AGE_HOURS * 60 * 60 * 1000
+
 export const SerpApiNewsAdapter: NewsSourceAdapter = {
   async search(keywords, config) {
     const apiKey = await getApiKey()
@@ -55,12 +60,17 @@ export const SerpApiNewsAdapter: NewsSourceAdapter = {
     if (!keywords.length) return []
 
     const num = Number((config as { maxResults?: unknown }).maxResults) || 10
+    // dateRange-Hint an Google News weiterreichen ('1d', '2d', '7d', ...).
+    // Default '2d' = letzte ~48h. Google's `when`-Parameter kennt 1h/4h/1d/7d/1y.
+    // '2d' wird von Google teils akzeptiert; Hard-Cutoff unten greift unabhaengig.
+    const dateRange = String((config as { dateRange?: unknown }).dateRange ?? '2d')
     const params = new URLSearchParams({
       engine: 'google_news',
       q: keywords.join(' '),
       hl: 'de',
       gl: 'de',
       num: String(num),
+      when: dateRange,
       api_key: apiKey,
     })
 
@@ -73,8 +83,13 @@ export const SerpApiNewsAdapter: NewsSourceAdapter = {
     const data = (await res.json()) as SerpApiResponse
     if (!data.news_results) return []
 
+    const now = Date.now()
     return data.news_results
       .map(mapResult)
       .filter((x): x is NewsSearchResult => x !== null)
+      .filter((x) => {
+        if (!x.publishedAt) return true // Datum unbekannt → durchlassen
+        return now - x.publishedAt.getTime() <= MAX_AGE_MS
+      })
   },
 }

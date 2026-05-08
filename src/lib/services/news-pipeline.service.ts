@@ -57,11 +57,23 @@ async function runTemplate<T>(
   } = {},
 ): Promise<T> {
   const { AiPromptTemplateService } = await import('@/lib/services/ai-prompt-template.service')
+  const { AiProviderService } = await import('@/lib/services/ai-provider.service')
   const { AIService } = await import('@/lib/services/ai/ai.service')
 
   const template = await AiPromptTemplateService.getOrDefault(slug)
   const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, vars)
   const fullPrompt = template.outputFormat ? `${userPrompt}\n\n${template.outputFormat}` : userPrompt
+
+  // Strikter Default-Provider, kein Fallback-Cascading durch andere Provider.
+  // Der News-Pipeline soll genau der unter /intern/settings/ai-providers
+  // markierte Default-Provider zugewiesen werden — sonst landen Calls bei
+  // einem anderen aktiven Provider mit ggf. abgelaufenem/falschem Key.
+  const defaultProvider = await AiProviderService.getDefaultProvider()
+  if (!defaultProvider) {
+    throw new Error(
+      'Kein Default-KI-Provider konfiguriert. Bitte unter /intern/settings/ai-providers einen aktiven Provider als Standard markieren.',
+    )
+  }
 
   const response = await AIService.completeWithContext(
     fullPrompt,
@@ -71,6 +83,7 @@ async function runTemplate<T>(
       entityId: options.entityId,
     },
     {
+      providerId: defaultProvider.id,
       maxTokens: options.maxTokens ?? 4000,
       temperature: options.temperature ?? 0.7,
       systemPrompt: template.systemPrompt,

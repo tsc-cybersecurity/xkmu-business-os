@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setupDbMock } from '../../../helpers/mock-db'
 
+// Strict default-provider lookup in news-pipeline runTemplate — Tests müssen
+// einen Default-Provider mocken, sonst wirft runTemplate "Kein Default-KI-Provider".
+vi.mock('@/lib/services/ai-provider.service', () => ({
+  AiProviderService: {
+    getDefaultProvider: vi.fn().mockResolvedValue({ id: 'mock-provider-id' }),
+  },
+}))
+
 const ITEM_ID = '00000000-0000-0000-0000-000000000c01'
 
 function itemFixture(overrides: Record<string, unknown> = {}) {

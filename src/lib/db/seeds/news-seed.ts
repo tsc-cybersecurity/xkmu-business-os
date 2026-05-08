@@ -73,7 +73,7 @@ export async function seedNewsModule(): Promise<{ topics: number; prompts: numbe
         color: t.color,
         keywords: t.keywords,
         sourceType: 'serpapi_news',
-        sourceConfig: { maxResults: 10, dateRange: '7d' },
+        sourceConfig: { maxResults: 10, dateRange: '2d' },
         isActive: false,
       })
       topicsAdded++
