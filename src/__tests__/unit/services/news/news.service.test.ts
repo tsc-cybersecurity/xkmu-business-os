@@ -171,3 +171,79 @@ describe('NewsService — Items', () => {
     expect(result[0].items).toHaveLength(1)
   })
 })
+
+describe('NewsService — runResearchForTopic', () => {
+  let dbMock: ReturnType<typeof setupDbMock>
+
+  beforeEach(() => {
+    vi.resetModules()
+    dbMock = setupDbMock()
+  })
+
+  function setupAdapterMock(results: Array<{ title: string; url: string }>) {
+    vi.doMock('@/lib/services/news/index', () => ({
+      resolveNewsAdapter: () => ({
+        search: vi.fn().mockResolvedValue(results),
+      }),
+    }))
+  }
+
+  it('throws when topic not found', async () => {
+    dbMock.mockSelect.mockResolvedValueOnce([])
+    setupAdapterMock([])
+    const { NewsService } = await import('@/lib/services/news.service')
+
+    await expect(NewsService.runResearchForTopic('missing')).rejects.toThrow(/topic not found/i)
+  })
+
+  it('returns 0/0 when adapter returns no results', async () => {
+    dbMock.mockSelect.mockResolvedValueOnce([{
+      id: 't1', name: 'X', sourceType: 'serpapi_news', sourceConfig: {}, keywords: ['k1'],
+      isActive: true, color: null, description: null, sortOrder: 0,
+      createdAt: new Date(), updatedAt: new Date(),
+    }])
+    setupAdapterMock([])
+    const { NewsService } = await import('@/lib/services/news.service')
+
+    const result = await NewsService.runResearchForTopic('t1')
+    expect(result).toEqual({ inserted: 0, skipped: 0 })
+  })
+
+  it('inserts items with sha256 urlHash and counts inserted vs skipped', async () => {
+    dbMock.mockSelect.mockResolvedValueOnce([{
+      id: 't1', name: 'X', sourceType: 'serpapi_news', sourceConfig: {}, keywords: ['k1'],
+      isActive: true, color: null, description: null, sortOrder: 0,
+      createdAt: new Date(), updatedAt: new Date(),
+    }])
+    setupAdapterMock([
+      { title: 'A', url: 'https://example.com/a' },
+      { title: 'B', url: 'https://example.com/b' },
+    ])
+    // .returning() liefert nur die wirklich inserted rows zurück (1 von 2 → 1 inserted, 1 skipped)
+    dbMock.mockInsert.mockResolvedValueOnce([{ id: 'i1' }])
+
+    const { NewsService } = await import('@/lib/services/news.service')
+    const result = await NewsService.runResearchForTopic('t1')
+    expect(result.inserted).toBe(1)
+    expect(result.skipped).toBe(1)
+    expect(dbMock.db.insert).toHaveBeenCalled()
+  })
+
+  it('filters items without url before insert', async () => {
+    dbMock.mockSelect.mockResolvedValueOnce([{
+      id: 't1', name: 'X', sourceType: 'serpapi_news', sourceConfig: {}, keywords: ['k1'],
+      isActive: true, color: null, description: null, sortOrder: 0,
+      createdAt: new Date(), updatedAt: new Date(),
+    }])
+    setupAdapterMock([
+      { title: 'OK', url: 'https://example.com/a' },
+      { title: 'NoURL', url: '' },
+    ])
+    dbMock.mockInsert.mockResolvedValueOnce([{ id: 'i1' }])
+
+    const { NewsService } = await import('@/lib/services/news.service')
+    await NewsService.runResearchForTopic('t1')
+
+    expect(dbMock.db.insert).toHaveBeenCalledTimes(1)
+  })
+})

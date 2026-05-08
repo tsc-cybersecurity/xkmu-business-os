@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { db } from '@/lib/db'
 import { newsTopics, newsItems } from '@/lib/db/schema'
 import { eq, and, desc, asc, inArray } from 'drizzle-orm'
@@ -118,5 +119,46 @@ export const NewsService = {
       topic,
       items: items.filter((i) => i.topicId === topic.id),
     }))
+  },
+
+  // ── Recherche ──────────────────────────────────────────────
+
+  async runResearchForTopic(
+    topicId: string,
+  ): Promise<{ inserted: number; skipped: number }> {
+    const topic = await this.getTopic(topicId)
+    if (!topic) throw new Error(`Topic not found: ${topicId}`)
+
+    const { resolveNewsAdapter } = await import('@/lib/services/news/index')
+    const adapter = resolveNewsAdapter(topic.sourceType)
+    const results = await adapter.search(
+      topic.keywords ?? [],
+      (topic.sourceConfig ?? {}) as Record<string, unknown>,
+    )
+
+    const valid = results.filter((r) => r.url && r.url.length > 0)
+    if (!valid.length) return { inserted: 0, skipped: 0 }
+
+    const rows = valid.map((r) => ({
+      topicId: topic.id,
+      title: r.title.slice(0, 500),
+      url: r.url.slice(0, 1000),
+      snippet: r.snippet ?? null,
+      source: r.source?.slice(0, 200) ?? null,
+      imageUrl: r.imageUrl?.slice(0, 1000) ?? null,
+      publishedAt: r.publishedAt ?? null,
+      urlHash: createHash('sha256').update(r.url).digest('hex'),
+    }))
+
+    const inserted = await db
+      .insert(newsItems)
+      .values(rows)
+      .onConflictDoNothing({ target: [newsItems.topicId, newsItems.urlHash] })
+      .returning({ id: newsItems.id })
+
+    return {
+      inserted: inserted.length,
+      skipped: valid.length - inserted.length,
+    }
   },
 }
