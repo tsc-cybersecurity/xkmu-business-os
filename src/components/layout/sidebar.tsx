@@ -98,6 +98,7 @@ export const navigation: NavItem[] = [
       { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
       { name: 'Posting-Kalender', href: '/intern/social-media/kalender', requiredModule: 'social_media' },
       { name: 'Newsletter', href: '/intern/marketing/newsletter', requiredModule: 'marketing' },
+      { name: 'News-Modul', href: '/intern/news', requiredModule: 'news' },
       { name: 'Bildgenerierung', href: '/intern/images', requiredModule: 'media' },
     ],
   },
