@@ -575,6 +575,15 @@ WHERE u.role = 'portal_user'
   AND p.company_id = u.company_id
   AND LOWER(p.email) = LOWER(u.email)
   AND p.portal_user_id IS NULL;
+
+-- ── scorecard_entries dirty-data cleanup ───────────────────────────────
+-- Vor drizzle-push die orphaned entries killen, sonst schlaegt der
+-- ADD CONSTRAINT scorecard_entries_metric_id_fk fehl, expect-Wrapper
+-- schluckt den Fehler und der Container loopt mit "app_meta does not
+-- exist" (siehe entrypoint Hash-Save am Ende).
+DELETE FROM scorecard_entries
+ WHERE metric_id IS NOT NULL
+   AND metric_id NOT IN (SELECT id FROM scorecard_metrics);
 EOSQL
 echo "Pre-Drizzle migrations complete!"
 
@@ -712,12 +721,28 @@ ORDER BY scenario_count DESC, ll.maps_to_control;
 EOSQL
 echo "IR Playbook views ready."
 
-# Save new schema hash (Schema-Sync war erfolgreich, sonst haette set -e schon abgebrochen)
-PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 >/dev/null <<EOSQL
+# Defense-in-Depth: app_meta nochmal anlegen (idempotent). Falls drizzle-kit
+# push die Tabelle gedropt hat, weil sie noch nicht im Drizzle-Schema steht
+# (Race waehrend Image-Rollout), legen wir sie hier neu an.
+PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 >/dev/null <<'EOSQL' || echo "WARN: app_meta defensive bootstrap failed"
+CREATE TABLE IF NOT EXISTS app_meta (
+  key VARCHAR(64) PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+EOSQL
+
+# Save new schema hash. WICHTIG: kein crash bei INSERT-Fehler — sonst loopt
+# der Container endlos, falls app_meta aus irgendeinem Grund weg ist.
+if PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 >/dev/null <<EOSQL
 INSERT INTO app_meta (key, value, updated_at) VALUES ('schema_hash', '${SCHEMA_HASH}', NOW())
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 EOSQL
-echo "Schema hash stored: ${SCHEMA_HASH}"
+then
+  echo "Schema hash stored: ${SCHEMA_HASH}"
+else
+  echo "WARN: Schema hash konnte nicht persistiert werden — naechster Start syncht erneut"
+fi
 
 fi  # end SCHEMA_SYNC_NEEDED
 
@@ -750,11 +775,15 @@ fi
 if [ "$SEED_CHECK_NEEDED" = "true" ]; then
   echo "Running seed-check..."
   npx tsx src/lib/db/seed-check.ts
-  PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 >/dev/null <<EOSQL
+  if PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 >/dev/null <<EOSQL
 INSERT INTO app_meta (key, value, updated_at) VALUES ('seed_hash', '${SEED_HASH}', NOW())
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 EOSQL
-  echo "Seed hash stored: ${SEED_HASH}"
+  then
+    echo "Seed hash stored: ${SEED_HASH}"
+  else
+    echo "WARN: Seed hash konnte nicht persistiert werden — naechster Start checkt erneut"
+  fi
 fi
 
 # ------------------------------------
