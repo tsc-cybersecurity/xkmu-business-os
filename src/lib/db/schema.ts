@@ -3977,3 +3977,33 @@ export const agentDefinitions = pgTable('agent_definitions', {
 
 export type AgentDefinition = typeof agentDefinitions.$inferSelect
 export type NewAgentDefinition = typeof agentDefinitions.$inferInsert
+
+export const agentMemoryEntries = pgTable('agent_memory_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  para: varchar('para', { length: 20 }).notNull(),
+  scope: varchar('scope', { length: 500 }).notNull(),
+  filePath: text('file_path').notNull(),
+  title: varchar('title', { length: 500 }),
+  summary: text('summary'),
+  tags: text('tags').array().default(sql`ARRAY[]::text[]`).notNull(),
+  contentHash: varchar('content_hash', { length: 64 }).notNull(),
+  contentTrgm: text('content_trgm'),
+  embedding: vector('embedding', { dimensions: 768 }),
+  sourceRunId: uuid('source_run_id').references(() => agentRuns.id, { onDelete: 'set null' }),
+  sourceStepId: uuid('source_step_id').references(() => agentSteps.id, { onDelete: 'set null' }),
+  sourceUserId: uuid('source_user_id').references(() => users.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 20 }).default('active').notNull(),
+  supersededByEntryId: uuid('superseded_by_entry_id').references((): AnyPgColumn => agentMemoryEntries.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('uq_agent_memory_entries_filepath').on(table.filePath),
+  index('idx_agent_memory_entries_scope_status').on(table.scope, table.status),
+  // GIN trgm-Index für FTS — als raw SQL via index().using(...)
+  index('idx_agent_memory_entries_trgm').using('gin', sql`${table.contentTrgm} gin_trgm_ops`),
+  // IVFFlat für Vector-Cosine
+  index('idx_agent_memory_entries_embedding').using('ivfflat', sql`${table.embedding} vector_cosine_ops`),
+])
+
+export type AgentMemoryEntry = typeof agentMemoryEntries.$inferSelect
+export type NewAgentMemoryEntry = typeof agentMemoryEntries.$inferInsert
