@@ -118,3 +118,51 @@ describe('NewsPipelineService — deepResearch', () => {
     await expect(NewsPipelineService.deepResearch(itemFixture())).rejects.toThrow(/news-deep-research/)
   })
 })
+
+describe('NewsPipelineService — generateBlogPost', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    setupDbMock()
+  })
+
+  function setupAiMock(jsonResponse: unknown) {
+    vi.doMock('@/lib/services/ai-prompt-template.service', () => ({
+      AiPromptTemplateService: {
+        getOrDefault: vi.fn().mockResolvedValue({ systemPrompt: '', userPrompt: '', outputFormat: null }),
+        applyPlaceholders: vi.fn().mockImplementation((t: string) => t),
+      },
+    }))
+    vi.doMock('@/lib/services/ai/ai.service', () => ({
+      AIService: {
+        completeWithContext: vi.fn().mockResolvedValue({
+          text: JSON.stringify(jsonResponse),
+          provider: 'mock',
+          model: 'mock',
+        }),
+      },
+    }))
+  }
+
+  it('returns BlogDraft on happy path', async () => {
+    setupAiMock({
+      title: 'B', excerpt: 'E', content: 'C',
+      seoTitle: 'S', seoDescription: 'D', tags: ['t'],
+    })
+    const { NewsPipelineService } = await import('@/lib/services/news-pipeline.service')
+    const draft = await NewsPipelineService.generateBlogPost(itemFixture(), {
+      summary: 's', keyPoints: [], sources: [], context: '',
+    })
+    expect(draft.title).toBe('B')
+    expect(draft.tags).toEqual(['t'])
+  })
+
+  it('throws when title or content missing', async () => {
+    setupAiMock({ excerpt: 'E' }) // no title or content
+    const { NewsPipelineService } = await import('@/lib/services/news-pipeline.service')
+    await expect(
+      NewsPipelineService.generateBlogPost(itemFixture(), {
+        summary: 's', keyPoints: [], sources: [], context: '',
+      }),
+    ).rejects.toThrow(/news-blog-draft/)
+  })
+})

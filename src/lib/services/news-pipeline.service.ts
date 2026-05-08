@@ -19,6 +19,15 @@ export interface DeepResearchResult {
   context: string
 }
 
+export interface BlogDraft {
+  title: string
+  excerpt: string
+  content: string
+  seoTitle?: string
+  seoDescription?: string
+  tags: string[]
+}
+
 function extractJson(text: string): string | null {
   const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
   if (codeBlockMatch) return codeBlockMatch[1].trim()
@@ -84,6 +93,24 @@ export const NewsPipelineService = {
       keyPoints: Array.isArray(parsed.keyPoints) ? parsed.keyPoints : [],
       sources: Array.isArray(parsed.sources) ? parsed.sources : [],
       context: typeof parsed.context === 'string' ? parsed.context : '',
+    }
+  },
+
+  async generateBlogPost(item: NewsItem, research: DeepResearchResult): Promise<BlogDraft> {
+    const parsed = await runTemplate<Partial<BlogDraft>>('news-blog-draft', {
+      title: item.title,
+      research: JSON.stringify(research),
+    }, { maxTokens: 8000 })
+    if (!parsed?.title || !parsed?.content) {
+      throw new Error('news-blog-draft: invalid AI output')
+    }
+    return {
+      title: parsed.title,
+      excerpt: parsed.excerpt ?? '',
+      content: parsed.content,
+      seoTitle: parsed.seoTitle,
+      seoDescription: parsed.seoDescription,
+      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
     }
   },
 }
