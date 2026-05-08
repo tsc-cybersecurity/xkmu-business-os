@@ -71,9 +71,53 @@ rotate_backups() {
   fi
 }
 
-# Pre-migration backup gate: BACKUP_ENABLED=false ueberspringt den pg_dump
-# (spart 30-60 s pro Container-Start). Default ist "true" fuer Sicherheit;
-# in dev/local einfach BACKUP_ENABLED=false setzen.
+# ------------------------------------
+# Bootstrap app_meta: Marker-Store fuer Schema-Hash + Seed-Hash.
+# Damit weiss der naechste Container-Start, ob sich seit dem letzten
+# erfolgreichen Sync wirklich etwas geaendert hat — sonst skippen wir
+# Backup + Pre-Drizzle-SQL + drizzle-kit push + View-Recreate komplett.
+# ------------------------------------
+echo "Bootstrapping app_meta marker table..."
+PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 >/dev/null <<'EOSQL'
+CREATE TABLE IF NOT EXISTS app_meta (
+  key VARCHAR(64) PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+EOSQL
+
+# ------------------------------------
+# Schema-Sync-Gate
+# ------------------------------------
+# Hash-Inputs: schema.ts (Drizzle-Source) + entrypoint.prod.sh (Pre-Drizzle-SQL
+# ist drin). Wenn beide unveraendert UND DB hat exakt diesen Hash gespeichert
+# → kompletter Schema-Sync-Block wird uebersprungen.
+# Override: FORCE_SCHEMA_SYNC=true erzwingt den Lauf.
+SCHEMA_HASH=$(cat /app/src/lib/db/schema.ts /entrypoint.prod.sh 2>/dev/null | sha256sum | awk '{print $1}')
+STORED_SCHEMA_HASH=$(PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT value FROM app_meta WHERE key='schema_hash'" 2>/dev/null | tr -d '[:space:]' || echo "")
+
+if [ "${FORCE_SCHEMA_SYNC:-false}" = "true" ]; then
+  echo "FORCE_SCHEMA_SYNC=true — running schema sync regardless of hash"
+  SCHEMA_SYNC_NEEDED=true
+elif [ -z "$STORED_SCHEMA_HASH" ]; then
+  echo "No stored schema hash — first run, running schema sync"
+  SCHEMA_SYNC_NEEDED=true
+elif [ "$STORED_SCHEMA_HASH" != "$SCHEMA_HASH" ]; then
+  echo "Schema hash changed — running schema sync"
+  echo "  stored:  ${STORED_SCHEMA_HASH}"
+  echo "  current: ${SCHEMA_HASH}"
+  SCHEMA_SYNC_NEEDED=true
+else
+  echo "Schema hash matches (${SCHEMA_HASH}) — skipping schema sync (backup, Pre-Drizzle SQL, drizzle push, IR views)"
+  SCHEMA_SYNC_NEEDED=false
+fi
+
+if [ "$SCHEMA_SYNC_NEEDED" = "true" ]; then
+
+# ------------------------------------
+# Pre-migration backup (laeuft nur bei tatsaechlichem Schema-Sync)
+# ------------------------------------
+# BACKUP_ENABLED=false skippt den pg_dump zusaetzlich (z.B. dev/local).
 if [ "${BACKUP_ENABLED:-true}" != "true" ]; then
   echo "INFO: BACKUP_ENABLED=${BACKUP_ENABLED}, skipping pre-migration backup"
 elif [ -d "$BACKUP_DIR" ] && [ -w "$BACKUP_DIR" ]; then
@@ -668,11 +712,50 @@ ORDER BY scenario_count DESC, ll.maps_to_control;
 EOSQL
 echo "IR Playbook views ready."
 
+# Save new schema hash (Schema-Sync war erfolgreich, sonst haette set -e schon abgebrochen)
+PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 >/dev/null <<EOSQL
+INSERT INTO app_meta (key, value, updated_at) VALUES ('schema_hash', '${SCHEMA_HASH}', NOW())
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
+EOSQL
+echo "Schema hash stored: ${SCHEMA_HASH}"
+
+fi  # end SCHEMA_SYNC_NEEDED
+
 # ------------------------------------
-# Run seed if needed
+# Seed-Check-Gate
 # ------------------------------------
-echo "Checking if seed is needed..."
-npx tsx src/lib/db/seed-check.ts
+# Hash-Inputs: seed-check.ts + alle Files unter seeds/. Aendert sich keine
+# Seed-Datei → seed-check.ts (mit ~14 count()-Queries + tsx-Bootstrap) wird
+# komplett uebersprungen.
+# Override: FORCE_SEED_CHECK=true erzwingt den Lauf.
+SEED_HASH=$(cat /app/src/lib/db/seed-check.ts /app/src/lib/db/seeds/*.ts 2>/dev/null | sha256sum | awk '{print $1}')
+STORED_SEED_HASH=$(PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT value FROM app_meta WHERE key='seed_hash'" 2>/dev/null | tr -d '[:space:]' || echo "")
+
+if [ "${FORCE_SEED_CHECK:-false}" = "true" ]; then
+  echo "FORCE_SEED_CHECK=true — running seed-check regardless of hash"
+  SEED_CHECK_NEEDED=true
+elif [ -z "$STORED_SEED_HASH" ]; then
+  echo "No stored seed hash — first run, running seed-check"
+  SEED_CHECK_NEEDED=true
+elif [ "$STORED_SEED_HASH" != "$SEED_HASH" ]; then
+  echo "Seed hash changed — running seed-check"
+  echo "  stored:  ${STORED_SEED_HASH}"
+  echo "  current: ${SEED_HASH}"
+  SEED_CHECK_NEEDED=true
+else
+  echo "Seed hash matches (${SEED_HASH}) — skipping seed-check"
+  SEED_CHECK_NEEDED=false
+fi
+
+if [ "$SEED_CHECK_NEEDED" = "true" ]; then
+  echo "Running seed-check..."
+  npx tsx src/lib/db/seed-check.ts
+  PGPASSWORD="$DB_PASS" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 >/dev/null <<EOSQL
+INSERT INTO app_meta (key, value, updated_at) VALUES ('seed_hash', '${SEED_HASH}', NOW())
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
+EOSQL
+  echo "Seed hash stored: ${SEED_HASH}"
+fi
 
 # ------------------------------------
 # Scheduled jobs: handled by src/instrumentation.ts (in-process ticker)

@@ -95,6 +95,13 @@ services:
       # /app/public/uploads/courses ist nicht persistent gemountet).
       - SCORM_PACKAGE_DIR=/app/data/scorm
       - COURSE_ASSET_DIR=/app/data/courses
+      # Schema-Sync- + Seed-Check-Gates (Default: smart skip via Hash in app_meta)
+      # - BACKUP_ENABLED=false      # pg_dump pre-migration ueberspringen (~30-60s)
+      # - FORCE_SCHEMA_SYNC=true    # Pre-Drizzle SQL + drizzle push + Views erzwingen
+      # - FORCE_SEED_CHECK=true     # seed-check.ts erzwingen
+      - BACKUP_ENABLED=${BACKUP_ENABLED:-true}
+      - FORCE_SCHEMA_SYNC=${FORCE_SCHEMA_SYNC:-false}
+      - FORCE_SEED_CHECK=${FORCE_SEED_CHECK:-false}
     volumes:
       - ./data/uploads:/app/data
     depends_on:
