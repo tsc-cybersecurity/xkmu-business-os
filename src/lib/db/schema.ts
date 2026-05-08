@@ -1488,7 +1488,7 @@ export const blogPosts = pgTable('blog_posts', {
   aiMetadata: jsonb('ai_metadata'),
   inSitemap: boolean('in_sitemap').notNull().default(true),
   authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
-  sourceNewsItemId: uuid('source_news_item_id'),
+  sourceNewsItemId: uuid('source_news_item_id').references(() => newsItems.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
@@ -1761,7 +1761,7 @@ export const socialMediaPosts = pgTable('social_media_posts', {
   status: varchar('status', { length: 20 }).default('draft'), // draft | scheduled | posted | failed
   aiGenerated: boolean('ai_generated').default(false),
   createdBy: uuid('created_by').references(() => users.id),
-  sourceNewsItemId: uuid('source_news_item_id'),
+  sourceNewsItemId: uuid('source_news_item_id').references(() => newsItems.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
