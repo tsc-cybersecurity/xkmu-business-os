@@ -37,6 +37,9 @@ vi.mock('@/lib/services/agents/tools/bootstrap', () => ({
 vi.mock('@/lib/services/agents/cost-tracker.service', () => ({
   CostTrackerService: { record: vi.fn().mockResolvedValue(undefined), checkBudget: vi.fn().mockResolvedValue({ exceeded: false }) },
 }))
+vi.mock('@/lib/services/agents/memory.service', () => ({
+  MemoryService: { compactRunHistory: vi.fn().mockResolvedValue('Step old-step: succeeded') },
+}))
 
 describe('OrchestratorService.plan', () => {
   beforeEach(() => {
@@ -96,5 +99,59 @@ describe('OrchestratorService.plan', () => {
     })
     const { OrchestratorService } = await import('@/lib/services/agents/orchestrator.service')
     await expect(OrchestratorService.plan('g1')).rejects.toThrow(/JSON/)
+  })
+})
+
+describe('OrchestratorService.replan', () => {
+  beforeEach(() => {
+    aiCompleteMock.mockReset()
+    insertMock.mockClear()
+    insertValuesMock.mockClear()
+    insertReturningMock.mockReset()
+    selectLimitMock.mockReset()
+    selectWhereMock.mockReset()
+    selectWhereMock.mockReturnValue({ limit: selectLimitMock })
+  })
+
+  it('replan continue: nextStepIds enthaelt frisch gequeute Step-IDs', async () => {
+    // db.select() Aufrufe in replan():
+    // 1. agentRuns: .where().limit() -> run
+    // 2. agentGoals: .where().limit() -> goal
+    // 3. agentSteps: .where() direkt awaited -> allSteps (alle succeeded, kein pending)
+    selectLimitMock
+      .mockResolvedValueOnce([{ id: 'run-1', goalId: 'g1', planJson: null, status: 'executing' }]) // run
+      .mockResolvedValueOnce([{ id: 'g1', title: 'T', description: '' }]) // goal
+
+    // allSteps: 3. select-Aufruf — .where() muss direkt eine Promise zurueckgeben (kein .limit())
+    selectWhereMock
+      .mockReturnValueOnce({ limit: selectLimitMock }) // run
+      .mockReturnValueOnce({ limit: selectLimitMock }) // goal
+      .mockResolvedValueOnce([                          // allSteps: alle succeeded -> LLM-Pfad
+        { id: 'step-old', stepKey: 'old-step', status: 'succeeded', workerType: 'memory:list', dependsOnStepKeys: [] },
+      ])
+
+    // LLM antwortet continue mit 1 neuem Step + nextStepMode=immediate
+    aiCompleteMock.mockResolvedValueOnce({
+      text: JSON.stringify({
+        action: 'continue',
+        reasoning: 'r',
+        newSteps: [{ stepKey: 'new-step', workerType: 'memory:list', config: {}, contextRefs: [], dependsOnStepKeys: [] }],
+        nextStepMode: 'immediate',
+      }),
+      provider: 'gemini',
+      model: 'gemini-2.5-flash',
+      usage: { promptTokens: 50, completionTokens: 30, totalTokens: 80 },
+    })
+
+    // insert agentSteps returning -> neue Step-ID
+    insertReturningMock.mockResolvedValueOnce([{ id: 'new-step-id', stepKey: 'new-step' }])
+
+    const { OrchestratorService } = await import('@/lib/services/agents/orchestrator.service')
+    const result = await OrchestratorService.replan('run-1')
+
+    expect(result.action).toBe('continue')
+    expect(result.nextStepIds).toBeDefined()
+    expect(result.nextStepIds!.length).toBe(1)
+    expect(result.nextStepMode).toBe('immediate')
   })
 })

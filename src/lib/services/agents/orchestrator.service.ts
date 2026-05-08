@@ -13,6 +13,8 @@ export interface ReplanDecision {
   action: 'continue' | 'goal_complete' | 'pause' | 'fail'
   newSteps?: PlannedStep[]
   nextStepMode?: ExecutionMode
+  /** IDs der gerade frisch gequeuten agent_steps — fuer Immediate-Lane-Inline-Loop. */
+  nextStepIds?: string[]
   reason?: string
 }
 
@@ -149,6 +151,7 @@ export const OrchestratorService = {
     const { eq, and, sql } = await import('drizzle-orm')
     const { ReplanDecisionSchema } = await import('./orchestrator/plan-types')
     const { MemoryService } = await import('./memory.service')
+    let queuedStepIds: string[] = []
 
     // Run + Goal laden
     const [run] = await db.select().from(agentRuns).where(eq(agentRuns.id, runId)).limit(1)
@@ -192,9 +195,10 @@ export const OrchestratorService = {
             referenceType: 'agent_step',
             referenceId: s.id,
           })
+          queuedStepIds.push(s.id)
         }
       }
-      return { action: 'continue', reason: `${readyToQueue.length} weitere Steps bereit, ${pendingOrRunning.length - readyToQueue.length} blockiert` }
+      return { action: 'continue', reason: `${readyToQueue.length} weitere Steps bereit, ${pendingOrRunning.length - readyToQueue.length} blockiert`, nextStepIds: queuedStepIds }
     }
 
     // Alle Steps terminal — LLM entscheidet
@@ -283,6 +287,7 @@ export const OrchestratorService = {
           referenceType: 'agent_step',
           referenceId: stepId,
         })
+        queuedStepIds.push(stepId)
       }
     } else {
       // continue ohne newSteps + alle Steps terminal -> Goal vermutlich done, aber LLM unschluessig.
@@ -296,6 +301,7 @@ export const OrchestratorService = {
       newSteps: decision.newSteps,
       nextStepMode: decision.nextStepMode,
       reason: decision.reasoning,
+      nextStepIds: queuedStepIds,
     }
   },
 }
