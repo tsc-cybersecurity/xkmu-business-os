@@ -100,7 +100,13 @@ export default function AiProvidersPage() {
 
   const startEdit = () => {
     if (!selected) return
-    setFormData({ providerType: selected.providerType, name: selected.name, apiKey: '', baseUrl: selected.baseUrl || '', model: selected.model, maxTokens: selected.maxTokens, temperature: parseFloat(selected.temperature || '0.7'), priority: selected.priority, isActive: selected.isActive, isDefault: selected.isDefault })
+    // apiKey: maskierten Wert (****abc1) ins Form vorbelegen — wenn der User
+    // ohne Aenderung speichert, wird der maskierte Wert gesendet, und der
+    // PUT-Endpoint blockt jeden Wert mit '****'-Prefix (zusaetzlich zur
+    // Service-Layer-Defense, die leere Strings als 'beibehalten' interpretiert).
+    // So kann der Schluessel beim Aendern unrelated Felder nicht versehentlich
+    // ueberschrieben werden.
+    setFormData({ providerType: selected.providerType, name: selected.name, apiKey: selected.apiKey || '', baseUrl: selected.baseUrl || '', model: selected.model, maxTokens: selected.maxTokens, temperature: parseFloat(selected.temperature || '0.7'), priority: selected.priority, isActive: selected.isActive, isDefault: selected.isDefault })
     setEditMode(true)
   }
 
@@ -184,7 +190,7 @@ export default function AiProvidersPage() {
               <h2 className="text-xl font-bold">{creating ? 'Neuen Provider erstellen' : `${selected?.name} bearbeiten`}</h2>
               <FormField label="Anbieter-Typ" required><Select value={formData.providerType} onValueChange={handleTypeChange} disabled={!!selected && editMode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{providerTypes.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select></FormField>
               <FormField label="Name" required><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} /></FormField>
-              {needsKey && <FormField label="API-Schluessel" required><Input type="password" value={formData.apiKey} onChange={e => setFormData(p => ({ ...p, apiKey: e.target.value }))} placeholder={editMode ? 'Leer = beibehalten' : 'sk-...'} /></FormField>}
+              {needsKey && <FormField label="API-Schluessel" required><Input type="password" value={formData.apiKey} onChange={e => setFormData(p => ({ ...p, apiKey: e.target.value }))} placeholder={editMode ? 'Vorhandener Schluessel ist maskiert — neuen Schluessel hier eintragen, sonst unveraendert lassen' : 'sk-...'} /></FormField>}
               {(formData.providerType === 'ollama' || formData.providerType === 'kie') && <FormField label="Base URL"><Input value={formData.baseUrl} onChange={e => setFormData(p => ({ ...p, baseUrl: e.target.value }))} /></FormField>}
               {!isNoModel && <FormField label="Modell" required>{providerModels[formData.providerType] ? <Select value={providerModels[formData.providerType]?.some(m => m.id === formData.model) ? formData.model : '_custom'} onValueChange={v => { if (v !== '_custom') setFormData(p => ({ ...p, model: v })) }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{providerModels[formData.providerType]?.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}<SelectItem value="_custom">Benutzerdefiniert</SelectItem></SelectContent></Select> : <Input value={formData.model} onChange={e => setFormData(p => ({ ...p, model: e.target.value }))} />}</FormField>}
               {!isNoModel && <div className="grid grid-cols-3 gap-4"><FormField label="Max Tokens"><Input type="number" value={formData.maxTokens} onChange={e => setFormData(p => ({ ...p, maxTokens: parseInt(e.target.value) || 1000 }))} /></FormField><FormField label="Temperatur"><Input type="number" min={0} max={2} step={0.1} value={formData.temperature} onChange={e => setFormData(p => ({ ...p, temperature: parseFloat(e.target.value) || 0.7 }))} /></FormField><FormField label="Prioritaet"><Input type="number" min={0} value={formData.priority} onChange={e => setFormData(p => ({ ...p, priority: parseInt(e.target.value) || 0 }))} /></FormField></div>}
