@@ -38,6 +38,11 @@ services:
       - LINKEDIN_CLIENT_SECRET=${LINKEDIN_CLIENT_SECRET:-}
       - LINKEDIN_OAUTH_REDIRECT_URI=${LINKEDIN_OAUTH_REDIRECT_URI:-}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_dev_2024}@redis:6379
+      # Schema-Sync- + Seed-Check-Gates (greifen nur in der prod-Stage via
+      # entrypoint.prod.sh — im dev-Stage ohne Effekt, hier nur fuer Symmetrie).
+      - BACKUP_ENABLED=${BACKUP_ENABLED:-false}
+      - FORCE_SCHEMA_SYNC=${FORCE_SCHEMA_SYNC:-false}
+      - FORCE_SEED_CHECK=${FORCE_SEED_CHECK:-false}
     volumes:
       - .:/app
       - /app/node_modules
