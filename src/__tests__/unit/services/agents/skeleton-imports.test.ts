@@ -38,10 +38,6 @@ describe('Agent-Module Skeleton — Phase 1', () => {
     await expect(OrchestratorService.replan('run-1')).rejects.toThrow(/nicht implementiert/)
   })
 
-  it('WorkerService.executeStep wirft "nicht implementiert"', async () => {
-    await expect(WorkerService.executeStep('step-1')).rejects.toThrow(/nicht implementiert/)
-  })
-
   it('ToolRegistry.parseRef parst "memory:search" korrekt', () => {
     const ref = ToolRegistry.parseRef('memory:search')
     expect(ref).toEqual({ namespace: 'memory', name: 'search', raw: 'memory:search' })
