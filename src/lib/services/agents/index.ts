@@ -4,6 +4,8 @@
  */
 
 export { SmartWorkerService } from './smart-worker.service'
+export { runImmediate } from './immediate-lane.service'
+export type { RunImmediateInput, RunImmediateResult, ImmediateTerminalReason } from './immediate-lane.service'
 export { OrchestratorService } from './orchestrator.service'
 export { GoalService } from './goal.service'
 export { WorkerService } from './worker.service'
