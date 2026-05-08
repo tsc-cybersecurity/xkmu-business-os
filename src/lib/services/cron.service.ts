@@ -54,6 +54,25 @@ function calculateNextRun(interval: string, dailyAt?: string | null): Date {
   return new Date(now.getTime() + ms)
 }
 
+/**
+ * Verarbeitet anstehende Agent-Tasks aus der task_queue.
+ * Phase 1: no-op Skeleton. Implementation in Phase 4.
+ * Spec: docs/superpowers/specs/2026-05-08-agent-system-design.md §6.4
+ */
+async function processAgentTaskQueue(): Promise<void> {
+  // Phase 1: bewusst leer.
+  // Phase 4 wird hier task_queue mit FOR UPDATE SKIP LOCKED claimen
+  // und WorkerService/OrchestratorService aufrufen.
+}
+
+/**
+ * Reconciliert stranded agent_runs (>10 min ohne Update).
+ * Phase 1: no-op Skeleton. Implementation in Phase 6.
+ */
+async function reconcileStrandedRuns(): Promise<void> {
+  // Phase 1: bewusst leer.
+}
+
 // ── Service ────────────────────────────────────────────────────────────────
 
 export const CronService = {
@@ -323,6 +342,10 @@ export const CronService = {
     if (dueJobs.length > 0) {
       logger.info(`Cron tick: ${executed} OK, ${failed} failed out of ${dueJobs.length} due`, { module: 'CronService' })
     }
+
+    // Agent-Subsystem (Phase 1: no-op, wird in Phase 4 + 6 implementiert)
+    await processAgentTaskQueue()
+    await reconcileStrandedRuns()
 
     return { executed, failed }
   },
