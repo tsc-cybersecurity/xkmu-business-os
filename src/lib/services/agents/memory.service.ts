@@ -182,7 +182,7 @@ export const MemoryService = {
     const { randomUUID } = await import('node:crypto')
     const { db } = await import('@/lib/db')
     const { agentMemoryEntries } = await import('@/lib/db/schema')
-    const { sql } = await import('drizzle-orm')
+    const { sql, eq } = await import('drizzle-orm')
     const { scopeToDir, scopeToFilePath, parseScope, isPathInsideMemoryRoot } = await import('./memory/paths')
     const { buildFrontmatter, parseFrontmatter, stringifyFrontmatter } = await import('./memory/frontmatter')
     const { computeContentHash } = await import('./memory/hash')
@@ -215,6 +215,17 @@ export const MemoryService = {
       frontmatter = buildFrontmatter({ id, para, scope })
     }
     const newSummary = stringifyFrontmatter(frontmatter, body)
+    const newContentHash = computeContentHash(newSummary)
+    // Short-circuit: skip file/DB/embedding work if nothing changed.
+    // Without this, the file-watcher loops because every write updates `updated:`.
+    const [existingRow] = await db
+      .select({ contentHash: agentMemoryEntries.contentHash })
+      .from(agentMemoryEntries)
+      .where(eq(agentMemoryEntries.id, id))
+      .limit(1)
+    if (existingRow?.contentHash === newContentHash && (items === undefined || items.length === 0)) {
+      return { id, path: summaryPath }
+    }
     const tmpPath = `${summaryPath}.tmp`
     await fs.writeFile(tmpPath, newSummary, 'utf8')
     await fs.rename(tmpPath, summaryPath)
@@ -236,7 +247,6 @@ export const MemoryService = {
       await fs.rename(tmpItems, itemsPath)
     }
 
-    const contentHash = computeContentHash(newSummary)
     let embedding: number[] | null = null
     try {
       embedding = await embedText(`${frontmatter.title ?? ''}\n\n${body}`.slice(0, 4000))
@@ -255,7 +265,7 @@ export const MemoryService = {
         title: frontmatter.title ?? null,
         summary,
         tags: frontmatter.tags ?? [],
-        contentHash,
+        contentHash: newContentHash,
         contentTrgm: `${frontmatter.title ?? ''} ${body}`.slice(0, 8000),
         embedding: embedding && embedding.length === EMBEDDING_DIMENSION ? embedding : null,
         status: 'active',
@@ -268,7 +278,7 @@ export const MemoryService = {
           title: frontmatter.title ?? null,
           summary,
           tags: frontmatter.tags ?? [],
-          contentHash,
+          contentHash: newContentHash,
           contentTrgm: `${frontmatter.title ?? ''} ${body}`.slice(0, 8000),
           embedding: embedding && embedding.length === EMBEDDING_DIMENSION ? embedding : null,
           updatedAt: sql`now()`,

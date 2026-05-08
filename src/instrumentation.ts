@@ -50,7 +50,10 @@ export async function register() {
   }
 
   // Agent-Memory-Watcher (Phase 2): startet chokidar fuer externe Edits.
-  if (process.env.NODE_ENV !== 'test') {
+  // HMR-Guard: nur einmal pro Prozess starten.
+  const g = globalThis as unknown as { __xkmuMemoryWatcherStarted?: boolean }
+  if (process.env.NODE_ENV !== 'test' && !g.__xkmuMemoryWatcherStarted) {
+    g.__xkmuMemoryWatcherStarted = true
     try {
       const { startMemoryWatcher } = await import('@/lib/services/agents/memory/watcher')
       await startMemoryWatcher()

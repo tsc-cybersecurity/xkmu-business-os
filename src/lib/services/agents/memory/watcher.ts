@@ -15,49 +15,63 @@ import path from 'node:path'
 import fs from 'node:fs/promises'
 
 let activeWatcher: { close: () => Promise<void> } | null = null
+let starting = false
+let shutdownHookRegistered = false
 
 export async function startMemoryWatcher(): Promise<void> {
-  if (activeWatcher) return
-  if (process.env.AGENT_MEMORY_WATCHER_DISABLED === '1') {
-    logger.info('Memory-Watcher deaktiviert (AGENT_MEMORY_WATCHER_DISABLED=1)', { module: 'MemoryWatcher' })
-    return
-  }
-  const root = getMemoryRoot()
+  if (activeWatcher || starting) return
+  starting = true
   try {
-    await fs.mkdir(root, { recursive: true })
-  } catch {
-    // ignore
-  }
-  const chokidar = await import('chokidar')
-  const watcher = chokidar.watch(`${root}/**/summary.md`, {
-    ignoreInitial: true,
-    awaitWriteFinish: { stabilityThreshold: 250, pollInterval: 100 },
-    // chokidar v5: `ignored` muss Function oder RegExp sein (keine Glob-Arrays mehr).
-    // Matched Pfade, die `_runs/`, `.git/` enthalten oder auf `.tmp` enden — inkl. Windows-Backslashes.
-    ignored: (filePath: string) => /(\/|\\)_runs(\/|\\)|(\/|\\)\.git(\/|\\)|\.tmp$/.test(filePath),
-  })
-
-  const reindex = async (filePath: string) => {
-    try {
-      if (!isPathInsideMemoryRoot(filePath)) return
-      const raw = await fs.readFile(filePath, 'utf8')
-      const { frontmatter, body } = parseFrontmatter(raw)
-      parseScope(frontmatter.scope) // validates
-      await MemoryService.write(frontmatter.scope, body)
-      logger.info(`Re-indexed: ${path.relative(root, filePath)}`, { module: 'MemoryWatcher' })
-    } catch (e) {
-      logger.warn(`Re-index Fehler fuer ${filePath}: ${(e as Error).message}`, { module: 'MemoryWatcher' })
+    if (process.env.AGENT_MEMORY_WATCHER_DISABLED === '1') {
+      logger.info('Memory-Watcher deaktiviert (AGENT_MEMORY_WATCHER_DISABLED=1)', { module: 'MemoryWatcher' })
+      return
     }
+    const root = getMemoryRoot()
+    try {
+      await fs.mkdir(root, { recursive: true })
+    } catch {
+      // ignore
+    }
+    const chokidar = await import('chokidar')
+    const watcher = chokidar.watch(`${root}/**/summary.md`, {
+      ignoreInitial: true,
+      awaitWriteFinish: { stabilityThreshold: 250, pollInterval: 100 },
+      // chokidar v5: `ignored` muss Function oder RegExp sein (keine Glob-Arrays mehr).
+      // Matched Pfade, die `_runs/`, `.git/` enthalten oder auf `.tmp` enden — inkl. Windows-Backslashes.
+      ignored: (filePath: string) => /(\/|\\)_runs(\/|\\)|(\/|\\)\.git(\/|\\)|\.tmp$/.test(filePath),
+    })
+
+    const reindex = async (filePath: string) => {
+      try {
+        if (!isPathInsideMemoryRoot(filePath)) return
+        const raw = await fs.readFile(filePath, 'utf8')
+        const { frontmatter, body } = parseFrontmatter(raw)
+        parseScope(frontmatter.scope) // validates
+        await MemoryService.write(frontmatter.scope, body)
+        logger.info(`Re-indexed: ${path.relative(root, filePath)}`, { module: 'MemoryWatcher' })
+      } catch (e) {
+        logger.warn(`Re-index Fehler fuer ${filePath}: ${(e as Error).message}`, { module: 'MemoryWatcher' })
+      }
+    }
+
+    watcher.on('add', reindex)
+    watcher.on('change', reindex)
+    watcher.on('error', (err) => {
+      logger.error('MemoryWatcher Error', err as Error, { module: 'MemoryWatcher' })
+    })
+
+    activeWatcher = { close: () => watcher.close() }
+    logger.info(`MemoryWatcher gestartet auf ${root}`, { module: 'MemoryWatcher' })
+
+    if (!shutdownHookRegistered) {
+      shutdownHookRegistered = true
+      const handler = () => { void stopMemoryWatcher() }
+      process.once('SIGTERM', handler)
+      process.once('SIGINT', handler)
+    }
+  } finally {
+    starting = false
   }
-
-  watcher.on('add', reindex)
-  watcher.on('change', reindex)
-  watcher.on('error', (err) => {
-    logger.error('MemoryWatcher Error', err as Error, { module: 'MemoryWatcher' })
-  })
-
-  activeWatcher = { close: () => watcher.close() }
-  logger.info(`MemoryWatcher gestartet auf ${root}`, { module: 'MemoryWatcher' })
 }
 
 export async function stopMemoryWatcher(): Promise<void> {
