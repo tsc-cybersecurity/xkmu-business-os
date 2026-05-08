@@ -1488,6 +1488,7 @@ export const blogPosts = pgTable('blog_posts', {
   aiMetadata: jsonb('ai_metadata'),
   inSitemap: boolean('in_sitemap').notNull().default(true),
   authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
+  sourceNewsItemId: uuid('source_news_item_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
@@ -1760,6 +1761,7 @@ export const socialMediaPosts = pgTable('social_media_posts', {
   status: varchar('status', { length: 20 }).default('draft'), // draft | scheduled | posted | failed
   aiGenerated: boolean('ai_generated').default(false),
   createdBy: uuid('created_by').references(() => users.id),
+  sourceNewsItemId: uuid('source_news_item_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
@@ -1775,6 +1777,69 @@ export const socialMediaPostsRelations = relations(socialMediaPosts, ({ one }) =
     references: [users.id],
   }),
 }))
+
+// ============================================
+// News Topics (Recherche-Themenbereiche)
+// ============================================
+export const newsTopics = pgTable('news_topics', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  color: varchar('color', { length: 7 }).default('#3b82f6'),
+  keywords: text('keywords').array().default([]).notNull(),
+  sourceType: varchar('source_type', { length: 30 }).notNull().default('serpapi_news'),
+  sourceConfig: jsonb('source_config').default({}),
+  isActive: boolean('is_active').default(true),
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_news_topics_active').on(table.isActive),
+])
+
+export type NewsTopic = typeof newsTopics.$inferSelect
+export type NewNewsTopic = typeof newsTopics.$inferInsert
+
+// ============================================
+// News Items (recherchierte News)
+// ============================================
+export const newsItems = pgTable('news_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  topicId: uuid('topic_id').notNull().references(() => newsTopics.id, { onDelete: 'cascade' }),
+  title: varchar('title', { length: 500 }).notNull(),
+  url: varchar('url', { length: 1000 }).notNull(),
+  snippet: text('snippet'),
+  source: varchar('source', { length: 200 }),
+  imageUrl: varchar('image_url', { length: 1000 }),
+  publishedAt: timestamp('published_at', { withTimezone: true }),
+  urlHash: varchar('url_hash', { length: 64 }).notNull(),
+  pipelineStatus: varchar('pipeline_status', { length: 20 }).default('idle').notNull(),
+  pipelineError: text('pipeline_error'),
+  pipelineTaskId: uuid('pipeline_task_id').references(() => taskQueue.id, { onDelete: 'set null' }),
+  researchData: jsonb('research_data'),
+  isHidden: boolean('is_hidden').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+}, (table) => [
+  index('idx_news_items_topic').on(table.topicId),
+  index('idx_news_items_pipeline_status').on(table.pipelineStatus),
+  index('idx_news_items_published').on(table.publishedAt),
+  uniqueIndex('uq_news_items_topic_url').on(table.topicId, table.urlHash),
+])
+
+export const newsTopicsRelations = relations(newsTopics, ({ many }) => ({
+  items: many(newsItems),
+}))
+
+export const newsItemsRelations = relations(newsItems, ({ one }) => ({
+  topic: one(newsTopics, {
+    fields: [newsItems.topicId],
+    references: [newsTopics.id],
+  }),
+}))
+
+export type NewsItem = typeof newsItems.$inferSelect
+export type NewNewsItem = typeof newsItems.$inferInsert
 
 // ============================================
 // Type Exports
