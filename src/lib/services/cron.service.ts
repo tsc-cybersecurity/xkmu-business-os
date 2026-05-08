@@ -35,6 +35,7 @@ export const ACTION_TYPE_OPTIONS = [
   { value: 'api_call', label: 'API-Endpoint aufrufen' },
   { value: 'course_assignment_reminders', label: 'Pflichtkurs-Erinnerungen versenden' },
   { value: 'process_queue', label: 'Task-Queue verarbeiten (geplante Termin-Reminder, Social-Posts)' },
+  { value: 'news_research', label: 'News-Recherche (alle aktiven Themenbereiche)' },
   { value: 'custom', label: 'Benutzerdefiniert' },
 ]
 
@@ -208,6 +209,26 @@ export const CronService = {
           const { runCalendarSyncMaintenance } = await import('./calendar-cron.handler')
           const result = await runCalendarSyncMaintenance()
           msg = `Calendar maintenance: ${result.total} accounts, ${result.refreshed} refreshed, ${result.renewed} renewed, ${result.failed} failed`
+          break
+        }
+        case 'news_research': {
+          const { NewsService } = await import('./news.service')
+          const config = (job.actionConfig || {}) as { topicIds?: string[] }
+          if (config.topicIds?.length) {
+            const summary = await Promise.all(
+              config.topicIds.map((id) =>
+                NewsService.runResearchForTopic(id)
+                  .then((r) => ({ topicId: id, ...r }))
+                  .catch((e) => ({ topicId: id, inserted: 0, skipped: 0, error: String(e) })),
+              ),
+            )
+            const total = summary.reduce((acc, s) => acc + s.inserted, 0)
+            msg = `News research: ${total} new items across ${summary.length} topics`
+          } else {
+            const summary = await NewsService.runResearchForAllActiveTopics()
+            const total = summary.reduce((acc, s) => acc + s.inserted, 0)
+            msg = `News research: ${total} new items across ${summary.length} active topics`
+          }
           break
         }
         default:
