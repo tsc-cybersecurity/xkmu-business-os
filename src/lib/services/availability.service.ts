@@ -53,6 +53,17 @@ export const AvailabilityService = {
     return row
   },
 
+  async updateOverride(
+    id: string,
+    patch: Partial<Pick<AvailabilityOverride, 'startAt' | 'endAt' | 'kind' | 'reason'>>,
+  ): Promise<AvailabilityOverride> {
+    const [row] = await db.update(availabilityOverrides)
+      .set(patch)
+      .where(eq(availabilityOverrides.id, id))
+      .returning()
+    return row
+  },
+
   async deleteOverride(id: string): Promise<void> {
     await db.delete(availabilityOverrides).where(eq(availabilityOverrides.id, id))
   },
