@@ -12,12 +12,20 @@ export function MemorySearchBar() {
   const [q, setQ] = useState('')
   const [hits, setHits] = useState<Hit[]>([])
   const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
 
   async function run() {
     if (q.trim().length < 2) return
-    const res = await fetch(`/api/agents/memory/search?q=${encodeURIComponent(q)}&limit=10`)
-    const json = await res.json() as { hits: Hit[] }
-    setHits(json.hits ?? [])
+    setError(null)
+    try {
+      const res = await fetch(`/api/agents/memory/search?q=${encodeURIComponent(q)}&limit=10`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const json = await res.json() as { hits: Hit[] }
+      setHits(json.hits ?? [])
+    } catch (e) {
+      setError((e as Error).message)
+      setHits([])
+    }
   }
 
   return (
@@ -31,6 +39,7 @@ export function MemorySearchBar() {
           <Search className="size-4 mr-1" /> Suchen
         </Button>
       </form>
+      {error && <p className="text-sm text-destructive">Fehler: {error}</p>}
       {hits.length > 0 && (
         <ul className="divide-y rounded border">
           {hits.map((h) => (

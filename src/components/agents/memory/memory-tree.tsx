@@ -17,14 +17,19 @@ export function MemoryTree() {
   const [open, setOpen] = useState<Record<string, boolean>>({ projects: true })
   const [data, setData] = useState<Record<string, Entry[]>>({})
   const [loading, setLoading] = useState<Record<string, boolean>>({})
+  const [errors, setErrors] = useState<Record<string, string | null>>({})
 
   async function loadPara(para: string) {
     if (data[para]) return
     setLoading((p) => ({ ...p, [para]: true }))
+    setErrors((p) => ({ ...p, [para]: null }))
     try {
       const res = await fetch(`/api/agents/memory?para=${para}&limit=200`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const json = await res.json() as { items: Entry[] }
       setData((p) => ({ ...p, [para]: json.items ?? [] }))
+    } catch (e) {
+      setErrors((p) => ({ ...p, [para]: (e as Error).message }))
     } finally {
       setLoading((p) => ({ ...p, [para]: false }))
     }
@@ -46,6 +51,7 @@ export function MemoryTree() {
           </button>
           {open[p.key] && (
             <ul className="pl-5 mt-1 space-y-1">
+              {errors[p.key] && <li className="text-destructive">Fehler: {errors[p.key]}</li>}
               {loading[p.key] && <li className="text-muted-foreground">lade ...</li>}
               {(data[p.key] ?? []).map((e) => (
                 <li key={e.id}>
