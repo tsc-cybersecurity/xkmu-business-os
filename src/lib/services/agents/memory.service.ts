@@ -189,7 +189,10 @@ export const MemoryService = {
     const { parseItems, stringifyItems, appendItem } = await import('./memory/items')
     const { embedText, EMBEDDING_DIMENSION } = await import('./memory/embedding')
 
-    const { para } = parseScope(scope)
+    const { para, remainder } = parseScope(scope)
+    if (!remainder || remainder.trim().length === 0) {
+      throw new Error(`Memory-Scope '${scope}' braucht einen Slug nach der PARA-Kategorie (z.B. 'projects/acme')`)
+    }
     const dir = scopeToDir(scope)
     const summaryPath = scopeToFilePath(scope, 'summary.md')
     if (!isPathInsideMemoryRoot(summaryPath)) {
@@ -280,7 +283,7 @@ export const MemoryService = {
     const { db } = await import('@/lib/db')
     const { agentMemoryEntries } = await import('@/lib/db/schema')
     const { eq } = await import('drizzle-orm')
-    const { scopeToFilePath } = await import('./memory/paths')
+    const { scopeToFilePath, isPathInsideMemoryRoot } = await import('./memory/paths')
     const { parseItems, stringifyItems, supersedeItem: supersedeItemPure } = await import('./memory/items')
 
     // Brute-Force-Suche ueber alle aktiven Entries (bei <10k Eintraegen akzeptabel).
@@ -291,6 +294,7 @@ export const MemoryService = {
 
     for (const { scope } of rows) {
       const itemsPath = scopeToFilePath(scope, 'items.yaml')
+      if (!isPathInsideMemoryRoot(itemsPath)) continue  // skip tampered scope
       try {
         const raw = await fs.readFile(itemsPath, 'utf8')
         const items = parseItems(raw)
