@@ -42,4 +42,19 @@ describe('Memory Paths', () => {
     expect(isPathInsideMemoryRoot('/m/projects/acme/summary.md')).toBe(true)
     expect(isPathInsideMemoryRoot('/etc/passwd')).toBe(false)
   })
+
+  it('isPathInsideMemoryRoot blockt explizite ..-Segmente', async () => {
+    vi.stubEnv('AGENT_MEMORY_DIR', '/m')
+    const { isPathInsideMemoryRoot } = await import('@/lib/services/agents/memory/paths')
+    expect(isPathInsideMemoryRoot('/m/projects/../../../etc/passwd')).toBe(false)
+    expect(isPathInsideMemoryRoot('/m/projects/../../etc')).toBe(false)
+    expect(isPathInsideMemoryRoot('/m/../m/projects/acme/summary.md')).toBe(true)  // resolves back inside
+  })
+
+  it('isPathInsideMemoryRoot blockt absolute Pfade ausserhalb Root', async () => {
+    vi.stubEnv('AGENT_MEMORY_DIR', '/m')
+    const { isPathInsideMemoryRoot } = await import('@/lib/services/agents/memory/paths')
+    expect(isPathInsideMemoryRoot('/etc/passwd')).toBe(false)
+    expect(isPathInsideMemoryRoot('/var/log/auth.log')).toBe(false)
+  })
 })

@@ -48,4 +48,16 @@ describe('Memory Embedding', () => {
     const { embedText } = await import('@/lib/services/agents/memory/embedding')
     await expect(embedText('x')).rejects.toThrow(/Dimension/)
   })
+
+  it('embedText sendet API-Key im x-goog-api-key Header, nicht in URL', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ embedding: { values: Array.from({ length: 768 }, () => 0) } }),
+    }) as unknown as typeof fetch
+    const { embedText } = await import('@/lib/services/agents/memory/embedding')
+    await embedText('hello')
+    const [url, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0]
+    expect(String(url)).not.toContain('key=')
+    expect((init as RequestInit).headers).toMatchObject({ 'x-goog-api-key': 'test-key' })
+  })
 })
