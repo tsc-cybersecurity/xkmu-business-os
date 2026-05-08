@@ -247,3 +247,31 @@ describe('NewsService — runResearchForTopic', () => {
     expect(dbMock.db.insert).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('NewsService — runResearchForAllActiveTopics', () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
+  it('runs all active topics, captures per-topic errors, continues on failure', async () => {
+    setupDbMock()
+    const { NewsService } = await import('@/lib/services/news.service')
+    const spy = vi.spyOn(NewsService, 'listTopics').mockResolvedValue([
+      { id: 't1' } as never,
+      { id: 't2' } as never,
+    ])
+    const runSpy = vi
+      .spyOn(NewsService, 'runResearchForTopic')
+      .mockResolvedValueOnce({ inserted: 3, skipped: 0 })
+      .mockRejectedValueOnce(new Error('boom'))
+
+    const result = await NewsService.runResearchForAllActiveTopics()
+    expect(result).toEqual([
+      { topicId: 't1', inserted: 3, skipped: 0 },
+      { topicId: 't2', inserted: 0, skipped: 0, error: 'boom' },
+    ])
+
+    spy.mockRestore()
+    runSpy.mockRestore()
+  })
+})

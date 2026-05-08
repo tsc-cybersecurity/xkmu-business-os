@@ -161,4 +161,25 @@ export const NewsService = {
       skipped: valid.length - inserted.length,
     }
   },
+
+  async runResearchForAllActiveTopics(): Promise<
+    { topicId: string; inserted: number; skipped: number; error?: string }[]
+  > {
+    const topics = await this.listTopics({ activeOnly: true })
+    const out: { topicId: string; inserted: number; skipped: number; error?: string }[] = []
+    for (const t of topics) {
+      try {
+        const r = await this.runResearchForTopic(t.id)
+        out.push({ topicId: t.id, ...r })
+      } catch (err) {
+        out.push({
+          topicId: t.id,
+          inserted: 0,
+          skipped: 0,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+    return out
+  },
 }
