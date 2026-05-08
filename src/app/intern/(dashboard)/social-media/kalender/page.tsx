@@ -152,6 +152,18 @@ export default function SocialMediaCalendarPage() {
       list.push(p)
       map.set(key, list)
     }
+    // Innerhalb jedes Tages chronologisch (frueh -> spaet) sortieren.
+    for (const [key, list] of map) {
+      list.sort((a, b) => {
+        const aAt = a.scheduledAt ?? a.postedAt
+        const bAt = b.scheduledAt ?? b.postedAt
+        if (!aAt && !bAt) return 0
+        if (!aAt) return 1
+        if (!bAt) return -1
+        return new Date(aAt).getTime() - new Date(bAt).getTime()
+      })
+      map.set(key, list)
+    }
     return map
   }, [scheduled])
 
