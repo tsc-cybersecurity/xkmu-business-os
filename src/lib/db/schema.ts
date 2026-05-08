@@ -3956,3 +3956,24 @@ export const agentStepsRelations = relations(agentSteps, ({ one }) => ({
 
 export type AgentStep = typeof agentSteps.$inferSelect
 export type NewAgentStep = typeof agentSteps.$inferInsert
+
+export const agentDefinitions = pgTable('agent_definitions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  role: varchar('role', { length: 30 }).notNull(),
+  name: varchar('name', { length: 200 }),
+  systemPrompt: text('system_prompt').notNull(),
+  allowedTools: text('allowed_tools').array().default(sql`ARRAY[]::text[]`).notNull(),
+  modelHint: varchar('model_hint', { length: 100 }),
+  maxTokensPerCall: integer('max_tokens_per_call').default(4096).notNull(),
+  maxIterations: integer('max_iterations').default(8).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_definitions_role_active').on(table.role, table.isActive),
+])
+
+export type AgentDefinition = typeof agentDefinitions.$inferSelect
+export type NewAgentDefinition = typeof agentDefinitions.$inferInsert
