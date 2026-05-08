@@ -882,3 +882,23 @@ export const createCourseAssignmentSchema = z.object({
   dueDate: z.string().datetime().nullable().optional()
     .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional()),
 })
+
+
+// News Module
+
+export const createNewsTopicSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  keywords: z.array(z.string().min(1)).min(1),
+  sourceType: z.enum(['serpapi_news']).optional(),
+  sourceConfig: z.record(z.string(), z.unknown()).optional(),
+  isActive: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
+})
+
+export const updateNewsTopicSchema = createNewsTopicSchema.partial()
+
+export const updateNewsItemSchema = z.object({
+  isHidden: z.boolean().optional(),
+})
