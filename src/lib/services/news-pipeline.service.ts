@@ -45,6 +45,19 @@ function extractJson(text: string): string | null {
   return null
 }
 
+// Sanftes Kuerzen am letzten Wortende mit Ellipsis. Pendant zu blog-ai.service.
+// Schuetzt vor varchar-Limit-Verletzungen (Postgres) wenn die KI ueberschiesst.
+function truncateAtWord(s: string, max: number): string {
+  if (s.length <= max) return s
+  const suffix = '…'
+  const budget = Math.max(0, max - suffix.length)
+  let cut = s.slice(0, budget)
+  const lastSpace = cut.lastIndexOf(' ')
+  if (lastSpace > budget * 0.6) cut = cut.slice(0, lastSpace)
+  cut = cut.replace(/[\s,;:.\-–—]+$/u, '')
+  return cut + suffix
+}
+
 async function runTemplate<T>(
   slug: string,
   vars: Record<string, string>,
@@ -149,12 +162,15 @@ export const NewsPipelineService = {
     if (!parsed?.title || !parsed?.content) {
       throw new Error('news-blog-draft: invalid AI output')
     }
+    // Defensives Truncating — KI ueberschiesst gelegentlich die varchar-Limits
+    // aus blog_posts (title 255, seo_title 70, seo_description 160). Sonst
+    // schlaegt der Insert mit "value too long for type varchar" fehl.
     return {
-      title: parsed.title,
+      title: truncateAtWord(parsed.title, 255),
       excerpt: parsed.excerpt ?? '',
       content: parsed.content,
-      seoTitle: parsed.seoTitle,
-      seoDescription: parsed.seoDescription,
+      seoTitle: parsed.seoTitle ? truncateAtWord(parsed.seoTitle, 70) : undefined,
+      seoDescription: parsed.seoDescription ? truncateAtWord(parsed.seoDescription, 160) : undefined,
       tags: Array.isArray(parsed.tags) ? parsed.tags : [],
     }
   },
