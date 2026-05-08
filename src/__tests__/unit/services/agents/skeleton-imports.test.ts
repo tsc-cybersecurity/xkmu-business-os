@@ -30,12 +30,8 @@ describe('Agent-Module Skeleton — Phase 1', () => {
     })
   })
 
-  it('OrchestratorService.plan wirft "nicht implementiert"', async () => {
-    await expect(OrchestratorService.plan('goal-1')).rejects.toThrow(/nicht implementiert/)
-  })
-
   it('OrchestratorService.replan wirft "nicht implementiert"', async () => {
-    await expect(OrchestratorService.replan('run-1')).rejects.toThrow(/nicht implementiert/)
+    await expect(OrchestratorService.replan('run-1')).rejects.toThrow(/wird in Task 4 implementiert/)
   })
 
   it('ToolRegistry.parseRef parst "memory:search" korrekt', () => {

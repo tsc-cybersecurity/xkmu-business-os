@@ -1,40 +1,149 @@
 /**
  * Orchestrator Service — Hauptagent-Loop.
- * Phase 1: Skeleton. Implementation in Phase 4 (Orchestrator-Loop).
  *
  * Spec: docs/superpowers/specs/2026-05-08-agent-system-design.md §2.2 + §6
  */
 
 import type { ExecutionMode, PlannedStep } from './types'
+import { InitialPlanSchema, type InitialPlan } from './orchestrator/plan-types'
+import { PLAN_SYSTEM_PROMPT, REPLAN_SYSTEM_PROMPT, ORCHESTRATOR_DEFAULT_MODEL_PLAN, ORCHESTRATOR_DEFAULT_MODEL_REPLAN } from './orchestrator/prompts'
+import { parseOrchestratorJson } from './orchestrator/json-parser'
 
 export interface ReplanDecision {
   action: 'continue' | 'goal_complete' | 'pause' | 'fail'
   newSteps?: PlannedStep[]
-  /** Wenn nur ein einziger naechster Step folgt und nextStepMode='immediate', kann Inline-Lane uebernommen werden. */
   nextStepMode?: ExecutionMode
   reason?: string
 }
 
+async function buildToolListPrompt(): Promise<string> {
+  const { ToolRegistry } = await import('./tool-registry')
+  const { initializeToolRegistry } = await import('./tools/bootstrap')
+  initializeToolRegistry()
+  const tools = await ToolRegistry.listAll()
+  if (tools.length === 0) return '(keine Tools verfuegbar)'
+  return tools.map((t) => `- ${t.ref.raw}: ${t.description}`).join('\n')
+}
+
+async function callLLM(systemPrompt: string, userPrompt: string, model: string, costContext: { runId: string; goalId: string; callRole: 'orchestrator_plan' | 'orchestrator_replan' }): Promise<string> {
+  const { AIService } = await import('@/lib/services/ai')
+  const { CostTrackerService } = await import('./cost-tracker.service')
+
+  const response = await AIService.complete(userPrompt, {
+    systemPrompt,
+    model,
+    temperature: 0.2,
+    maxTokens: 2048,
+  })
+
+  await CostTrackerService.record({
+    runId: costContext.runId,
+    goalId: costContext.goalId,
+    provider: response.provider,
+    model: response.model,
+    callRole: costContext.callRole,
+    inputTokens: response.usage?.promptTokens ?? 0,
+    outputTokens: response.usage?.completionTokens ?? 0,
+    costCents: 0, // TODO: pricing-table
+  })
+
+  return response.text
+}
+
 export const OrchestratorService = {
-  /**
-   * Erstes Plannen eines Goals.
-   * - Sammle Tool-Liste (kurz)
-   * - Sammle initiale Memory-Refs
-   * - Rufe Orchestrator-LLM (JSON-Mode)
-   * - Persistiere agent_runs + initiale agent_steps
-   * - Queue agent_step_run-Tasks fuer Steps ohne unaufgeloeste Dependencies
-   */
-  async plan(_goalId: string): Promise<{ runId: string; steps: PlannedStep[] }> {
-    throw new Error('OrchestratorService.plan: nicht implementiert (Phase 4)')
+  async plan(goalId: string): Promise<{ runId: string; steps: PlannedStep[] }> {
+    const { db } = await import('@/lib/db')
+    const { agentGoals, agentRuns, agentSteps, taskQueue } = await import('@/lib/db/schema')
+    const { eq, sql } = await import('drizzle-orm')
+
+    // Goal laden
+    const [goal] = await db
+      .select({ id: agentGoals.id, title: agentGoals.title, description: agentGoals.description })
+      .from(agentGoals)
+      .where(eq(agentGoals.id, goalId))
+      .limit(1)
+    if (!goal) {
+      throw new Error(`Goal ${goalId} nicht gefunden`)
+    }
+
+    // Goal-Status auf 'planning'
+    await db.update(agentGoals).set({ status: 'planning', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+
+    // Run anlegen (status='planning')
+    const [run] = await db
+      .insert(agentRuns)
+      .values({ goalId, status: 'planning' })
+      .returning({ id: agentRuns.id })
+
+    // Tool-Liste fuer System-Prompt
+    const toolList = await buildToolListPrompt()
+    const userPrompt = `GOAL:\n  Titel: ${goal.title}\n  Beschreibung: ${goal.description ?? '(keine)'}\n\nVERFUEGBARE TOOLS:\n${toolList}\n\nErstelle den Plan als JSON.`
+
+    // LLM-Call
+    const rawText = await callLLM(PLAN_SYSTEM_PROMPT, userPrompt, ORCHESTRATOR_DEFAULT_MODEL_PLAN, {
+      runId: run.id,
+      goalId,
+      callRole: 'orchestrator_plan',
+    })
+
+    // JSON parsen
+    let plan: InitialPlan
+    try {
+      plan = parseOrchestratorJson(rawText, InitialPlanSchema)
+    } catch (e) {
+      // Run als failed markieren
+      await db.update(agentRuns).set({
+        status: 'failed',
+        lastError: (e as Error).message,
+        finishedAt: sql`now()`,
+        updatedAt: sql`now()`,
+      }).where(eq(agentRuns.id, run.id))
+      await db.update(agentGoals).set({ status: 'failed', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+      throw e
+    }
+
+    // Steps in DB schreiben
+    const stepRows = plan.steps.map((s) => ({
+      runId: run.id,
+      goalId,
+      stepKey: s.stepKey,
+      workerType: s.workerType,
+      config: s.config,
+      contextRefs: s.contextRefs,
+      dependsOnStepKeys: s.dependsOnStepKeys,
+      status: 'pending' as const,
+    }))
+    const insertedSteps = await db.insert(agentSteps).values(stepRows).returning({ id: agentSteps.id, stepKey: agentSteps.stepKey })
+
+    // Plan-JSON + status auf Run schreiben
+    await db.update(agentRuns).set({
+      planJson: plan as unknown as Record<string, unknown>,
+      status: 'executing',
+      updatedAt: sql`now()`,
+    }).where(eq(agentRuns.id, run.id))
+
+    await db.update(agentGoals).set({ status: 'running', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+
+    // Steps ohne unaufgeloeste Dependencies queuen
+    const stepKeyToId = new Map(insertedSteps.map((s) => [s.stepKey, s.id]))
+    const readySteps = plan.steps.filter((s) => s.dependsOnStepKeys.length === 0)
+    for (const s of readySteps) {
+      const stepId = stepKeyToId.get(s.stepKey)
+      if (!stepId) continue
+      await db.insert(taskQueue).values({
+        type: 'agent_step_run',
+        status: 'pending',
+        priority: 2,
+        payload: { stepId, runId: run.id, goalId },
+        referenceType: 'agent_step',
+        referenceId: stepId,
+      }).returning({ id: taskQueue.id })
+    }
+
+    return { runId: run.id, steps: plan.steps as unknown as PlannedStep[] }
   },
 
-  /**
-   * Re-Plan nach jedem Worker-Result.
-   * - Lade aktuellen Run-State (komprimiert via MemoryService.compactRunHistory)
-   * - Rufe Orchestrator-LLM mit kompaktem Kontext (Sliding-Summary, Prompt-Caching)
-   * - Parse Decision; bei newSteps -> erzeuge agent_steps + queue agent_step_run
-   */
   async replan(_runId: string): Promise<ReplanDecision> {
-    throw new Error('OrchestratorService.replan: nicht implementiert (Phase 4)')
+    throw new Error('OrchestratorService.replan: wird in Task 4 implementiert')
   },
 }
