@@ -3861,3 +3861,33 @@ export const appMeta = pgTable('app_meta', {
 
 export type AppMeta = typeof appMeta.$inferSelect
 export type NewAppMeta = typeof appMeta.$inferInsert
+
+// ============================================
+// Agents — Phase 1 (Schema only, no logic yet)
+// Spec: docs/superpowers/specs/2026-05-08-agent-system-design.md
+// ============================================
+
+export const agentGoals = pgTable('agent_goals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 500 }).notNull(),
+  description: text('description'),
+  executionMode: varchar('execution_mode', { length: 20 }).default('cron').notNull(),
+  status: varchar('status', { length: 30 }).default('draft').notNull(),
+  budgetTokens: integer('budget_tokens'),
+  budgetCents: integer('budget_cents'),
+  spentTokens: integer('spent_tokens').default(0).notNull(),
+  spentCents: integer('spent_cents').default(0).notNull(),
+  priority: integer('priority').default(2).notNull(),
+  requirePlanApproval: boolean('require_plan_approval').default(false).notNull(),
+  createdByUserId: uuid('created_by_user_id').references(() => users.id),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_goals_status_priority').on(table.status, table.priority, table.createdAt),
+  index('idx_agent_goals_user_status').on(table.createdByUserId, table.status),
+])
+
+export type AgentGoal = typeof agentGoals.$inferSelect
+export type NewAgentGoal = typeof agentGoals.$inferInsert
