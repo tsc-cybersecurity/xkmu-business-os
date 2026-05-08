@@ -64,6 +64,15 @@ export async function register() {
     }
   }
 
+  // Tool-Registry initialisieren (Phase 3)
+  try {
+    const { initializeToolRegistry } = await import('@/lib/services/agents/tools/bootstrap')
+    initializeToolRegistry()
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('[instrumentation] ToolRegistry konnte nicht initialisiert werden:', (e as Error).message)
+  }
+
   // Boot-time check: APPOINTMENT_TOKEN_SECRET. Soft-warn instead of hard-fail
   // — apps that don't use the booking feature should still boot.
   const apptSecret = process.env.APPOINTMENT_TOKEN_SECRET

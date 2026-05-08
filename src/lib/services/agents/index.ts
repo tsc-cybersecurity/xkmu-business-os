@@ -8,6 +8,7 @@ export { WorkerService } from './worker.service'
 export { MemoryService } from './memory.service'
 export { CostTrackerService } from './cost-tracker.service'
 export { ToolRegistry } from './tool-registry'
+export { initializeToolRegistry, isToolRegistryInitialized } from './tools/bootstrap'
 
 export type {
   AgentGoal,
