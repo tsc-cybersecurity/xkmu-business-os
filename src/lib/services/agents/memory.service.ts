@@ -332,14 +332,43 @@ export const MemoryService = {
   },
 
   /** Expandiert MemoryRefs zu vollen Inhalten — wird beim Worker-Start aufgerufen. */
-  async expandRefs(
-    _refs: MemoryRef[],
-  ): Promise<Array<{ ref: MemoryRef; title: string | null; body: string }>> {
-    throw new Error('MemoryService.expandRefs: nicht implementiert (Phase 2)')
+  async expandRefs(refs: MemoryRef[]): Promise<Array<{ ref: MemoryRef; title: string | null; body: string }>> {
+    const out: Array<{ ref: MemoryRef; title: string | null; body: string }> = []
+    for (const ref of refs) {
+      try {
+        const r = await this.read(ref)
+        out.push({ ref, title: r.title, body: r.body })
+      } catch {
+        out.push({ ref, title: null, body: '' })
+      }
+    }
+    return out
   },
 
   /** Komprimiert Run-History für Re-Plan-Kontext. */
-  async compactRunHistory(_runId: string, _keepLast = 5): Promise<string> {
-    throw new Error('MemoryService.compactRunHistory: nicht implementiert (Phase 2)')
+  async compactRunHistory(runId: string, keepLast = 5): Promise<string> {
+    const { db } = await import('@/lib/db')
+    const { agentSteps } = await import('@/lib/db/schema')
+    const { eq, desc } = await import('drizzle-orm')
+    const rows = await db
+      .select({
+        stepKey: agentSteps.stepKey,
+        workerType: agentSteps.workerType,
+        status: agentSteps.status,
+        resultSummary: agentSteps.resultSummary,
+      })
+      .from(agentSteps)
+      .where(eq(agentSteps.runId, runId))
+      .orderBy(desc(agentSteps.createdAt))
+    if (rows.length === 0) return ''
+    const recent = rows.slice(0, keepLast)
+    const older = rows.slice(keepLast)
+    const recentBlock = recent
+      .map((r) => `- ${r.stepKey} [${r.workerType}] ${r.status}: ${r.resultSummary ?? ''}`)
+      .join('\n')
+    if (older.length === 0) return recentBlock
+    const succeeded = older.filter((o) => o.status === 'succeeded').length
+    const failed = older.filter((o) => o.status === 'failed').length
+    return `... ${older.length} aeltere Steps zuvor (${succeeded} succeeded, ${failed} failed)\n${recentBlock}`
   },
 }
