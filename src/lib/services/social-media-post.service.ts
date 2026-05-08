@@ -57,6 +57,7 @@ export interface CreatePostInput {
   scheduledAt?: string | null
   status?: string
   aiGenerated?: boolean
+  sourceNewsItemId?: string
 }
 
 export type UpdatePostInput = Partial<CreatePostInput>
@@ -130,6 +131,7 @@ export const SocialMediaPostService = {
         status: data.status || 'draft',
         aiGenerated: data.aiGenerated || false,
         createdBy: createdBy || undefined,
+        sourceNewsItemId: data.sourceNewsItemId || null,
       })
       .returning()
     await reconcilePublishTask(post.id, post.scheduledAt, post.status)
@@ -149,6 +151,7 @@ export const SocialMediaPostService = {
       status: data.status || 'draft',
       aiGenerated: data.aiGenerated || false,
       createdBy: createdBy || undefined,
+      sourceNewsItemId: data.sourceNewsItemId || null,
     }))
     return db.insert(socialMediaPosts).values(values).returning()
   },

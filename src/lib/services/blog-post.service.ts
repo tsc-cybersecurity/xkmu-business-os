@@ -27,6 +27,7 @@ export interface CreateBlogPostInput {
   source?: string
   aiMetadata?: Record<string, unknown>
   inSitemap?: boolean
+  sourceNewsItemId?: string
 }
 
 export type UpdateBlogPostInput = Partial<CreateBlogPostInput>
@@ -55,6 +56,7 @@ export const BlogPostService = {
         aiMetadata: data.aiMetadata || null,
         inSitemap: data.inSitemap ?? true,
         authorId: authorId || undefined,
+        sourceNewsItemId: data.sourceNewsItemId ?? null,
       })
       .returning()
     return post
@@ -104,6 +106,7 @@ export const BlogPostService = {
     if (data.source !== undefined) updateData.source = data.source
     if (data.aiMetadata !== undefined) updateData.aiMetadata = data.aiMetadata
     if (data.inSitemap !== undefined) updateData.inSitemap = data.inSitemap
+    if (data.sourceNewsItemId !== undefined) updateData.sourceNewsItemId = data.sourceNewsItemId ?? null
 
     const [post] = await db
       .update(blogPosts)
