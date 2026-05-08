@@ -31,6 +31,7 @@ export interface WeekPost {
   title: string | null
   content: string
   scheduledAt: string | null
+  postedAt: string | null
   status: string | null
 }
 
@@ -60,8 +61,10 @@ function fmtTime(slotIdx: number): string {
 }
 
 function postPosition(p: WeekPost, weekStart: Date): { dayIdx: number; topSlot: number } | null {
-  if (!p.scheduledAt) return null
-  const at = new Date(p.scheduledAt)
+  // Direct-gepostete Posts haben kein scheduledAt — postedAt als Fallback.
+  const effectiveAt = p.scheduledAt ?? p.postedAt
+  if (!effectiveAt) return null
+  const at = new Date(effectiveAt)
   for (let dayIdx = 0; dayIdx < 7; dayIdx++) {
     const dayStart = addDays(weekStart, dayIdx)
     const dayEnd = addDays(dayStart, 1)
@@ -316,8 +319,9 @@ export function WeekView({ scheduled, backlog, onChanged }: {
                     if (isDragged) return null
                     const platformClass = PLATFORM_COLORS[post.platform] ?? 'bg-muted text-foreground border-border'
                     const titleText = post.title || post.content.slice(0, 60)
-                    const time = post.scheduledAt
-                      ? new Date(post.scheduledAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+                    const effectiveAt = post.scheduledAt ?? post.postedAt
+                    const time = effectiveAt
+                      ? new Date(effectiveAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
                       : null
                     return (
                       <button

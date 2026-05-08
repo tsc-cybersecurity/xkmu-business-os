@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { socialMediaPosts, socialMediaTopics, taskQueue } from '@/lib/db/schema'
-import { eq, and, count, desc, gte, lt, isNull, asc, inArray } from 'drizzle-orm'
+import { eq, and, count, desc, gte, lt, isNull, asc, inArray, or } from 'drizzle-orm'
 import type { SocialMediaPost, NewSocialMediaPost } from '@/lib/db/schema'
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -204,12 +204,22 @@ export const SocialMediaPostService = {
     }
 
     const [scheduled, backlog] = await Promise.all([
+      // Inkludiert sowohl Posts mit scheduledAt im Range als auch direkt
+      // gepostete (ohne scheduledAt, nur postedAt im Range) — sonst tauchen
+      // ad-hoc gepostete Items im Kalender nicht auf.
       db.select(baseFields)
         .from(socialMediaPosts)
         .leftJoin(socialMediaTopics, eq(socialMediaPosts.topicId, socialMediaTopics.id))
-        .where(and(
-          gte(socialMediaPosts.scheduledAt, range.from),
-          lt(socialMediaPosts.scheduledAt, range.to),
+        .where(or(
+          and(
+            gte(socialMediaPosts.scheduledAt, range.from),
+            lt(socialMediaPosts.scheduledAt, range.to),
+          ),
+          and(
+            isNull(socialMediaPosts.scheduledAt),
+            gte(socialMediaPosts.postedAt, range.from),
+            lt(socialMediaPosts.postedAt, range.to),
+          ),
         ))
         .orderBy(asc(socialMediaPosts.scheduledAt)),
       db.select(baseFields)

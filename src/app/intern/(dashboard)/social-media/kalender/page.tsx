@@ -144,8 +144,10 @@ export default function SocialMediaCalendarPage() {
   const postsByDay = useMemo(() => {
     const map = new Map<string, CalendarPost[]>()
     for (const p of scheduled) {
-      if (!p.scheduledAt) continue
-      const key = fmtDayKey(new Date(p.scheduledAt))
+      // Direct-gepostete Posts haben kein scheduledAt — postedAt als Fallback.
+      const effectiveAt = p.scheduledAt ?? p.postedAt
+      if (!effectiveAt) continue
+      const key = fmtDayKey(new Date(effectiveAt))
       const list = map.get(key) ?? []
       list.push(p)
       map.set(key, list)
@@ -377,8 +379,9 @@ function PostCard({
   compact?: boolean
 }) {
   const platformClass = PLATFORM_COLORS[post.platform] ?? 'bg-muted text-foreground border-border'
-  const time = post.scheduledAt
-    ? new Date(post.scheduledAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  const effectiveAt = post.scheduledAt ?? post.postedAt
+  const time = effectiveAt
+    ? new Date(effectiveAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
     : null
   const titleText = post.title || post.content.slice(0, 60)
   const isPosted = post.status === 'posted'
