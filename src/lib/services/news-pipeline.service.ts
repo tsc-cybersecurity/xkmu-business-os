@@ -48,7 +48,13 @@ function extractJson(text: string): string | null {
 async function runTemplate<T>(
   slug: string,
   vars: Record<string, string>,
-  options: { maxTokens?: number; temperature?: number } = {},
+  options: {
+    maxTokens?: number
+    temperature?: number
+    feature?: string
+    entityType?: string
+    entityId?: string
+  } = {},
 ): Promise<T> {
   const { AiPromptTemplateService } = await import('@/lib/services/ai-prompt-template.service')
   const { AIService } = await import('@/lib/services/ai/ai.service')
@@ -57,11 +63,19 @@ async function runTemplate<T>(
   const userPrompt = AiPromptTemplateService.applyPlaceholders(template.userPrompt, vars)
   const fullPrompt = template.outputFormat ? `${userPrompt}\n\n${template.outputFormat}` : userPrompt
 
-  const response = await AIService.completeWithContext(fullPrompt, { feature: 'news_pipeline' }, {
-    maxTokens: options.maxTokens ?? 4000,
-    temperature: options.temperature ?? 0.7,
-    systemPrompt: template.systemPrompt,
-  })
+  const response = await AIService.completeWithContext(
+    fullPrompt,
+    {
+      feature: options.feature ?? slug,
+      entityType: options.entityType,
+      entityId: options.entityId,
+    },
+    {
+      maxTokens: options.maxTokens ?? 4000,
+      temperature: options.temperature ?? 0.7,
+      systemPrompt: template.systemPrompt,
+    },
+  )
 
   const jsonStr = extractJson(response.text)
   if (!jsonStr) {
@@ -93,6 +107,10 @@ export const NewsPipelineService = {
       url: item.url,
       snippet: item.snippet ?? '',
       source: item.source ?? '',
+    }, {
+      feature: 'news_deep_research',
+      entityType: 'news_item',
+      entityId: item.id,
     })
     if (!parsed || typeof parsed.summary !== 'string') {
       throw new Error('news-deep-research: invalid AI output')
@@ -109,7 +127,12 @@ export const NewsPipelineService = {
     const parsed = await runTemplate<Partial<BlogDraft>>('news-blog-draft', {
       title: item.title,
       research: JSON.stringify(research),
-    }, { maxTokens: 8000 })
+    }, {
+      maxTokens: 8000,
+      feature: 'news_blog_draft',
+      entityType: 'news_item',
+      entityId: item.id,
+    })
     if (!parsed?.title || !parsed?.content) {
       throw new Error('news-blog-draft: invalid AI output')
     }
@@ -137,7 +160,12 @@ export const NewsPipelineService = {
           blogTitle: blog.title,
           blogExcerpt: blog.excerpt ?? '',
           platform,
-        }, { maxTokens: 1500 })
+        }, {
+          maxTokens: 1500,
+          feature: `news_social_draft_${platform}`,
+          entityType: 'news_item',
+          entityId: item.id,
+        })
         if (!parsed?.content) {
           logger.warn(`news-social-draft: empty content for ${platform}`, {
             module: 'NewsPipelineService',
