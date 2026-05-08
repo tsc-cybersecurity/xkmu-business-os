@@ -42,19 +42,6 @@ describe('Agent-Module Skeleton — Phase 1', () => {
     await expect(WorkerService.executeStep('step-1')).rejects.toThrow(/nicht implementiert/)
   })
 
-  it('CostTrackerService.record wirft "nicht implementiert"', async () => {
-    await expect(
-      CostTrackerService.record({
-        provider: 'gemini',
-        model: 'gemini-2.0-flash',
-        callRole: 'orchestrator_plan',
-        inputTokens: 100,
-        outputTokens: 50,
-        costCents: 1,
-      }),
-    ).rejects.toThrow(/nicht implementiert/)
-  })
-
   it('ToolRegistry.parseRef parst "memory:search" korrekt', () => {
     const ref = ToolRegistry.parseRef('memory:search')
     expect(ref).toEqual({ namespace: 'memory', name: 'search', raw: 'memory:search' })
