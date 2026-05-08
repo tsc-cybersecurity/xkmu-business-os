@@ -56,13 +56,67 @@ function calculateNextRun(interval: string, dailyAt?: string | null): Date {
 
 /**
  * Verarbeitet anstehende Agent-Tasks aus der task_queue.
- * Phase 1: no-op Skeleton. Implementation in Phase 4.
+ * Phase 3: dispatcht agent_step_run-Tasks an WorkerService.executeStep.
+ * Atomic Claim via FOR UPDATE SKIP LOCKED — kein Doppelaufruf, parallel-safe.
  * Spec: docs/superpowers/specs/2026-05-08-agent-system-design.md §6.4
  */
 async function processAgentTaskQueue(): Promise<void> {
-  // Phase 1: bewusst leer.
-  // Phase 4 wird hier task_queue mit FOR UPDATE SKIP LOCKED claimen
-  // und WorkerService/OrchestratorService aufrufen.
+  const { sql } = await import('drizzle-orm')
+  const { db } = await import('@/lib/db')
+  const { logger: log } = await import('@/lib/utils/logger')
+
+  // Atomic claim — bis zu 10 Tasks parallel
+  const claimResult = (await db.execute(sql`
+    UPDATE task_queue SET status='running', executed_at=NOW()
+    WHERE id IN (
+      SELECT id FROM task_queue
+      WHERE type IN ('agent_step_run', 'agent_replan', 'agent_continuation')
+        AND status='pending'
+        AND scheduled_for <= NOW()
+      ORDER BY priority ASC, scheduled_for ASC
+      LIMIT 10
+      FOR UPDATE SKIP LOCKED
+    )
+    RETURNING id, type, payload, reference_id
+  `)) as unknown as Array<{ id: string; type: string; payload: Record<string, unknown> | null; reference_id: string | null }>
+
+  if (claimResult.length === 0) return
+
+  const { WorkerService } = await import('@/lib/services/agents/worker.service')
+
+  await Promise.allSettled(
+    claimResult.map(async (task) => {
+      try {
+        if (task.type === 'agent_step_run') {
+          const stepId = task.reference_id ?? (task.payload?.stepId as string | undefined)
+          if (!stepId) {
+            throw new Error('agent_step_run ohne stepId in reference_id oder payload.stepId')
+          }
+          const result = await WorkerService.executeStep(stepId)
+          await db.execute(sql`
+            UPDATE task_queue
+            SET status='completed', result=${JSON.stringify(result)}::jsonb
+            WHERE id=${task.id}
+          `)
+        } else {
+          // agent_replan und agent_continuation: Phase 4/6, hier no-op markieren
+          await db.execute(sql`
+            UPDATE task_queue
+            SET status='completed', result=${JSON.stringify({ skipped: 'phase>3 not yet implemented' })}::jsonb
+            WHERE id=${task.id}
+          `)
+        }
+      } catch (e) {
+        const msg = (e as Error).message
+        log.error(`Agent task ${task.id} failed: ${msg}`, e, { module: 'AgentTickHandler' })
+        await db.execute(sql`
+          UPDATE task_queue
+          SET status='failed', error=${msg}
+          WHERE id=${task.id}
+        `)
+      }
+    }),
+  )
 }
 
 /**
