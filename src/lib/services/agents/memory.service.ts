@@ -275,12 +275,37 @@ export const MemoryService = {
     return { id, path: summaryPath }
   },
 
-  async supersede(
-    _itemId: string,
-    _newFact: string,
-    _source: string,
-  ): Promise<void> {
-    throw new Error('MemoryService.supersede: nicht implementiert (Phase 2)')
+  async supersede(itemId: string, newFact: string, source: string): Promise<void> {
+    const fs = await import('node:fs/promises')
+    const { db } = await import('@/lib/db')
+    const { agentMemoryEntries } = await import('@/lib/db/schema')
+    const { eq } = await import('drizzle-orm')
+    const { scopeToFilePath } = await import('./memory/paths')
+    const { parseItems, stringifyItems, supersedeItem: supersedeItemPure } = await import('./memory/items')
+
+    // Brute-Force-Suche ueber alle aktiven Entries (bei <10k Eintraegen akzeptabel).
+    const rows = await db
+      .select({ scope: agentMemoryEntries.scope })
+      .from(agentMemoryEntries)
+      .where(eq(agentMemoryEntries.status, 'active'))
+
+    for (const { scope } of rows) {
+      const itemsPath = scopeToFilePath(scope, 'items.yaml')
+      try {
+        const raw = await fs.readFile(itemsPath, 'utf8')
+        const items = parseItems(raw)
+        if (items.some((i) => i.id === itemId)) {
+          const next = supersedeItemPure(items, itemId, { fact: newFact, source })
+          const tmp = `${itemsPath}.tmp`
+          await fs.writeFile(tmp, stringifyItems(next), 'utf8')
+          await fs.rename(tmp, itemsPath)
+          return
+        }
+      } catch {
+        continue
+      }
+    }
+    throw new Error(`Item ${itemId} in keinem aktiven Memory-Entry gefunden`)
   },
 
   async list(
