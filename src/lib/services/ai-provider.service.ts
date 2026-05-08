@@ -70,6 +70,10 @@ export const AiProviderService = {
   },
 
   async getActiveProviders() {
+    // is_default DESC zuerst: der als Standard markierte Provider wird immer
+    // als erster probiert, unabhaengig von priority. Dahinter sortieren wir
+    // nach priority ASC als Fallback-Reihenfolge. Sonst gewinnt ein anderer
+    // Provider mit niedrigerer priority und der Default-Switch ist wirkungslos.
     return db
       .select()
       .from(aiProviders)
@@ -81,7 +85,7 @@ export const AiProviderService = {
           ne(aiProviders.providerType, 'serpapi')
         )
       )
-      .orderBy(asc(aiProviders.priority))
+      .orderBy(desc(aiProviders.isDefault), asc(aiProviders.priority))
   },
 
   async getDefaultProvider() {
