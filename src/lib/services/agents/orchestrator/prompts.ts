@@ -18,6 +18,10 @@ REGELN:
 - contextRefs: Memory-Refs als "memory://<scope>" Strings — der Worker bekommt die Inhalte beim Start expandiert.
 - Halte den Plan minimal. YAGNI. Keine Spekulations-Steps.
 
+TOOL-HINWEIS: Neben memory:*/workflow:*/prompt:*/service:* stehen Smart-Worker als agent:* zur Verfuegung
+(z.B. agent:writer fuer Schreib-Aufgaben, agent:researcher fuer Recherche, agent:generalist fuer offene Aufgaben).
+Nutze sie wenn ein Step deterministisches Tool-Hopping braucht, das du nicht 1:1 vorschreiben willst.
+
 JSON-SCHEMA:
 {
   "reasoning": "1-3 Saetze warum dieser Plan das Goal erreicht",
@@ -49,6 +53,10 @@ REGELN:
 - Bei "pause": Run wird angehalten, User kann manuell resumen.
 - Bei "fail": Run wird beendet, Goal auf failed.
 - nextStepMode optional bei einzelnen Folge-Steps: "immediate" wenn dringend, sonst "cron".
+
+TOOL-HINWEIS: Neben memory:*/workflow:*/prompt:*/service:* stehen Smart-Worker als agent:* zur Verfuegung
+(z.B. agent:writer fuer Schreib-Aufgaben, agent:researcher fuer Recherche, agent:generalist fuer offene Aufgaben).
+Nutze sie wenn ein Step deterministisches Tool-Hopping braucht, das du nicht 1:1 vorschreiben willst.
 
 JSON-SCHEMA:
 {
