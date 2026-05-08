@@ -98,11 +98,31 @@ async function processAgentTaskQueue(): Promise<void> {
             SET status='completed', result=${JSON.stringify(result)}::jsonb
             WHERE id=${task.id}
           `)
-        } else {
-          // agent_replan und agent_continuation: Phase 4/6, hier no-op markieren
+          // Re-Plan triggern: nach jedem Step entscheidet Orchestrator weiter
+          const runId = (task.payload?.runId as string | undefined)
+          if (runId) {
+            await db.execute(sql`
+              INSERT INTO task_queue (type, status, priority, payload, reference_type, reference_id)
+              VALUES ('agent_replan', 'pending', 2, ${JSON.stringify({ runId })}::jsonb, 'agent_run', ${runId})
+            `)
+          }
+        } else if (task.type === 'agent_replan') {
+          const runId = task.reference_id ?? (task.payload?.runId as string | undefined)
+          if (!runId) {
+            throw new Error('agent_replan ohne runId in reference_id oder payload.runId')
+          }
+          const { OrchestratorService } = await import('@/lib/services/agents/orchestrator.service')
+          const decision = await OrchestratorService.replan(runId)
           await db.execute(sql`
             UPDATE task_queue
-            SET status='completed', result=${JSON.stringify({ skipped: 'phase>3 not yet implemented' })}::jsonb
+            SET status='completed', result=${JSON.stringify(decision)}::jsonb
+            WHERE id=${task.id}
+          `)
+        } else {
+          // agent_continuation: Phase 6
+          await db.execute(sql`
+            UPDATE task_queue
+            SET status='completed', result=${JSON.stringify({ skipped: 'phase>4 not yet implemented' })}::jsonb
             WHERE id=${task.id}
           `)
         }
