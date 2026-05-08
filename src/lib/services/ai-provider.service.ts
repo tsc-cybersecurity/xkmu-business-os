@@ -142,7 +142,16 @@ export const AiProviderService = {
     const updateData: Record<string, unknown> = { updatedAt: new Date() }
     if (data.providerType !== undefined) updateData.providerType = data.providerType
     if (data.name !== undefined) updateData.name = data.name
-    if (data.apiKey !== undefined) updateData.apiKey = data.apiKey || null
+    // apiKey: leerer String bedeutet "beibehalten" (Edit-Form sendet '' als
+    // Sicherheits-Default mit Placeholder "Leer = beibehalten"). Nur wenn
+    // explizit ein Key gesetzt wird oder explizit null kommt (Schluessel loeschen),
+    // tatsaechlich aktualisieren. Vorher: '' || null -> null, Schluessel wurde
+    // versehentlich beim Speichern unrelated Felder geloescht.
+    if (typeof data.apiKey === 'string' && data.apiKey.length > 0) {
+      updateData.apiKey = data.apiKey
+    } else if (data.apiKey === null) {
+      updateData.apiKey = null
+    }
     if (data.baseUrl !== undefined) updateData.baseUrl = data.baseUrl || null
     if (data.model !== undefined) updateData.model = data.model
     if (data.maxTokens !== undefined) updateData.maxTokens = data.maxTokens
