@@ -11,6 +11,11 @@ describe.skipIf(skip !== null)('MemoryService Recall', () => {
   beforeAll(async () => {
     tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'agents-memory-recall-'))
     vi.stubEnv('AGENT_MEMORY_DIR', tmpRoot)
+    // Force lexical/BM25-only mode to keep recall test hermetic and free.
+    // Override with AGENT_RECALL_USE_REAL_EMBEDDINGS=1 to test hybrid scoring.
+    if (process.env.AGENT_RECALL_USE_REAL_EMBEDDINGS !== '1') {
+      vi.stubEnv('GOOGLE_AI_API_KEY', '')
+    }
     const { MemoryService } = await import('@/lib/services/agents')
     const { MEMORY_FIXTURES } = await import('@/lib/services/agents/memory/index-fixtures')
     for (const f of MEMORY_FIXTURES) {
