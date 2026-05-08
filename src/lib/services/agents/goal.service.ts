@@ -47,12 +47,16 @@ export const GoalService = {
     return { id: row.id }
   },
 
-  async start(goalId: string): Promise<{ runId: string }> {
+  async start(goalId: string): Promise<{ runId: string; immediate?: { iterations: number; terminalReason: string } }> {
     const { db } = await import('@/lib/db')
-    const { agentGoals } = await import('@/lib/db/schema')
-    const { eq } = await import('drizzle-orm')
+    const { agentGoals, agentSteps } = await import('@/lib/db/schema')
+    const { eq, and } = await import('drizzle-orm')
 
-    const [goal] = await db.select({ id: agentGoals.id, status: agentGoals.status }).from(agentGoals).where(eq(agentGoals.id, goalId)).limit(1)
+    const [goal] = await db
+      .select({ id: agentGoals.id, status: agentGoals.status, executionMode: agentGoals.executionMode })
+      .from(agentGoals)
+      .where(eq(agentGoals.id, goalId))
+      .limit(1)
     if (!goal) throw new Error(`Goal ${goalId} nicht gefunden`)
     if (goal.status !== 'draft') {
       throw new Error(`Goal ${goalId} bereits gestartet (status=${goal.status}) — nur draft-Goals koennen start() aufrufen`)
@@ -60,6 +64,22 @@ export const GoalService = {
 
     const { OrchestratorService } = await import('./orchestrator.service')
     const result = await OrchestratorService.plan(goalId)
+
+    if (goal.executionMode === 'immediate') {
+      // ready-Steps des frischen Run holen (status=pending)
+      const readySteps = await db
+        .select({ id: agentSteps.id })
+        .from(agentSteps)
+        .where(and(eq(agentSteps.runId, result.runId), eq(agentSteps.status, 'pending')))
+
+      // Nur wenn genau 1 ready-Step: inline laufen lassen. Sonst Cron-Lane.
+      if (readySteps.length === 1) {
+        const { runImmediate } = await import('./immediate-lane.service')
+        const inline = await runImmediate({ runId: result.runId, startStepIds: [readySteps[0].id] })
+        return { runId: result.runId, immediate: inline }
+      }
+    }
+
     return { runId: result.runId }
   },
 

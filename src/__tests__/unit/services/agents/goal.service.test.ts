@@ -14,12 +14,17 @@ const selectMock = vi.fn((..._args: any[]) => ({ from: selectFromMock }))
 
 vi.mock('@/lib/db', () => ({ db: { insert: insertMock, update: updateMock, select: selectMock } }))
 vi.mock('@/lib/db/schema', () => ({
-  agentGoals: { id: 'id', status: 'status', createdAt: 'createdAt' },
+  agentGoals: { id: 'id', status: 'status', executionMode: 'executionMode', createdAt: 'createdAt' },
   agentRuns: { id: 'id', goalId: 'goalId', status: 'status' },
-  agentSteps: { id: 'id', runId: 'runId' },
+  agentSteps: { id: 'id', runId: 'runId', status: 'status' },
 }))
 vi.mock('@/lib/services/agents/orchestrator.service', () => ({
   OrchestratorService: { plan: planMock },
+}))
+
+const runImmediateMock = vi.fn()
+vi.mock('@/lib/services/agents/immediate-lane.service', () => ({
+  runImmediate: runImmediateMock,
 }))
 
 describe('GoalService', () => {
@@ -29,6 +34,7 @@ describe('GoalService', () => {
     selectLimitMock.mockReset()
     planMock.mockReset()
     updateSetMock.mockClear()
+    runImmediateMock.mockReset()
   })
 
   it('create() legt Goal mit status=draft an', async () => {
@@ -86,5 +92,39 @@ describe('GoalService', () => {
     await GoalService.cancel('g1')
     const args = updateSetMock.mock.calls[0]?.[0] as Record<string, unknown>
     expect(args.status).toBe('cancelled')
+  })
+
+  it('start() triggert runImmediate fuer executionMode=immediate Goals', async () => {
+    // Goal mit executionMode=immediate und status=draft
+    // select-Aufruf 1: agentGoals.where().limit() -> goal
+    selectLimitMock.mockResolvedValueOnce([{ id: 'g1', status: 'draft', executionMode: 'immediate' }])
+    planMock.mockResolvedValueOnce({ runId: 'run-1', steps: [{ stepKey: 'step-a', dependsOnStepKeys: [] }] })
+    // select-Aufruf 2: agentSteps.where(and(...)) -> direkt awaited ohne .limit()
+    selectWhereMock
+      .mockReturnValueOnce({ limit: selectLimitMock })   // erster Aufruf: goal
+      .mockResolvedValueOnce([{ id: 'step-1' }])         // zweiter Aufruf: readySteps
+    runImmediateMock.mockResolvedValueOnce({ iterations: 1, terminalReason: 'goal_complete' })
+
+    const { GoalService } = await import('@/lib/services/agents/goal.service')
+    const r = await GoalService.start('g1')
+
+    expect(planMock).toHaveBeenCalledWith('g1')
+    expect(runImmediateMock).toHaveBeenCalledWith({ runId: 'run-1', startStepIds: ['step-1'] })
+    expect(r.runId).toBe('run-1')
+    expect(r.immediate?.terminalReason).toBe('goal_complete')
+    expect(r.immediate?.iterations).toBe(1)
+  })
+
+  it('start() triggert KEIN runImmediate fuer executionMode=cron Goals (default)', async () => {
+    selectLimitMock.mockResolvedValueOnce([{ id: 'g1', status: 'draft', executionMode: 'cron' }])
+    planMock.mockResolvedValueOnce({ runId: 'run-2', steps: [] })
+
+    const { GoalService } = await import('@/lib/services/agents/goal.service')
+    const r = await GoalService.start('g1')
+
+    expect(planMock).toHaveBeenCalledWith('g1')
+    expect(runImmediateMock).not.toHaveBeenCalled()
+    expect(r.runId).toBe('run-2')
+    expect(r.immediate).toBeUndefined()
   })
 })
