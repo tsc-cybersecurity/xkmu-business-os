@@ -166,3 +166,83 @@ describe('NewsPipelineService — generateBlogPost', () => {
     ).rejects.toThrow(/news-blog-draft/)
   })
 })
+
+describe('NewsPipelineService — generateSocialPosts', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    setupDbMock()
+  })
+
+  it('generates one draft per default platform', async () => {
+    const renderMock = vi.fn()
+    vi.doMock('@/lib/services/ai-prompt-template.service', () => ({
+      AiPromptTemplateService: {
+        getOrDefault: vi.fn().mockResolvedValue({ systemPrompt: '', userPrompt: '', outputFormat: null }),
+        applyPlaceholders: vi.fn().mockImplementation((t: string) => t),
+      },
+    }))
+    vi.doMock('@/lib/services/ai/ai.service', () => ({
+      AIService: {
+        completeWithContext: vi.fn().mockImplementation((prompt: string) => {
+          renderMock(prompt)
+          // platform info is in the prompt OR in vars; we mock independent of that
+          const platform = prompt.includes('linkedin') ? 'linkedin' : 'x'
+          return Promise.resolve({
+            text: JSON.stringify({
+              platform,
+              title: 'T',
+              content: `Content for ${platform}`,
+              hashtags: ['#a'],
+            }),
+            provider: 'mock',
+            model: 'mock',
+          })
+        }),
+      },
+    }))
+    const { NewsPipelineService } = await import('@/lib/services/news-pipeline.service')
+
+    const drafts = await NewsPipelineService.generateSocialPosts(
+      itemFixture(),
+      { summary: 's', keyPoints: [], sources: [], context: '' },
+      { id: 'b1', title: 'BlogTitle', excerpt: 'Ex' },
+    )
+
+    expect(drafts).toHaveLength(2)
+    expect(drafts.map((d) => d.platform).sort()).toEqual(['linkedin', 'x'])
+    expect(renderMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('skips a platform when AI returns empty content but continues with others', async () => {
+    let calls = 0
+    vi.doMock('@/lib/services/ai-prompt-template.service', () => ({
+      AiPromptTemplateService: {
+        getOrDefault: vi.fn().mockResolvedValue({ systemPrompt: '', userPrompt: '', outputFormat: null }),
+        applyPlaceholders: vi.fn().mockImplementation((t: string) => t),
+      },
+    }))
+    vi.doMock('@/lib/services/ai/ai.service', () => ({
+      AIService: {
+        completeWithContext: vi.fn().mockImplementation(() => {
+          calls++
+          return Promise.resolve({
+            text: calls === 1
+              ? JSON.stringify({ platform: 'linkedin' }) // missing content
+              : JSON.stringify({ platform: 'x', content: 'OK', hashtags: [] }),
+            provider: 'mock',
+            model: 'mock',
+          })
+        }),
+      },
+    }))
+    const { NewsPipelineService } = await import('@/lib/services/news-pipeline.service')
+
+    const drafts = await NewsPipelineService.generateSocialPosts(
+      itemFixture(),
+      { summary: 's', keyPoints: [], sources: [], context: '' },
+      { id: 'b1', title: 'BlogTitle', excerpt: null },
+    )
+    expect(drafts).toHaveLength(1)
+    expect(drafts[0].platform).toBe('x')
+  })
+})

@@ -28,6 +28,15 @@ export interface BlogDraft {
   tags: string[]
 }
 
+export interface SocialDraft {
+  platform: 'linkedin' | 'x'
+  title?: string
+  content: string
+  hashtags: string[]
+}
+
+const DEFAULT_SOCIAL_PLATFORMS: Array<'linkedin' | 'x'> = ['linkedin', 'x']
+
 function extractJson(text: string): string | null {
   const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
   if (codeBlockMatch) return codeBlockMatch[1].trim()
@@ -112,5 +121,44 @@ export const NewsPipelineService = {
       seoDescription: parsed.seoDescription,
       tags: Array.isArray(parsed.tags) ? parsed.tags : [],
     }
+  },
+
+  async generateSocialPosts(
+    item: NewsItem,
+    research: DeepResearchResult,
+    blog: { id: string; title: string; excerpt: string | null },
+  ): Promise<SocialDraft[]> {
+    const drafts: SocialDraft[] = []
+    for (const platform of DEFAULT_SOCIAL_PLATFORMS) {
+      try {
+        const parsed = await runTemplate<Partial<SocialDraft>>('news-social-draft', {
+          title: item.title,
+          research: JSON.stringify(research),
+          blogTitle: blog.title,
+          blogExcerpt: blog.excerpt ?? '',
+          platform,
+        }, { maxTokens: 1500 })
+        if (!parsed?.content) {
+          logger.warn(`news-social-draft: empty content for ${platform}`, {
+            module: 'NewsPipelineService',
+            itemId: item.id,
+          })
+          continue
+        }
+        drafts.push({
+          platform,
+          title: parsed.title,
+          content: parsed.content,
+          hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : [],
+        })
+      } catch (err) {
+        logger.warn(`news-social-draft: failed for ${platform}`, {
+          module: 'NewsPipelineService',
+          itemId: item.id,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
+    }
+    return drafts
   },
 }
