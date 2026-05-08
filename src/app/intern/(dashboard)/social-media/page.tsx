@@ -76,6 +76,7 @@ export default function SocialMediaPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [topicFilter, setTopicFilter] = useState<string>('all');
   const [hidePosted, setHidePosted] = useState<boolean>(true);
+  const [hideScheduled, setHideScheduled] = useState<boolean>(true);
   const [sortField, setSortField] = useState<SortField>('createdAt');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
@@ -125,11 +126,16 @@ export default function SocialMediaPage() {
     }
   };
 
-  // Client-seitiger Filter "Gepostete ausblenden" — laeuft zusaetzlich zum
-  // Server-Status-Filter, damit der User "alle Status" + "ohne Gepostete"
+  // Client-seitiger Filter "Gepostete/Geplante ausblenden" — laeuft zusaetzlich
+  // zum Server-Status-Filter, damit der User "alle Status" + selektive Status
   // kombinieren kann (Server-Filter kennt nur einen einzelnen Status-Wert).
-  const visiblePosts = hidePosted ? posts.filter((p) => p.status !== 'posted') : posts
+  const visiblePosts = posts.filter((p) => {
+    if (hidePosted && p.status === 'posted') return false
+    if (hideScheduled && p.status === 'scheduled') return false
+    return true
+  })
   const postedCount = posts.filter((p) => p.status === 'posted').length
+  const scheduledCount = posts.filter((p) => p.status === 'scheduled').length
 
   const sortedPosts = [...visiblePosts].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
@@ -251,6 +257,18 @@ export default function SocialMediaPage() {
           Gepostete ausblenden
           {postedCount > 0 && (
             <span className="text-xs text-muted-foreground">({postedCount})</span>
+          )}
+        </label>
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={hideScheduled}
+            onChange={(e) => setHideScheduled(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Geplante ausblenden
+          {scheduledCount > 0 && (
+            <span className="text-xs text-muted-foreground">({scheduledCount})</span>
           )}
         </label>
       </div>
