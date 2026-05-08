@@ -399,6 +399,16 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
       }
     }
 
+    case 'news_pipeline': {
+      const newsItemId = item.referenceId ?? (payload.newsItemId as string | undefined)
+      if (!newsItemId) {
+        return { skipped: true, reason: 'no_news_item_id' }
+      }
+      const { NewsPipelineService } = await import('./news-pipeline.service')
+      await NewsPipelineService.run(newsItemId)
+      return { newsItemId, status: 'completed' }
+    }
+
     default:
       logger.warn(`Unknown task type: ${item.type}`, { module: 'TaskQueue' })
       return { skipped: true, reason: `Unknown type: ${item.type}` }
