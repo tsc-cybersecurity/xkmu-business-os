@@ -9,7 +9,7 @@ import { eq, and, count, sql } from 'drizzle-orm'
 // lazy via `await import(...)` erst nach Existenz-Check — spart bei Warm-Starts
 // das TS-Parsing von ~6000+ Zeilen Seed-Daten.
 import { DEFAULT_ROLE_PERMISSIONS, MODULES } from '../types/permissions'
-import { DEFAULT_TEMPLATES } from '../services/ai-prompt-template.defaults'
+import { DEFAULT_TEMPLATES, TRIGGER_INFO } from '../services/ai-prompt-template.defaults'
 import { logger } from '@/lib/utils/logger'
 const adminEmail = process.env.SEED_ADMIN_EMAIL
 const adminPassword = process.env.SEED_ADMIN_PASSWORD
@@ -489,10 +489,33 @@ async function seedBlogPosts(db: ReturnType<typeof drizzle>, authorId: string) {
 // ============================================
 const AI_PROMPT_TEMPLATE_SLUGS = Object.keys(DEFAULT_TEMPLATES)
 
+function resolveTriggerInfo(slug: string): string | null {
+  if (TRIGGER_INFO[slug]) return TRIGGER_INFO[slug]
+  if (slug.startsWith('company_')) {
+    return `Firmen-Detail-Page (/intern/contacts/companies/[id]) → KI-Aktion "${slug}". Generiert kontextuelle Inhalte (Email, Notiz, Skript, Analyse) basierend auf Firmen-Stammdaten.`
+  }
+  return null
+}
+
 async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>) {
   const [{ total }] = await db.select({ total: count() }).from(aiPromptTemplates)
   if (Number(total) > 0) {
-    logger.info('AI prompt templates already exist, skipping...')
+    // Backfill: trigger_info fuer existing rows wo es noch fehlt.
+    // Wichtig fuer DBs die vor diesem Patch geseedet wurden.
+    let updated = 0
+    for (const slug of AI_PROMPT_TEMPLATE_SLUGS) {
+      const trigger = resolveTriggerInfo(slug)
+      if (!trigger) continue
+      const result = await db.execute(sql`
+        UPDATE ai_prompt_templates
+        SET trigger_info = ${trigger}, updated_at = NOW()
+        WHERE slug = ${slug}
+          AND (trigger_info IS NULL OR trigger_info = '')
+      `)
+      // result.rowCount ist treiber-spezifisch; wir loggen nur Gesamtzahl
+      if (result) updated++
+    }
+    logger.info(`AI prompt templates: backfilled trigger_info for ${updated} slugs (existing rows checked)`)
     return 0
   }
 
@@ -505,6 +528,7 @@ async function seedAiPromptTemplates(db: ReturnType<typeof drizzle>) {
       systemPrompt: defaults.systemPrompt,
       userPrompt: defaults.userPrompt,
       outputFormat: defaults.outputFormat,
+      triggerInfo: resolveTriggerInfo(slug),
       isActive: true,
     })
     created++
@@ -1142,6 +1166,12 @@ async function seedCheck() {
     } else {
       logger.info('SOP catalog already exists, skipping...')
     }
+  }
+
+  // 17. Seed News-Modul (3 Topics inaktiv + 3 Prompt-Templates)
+  {
+    const { seedNewsModule } = await import('./seeds/news-seed')
+    await seedNewsModule()
   }
 
   logger.info('Seed check completed!', { module: 'SeedCheck' })
