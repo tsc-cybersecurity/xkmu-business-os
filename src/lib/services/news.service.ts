@@ -2,7 +2,7 @@ import { createHash } from 'crypto'
 import { db } from '@/lib/db'
 import { newsTopics, newsItems } from '@/lib/db/schema'
 import { eq, and, desc, asc, inArray } from 'drizzle-orm'
-import type { NewsTopic, NewNewsTopic, NewsItem } from '@/lib/db/schema'
+import type { NewsTopic, NewNewsTopic, NewsItem, NewNewsItem } from '@/lib/db/schema'
 
 export interface CreateTopicInput {
   name: string
@@ -101,6 +101,13 @@ export const NewsService = {
       .where(eq(newsItems.id, id))
       .returning({ id: newsItems.id })
     return result.length > 0
+  },
+
+  async updateItem(id: string, data: Partial<NewNewsItem>): Promise<void> {
+    await db
+      .update(newsItems)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(newsItems.id, id))
   },
 
   async listAllForDashboard(opts?: { hidden?: boolean }): Promise<{ topic: NewsTopic; items: NewsItem[] }[]> {

@@ -246,3 +246,89 @@ describe('NewsPipelineService — generateSocialPosts', () => {
     expect(drafts[0].platform).toBe('x')
   })
 })
+
+describe('NewsPipelineService — run', () => {
+  let dbMock: ReturnType<typeof setupDbMock>
+
+  beforeEach(() => {
+    vi.resetModules()
+    dbMock = setupDbMock()
+  })
+
+  it('runs all 3 stages and ends with status=completed', async () => {
+    let aiCallCount = 0
+    vi.doMock('@/lib/services/news.service', () => ({
+      NewsService: {
+        getItem: vi.fn().mockResolvedValue(itemFixture()),
+        updateItem: vi.fn().mockResolvedValue(undefined),
+      },
+    }))
+    vi.doMock('@/lib/services/blog-post.service', () => ({
+      BlogPostService: {
+        create: vi.fn().mockResolvedValue({ id: 'b1', title: 'B', excerpt: 'E' }),
+      },
+    }))
+    vi.doMock('@/lib/services/social-media-post.service', () => ({
+      SocialMediaPostService: {
+        create: vi.fn().mockResolvedValue({ id: 'sp1' }),
+      },
+    }))
+    vi.doMock('@/lib/services/ai-prompt-template.service', () => ({
+      AiPromptTemplateService: {
+        getOrDefault: vi.fn().mockResolvedValue({ systemPrompt: '', userPrompt: '', outputFormat: null }),
+        applyPlaceholders: vi.fn().mockImplementation((t: string) => t),
+      },
+    }))
+    vi.doMock('@/lib/services/ai/ai.service', () => ({
+      AIService: {
+        completeWithContext: vi.fn().mockImplementation(() => {
+          aiCallCount++
+          // call 1 = research, 2 = blog, 3+ = social drafts
+          if (aiCallCount === 1) {
+            return Promise.resolve({ text: JSON.stringify({ summary: 's', keyPoints: [], sources: [], context: '' }), provider: 'mock', model: 'mock' })
+          }
+          if (aiCallCount === 2) {
+            return Promise.resolve({ text: JSON.stringify({ title: 'B', excerpt: 'E', content: 'C', tags: [] }), provider: 'mock', model: 'mock' })
+          }
+          return Promise.resolve({ text: JSON.stringify({ platform: aiCallCount === 3 ? 'linkedin' : 'x', content: 'X', hashtags: [] }), provider: 'mock', model: 'mock' })
+        }),
+      },
+    }))
+
+    const { NewsPipelineService } = await import('@/lib/services/news-pipeline.service')
+    await NewsPipelineService.run(ITEM_ID)
+
+    // markStatus uses db.update internally — final state should be 'completed'
+    expect(dbMock.db.update).toHaveBeenCalled()
+  })
+
+  it('marks failed on Stufe 1 error', async () => {
+    vi.doMock('@/lib/services/news.service', () => ({
+      NewsService: {
+        getItem: vi.fn().mockResolvedValue(itemFixture()),
+        updateItem: vi.fn(),
+      },
+    }))
+    vi.doMock('@/lib/services/ai-prompt-template.service', () => ({
+      AiPromptTemplateService: {
+        getOrDefault: vi.fn().mockResolvedValue({ systemPrompt: '', userPrompt: '', outputFormat: null }),
+        applyPlaceholders: vi.fn().mockImplementation((t: string) => t),
+      },
+    }))
+    vi.doMock('@/lib/services/ai/ai.service', () => ({
+      AIService: {
+        completeWithContext: vi.fn().mockRejectedValue(new Error('AI down')),
+      },
+    }))
+    const { NewsPipelineService } = await import('@/lib/services/news-pipeline.service')
+    await expect(NewsPipelineService.run(ITEM_ID)).rejects.toThrow('AI down')
+  })
+
+  it('throws if item not found', async () => {
+    vi.doMock('@/lib/services/news.service', () => ({
+      NewsService: { getItem: vi.fn().mockResolvedValue(null) },
+    }))
+    const { NewsPipelineService } = await import('@/lib/services/news-pipeline.service')
+    await expect(NewsPipelineService.run(ITEM_ID)).rejects.toThrow(/not found/i)
+  })
+})

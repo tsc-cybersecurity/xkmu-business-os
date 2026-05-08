@@ -161,4 +161,64 @@ export const NewsPipelineService = {
     }
     return drafts
   },
+
+  async run(newsItemId: string): Promise<void> {
+    const { NewsService } = await import('@/lib/services/news.service')
+    const { BlogPostService } = await import('@/lib/services/blog-post.service')
+    const { SocialMediaPostService } = await import('@/lib/services/social-media-post.service')
+
+    const item = await NewsService.getItem(newsItemId)
+    if (!item) throw new Error(`news item not found: ${newsItemId}`)
+
+    try {
+      // Stufe 1
+      await this.markStatus(newsItemId, 'researching')
+      const research = await this.deepResearch(item)
+      await NewsService.updateItem(newsItemId, { researchData: research as never })
+
+      // Stufe 2
+      await this.markStatus(newsItemId, 'generating')
+      const blogDraft = await this.generateBlogPost(item, research)
+      const blogPost = await BlogPostService.create({
+        title: blogDraft.title,
+        excerpt: blogDraft.excerpt,
+        content: blogDraft.content,
+        seoTitle: blogDraft.seoTitle,
+        seoDescription: blogDraft.seoDescription,
+        tags: blogDraft.tags,
+        status: 'draft',
+        source: 'news',
+        sourceNewsItemId: newsItemId,
+      })
+
+      // Stufe 3
+      const socialDrafts = await this.generateSocialPosts(item, research, {
+        id: blogPost.id,
+        title: blogPost.title,
+        excerpt: blogPost.excerpt,
+      })
+      const socialErrors: string[] = []
+      for (const draft of socialDrafts) {
+        try {
+          await SocialMediaPostService.create({
+            platform: draft.platform,
+            content: draft.content,
+            title: draft.title,
+            hashtags: draft.hashtags,
+            status: 'draft',
+            aiGenerated: true,
+            sourceNewsItemId: newsItemId,
+          })
+        } catch (e) {
+          socialErrors.push(`${draft.platform}: ${e instanceof Error ? e.message : String(e)}`)
+        }
+      }
+
+      await this.markStatus(newsItemId, 'completed', socialErrors.length ? socialErrors.join('; ') : null)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      await this.markStatus(newsItemId, 'failed', msg)
+      throw err
+    }
+  },
 }
