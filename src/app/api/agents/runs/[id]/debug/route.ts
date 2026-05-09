@@ -79,23 +79,23 @@ async function runDebugHandler(params: Promise<{ id: string }>) {
     [] as Array<typeof agentSteps.$inferSelect>,
   )
 
-  // 3) Tasks — bei leerem stepIds-Array OHNE ANY-Branch (sonst SQL-Fehler)
+  // 3) Tasks — Drizzle-Template-Param fuer Array-Cast funktioniert nicht
+  // (serialisiert zu '($1, $2)::uuid[]' statt 'ARRAY[$1, $2]::uuid[]').
+  // Loesung: per IN (...) mit sql.join, das produziert valides SQL.
   const stepIds = steps.map((s) => s.id)
   const tasks = await safe('tasks-lookup', async () => {
-    const query = stepIds.length > 0
-      ? sql`SELECT id, type, status, error, result, payload, reference_type, reference_id,
-                   created_at, scheduled_for, executed_at, completed_at
-            FROM task_queue
-            WHERE reference_id = ${runId}
-               OR reference_id = ANY(${stepIds}::uuid[])
-               OR payload->>'runId' = ${runId}
-            ORDER BY created_at DESC LIMIT 50`
-      : sql`SELECT id, type, status, error, result, payload, reference_type, reference_id,
-                   created_at, scheduled_for, executed_at, completed_at
-            FROM task_queue
-            WHERE reference_id = ${runId}
-               OR payload->>'runId' = ${runId}
-            ORDER BY created_at DESC LIMIT 50`
+    const stepIdInClause = stepIds.length > 0
+      ? sql`OR reference_id IN (${sql.join(stepIds.map((id) => sql`${id}::uuid`), sql`, `)})`
+      : sql``
+    const query = sql`
+      SELECT id, type, status, error, result, payload, reference_type, reference_id,
+             created_at, scheduled_for, executed_at, completed_at
+      FROM task_queue
+      WHERE reference_id = ${runId}
+         ${stepIdInClause}
+         OR payload->>'runId' = ${runId}
+      ORDER BY created_at DESC LIMIT 50
+    `
     return (await db.execute(query)) as unknown as Array<{
       id: string; type: string; status: string; error: string | null;
       result: Record<string, unknown> | null; payload: Record<string, unknown> | null;
