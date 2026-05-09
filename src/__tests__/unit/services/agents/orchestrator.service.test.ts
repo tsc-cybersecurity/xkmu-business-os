@@ -21,7 +21,7 @@ vi.mock('@/lib/db/schema', () => ({
   taskQueue: { id: 'id', type: 'type', status: 'status', referenceType: 'referenceType', referenceId: 'referenceId' },
 }))
 vi.mock('@/lib/services/ai', () => ({
-  AIService: { complete: aiCompleteMock },
+  AIService: { complete: aiCompleteMock, completeWithContext: aiCompleteMock },
 }))
 vi.mock('@/lib/services/agents/tool-registry', () => ({
   ToolRegistry: {

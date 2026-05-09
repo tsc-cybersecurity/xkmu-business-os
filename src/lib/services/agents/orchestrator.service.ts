@@ -31,12 +31,18 @@ async function callLLM(systemPrompt: string, userPrompt: string, model: string, 
   const { AIService } = await import('@/lib/services/ai')
   const { CostTrackerService } = await import('./cost-tracker.service')
 
-  const response = await AIService.complete(userPrompt, {
-    systemPrompt,
-    model,
-    temperature: 0.2,
-    maxTokens: 2048,
-  })
+  // completeWithContext nutzt DB-Provider zuerst (mit Logging via aiRequestLogs)
+  // und faellt auf static Provider zurueck wenn keine konfiguriert sind.
+  const response = await AIService.completeWithContext(
+    userPrompt,
+    { feature: costContext.callRole, entityType: 'agent_run', entityId: costContext.runId },
+    {
+      systemPrompt,
+      model,
+      temperature: 0.2,
+      maxTokens: 2048,
+    },
+  )
 
   await CostTrackerService.record({
     runId: costContext.runId,

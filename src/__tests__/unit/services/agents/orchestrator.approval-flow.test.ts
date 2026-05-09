@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const aiCompleteMock = vi.fn()
-vi.mock('@/lib/services/ai', () => ({ AIService: { complete: aiCompleteMock } }))
+vi.mock('@/lib/services/ai', () => ({ AIService: { complete: aiCompleteMock, completeWithContext: aiCompleteMock } }))
 vi.mock('@/lib/services/agents/cost-tracker.service', () => ({
   CostTrackerService: {
     checkBudget: vi.fn().mockResolvedValue({ exceeded: false, spentCents: 0, budgetCents: null, spentTokens: 0, budgetTokens: null }),
