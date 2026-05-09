@@ -68,6 +68,20 @@ export const OrchestratorService = {
       throw new Error(`Goal ${goalId} nicht gefunden`)
     }
 
+    // Budget-Check: bei exceeded -> Goal paused, kein LLM-Call
+    const { CostTrackerService } = await import('./cost-tracker.service')
+    const budget = await CostTrackerService.checkBudget(goalId)
+    if (budget.exceeded) {
+      const { logAgentEvent } = await import('./recovery/activity-log')
+      await db.update(agentGoals).set({ status: 'paused', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+      await logAgentEvent({
+        action: 'agent.budget.exceeded',
+        goalId,
+        detail: `plan() abgebrochen: ${budget.reason} (${budget.spentTokens}/${budget.budgetTokens ?? '∞'} tokens, ${budget.spentCents}/${budget.budgetCents ?? '∞'} cents)`,
+      })
+      throw new Error(`Goal ${goalId} budget exceeded vor plan(): ${budget.reason}`)
+    }
+
     // Goal-Status auf 'planning'
     await db.update(agentGoals).set({ status: 'planning', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
 
@@ -163,6 +177,21 @@ export const OrchestratorService = {
       .where(eq(agentGoals.id, run.goalId))
       .limit(1)
     if (!goal) throw new Error(`Goal ${run.goalId} nicht gefunden`)
+
+    // Budget-Check: bei exceeded -> Goal paused, kein LLM-Call
+    const { CostTrackerService } = await import('./cost-tracker.service')
+    const budget = await CostTrackerService.checkBudget(run.goalId)
+    if (budget.exceeded) {
+      const { logAgentEvent } = await import('./recovery/activity-log')
+      await db.update(agentGoals).set({ status: 'paused', updatedAt: sql`now()` }).where(eq(agentGoals.id, run.goalId))
+      await logAgentEvent({
+        action: 'agent.budget.exceeded',
+        goalId: run.goalId,
+        runId,
+        detail: `replan() abgebrochen: ${budget.reason}`,
+      })
+      return { action: 'pause', reason: `Budget exceeded: ${budget.reason}` }
+    }
 
     // Pruefe ob alle Steps terminal sind ODER ob noch pending/running existieren
     const allSteps = await db
