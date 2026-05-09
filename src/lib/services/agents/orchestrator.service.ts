@@ -6,8 +6,8 @@
 
 import type { ExecutionMode, PlannedStep } from './types'
 import { InitialPlanSchema, type InitialPlan } from './orchestrator/plan-types'
-import { PLAN_SYSTEM_PROMPT, REPLAN_SYSTEM_PROMPT, ORCHESTRATOR_DEFAULT_MODEL_PLAN, ORCHESTRATOR_DEFAULT_MODEL_REPLAN } from './orchestrator/prompts'
 import { parseOrchestratorJson } from './orchestrator/json-parser'
+import { SystemPromptService } from './system-prompt.service'
 
 export interface ReplanDecision {
   action: 'continue' | 'goal_complete' | 'pause' | 'fail'
@@ -95,8 +95,9 @@ export const OrchestratorService = {
     const toolList = await buildToolListPrompt()
     const userPrompt = `GOAL:\n  Titel: ${goal.title}\n  Beschreibung: ${goal.description ?? '(keine)'}\n\nVERFUEGBARE TOOLS:\n${toolList}\n\nErstelle den Plan als JSON.`
 
-    // LLM-Call
-    const rawText = await callLLM(PLAN_SYSTEM_PROMPT, userPrompt, ORCHESTRATOR_DEFAULT_MODEL_PLAN, {
+    // LLM-Call (System-Prompt + Modell aus DB via SystemPromptService)
+    const planPrompt = await SystemPromptService.get('orchestrator-plan')
+    const rawText = await callLLM(planPrompt.systemPrompt, userPrompt, planPrompt.modelHint ?? 'gemini-2.5-flash', {
       runId: run.id,
       goalId,
       callRole: 'orchestrator_plan',
@@ -245,7 +246,8 @@ export const OrchestratorService = {
 
     const userPrompt = `GOAL:\n  Titel: ${goal.title}\n  Beschreibung: ${goal.description ?? '(keine)'}\n\nRUN-STATE:\n${compactedHistory || '(keine Steps)'}\n\nVERFUEGBARE TOOLS:\n${toolList}\n\nWelche Aktion?`
 
-    const rawText = await callLLM(REPLAN_SYSTEM_PROMPT, userPrompt, ORCHESTRATOR_DEFAULT_MODEL_REPLAN, {
+    const replanPrompt = await SystemPromptService.get('orchestrator-replan')
+    const rawText = await callLLM(replanPrompt.systemPrompt, userPrompt, replanPrompt.modelHint ?? 'gemini-2.5-flash-lite', {
       runId,
       goalId: run.goalId,
       callRole: 'orchestrator_replan',

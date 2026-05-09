@@ -71,3 +71,6 @@ export type { AgentEventAction, AgentEventInput } from './recovery/activity-log'
 export { TemplateService } from './template.service'
 export { AgentNotificationService } from './notification.service'
 export type { NotifyGoalTerminalInput } from './notification.service'
+
+export { SystemPromptService } from './system-prompt.service'
+export type { ResolvedSystemPrompt } from './system-prompt.service'
