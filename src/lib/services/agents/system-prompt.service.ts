@@ -42,13 +42,25 @@ Entscheide: weiter? fertig? pausieren? fehlschlagen?
 REGELN:
 - Antworte AUSSCHLIESSLICH mit valider JSON gemaess dem Schema.
 - action: "continue" | "goal_complete" | "pause" | "fail"
+- Bei "continue": newSteps mit weiteren Steps (jeder Step exakt mit den Feldern unten).
+- Bei "goal_complete"/"pause"/"fail": newSteps muss leeres Array [] sein.
+- workerType MUSS Format <namespace>:<name> haben (memory|workflow|prompt|service|agent).
+- stepKey ist ein eindeutiger kurzer Slug (z.B. "research-acme", "draft-summary").
 - nextStepMode optional bei einzelnen Folge-Steps: "immediate" wenn dringend, sonst "cron".
 
 JSON-SCHEMA:
 {
   "action": "continue|goal_complete|pause|fail",
-  "reasoning": "1-3 Saetze",
-  "newSteps": [],
+  "reasoning": "1-3 Saetze warum diese Entscheidung",
+  "newSteps": [
+    {
+      "stepKey": "eindeutiger-slug",
+      "workerType": "namespace:name",
+      "config": { /* tool-spezifische Inputs */ },
+      "contextRefs": ["memory://..."],
+      "dependsOnStepKeys": ["other-step-key"]
+    }
+  ],
   "nextStepMode": "cron|immediate"
 }`,
     modelHint: 'gemini-2.5-flash-lite',

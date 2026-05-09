@@ -69,3 +69,5 @@ temp/
 
 # Agent-Memory transient run-logs (Phase 2+, auto-purge nach 30 Tagen)
 /data/agent-memory/_runs/
+pnpm-lock.yaml
+pnpm-workspace.yaml
