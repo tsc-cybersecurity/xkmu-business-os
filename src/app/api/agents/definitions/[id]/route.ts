@@ -54,6 +54,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .set({ ...update, updatedAt: sql`now()` })
     .where(eq(agentDefinitions.id, id))
 
+  // Caches invalidieren damit naechster Plan/Replan/Smart-Worker-Run die neuen Werte sieht
+  const { SystemPromptService } = await import('@/lib/services/agents/system-prompt.service')
+  SystemPromptService._resetCache()
+  const { _resetAgentDefinitionCache } = await import('@/lib/services/agents/smart-worker/agent-definition-loader')
+  _resetAgentDefinitionCache()
+
   return NextResponse.json({ ok: true })
 }
 
@@ -71,6 +77,11 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     .update(agentDefinitions)
     .set({ isActive: false, updatedAt: sql`now()` })
     .where(eq(agentDefinitions.id, id))
+
+  const { SystemPromptService } = await import('@/lib/services/agents/system-prompt.service')
+  SystemPromptService._resetCache()
+  const { _resetAgentDefinitionCache } = await import('@/lib/services/agents/smart-worker/agent-definition-loader')
+  _resetAgentDefinitionCache()
 
   return NextResponse.json({ ok: true })
 }

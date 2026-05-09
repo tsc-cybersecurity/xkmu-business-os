@@ -112,4 +112,8 @@ export const MIGRATIONS: Migration[] = [
     name: '023_agent_cost_events_index.sql',
     description: 'Agent-System Phase 8: Performance-Index auf agent_cost_events.occurred_at DESC',
   },
+  {
+    name: '024_agent_system_prompts_seed.sql',
+    description: 'Agent-System: Orchestrator-Plan/Replan + Smart-Worker-Loop-Suffix als DB-Eintrage',
+  },
 ]

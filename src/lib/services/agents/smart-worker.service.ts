@@ -13,7 +13,7 @@
 
 import { IterationOutputSchema, type IterationOutput } from './smart-worker/iteration-types'
 import { filterToolsByWhitelist, matchesWhitelist } from './smart-worker/tool-filter'
-import { SMART_WORKER_LOOP_SUFFIX, SMART_WORKER_DEFAULT_MODEL } from './smart-worker/system-prompt'
+import { SystemPromptService } from './system-prompt.service'
 
 export interface SmartWorkerInput {
   definitionSlug: string
@@ -65,8 +65,10 @@ export const SmartWorkerService = {
       ? '(keine Tools verfuegbar)'
       : allowedTools.map((t) => `- ${t.ref.raw}: ${t.description}`).join('\n')
 
-    const systemPrompt = `${definition.systemPrompt}\n\n${SMART_WORKER_LOOP_SUFFIX}`
-    const model = definition.modelHint ?? SMART_WORKER_DEFAULT_MODEL
+    // Loop-Suffix + Default-Modell aus DB via SystemPromptService
+    const loopSuffixPrompt = await SystemPromptService.get('smart-worker-loop-suffix')
+    const systemPrompt = `${definition.systemPrompt}\n\n${loopSuffixPrompt.systemPrompt}`
+    const model = definition.modelHint ?? loopSuffixPrompt.modelHint ?? 'gemini-2.5-flash-lite'
     const history: HistoryEntry[] = []
     let totalInputTokens = 0
     let totalOutputTokens = 0
