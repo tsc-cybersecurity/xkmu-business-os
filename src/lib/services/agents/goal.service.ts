@@ -147,6 +147,69 @@ export const GoalService = {
     })
   },
 
+  async approve(goalId: string): Promise<{ runId: string; queuedSteps: number }> {
+    const { db } = await import('@/lib/db')
+    const { agentGoals, agentRuns, agentSteps, taskQueue } = await import('@/lib/db/schema')
+    const { eq, and, sql, desc } = await import('drizzle-orm')
+    const { logAgentEvent } = await import('./recovery/activity-log')
+
+    const [goal] = await db.select({ status: agentGoals.status }).from(agentGoals).where(eq(agentGoals.id, goalId)).limit(1)
+    if (!goal) throw new Error(`Goal ${goalId} nicht gefunden`)
+    if (goal.status !== 'awaiting_approval') {
+      throw new Error(`approve() nur fuer awaiting_approval Goals (aktuell: ${goal.status})`)
+    }
+
+    // Letzten Run finden
+    const [run] = await db
+      .select({ id: agentRuns.id })
+      .from(agentRuns)
+      .where(eq(agentRuns.goalId, goalId))
+      .orderBy(desc(agentRuns.createdAt))
+      .limit(1)
+    if (!run) throw new Error(`Kein Run fuer Goal ${goalId} gefunden`)
+
+    // Ready Steps queuen (dependsOnStepKeys leer)
+    const readySteps = await db
+      .select({ id: agentSteps.id, dependsOnStepKeys: agentSteps.dependsOnStepKeys })
+      .from(agentSteps)
+      .where(and(eq(agentSteps.runId, run.id), eq(agentSteps.status, 'pending')))
+
+    let queued = 0
+    for (const s of readySteps) {
+      const deps = (s.dependsOnStepKeys as string[]) ?? []
+      if (deps.length > 0) continue
+      await db.insert(taskQueue).values({
+        type: 'agent_step_run',
+        status: 'pending',
+        priority: 2,
+        payload: { stepId: s.id, runId: run.id, goalId },
+        referenceType: 'agent_step',
+        referenceId: s.id,
+      })
+      queued += 1
+    }
+
+    await db.update(agentGoals).set({ status: 'running', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+    await logAgentEvent({ action: 'agent.run.recovered', goalId, runId: run.id, detail: `Plan freigegeben, ${queued} Step(s) gequeued` })
+    return { runId: run.id, queuedSteps: queued }
+  },
+
+  async reject(goalId: string): Promise<void> {
+    const { db } = await import('@/lib/db')
+    const { agentGoals } = await import('@/lib/db/schema')
+    const { eq, sql } = await import('drizzle-orm')
+    const { logAgentEvent } = await import('./recovery/activity-log')
+
+    const [goal] = await db.select({ status: agentGoals.status }).from(agentGoals).where(eq(agentGoals.id, goalId)).limit(1)
+    if (!goal) throw new Error(`Goal ${goalId} nicht gefunden`)
+    if (goal.status !== 'awaiting_approval') {
+      throw new Error(`reject() nur fuer awaiting_approval Goals (aktuell: ${goal.status})`)
+    }
+
+    await db.update(agentGoals).set({ status: 'cancelled', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+    await logAgentEvent({ action: 'agent.goal.cancel_cleanup', goalId, detail: 'Plan abgelehnt' })
+  },
+
   async list(limit = 50): Promise<GoalListItem[]> {
     const { db } = await import('@/lib/db')
     const { agentGoals } = await import('@/lib/db/schema')

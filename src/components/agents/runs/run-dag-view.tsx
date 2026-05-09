@@ -9,6 +9,8 @@
  */
 'use client'
 
+import { useMemo } from 'react'
+
 // ─── Typen ───────────────────────────────────────────────────────────────────
 
 export interface DagStep {
@@ -133,7 +135,7 @@ interface RunDagViewProps {
 }
 
 export function RunDagView({ steps }: RunDagViewProps) {
-  const nodes = computeDagLayout(steps)
+  const nodes = useMemo(() => computeDagLayout(steps), [steps])
 
   if (nodes.length === 0) {
     return <p className="text-sm text-muted-foreground">Keine Steps vorhanden.</p>

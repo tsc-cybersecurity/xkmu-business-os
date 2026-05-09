@@ -3979,6 +3979,32 @@ export const agentDefinitions = pgTable('agent_definitions', {
 export type AgentDefinition = typeof agentDefinitions.$inferSelect
 export type NewAgentDefinition = typeof agentDefinitions.$inferInsert
 
+export const agentGoalTemplates = pgTable('agent_goal_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  name: varchar('name', { length: 200 }).notNull(),
+  description: text('description'),
+  /** Mustache-aehnliche Template-Strings, {{varname}}-Platzhalter */
+  titleTemplate: text('title_template').notNull(),
+  descriptionTemplate: text('description_template'),
+  /** Liste der erforderlichen Variablen (z.B. ['firmenName']) */
+  requiredVariables: text('required_variables').array().default(sql`ARRAY[]::text[]`).notNull(),
+  defaultBudgetCents: integer('default_budget_cents'),
+  defaultBudgetTokens: integer('default_budget_tokens'),
+  defaultExecutionMode: varchar('default_execution_mode', { length: 20 }).default('cron').notNull(),
+  defaultPriority: integer('default_priority').default(2).notNull(),
+  defaultRequirePlanApproval: boolean('default_require_plan_approval').default(false).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_goal_templates_slug_active').on(table.slug, table.isActive),
+])
+
+export type AgentGoalTemplate = typeof agentGoalTemplates.$inferSelect
+export type NewAgentGoalTemplate = typeof agentGoalTemplates.$inferInsert
+
 export const agentMemoryEntries = pgTable('agent_memory_entries', {
   id: uuid('id').primaryKey().defaultRandom(),
   para: varchar('para', { length: 20 }).notNull(),

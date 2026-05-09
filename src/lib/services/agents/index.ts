@@ -67,3 +67,7 @@ export type { ContinuationPath, ContinuationResult } from './recovery/continuati
 export type { BootRecoveryResult } from './recovery/boot-recovery'
 export type { ReconcileResult } from './recovery/reconcile.service'
 export type { AgentEventAction, AgentEventInput } from './recovery/activity-log'
+
+export { TemplateService } from './template.service'
+export { AgentNotificationService } from './notification.service'
+export type { NotifyGoalTerminalInput } from './notification.service'

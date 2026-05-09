@@ -19,8 +19,9 @@ const logAgentEventMock = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/lib/services/agents/recovery/activity-log', () => ({ logAgentEvent: logAgentEventMock }))
 vi.mock('@/lib/db/schema', () => ({
   agentGoals: { id: 'id', status: 'status', executionMode: 'executionMode', createdAt: 'createdAt' },
-  agentRuns: { id: 'id', goalId: 'goalId', status: 'status' },
-  agentSteps: { id: 'id', runId: 'runId', status: 'status' },
+  agentRuns: { id: 'id', goalId: 'goalId', status: 'status', createdAt: 'createdAt' },
+  agentSteps: { id: 'id', runId: 'runId', status: 'status', dependsOnStepKeys: 'dependsOnStepKeys' },
+  taskQueue: { id: 'id' },
 }))
 vi.mock('@/lib/services/agents/orchestrator.service', () => ({
   OrchestratorService: { plan: planMock },
@@ -151,5 +152,38 @@ describe('GoalService', () => {
     expect(logAgentEventMock).toHaveBeenCalledWith(
       expect.objectContaining({ action: 'agent.goal.cancel_cleanup', goalId: 'g1' }),
     )
+  })
+
+  it('approve() queued ready Steps + Goal auf running', async () => {
+    // goal-Lookup
+    selectLimitMock.mockResolvedValueOnce([{ id: 'g1', status: 'awaiting_approval' }])
+    // latestRun via orderBy().limit()
+    selectLimitMock.mockResolvedValueOnce([{ id: 'run-1' }])
+    // readySteps — direkt awaited (kein .limit()), via mockResolvedValueOnce auf selectWhereMock
+    selectWhereMock
+      .mockReturnValueOnce({ limit: selectLimitMock, orderBy: vi.fn().mockResolvedValue([]) })                          // goal-Lookup chain
+      .mockReturnValueOnce({ limit: selectLimitMock, orderBy: vi.fn().mockReturnValue({ limit: selectLimitMock }) })    // latestRun chain
+      .mockResolvedValueOnce([{ id: 's1', dependsOnStepKeys: [] }] as never)                                            // readySteps direct
+
+    const { GoalService } = await import('@/lib/services/agents/goal.service')
+    const r = await GoalService.approve('g1')
+    expect(r.queuedSteps).toBe(1)
+    expect(updateSetMock).toHaveBeenCalled()
+    const lastUpdate = updateSetMock.mock.calls[updateSetMock.mock.calls.length - 1]?.[0] as Record<string, unknown>
+    expect(lastUpdate.status).toBe('running')
+  })
+
+  it('reject() setzt Goal auf cancelled', async () => {
+    selectLimitMock.mockResolvedValueOnce([{ id: 'g1', status: 'awaiting_approval' }])
+    const { GoalService } = await import('@/lib/services/agents/goal.service')
+    await GoalService.reject('g1')
+    const args = updateSetMock.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(args.status).toBe('cancelled')
+  })
+
+  it('approve() wirft wenn Goal nicht awaiting_approval', async () => {
+    selectLimitMock.mockResolvedValueOnce([{ id: 'g1', status: 'running' }])
+    const { GoalService } = await import('@/lib/services/agents/goal.service')
+    await expect(GoalService.approve('g1')).rejects.toThrow(/awaiting_approval/)
   })
 })
