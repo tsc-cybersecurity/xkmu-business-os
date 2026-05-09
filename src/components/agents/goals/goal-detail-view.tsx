@@ -137,6 +137,32 @@ export function GoalDetailView({ goalId }: { goalId: string }) {
         </CardContent>
       </Card>
 
+      {data.goal.status === 'awaiting_approval' && (
+        <Card className="border-yellow-500">
+          <CardHeader>
+            <CardTitle>Plan-Freigabe erforderlich</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Der Plan wurde erstellt und wartet auf deine Freigabe. Pruefe die Steps unten und entscheide:
+            </p>
+            <div className="flex gap-2">
+              <Button onClick={async () => {
+                const r = await fetch(`/api/agents/goals/${data.goal.id}/approve`, { method: 'POST' })
+                if (r.ok) { toast.success('Plan freigegeben'); window.location.reload() }
+                else toast.error(`Fehler: ${await r.text()}`)
+              }}>Plan freigeben</Button>
+              <Button variant="destructive" onClick={async () => {
+                if (!confirm('Plan wirklich ablehnen? Goal wird abgebrochen.')) return
+                const r = await fetch(`/api/agents/goals/${data.goal.id}/reject`, { method: 'POST' })
+                if (r.ok) { toast.success('Plan abgelehnt'); window.location.reload() }
+                else toast.error(`Fehler: ${await r.text()}`)
+              }}>Ablehnen</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader><CardTitle className="text-base">Steps</CardTitle></CardHeader>
         <CardContent>

@@ -52,13 +52,13 @@ describe('OrchestratorService.plan() Approval-Flow', () => {
     await OrchestratorService.plan('g1')
 
     // Goal-Updates: status=planning, danach status=awaiting_approval (NICHT running)
-    const updateCalls = updateSetMock.mock.calls.map((c) => c[0] as Record<string, unknown>)
-    const lastGoalUpdate = updateCalls[updateCalls.length - 1]
+    const updateCalls = updateSetMock.mock.calls.map((c) => (c as unknown[])[0] as Record<string, unknown>)
+    const lastGoalUpdate = updateCalls[updateCalls.length - 1] as Record<string, unknown>
     expect(lastGoalUpdate.status).toBe('awaiting_approval')
 
     // KEIN task_queue-Insert mit type=agent_step_run
     const taskQueueInserts = insertValuesMock.mock.calls.filter((c) => {
-      const v = c[0] as Record<string, unknown>
+      const v = (c as unknown[])[0] as Record<string, unknown>
       return v.type === 'agent_step_run'
     })
     expect(taskQueueInserts).toHaveLength(0)
@@ -78,8 +78,8 @@ describe('OrchestratorService.plan() Approval-Flow', () => {
     const { OrchestratorService } = await import('@/lib/services/agents/orchestrator.service')
     await OrchestratorService.plan('g1')
 
-    const updateCalls = updateSetMock.mock.calls.map((c) => c[0] as Record<string, unknown>)
-    const lastGoalUpdate = updateCalls[updateCalls.length - 1]
-    expect(lastGoalUpdate.status).toBe('running')
+    const updateCalls2 = updateSetMock.mock.calls.map((c) => (c as unknown[])[0] as Record<string, unknown>)
+    const lastGoalUpdate2 = updateCalls2[updateCalls2.length - 1] as Record<string, unknown>
+    expect(lastGoalUpdate2.status).toBe('running')
   })
 })

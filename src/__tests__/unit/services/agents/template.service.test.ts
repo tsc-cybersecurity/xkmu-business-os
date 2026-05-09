@@ -20,7 +20,7 @@ describe('TemplateService.list', () => {
     const orderBy = vi.fn().mockResolvedValue([
       { id: 't1', slug: 'firma-recherchieren', name: 'Firma recherchieren', isActive: true },
     ])
-    selectWhereMock.mockReturnValueOnce({ orderBy })
+    selectWhereMock.mockReturnValueOnce({ orderBy, limit: selectLimitMock })
     const { TemplateService } = await import('@/lib/services/agents/template.service')
     const r = await TemplateService.list()
     expect(r).toHaveLength(1)

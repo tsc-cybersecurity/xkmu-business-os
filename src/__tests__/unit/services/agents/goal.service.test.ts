@@ -161,9 +161,9 @@ describe('GoalService', () => {
     selectLimitMock.mockResolvedValueOnce([{ id: 'run-1' }])
     // readySteps — direkt awaited (kein .limit()), via mockResolvedValueOnce auf selectWhereMock
     selectWhereMock
-      .mockReturnValueOnce({ limit: selectLimitMock, orderBy: vi.fn().mockResolvedValue([]) })  // goal-Lookup chain
-      .mockReturnValueOnce({ orderBy: vi.fn().mockReturnValue({ limit: selectLimitMock }) })     // latestRun chain
-      .mockResolvedValueOnce([{ id: 's1', dependsOnStepKeys: [] }] as never)                    // readySteps direct
+      .mockReturnValueOnce({ limit: selectLimitMock, orderBy: vi.fn().mockResolvedValue([]) })                          // goal-Lookup chain
+      .mockReturnValueOnce({ limit: selectLimitMock, orderBy: vi.fn().mockReturnValue({ limit: selectLimitMock }) })    // latestRun chain
+      .mockResolvedValueOnce([{ id: 's1', dependsOnStepKeys: [] }] as never)                                            // readySteps direct
 
     const { GoalService } = await import('@/lib/services/agents/goal.service')
     const r = await GoalService.approve('g1')
