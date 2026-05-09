@@ -115,6 +115,7 @@ export const GoalService = {
     const { db } = await import('@/lib/db')
     const { agentGoals } = await import('@/lib/db/schema')
     const { eq, sql } = await import('drizzle-orm')
+    const { logAgentEvent } = await import('./recovery/activity-log')
 
     const [goal] = await db.select({ status: agentGoals.status }).from(agentGoals).where(eq(agentGoals.id, goalId)).limit(1)
     if (!goal) throw new Error(`Goal ${goalId} nicht gefunden`)
@@ -122,7 +123,28 @@ export const GoalService = {
       throw new Error(`Goal ${goalId} bereits terminal (status=${goal.status})`)
     }
 
+    // Goal auf cancelled
     await db.update(agentGoals).set({ status: 'cancelled', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+
+    // Pending Tasks aller Runs des Goals abraeumen — verhindert Geister-Steps nach Cancel.
+    const cleanup = await db.execute(sql`
+      UPDATE task_queue
+      SET status='cancelled', error='goal cancelled by user', completed_at=NOW()
+      WHERE status='pending'
+        AND type IN ('agent_step_run','agent_replan','agent_continuation')
+        AND (
+          reference_id IN (SELECT id FROM agent_runs WHERE goal_id=${goalId})
+          OR reference_id IN (SELECT id FROM agent_steps WHERE goal_id=${goalId})
+        )
+      RETURNING id
+    `) as unknown as Array<{ id: string }>
+
+    await logAgentEvent({
+      action: 'agent.goal.cancel_cleanup',
+      goalId,
+      detail: `${cleanup.length} pending Task(s) abgeraeumt`,
+      metadata: { cleanedTaskCount: cleanup.length },
+    })
   },
 
   async list(limit = 50): Promise<GoalListItem[]> {
