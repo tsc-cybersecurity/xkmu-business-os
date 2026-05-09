@@ -39,17 +39,28 @@ export async function handleContinuation(runId: string): Promise<ContinuationRes
   }
 
   // Step + Task-Snapshot via raw SQL (JOIN ueber Step + Task-Status)
+  // Wir holen dependsOnStepKeys + goalId mit damit Pfad 1a (orphan-pending-Step
+  // mit erfuellten Deps) ohne zweite Query auskommt — das ist auch testfreundlich.
   const stepRows = (await db.execute(sql`
-    SELECT s.id AS "stepId", s.status AS "stepStatus", s.updated_at AS "stepUpdatedAt",
+    SELECT s.id AS "stepId", s.step_key AS "stepKey", s.status AS "stepStatus",
+           s.updated_at AS "stepUpdatedAt",
+           s.depends_on_step_keys AS "dependsOnStepKeys", s.goal_id AS "goalId",
            tq.status AS "taskStatus"
     FROM agent_steps s
     LEFT JOIN task_queue tq
       ON tq.reference_id = s.id AND tq.type = 'agent_step_run'
       AND tq.status IN ('pending','running')
     WHERE s.run_id = ${runId}
-      AND s.status IN ('pending','running')
     ORDER BY s.created_at DESC
-  `)) as unknown as Array<{ stepId: string; stepStatus: 'pending' | 'running'; stepUpdatedAt: Date | string; taskStatus: string | null }>
+  `)) as unknown as Array<{
+    stepId: string
+    stepKey: string
+    stepStatus: 'pending' | 'running' | 'succeeded' | 'failed' | 'skipped'
+    stepUpdatedAt: Date | string
+    dependsOnStepKeys: string[] | null
+    goalId: string
+    taskStatus: string | null
+  }>
 
   const replanOpen = (await db.execute(sql`
     SELECT id FROM task_queue
@@ -63,6 +74,41 @@ export async function handleContinuation(runId: string): Promise<ContinuationRes
   const queueBoundPending = stepRows.find((r) => r.stepStatus === 'pending' && r.taskStatus !== null)
   if (queueBoundPending) {
     return { runId, path: 'queue_bound_ok' }
+  }
+
+  // Pfad 1a: pending Step OHNE Task aber alle deps erfuellt -> Task nachreichen.
+  // Entsteht z.B. wenn der Generic-Processor frueher "Unknown type" markiert
+  // hat oder wenn ein Task-Insert in der Plan-Phase verschwunden ist.
+  const succeededStepKeys = new Set(
+    stepRows.filter((r) => r.stepStatus === 'succeeded').map((r) => r.stepKey),
+  )
+  const orphanedPending = stepRows.filter((r) => {
+    if (r.stepStatus !== 'pending' || r.taskStatus !== null) return false
+    const deps = (r.dependsOnStepKeys as string[] | null) ?? []
+    return deps.every((depKey) => succeededStepKeys.has(depKey))
+  })
+  if (orphanedPending.length > 0) {
+    let queued = 0
+    const queuedIds: string[] = []
+    for (const orphan of orphanedPending) {
+      await db.insert(taskQueue).values({
+        type: 'agent_step_run',
+        status: 'pending',
+        priority: 1,
+        payload: { stepId: orphan.stepId, runId, goalId: orphan.goalId },
+        referenceType: 'agent_step',
+        referenceId: orphan.stepId,
+      } as never)
+      queued += 1
+      queuedIds.push(orphan.stepId)
+    }
+    await logAgentEvent({
+      action: 'agent.run.recovered',
+      runId,
+      goalId: run.goalId,
+      detail: `${queued} verwaiste pending Step(s) wieder gequeued: ${queuedIds.join(', ')}`,
+    })
+    return { runId, path: 'replan_missing', detail: `Pfad-1a: ${queued} orphan-Step(s) re-queued` }
   }
 
   // Pfad 2: running Step ohne Update seit > 10 min -> stranded executing
@@ -97,8 +143,9 @@ export async function handleContinuation(runId: string): Promise<ContinuationRes
     return { runId, path: 'running_step_stalled', detail: errMsg }
   }
 
-  // Pfad 3: keine offenen Steps + kein offener replan-Task -> replan queuen
-  if (stepRows.length === 0 && replanOpen.length === 0) {
+  // Pfad 3: keine offenen (pending/running) Steps + kein offener replan-Task -> replan queuen
+  const openStepCount = stepRows.filter((r) => r.stepStatus === 'pending' || r.stepStatus === 'running').length
+  if (openStepCount === 0 && replanOpen.length === 0) {
     await db
       .insert(taskQueue)
       .values({
@@ -120,9 +167,9 @@ export async function handleContinuation(runId: string): Promise<ContinuationRes
 
   // Pfad 4: nichts findet einen Pfad -> Goal paused, Activity-Log
   const detail =
-    stepRows.length > 0
-      ? `Pfad-4: Steps existieren in unklarem Zustand (n=${stepRows.length}), Replan-offen=${replanOpen.length > 0}`
-      : `Pfad-4: keine Steps offen aber Replan-Task laeuft seit langer Zeit (n=${replanOpen.length})`
+    openStepCount > 0
+      ? `Pfad-4: Steps existieren in unklarem Zustand (n=${openStepCount}), Replan-offen=${replanOpen.length > 0}`
+      : `Pfad-4: keine offenen Steps, Replan-Task laeuft seit langer Zeit (n=${replanOpen.length})`
 
   await db
     .update(agentGoals)
