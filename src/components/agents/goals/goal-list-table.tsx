@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { toast } from 'sonner'
 
 interface GoalRow {
   id: string
@@ -64,7 +66,28 @@ export function GoalListTable() {
                 {new Date(g.createdAt).toLocaleString('de-DE')} · Prio {g.priority} · {(g.spentCents / 100).toFixed(2)} EUR
               </div>
             </div>
-            <Badge variant={STATUS_COLORS[g.status] ?? 'outline'}>{g.status}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={STATUS_COLORS[g.status] ?? 'outline'}>{g.status}</Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:bg-destructive/10"
+                onClick={async (e) => {
+                  e.preventDefault()
+                  if (!confirm(`Goal "${g.title}" wirklich loeschen?\n\nLoescht auch alle Runs/Steps/Cost-Events. Nicht reversibel.`)) return
+                  try {
+                    const r = await fetch(`/api/agents/goals/${g.id}`, { method: 'DELETE' })
+                    if (!r.ok) throw new Error(await r.text())
+                    setGoals((prev) => prev.filter((x) => x.id !== g.id))
+                    toast.success('Goal geloescht')
+                  } catch (err) {
+                    toast.error((err as Error).message)
+                  }
+                }}
+              >
+                Loeschen
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}
