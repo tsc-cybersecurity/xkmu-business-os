@@ -118,11 +118,35 @@ export function GoalDetailView({ goalId }: { goalId: string }) {
             <span>Spent: {(goal.spentCents / 100).toFixed(2)} EUR / {goal.spentTokens.toLocaleString('de-DE')} tokens</span>
             {goal.budgetCents != null && <span>· Budget: {(goal.budgetCents / 100).toFixed(2)} EUR</span>}
           </div>
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-2 mt-3 flex-wrap">
             {canStart && <Button size="sm" onClick={() => action('start')} disabled={acting}>Starten</Button>}
             {canPause && <Button size="sm" variant="secondary" onClick={() => action('pause')} disabled={acting}>Pausieren</Button>}
             {canResume && <Button size="sm" onClick={() => action('resume')} disabled={acting}>Fortsetzen</Button>}
             {canCancel && <Button size="sm" variant="destructive" onClick={() => action('cancel')} disabled={acting}>Abbrechen</Button>}
+            <Button size="sm" variant="outline" onClick={async () => {
+              const newTitle = prompt('Neuer Titel:', data.goal.title)
+              if (newTitle === null) return
+              const newDescription = prompt('Neue Beschreibung (leer = unveraendert):', data.goal.description ?? '')
+              if (newDescription === null) return
+              const newBudgetCentsRaw = prompt('Budget in Cent (leer = unveraendert, "0" = unbegrenzt):', String(data.goal.budgetCents ?? ''))
+              if (newBudgetCentsRaw === null) return
+              const body: Record<string, unknown> = { action: 'update', title: newTitle.trim() }
+              if (newDescription.trim() !== (data.goal.description ?? '')) body.description = newDescription
+              if (newBudgetCentsRaw.trim() !== '') body.budgetCents = newBudgetCentsRaw === '0' ? null : Number(newBudgetCentsRaw)
+              try {
+                const r = await fetch(`/api/agents/goals/${goalId}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+                if (!r.ok) throw new Error(await r.text())
+                toast.success('Goal aktualisiert'); window.location.reload()
+              } catch (e) { toast.error((e as Error).message) }
+            }} disabled={acting}>Bearbeiten</Button>
+            <Button size="sm" variant="destructive" onClick={async () => {
+              if (!confirm(`Goal "${data.goal.title}" wirklich loeschen?\n\nLoescht auch alle Runs/Steps/Cost-Events. Nicht reversibel.`)) return
+              try {
+                const r = await fetch(`/api/agents/goals/${goalId}`, { method: 'DELETE' })
+                if (!r.ok) throw new Error(await r.text())
+                toast.success('Goal geloescht'); window.location.href = '/intern/agents/goals'
+              } catch (e) { toast.error((e as Error).message) }
+            }} disabled={acting}>Loeschen</Button>
           </div>
           {data.latestRunId && (
             <div className="mt-3">

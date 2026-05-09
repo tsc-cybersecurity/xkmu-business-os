@@ -162,9 +162,34 @@ export function DefinitionForm({ initial }: { initial?: Initial }) {
               />
             </div>
           </div>
-          <Button type="submit" disabled={saving}>
-            {saving ? 'Speichere...' : 'Speichern'}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Speichere...' : 'Speichern'}
+            </Button>
+            {isEdit && (
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={saving}
+                onClick={async () => {
+                  if (!confirm(`Definition "${initial!.slug}" wirklich loeschen?\n\nSoft-Delete via isActive=false — historische Step-Refs bleiben erhalten.`)) return
+                  setSaving(true)
+                  try {
+                    const r = await fetch(`/api/agents/definitions/${initial!.id}`, { method: 'DELETE' })
+                    if (!r.ok) throw new Error(await r.text())
+                    toast.success('Definition geloescht (deaktiviert)')
+                    router.push('/intern/agents/definitions')
+                  } catch (e) {
+                    toast.error(`Fehler: ${(e as Error).message}`)
+                  } finally {
+                    setSaving(false)
+                  }
+                }}
+              >
+                Loeschen
+              </Button>
+            )}
+          </div>
         </form>
       </CardContent>
     </Card>
