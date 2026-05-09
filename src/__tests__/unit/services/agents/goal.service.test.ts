@@ -11,8 +11,12 @@ const selectWhereMock = vi.fn((..._args: any[]) => ({ limit: selectLimitMock, or
 const selectOrderByMock = vi.fn().mockResolvedValue([])
 const selectFromMock = vi.fn((..._args: any[]) => ({ where: selectWhereMock, orderBy: selectOrderByMock }))
 const selectMock = vi.fn((..._args: any[]) => ({ from: selectFromMock }))
+const dbExecuteMock = vi.fn().mockResolvedValue([])
 
-vi.mock('@/lib/db', () => ({ db: { insert: insertMock, update: updateMock, select: selectMock } }))
+vi.mock('@/lib/db', () => ({ db: { insert: insertMock, update: updateMock, select: selectMock, execute: dbExecuteMock } }))
+
+const logAgentEventMock = vi.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/services/agents/recovery/activity-log', () => ({ logAgentEvent: logAgentEventMock }))
 vi.mock('@/lib/db/schema', () => ({
   agentGoals: { id: 'id', status: 'status', executionMode: 'executionMode', createdAt: 'createdAt' },
   agentRuns: { id: 'id', goalId: 'goalId', status: 'status' },
@@ -126,5 +130,26 @@ describe('GoalService', () => {
     expect(runImmediateMock).not.toHaveBeenCalled()
     expect(r.runId).toBe('run-2')
     expect(r.immediate).toBeUndefined()
+  })
+
+  it('cancel() raeumt offene agent_step_run/agent_replan-Tasks der laufenden Runs ab', async () => {
+    selectLimitMock.mockResolvedValueOnce([{ id: 'g1', status: 'running' }])
+    dbExecuteMock.mockResolvedValueOnce([{ id: 'tq-1' }, { id: 'tq-2' }])
+
+    const { GoalService } = await import('@/lib/services/agents/goal.service')
+    await GoalService.cancel('g1')
+
+    // Goal-Update muss aufgerufen worden sein
+    expect(updateMock).toHaveBeenCalled()
+    const args = updateSetMock.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(args.status).toBe('cancelled')
+
+    // db.execute fuer Cleanup muss aufgerufen worden sein
+    expect(dbExecuteMock).toHaveBeenCalled()
+
+    // Audit-Event muss geschrieben worden sein
+    expect(logAgentEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'agent.goal.cancel_cleanup', goalId: 'g1' }),
+    )
   })
 })
