@@ -2144,6 +2144,72 @@ git commit -m "feat(agents): /intern/agents Dashboard (Aktive Goals + Cost-Spark
 
 ---
 
+### Task 11a: Sidebar-Eintrag `Agents`
+
+Bisher sind alle Agent-Pages nur via direkter URL erreichbar — kein Eintrag in `src/components/layout/sidebar.tsx`. Wir fuegen einen Top-Level-Eintrag mit Subitems analog zu `Intelligence`/`CRM`/`CMS` hinzu, ohne `requiredModule`-Gate (alle berechtigten User sehen es sofort).
+
+**Files:**
+- Modify: `src/components/layout/sidebar.tsx`
+
+- [ ] **Step 1: Lies sidebar.tsx (Zeilen 1-130 reichen)**
+
+Identifiziere zwei Stellen:
+- Lucide-Icon-Imports am Anfang
+- `navigation: NavItem[]`-Array — neuer Eintrag nach dem `Intelligence`-Block (~Zeile 117)
+
+- [ ] **Step 2: Icon-Import**
+
+Im Lucide-Import-Block (~Zeile 6-28) `Bot` ergaenzen. Beispiel:
+
+```ts
+import { LayoutDashboard,
+  Building2,
+  Settings,
+  Shield,
+  Globe,
+  ChevronLeft,
+  ChevronRight,
+  Brain,
+  Bot,                          // NEU
+  Monitor,
+  ...
+```
+
+- [ ] **Step 3: Navigation-Item**
+
+Nach dem `Intelligence`-Block neuen Eintrag einfuegen:
+
+```ts
+  // ── Agents ──
+  {
+    name: 'Agents',
+    href: '/intern/agents',
+    icon: Bot,
+    children: [
+      { name: 'Dashboard', href: '/intern/agents' },
+      { name: 'Goals', href: '/intern/agents/goals' },
+      { name: 'Memory', href: '/intern/agents/memory' },
+      { name: 'Definitions', href: '/intern/agents/definitions' },
+      { name: 'Kosten', href: '/intern/agents/cost' },
+    ],
+  },
+```
+
+KEIN `requiredModule` — Sichtbarkeit ist hartkodiert. Spaetere Modul-Gates per separater Migration.
+
+- [ ] **Step 4: Manueller Browser-Check**
+
+`/intern/dashboard` aufrufen → in Sidebar `Agents` mit Bot-Icon zwischen `Intelligence` und `Cybersecurity` sichtbar, expandiert die 5 Subitems.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/components/layout/sidebar.tsx
+git commit -m "feat(agents): Sidebar-Eintrag Agents mit 5 Subitems"
+```
+
+---
+
 ### Task 11: Goal-Detail-View Link auf Run-Detail
 
 Die existierende `/intern/agents/goals/[id]`-Page zeigt heute Steps inline. Sie soll jetzt zusaetzlich einen Link auf `/intern/agents/runs/[latestRunId]` zeigen, damit User zum DAG kommen.
