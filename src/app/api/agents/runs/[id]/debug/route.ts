@@ -24,74 +24,130 @@ interface DebugIssue {
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    return await runDebugHandler(params)
+  } catch (e) {
+    // Letzter Schutz — wenn etwas Unerwartetes wirft, geben wir die Message
+    // zurueck damit der User im UI sieht was los ist (statt nackter HTTP 500).
+    const msg = (e as Error).message
+    return NextResponse.json({ debugFatalError: msg, stack: (e as Error).stack?.split('\n').slice(0, 5) }, { status: 500 })
+  }
+}
+
+async function runDebugHandler(params: Promise<{ id: string }>) {
   const session = await getSession()
   if (!session) return apiUnauthorized('Nicht autorisiert')
 
   const { id: runId } = await params
+  const errors: string[] = []
+
+  // Helper: jeden Sub-Block defensiv ausfuehren, Fehler in errors[] sammeln
+  // statt 500 zu werfen. So sieht der User im UI was klemmt.
+  async function safe<T>(label: string, fn: () => Promise<T>, fallback: T): Promise<T> {
+    try {
+      return await fn()
+    } catch (e) {
+      const msg = `${label}: ${(e as Error).message}`
+      errors.push(msg)
+      try {
+        const { logger } = await import('@/lib/utils/logger')
+        logger.error(`Debug-Endpoint: ${msg}`, e, { module: 'AgentDebug', runId })
+      } catch { /* noop */ }
+      return fallback
+    }
+  }
 
   const { db } = await import('@/lib/db')
-  const { agentRuns, agentGoals, agentSteps, agentCostEvents, taskQueue, aiProviders, auditLogs } = await import('@/lib/db/schema')
+  const { agentRuns, agentGoals, agentSteps, agentCostEvents, aiProviders, auditLogs } = await import('@/lib/db/schema')
   const { eq, asc, desc, sql, or, and } = await import('drizzle-orm')
 
   // 1) Run + Goal
-  const [run] = await db.select().from(agentRuns).where(eq(agentRuns.id, runId)).limit(1)
+  const run = await safe('run-lookup', async () => {
+    const [r] = await db.select().from(agentRuns).where(eq(agentRuns.id, runId)).limit(1)
+    return r ?? null
+  }, null as null | typeof agentRuns.$inferSelect)
   if (!run) return apiNotFound('Run nicht gefunden')
 
-  const [goal] = await db.select().from(agentGoals).where(eq(agentGoals.id, run.goalId)).limit(1)
+  const goal = await safe('goal-lookup', async () => {
+    const [g] = await db.select().from(agentGoals).where(eq(agentGoals.id, run.goalId)).limit(1)
+    return g ?? null
+  }, null as null | typeof agentGoals.$inferSelect)
 
   // 2) Steps
-  const steps = await db.select().from(agentSteps).where(eq(agentSteps.runId, runId)).orderBy(asc(agentSteps.createdAt))
+  const steps = await safe('steps-lookup', async () =>
+    await db.select().from(agentSteps).where(eq(agentSteps.runId, runId)).orderBy(asc(agentSteps.createdAt)),
+    [] as Array<typeof agentSteps.$inferSelect>,
+  )
 
-  // 3) Alle task_queue fuer diesen Run (referenceId = runId ODER stepId)
+  // 3) Tasks — bei leerem stepIds-Array OHNE ANY-Branch (sonst SQL-Fehler)
   const stepIds = steps.map((s) => s.id)
-  const tasks = (await db.execute(sql`
-    SELECT id, type, status, error, result, payload, reference_type, reference_id,
-           created_at, scheduled_for, executed_at, completed_at
-    FROM task_queue
-    WHERE reference_id = ${runId}
-       OR reference_id = ANY(${stepIds}::uuid[])
-       OR payload->>'runId' = ${runId}
-    ORDER BY created_at DESC
-    LIMIT 50
-  `)) as unknown as Array<{
+  const tasks = await safe('tasks-lookup', async () => {
+    const query = stepIds.length > 0
+      ? sql`SELECT id, type, status, error, result, payload, reference_type, reference_id,
+                   created_at, scheduled_for, executed_at, completed_at
+            FROM task_queue
+            WHERE reference_id = ${runId}
+               OR reference_id = ANY(${stepIds}::uuid[])
+               OR payload->>'runId' = ${runId}
+            ORDER BY created_at DESC LIMIT 50`
+      : sql`SELECT id, type, status, error, result, payload, reference_type, reference_id,
+                   created_at, scheduled_for, executed_at, completed_at
+            FROM task_queue
+            WHERE reference_id = ${runId}
+               OR payload->>'runId' = ${runId}
+            ORDER BY created_at DESC LIMIT 50`
+    return (await db.execute(query)) as unknown as Array<{
+      id: string; type: string; status: string; error: string | null;
+      result: Record<string, unknown> | null; payload: Record<string, unknown> | null;
+      reference_type: string | null; reference_id: string | null;
+      created_at: string; scheduled_for: string | null;
+      executed_at: string | null; completed_at: string | null;
+    }>
+  }, [] as Array<{
     id: string; type: string; status: string; error: string | null;
     result: Record<string, unknown> | null; payload: Record<string, unknown> | null;
     reference_type: string | null; reference_id: string | null;
     created_at: string; scheduled_for: string | null;
     executed_at: string | null; completed_at: string | null;
-  }>
+  }>)
 
   // 4) Cost-Events
-  const costEvents = await db.select().from(agentCostEvents).where(eq(agentCostEvents.runId, runId)).orderBy(asc(agentCostEvents.occurredAt))
+  const costEvents = await safe('cost-events-lookup', async () =>
+    await db.select().from(agentCostEvents).where(eq(agentCostEvents.runId, runId)).orderBy(asc(agentCostEvents.occurredAt)),
+    [] as Array<typeof agentCostEvents.$inferSelect>,
+  )
 
   // 5) Audit-Log-Events fuer diesen Run + Goal
-  const auditEvents = (await db
-    .select()
-    .from(auditLogs)
-    .where(or(
-      and(eq(auditLogs.entityType, 'agent_run'), eq(auditLogs.entityId, runId)),
-      and(eq(auditLogs.entityType, 'agent_goal'), eq(auditLogs.entityId, run.goalId)),
-    ))
-    .orderBy(desc(auditLogs.createdAt))
-    .limit(20)) as Array<{ id: string; action: string; entityType: string | null; entityId: string | null; payload: Record<string, unknown> | null; createdAt: Date }>
+  const auditEvents = await safe('audit-events-lookup', async () =>
+    (await db
+      .select()
+      .from(auditLogs)
+      .where(or(
+        and(eq(auditLogs.entityType, 'agent_run'), eq(auditLogs.entityId, runId)),
+        and(eq(auditLogs.entityType, 'agent_goal'), eq(auditLogs.entityId, run.goalId)),
+      ))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(20)) as Array<{ id: string; action: string; entityType: string | null; entityId: string | null; payload: Record<string, unknown> | null; createdAt: Date }>,
+    [] as Array<{ id: string; action: string; entityType: string | null; entityId: string | null; payload: Record<string, unknown> | null; createdAt: Date }>,
+  )
 
   // 6) Aktive AI-Provider
-  const activeProviders = (await db
-    .select({ id: aiProviders.id, name: aiProviders.name, providerType: aiProviders.providerType, model: aiProviders.model, isActive: aiProviders.isActive })
-    .from(aiProviders)
-    .where(eq(aiProviders.isActive, true))) as Array<{ id: string; name: string; providerType: string; model: string | null; isActive: boolean }>
+  const activeProviders = await safe('providers-lookup', async () =>
+    (await db
+      .select({ id: aiProviders.id, name: aiProviders.name, providerType: aiProviders.providerType, model: aiProviders.model, isActive: aiProviders.isActive })
+      .from(aiProviders)
+      .where(eq(aiProviders.isActive, true))) as Array<{ id: string; name: string; providerType: string; model: string | null; isActive: boolean }>,
+    [] as Array<{ id: string; name: string; providerType: string; model: string | null; isActive: boolean }>,
+  )
 
   // 7) Tool-Registry-Status
-  const { ToolRegistry } = await import('@/lib/services/agents/tool-registry')
-  const { initializeToolRegistry } = await import('@/lib/services/agents/tools/bootstrap')
-  initializeToolRegistry()
-  let registeredTools: Array<{ ref: string; description: string }> = []
-  try {
+  const registeredTools = await safe('tool-registry', async () => {
+    const { ToolRegistry } = await import('@/lib/services/agents/tool-registry')
+    const { initializeToolRegistry } = await import('@/lib/services/agents/tools/bootstrap')
+    initializeToolRegistry()
     const all = await ToolRegistry.listAll()
-    registeredTools = all.map((t) => ({ ref: t.ref.raw, description: t.description.slice(0, 200) }))
-  } catch (e) {
-    registeredTools = [{ ref: 'ERROR', description: (e as Error).message }]
-  }
+    return all.map((t) => ({ ref: t.ref.raw, description: t.description.slice(0, 200) }))
+  }, [] as Array<{ ref: string; description: string }>)
 
   // ─── Heuristik-Diagnostics ───
   const issues: DebugIssue[] = []
@@ -216,5 +272,6 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     activeProviders,
     registeredTools: { count: registeredTools.length, sample: registeredTools.slice(0, 30) },
     issues,
+    debugErrors: errors,
   })
 }

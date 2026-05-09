@@ -21,6 +21,7 @@ interface DebugData {
   activeProviders: Array<{ id: string; name: string; providerType: string; model: string | null }>
   registeredTools: { count: number; sample: Array<{ ref: string; description: string }> }
   issues: DebugIssue[]
+  debugErrors?: string[]
 }
 
 const SEVERITY_STYLE: Record<DebugIssue['severity'], string> = {
@@ -39,8 +40,13 @@ export function RunDebugPanel({ runId }: { runId: string }) {
     setError(null)
     try {
       const r = await fetch(`/api/agents/runs/${runId}/debug`)
-      if (!r.ok) throw new Error(`HTTP ${r.status}`)
-      setData(await r.json() as DebugData)
+      const body = await r.json().catch(() => null) as Partial<DebugData> & { debugFatalError?: string; stack?: string[] } | null
+      if (!r.ok) {
+        const fatal = body?.debugFatalError
+        const stack = body?.stack?.join('\n')
+        throw new Error(`HTTP ${r.status}${fatal ? ': ' + fatal : ''}${stack ? '\n\n' + stack : ''}`)
+      }
+      setData(body as DebugData)
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -50,7 +56,19 @@ export function RunDebugPanel({ runId }: { runId: string }) {
 
   useEffect(() => { void reload() }, [runId])
 
-  if (error) return <Card><CardContent className="text-destructive">Debug-Fehler: {error}</CardContent></Card>
+  if (error) {
+    return (
+      <Card>
+        <CardHeader><CardTitle>Debug-Panel — Fehler</CardTitle></CardHeader>
+        <CardContent>
+          <Button size="sm" variant="outline" onClick={reload} disabled={loading} className="mb-2">
+            {loading ? 'Lade ...' : 'Erneut versuchen'}
+          </Button>
+          <pre className="text-destructive text-xs whitespace-pre-wrap bg-muted p-3 rounded">{error}</pre>
+        </CardContent>
+      </Card>
+    )
+  }
   if (!data) return <Card><CardContent>Lade Debug-Daten ...</CardContent></Card>
 
   return (
@@ -61,6 +79,21 @@ export function RunDebugPanel({ runId }: { runId: string }) {
           {loading ? 'Lade ...' : 'Refresh'}
         </Button>
       </div>
+
+      {/* Debug-Errors (Sub-Block-Failures aus dem Endpoint selbst) */}
+      {data.debugErrors && data.debugErrors.length > 0 && (
+        <Card className="border-destructive">
+          <CardHeader><CardTitle>Debug-Endpoint-Fehler</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-2">
+              Folgende Sub-Queries sind fehlgeschlagen — die uebrigen Daten sind trotzdem geladen:
+            </p>
+            <ul className="text-xs space-y-1 text-destructive">
+              {data.debugErrors.map((e, i) => <li key={i}><code>{e}</code></li>)}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Issues */}
       {data.issues.length > 0 && (
