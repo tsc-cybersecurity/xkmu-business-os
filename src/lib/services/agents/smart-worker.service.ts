@@ -82,12 +82,18 @@ export const SmartWorkerService = {
     for (let iter = 1; iter <= definition.maxIterations; iter++) {
       const userPrompt = `AUFTRAG:\n${JSON.stringify(args.input, null, 2)}\n\nTOOLS:\n${toolListPrompt}\n\nBISHERIGER TOOL-USE:\n${buildHistoryBlock(history)}\n\nIteration ${iter}/${definition.maxIterations}. Antworte mit JSON.`
 
-      const response = await AIService.complete(userPrompt, {
-        systemPrompt,
-        model,
-        temperature: 0.2,
-        maxTokens: definition.maxTokensPerCall,
-      })
+      // completeWithContext nutzt DB-Provider zuerst (mit Logging) und faellt
+      // auf static Provider zurueck wenn keine konfiguriert sind.
+      const response = await AIService.completeWithContext(
+        userPrompt,
+        { feature: 'smart_worker', entityType: 'agent_step', entityId: args.stepId },
+        {
+          systemPrompt,
+          model,
+          temperature: 0.2,
+          maxTokens: definition.maxTokensPerCall,
+        },
+      )
 
       totalInputTokens += response.usage?.promptTokens ?? 0
       totalOutputTokens += response.usage?.completionTokens ?? 0

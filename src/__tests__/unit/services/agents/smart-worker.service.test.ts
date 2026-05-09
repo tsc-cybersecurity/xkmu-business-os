@@ -1,7 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Smart-Worker ruft jetzt completeWithContext (DB-Provider zuerst).
+// Tests greifen weiterhin auf AIService.complete als Mock-Target zu — wir
+// aliasen completeWithContext auf dieselbe vi.fn() damit existierende Test-
+// Mocks weiter funktionieren.
+const _aiMock = vi.fn()
 vi.mock('@/lib/services/ai', () => ({
-  AIService: { complete: vi.fn() },
+  AIService: { complete: _aiMock, completeWithContext: _aiMock },
 }))
 
 vi.mock('@/lib/services/agents/smart-worker/agent-definition-loader', () => ({

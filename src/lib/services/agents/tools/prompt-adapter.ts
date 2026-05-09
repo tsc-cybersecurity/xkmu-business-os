@@ -123,13 +123,19 @@ export const promptToolAdapter: ToolAdapter = {
       const renderedSystem = renderTemplate(row.systemPrompt, variables)
 
       const { AIService } = await import('@/lib/services/ai')
-      const response = await AIService.complete(renderedUser, {
-        systemPrompt: renderedSystem,
-        providerId: input.options?.providerId,
-        model: input.options?.model,
-        temperature: input.options?.temperature,
-        maxTokens: input.options?.maxTokens,
-      })
+      // completeWithContext nutzt DB-Provider zuerst (mit Logging) und faellt
+      // auf static Provider zurueck wenn keine konfiguriert sind.
+      const response = await AIService.completeWithContext(
+        renderedUser,
+        { feature: 'agent_prompt_tool', entityType: 'agent_step', entityId: invocation.context.stepId },
+        {
+          systemPrompt: renderedSystem,
+          providerId: input.options?.providerId,
+          model: input.options?.model,
+          temperature: input.options?.temperature,
+          maxTokens: input.options?.maxTokens,
+        },
+      )
 
       return {
         status: 'succeeded',

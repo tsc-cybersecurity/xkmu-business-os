@@ -11,7 +11,7 @@ vi.mock('@/lib/db/schema', () => ({
   customAiPrompts: { slug: 'slug', name: 'name', description: 'description', systemPrompt: 'systemPrompt', userPrompt: 'userPrompt', isActive: 'isActive' },
 }))
 vi.mock('@/lib/services/ai', () => ({
-  AIService: { complete: aiCompleteMock },
+  AIService: { complete: aiCompleteMock, completeWithContext: aiCompleteMock },
 }))
 
 function mockPromptListResponse(rows: Array<{ slug: string; name: string; description: string | null }>) {
@@ -75,10 +75,11 @@ describe('Prompt-Tool-Adapter', () => {
     })
     expect(r.status).toBe('succeeded')
     expect(aiCompleteMock).toHaveBeenCalledTimes(1)
+    // completeWithContext-Signatur: (prompt, context, options) — systemPrompt liegt in [2]
     const callArgs = aiCompleteMock.mock.calls[0]
     expect(callArgs[0]).toContain('Acme GmbH')
     expect(callArgs[0]).toContain('B2B')
-    expect(callArgs[1].systemPrompt).toContain('Recherche-Assistent')
+    expect(callArgs[2].systemPrompt).toContain('Recherche-Assistent')
     expect(r.output).toEqual({ text: 'Acme ist top.', provider: 'gemini', model: 'gemini-2.5-flash' })
     expect(r.usage).toEqual({
       inputTokens: 50,
