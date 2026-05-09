@@ -49,6 +49,11 @@ export function GoalDetailView({ goalId }: { goalId: string }) {
   const [data, setData] = useState<DetailData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [acting, setActing] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editBudget, setEditBudget] = useState('')
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
 
   async function load() {
     try {
@@ -123,31 +128,62 @@ export function GoalDetailView({ goalId }: { goalId: string }) {
             {canPause && <Button size="sm" variant="secondary" onClick={() => action('pause')} disabled={acting}>Pausieren</Button>}
             {canResume && <Button size="sm" onClick={() => action('resume')} disabled={acting}>Fortsetzen</Button>}
             {canCancel && <Button size="sm" variant="destructive" onClick={() => action('cancel')} disabled={acting}>Abbrechen</Button>}
-            <Button size="sm" variant="outline" onClick={async () => {
-              const newTitle = prompt('Neuer Titel:', data.goal.title)
-              if (newTitle === null) return
-              const newDescription = prompt('Neue Beschreibung (leer = unveraendert):', data.goal.description ?? '')
-              if (newDescription === null) return
-              const newBudgetCentsRaw = prompt('Budget in Cent (leer = unveraendert, "0" = unbegrenzt):', String(data.goal.budgetCents ?? ''))
-              if (newBudgetCentsRaw === null) return
-              const body: Record<string, unknown> = { action: 'update', title: newTitle.trim() }
-              if (newDescription.trim() !== (data.goal.description ?? '')) body.description = newDescription
-              if (newBudgetCentsRaw.trim() !== '') body.budgetCents = newBudgetCentsRaw === '0' ? null : Number(newBudgetCentsRaw)
-              try {
-                const r = await fetch(`/api/agents/goals/${goalId}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
-                if (!r.ok) throw new Error(await r.text())
-                toast.success('Goal aktualisiert'); window.location.reload()
-              } catch (e) { toast.error((e as Error).message) }
-            }} disabled={acting}>Bearbeiten</Button>
-            <Button size="sm" variant="destructive" onClick={async () => {
-              if (!confirm(`Goal "${data.goal.title}" wirklich loeschen?\n\nLoescht auch alle Runs/Steps/Cost-Events. Nicht reversibel.`)) return
-              try {
-                const r = await fetch(`/api/agents/goals/${goalId}`, { method: 'DELETE' })
-                if (!r.ok) throw new Error(await r.text())
-                toast.success('Goal geloescht'); window.location.href = '/intern/agents/goals'
-              } catch (e) { toast.error((e as Error).message) }
-            }} disabled={acting}>Loeschen</Button>
+            <Button size="sm" variant="outline" onClick={() => {
+              setEditTitle(data.goal.title)
+              setEditDescription(data.goal.description ?? '')
+              setEditBudget(data.goal.budgetCents !== null ? String(data.goal.budgetCents) : '')
+              setEditing(true)
+            }} disabled={acting || editing}>Bearbeiten</Button>
+            <Button size="sm" variant="destructive" onClick={() => setDeleteConfirm(true)} disabled={acting}>Loeschen</Button>
           </div>
+          {editing && (
+            <div className="mt-4 p-3 border rounded space-y-3 bg-muted/30">
+              <h3 className="font-medium">Goal bearbeiten</h3>
+              <div>
+                <label className="text-sm font-medium">Titel</label>
+                <input className="w-full border rounded p-2 text-sm" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Beschreibung</label>
+                <textarea className="w-full border rounded p-2 text-sm" rows={4} value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Budget in Cent (leer = unbegrenzt)</label>
+                <input type="number" className="w-full border rounded p-2 text-sm" value={editBudget} onChange={(e) => setEditBudget(e.target.value)} />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={async () => {
+                  setActing(true)
+                  try {
+                    const body: Record<string, unknown> = { action: 'update', title: editTitle.trim(), description: editDescription }
+                    body.budgetCents = editBudget.trim() === '' ? null : Number(editBudget)
+                    const r = await fetch(`/api/agents/goals/${goalId}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+                    if (!r.ok) throw new Error(await r.text())
+                    toast.success('Goal aktualisiert'); setEditing(false); await load()
+                  } catch (e) { toast.error((e as Error).message) } finally { setActing(false) }
+                }} disabled={acting || !editTitle.trim()}>Speichern</Button>
+                <Button size="sm" variant="outline" onClick={() => setEditing(false)} disabled={acting}>Abbrechen</Button>
+              </div>
+            </div>
+          )}
+          {deleteConfirm && (
+            <div className="mt-4 p-3 border-2 border-destructive rounded space-y-2 bg-destructive/5">
+              <p className="text-sm font-medium text-destructive">
+                Goal "{data.goal.title}" wirklich loeschen? Loescht auch alle Runs/Steps/Cost-Events. Nicht reversibel.
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="destructive" onClick={async () => {
+                  setActing(true)
+                  try {
+                    const r = await fetch(`/api/agents/goals/${goalId}`, { method: 'DELETE' })
+                    if (!r.ok) throw new Error(await r.text())
+                    toast.success('Goal geloescht'); window.location.href = '/intern/agents/goals'
+                  } catch (e) { toast.error((e as Error).message); setActing(false); setDeleteConfirm(false) }
+                }} disabled={acting}>Endgueltig loeschen</Button>
+                <Button size="sm" variant="outline" onClick={() => setDeleteConfirm(false)} disabled={acting}>Abbrechen</Button>
+              </div>
+            </div>
+          )}
           {data.latestRunId && (
             <div className="mt-3">
               <Link href={`/intern/agents/runs/${data.latestRunId}`} className="text-primary hover:underline text-sm">
