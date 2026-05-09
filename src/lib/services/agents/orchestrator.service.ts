@@ -276,6 +276,14 @@ export const OrchestratorService = {
         completedAt: sql`now()`,
         updatedAt: sql`now()`,
       }).where(eq(agentGoals.id, run.goalId))
+      const { AgentNotificationService } = await import('./notification.service')
+      void AgentNotificationService.notifyGoalTerminal({
+        goalId: run.goalId,
+        goalTitle: goal.title,
+        status: 'done',
+        summary: decision.reasoning,
+        runId,
+      })
       return { action: 'goal_complete', reason: decision.reasoning }
     }
 
@@ -292,6 +300,14 @@ export const OrchestratorService = {
         updatedAt: sql`now()`,
       }).where(eq(agentRuns.id, runId))
       await db.update(agentGoals).set({ status: 'failed', updatedAt: sql`now()` }).where(eq(agentGoals.id, run.goalId))
+      const { AgentNotificationService } = await import('./notification.service')
+      void AgentNotificationService.notifyGoalTerminal({
+        goalId: run.goalId,
+        goalTitle: goal.title,
+        status: 'failed',
+        summary: decision.reasoning,
+        runId,
+      })
       return { action: 'fail', reason: decision.reasoning }
     }
 
