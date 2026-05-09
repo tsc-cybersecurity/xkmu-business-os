@@ -1,15 +1,24 @@
+import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 interface Item { id: string; fact: string; status: string; source: string }
 
-export function MemoryEntryCard(props: { title: string | null; body: string; items: Item[] }) {
+export function MemoryEntryCard(props: { title: string | null; body: string; items: Item[]; scope?: string }) {
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>{props.title ?? 'Memory-Entry'}</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>{props.title ?? 'Memory-Entry'}</span>
+            {props.scope && (
+              <Link href={`/intern/agents/memory/${encodeURIComponent(props.scope)}/edit`}>
+                <Button size="sm" variant="outline">Bearbeiten</Button>
+              </Link>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <article className="prose prose-sm max-w-none dark:prose-invert">
