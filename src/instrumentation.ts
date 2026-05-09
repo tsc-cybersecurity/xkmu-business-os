@@ -49,6 +49,17 @@ export async function register() {
     logger.error('Auto-Migration Fehler (App startet trotzdem)', err, { module: 'Startup' })
   }
 
+  // Boot-Recovery: stranded Runs aus letztem Crash zur Cron-Lane uebergeben (Phase 6).
+  try {
+    const { recoverStrandedRunsOnBoot } = await import('@/lib/services/agents/recovery/boot-recovery')
+    const r = await recoverStrandedRunsOnBoot()
+    if (r.recovered > 0) {
+      logger.info(`Boot-Recovery hat ${r.recovered} stranded Run(s) zur Cron-Lane gegeben`, { module: 'Startup' })
+    }
+  } catch (e) {
+    logger.error('Boot-Recovery Fehler (App startet trotzdem)', e, { module: 'Startup' })
+  }
+
   // Agent-Memory-Watcher (Phase 2): startet chokidar fuer externe Edits.
   // HMR-Guard: nur einmal pro Prozess starten.
   const g = globalThis as unknown as { __xkmuMemoryWatcherStarted?: boolean }

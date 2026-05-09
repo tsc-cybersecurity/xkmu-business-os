@@ -58,3 +58,12 @@ export type {
 } from './orchestrator.service'
 
 export type { CreateGoalInput, GoalListItem } from './goal.service'
+
+export { reconcileStrandedRuns } from './recovery/reconcile.service'
+export { handleContinuation } from './recovery/continuation.service'
+export { recoverStrandedRunsOnBoot } from './recovery/boot-recovery'
+export { logAgentEvent } from './recovery/activity-log'
+export type { ContinuationPath, ContinuationResult } from './recovery/continuation.service'
+export type { BootRecoveryResult } from './recovery/boot-recovery'
+export type { ReconcileResult } from './recovery/reconcile.service'
+export type { AgentEventAction, AgentEventInput } from './recovery/activity-log'

@@ -118,13 +118,20 @@ async function processAgentTaskQueue(): Promise<void> {
             SET status='completed', result=${JSON.stringify(decision)}::jsonb
             WHERE id=${task.id}
           `)
-        } else {
-          // agent_continuation: Phase 6
+        } else if (task.type === 'agent_continuation') {
+          const runId = task.reference_id ?? (task.payload?.runId as string | undefined)
+          if (!runId) {
+            throw new Error('agent_continuation ohne runId in reference_id oder payload.runId')
+          }
+          const { handleContinuation } = await import('@/lib/services/agents/recovery/continuation.service')
+          const result = await handleContinuation(runId)
           await db.execute(sql`
             UPDATE task_queue
-            SET status='completed', result=${JSON.stringify({ skipped: 'phase>4 not yet implemented' })}::jsonb
+            SET status='completed', result=${JSON.stringify(result)}::jsonb
             WHERE id=${task.id}
           `)
+        } else {
+          throw new Error(`Unbekannter Agent-Task-Typ: ${task.type}`)
         }
       } catch (e) {
         const msg = (e as Error).message
@@ -141,10 +148,19 @@ async function processAgentTaskQueue(): Promise<void> {
 
 /**
  * Reconciliert stranded agent_runs (>10 min ohne Update).
- * Phase 1: no-op Skeleton. Implementation in Phase 6.
+ * Phase 6: Reconcile-Loop alle 5 min — findet stranded Runs und queued continuation-Tasks.
+ * Sliding-Window via tick-Counter wuerde extra State erfordern; einfacher:
+ * Spec sagt "alle 5 min" — wir laufen einfach jeden Tick (1 min). Die NOT EXISTS-Subquery
+ * verhindert Doppel-Inserts, also kostet das nur eine Selektor-Query pro Tick wenn nichts strandet.
  */
 async function reconcileStrandedRuns(): Promise<void> {
-  // Phase 1: bewusst leer.
+  try {
+    const { reconcileStrandedRuns: reconcile } = await import('@/lib/services/agents/recovery/reconcile.service')
+    await reconcile()
+  } catch (e) {
+    const { logger: log } = await import('@/lib/utils/logger')
+    log.error(`Reconcile-Loop-Fehler: ${(e as Error).message}`, e, { module: 'AgentRecovery' })
+  }
 }
 
 // ── Service ────────────────────────────────────────────────────────────────
