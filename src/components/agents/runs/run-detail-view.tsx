@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { RunDagView } from './run-dag-view'
 import { RunCostBreakdown } from './run-cost-breakdown'
 import { ManualTriggers } from './manual-triggers'
+import { RunDebugPanel } from './run-debug-panel'
 
 interface RunDetail {
   run: {
@@ -126,6 +127,8 @@ export function RunDetailView({ runId }: { runId: string }) {
       </Card>
 
       <RunCostBreakdown events={data.costEvents} />
+
+      <RunDebugPanel runId={data.run.id} />
 
       <Card>
         <CardHeader><CardTitle>Steps</CardTitle></CardHeader>
