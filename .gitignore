@@ -62,4 +62,10 @@ credentials.txt
 # (cred.txt, bug-reports, raw exports, etc. live here)
 temp/
 
+# Agent-Memory: PARA-Skelett tracken, Inhalte/Run-Logs nicht
+!/data/
+!/data/agent-memory/
+!/data/agent-memory/**/.gitkeep
 
+# Agent-Memory transient run-logs (Phase 2+, auto-purge nach 30 Tagen)
+/data/agent-memory/_runs/

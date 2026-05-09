@@ -19,6 +19,7 @@ import { pgTable,
   smallint,
   char,
   time,
+  vector,
   type AnyPgColumn,
 } from 'drizzle-orm/pg-core'
 import { relations, sql } from 'drizzle-orm'
@@ -2511,6 +2512,7 @@ export const taskQueue = pgTable('task_queue', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 }, (table) => [
+  index('idx_task_queue_type_status_scheduled').on(table.type, table.status, table.scheduledFor),
 ])
 
 export const taskQueueRelations = relations(taskQueue, ({ one }) => ({
@@ -3860,3 +3862,171 @@ export const appMeta = pgTable('app_meta', {
 
 export type AppMeta = typeof appMeta.$inferSelect
 export type NewAppMeta = typeof appMeta.$inferInsert
+
+// ============================================
+// Agents — Phase 1 (Schema only, no logic yet)
+// Spec: docs/superpowers/specs/2026-05-08-agent-system-design.md
+// ============================================
+
+export const agentGoals = pgTable('agent_goals', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 500 }).notNull(),
+  description: text('description'),
+  executionMode: varchar('execution_mode', { length: 20 }).default('cron').notNull(),
+  status: varchar('status', { length: 30 }).default('draft').notNull(),
+  budgetTokens: integer('budget_tokens'),
+  budgetCents: integer('budget_cents'),
+  spentTokens: integer('spent_tokens').default(0).notNull(),
+  spentCents: integer('spent_cents').default(0).notNull(),
+  priority: integer('priority').default(2).notNull(),
+  requirePlanApproval: boolean('require_plan_approval').default(false).notNull(),
+  createdByUserId: uuid('created_by_user_id').references(() => users.id),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_goals_status_priority').on(table.status, table.priority, table.createdAt),
+  index('idx_agent_goals_user_status').on(table.createdByUserId, table.status),
+])
+
+export type AgentGoal = typeof agentGoals.$inferSelect
+export type NewAgentGoal = typeof agentGoals.$inferInsert
+
+export const agentRuns = pgTable('agent_runs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  goalId: uuid('goal_id').notNull().references(() => agentGoals.id, { onDelete: 'cascade' }),
+  attempt: integer('attempt').default(1).notNull(),
+  status: varchar('status', { length: 30 }).default('planning').notNull(),
+  planJson: jsonb('plan_json'),
+  contextSnapshotJson: jsonb('context_snapshot_json'),
+  startedAt: timestamp('started_at', { withTimezone: true }).defaultNow().notNull(),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+  inputTokens: bigint('input_tokens', { mode: 'number' }).default(0).notNull(),
+  outputTokens: bigint('output_tokens', { mode: 'number' }).default(0).notNull(),
+  cachedInputTokens: bigint('cached_input_tokens', { mode: 'number' }).default(0).notNull(),
+  costCents: integer('cost_cents').default(0).notNull(),
+  livenessCheckedAt: timestamp('liveness_checked_at', { withTimezone: true }),
+  lastError: text('last_error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_runs_goal_status').on(table.goalId, table.status),
+  index('idx_agent_runs_status_liveness').on(table.status, table.livenessCheckedAt),
+])
+
+export const agentRunsRelations = relations(agentRuns, ({ one }) => ({
+  goal: one(agentGoals, { fields: [agentRuns.goalId], references: [agentGoals.id] }),
+}))
+
+export type AgentRun = typeof agentRuns.$inferSelect
+export type NewAgentRun = typeof agentRuns.$inferInsert
+
+export const agentSteps = pgTable('agent_steps', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  runId: uuid('run_id').notNull().references(() => agentRuns.id, { onDelete: 'cascade' }),
+  goalId: uuid('goal_id').notNull().references(() => agentGoals.id, { onDelete: 'cascade' }),
+  stepKey: varchar('step_key', { length: 200 }).notNull(),
+  workerType: varchar('worker_type', { length: 200 }).notNull(),
+  config: jsonb('config').default({}).notNull(),
+  contextRefs: jsonb('context_refs').default([]).notNull(),
+  dependsOnStepKeys: text('depends_on_step_keys').array().default(sql`ARRAY[]::text[]`).notNull(),
+  status: varchar('status', { length: 30 }).default('pending').notNull(),
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  finishedAt: timestamp('finished_at', { withTimezone: true }),
+  resultJson: jsonb('result_json'),
+  resultSummary: varchar('result_summary', { length: 500 }),
+  resultDocumentId: uuid('result_document_id'),
+  inputTokens: bigint('input_tokens', { mode: 'number' }).default(0).notNull(),
+  outputTokens: bigint('output_tokens', { mode: 'number' }).default(0).notNull(),
+  costCents: integer('cost_cents').default(0).notNull(),
+  error: text('error'),
+  taskQueueId: uuid('task_queue_id').references(() => taskQueue.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('uq_agent_steps_run_step_key').on(table.runId, table.stepKey),
+  index('idx_agent_steps_run_status').on(table.runId, table.status),
+  index('idx_agent_steps_status_taskqueue').on(table.status, table.taskQueueId),
+])
+
+export const agentStepsRelations = relations(agentSteps, ({ one }) => ({
+  run: one(agentRuns, { fields: [agentSteps.runId], references: [agentRuns.id] }),
+  goal: one(agentGoals, { fields: [agentSteps.goalId], references: [agentGoals.id] }),
+}))
+
+export type AgentStep = typeof agentSteps.$inferSelect
+export type NewAgentStep = typeof agentSteps.$inferInsert
+
+export const agentDefinitions = pgTable('agent_definitions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  role: varchar('role', { length: 30 }).notNull(),
+  name: varchar('name', { length: 200 }),
+  systemPrompt: text('system_prompt').notNull(),
+  allowedTools: text('allowed_tools').array().default(sql`ARRAY[]::text[]`).notNull(),
+  modelHint: varchar('model_hint', { length: 100 }),
+  maxTokensPerCall: integer('max_tokens_per_call').default(4096).notNull(),
+  maxIterations: integer('max_iterations').default(8).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_definitions_role_active').on(table.role, table.isActive),
+])
+
+export type AgentDefinition = typeof agentDefinitions.$inferSelect
+export type NewAgentDefinition = typeof agentDefinitions.$inferInsert
+
+export const agentMemoryEntries = pgTable('agent_memory_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  para: varchar('para', { length: 20 }).notNull(),
+  scope: varchar('scope', { length: 500 }).notNull(),
+  filePath: text('file_path').notNull(),
+  title: varchar('title', { length: 500 }),
+  summary: text('summary'),
+  tags: text('tags').array().default(sql`ARRAY[]::text[]`).notNull(),
+  contentHash: varchar('content_hash', { length: 64 }).notNull(),
+  contentTrgm: text('content_trgm'),
+  embedding: vector('embedding', { dimensions: 768 }),
+  sourceRunId: uuid('source_run_id').references(() => agentRuns.id, { onDelete: 'set null' }),
+  sourceStepId: uuid('source_step_id').references(() => agentSteps.id, { onDelete: 'set null' }),
+  sourceUserId: uuid('source_user_id').references(() => users.id, { onDelete: 'set null' }),
+  status: varchar('status', { length: 20 }).default('active').notNull(),
+  supersededByEntryId: uuid('superseded_by_entry_id').references((): AnyPgColumn => agentMemoryEntries.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('uq_agent_memory_entries_filepath').on(table.filePath),
+  index('idx_agent_memory_entries_scope_status').on(table.scope, table.status),
+  // GIN trgm-Index für FTS — als raw SQL via index().using(...)
+  index('idx_agent_memory_entries_trgm').using('gin', sql`${table.contentTrgm} gin_trgm_ops`),
+  // IVFFlat für Vector-Cosine
+  index('idx_agent_memory_entries_embedding').using('ivfflat', sql`${table.embedding} vector_cosine_ops`),
+])
+
+export type AgentMemoryEntry = typeof agentMemoryEntries.$inferSelect
+export type NewAgentMemoryEntry = typeof agentMemoryEntries.$inferInsert
+
+export const agentCostEvents = pgTable('agent_cost_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  runId: uuid('run_id').references(() => agentRuns.id, { onDelete: 'set null' }),
+  stepId: uuid('step_id').references(() => agentSteps.id, { onDelete: 'set null' }),
+  goalId: uuid('goal_id').references(() => agentGoals.id, { onDelete: 'set null' }),
+  provider: varchar('provider', { length: 50 }).notNull(),
+  model: varchar('model', { length: 100 }).notNull(),
+  callRole: varchar('call_role', { length: 50 }).notNull(),
+  inputTokens: integer('input_tokens').default(0).notNull(),
+  cachedInputTokens: integer('cached_input_tokens').default(0).notNull(),
+  outputTokens: integer('output_tokens').default(0).notNull(),
+  costCents: integer('cost_cents').notNull(),
+  occurredAt: timestamp('occurred_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_agent_cost_events_goal_occurred').on(table.goalId, table.occurredAt),
+  index('idx_agent_cost_events_run_occurred').on(table.runId, table.occurredAt),
+  index('idx_agent_cost_events_provider_occurred').on(table.provider, table.occurredAt),
+])
+
+export type AgentCostEvent = typeof agentCostEvents.$inferSelect
+export type NewAgentCostEvent = typeof agentCostEvents.$inferInsert

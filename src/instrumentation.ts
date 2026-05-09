@@ -49,6 +49,30 @@ export async function register() {
     logger.error('Auto-Migration Fehler (App startet trotzdem)', err, { module: 'Startup' })
   }
 
+  // Agent-Memory-Watcher (Phase 2): startet chokidar fuer externe Edits.
+  // HMR-Guard: nur einmal pro Prozess starten.
+  const g = globalThis as unknown as { __xkmuMemoryWatcherStarted?: boolean }
+  if (process.env.NODE_ENV !== 'test' && !g.__xkmuMemoryWatcherStarted) {
+    g.__xkmuMemoryWatcherStarted = true
+    try {
+      const { startMemoryWatcher } = await import('@/lib/services/agents/memory/watcher')
+      await startMemoryWatcher()
+    } catch (e) {
+      // Non-fatal — Memory-Suche funktioniert auch ohne Watcher
+      // eslint-disable-next-line no-console
+      console.warn('[instrumentation] MemoryWatcher konnte nicht gestartet werden:', (e as Error).message)
+    }
+  }
+
+  // Tool-Registry initialisieren (Phase 3)
+  try {
+    const { initializeToolRegistry } = await import('@/lib/services/agents/tools/bootstrap')
+    initializeToolRegistry()
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('[instrumentation] ToolRegistry konnte nicht initialisiert werden:', (e as Error).message)
+  }
+
   // Boot-time check: APPOINTMENT_TOKEN_SECRET. Soft-warn instead of hard-fail
   // — apps that don't use the booking feature should still boot.
   const apptSecret = process.env.APPOINTMENT_TOKEN_SECRET

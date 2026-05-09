@@ -54,6 +54,99 @@ function calculateNextRun(interval: string, dailyAt?: string | null): Date {
   return new Date(now.getTime() + ms)
 }
 
+/**
+ * Verarbeitet anstehende Agent-Tasks aus der task_queue.
+ * Phase 3: dispatcht agent_step_run-Tasks an WorkerService.executeStep.
+ * Atomic Claim via FOR UPDATE SKIP LOCKED — kein Doppelaufruf, parallel-safe.
+ * Spec: docs/superpowers/specs/2026-05-08-agent-system-design.md §6.4
+ */
+async function processAgentTaskQueue(): Promise<void> {
+  const { sql } = await import('drizzle-orm')
+  const { db } = await import('@/lib/db')
+  const { logger: log } = await import('@/lib/utils/logger')
+
+  // Atomic claim — bis zu 10 Tasks parallel
+  const claimResult = (await db.execute(sql`
+    UPDATE task_queue SET status='running', executed_at=NOW()
+    WHERE id IN (
+      SELECT id FROM task_queue
+      WHERE type IN ('agent_step_run', 'agent_replan', 'agent_continuation')
+        AND status='pending'
+        AND scheduled_for <= NOW()
+      ORDER BY priority ASC, scheduled_for ASC
+      LIMIT 10
+      FOR UPDATE SKIP LOCKED
+    )
+    RETURNING id, type, payload, reference_id
+  `)) as unknown as Array<{ id: string; type: string; payload: Record<string, unknown> | null; reference_id: string | null }>
+
+  if (claimResult.length === 0) return
+
+  const { WorkerService } = await import('@/lib/services/agents/worker.service')
+
+  await Promise.allSettled(
+    claimResult.map(async (task) => {
+      try {
+        if (task.type === 'agent_step_run') {
+          const stepId = task.reference_id ?? (task.payload?.stepId as string | undefined)
+          if (!stepId) {
+            throw new Error('agent_step_run ohne stepId in reference_id oder payload.stepId')
+          }
+          const result = await WorkerService.executeStep(stepId)
+          await db.execute(sql`
+            UPDATE task_queue
+            SET status='completed', result=${JSON.stringify(result)}::jsonb
+            WHERE id=${task.id}
+          `)
+          // Re-Plan triggern: nach jedem Step entscheidet Orchestrator weiter
+          const runId = (task.payload?.runId as string | undefined)
+          if (runId) {
+            await db.execute(sql`
+              INSERT INTO task_queue (type, status, priority, payload, reference_type, reference_id)
+              VALUES ('agent_replan', 'pending', 2, ${JSON.stringify({ runId })}::jsonb, 'agent_run', ${runId})
+            `)
+          }
+        } else if (task.type === 'agent_replan') {
+          const runId = task.reference_id ?? (task.payload?.runId as string | undefined)
+          if (!runId) {
+            throw new Error('agent_replan ohne runId in reference_id oder payload.runId')
+          }
+          const { OrchestratorService } = await import('@/lib/services/agents/orchestrator.service')
+          const decision = await OrchestratorService.replan(runId)
+          await db.execute(sql`
+            UPDATE task_queue
+            SET status='completed', result=${JSON.stringify(decision)}::jsonb
+            WHERE id=${task.id}
+          `)
+        } else {
+          // agent_continuation: Phase 6
+          await db.execute(sql`
+            UPDATE task_queue
+            SET status='completed', result=${JSON.stringify({ skipped: 'phase>4 not yet implemented' })}::jsonb
+            WHERE id=${task.id}
+          `)
+        }
+      } catch (e) {
+        const msg = (e as Error).message
+        log.error(`Agent task ${task.id} failed: ${msg}`, e, { module: 'AgentTickHandler' })
+        await db.execute(sql`
+          UPDATE task_queue
+          SET status='failed', error=${msg}
+          WHERE id=${task.id}
+        `)
+      }
+    }),
+  )
+}
+
+/**
+ * Reconciliert stranded agent_runs (>10 min ohne Update).
+ * Phase 1: no-op Skeleton. Implementation in Phase 6.
+ */
+async function reconcileStrandedRuns(): Promise<void> {
+  // Phase 1: bewusst leer.
+}
+
 // ── Service ────────────────────────────────────────────────────────────────
 
 export const CronService = {
@@ -323,6 +416,10 @@ export const CronService = {
     if (dueJobs.length > 0) {
       logger.info(`Cron tick: ${executed} OK, ${failed} failed out of ${dueJobs.length} due`, { module: 'CronService' })
     }
+
+    // Agent-Subsystem (Phase 1: no-op, wird in Phase 4 + 6 implementiert)
+    await processAgentTaskQueue()
+    await reconcileStrandedRuns()
 
     return { executed, failed }
   },

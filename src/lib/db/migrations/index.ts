@@ -96,4 +96,12 @@ export const MIGRATIONS: Migration[] = [
     name: '019_block_field_definitions.sql',
     description: 'Sub-2c: structured field_definitions für 12 lesson-verfügbare Block-Typen',
   },
+  {
+    name: '020_agent_system_phase1.sql',
+    description: 'Agent-System Phase 1: pgvector + pg_trgm + 6 agent_*-Tabellen + task_queue-Index',
+  },
+  {
+    name: '021_agent_definitions_seed.sql',
+    description: 'Agent-System Phase 5: Seed der 3 Default-Smart-Worker (writer/researcher/generalist)',
+  },
 ]
