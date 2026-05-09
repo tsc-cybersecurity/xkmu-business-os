@@ -83,21 +83,30 @@ Entscheide: weiter? fertig? pausieren? fehlschlagen?
 REGELN:
 - Antworte AUSSCHLIESSLICH mit valider JSON gemaess dem Schema.
 - action: "continue" | "goal_complete" | "pause" | "fail"
-- Bei "continue": newSteps mit weiteren Steps (Plan-Erweiterung).
-- Bei "goal_complete": kein newSteps noetig — Run wird auf succeeded gesetzt.
-- Bei "pause": Run wird angehalten, User kann manuell resumen.
-- Bei "fail": Run wird beendet, Goal auf failed.
+- Bei "continue": newSteps mit weiteren Steps (jeder Step exakt mit den Feldern unten).
+- Bei "goal_complete"/"pause"/"fail": newSteps muss leeres Array [] sein.
+- workerType MUSS Format <namespace>:<name> haben (memory|workflow|prompt|service|agent).
+- stepKey ist ein eindeutiger kurzer Slug (z.B. "research-acme", "draft-summary").
+- dependsOnStepKeys: andere Steps die fertig sein muessen bevor dieser laeuft.
+- contextRefs: Memory-Refs als "memory://<scope>" Strings.
 - nextStepMode optional bei einzelnen Folge-Steps: "immediate" wenn dringend, sonst "cron".
 
 TOOL-HINWEIS: Neben memory:*/workflow:*/prompt:*/service:* stehen Smart-Worker als agent:* zur Verfuegung
 (z.B. agent:writer fuer Schreib-Aufgaben, agent:researcher fuer Recherche, agent:generalist fuer offene Aufgaben).
-Nutze sie wenn ein Step deterministisches Tool-Hopping braucht, das du nicht 1:1 vorschreiben willst.
 
 JSON-SCHEMA:
 {
   "action": "continue|goal_complete|pause|fail",
   "reasoning": "1-3 Saetze warum diese Entscheidung",
-  "newSteps": [ /* nur wenn action=continue, sonst leer */ ],
+  "newSteps": [
+    {
+      "stepKey": "eindeutiger-slug",
+      "workerType": "namespace:name",
+      "config": { /* tool-spezifische Inputs */ },
+      "contextRefs": ["memory://..."],
+      "dependsOnStepKeys": ["other-step-key"]
+    }
+  ],
   "nextStepMode": "cron|immediate"
 }',
   ARRAY[]::TEXT[],
