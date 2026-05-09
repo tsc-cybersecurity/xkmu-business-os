@@ -104,4 +104,8 @@ export const MIGRATIONS: Migration[] = [
     name: '021_agent_definitions_seed.sql',
     description: 'Agent-System Phase 5: Seed der 3 Default-Smart-Worker (writer/researcher/generalist)',
   },
+  {
+    name: '022_agent_goal_templates.sql',
+    description: 'Agent-System Phase 8: agent_goal_templates + 3 Default-Seeds',
+  },
 ]
