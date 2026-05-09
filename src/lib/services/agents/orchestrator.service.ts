@@ -60,7 +60,7 @@ export const OrchestratorService = {
 
     // Goal laden
     const [goal] = await db
-      .select({ id: agentGoals.id, title: agentGoals.title, description: agentGoals.description })
+      .select({ id: agentGoals.id, title: agentGoals.title, description: agentGoals.description, requirePlanApproval: agentGoals.requirePlanApproval })
       .from(agentGoals)
       .where(eq(agentGoals.id, goalId))
       .limit(1)
@@ -138,22 +138,27 @@ export const OrchestratorService = {
       updatedAt: sql`now()`,
     }).where(eq(agentRuns.id, run.id))
 
-    await db.update(agentGoals).set({ status: 'running', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+    if (goal.requirePlanApproval) {
+      // Plan erstellt, Steps in DB (zur Vorschau), aber KEIN Queue — Goal wartet auf Freigabe
+      await db.update(agentGoals).set({ status: 'awaiting_approval', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
+    } else {
+      await db.update(agentGoals).set({ status: 'running', updatedAt: sql`now()` }).where(eq(agentGoals.id, goalId))
 
-    // Steps ohne unaufgeloeste Dependencies queuen
-    const stepKeyToId = new Map(insertedSteps.map((s) => [s.stepKey, s.id]))
-    const readySteps = plan.steps.filter((s) => s.dependsOnStepKeys.length === 0)
-    for (const s of readySteps) {
-      const stepId = stepKeyToId.get(s.stepKey)
-      if (!stepId) continue
-      await db.insert(taskQueue).values({
-        type: 'agent_step_run',
-        status: 'pending',
-        priority: 2,
-        payload: { stepId, runId: run.id, goalId },
-        referenceType: 'agent_step',
-        referenceId: stepId,
-      }).returning({ id: taskQueue.id })
+      // Steps ohne unaufgeloeste Dependencies queuen
+      const stepKeyToId = new Map(insertedSteps.map((s) => [s.stepKey, s.id]))
+      const readySteps = plan.steps.filter((s) => s.dependsOnStepKeys.length === 0)
+      for (const s of readySteps) {
+        const stepId = stepKeyToId.get(s.stepKey)
+        if (!stepId) continue
+        await db.insert(taskQueue).values({
+          type: 'agent_step_run',
+          status: 'pending',
+          priority: 2,
+          payload: { stepId, runId: run.id, goalId },
+          referenceType: 'agent_step',
+          referenceId: stepId,
+        }).returning({ id: taskQueue.id })
+      }
     }
 
     return { runId: run.id, steps: plan.steps as unknown as PlannedStep[] }
