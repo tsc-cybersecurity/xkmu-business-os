@@ -11,6 +11,7 @@ import { LayoutDashboard,
   ChevronLeft,
   ChevronRight,
   Brain,
+  Bot,
   Monitor,
   ListTodo,
   Mail,
@@ -113,6 +114,19 @@ export const navigation: NavItem[] = [
       { name: 'KI-Chat', href: '/intern/chat', requiredModule: 'chat' },
       { name: 'Projekte', href: '/intern/projekte', requiredModule: 'processes' },
       { name: 'Workflows', href: '/intern/settings/workflows', requiredModule: 'settings' },
+    ],
+  },
+  // ── Agents ──
+  {
+    name: 'Agents',
+    href: '/intern/agents',
+    icon: Bot,
+    children: [
+      { name: 'Dashboard', href: '/intern/agents' },
+      { name: 'Goals', href: '/intern/agents/goals' },
+      { name: 'Memory', href: '/intern/agents/memory' },
+      { name: 'Definitions', href: '/intern/agents/definitions' },
+      { name: 'Kosten', href: '/intern/agents/cost' },
     ],
   },
   // ── Cybersecurity ──

@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { ManualTriggers } from '@/components/agents/runs/manual-triggers'
 
 interface DetailData {
   goal: {
@@ -121,6 +123,16 @@ export function GoalDetailView({ goalId }: { goalId: string }) {
             {canPause && <Button size="sm" variant="secondary" onClick={() => action('pause')} disabled={acting}>Pausieren</Button>}
             {canResume && <Button size="sm" onClick={() => action('resume')} disabled={acting}>Fortsetzen</Button>}
             {canCancel && <Button size="sm" variant="destructive" onClick={() => action('cancel')} disabled={acting}>Abbrechen</Button>}
+          </div>
+          {data.latestRunId && (
+            <div className="mt-3">
+              <Link href={`/intern/agents/runs/${data.latestRunId}`} className="text-primary hover:underline text-sm">
+                Run-Details mit DAG anzeigen →
+              </Link>
+            </div>
+          )}
+          <div className="mt-3">
+            <ManualTriggers goalId={goalId} runId={data.latestRunId ?? undefined} />
           </div>
         </CardContent>
       </Card>

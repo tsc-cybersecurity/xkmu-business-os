@@ -23,7 +23,7 @@ export default async function MemoryDetailPage({ params }: { params: Promise<{ s
         <h1 className="text-2xl font-semibold">{r.title ?? scope}</h1>
         <p className="text-xs text-muted-foreground">{scope}</p>
       </div>
-      <MemoryEntryCard title={r.title} body={r.body} items={r.items} />
+      <MemoryEntryCard title={r.title} body={r.body} items={r.items} scope={scope} />
     </div>
   )
 }
