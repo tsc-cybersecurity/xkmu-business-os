@@ -87,9 +87,10 @@ async function runDebugHandler(params: Promise<{ id: string }>) {
     const stepIdInClause = stepIds.length > 0
       ? sql`OR reference_id IN (${sql.join(stepIds.map((id) => sql`${id}::uuid`), sql`, `)})`
       : sql``
+    // task_queue hat KEINE completed_at-Spalte (Schema: nur executed_at).
     const query = sql`
       SELECT id, type, status, error, result, payload, reference_type, reference_id,
-             created_at, scheduled_for, executed_at, completed_at
+             created_at, scheduled_for, executed_at, updated_at
       FROM task_queue
       WHERE reference_id = ${runId}
          ${stepIdInClause}
@@ -101,14 +102,14 @@ async function runDebugHandler(params: Promise<{ id: string }>) {
       result: Record<string, unknown> | null; payload: Record<string, unknown> | null;
       reference_type: string | null; reference_id: string | null;
       created_at: string; scheduled_for: string | null;
-      executed_at: string | null; completed_at: string | null;
+      executed_at: string | null; updated_at: string | null;
     }>
   }, [] as Array<{
     id: string; type: string; status: string; error: string | null;
     result: Record<string, unknown> | null; payload: Record<string, unknown> | null;
     reference_type: string | null; reference_id: string | null;
     created_at: string; scheduled_for: string | null;
-    executed_at: string | null; completed_at: string | null;
+    executed_at: string | null; updated_at: string | null;
   }>)
 
   // 4) Cost-Events
@@ -258,7 +259,7 @@ async function runDebugHandler(params: Promise<{ id: string }>) {
       id: t.id, type: t.type, status: t.status, error: t.error,
       result: t.result, referenceType: t.reference_type, referenceId: t.reference_id,
       createdAt: t.created_at, scheduledFor: t.scheduled_for,
-      executedAt: t.executed_at, completedAt: t.completed_at,
+      executedAt: t.executed_at, completedAt: t.updated_at,
     })),
     costEvents: costEvents.map((c) => ({
       id: c.id, callRole: c.callRole, provider: c.provider, model: c.model,
