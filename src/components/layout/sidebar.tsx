@@ -126,6 +126,7 @@ export const navigation: NavItem[] = [
       { name: 'Goals', href: '/intern/agents/goals' },
       { name: 'Memory', href: '/intern/agents/memory' },
       { name: 'Definitions', href: '/intern/agents/definitions' },
+      { name: 'Templates', href: '/intern/agents/templates' },
       { name: 'Kosten', href: '/intern/agents/cost' },
     ],
   },

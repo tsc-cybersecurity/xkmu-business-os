@@ -75,8 +75,24 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   try {
     const { db } = await import('@/lib/db')
     const { agentGoals } = await import('@/lib/db/schema')
-    const { eq } = await import('drizzle-orm')
-    // CASCADE auf agent_runs/agent_steps via FK ON DELETE CASCADE (Migration 020)
+    const { eq, sql } = await import('drizzle-orm')
+
+    // 1) task_queue-Einträge der zugehoerigen Runs/Steps abraeumen.
+    //    task_queue hat KEIN FK auf agent_runs/agent_steps — die Cascade greift
+    //    NICHT, der Cron-Tick wuerde sonst weiter "Run/Step nicht gefunden" werfen.
+    await db.execute(sql`
+      DELETE FROM task_queue
+      WHERE type IN ('agent_step_run','agent_replan','agent_continuation')
+        AND (
+          reference_id IN (SELECT id FROM agent_runs WHERE goal_id=${id})
+          OR reference_id IN (SELECT id FROM agent_steps WHERE goal_id=${id})
+          OR (payload->>'goalId' = ${id})
+        )
+    `)
+
+    // 2) agent_cost_events behalten goal_id-NULL (FK ON DELETE SET NULL) — Audit-Trail.
+
+    // 3) Goal selbst — CASCADE auf agent_runs/agent_steps (Migration 020 FKs).
     await db.delete(agentGoals).where(eq(agentGoals.id, id))
     return NextResponse.json({ ok: true })
   } catch (e) {
