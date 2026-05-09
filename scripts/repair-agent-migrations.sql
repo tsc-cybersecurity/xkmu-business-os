@@ -185,43 +185,35 @@ CREATE INDEX IF NOT EXISTS idx_agent_cost_events_provider_occurred ON agent_cost
 CREATE INDEX IF NOT EXISTS idx_task_queue_type_status_scheduled
   ON task_queue (type, status, scheduled_for);
 
+-- Sicherstellen dass agent_definitions.slug einen UNIQUE-Index hat
+-- (drizzle-kit push hat ihn moeglicherweise nicht angelegt)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_agent_definitions_slug ON agent_definitions (slug);
+
 -- ─────────────────────────────────────────────
 -- Migration 021: Default-Smart-Worker
+-- (WHERE NOT EXISTS statt ON CONFLICT — robust auch ohne UNIQUE-Constraint)
 -- ─────────────────────────────────────────────
 
 INSERT INTO agent_definitions (slug, role, name, system_prompt, allowed_tools, model_hint, max_tokens_per_call, max_iterations)
-VALUES
-  (
-    'writer',
-    'worker',
-    'Writer',
-    'Du bist ein praeziser Schreib-Assistent. Du nimmst eine Aufgabe (z.B. Text schreiben, ueberarbeiten, kuerzen) und lieferst genau das gewuenschte Ergebnis. Nutze Memory-Tools um Kontext nachzuschlagen, Prompt-Tools um Templates zu rendern. Antworte deutsch.',
-    ARRAY['memory:read', 'memory:search', 'memory:list', 'memory:write', 'prompt:*'],
-    'gemini-2.5-flash-lite',
-    2048,
-    6
-  ),
-  (
-    'researcher',
-    'worker',
-    'Researcher',
-    'Du bist ein Recherche-Agent. Du nimmst eine Recherche-Aufgabe (z.B. Firmen-Hintergrund, Marktdaten, technische Frage) und lieferst eine zusammengefasste Antwort. Nutze service-Tools fuer Web-Recherche, memory-Tools zum Speichern und Wiederfinden. Antworte deutsch.',
-    ARRAY['memory:read', 'memory:search', 'memory:list', 'memory:write', 'service:lead-research', 'service:website-scraper'],
-    'gemini-2.5-flash',
-    4096,
-    8
-  ),
-  (
-    'generalist',
-    'worker',
-    'Generalist',
-    'Du bist ein generischer Smart-Worker. Du nimmst eine offene Aufgabe und arbeitest sie mit den verfuegbaren Tools ab. Halte dich kurz, prueffe Memory bevor du etwas neu generierst, schreibe wichtige Erkenntnisse in Memory zurueck. Antworte deutsch.',
-    ARRAY['memory:*', 'prompt:*', 'workflow:*'],
-    'gemini-2.5-flash-lite',
-    2048,
-    8
-  )
-ON CONFLICT (slug) DO NOTHING;
+SELECT 'writer', 'worker', 'Writer',
+  'Du bist ein praeziser Schreib-Assistent. Du nimmst eine Aufgabe (z.B. Text schreiben, ueberarbeiten, kuerzen) und lieferst genau das gewuenschte Ergebnis. Nutze Memory-Tools um Kontext nachzuschlagen, Prompt-Tools um Templates zu rendern. Antworte deutsch.',
+  ARRAY['memory:read', 'memory:search', 'memory:list', 'memory:write', 'prompt:*'],
+  'gemini-2.5-flash-lite', 2048, 6
+WHERE NOT EXISTS (SELECT 1 FROM agent_definitions WHERE slug = 'writer');
+
+INSERT INTO agent_definitions (slug, role, name, system_prompt, allowed_tools, model_hint, max_tokens_per_call, max_iterations)
+SELECT 'researcher', 'worker', 'Researcher',
+  'Du bist ein Recherche-Agent. Du nimmst eine Recherche-Aufgabe (z.B. Firmen-Hintergrund, Marktdaten, technische Frage) und lieferst eine zusammengefasste Antwort. Nutze service-Tools fuer Web-Recherche, memory-Tools zum Speichern und Wiederfinden. Antworte deutsch.',
+  ARRAY['memory:read', 'memory:search', 'memory:list', 'memory:write', 'service:lead-research', 'service:website-scraper'],
+  'gemini-2.5-flash', 4096, 8
+WHERE NOT EXISTS (SELECT 1 FROM agent_definitions WHERE slug = 'researcher');
+
+INSERT INTO agent_definitions (slug, role, name, system_prompt, allowed_tools, model_hint, max_tokens_per_call, max_iterations)
+SELECT 'generalist', 'worker', 'Generalist',
+  'Du bist ein generischer Smart-Worker. Du nimmst eine offene Aufgabe und arbeitest sie mit den verfuegbaren Tools ab. Halte dich kurz, prueffe Memory bevor du etwas neu generierst, schreibe wichtige Erkenntnisse in Memory zurueck. Antworte deutsch.',
+  ARRAY['memory:*', 'prompt:*', 'workflow:*'],
+  'gemini-2.5-flash-lite', 2048, 8
+WHERE NOT EXISTS (SELECT 1 FROM agent_definitions WHERE slug = 'generalist');
 
 -- ─────────────────────────────────────────────
 -- Migration 022: Goal-Templates
@@ -247,40 +239,31 @@ CREATE TABLE IF NOT EXISTS agent_goal_templates (
 );
 
 CREATE INDEX IF NOT EXISTS idx_agent_goal_templates_slug_active ON agent_goal_templates (slug, is_active);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_agent_goal_templates_slug ON agent_goal_templates (slug);
 
 INSERT INTO agent_goal_templates (slug, name, description, title_template, description_template, required_variables, default_budget_cents, default_priority)
-VALUES
-  (
-    'firma-recherchieren',
-    'Firma recherchieren',
-    'Recherchiert eine Firma und legt ein Memo unter Resources/firmen/<slug> ab.',
-    'Recherche: {{firmenName}}',
-    'Recherchiere die Firma "{{firmenName}}" — Branche, Mitarbeiterzahl, Umsatz, Schluesselpersonen, aktuelle News. Nutze service:lead-research und service:website-scraper. Speichere die Zusammenfassung als Memory unter Resources/firmen/{{firmenName}}.md.',
-    ARRAY['firmenName'],
-    500,
-    2
-  ),
-  (
-    'memo-schreiben',
-    'Memo schreiben',
-    'Schreibt ein kurzes Memo zu einem Thema basierend auf vorhandenem Memory.',
-    'Memo: {{thema}}',
-    'Schreibe ein praezises Memo (max 500 Worte) zum Thema "{{thema}}". Nutze memory:search um vorhandenes Material zu finden, agent:writer fuer den Fliesstext. Speichere als Memory unter Projects/memos/{{thema}}.md.',
-    ARRAY['thema'],
-    300,
-    2
-  ),
-  (
-    'newsletter-analysieren',
-    'Newsletter-URL analysieren',
-    'Scrapt eine Newsletter-Quelle und legt strukturierte Notizen ab.',
-    'Newsletter-Analyse: {{quelleUrl}}',
-    'Scrape die URL "{{quelleUrl}}" via service:website-scraper, extrahiere die wichtigsten 5 Punkte, speichere als Memory unter Resources/newsletter/<auto-slug>.md.',
-    ARRAY['quelleUrl'],
-    300,
-    2
-  )
-ON CONFLICT (slug) DO NOTHING;
+SELECT 'firma-recherchieren', 'Firma recherchieren',
+  'Recherchiert eine Firma und legt ein Memo unter Resources/firmen/<slug> ab.',
+  'Recherche: {{firmenName}}',
+  'Recherchiere die Firma "{{firmenName}}" — Branche, Mitarbeiterzahl, Umsatz, Schluesselpersonen, aktuelle News. Nutze service:lead-research und service:website-scraper. Speichere die Zusammenfassung als Memory unter Resources/firmen/{{firmenName}}.md.',
+  ARRAY['firmenName'], 500, 2
+WHERE NOT EXISTS (SELECT 1 FROM agent_goal_templates WHERE slug = 'firma-recherchieren');
+
+INSERT INTO agent_goal_templates (slug, name, description, title_template, description_template, required_variables, default_budget_cents, default_priority)
+SELECT 'memo-schreiben', 'Memo schreiben',
+  'Schreibt ein kurzes Memo zu einem Thema basierend auf vorhandenem Memory.',
+  'Memo: {{thema}}',
+  'Schreibe ein praezises Memo (max 500 Worte) zum Thema "{{thema}}". Nutze memory:search um vorhandenes Material zu finden, agent:writer fuer den Fliesstext. Speichere als Memory unter Projects/memos/{{thema}}.md.',
+  ARRAY['thema'], 300, 2
+WHERE NOT EXISTS (SELECT 1 FROM agent_goal_templates WHERE slug = 'memo-schreiben');
+
+INSERT INTO agent_goal_templates (slug, name, description, title_template, description_template, required_variables, default_budget_cents, default_priority)
+SELECT 'newsletter-analysieren', 'Newsletter-URL analysieren',
+  'Scrapt eine Newsletter-Quelle und legt strukturierte Notizen ab.',
+  'Newsletter-Analyse: {{quelleUrl}}',
+  'Scrape die URL "{{quelleUrl}}" via service:website-scraper, extrahiere die wichtigsten 5 Punkte, speichere als Memory unter Resources/newsletter/<auto-slug>.md.',
+  ARRAY['quelleUrl'], 300, 2
+WHERE NOT EXISTS (SELECT 1 FROM agent_goal_templates WHERE slug = 'newsletter-analysieren');
 
 -- ─────────────────────────────────────────────
 -- Migration 023: Performance-Index
@@ -292,12 +275,24 @@ CREATE INDEX IF NOT EXISTS idx_agent_cost_events_occurred_desc
 -- ─────────────────────────────────────────────
 -- _migrations Tracking aktualisieren
 -- damit der Auto-Migrator beim naechsten Boot konsistent bleibt
+-- (WHERE NOT EXISTS — robust auch ohne UNIQUE-Constraint)
 -- ─────────────────────────────────────────────
 
-INSERT INTO _migrations (name) VALUES ('020_agent_system_phase1.sql') ON CONFLICT (name) DO NOTHING;
-INSERT INTO _migrations (name) VALUES ('021_agent_definitions_seed.sql') ON CONFLICT (name) DO NOTHING;
-INSERT INTO _migrations (name) VALUES ('022_agent_goal_templates.sql') ON CONFLICT (name) DO NOTHING;
-INSERT INTO _migrations (name) VALUES ('023_agent_cost_events_index.sql') ON CONFLICT (name) DO NOTHING;
+INSERT INTO _migrations (name)
+SELECT '020_agent_system_phase1.sql'
+WHERE NOT EXISTS (SELECT 1 FROM _migrations WHERE name = '020_agent_system_phase1.sql');
+
+INSERT INTO _migrations (name)
+SELECT '021_agent_definitions_seed.sql'
+WHERE NOT EXISTS (SELECT 1 FROM _migrations WHERE name = '021_agent_definitions_seed.sql');
+
+INSERT INTO _migrations (name)
+SELECT '022_agent_goal_templates.sql'
+WHERE NOT EXISTS (SELECT 1 FROM _migrations WHERE name = '022_agent_goal_templates.sql');
+
+INSERT INTO _migrations (name)
+SELECT '023_agent_cost_events_index.sql'
+WHERE NOT EXISTS (SELECT 1 FROM _migrations WHERE name = '023_agent_cost_events_index.sql');
 
 COMMIT;
 
