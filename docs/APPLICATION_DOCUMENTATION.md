@@ -1502,6 +1502,526 @@ KI-Anbieter löschen.
 
 ---
 
+### 5.26 AI-Agents-API
+
+Goal-getriebene autonome Agenten. Detailbeschreibung in Section 25.
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST | `/api/agents/goals` | Goals auflisten / anlegen (auch aus Template) |
+| GET / PATCH / DELETE | `/api/agents/goals/[id]` | Goal lesen/bearbeiten/löschen (cleanup `task_queue`) |
+| POST | `/api/agents/goals/[id]/approve` | Plan freigeben (bei `requirePlanApproval`) |
+| POST | `/api/agents/goals/[id]/reject` | Plan ablehnen, Goal cancelled |
+| POST | `/api/agents/goals/[id]/run-immediate` | Sofort-Run statt Cron-Wartezeit |
+| GET / PATCH | `/api/agents/runs/[id]` | Run-Status mit Steps |
+| GET | `/api/agents/runs/[id]/debug` | 6-Heuristik-Diagnose (Issues, Provider, Tools, Tasks, Audit) |
+| POST | `/api/agents/runs/[id]/replan-now` | Manueller Replan-Trigger |
+| POST | `/api/agents/steps/[id]/retry` | Einzelnen Step neu queueen |
+| GET / POST | `/api/agents/definitions` | Worker-Typ-Definitions |
+| GET / PATCH / DELETE | `/api/agents/definitions/[id]` | Definition-Detail |
+| GET / POST | `/api/agents/templates` | Goal-Templates |
+| GET / PATCH / DELETE | `/api/agents/templates/[id]` | Template-Detail |
+| POST | `/api/agents/templates/[id]/create-goal` | Goal aus Template (mit Variablen) |
+| GET / POST / DELETE | `/api/agents/memory` | PARA-Memory-Items |
+| GET / PATCH / DELETE | `/api/agents/memory/[id]` | Memory-Item-Detail |
+| GET | `/api/agents/memory/search` | Hybrid-Search (pgvector + pg_trgm) |
+| GET | `/api/agents/cost` | Token-/EUR-Verbrauch aggregiert |
+
+---
+
+### 5.27 Customer-Portal-API
+
+Externe Portal-Zugriffe für Kunden (Person mit `portal-access`). Authentifizierung via separater Portal-Session.
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/api/v1/portal/me/company` | Eigene Firmen-Stammdaten |
+| GET / POST / PATCH | `/api/v1/portal/me/company/change-request[…]` | Änderungswünsche stellen |
+| GET / POST | `/api/v1/portal/me/company/change-requests` | Liste eigener Änderungswünsche |
+| GET | `/api/v1/portal/me/contracts` / `[id]` | Eigene Verträge |
+| GET | `/api/v1/portal/me/documents` / `[id]` / `[id]/download` | Eigene Dokumente |
+| GET | `/api/v1/portal/me/orders` / `[id]` | Eigene Aufträge |
+| GET | `/api/v1/portal/me/projects` / `[id]` | Eigene Projekte |
+| GET / POST | `/api/v1/portal/me/chat/messages` | Portal-Chat |
+| POST | `/api/v1/portal/me/chat/mark-read` | Chat als gelesen |
+| GET | `/api/v1/portal/me/chat/unread-count` | Ungelesene-Counter |
+| GET / POST / PATCH | `/api/v1/portal/change-requests[…]/approve` / `[…]/reject` | (Berater-Seite) Änderungswünsche bearbeiten |
+| GET / POST / PATCH | `/api/v1/portal/certificate-requests[…]` | Zertifikats-Anfragen |
+| POST | `/api/v1/portal/certificate-requests/[id]/approve` / `reject` / `revoke` | Zertifikats-Workflow |
+| GET / POST | `/api/v1/portal/courses/assignments` | Kurs-Zuweisungen für Portal-User |
+| GET | `/api/v1/portal/courses/[id]/certificate` / `pdf` | Zertifikat lesen / PDF |
+| POST | `/api/v1/portal/courses/[id]/certificate/request` | Zertifikat beantragen |
+| GET | `/api/v1/portal/document-categories` | Verfügbare Kategorien |
+| GET | `/api/v1/portal/order-categories` | Verfügbare Auftrags-Kategorien |
+| GET / POST | `/api/v1/companies/[id]/portal-users` | Portal-User pro Firma verwalten |
+| GET / POST | `/api/v1/persons/[id]/portal-access` | Portal-Zugang pro Person |
+| GET | `/api/v1/companies/[id]/portal-documents` / `[docId]` / `[docId]/download` | Berater-Sicht auf Portal-Dokumente |
+| CRUD | `/api/v1/portal-document-categories` / `[id]` | Portal-Dokument-Kategorien (intern) |
+
+---
+
+### 5.28 E-Learning / Kurse-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| CRUD | `/api/v1/courses` / `[id]` | Kurs-Stammdaten |
+| POST | `/api/v1/courses/[id]/publish` / `unpublish` / `archive` / `restore` | Lifecycle |
+| GET / POST | `/api/v1/courses/[id]/modules` / `[moduleId]` | Module |
+| POST | `/api/v1/courses/[id]/modules/reorder` | Reihenfolge |
+| GET / POST | `/api/v1/courses/[id]/lessons` / `[lessonId]` | Lessons |
+| POST | `/api/v1/courses/[id]/lessons/reorder` | Reihenfolge |
+| GET / POST | `/api/v1/courses/[id]/lessons/[lessonId]/blocks` / `[blockId]` | Inhaltsblöcke |
+| POST | `/api/v1/courses/[id]/lessons/[lessonId]/blocks/reorder` | Reihenfolge |
+| POST | `/api/v1/courses/[id]/lessons/[lessonId]/complete` | Lesson abgeschlossen markieren |
+| GET / POST | `/api/v1/courses/[id]/lessons/[lessonId]/quiz` / `questions` / `attempts` | Quiz |
+| GET / POST | `/api/v1/courses/[id]/access` / `[grantId]` | Zugriffs-Berechtigungen |
+| GET / POST | `/api/v1/courses/[id]/assignments` / `[assignmentId]` | Pflicht-Zuweisungen |
+| GET / POST | `/api/v1/courses/[id]/assets` / `[assetId]` | Asset-Library |
+| GET | `/api/v1/courses/[id]/progress` | Fortschritts-Stats |
+| GET | `/api/v1/courses/[id]/report` | Reporting |
+| POST | `/api/v1/courses/[id]/scorm/import` / `export` | SCORM-Pakete |
+| GET | `/api/v1/courses/[id]/scorm/[packageId]/files` / `serve/[...path]` | SCORM-Auslieferung |
+| GET | `/api/v1/courses/assets/serve/[...path]` | Asset-Datei |
+| GET | `/api/v1/elearning/reports/compliance` | Compliance-Report |
+
+---
+
+### 5.29 OKR-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/okr/cycles` / `[id]` | OKR-Zyklen |
+| GET / POST / PATCH / DELETE | `/api/v1/okr/objectives` / `[id]` | Objectives |
+| GET / POST | `/api/v1/okr/objectives/[id]/kr` | Key-Results pro Objective |
+| GET / PATCH / DELETE | `/api/v1/okr/kr/[id]` | Key-Result-Detail |
+| POST | `/api/v1/okr/kr/[id]/checkin` | Fortschritts-Check-in |
+| GET | `/api/v1/okr/dashboard` | Aggregiertes Dashboard |
+
+---
+
+### 5.30 EOS-API (Entrepreneurial Operating System)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/eos/issues` / `[id]` | Issue-Liste (IDS) |
+| GET / POST / PATCH / DELETE | `/api/v1/eos/rocks` / `[id]` | Quartals-Rocks |
+| GET / POST / PATCH / DELETE | `/api/v1/eos/meetings` / `[id]` | Level-10-Meetings |
+| GET | `/api/v1/eos/scorecard` | Wöchentliche Scorecard |
+| GET / PUT | `/api/v1/eos/vto` | Vision/Traction Organizer |
+
+---
+
+### 5.31 CRM-Chat-API (intern)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/api/v1/chat/companies` | Firmen mit Chat-Threads |
+| GET / POST | `/api/v1/chat/companies/[id]/messages` | Nachrichten je Firma |
+| POST | `/api/v1/chat/companies/[id]/mark-read` | Als gelesen markieren |
+| GET / POST | `/api/v1/chat/conversations` / `[id]` | Conversation-Verwaltung |
+| GET | `/api/v1/chat/unread-count` | Unread-Counter |
+| POST | `/api/v1/chat` | (Top-Level Chat-Endpoint) |
+
+---
+
+### 5.32 News-API (KI-Pipeline)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST | `/api/v1/news/topics` / `[id]` | Themen |
+| POST | `/api/v1/news/topics/[id]/research` | Recherche pro Thema |
+| GET / POST / PATCH / DELETE | `/api/v1/news/items` / `[id]` | News-Beiträge |
+| POST | `/api/v1/news/items/[id]/pipeline` | Pipeline-Trigger (Recherche → Entwurf → Publish) |
+| POST | `/api/v1/news/research` | Globaler Research-Trigger |
+
+---
+
+### 5.33 Newsletter-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/newsletter/campaigns` / `[id]` | Kampagnen |
+| POST | `/api/v1/newsletter/campaigns/[id]/send` | Versand auslösen |
+| GET / POST / DELETE | `/api/v1/newsletter/subscribers` | Empfänger-Liste |
+
+---
+
+### 5.34 Zeiterfassung-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/time-entries` / `[id]` | Zeiteinträge |
+| POST | `/api/v1/time-entries/timer` | Timer (start/stop) |
+| POST | `/api/v1/time-entries/invoice` | In Rechnung übernehmen |
+
+---
+
+### 5.35 Termine & Buchung-API
+
+**Öffentliche Buchungs-API (kein Auth, Slug-basiert):**
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/api/buchen/[slug]/availability` | Verfügbare Slots |
+| GET | `/api/buchen/[slug]/availability/month` | Monatsübersicht |
+| POST | `/api/buchen/[slug]/book` | Termin buchen |
+| POST | `/api/buchen/cancel` | Stornieren (Token) |
+| GET / POST | `/api/buchen/reschedule` / `availability` | Verschieben |
+
+**Portal-API (eingeloggte Portal-User):**
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/api/portal/termin/availability` | Verfügbare Slots |
+| POST | `/api/portal/termin/book` | Termin buchen |
+| GET | `/api/portal/termin/my` | Eigene Termine |
+| POST | `/api/portal/termin/[id]/cancel` / `reschedule` | Stornieren / Verschieben |
+| GET | `/api/portal/termin/staff` | Verfügbare Berater |
+
+**Interne API:**
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/appointments` | Termine verwalten |
+| GET | `/api/v1/appointments/[id]/ics` | iCalendar-Export |
+| GET / POST / PATCH / DELETE | `/api/v1/availability/rules` / `[id]` | Verfügbarkeitsregeln |
+| GET / POST / PATCH / DELETE | `/api/v1/availability/overrides` / `[id]` | Einmalige Overrides |
+| GET | `/api/v1/availability/diagnose` | Konfigurations-Diagnose |
+| GET / POST / PATCH / DELETE | `/api/v1/slot-types` / `[id]` | Slot-Typen |
+| POST | `/api/v1/slot-types/reorder` | Reihenfolge |
+| GET / PUT | `/api/v1/booking-page` | Öffentliche Buchungsseite konfigurieren |
+
+---
+
+### 5.36 Kalender-Integration-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / DELETE | `/api/v1/calendar-account` | Kalender-Account-Verbindung |
+| GET / POST / DELETE | `/api/v1/integrations/google-calendar` | Google-Kalender-Integration |
+| GET | `/api/google-calendar/oauth/start` | OAuth-Start |
+| GET | `/api/google-calendar/oauth/callback` | OAuth-Rückrufpfad |
+| POST | `/api/google-calendar/webhook` | Push-Notifications |
+
+---
+
+### 5.37 Cron-Jobs-API
+
+Generisches Cron-System (separat von `agent.heartbeat`).
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST | `/api/v1/cron-jobs` | Jobs auflisten / anlegen |
+| GET / PATCH / DELETE | `/api/v1/cron-jobs/[id]` | Job-Detail |
+| POST | `/api/v1/cron-jobs/[id]/run` | Manueller Run |
+| POST | `/api/v1/cron-jobs/tick` | Tick-Endpoint (intern) |
+| POST | `/api/cron/tick` | Cron-Trigger (extern, Authorization-Header) |
+
+---
+
+### 5.38 Workflow-Engine-API
+
+Inhouse-Workflow-Engine (siehe Section 24, NICHT n8n).
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/workflows` / `[id]` | Workflows |
+| GET / POST | `/api/v1/workflows/[id]/runs` | Workflow-Runs |
+| GET | `/api/v1/workflows/actions` | Verfügbare Action-Typen |
+| GET | `/api/v1/execution-logs` | Ausführungs-Logs |
+
+---
+
+### 5.39 KI-Prompt-Verwaltung-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/ai-prompt-templates` / `[id]` | Prompt-Templates |
+| POST | `/api/v1/ai-prompt-templates/seed` | Seed-Reset |
+| GET / POST / PATCH / DELETE | `/api/v1/custom-prompts` / `[id]` | Benutzer-Custom-Prompts |
+| POST | `/api/v1/custom-prompts/[id]/execute` | Prompt ausführen |
+| POST | `/api/v1/custom-prompts/generate` | Per KI Prompt generieren |
+
+---
+
+### 5.40 Cockpit-API
+
+System-Health & Integration-Übersicht.
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/api/v1/cockpit` / `[id]` | Integrationen-Liste / -Detail |
+| GET | `/api/v1/cockpit/stats` | System-Stats |
+| GET / POST / DELETE | `/api/v1/cockpit/[id]/credentials` / `[credentialId]` | Credentials je Integration |
+
+---
+
+### 5.41 KPI-Dashboard-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/api/v1/kpi` | KPI-Aggregation für Dashboard |
+| GET | `/api/v1/dashboard` | Dashboard-Daten |
+
+---
+
+### 5.42 SOPs-API
+
+Standard-Operating-Procedures.
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/sops` / `[id]` | SOPs |
+| GET / POST | `/api/v1/sops/[id]/steps` | Schritte |
+| POST | `/api/v1/sops/[id]/publish` | Veröffentlichen |
+| GET | `/api/v1/sops/[id]/export` | Export |
+| GET | `/api/v1/sops/stats` | Statistik |
+
+---
+
+### 5.43 Prozesse-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/processes` / `[id]` | Prozesse |
+| GET / POST | `/api/v1/processes/[id]/tasks` | Prozess-Tasks |
+| PATCH / DELETE | `/api/v1/processes/tasks/[taskId]` | Einzel-Task |
+| GET / POST | `/api/v1/processes/dev-tasks` / `generate` | Dev-Aufgaben (KI) |
+| GET | `/api/v1/processes/mapping` | Modul-Prozess-Mapping |
+| POST | `/api/v1/processes/seed` | Seed-Reset |
+
+---
+
+### 5.44 Projekte-API (Kanban)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/projects` / `[id]` | Projekte |
+| GET / POST | `/api/v1/projects/[id]/tasks` | Tasks |
+| PATCH / DELETE | `/api/v1/projects/[id]/tasks/[taskId]` | Task-Detail |
+
+---
+
+### 5.45 BSI Grundschutz++-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/grundschutz/assets` / `[id]` | Assets |
+| GET | `/api/v1/grundschutz/assets/categories` | Kategorien |
+| GET / POST | `/api/v1/grundschutz/assets/[id]/controls` | Asset-Controls |
+| GET / POST / PATCH / DELETE | `/api/v1/grundschutz/audits` / `[id]` | Audits |
+| GET / POST | `/api/v1/grundschutz/audits/[id]/answers` | Antworten |
+| GET | `/api/v1/grundschutz/audits/[id]/scoring` | Scoring |
+| GET | `/api/v1/grundschutz/catalog` | BSI-Katalog |
+| GET / PATCH | `/api/v1/grundschutz/controls` / `[id]` | Controls |
+| GET | `/api/v1/grundschutz/groups` | Gruppen |
+
+---
+
+### 5.46 Incident-Response-Playbook-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/ir-playbook` / `[id]` | Playbook-Einträge |
+| GET | `/api/v1/ir-playbook/views` | Vorgefertigte Sichten |
+
+---
+
+### 5.47 Verträge-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/contract-templates` / `[id]` | Vertragsvorlagen |
+| POST | `/api/v1/contract-templates/generate` | KI-generiert |
+| POST | `/api/v1/contract-templates/seed` | Seed-Reset |
+| GET / POST / PATCH / DELETE | `/api/v1/contract-clauses` / `[id]` | Klausel-Bibliothek |
+
+---
+
+### 5.48 Aufträge & Belege-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/orders` / `[id]` | Aufträge |
+| GET / POST / PATCH / DELETE | `/api/v1/receipts` / `[id]` | Belege |
+| GET / POST / PATCH / DELETE | `/api/v1/opportunities` / `[id]` | Sales-Opportunities |
+| POST | `/api/v1/opportunities/[id]/convert` | Konvertierung |
+| GET | `/api/v1/opportunities/search` | Suche |
+| GET | `/api/v1/opportunities/debug` | Debug |
+
+---
+
+### 5.49 KI-Bilder-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / DELETE | `/api/v1/images` / `[id]` | Bild-Liste / -Detail |
+| POST | `/api/v1/images/generate` | Bild generieren |
+| GET | `/api/v1/images/status` | Provider-Status |
+| POST | `/api/v1/kie/generate` | kie.ai-Video direkt |
+| GET | `/api/v1/kie/status/[taskId]` | kie.ai-Task-Status |
+
+---
+
+### 5.50 E-Mail-Konten & Postfach-API
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/email-accounts` / `[id]` | IMAP/SMTP-Konten |
+| POST | `/api/v1/email-accounts/[id]/sync` | IMAP-Sync |
+| POST | `/api/v1/email-accounts/[id]/test` | Verbindung testen |
+| GET / DELETE | `/api/v1/emails` / `[id]` | Postfach |
+| POST | `/api/v1/emails/send` | Senden |
+| POST | `/api/v1/emails/[id]/reply` | Antworten |
+| POST | `/api/v1/emails/sync` | Globaler Sync-Trigger |
+| GET | `/api/v1/emails/link-search` | Verlinkte Entitäten suchen |
+| GET / POST / PATCH / DELETE | `/api/v1/email-templates` / `[id]` | E-Mail-Vorlagen |
+| POST | `/api/v1/email-templates/seed` | Seed-Reset |
+
+---
+
+### 5.51 Personen-Erweiterungen
+
+(Ergänzt Section 5.2.)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET | `/api/v1/persons/birthdays` | Anstehende Geburtstage |
+| GET | `/api/v1/persons/search` | Volltext-Suche |
+| POST | `/api/v1/persons/[id]/research` | KI-Recherche |
+| POST | `/api/v1/persons/[id]/portal-access` | Portal-Zugang setzen |
+
+---
+
+### 5.52 Firmen-Erweiterungen
+
+(Ergänzt Section 5.1.)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| POST | `/api/v1/companies/[id]/research` | KI-Recherche starten |
+| POST | `/api/v1/companies/[id]/research/[researchId]/apply` / `reject` | Ergebnis anwenden/ablehnen |
+| POST | `/api/v1/companies/[id]/crawl` | Website crawlen |
+| POST | `/api/v1/companies/[id]/actions/generate` | KI-Maßnahmen vorschlagen |
+| POST | `/api/v1/companies/[id]/analyze-document` | Dokumenten-Analyse |
+| GET / POST | `/api/v1/companies/[id]/persons` | Verknüpfte Personen |
+| GET | `/api/v1/companies/[id]/prep` | Termin-Vorbereitung |
+| GET / POST / PATCH | `/api/v1/companies/[id]/change-requests` | Änderungswünsche (Berater-Sicht) |
+
+---
+
+### 5.53 Leads-Erweiterungen
+
+(Ergänzt Section 5.6.)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| POST | `/api/v1/leads/[id]/research` | KI-Lead-Anreicherung |
+| POST | `/api/v1/leads/[id]/outreach` | Outreach-E-Mail |
+| POST | `/api/v1/leads/inbound` | Inbound-Lead via Formular |
+
+---
+
+### 5.54 Blog-Erweiterungen
+
+(Ergänzt Section 5.10.)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| POST | `/api/v1/blog/posts/generate` | Beitrag per KI generieren |
+| POST | `/api/v1/blog/posts/[id]/seo/generate` | SEO-Felder generieren |
+| POST | `/api/v1/blog/posts/[id]/generate-social` | Social-Posts ableiten |
+| POST | `/api/v1/blog/posts/[id]/publish-wp` | Auf WordPress veröffentlichen |
+| POST | `/api/v1/blog/posts/[id]/review` | Review setzen |
+| GET / POST / PATCH / DELETE | `/api/v1/blog-categories` / `[id]` | Kategorien |
+| GET | `/api/v1/public/blog/categories` | Kategorien (öffentlich) |
+
+---
+
+### 5.55 CMS-Erweiterungen
+
+(Ergänzt Section 5.11.)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/cms/templates` / `[id]` | Seiten-Templates |
+| GET | `/api/v1/cms/sitemap` | Sitemap-Daten |
+| GET / PUT | `/api/v1/cms/design` | Design-/Theme-Settings |
+| POST | `/api/v1/cms/pages/[id]/seo/generate` | SEO per KI |
+| POST | `/api/v1/cms/navigation/seed` | Navigations-Seed |
+
+---
+
+### 5.56 Social-Media-Erweiterungen
+
+(Ergänzt Section 5.13.)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / DELETE | `/api/v1/social/accounts/[id]` | Verbundenen Account verwalten |
+| GET | `/api/v1/social/connection-status` | Verbindungs-Status |
+| GET | `/api/v1/social/diagnose` | Diagnose |
+| GET | `/api/social/{meta,linkedin,instagram,x}/oauth/start` | OAuth-Start je Provider |
+| GET | `/api/social/{meta,linkedin,instagram,x}/oauth/callback` | OAuth-Callback |
+| POST | `/api/v1/social-media/posts/[id]/publish` | Sofort publizieren |
+| POST | `/api/v1/social-media/posts/[id]/improve` | Per KI verbessern |
+| POST | `/api/v1/social-media/posts/generate` / `generate-plan` | KI-Generierung |
+| GET | `/api/v1/social-media/posts/calendar` | Kalender-Datenpunkte |
+| GET / POST / PATCH / DELETE | `/api/v1/social-media/topics` / `[id]` | Themen |
+| POST | `/api/v1/social-media/topics/generate` | Themen per KI |
+| POST | `/api/v1/social-media/test-connection` | Verbindung testen |
+
+---
+
+### 5.57 Marketing-Erweiterungen
+
+(Ergänzt Section 5.12.)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| POST | `/api/v1/marketing/agent/analyze` | KI-Marketing-Agent |
+| GET / POST | `/api/v1/marketing/templates` / `[id]` | Vorlagen |
+| GET / POST | `/api/v1/marketing/campaigns/[id]/tasks` | Kampagnen-Tasks |
+| POST | `/api/v1/marketing/tasks/generate` | Tasks per KI |
+
+---
+
+### 5.58 Dokument- & Vorlagen-Erweiterungen
+
+(Ergänzt Section 5.5.)
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/document-templates` / `[id]` | Dokumentvorlagen |
+| POST | `/api/v1/document-templates/[id]/generate` | Aus Vorlage erzeugen |
+| POST | `/api/v1/document-templates/seed` | Seed-Reset |
+| POST | `/api/v1/documents/[id]/convert` | Angebot → Rechnung u.ä. |
+| GET / POST / PATCH / DELETE | `/api/v1/documents/[id]/items` / `[itemId]` | Positionen |
+| POST | `/api/v1/documents/[id]/send` | Versand |
+| PATCH | `/api/v1/documents/[id]/status` | Status setzen |
+| GET | `/api/v1/documents/next-number` | Nächste Belegnummer |
+
+---
+
+### 5.59 Sonstige
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| GET / POST / PATCH / DELETE | `/api/v1/feedback` / `[id]/respond` | Feedback-Modul |
+| GET / POST / PATCH / DELETE | `/api/v1/user-groups` / `[id]` / `[id]/members` / `[id]/members/[userId]` | Benutzergruppen für Permissions |
+| GET / POST / PATCH / DELETE | `/api/v1/deliverables` / `[id]` | Leistungspakete (Website) |
+| GET | `/api/v1/deliverables/modules` | Module-Mapping |
+| POST | `/api/v1/seo/keywords` | SEO-Keyword-Recherche |
+| GET / POST / PATCH / DELETE | `/api/v1/ideas/[id]/convert` | Ideen-Konvertierung |
+| GET | `/api/v1/auth/permissions` | Aktuelle Permissions |
+| POST | `/api/v1/auth/change-password` | Passwort ändern |
+| POST | `/api/v1/auth/accept-invite` | Einladung annehmen |
+| POST | `/api/v1/admin/database/exec` | SQL ausführen (Admin only) |
+| POST | `/api/v1/admin/database/migrate` | Migration triggern (Admin only) |
+| GET | `/api/health` | Health-Check |
+
+---
+
 ## 6. Module im Detail
 
 ### Berechtigungssystem
