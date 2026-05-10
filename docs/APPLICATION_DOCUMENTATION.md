@@ -588,9 +588,299 @@ Tokens liegen verschlüsselt (AES-256-GCM) in `social_oauth_accounts.access_toke
 | Webhooks | `/intern/settings/webhooks` | Webhook-Konfiguration |
 | API-Doku | `/intern/settings/api-docs` | Interaktive API-Dokumentation |
 | n8n | `/intern/settings/n8n` | n8n-Verbindung konfigurieren |
+| Custom-Prompts | `/intern/settings/custom-prompts` | Eigene KI-Prompts pflegen und ausführen |
+| Cron-Jobs | `/intern/settings/cron-jobs` | Generische Cron-Jobs (separat von Agent-Heartbeat) |
+| Task-Queue | `/intern/settings/task-queue` | Globale Task-Queue (Pending/Running/Failed) |
+| Workflows | `/intern/settings/workflows` / `[id]` | Workflow-Engine-Workflows verwalten |
+| App-Doku | `/intern/settings/app-docs` | Diese Anwendungsdokumentation in der App |
+| Profil | `/intern/settings/profile` | Eigenes Benutzerprofil + Passwort |
+| IMAP-Konten | `/intern/settings/email-imap` | E-Mail-Konten (IMAP/SMTP) verbinden |
+| E-Mail-Vorlagen | `/intern/settings/email-templates` | E-Mail-Templates pflegen |
+| Google-Kalender | `/intern/settings/integrations/google-calendar` | Google-Kalender-Sync |
+| Portal-Doc-Kategorien | `/intern/settings/portal-document-categories` | Kategorien für Portal-Dokumente |
 | Datenbank | `/intern/settings/database` | Datenbank-Browser (Tabellen anzeigen, bearbeiten, löschen) |
 | Datenexport | `/intern/settings/export` | Datenbankexport als SQL-Datei |
 | Datenimport | `/intern/settings/import` | SQL-Datei importieren (Merge/Replace) |
+
+---
+
+### 4.15 Hub-Seiten
+
+Hub-Seiten sind reine Navigations-Übersichten, die thematisch zusammengehörige Module bündeln.
+
+| Seite | URL | Inhalt |
+|---|---|---|
+| CRM | `/intern/crm` | Kontakte, Leads, Opportunities, Aktivitäten |
+| CMS-Hub | `/intern/cms-hub` | CMS-Seiten, Blog, Navigation, Templates, Sitemap, Design |
+| Website | `/intern/website` | Öffentliche Website (CMS, Blog, SEO) |
+| Intelligence | `/intern/intelligence` | BI, n8n, Chat, Projekte, Prozesse, Workflows |
+| Marketing-KI | `/intern/marketing-ki` | KI-Marketing-Agent, Templates, Kampagnen-Generator |
+| Management | `/intern/management` | Deliverables, EOS, OKR, SOPs |
+| Cybersecurity | `/intern/cybersecurity` | DIN, WiBA, Basisabsicherung, Grundschutz++, IR-Playbook |
+
+---
+
+### 4.16 Chancen (Opportunities)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/chancen` | Sales-Pipeline mit Status-Spalten, Konvertierung zu Lead/Auftrag |
+
+API: `/api/v1/opportunities` (siehe 5.48). Konvertierung via `POST /api/v1/opportunities/[id]/convert`.
+
+---
+
+### 4.17 Chat & E-Mail-Postfach
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Chat | `/intern/chat` | CRM-Chat mit Firmen/Personen, Conversations, Unread-Counter |
+| Postfach | `/intern/emails` | IMAP-Postfach: Listen, Lesen, Antworten, Versenden |
+
+APIs: `/api/v1/chat/*` (5.31), `/api/v1/emails*` und `/api/v1/email-accounts/*` (5.50).
+
+---
+
+### 4.18 Cockpit
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/cockpit` | System- und Integrations-Health |
+
+Listet konfigurierte Integrationen, Credentials-Status, KPI-Snapshots. API: `/api/v1/cockpit*` (5.40).
+
+---
+
+### 4.19 Cybersecurity-Erweiterungen
+
+(Ergänzt 4.7 / 4.8.)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Basisabsicherung | `/intern/cybersecurity/basisabsicherung` | Liste BSI-Basisabsicherungs-Audits |
+| Basisabsicherung-Neu | `/intern/cybersecurity/basisabsicherung/new` | Audit anlegen |
+| Basisabsicherung-Detail | `/intern/cybersecurity/basisabsicherung/[id]` | Audit-Übersicht |
+| Basisabsicherung-Checkliste | `/intern/cybersecurity/basisabsicherung/[id]/checklist/[checklistId]` | Checkliste durchlaufen |
+| Basisabsicherung-Report | `/intern/cybersecurity/basisabsicherung/[id]/report` | Audit-Report |
+| Grundschutz++ | `/intern/cybersecurity/grundschutz` | BSI Grundschutz++ Übersicht |
+| Grundschutz-Neu | `/intern/cybersecurity/grundschutz/new` | Neues Grundschutz-Audit |
+| Grundschutz-Audit | `/intern/cybersecurity/grundschutz/audit/[id]` | Audit durchführen |
+| Grundschutz-Assets | `/intern/cybersecurity/grundschutz/assets` / `[id]` | Asset-Inventar mit Controls-Mapping |
+| IR-Playbook | `/intern/cybersecurity/ir-playbook` / `[id]` | Incident-Response-Playbook (Listen, Detail, Phasen) |
+
+API: `/api/v1/grundschutz/*` (5.45), `/api/v1/ir-playbook/*` (5.46), `/api/v1/wiba/*` (5.23).
+
+---
+
+### 4.20 Finanzen-Erweiterung: Verträge
+
+(Ergänzt 4.3.)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Verträge | `/intern/finance/contracts` | Vertragsliste |
+| Neuer Vertrag | `/intern/finance/contracts/new` | Anlegen |
+| Vertrag | `/intern/finance/contracts/[id]` | Detail |
+| Vertrag bearbeiten | `/intern/finance/contracts/[id]/edit` | Editor |
+| Klausel-Bibliothek | `/intern/finance/contracts/clauses` | Klauseln pflegen |
+| Vertragsvorlagen | `/intern/finance/contracts/templates` / `new` | Templates (KI-Generator verfügbar) |
+
+API: `/api/v1/contract-templates*` und `/api/v1/contract-clauses*` (5.47).
+
+---
+
+### 4.21 News-Modul (KI-Pipeline)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| News-Übersicht | `/intern/news` | Recherchierte News-Items, Status-Filter |
+| News-Detail | `/intern/news/[id]` | Einzelartikel mit Pipeline-Triggers |
+| Themen | `/intern/news/topics` | Themen-Liste |
+| Neues Thema | `/intern/news/topics/new` | Thema anlegen |
+| Themen-Detail | `/intern/news/topics/[id]` | Themen-Konfiguration + Recherche-Trigger |
+
+API: `/api/v1/news/*` (5.32). Pipeline: Topic → Recherche → Item-Entwurf → Publish-Pipeline.
+
+---
+
+### 4.22 Newsletter
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/marketing/newsletter` | Newsletter-Kampagnen |
+| Detail | `/intern/marketing/newsletter/[id]` | Kampagnen-Editor mit Empfänger-Segment |
+
+API: `/api/v1/newsletter/*` (5.33). Versand via `POST /api/v1/newsletter/campaigns/[id]/send`.
+
+---
+
+### 4.23 Marketing-Agent
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Marketing-Agent | `/intern/marketing/agent` | KI-Agent für Marketing-Analyse und Task-Generierung |
+
+API: `/api/v1/marketing/agent/analyze` (5.57).
+
+---
+
+### 4.24 Aufträge (Orders)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/orders` | Auftragsliste mit Status-Filter |
+| Detail | `/intern/orders/[id]` | Auftragsdetails (Positionen, Status, verknüpfte Belege) |
+
+API: `/api/v1/orders*` (5.48).
+
+---
+
+### 4.25 Projekte (Kanban)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/projekte` | Projekt-Liste |
+| Detail | `/intern/projekte/[id]` | Kanban-Board mit Tasks |
+
+API: `/api/v1/projects*` (5.44).
+
+---
+
+### 4.26 Prozesse
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/prozesse` | Prozess-Liste |
+| Detail | `/intern/prozesse/[id]` | Prozess mit Schritten und Tasks |
+| Dev-Tasks | `/intern/prozesse/dev` | Programmieraufgaben (KI-generiert für interne Entwicklung) |
+
+API: `/api/v1/processes*` (5.43).
+
+---
+
+### 4.27 Management-Module
+
+#### Deliverables (Leistungspakete)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/management/deliverables` | Liste der Leistungspakete (KI-Beratung A1-A4) |
+| Detail | `/intern/management/deliverables/[id]` | Modul-Mapping, Status, Lieferumfang |
+
+#### EOS (Entrepreneurial Operating System)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| EOS-Hub | `/intern/management/eos` | Issues, Rocks, Meetings, Scorecard, VTO |
+
+API: `/api/v1/eos/*` (5.30).
+
+#### OKR
+
+| Seite | URL | Funktion |
+|---|---|---|
+| OKR-Hub | `/intern/management/okr` | Cycles, Objectives, Key-Results, Dashboard |
+
+API: `/api/v1/okr/*` (5.29).
+
+#### SOPs (Standard Operating Procedures)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/management/sops` | SOP-Liste |
+| Detail | `/intern/management/sops/[id]` | SOP mit Schritten, Publish, Export |
+
+API: `/api/v1/sops*` (5.42).
+
+---
+
+### 4.28 E-Learning / Kurse
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/elearning` | Kurs-Bibliothek |
+| Neuer Kurs | `/intern/elearning/new` | Kurs anlegen |
+| Kurs-Detail | `/intern/elearning/[id]` | Module, Lessons, Assets, Progress, Publish |
+| Lektion | `/intern/elearning/[id]/lektionen/[lessonId]` | Lessoneditor mit Blöcken & Quiz |
+| SCORM-Import | `/intern/elearning/[id]/scorm-import` | SCORM-Paket hochladen |
+| Berichte | `/intern/elearning/berichte` | Compliance-Reports |
+
+API: `/api/v1/courses/*` und `/api/v1/elearning/reports/compliance` (5.28).
+
+---
+
+### 4.29 Termine (Booking)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/termine` | Termin-Kalender mit Anlegen/Verschieben/Stornieren |
+| Verfügbarkeit | `/intern/termine/availability` | Regeln und einmalige Overrides |
+| Slot-Typen | `/intern/termine/slot-types` | Slot-Typen (Dauer, Buffer) konfigurieren |
+
+APIs: `/api/v1/appointments*`, `/api/v1/availability/*`, `/api/v1/slot-types*` (5.35), öffentliche Buchung via `/api/buchen/[slug]/*`.
+
+---
+
+### 4.30 Zeiterfassung
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/zeiterfassung` | Zeiterfassung mit Timer, Liste, Filter, Rechnungs-Übernahme |
+
+API: `/api/v1/time-entries*` (5.34).
+
+---
+
+### 4.31 KI-Bilder
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Bibliothek | `/intern/images` | Generierte Bilder + KI-Generator (Aspect-Ratio, Provider-Status) |
+
+API: `/api/v1/images*` und `/api/v1/kie/*` (5.49).
+
+---
+
+### 4.32 Portal-Verwaltung (Berater-Sicht)
+
+(Berater-/Owner-Sicht auf Portal-Anfragen.)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Zertifikats-Anfragen | `/intern/portal/certificate-requests` | Anfragen freigeben/ablehnen/widerrufen |
+| Änderungswünsche | `/intern/portal/change-requests` | Stammdaten-Änderungswünsche prüfen |
+| Portal-Chat | `/intern/portal/chat` | Chat mit Portal-Usern |
+
+API: `/api/v1/portal/*` und `/api/v1/portal/me/*` (5.27).
+
+---
+
+### 4.33 CMS-Erweiterungen
+
+(Ergänzt 4.10.)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Blog-Kategorien | `/intern/cms/blog-categories` | Kategorien für Blog-Beiträge |
+| Templates | `/intern/cms/templates` | Wiederverwendbare Seiten-Templates |
+| Design | `/intern/cms/design` | Theme-/Design-Settings |
+| Sitemap | `/intern/cms/sitemap` | Sitemap-Vorschau |
+
+---
+
+### 4.34 AI-Agenten (UI)
+
+(Detailbeschreibung siehe Section 25.)
+
+| Seite | URL | Funktion |
+|---|---|---|
+| Übersicht | `/intern/agents` | Agents-Hub |
+| Goals | `/intern/agents/goals` / `[id]` / `new` | Goals verwalten + Detail mit DAG, Approval-Flow, Inline-Edit/Delete |
+| Runs | `/intern/agents/runs/[id]` | Run-Detail mit Debug-Panel |
+| Definitions | `/intern/agents/definitions` / `[id]` / `new` | Worker-Typen mit Skills, Tools, System-Prompt |
+| Templates | `/intern/agents/templates` / `[id]` / `new` | Goal-Templates mit Variablen |
+| Memory | `/intern/agents/memory` / `[scope]` / `[scope]/edit` | PARA-Memory (Projects/Areas/Resources/Archives) |
+| Kosten | `/intern/agents/cost` | Token-/EUR-Verbrauch |
 
 ---
 
