@@ -42,7 +42,6 @@ src/__tests__/
 │   │   ├── webhook.validation.test.ts
 │   │   ├── user.validation.test.ts
 │   │   ├── role.validation.test.ts
-│   │   ├── tenant.validation.test.ts
 │   │   ├── blog.validation.test.ts
 │   │   ├── cms.validation.test.ts
 │   │   ├── marketing.validation.test.ts
@@ -319,7 +318,6 @@ Kopiere `companies.route.test.ts` und ersetze:
 | Webhook | 28 | createWebhookSchema, updateWebhookSchema |
 | User | 57 | createUserSchema, loginSchema, registerSchema, + Passwort |
 | Role | 31 | createRoleSchema, updateRoleSchema |
-| Tenant | 23 | createTenantSchema, updateTenantSchema |
 | Blog | 45 | createBlogPostSchema, generateBlogPostSchema |
 | CMS | 60 | Pages, Blocks, Navigation Schemas |
 | Marketing | 65 | Campaigns, Tasks, Templates Schemas |

@@ -1,7 +1,7 @@
 # xKMU BusinessOS - Vollständige Anwendungsdokumentation
 
-> **Version:** 1.5.625+
-> **Stand:** 2026-05-07
+> **Version:** 1.5.712+
+> **Stand:** 2026-05-10
 > **Stack:** Next.js 16 App Router, React 19, Drizzle ORM, PostgreSQL
 > **Sprache:** Deutsch (UI), Englisch (API/Code)
 
@@ -33,13 +33,14 @@
 22. [Social Media Publishing](#22-social-media-publishing)
 23. [SEO-Keyword-Recherche](#23-seo-keyword-recherche)
 24. [Workflow-Engine](#24-workflow-engine)
+25. [AI-Agenten](#25-ai-agenten)
 
 ---
 
 ## 1. Architektur-Übersicht
 
-### Multi-Tenant-Architektur
-Jede Datenbankentität ist mit einer `tenantId` versehen. Benutzer sehen nur Daten ihres eigenen Mandanten.
+### Single-Tenant-Architektur
+Die Anwendung läuft als Single-Tenant-Installation: jede Instanz bedient genau eine Organisation. Die Firmen-Stammdaten (Name, Adresse, Bank, Settings) liegen in der Singleton-Tabelle `organization`. Ein `tenantId`-Scoping auf Datensätzen existiert nicht mehr.
 
 ### Layouts
 | Layout | Pfad | Beschreibung |
@@ -71,7 +72,7 @@ Jede Datenbankentität ist mit einer `tenantId` versehen. Benutzer sehen nur Dat
 | Eigenschaft | Wert |
 |------------|------|
 | **URL** | `/intern/register` |
-| **Funktion** | Neuen Benutzer + Mandant anlegen |
+| **Funktion** | Neuen Benutzer (+ Initial-Organisation, falls noch leer) anlegen |
 
 ### API-Endpunkte
 
@@ -93,7 +94,7 @@ Neuen Benutzer registrieren.
 | `email` | string | Ja | E-Mail-Adresse |
 | `password` | string | Ja | Passwort |
 | `name` | string | Ja | Vollständiger Name |
-| `companyName` | string | Ja | Firmenname (wird als Tenant angelegt) |
+| `companyName` | string | Ja | Firmenname (wird in `organization` gespeichert) |
 
 #### `POST /api/v1/auth/logout`
 Aktuelle Session beenden.
@@ -575,7 +576,7 @@ Tokens liegen verschlüsselt (AES-256-GCM) in `social_oauth_accounts.access_toke
 | Seite | URL | Funktion |
 |-------|-----|----------|
 | Übersicht | `/intern/settings` | Einstellungs-Übersicht |
-| Mandant | `/intern/settings/tenant` | Firmendaten, Branding (Logo-Upload) |
+| Organisation | `/intern/settings/organization` | Firmenstammdaten (Adresse, Bank, Steuern), Branding (Logo-Upload), Demo-Daten-Import |
 | Benutzer | `/intern/settings/users` | Benutzerverwaltung |
 | Benutzerdetail | `/intern/settings/users/[id]` | Benutzer bearbeiten |
 | Rollen | `/intern/settings/roles` | Rollenverwaltung |
@@ -1228,8 +1229,8 @@ Medium löschen.
 Datei hochladen (multipart/form-data). Erlaubte Typen: JPEG, PNG, WebP, GIF. Max. 5 MB.
 In Produktion werden Dateien unter `MEDIA_UPLOAD_DIR` (Docker-Volume) persistiert statt in `/public/uploads/`.
 
-#### `GET /api/v1/media/serve/[tenantId]/[filename]`
-Hochgeladene Datei ausliefern (öffentlich, kein Auth). Wird automatisch als Pfad bei Uploads in Produktionsumgebung vergeben. Cache-Header: 1 Jahr, immutable.
+#### `GET /api/v1/media/serve/[...path]`
+Hochgeladene Datei ausliefern (öffentlich, kein Auth). Catch-all-Route für Dateien unterhalb `MEDIA_UPLOAD_DIR`. Path-Traversal wird abgewiesen. Cache-Header: 1 Jahr, immutable.
 
 ---
 
@@ -1315,10 +1316,29 @@ Webhook löschen.
 
 ---
 
-### 5.18 Mandant-API
+### 5.18 Organisation-API
 
-#### `GET /api/v1/tenant`
-Mandanten-Informationen abrufen (Firmenname, Einstellungen, etc.).
+#### `GET /api/v1/organization`
+Organisations-Stammdaten abrufen (Name, Slug, Adresse, Bank, Steuern, Settings).
+
+#### `PUT /api/v1/organization`
+Organisations-Stammdaten aktualisieren. Berechtigung: `settings:update`.
+
+| Body-Parameter (Auswahl) | Typ | Beschreibung |
+|---|---|---|
+| `name` | string | Firmenname |
+| `slug` | string | Slug (lowercase, alphanumeric, dashes) |
+| `street`, `houseNumber`, `postalCode`, `city`, `country` | string | Anschrift |
+| `legalForm`, `managingDirector`, `tradeRegister`, `vatId`, `taxNumber` | string | Rechtsform & Steuern |
+| `bankName1`, `bankIban1`, `bankBic1`, `bankName2`, `bankIban2`, `bankBic2` | string | Bankverbindungen |
+| `phone`, `email`, `website` | string | Kontakt |
+| `settings` | object | Beliebige JSON-Settings (z.B. Branding-Logo) |
+
+#### `POST /api/v1/organization/seed-demo`
+Demo-Datenbestand importieren. Berechtigung: `settings:update`.
+
+#### `POST /api/v1/organization/analyze`
+KI-gestützte Analyse der Organisations-Daten.
 
 ---
 
@@ -1338,7 +1358,7 @@ E-Mail versenden.
 ### 5.20 Import/Export-API
 
 #### `GET /api/v1/export/database`
-Datenbankexport als SQL-Datei herunterladen. Exportiert alle Tenant-spezifischen Tabellen (gefiltert nach `tenant_id`), `role_permissions` (über Join), und globale Referenztabellen (`din_requirements`, `din_grants`, `wiba_requirements`, `cms_block_type_definitions`).
+Datenbankexport als SQL-Datei herunterladen. Exportiert alle Anwendungstabellen (über Whitelist), `role_permissions` (über Join) sowie globale Referenztabellen (`din_requirements`, `din_grants`, `wiba_requirements`, `cms_block_type_definitions`).
 
 **Antwort:** SQL-Datei als Download (`Content-Disposition: attachment`)
 
@@ -1379,7 +1399,7 @@ CMS-Seite nach Slug (öffentlich).
 Website-Navigation (öffentlich).
 
 #### `GET /api/v1/public/branding`
-Branding-Informationen (Logo-URL, Alt-Text) aus `tenants.settings`. Fallback auf Standard-Logo wenn keins konfiguriert.
+Branding-Informationen (Logo-URL, Alt-Text) aus `organization.settings`. Fallback auf Standard-Logo wenn keins konfiguriert.
 **Response:** `{ logoUrl: string, logoAlt: string }`
 
 #### `POST /api/v1/contact`
@@ -1434,7 +1454,7 @@ Alle 257 WiBA-Anforderungen auflisten. Liefert zusätzlich `categoryNames`, `cat
 Alle Datenbanktabellen mit Zeilenanzahl auflisten. Berechtigung: `database:read`.
 
 #### `GET /api/v1/admin/database/tables/[tableName]`
-Tabellendaten lesen mit Pagination und Spalten-Metadaten. Tenant-gefiltert bei Tabellen mit `tenant_id`.
+Tabellendaten lesen mit Pagination und Spalten-Metadaten.
 
 #### `PUT /api/v1/admin/database/tables/[tableName]`
 Einzelne Zeile aktualisieren. Berechtigung: `database:update`.
@@ -1547,7 +1567,7 @@ Status aller konfigurierten KI-Anbieter.
 
 ### KI-Prompt-Vorlagen
 
-Verwaltung über `/intern/settings/ai-prompts`. Jede Vorlage hat einen eindeutigen `slug`, der im Code referenziert wird. System nutzt `AiPromptTemplateService.getOrDefault(tenantId, slug)`.
+Verwaltung über `/intern/settings/ai-prompts`. Jede Vorlage hat einen eindeutigen `slug`, der im Code referenziert wird. System nutzt `AiPromptTemplateService.getOrDefault(slug)`.
 
 ### KI-Nutzungsprotokolle
 
@@ -1606,8 +1626,8 @@ Der BSI „Weg in die Basis-Absicherung" (WiBA) Check prüft 257 Anforderungen i
 ### Datenmodell
 | Tabelle | Beschreibung |
 |---------|-------------|
-| `wiba_requirements` | 257 Anforderungen mit Kategorie, Hilfetext, Aufwand (global, ohne tenant_id) |
-| `wiba_audit_sessions` | WiBA-Checks pro Tenant mit Status und Zeitstempeln |
+| `wiba_requirements` | 257 Anforderungen mit Kategorie, Hilfetext, Aufwand (globale Referenztabelle) |
+| `wiba_audit_sessions` | WiBA-Checks mit Status und Zeitstempeln |
 | `wiba_answers` | Antworten (ja/nein/nicht_relevant) mit Notizen |
 
 ### Scoring
@@ -1635,10 +1655,9 @@ Der Datenbank-Browser unter `/intern/settings/database` ermöglicht direkten Zug
 - Spalten-Metadaten (Typ, Nullable, Default)
 
 ### Sicherheit
-- **Tabellen-Whitelist:** Nur 55 definierte Tabellen sind zugänglich
-- **Tenant-Isolation:** Tabellen mit `tenant_id` werden automatisch gefiltert
+- **Tabellen-Whitelist:** Nur explizit freigegebene Tabellen sind zugänglich (siehe `src/lib/db/table-whitelist.ts`)
 - **Berechtigungen:** Modul `database` mit Aktionen `read`, `update`, `delete`
-- **Schutz:** `tenant_id` kann nicht verändert werden
+- **Audit:** Alle änderenden Aktionen werden im Audit-Log persistiert
 
 ---
 
@@ -1694,7 +1713,7 @@ Das BusinessOS bietet eine vollständige n8n-Integration für Workflow-Automatis
 | POST | `/api/v1/n8n/workflows/generate` | KI-Workflow-Generator |
 
 ### DB-Tabellen
-- `n8n_connections` - n8n-Verbindungsdaten pro Tenant
+- `n8n_connections` - n8n-Verbindungsdaten (Singleton)
 - `n8n_workflow_logs` - Generierungs- und Deploy-Logs
 
 ### Berechtigungen
@@ -2405,4 +2424,57 @@ Verhalten:
 
 ---
 
-*Diese Dokumentation wurde am 2026-04-25 aktualisiert. Workflow-Engine in 1.4.529.*
+---
+
+## 25. AI-Agenten
+
+> **Detail-Doku:** Siehe `docs/AGENTS.md` für Architektur, Skills, Recovery-Patterns und Bedienung.
+
+### Überblick
+Goal-getriebene autonome Agenten mit Planning, Smart-Worker-Tool-Use-Loop, Recovery und Budget-Caps. Inspiriert von Paperclip. Nutzt DB-basierte AI-Provider (`aiProviders`-Tabelle) via `AIService.completeWithContext`.
+
+### Bestandteile
+| Komponente | Aufgabe |
+|---|---|
+| **Goals** | Vom User definierte Ziele (Titel, Beschreibung, Budget, Approval-Flag) |
+| **Runs** | Konkrete Ausführungen eines Goals (Status: planning → running → done/failed/paused/cancelled/awaiting_approval) |
+| **Steps (DAG)** | Einzelne Plan-Schritte mit `dependsOnStepKeys`-Abhängigkeiten |
+| **Definitions** | Worker-Typen mit Skills/Tools-Whitelist und System-Prompt (in DB editierbar) |
+| **Templates** | Wiederverwendbare Goal-Vorlagen mit `{{var}}`-Platzhaltern |
+| **Tools** | 5 Namespaces — `memory.*`, `workflow.*`, `prompt.*`, `service.*`, `agent.*` |
+| **PARA-Memory** | Projects/Areas/Resources/Archives — pgvector + pg_trgm Hybrid-Search |
+| **Recovery** | 4 Liveness-Pfade + Stranded-Run-Reconcile + Boot-Recovery (FOR UPDATE SKIP LOCKED) |
+
+### Seiten
+| Route | Zweck |
+|---|---|
+| `/intern/agents/goals` | Goal-Liste, Anlegen/Löschen |
+| `/intern/agents/goals/[id]` | Goal-Detail mit DAG, Inline-Edit, Approval-Flow, Manual-Triggers |
+| `/intern/agents/runs/[id]` | Run-Detail mit Debug-Panel (6 Heuristiken), Audit-Events |
+| `/intern/agents/definitions` | Worker-Definitions (CRUD) |
+| `/intern/agents/templates` | Goal-Templates (CRUD) mit Variablen |
+| `/intern/agents/costs` | Token-/EUR-Verbrauch-Übersicht |
+
+### Wichtige API-Endpunkte (Auswahl)
+| Methode | Pfad | Zweck |
+|---|---|---|
+| POST | `/api/agents/goals` | Goal anlegen (auch aus Template) |
+| GET / PATCH / DELETE | `/api/agents/goals/[id]` | Goal lesen/bearbeiten/löschen (räumt task_queue ab) |
+| POST | `/api/agents/goals/[id]/approve` | Plan freigeben |
+| POST | `/api/agents/goals/[id]/reject` | Plan ablehnen |
+| GET | `/api/agents/runs/[id]/debug` | Debug-Snapshot (Issues, Provider, Tools, Tasks, Audit) |
+| GET / POST / PATCH / DELETE | `/api/agents/templates[…]` | Template-CRUD |
+
+### Cron-Hooks
+- `agent.heartbeat` — Smart-Worker-Tick, picked Steps via `FOR UPDATE SKIP LOCKED`
+- `agent.recovery` — Stranded-Run-Reconcile, orphaned-pending-Steps nachholen
+
+### Wichtige Implementations-Hinweise
+- **DB-Provider:** Alle LLM-Calls laufen über `AIService.completeWithContext` (kein static `complete`)
+- **Task-Queue-Isolation:** Generischer `TaskQueueService.executeAllPending` schliesst `agent_*`-Tasks via `notLike(taskQueue.type, 'agent_%')` aus
+- **System-Prompts in DB:** `agent_definitions.system_prompt` mit hartkodiertem Fallback in `SystemPromptService`
+- **Goal-Löschen:** Löscht zugehörige `task_queue`-Einträge mit (Reference-ID-FK fehlt)
+
+---
+
+*Diese Dokumentation wurde am 2026-05-10 aktualisiert. Stand-Version: 1.5.712. Multi-Tenant ausgebaut — Anwendung läuft Single-Tenant gegen Singleton-Tabelle `organization`.*

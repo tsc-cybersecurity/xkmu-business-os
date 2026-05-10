@@ -1,6 +1,6 @@
 # xKMU Business OS
 
-Multi-tenant Business Management Platform for SMEs (Small and Medium Enterprises).
+Single-tenant Business Management Platform for SMEs (Small and Medium Enterprises).
 
 ## Features
 
@@ -62,10 +62,11 @@ Multi-tenant Business Management Platform for SMEs (Small and Medium Enterprises
 ### Administration
 - **User Management** - Multi-user support with role-based access
 - **Roles & Permissions** - Fine-grained CRUD permissions per module (6 default roles: Owner, Admin, Member, Viewer, IT-Auditor, Designer)
-- **Settings & Configuration** - Tenant settings, email templates, API key management
+- **Settings & Configuration** - Organization settings, email templates, API key management
 - **Database Admin** - Browser-based database viewer and editor
-- **Import / Export** - Full tenant data backup and restore
-- **Multi-Tenant** - Secure tenant isolation at database level
+- **Import / Export** - Full database backup and restore as SQL
+- **Audit Log** - Tamper-evident logging of all change operations and login/logout
+- **AI Agents** - Goal-driven autonomous agents with planning, smart-worker tool-use, recovery, and budgets
 - **Notifications** - In-app notification system
 
 ## Tech Stack
