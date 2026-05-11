@@ -128,4 +128,8 @@ export const MIGRATIONS: Migration[] = [
     name: '027_drop_calendar_account_legacy_sync_state.sql',
     description: 'Calendar: drop ungenutzte Sync-State-Spalten von user_calendar_accounts (Cleanup nach Migration 025)',
   },
+  {
+    name: '028_api_doc_annotations.sql',
+    description: 'API-Doku: persistente KI-generierte Annotationen fuer Endpoints ohne handgepflegte Registry-Eintraege',
+  },
 ]

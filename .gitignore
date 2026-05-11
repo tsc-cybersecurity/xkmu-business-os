@@ -73,5 +73,6 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 
 # Auto-generierte API-Doku (per scripts/generate-api-manifest.mjs;
-# laeuft via predev/prebuild/postinstall — niemals manuell editieren)
+# laeuft via predev/prebuild — niemals manuell editieren)
 /src/lib/api-docs/discovered.ts
+/src/lib/api-docs/discovered-sources.server.ts

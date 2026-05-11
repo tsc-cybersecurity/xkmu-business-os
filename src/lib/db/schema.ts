@@ -4067,3 +4067,25 @@ export const agentCostEvents = pgTable('agent_cost_events', {
 
 export type AgentCostEvent = typeof agentCostEvents.$inferSelect
 export type NewAgentCostEvent = typeof agentCostEvents.$inferInsert
+
+// ============================================
+// API-Doku Annotationen (Migration 028)
+// ============================================
+export const apiDocAnnotations = pgTable('api_doc_annotations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  method: varchar('method', { length: 10 }).notNull(),
+  path: text('path').notNull(),
+  summary: text('summary').notNull(),
+  description: text('description'),
+  requestBody: jsonb('request_body'),
+  responseExample: jsonb('response_example'),
+  curlExample: text('curl_example').notNull().default(''),
+  source: varchar('source', { length: 20 }).notNull().default('ai_generated'),
+  model: varchar('model', { length: 100 }),
+  generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex('uq_api_doc_annotations_method_path').on(table.method, table.path),
+])
+
+export type ApiDocAnnotation = typeof apiDocAnnotations.$inferSelect
+export type NewApiDocAnnotation = typeof apiDocAnnotations.$inferInsert
