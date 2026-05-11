@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { externalBusy, userCalendarsWatched } from '@/lib/db/schema'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, ne } from 'drizzle-orm'
 import { createHmac, randomUUID } from 'node:crypto'
 import { CalendarAccountService } from './calendar-account.service'
 import { CalendarConfigService } from './calendar-config.service'
@@ -35,6 +35,17 @@ export const CalendarSyncService = {
     if (!watched || watched.accountId !== accountId) {
       throw new Error(`Watched calendar ${watchedId} not found or wrong account`)
     }
+    // Re-attach: alle bestehenden external_busy-Zeilen fuer diesen Kalender
+    // auf den aktuellen Account umhaengen, falls sie noch auf alte (revoked
+    // oder geloeschte) Account-IDs zeigen. Sonst bleibt orphaned data uebrig
+    // und das Slot-Listing (filtert nach aktuellem account_id) sieht sie
+    // nicht. Greift speziell bei Reconnects.
+    await db.update(externalBusy)
+      .set({ accountId })
+      .where(and(
+        eq(externalBusy.googleCalendarId, watched.googleCalendarId),
+        ne(externalBusy.accountId, accountId),
+      ))
     const accessToken = await CalendarAccountService.getValidAccessToken(accountId)
     let pageToken: string | undefined
     let syncToken: string | null = null
