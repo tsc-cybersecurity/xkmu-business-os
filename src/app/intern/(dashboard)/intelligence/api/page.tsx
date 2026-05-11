@@ -10,10 +10,12 @@ import {
   Search, PanelLeftClose, PanelLeft, Code2, Download, Copy, Check, ServerCog,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { apiServices } from '@/lib/api-docs/registry'
+import { MERGED_SERVICES } from '@/lib/api-docs/merge'
 import type { ApiEndpoint, ApiService, HttpMethod } from '@/lib/api-docs/types'
 import { buildCurlExample, buildFetchExample, buildPythonExample } from '@/lib/api-docs/code-examples'
 import { toast } from 'sonner'
+
+const apiServices = MERGED_SERVICES
 
 const methodColors: Record<HttpMethod, string> = {
   GET: 'bg-green-600 hover:bg-green-600',

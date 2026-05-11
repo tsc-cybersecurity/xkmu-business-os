@@ -4,8 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "predev": "node scripts/generate-api-manifest.mjs",
     "build": "next build",
+    "prebuild": "node scripts/generate-api-manifest.mjs",
     "start": "next start",
+    "postinstall": "node scripts/generate-api-manifest.mjs",
+    "api-docs:scan": "node scripts/generate-api-manifest.mjs",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",

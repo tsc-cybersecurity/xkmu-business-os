@@ -30,3 +30,19 @@ export interface ApiService {
   auth: AuthType
   endpoints: ApiEndpoint[]
 }
+
+export interface DiscoveredAuth {
+  type: AuthType
+  /** Falls per withPermission(req, 'module', 'action', ...) erkannt — sonst null */
+  module: string | null
+  action: string | null
+}
+
+/** Endpoint, der durch Filesystem-Scan von src/app/api/**\/route.ts entdeckt wurde */
+export interface DiscoveredEndpoint {
+  method: HttpMethod
+  path: string
+  auth: DiscoveredAuth | null
+  /** Quelldatei relativ zum Projekt-Root */
+  file: string
+}
