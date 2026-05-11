@@ -32,14 +32,29 @@ const ev = (over: Partial<{ id: string; status: string; transparency: string; xk
   extendedXkmuAppointmentId: over.xkmuApptId ?? null,
 })
 
-describe('CalendarSyncService.fullSync', () => {
+// Watched-row helper — Migration 025 schema
+const watchedRow = (over: Partial<{ id: string; accountId: string; googleCalendarId: string; syncToken: string | null; watchChannelId: string | null; watchResourceId: string | null; readForBusy: boolean }>) => ({
+  id: over.id ?? 'cal-1',
+  accountId: over.accountId ?? 'acc-1',
+  googleCalendarId: over.googleCalendarId ?? 'primary',
+  displayName: 'X',
+  readForBusy: over.readForBusy ?? true,
+  syncToken: over.syncToken ?? null,
+  watchChannelId: over.watchChannelId ?? null,
+  watchResourceId: over.watchResourceId ?? null,
+  watchExpiresAt: null,
+  lastMessageNumber: null,
+  lastSyncedAt: null,
+  createdAt: new Date(),
+})
+
+describe('CalendarSyncService.fullSyncCalendar', () => {
   beforeEach(() => vi.resetModules())
 
-  it('paginates and persists nextSyncToken', async () => {
+  it('paginates and persists nextSyncToken on the watched-calendar row', async () => {
     const helper = setupDbMock()
-    helper.insertMock.mockResolvedValueOnce(undefined)
-    helper.deleteMock.mockResolvedValueOnce(undefined)
-    helper.updateMock.mockResolvedValueOnce(undefined)
+    // 1. select for getWatchedById in fullSyncCalendar
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-1', accountId: 'acc-1' })])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
     vi.mocked(CalendarAccountService.getValidAccessToken).mockResolvedValue('AT')
@@ -49,46 +64,40 @@ describe('CalendarSyncService.fullSync', () => {
       .mockResolvedValueOnce({ events: [ev({ id: 'e3' })] as never, nextPageToken: null, nextSyncToken: 'tok-final', status: 'ok' })
 
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
-    const out = await CalendarSyncService.fullSync('acc-1', 'primary')
-    expect(out.syncToken).toBe('tok-final')
-    expect(out.eventCount).toBe(3)
+    const out = await CalendarSyncService.fullSyncCalendar('acc-1', 'cal-1')
+    expect(out.events).toBe(3)
     expect(CalendarGoogleClient.eventsList).toHaveBeenCalledTimes(2)
+    expect(helper.db.update).toHaveBeenCalled()
   })
 })
 
-describe('CalendarSyncService.incrementalSync', () => {
+describe('CalendarSyncService.incrementalSyncCalendar', () => {
   beforeEach(() => vi.resetModules())
 
   it('returns reSynced=true on sync_token_expired and triggers fullSync', async () => {
     const helper = setupDbMock()
-    helper.selectMock.mockResolvedValueOnce([{
-      id: 'acc-1', primaryCalendarId: 'primary', syncToken: 'old-tok', revokedAt: null,
-    }])
-    helper.updateMock.mockResolvedValueOnce(undefined)
+    // 1. getWatchedById in incrementalSyncCalendar
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-1', accountId: 'acc-1', syncToken: 'old-tok' })])
+    // 2. getWatchedById nested call in fullSyncCalendar (after re-sync trigger)
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-1', accountId: 'acc-1' })])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
-    vi.mocked(CalendarAccountService.getById).mockResolvedValueOnce({
-      id: 'acc-1', primaryCalendarId: 'primary', syncToken: 'old-tok', revokedAt: null,
-    } as never)
     vi.mocked(CalendarAccountService.getValidAccessToken).mockResolvedValue('AT')
     const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
     vi.mocked(CalendarGoogleClient.eventsList)
       .mockResolvedValueOnce({ events: [], nextPageToken: null, nextSyncToken: null, status: 'sync_token_expired' })
-      // fullSync inner call
       .mockResolvedValueOnce({ events: [ev({ id: 'e1' })] as never, nextPageToken: null, nextSyncToken: 'fresh', status: 'ok' })
 
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
-    const out = await CalendarSyncService.incrementalSync('acc-1')
+    const out = await CalendarSyncService.incrementalSyncCalendar('cal-1')
     expect(out.reSynced).toBe(true)
   })
 
   it('upserts and persists new sync token on normal change', async () => {
     const helper = setupDbMock()
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-1', accountId: 'acc-1', syncToken: 'tok' })])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
-    vi.mocked(CalendarAccountService.getById).mockResolvedValueOnce({
-      id: 'acc-1', primaryCalendarId: 'primary', syncToken: 'tok', revokedAt: null,
-    } as never)
     vi.mocked(CalendarAccountService.getValidAccessToken).mockResolvedValue('AT')
     const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
     vi.mocked(CalendarGoogleClient.eventsList).mockResolvedValueOnce({
@@ -96,7 +105,7 @@ describe('CalendarSyncService.incrementalSync', () => {
     })
 
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
-    const out = await CalendarSyncService.incrementalSync('acc-1')
+    const out = await CalendarSyncService.incrementalSyncCalendar('cal-1')
     expect(out.events).toBe(1)
     expect(out.reSynced).toBe(false)
   })
@@ -129,28 +138,26 @@ describe('CalendarSyncService.upsertEvents', () => {
   })
 })
 
-describe('CalendarSyncService.setupWatch', () => {
+describe('CalendarSyncService.setupWatchCalendar', () => {
   beforeEach(() => vi.resetModules())
 
   it('throws when appPublicUrl missing', async () => {
     const helper = setupDbMock()
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-1' })])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
     vi.mocked(CalendarConfigService.getConfig).mockResolvedValueOnce({
       id: 'c', clientId: 'cid', clientSecret: 'sec', redirectUri: 'r',
       appPublicUrl: null, tokenEncryptionKeyHex: '0'.repeat(64), appointmentTokenSecret: 's'.repeat(64),
     } as never)
-    const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
-    vi.mocked(CalendarAccountService.getById).mockResolvedValueOnce({
-      id: 'acc-1', primaryCalendarId: 'primary', revokedAt: null,
-    } as never)
 
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
-    await expect(CalendarSyncService.setupWatch('acc-1')).rejects.toThrow(/app_public_url|appPublicUrl/i)
+    await expect(CalendarSyncService.setupWatchCalendar('cal-1')).rejects.toThrow(/app_public_url|appPublicUrl/i)
   })
 
-  it('calls channelsWatch and persists IDs', async () => {
+  it('calls channelsWatch and persists IDs on the watched-calendar row', async () => {
     const helper = setupDbMock()
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-1' })])
     helper.updateMock.mockResolvedValueOnce(undefined)
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
@@ -159,9 +166,6 @@ describe('CalendarSyncService.setupWatch', () => {
       appPublicUrl: 'https://app.x', tokenEncryptionKeyHex: '0'.repeat(64), appointmentTokenSecret: 's'.repeat(64),
     } as never)
     const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
-    vi.mocked(CalendarAccountService.getById).mockResolvedValueOnce({
-      id: 'acc-1', primaryCalendarId: 'primary', revokedAt: null,
-    } as never)
     vi.mocked(CalendarAccountService.getValidAccessToken).mockResolvedValueOnce('AT')
     const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
     vi.mocked(CalendarGoogleClient.channelsWatch).mockResolvedValueOnce({
@@ -169,25 +173,55 @@ describe('CalendarSyncService.setupWatch', () => {
     })
 
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
-    await CalendarSyncService.setupWatch('acc-1')
+    await CalendarSyncService.setupWatchCalendar('cal-1')
     expect(CalendarGoogleClient.channelsWatch).toHaveBeenCalled()
     expect(helper.db.update).toHaveBeenCalled()
   })
 })
 
-describe('CalendarSyncService.stopWatch', () => {
+describe('CalendarSyncService.stopWatchCalendar', () => {
   beforeEach(() => vi.resetModules())
 
   it('is no-op when watchChannelId is null', async () => {
     const helper = setupDbMock()
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-1', watchChannelId: null })])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
-    const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
-    vi.mocked(CalendarAccountService.getById).mockResolvedValueOnce({
-      id: 'acc-1', watchChannelId: null, watchResourceId: null,
-    } as never)
     const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
-    await CalendarSyncService.stopWatch('acc-1')
+    await CalendarSyncService.stopWatchCalendar('cal-1')
     expect(CalendarGoogleClient.channelsStop).not.toHaveBeenCalled()
+  })
+})
+
+describe('CalendarSyncService account-shims iterieren ueber alle readForBusy=true Kalender', () => {
+  beforeEach(() => {
+    vi.resetModules()
+    vi.clearAllMocks()
+  })
+
+  it('fullSyncAccount syncs jede watched-calendar, nicht nur primary', async () => {
+    const helper = setupDbMock()
+    // 1. listSyncableForAccount
+    helper.selectMock.mockResolvedValueOnce([
+      watchedRow({ id: 'cal-1', googleCalendarId: 'primary' }),
+      watchedRow({ id: 'cal-2', googleCalendarId: 'private@gmail.com' }),
+    ])
+    // 2 + 3. getWatchedById in fullSyncCalendar — einmal pro Iteration
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-1', googleCalendarId: 'primary' })])
+    helper.selectMock.mockResolvedValueOnce([watchedRow({ id: 'cal-2', googleCalendarId: 'private@gmail.com' })])
+
+    vi.doMock('@/lib/db', () => ({ db: helper.db }))
+    const { CalendarAccountService } = await import('@/lib/services/calendar-account.service')
+    vi.mocked(CalendarAccountService.getValidAccessToken).mockResolvedValue('AT')
+    const { CalendarGoogleClient } = await import('@/lib/services/calendar-google.client')
+    vi.mocked(CalendarGoogleClient.eventsList)
+      .mockResolvedValueOnce({ events: [ev({ id: 'a' })] as never, nextPageToken: null, nextSyncToken: 'tok-A', status: 'ok' })
+      .mockResolvedValueOnce({ events: [ev({ id: 'b' })] as never, nextPageToken: null, nextSyncToken: 'tok-B', status: 'ok' })
+
+    const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
+    const out = await CalendarSyncService.fullSyncAccount('acc-1')
+    expect(out.calendars).toBe(2)
+    expect(out.events).toBe(2)
+    expect(CalendarGoogleClient.eventsList).toHaveBeenCalledTimes(2)
   })
 })

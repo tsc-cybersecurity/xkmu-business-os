@@ -317,7 +317,7 @@ export const CronService = {
         case 'calendar_sync': {
           const { runCalendarSyncMaintenance } = await import('./calendar-cron.handler')
           const result = await runCalendarSyncMaintenance()
-          msg = `Calendar maintenance: ${result.total} accounts, ${result.refreshed} refreshed, ${result.renewed} renewed, ${result.failed} failed`
+          msg = `Calendar maintenance: ${result.totalAccounts} accounts / ${result.totalCalendars} calendars, ${result.refreshed} token-refreshed, ${result.renewed} channels renewed, ${result.failed} failed`
           break
         }
         case 'news_research': {

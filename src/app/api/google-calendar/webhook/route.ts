@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { db } from '@/lib/db'
-import { userCalendarAccounts } from '@/lib/db/schema'
-import { and, eq, isNull } from 'drizzle-orm'
+import { userCalendarsWatched } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 import { CalendarConfigService } from '@/lib/services/calendar-config.service'
 import { CalendarSyncService } from '@/lib/services/calendar-sync.service'
 import { logger } from '@/lib/utils/logger'
@@ -25,12 +25,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'missing_headers' }, { status: 400 })
   }
 
-  // Find account by channel id
-  const rows = await db.select().from(userCalendarAccounts)
-    .where(and(eq(userCalendarAccounts.watchChannelId, channelId), isNull(userCalendarAccounts.revokedAt)))
-    .limit(1)
-  const account = rows[0]
-  if (!account) {
+  // Find watched calendar by channel id (Migration 025 — Channels leben pro Kalender)
+  const watched = await CalendarSyncService.getWatchedByChannelId(channelId)
+  if (!watched) {
     // Google retries on 5xx but not 4xx. Returning 404 lets Google drop the channel.
     return NextResponse.json({ error: 'channel_not_found' }, { status: 404 })
   }
@@ -47,43 +44,42 @@ export async function POST(request: NextRequest) {
 
   // Idempotency
   const messageNum = messageNumStr ? parseInt(messageNumStr, 10) : null
-  if (messageNum !== null && account.lastMessageNumber !== null && messageNum <= account.lastMessageNumber) {
+  if (messageNum !== null && watched.lastMessageNumber !== null && messageNum <= watched.lastMessageNumber) {
     return NextResponse.json({ ok: true, skipped: 'duplicate_or_older_message' })
   }
 
   // Initial 'sync' state — Google sent it after channel creation, no pull needed
   if (resourceState === 'sync') {
     if (messageNum !== null) {
-      await db.update(userCalendarAccounts)
-        .set({ lastMessageNumber: messageNum, updatedAt: new Date() })
-        .where(eq(userCalendarAccounts.id, account.id))
+      await db.update(userCalendarsWatched)
+        .set({ lastMessageNumber: messageNum })
+        .where(eq(userCalendarsWatched.id, watched.id))
     }
     return NextResponse.json({ ok: true, state: 'sync' })
   }
 
   // Channel deleted by Google — clear locally; cron will renew
   if (resourceState === 'not_exists') {
-    await db.update(userCalendarAccounts).set({
+    await db.update(userCalendarsWatched).set({
       watchChannelId: null,
       watchResourceId: null,
       watchExpiresAt: null,
-      updatedAt: new Date(),
-    }).where(eq(userCalendarAccounts.id, account.id))
+    }).where(eq(userCalendarsWatched.id, watched.id))
     return NextResponse.json({ ok: true, state: 'not_exists' })
   }
 
-  // Normal change — incremental sync
+  // Normal change — incremental sync (per Kalender)
   if (resourceState === 'exists') {
     try {
-      const out = await CalendarSyncService.incrementalSync(account.id)
+      const out = await CalendarSyncService.incrementalSyncCalendar(watched.id)
       if (messageNum !== null) {
-        await db.update(userCalendarAccounts)
-          .set({ lastMessageNumber: messageNum, updatedAt: new Date() })
-          .where(eq(userCalendarAccounts.id, account.id))
+        await db.update(userCalendarsWatched)
+          .set({ lastMessageNumber: messageNum })
+          .where(eq(userCalendarsWatched.id, watched.id))
       }
       return NextResponse.json({ ok: true, ...out })
     } catch (err) {
-      logger.error('webhook incremental sync failed', err, { accountId: account.id })
+      logger.error('webhook incremental sync failed', err, { watchedId: watched.id, accountId: watched.accountId })
       // Return 200 to avoid Google retrying — we'll catch up on the next cron tick
       return NextResponse.json({ ok: false, error: 'sync_failed' })
     }

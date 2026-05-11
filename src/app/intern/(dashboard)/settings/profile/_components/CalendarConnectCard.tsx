@@ -13,6 +13,10 @@ interface CalendarRow {
   googleCalendarId: string
   displayName: string
   readForBusy: boolean
+  hasSyncToken?: boolean
+  watchActive?: boolean
+  watchExpiresAt?: string | null
+  lastSyncedAt?: string | null
 }
 
 interface AccountInfo {
@@ -82,9 +86,38 @@ export function CalendarConnectCard() {
       })
       if (!res.ok) throw new Error('Toggle fehlgeschlagen')
       setCalendars(cs => cs.map(c => c.id === watchedId ? { ...c, readForBusy: next } : c))
+      toast.success(next
+        ? 'Kalender wird jetzt als belegt geprueft (Initial-Sync laeuft)'
+        : 'Kalender wird nicht mehr als belegt geprueft (gecachte Termine entfernt)')
+      // Refresh, um Sync-State (lastSyncedAt, watchActive) zu aktualisieren
+      void reloadAccount()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Fehler')
     } finally { setBusy(false) }
+  }
+
+  async function resyncCalendar(watchedId: string) {
+    setBusy(true)
+    try {
+      const res = await fetch('/api/v1/calendar-account', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resyncCalendar', watchedId }),
+      })
+      if (!res.ok) throw new Error('Re-Sync fehlgeschlagen')
+      const data = await res.json()
+      toast.success(`Re-Sync: ${data.events ?? 0} Events, ${data.inserted ?? 0} aktualisiert`)
+      void reloadAccount()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Fehler')
+    } finally { setBusy(false) }
+  }
+
+  async function reloadAccount() {
+    const res = await fetch('/api/v1/calendar-account')
+    if (!res.ok) return
+    const data: CalendarAccountResponse = await res.json()
+    setCalendars(data.calendars ?? [])
   }
 
   async function disconnect() {
@@ -172,35 +205,64 @@ export function CalendarConnectCard() {
                   </p>
                 </div>
                 <ul className="divide-y">
-                  {calendars.map(c => (
-                    <li key={c.id} className="flex items-center justify-between p-4">
-                      <div>
-                        <div className="font-medium">{c.displayName}</div>
-                        <div className="text-xs text-muted-foreground">{c.googleCalendarId}</div>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="radio"
-                            name="primary"
-                            checked={primary === c.googleCalendarId}
-                            onChange={() => setPrimaryCalendar(c.googleCalendarId)}
-                            disabled={busy}
-                          />
-                          Primär
-                        </label>
-                        <label className="flex items-center gap-2 text-sm">
-                          <input
-                            type="checkbox"
-                            checked={c.readForBusy}
-                            onChange={e => toggleReadForBusy(c.id, e.target.checked)}
-                            disabled={busy}
-                          />
-                          als belegt zählen
-                        </label>
-                      </div>
-                    </li>
-                  ))}
+                  {calendars.map(c => {
+                    const watchOk = c.readForBusy && c.watchActive
+                    const watchBroken = c.readForBusy && !c.watchActive
+                    return (
+                      <li key={c.id} className="flex items-center justify-between p-4">
+                        <div className="flex-1">
+                          <div className="font-medium">{c.displayName}</div>
+                          <div className="text-xs text-muted-foreground">{c.googleCalendarId}</div>
+                          {c.readForBusy && (
+                            <div className="mt-1 text-xs">
+                              {watchOk && (
+                                <span className="text-emerald-700">
+                                  ● Push-Sync aktiv
+                                  {c.lastSyncedAt && ` · zuletzt synchronisiert ${new Date(c.lastSyncedAt).toLocaleString('de-DE')}`}
+                                </span>
+                              )}
+                              {watchBroken && (
+                                <span className="text-amber-700">
+                                  ● Push-Channel inaktiv — Aenderungen werden erst nach naechstem Cron-Lauf erkannt. Per "Re-Sync" sofort holen.
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="radio"
+                              name="primary"
+                              checked={primary === c.googleCalendarId}
+                              onChange={() => setPrimaryCalendar(c.googleCalendarId)}
+                              disabled={busy}
+                            />
+                            Primär
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={c.readForBusy}
+                              onChange={e => toggleReadForBusy(c.id, e.target.checked)}
+                              disabled={busy}
+                            />
+                            als belegt zählen
+                          </label>
+                          {c.readForBusy && (
+                            <button
+                              type="button"
+                              onClick={() => resyncCalendar(c.id)}
+                              disabled={busy}
+                              className="rounded-md border px-2 py-1 text-xs hover:bg-muted disabled:opacity-50"
+                            >
+                              Re-Sync
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             )}

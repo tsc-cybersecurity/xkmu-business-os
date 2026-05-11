@@ -3573,10 +3573,23 @@ export const userCalendarsWatched = pgTable('user_calendars_watched', {
   googleCalendarId: varchar('google_calendar_id', { length: 255 }).notNull(),
   displayName: varchar('display_name', { length: 255 }).notNull(),
   readForBusy: boolean('read_for_busy').notNull().default(true),
+  // Per-Kalender-Sync-State (Migration 025).
+  // Ersetzt die gleichnamigen Felder auf userCalendarAccounts, sodass
+  // auch nicht-primaere Kalender (z.B. privater Kalender) gepullt
+  // und ueberwacht werden.
+  syncToken: text('sync_token'),
+  watchChannelId: uuid('watch_channel_id'),
+  watchResourceId: varchar('watch_resource_id', { length: 255 }),
+  watchExpiresAt: timestamp('watch_expires_at', { withTimezone: true }),
+  lastMessageNumber: bigint('last_message_number', { mode: 'number' }),
+  lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => ({
   uniqAccountCalendar: uniqueIndex('uq_user_calendars_watched_account_calendar')
     .on(table.accountId, table.googleCalendarId),
+  uniqWatchChannel: uniqueIndex('uq_user_calendars_watched_channel')
+    .on(table.watchChannelId)
+    .where(sql`watch_channel_id IS NOT NULL`),
   accountIdx: index('idx_user_calendars_watched_account').on(table.accountId),
 }))
 

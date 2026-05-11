@@ -116,4 +116,8 @@ export const MIGRATIONS: Migration[] = [
     name: '024_agent_system_prompts_seed.sql',
     description: 'Agent-System: Orchestrator-Plan/Replan + Smart-Worker-Loop-Suffix als DB-Eintrage',
   },
+  {
+    name: '025_calendar_per_calendar_sync.sql',
+    description: 'Calendar: Sync-State pro Kalender (statt nur primary) — Watch-Channel + syncToken auf user_calendars_watched',
+  },
 ]
