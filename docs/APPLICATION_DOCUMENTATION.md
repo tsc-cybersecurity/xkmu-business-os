@@ -13,7 +13,11 @@
 2. [Authentifizierung & Autorisierung](#2-authentifizierung--autorisierung)
 3. [Öffentliche Seiten](#3-öffentliche-seiten)
 4. [Dashboard & Interne Seiten](#4-dashboard--interne-seiten)
+   - 4.1 Kontakte · 4.2 Katalog · 4.3 Finanzen · 4.4 Leads · 4.5 Ideen · 4.6 DIN SPEC 27076 · 4.7 Cybersecurity · 4.8 BSI WiBA · 4.9 Blog · 4.10 CMS · 4.11 Marketing · 4.12 Social-Media · 4.13 Business Intelligence · 4.14 Einstellungen
+   - 4.15 Hub-Seiten · 4.16 Chancen · 4.17 Chat & E-Mail-Postfach · 4.18 Cockpit · 4.19 Cybersecurity-Erweiterungen · 4.20 Verträge · 4.21 News · 4.22 Newsletter · 4.23 Marketing-Agent · 4.24 Aufträge · 4.25 Projekte · 4.26 Prozesse · 4.27 Management (Deliverables/EOS/OKR/SOPs) · 4.28 E-Learning · 4.29 Termine · 4.30 Zeiterfassung · 4.31 KI-Bilder · 4.32 Portal-Verwaltung · 4.33 CMS-Erweiterungen · 4.34 AI-Agenten (UI)
 5. [API-Referenz](#5-api-referenz)
+   - 5.1-5.25 Bestehende APIs (Firmen, Personen, Produkte, Dokumente, Leads, Ideen, Aktivitäten, DIN, Blog, CMS, Marketing, Social-Media, Medien, Users/Roles, API-Keys, Webhooks, Organisation, E-Mail, Import/Export, BI, Public, WiBA, DB-Admin, AI-Providers)
+   - 5.26 AI-Agents · 5.27 Customer-Portal · 5.28 E-Learning/Kurse · 5.29 OKR · 5.30 EOS · 5.31 CRM-Chat · 5.32 News · 5.33 Newsletter · 5.34 Zeiterfassung · 5.35 Termine & Buchung · 5.36 Kalender-Integration · 5.37 Cron-Jobs · 5.38 Workflow-Engine · 5.39 KI-Prompt-Verwaltung · 5.40 Cockpit · 5.41 KPI/Dashboard · 5.42 SOPs · 5.43 Prozesse · 5.44 Projekte · 5.45 BSI Grundschutz++ · 5.46 IR-Playbook · 5.47 Verträge · 5.48 Aufträge & Belege · 5.49 KI-Bilder · 5.50 E-Mail-Konten/Postfach · 5.51-5.58 Erweiterungen (Persons, Companies, Leads, Blog, CMS, Social-Media, Marketing, Documents) · 5.59 Sonstige
 6. [Module im Detail](#6-module-im-detail)
 7. [KI-Integration](#7-ki-integration)
 8. [CMS-System](#8-cms-system)
