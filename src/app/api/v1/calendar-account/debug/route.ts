@@ -5,6 +5,7 @@ import { userCalendarAccounts, userCalendarsWatched, externalBusy, appointments 
 import { and, eq, gte, inArray, lte } from 'drizzle-orm'
 import { CalendarAccountService } from '@/lib/services/calendar-account.service'
 import { CalendarGoogleClient } from '@/lib/services/calendar-google.client'
+import { CalendarSyncService } from '@/lib/services/calendar-sync.service'
 
 /**
  * Diagnose-Endpoint fuer Google-Calendar-Sync.
@@ -160,6 +161,106 @@ export async function GET(request: NextRequest) {
       liveProbe,
       hints: buildHints({ allAccounts, watched, busyRows, orphanedCount, activeAccount }),
     })
+  })
+}
+
+/**
+ * POST /api/v1/calendar-account/debug — triggert einen vollstaendigen Force-Sync
+ * fuer alle readForBusy=true watched calendars und gibt detaillierte Stats
+ * zurueck. Vor jedem Call wird sync_token=null gesetzt, damit Google den
+ * gesamten Eventset liefert (kein incremental).
+ *
+ * Body (optional): { paginate: true } - laesst fullSyncCalendar laufen (mit
+ * eigener Paginierung). Default: trace=true gibt zusaetzlich die ersten paar
+ * Events pro Page aus, damit man sieht was Google wirklich liefert.
+ */
+export async function POST(request: NextRequest) {
+  return withPermission(request, 'appointments', 'update', async (auth) => {
+    if (!auth.userId) return NextResponse.json({ error: 'no_user_context' }, { status: 401 })
+
+    const account = await CalendarAccountService.getActiveAccount(auth.userId)
+    if (!account) return NextResponse.json({ error: 'no_active_account' }, { status: 404 })
+
+    const watched = await db.select().from(userCalendarsWatched)
+      .where(and(
+        eq(userCalendarsWatched.accountId, account.id),
+        eq(userCalendarsWatched.readForBusy, true),
+      ))
+
+    const results: Array<Record<string, unknown>> = []
+
+    for (const w of watched) {
+      const trace: Record<string, unknown> = {
+        watchedId: w.id,
+        googleCalendarId: w.googleCalendarId,
+        beforeSyncToken: w.syncToken ? `${w.syncToken.slice(0, 24)}...` : null,
+        pages: [] as Array<unknown>,
+        upsertStats: { events: 0, inserted: 0, deleted: 0, skipped: 0 },
+        error: null as string | null,
+      }
+
+      try {
+        // sync_token nullen
+        await db.update(userCalendarsWatched).set({ syncToken: null })
+          .where(eq(userCalendarsWatched.id, w.id))
+
+        const accessToken = await CalendarAccountService.getValidAccessToken(account.id)
+        const timeMin = new Date(Date.now() - 30 * 86400_000)
+        let pageToken: string | undefined
+        let pageNum = 0
+
+        do {
+          pageNum++
+          const out = await CalendarGoogleClient.eventsList({
+            accessToken,
+            calendarId: w.googleCalendarId,
+            pageToken,
+            timeMin: pageToken ? undefined : timeMin,
+          })
+
+          const pageSample = out.events.slice(0, 10).map(e => ({
+            id: e.id,
+            summary: e.summary,
+            start: e.start?.toISOString() ?? null,
+            end: e.end?.toISOString() ?? null,
+            status: e.status,
+            transparency: e.transparency,
+            hasXkmuApptId: e.extendedXkmuAppointmentId !== null,
+          }))
+
+          ;(trace.pages as Array<unknown>).push({
+            page: pageNum,
+            eventCount: out.events.length,
+            sample: pageSample,
+            nextPageToken: out.nextPageToken ? `${out.nextPageToken.slice(0, 24)}...` : null,
+            nextSyncToken: out.nextSyncToken ? 'set' : null,
+          })
+
+          const stats = await CalendarSyncService.upsertEvents(account.id, w.googleCalendarId, out.events)
+          const cumStats = trace.upsertStats as { events: number; inserted: number; deleted: number; skipped: number }
+          cumStats.events += out.events.length
+          cumStats.inserted += stats.inserted
+          cumStats.deleted += stats.deleted
+          cumStats.skipped += stats.skipped
+
+          pageToken = out.nextPageToken ?? undefined
+          if (!pageToken && out.nextSyncToken) {
+            await db.update(userCalendarsWatched).set({ syncToken: out.nextSyncToken, lastSyncedAt: new Date() })
+              .where(eq(userCalendarsWatched.id, w.id))
+          }
+        } while (pageToken && pageNum < 20)  // Safety: max 20 pages
+
+        if (pageNum >= 20) {
+          trace.warning = 'Page-Limit (20) erreicht — Sync wurde abgebrochen'
+        }
+      } catch (err) {
+        trace.error = String(err)
+      }
+
+      results.push(trace)
+    }
+
+    return NextResponse.json({ ok: true, accountId: account.id, results })
   })
 }
 
