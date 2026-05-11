@@ -212,39 +212,30 @@ export const CalendarSyncService = {
   async upsertEvents(accountId: string, calendarId: string, events: ExternalEvent[]): Promise<{ inserted: number; deleted: number; skipped: number }> {
     let inserted = 0, deleted = 0, skipped = 0
     for (const ev of events) {
-      // Skip our own bookings (created with the extended property).
-      // TODO Phase 4: when ev.status === 'cancelled' AND extendedXkmuAppointmentId
-      // is set, the corresponding appointment in our DB should be cancelled too.
-      // Currently we drop the cancellation signal entirely. Restructure to
-      // check status === 'cancelled' first, then handle own-booking case.
-      if (ev.extendedXkmuAppointmentId) {
-        skipped++
-        continue
-      }
-      // Cancelled or missing time → DELETE
-      if (ev.status === 'cancelled' || !ev.start || !ev.end) {
-        await db.delete(externalBusy).where(and(
-          eq(externalBusy.googleCalendarId, calendarId),
-          eq(externalBusy.googleEventId, ev.id),
-        ))
-        deleted++
-        continue
-      }
-      // Upsert (insert ... on conflict do update)
-      await db.insert(externalBusy).values({
-        accountId,
-        googleCalendarId: calendarId,
-        googleEventId: ev.id,
-        startAt: ev.start,
-        endAt: ev.end,
-        etag: ev.etag,
-        transparency: ev.transparency,
-        isAllDay: ev.isAllDay,
-        summary: ev.summary?.slice(0, 500) ?? null,
-        lastSyncedAt: new Date(),
-      }).onConflictDoUpdate({
-        target: [externalBusy.googleCalendarId, externalBusy.googleEventId],
-        set: {
+      try {
+        // Skip our own bookings (created with the extended property).
+        if (ev.extendedXkmuAppointmentId) {
+          skipped++
+          continue
+        }
+        // Cancelled or missing time → DELETE
+        if (ev.status === 'cancelled' || !ev.start || !ev.end) {
+          await db.delete(externalBusy).where(and(
+            eq(externalBusy.googleCalendarId, calendarId),
+            eq(externalBusy.googleEventId, ev.id),
+          ))
+          deleted++
+          continue
+        }
+        // Upsert (insert ... on conflict do update). Wichtig: account_id
+        // wird auch im UPDATE-Fall mitgeschrieben, sodass alte Zeilen, die
+        // noch auf einen frueheren Account-ID zeigen, beim Re-Sync auf den
+        // aktiven Account umgehaengt werden (sonst sieht das Slot-Listing
+        // diese Events nicht, weil es nach aktuellem account_id filtert).
+        await db.insert(externalBusy).values({
+          accountId,
+          googleCalendarId: calendarId,
+          googleEventId: ev.id,
           startAt: ev.start,
           endAt: ev.end,
           etag: ev.etag,
@@ -252,9 +243,24 @@ export const CalendarSyncService = {
           isAllDay: ev.isAllDay,
           summary: ev.summary?.slice(0, 500) ?? null,
           lastSyncedAt: new Date(),
-        },
-      })
-      inserted++
+        }).onConflictDoUpdate({
+          target: [externalBusy.googleCalendarId, externalBusy.googleEventId],
+          set: {
+            accountId,
+            startAt: ev.start,
+            endAt: ev.end,
+            etag: ev.etag,
+            transparency: ev.transparency,
+            isAllDay: ev.isAllDay,
+            summary: ev.summary?.slice(0, 500) ?? null,
+            lastSyncedAt: new Date(),
+          },
+        })
+        inserted++
+      } catch (err) {
+        console.error('[CalendarSync] upsert event failed:', { calendarId, eventId: ev.id, err: String(err) })
+        skipped++
+      }
     }
     return { inserted, deleted, skipped }
   },

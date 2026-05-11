@@ -40,6 +40,82 @@ export const CalendarAccountService = {
     const cfg = await CalendarConfigService.getConfig()
     const expiresAt = new Date(Date.now() + input.expiresInSec * 1000)
     const primary = input.calendars.find(c => c.isPrimary)
+    const primaryId = primary?.id ?? input.calendars[0]?.id ?? null
+
+    // Reconnect-Pfad: existiert bereits ein revoked oder aktiver Account fuer
+    // diesen User+Provider, dann reanimieren wir ihn statt neu anzulegen.
+    // Damit bleiben external_busy/userCalendarsWatched-Eintraege gueltig
+    // (verknuepft via account_id) — sonst wuerden alte Sync-Daten nach
+    // Reconnect ins Leere zeigen und die Slot-Anzeige zaehlt sie nicht.
+    // Aktiven Account bevorzugen, falls ein User aus historischen Reconnects
+    // eine Split-Brain-Situation hat (mehrere Rows fuer gleiche user+provider).
+    const existingRows = await db.select().from(userCalendarAccounts)
+      .where(and(
+        eq(userCalendarAccounts.userId, input.userId),
+        eq(userCalendarAccounts.provider, 'google'),
+      ))
+      .orderBy(sql`revoked_at NULLS FIRST`, sql`updated_at DESC`)
+      .limit(1)
+    const existing = existingRows[0]
+
+    // Split-Brain heilen: external_busy + userCalendarsWatched aus etwaigen
+    // anderen (alten/revoked) Accounts auf diesen umhaengen, sonst bleiben
+    // alte Sync-Daten orphaned und die Slot-Anzeige sieht sie nicht.
+    if (existing) {
+      await db.execute(sql`
+        UPDATE external_busy SET account_id = ${existing.id}
+        WHERE account_id IN (
+          SELECT id FROM user_calendar_accounts
+          WHERE user_id = ${input.userId} AND provider = 'google' AND id <> ${existing.id}
+        )
+      `)
+      await db.execute(sql`
+        DELETE FROM user_calendars_watched
+        WHERE account_id IN (
+          SELECT id FROM user_calendar_accounts
+          WHERE user_id = ${input.userId} AND provider = 'google' AND id <> ${existing.id}
+        )
+      `)
+      // Alte Account-Rows weg — wir brauchen die History nicht und sie blocken
+      // sonst zukuenftige Lookups. Tokens sind dort eh schon revoked.
+      await db.execute(sql`
+        DELETE FROM user_calendar_accounts
+        WHERE user_id = ${input.userId} AND provider = 'google' AND id <> ${existing.id}
+      `)
+    }
+
+    if (existing) {
+      await db.update(userCalendarAccounts).set({
+        googleEmail: input.googleEmail,
+        accessTokenEnc: encryptToken(input.accessToken, cfg.tokenEncryptionKeyHex),
+        refreshTokenEnc: encryptToken(input.refreshToken, cfg.tokenEncryptionKeyHex),
+        tokenExpiresAt: expiresAt,
+        scopes: input.scopes,
+        primaryCalendarId: primaryId,
+        revokedAt: null,
+        updatedAt: new Date(),
+      }).where(eq(userCalendarAccounts.id, existing.id))
+
+      // Watched-Calendars deduplizieren: existing rows behalten + Sync-State,
+      // nur fuer NEUE Calendar-IDs Eintraege anlegen.
+      const existingWatched = await db.select().from(userCalendarsWatched)
+        .where(eq(userCalendarsWatched.accountId, existing.id))
+      const knownIds = new Set(existingWatched.map(w => w.googleCalendarId))
+      const newWatched = input.calendars.filter(c => !knownIds.has(c.id))
+      if (newWatched.length > 0) {
+        await db.insert(userCalendarsWatched).values(
+          newWatched.map(c => ({
+            accountId: existing.id,
+            googleCalendarId: c.id,
+            displayName: c.summary,
+            readForBusy: c.isPrimary,
+          })),
+        )
+      }
+      return { id: existing.id }
+    }
+
+    // Neuer Account
     const [acc] = await db.insert(userCalendarAccounts).values({
       userId: input.userId,
       provider: 'google',
@@ -48,7 +124,7 @@ export const CalendarAccountService = {
       refreshTokenEnc: encryptToken(input.refreshToken, cfg.tokenEncryptionKeyHex),
       tokenExpiresAt: expiresAt,
       scopes: input.scopes,
-      primaryCalendarId: primary?.id ?? input.calendars[0]?.id ?? null,
+      primaryCalendarId: primaryId,
     }).returning({ id: userCalendarAccounts.id })
 
     if (input.calendars.length > 0) {

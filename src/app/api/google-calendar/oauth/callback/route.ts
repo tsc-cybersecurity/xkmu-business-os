@@ -46,16 +46,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'invalid_state_signature' }, { status: 400 })
   }
 
-  // Existierenden aktiven Account erkennen — bei Reconnect alten revoken
-  // statt abzubrechen (verhindert "already_connected"-Sackgasse).
-  const existing = await CalendarAccountService.getActiveAccount(verified.uid)
-  if (existing) {
-    try {
-      await CalendarAccountService.revoke(existing.id)
-    } catch (err) {
-      logger.warn('Revoke des bestehenden Calendar-Accounts vor Reconnect fehlgeschlagen — markiere lokal trotzdem als revoked', { module: 'OAuthCallback', accountId: existing.id, error: String(err) })
-    }
-  }
+  // Reconnect-Pfad: storeNewAccount unten reanimiert ggf. einen bestehenden
+  // (revoked oder aktiven) Account fuer User+Provider, statt eine neue Row
+  // anzulegen. Dadurch bleiben external_busy/userCalendarsWatched-Eintraege
+  // mit dem stabilen account_id verknuepft und werden nach Reconnect korrekt
+  // gefunden.
 
   let exchange
   try {
