@@ -21,6 +21,8 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const probeLive = url.searchParams.get('probe') === '1'
     const forceSync = url.searchParams.get('forceSync') === '1'
+      || url.searchParams.get('forcesync') === '1'
+      || url.searchParams.get('force_sync') === '1'
 
     const errors: Record<string, string> = {}
     const safe = async <T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> => {
