@@ -2,19 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withPermission } from '@/lib/auth/require-permission'
 import { db } from '@/lib/db'
 import { userCalendarAccounts, userCalendarsWatched, externalBusy, appointments } from '@/lib/db/schema'
-import { and, eq, gte, lte, sql } from 'drizzle-orm'
+import { and, eq, gte, inArray, lte } from 'drizzle-orm'
 import { CalendarAccountService } from '@/lib/services/calendar-account.service'
 import { CalendarGoogleClient } from '@/lib/services/calendar-google.client'
 
 /**
  * Diagnose-Endpoint fuer Google-Calendar-Sync.
  *
- * Liefert pro authentifiziertem User:
- * - Alle calendar_accounts (auch revoked) inkl. Sync-State
- * - Pro Account: alle watched calendars inkl. watch/sync-State
- * - external_busy-Counts + Sample fuer aktuelle Woche
- * - Mismatch-Detection: external_busy mit account_id <> aktiver Account
- * - Optional: Live Google FreeBusy-Probe (?probe=1)
+ * Robust gegen Sub-Query-Failures: jede Section in eigenem try/catch
+ * mit safe-Fallback, damit ein fehlerhaftes Stueck nicht den ganzen
+ * Endpoint auf 500 reisst.
  */
 export async function GET(request: NextRequest) {
   return withPermission(request, 'appointments', 'read', async (auth) => {
@@ -23,22 +20,26 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const probeLive = url.searchParams.get('probe') === '1'
 
-    // 1. Alle Accounts dieses Users (auch revoked) — Split-Brain-Erkennung
-    const allAccounts = await db.select().from(userCalendarAccounts)
-      .where(eq(userCalendarAccounts.userId, auth.userId))
+    const errors: Record<string, string> = {}
+    const safe = async <T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> => {
+      try { return await fn() } catch (err) { errors[name] = String(err); return fallback }
+    }
+
+    // 1. Alle Accounts dieses Users (auch revoked)
+    const allAccounts = await safe('accounts', () =>
+      db.select().from(userCalendarAccounts).where(eq(userCalendarAccounts.userId, auth.userId!)),
+      [] as Array<typeof userCalendarAccounts.$inferSelect>,
+    )
     const activeAccount = allAccounts.find(a => a.revokedAt === null)
     const revokedAccounts = allAccounts.filter(a => a.revokedAt !== null)
-
-    // 2. Watched calendars (pro Account)
     const accountIds = allAccounts.map(a => a.id)
-    const watched = accountIds.length === 0 ? [] : await db.execute(sql`
-      SELECT id, account_id, google_calendar_id, display_name, read_for_busy,
-             sync_token IS NOT NULL AS has_sync_token,
-             watch_channel_id, watch_expires_at, last_synced_at, last_message_number
-      FROM user_calendars_watched
-      WHERE account_id = ANY(${accountIds}::uuid[])
-      ORDER BY account_id, google_calendar_id
-    `) as unknown as Array<Record<string, unknown>>
+
+    // 2. Watched calendars
+    const watched = await safe('watched', async () => {
+      if (accountIds.length === 0) return []
+      return db.select().from(userCalendarsWatched)
+        .where(inArray(userCalendarsWatched.accountId, accountIds))
+    }, [] as Array<typeof userCalendarsWatched.$inferSelect>)
 
     // 3. external_busy fuer naechste 14 Tage
     const from = new Date()
@@ -46,73 +47,78 @@ export async function GET(request: NextRequest) {
     const to = new Date(from)
     to.setDate(to.getDate() + 14)
 
-    const busyRows = accountIds.length === 0 ? [] : await db.execute(sql`
-      SELECT id, account_id, google_calendar_id, google_event_id,
-             start_at, end_at, summary, transparency, last_synced_at
-      FROM external_busy
-      WHERE account_id = ANY(${accountIds}::uuid[])
-        AND end_at >= ${from.toISOString()}::timestamptz
-        AND start_at <= ${to.toISOString()}::timestamptz
-      ORDER BY start_at
-      LIMIT 100
-    `) as unknown as Array<Record<string, unknown>>
+    const busyRows = await safe('externalBusy', async () => {
+      if (accountIds.length === 0) return []
+      return db.select().from(externalBusy)
+        .where(and(
+          inArray(externalBusy.accountId, accountIds),
+          gte(externalBusy.endAt, from),
+          lte(externalBusy.startAt, to),
+        ))
+        .limit(100)
+    }, [] as Array<typeof externalBusy.$inferSelect>)
 
-    const orphanedCount = busyRows.filter(r => r.account_id !== activeAccount?.id).length
+    const orphanedCount = activeAccount
+      ? busyRows.filter(r => r.accountId !== activeAccount.id).length
+      : 0
 
-    // 4. Appointments fuer naechste 14 Tage (App-Buchungen)
-    const apptRows = await db.select({
-      id: appointments.id,
-      slotTypeId: appointments.slotTypeId,
-      startAt: appointments.startAt,
-      endAt: appointments.endAt,
-      status: appointments.status,
-      googleEventId: appointments.googleEventId,
-      customerName: appointments.customerName,
-    }).from(appointments)
-      .where(and(
-        eq(appointments.userId, auth.userId),
-        gte(appointments.endAt, from),
-        lte(appointments.startAt, to),
-      ))
+    // 4. Appointments fuer naechste 14 Tage
+    const apptRows = await safe('appointments', () =>
+      db.select({
+        id: appointments.id,
+        slotTypeId: appointments.slotTypeId,
+        startAt: appointments.startAt,
+        endAt: appointments.endAt,
+        status: appointments.status,
+        googleEventId: appointments.googleEventId,
+        customerName: appointments.customerName,
+      }).from(appointments)
+        .where(and(
+          eq(appointments.userId, auth.userId!),
+          gte(appointments.endAt, from),
+          lte(appointments.startAt, to),
+        )),
+      [] as Array<{ id: string }>,
+    )
 
-    // 5. Optional: live Google freeBusy + events.list-Probe fuer aktiven Account
+    // 5. Optional: Live Google-Probe fuer aktiven Account
     let liveProbe: unknown = null
     if (probeLive && activeAccount) {
-      try {
+      liveProbe = await safe('liveProbe', async () => {
         const accessToken = await CalendarAccountService.getValidAccessToken(activeAccount.id)
-        const watchedForProbe = await db.select().from(userCalendarsWatched)
-          .where(and(
-            eq(userCalendarsWatched.accountId, activeAccount.id),
-            eq(userCalendarsWatched.readForBusy, true),
-          ))
+        const watchedForProbe = watched.filter(w => w.accountId === activeAccount.id && w.readForBusy)
         const calIds = watchedForProbe.map(w => w.googleCalendarId)
-        const fb = calIds.length > 0
-          ? await CalendarGoogleClient.freeBusyQuery({ accessToken, calendarIds: calIds, timeMin: from, timeMax: to })
-          : { busy: [] }
+
+        // freeBusy
+        const fb = await safe('liveProbe.freeBusy', async () => {
+          if (calIds.length === 0) return { busy: [] }
+          return CalendarGoogleClient.freeBusyQuery({ accessToken, calendarIds: calIds, timeMin: from, timeMax: to })
+        }, { busy: [] as Array<{ calendarId: string; start: Date; end: Date }> })
 
         // events.list pro Kalender (limit 25)
         const eventsPerCal: Record<string, Array<{ id: string; summary: string | null; start: string | null; end: string | null; transparency: string; hasXkmuApptId: boolean }>> = {}
         for (const cid of calIds) {
-          const list = await CalendarGoogleClient.eventsList({ accessToken, calendarId: cid, timeMin: from })
-          eventsPerCal[cid] = list.events.slice(0, 25).map(e => ({
-            id: e.id,
-            summary: e.summary,
-            start: e.start?.toISOString() ?? null,
-            end: e.end?.toISOString() ?? null,
-            transparency: e.transparency,
-            hasXkmuApptId: e.extendedXkmuAppointmentId !== null,
-          }))
+          eventsPerCal[cid] = await safe(`liveProbe.events.${cid}`, async () => {
+            const list = await CalendarGoogleClient.eventsList({ accessToken, calendarId: cid, timeMin: from })
+            return list.events.slice(0, 25).map(e => ({
+              id: e.id,
+              summary: e.summary,
+              start: e.start?.toISOString() ?? null,
+              end: e.end?.toISOString() ?? null,
+              transparency: e.transparency,
+              hasXkmuApptId: e.extendedXkmuAppointmentId !== null,
+            }))
+          }, [])
         }
 
-        liveProbe = { freeBusy: fb.busy, eventsPerCalendar: eventsPerCal }
-      } catch (err) {
-        liveProbe = { error: String(err) }
-      }
+        return { freeBusy: fb.busy, eventsPerCalendar: eventsPerCal }
+      }, null)
     }
 
     return NextResponse.json({
       now: new Date().toISOString(),
       window: { from: from.toISOString(), to: to.toISOString() },
+      errors: Object.keys(errors).length > 0 ? errors : undefined,
       accounts: {
         total: allAccounts.length,
         active: activeAccount ? {
@@ -130,7 +136,18 @@ export async function GET(request: NextRequest) {
         })),
         splitBrain: allAccounts.length > 1,
       },
-      watched,
+      watched: watched.map(w => ({
+        id: w.id,
+        accountId: w.accountId,
+        googleCalendarId: w.googleCalendarId,
+        displayName: w.displayName,
+        readForBusy: w.readForBusy,
+        hasSyncToken: w.syncToken !== null,
+        watchChannelId: w.watchChannelId,
+        watchExpiresAt: w.watchExpiresAt,
+        lastSyncedAt: w.lastSyncedAt,
+        lastMessageNumber: w.lastMessageNumber,
+      })),
       externalBusy: {
         count: busyRows.length,
         orphanedCount,
@@ -148,8 +165,8 @@ export async function GET(request: NextRequest) {
 
 function buildHints(input: {
   allAccounts: Array<{ id: string; revokedAt: Date | null }>
-  watched: Array<Record<string, unknown>>
-  busyRows: Array<Record<string, unknown>>
+  watched: Array<{ readForBusy: boolean; googleCalendarId: string; watchChannelId: string | null; lastSyncedAt: Date | null }>
+  busyRows: Array<{ googleCalendarId: string }>
   orphanedCount: number
   activeAccount: { id: string } | undefined
 }): string[] {
@@ -168,21 +185,21 @@ function buildHints(input: {
   if (input.orphanedCount > 0) {
     hints.push(`${input.orphanedCount} external_busy-Zeilen zeigen auf alten/revoked Account-ID. Re-Sync fuehrt Re-Attach durch.`)
   }
-  const readForBusy = input.watched.filter(w => w.read_for_busy === true)
+  const readForBusy = input.watched.filter(w => w.readForBusy)
   if (readForBusy.length === 0) {
     hints.push('Keine Kalender als "als belegt zaehlen" markiert. In /intern/settings/profile aktivieren.')
   }
   for (const w of readForBusy) {
-    if (w.watch_channel_id === null) {
-      hints.push(`Watch-Channel fehlt fuer ${w.google_calendar_id}. Re-Sync registriert ihn neu.`)
-    } else if (w.last_synced_at === null) {
-      hints.push(`Kalender ${w.google_calendar_id}: Watch aktiv, aber fullSync nie erfolgreich abgeschlossen. Re-Sync triggern.`)
+    if (!w.watchChannelId) {
+      hints.push(`Watch-Channel fehlt fuer ${w.googleCalendarId}. Re-Sync registriert ihn neu.`)
+    } else if (!w.lastSyncedAt) {
+      hints.push(`Kalender ${w.googleCalendarId}: Watch aktiv, aber fullSync nie erfolgreich abgeschlossen. Re-Sync triggern.`)
     }
   }
-  const calsWithBusy = new Set(input.busyRows.map(r => r.google_calendar_id))
+  const calsWithBusy = new Set(input.busyRows.map(r => r.googleCalendarId))
   for (const w of readForBusy) {
-    if (!calsWithBusy.has(w.google_calendar_id) && w.last_synced_at !== null) {
-      hints.push(`Kalender ${w.google_calendar_id}: zuletzt gesynced, aber 0 external_busy in der naechsten Woche. ?probe=1 fuer Live-Vergleich mit Google.`)
+    if (!calsWithBusy.has(w.googleCalendarId) && w.lastSyncedAt) {
+      hints.push(`Kalender ${w.googleCalendarId}: zuletzt gesynced, aber 0 external_busy. ?probe=1 fuer Live-Vergleich mit Google.`)
     }
   }
   if (hints.length === 0) hints.push('Alle Diagnose-Checks ok.')
