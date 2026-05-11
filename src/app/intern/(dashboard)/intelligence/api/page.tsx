@@ -42,17 +42,51 @@ const AUTH_COLOR: Record<string, string> = {
 }
 
 const CATEGORY_MAP: Record<string, string> = {
-  auth: 'Auth & Users', users: 'Auth & Users', roles: 'Auth & Users', 'api-keys': 'Auth & Users', admin: 'Auth & Users',
-  companies: 'CRM', persons: 'CRM', leads: 'CRM', opportunities: 'CRM', activities: 'CRM',
-  documents: 'Finanzen & Vertrag', 'contract-templates': 'Finanzen & Vertrag', 'contract-clauses': 'Finanzen & Vertrag',
-  products: 'Katalog & Zeit', 'time-entries': 'Katalog & Zeit', receipts: 'Katalog & Zeit', projects: 'Katalog & Zeit',
-  processes: 'Management', ideas: 'Management', cockpit: 'Management',
-  'din-audit': 'Compliance', wiba: 'Compliance', grundschutz: 'Compliance', 'ir-playbook': 'Compliance',
-  blog: 'Content & Marketing', cms: 'Content & Marketing', marketing: 'Content & Marketing',
+  // Auth & Users
+  auth: 'Auth & Users', users: 'Auth & Users', roles: 'Auth & Users',
+  'user-groups': 'Auth & Users', 'api-keys': 'Auth & Users', admin: 'Auth & Users',
+  // CRM
+  companies: 'CRM', persons: 'CRM', leads: 'CRM', opportunities: 'CRM',
+  activities: 'CRM', organization: 'CRM',
+  // Finanzen & Vertrag
+  documents: 'Finanzen & Vertrag', 'contract-templates': 'Finanzen & Vertrag',
+  'contract-clauses': 'Finanzen & Vertrag', 'document-templates': 'Finanzen & Vertrag',
+  receipts: 'Finanzen & Vertrag',
+  // Katalog & Zeit
+  products: 'Katalog & Zeit', 'product-categories': 'Katalog & Zeit',
+  'time-entries': 'Katalog & Zeit', projects: 'Katalog & Zeit',
+  // Management
+  processes: 'Management', sops: 'Management', deliverables: 'Management',
+  ideas: 'Management', cockpit: 'Management', eos: 'Management', okr: 'Management',
+  // Compliance
+  din: 'Compliance', wiba: 'Compliance', grundschutz: 'Compliance', 'ir-playbook': 'Compliance',
+  // Booking & Calendar
+  appointments: 'Booking & Calendar', availability: 'Booking & Calendar',
+  'slot-types': 'Booking & Calendar', 'booking-page': 'Booking & Calendar',
+  'calendar-account': 'Booking & Calendar',
+  // Courses & Portal
+  courses: 'Courses & Portal', elearning: 'Courses & Portal',
+  portal: 'Courses & Portal', 'portal-document-categories': 'Courses & Portal',
+  // Email
+  email: 'Email', 'email-accounts': 'Email', 'email-templates': 'Email', emails: 'Email',
+  // Content & Marketing
+  blog: 'Content & Marketing', 'blog-categories': 'Content & Marketing',
+  cms: 'Content & Marketing', marketing: 'Content & Marketing',
   'social-media': 'Content & Marketing', newsletter: 'Content & Marketing',
-  n8n: 'AI & Automation', ai: 'AI & Automation', chat: 'AI & Automation',
+  news: 'Content & Marketing', seo: 'Content & Marketing',
+  // AI & Automation
+  ai: 'AI & Automation', 'ai-logs': 'AI & Automation',
+  'ai-prompt-templates': 'AI & Automation', 'ai-providers': 'AI & Automation',
+  'custom-prompts': 'AI & Automation', kie: 'AI & Automation', chat: 'AI & Automation',
+  n8n: 'AI & Automation', workflows: 'AI & Automation', 'task-queue': 'AI & Automation',
+  'cron-jobs': 'AI & Automation', 'execution-logs': 'AI & Automation',
+  integrations: 'AI & Automation', social: 'AI & Automation',
+  // BI & Dashboard
+  dashboard: 'BI & Dashboard', 'business-intelligence': 'BI & Dashboard', kpi: 'BI & Dashboard',
+  // Media
   images: 'Media', media: 'Media',
-  webhooks: 'Integrationen',
+  // Sonstiges
+  webhooks: 'Sonstiges', orders: 'Sonstiges', feedback: 'Sonstiges', import: 'Sonstiges',
 }
 
 const categoryOf = (svc: ApiService): string => CATEGORY_MAP[svc.slug] ?? 'Sonstige'
