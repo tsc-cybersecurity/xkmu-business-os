@@ -259,7 +259,7 @@ export const MarketingAgentService = {
     context: AIRequestContext
   ): Promise<MarketingAgentResult> {
     const language = input.language || 'de'
-    const platforms = input.platforms?.length ? input.platforms : ['linkedin', 'twitter', 'instagram']
+    const platforms = input.platforms?.length ? input.platforms : ['linkedin', 'x', 'instagram']
     const tone = input.tone || 'professional'
 
     logger.info(`Marketing Agent: Starting analysis for ${input.url}`, { module: 'MarketingAgent' })

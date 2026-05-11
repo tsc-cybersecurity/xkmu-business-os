@@ -9,7 +9,7 @@ import { logger } from '@/lib/utils/logger'
 const analyzeSchema = z.object({
   url: z.string().min(1, 'URL ist erforderlich').max(2000),
   language: z.enum(['de', 'en']).default('de'),
-  platforms: z.array(z.enum(['linkedin', 'twitter', 'instagram', 'facebook', 'xing'])).optional(),
+  platforms: z.array(z.enum(['linkedin', 'x', 'instagram', 'facebook', 'xing'])).optional(),
   tone: z.enum(['professional', 'casual', 'humorous', 'inspirational']).default('professional'),
   additionalContext: z.string().max(5000).optional(),
 })
