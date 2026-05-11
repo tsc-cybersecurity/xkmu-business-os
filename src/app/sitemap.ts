@@ -60,7 +60,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ))
   for (const p of cmsRows) {
     entries.push({
-      url: `${BASE_URL}/${p.slug}`,
+      url: `${BASE_URL}/${p.slug.replace(/^\/+/, '')}`,
       lastModified: p.updatedAt ?? p.publishedAt ?? undefined,
       changeFrequency: 'weekly',
       priority: 0.6,
