@@ -13,9 +13,104 @@ import { cn } from '@/lib/utils'
 import { MERGED_SERVICES } from '@/lib/api-docs/merge'
 import type { ApiEndpoint, ApiService, HttpMethod } from '@/lib/api-docs/types'
 import { buildCurlExample, buildFetchExample, buildPythonExample } from '@/lib/api-docs/code-examples'
+import { USAGE_GUIDE, type CodeLang } from '@/lib/api-docs/usage-guide'
+import { BookOpen } from 'lucide-react'
 import { toast } from 'sonner'
 
 const apiServices = MERGED_SERVICES
+
+// ============================================
+// Usage Guide Renderer
+// ============================================
+const LANG_ORDER: CodeLang[] = ['curl', 'fetch', 'python']
+
+function CodeBlock({ code }: { code: string }) {
+  return (
+    <div className="relative rounded-md bg-muted p-3">
+      <div className="absolute right-2 top-2"><CopyButton text={code} /></div>
+      <pre className="overflow-x-auto pr-8 text-xs leading-relaxed"><code>{code}</code></pre>
+    </div>
+  )
+}
+
+function UsageGuide() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono">how-to-use-the-api</div>
+        <h1 className="text-2xl font-bold flex items-center gap-2">
+          <BookOpen className="h-6 w-6 text-primary" />API-Einführung
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Komplett-Anleitung mit Auth-Flow, Response-Format, Pagination, Fehlerbehandlung
+          und End-to-End-Skripten. Lies das einmal — danach kennst du die Spielregeln aller
+          {' '}{apiServices.length} Services.
+        </p>
+      </div>
+
+      {USAGE_GUIDE.map((section) => (
+        <Card key={section.id}>
+          <CardHeader>
+            <CardTitle className="text-base">{section.title}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {section.intro.split('\n\n').map((para, i) => (
+              <p key={i} className="text-sm text-muted-foreground whitespace-pre-wrap">{para}</p>
+            ))}
+
+            {section.staticBlocks?.map((block, i) => (
+              <div key={i}>
+                <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{block.label}</h4>
+                <CodeBlock code={block.code} />
+              </div>
+            ))}
+
+            {section.table && (
+              <div className="overflow-x-auto rounded-md border">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/50">
+                      {section.table.columns.map((c) => (
+                        <th key={c} className="px-3 py-2 text-left font-medium text-xs">{c}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {section.table.rows.map((row, ri) => (
+                      <tr key={ri} className="border-b last:border-0">
+                        {row.map((cell, ci) => (
+                          <td key={ci} className="px-3 py-2 text-xs">
+                            {ci === 1 ? <code className="font-mono">{cell}</code> : cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {section.examples && section.examples.length > 0 && (
+              <Tabs defaultValue={section.examples[0].lang}>
+                <TabsList className="h-8">
+                  {LANG_ORDER.filter((l) => section.examples!.some((ex) => ex.lang === l)).map((l) => {
+                    const ex = section.examples!.find((e) => e.lang === l)!
+                    return <TabsTrigger key={l} value={l} className="text-xs">{ex.label}</TabsTrigger>
+                  })}
+                </TabsList>
+                {section.examples.map((ex) => (
+                  <TabsContent key={ex.lang} value={ex.lang} className="mt-2">
+                    <CodeBlock code={ex.code} />
+                  </TabsContent>
+                ))}
+              </Tabs>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
 
 const methodColors: Record<HttpMethod, string> = {
   GET: 'bg-green-600 hover:bg-green-600',
@@ -203,9 +298,11 @@ function ServiceDetail({ service, baseUrl }: { service: ApiService; baseUrl: str
 // ============================================
 // Main Page
 // ============================================
+type ViewMode = { kind: 'guide' } | { kind: 'service'; slug: string }
+
 export default function ApiCatalogPage() {
   const [search, setSearch] = useState('')
-  const [selectedSlug, setSelectedSlug] = useState<string>(apiServices[0]?.slug ?? '')
+  const [view, setView] = useState<ViewMode>({ kind: 'guide' })
   const [showSidebar, setShowSidebar] = useState(true)
 
   const baseUrl = useMemo(() => {
@@ -237,7 +334,9 @@ export default function ApiCatalogPage() {
   }, [filtered])
 
   const totalEndpoints = useMemo(() => apiServices.reduce((sum, s) => sum + s.endpoints.length, 0), [])
-  const selected = apiServices.find((s) => s.slug === selectedSlug) ?? apiServices[0]
+  const selected = view.kind === 'service'
+    ? (apiServices.find((s) => s.slug === view.slug) ?? null)
+    : null
 
   const exportHtml = () => {
     const url = `/api/v1/api-docs/export?baseUrl=${encodeURIComponent(baseUrl)}`
@@ -272,17 +371,27 @@ export default function ApiCatalogPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto">
+            <button
+              onClick={() => setView({ kind: 'guide' })}
+              className={cn(
+                'w-full flex items-center gap-2 px-4 py-2.5 text-left text-xs hover:bg-accent transition-colors border-b border-border/40 font-medium',
+                view.kind === 'guide' && 'bg-accent',
+              )}
+            >
+              <BookOpen className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="truncate flex-1">Einführung — How to use the API</span>
+            </button>
             {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([cat, items]) => (
               <div key={cat}>
                 <div className="px-4 py-1.5 bg-muted/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground sticky top-0">
                   {cat} ({items.length})
                 </div>
                 {items.map((s) => {
-                  const isSelected = s.slug === selectedSlug
+                  const isSelected = view.kind === 'service' && view.slug === s.slug
                   return (
                     <button
                       key={s.slug}
-                      onClick={() => setSelectedSlug(s.slug)}
+                      onClick={() => setView({ kind: 'service', slug: s.slug })}
                       className={cn(
                         'w-full flex items-center gap-2 px-4 py-2 text-left text-xs hover:bg-accent transition-colors border-b border-border/40',
                         isSelected && 'bg-accent font-medium',
@@ -315,6 +424,7 @@ export default function ApiCatalogPage() {
               <div className="flex items-center gap-2">
                 <ServerCog className="h-4 w-4 text-primary" />
                 <span className="font-semibold">API-Katalog</span>
+                {view.kind === 'guide' && <span className="text-sm text-muted-foreground hidden md:inline">— Einführung</span>}
                 {selected && <span className="text-sm text-muted-foreground hidden md:inline">— {selected.name}</span>}
               </div>
             </div>
@@ -325,7 +435,9 @@ export default function ApiCatalogPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          {selected ? (
+          {view.kind === 'guide' ? (
+            <UsageGuide />
+          ) : selected ? (
             <ServiceDetail service={selected} baseUrl={baseUrl} />
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">

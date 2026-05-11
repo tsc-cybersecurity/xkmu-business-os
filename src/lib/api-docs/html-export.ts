@@ -1,5 +1,6 @@
 import type { ApiService, ApiEndpoint } from './types'
 import { buildCurlExample, buildFetchExample, buildPythonExample } from './code-examples'
+import { USAGE_GUIDE } from './usage-guide'
 
 function esc(s: string): string {
   return s
@@ -87,6 +88,14 @@ const CSS = `
   nav ul { list-style: none; padding: 0; margin: 0 }
   nav li a { display: block; padding: 6px 8px; color: #475569; text-decoration: none; font-size: 13px; border-radius: 4px }
   nav li a:hover { background: #f1f5f9; color: #0f172a }
+  nav .nav-section { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin: 12px 8px 4px }
+  section.guide { margin-bottom: 64px }
+  section.guide .title { font-size: 28px; margin: 0 0 4px }
+  section.guide-section { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 16px }
+  section.guide-section h2 { font-size: 17px; margin: 0 0 8px; font-weight: 600 }
+  section.guide-section p { font-size: 14px; color: #475569; margin: 0 0 12px; white-space: pre-wrap }
+  section.guide-section h4 { font-size: 12px; margin: 16px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b }
+  section.guide-section pre { background: #0f172a; color: #e2e8f0; padding: 12px 16px; border-radius: 6px; overflow-x: auto; font-size: 12px; margin: 0 }
   main { padding: 32px 48px; max-width: 1100px }
   h1.title { font-size: 28px; margin: 0 0 4px }
   .top-meta { font-size: 12px; color: #64748b; margin-bottom: 32px }
@@ -114,10 +123,39 @@ const CSS = `
   @media print { nav { display: none } main { padding: 16px } article.endpoint { break-inside: avoid } section.service { break-before: page } }
 `
 
+function renderGuide(): string {
+  const sections = USAGE_GUIDE.map((sec) => {
+    const intro = sec.intro.split('\n\n').map((p) => `<p>${esc(p)}</p>`).join('')
+    const staticBlocks = (sec.staticBlocks ?? []).map((b) =>
+      `<h4>${esc(b.label)}</h4><pre><code>${esc(b.code)}</code></pre>`,
+    ).join('')
+    const table = sec.table
+      ? `<table class="params"><thead><tr>${sec.table.columns.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>`
+        + `<tbody>${sec.table.rows.map(r => `<tr>${r.map((cell, i) => `<td>${i === 1 ? `<code>${esc(cell)}</code>` : esc(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`
+      : ''
+    const examples = (sec.examples ?? []).map((ex) =>
+      `<h4>${esc(ex.label)}</h4><pre><code>${esc(ex.code)}</code></pre>`,
+    ).join('')
+    return `<section id="guide-${esc(sec.id)}" class="guide-section">
+      <h2>${esc(sec.title)}</h2>
+      ${intro}
+      ${staticBlocks}
+      ${table}
+      ${examples}
+    </section>`
+  }).join('')
+  return `<section class="guide">
+    <h1 class="title">API-Einführung</h1>
+    <p class="desc">Komplett-Anleitung mit Auth, Response-Format, Pagination, Fehlern und End-to-End-Beispielen.</p>
+    ${sections}
+  </section>`
+}
+
 export function buildStandaloneHtml(services: ApiService[], baseUrl: string, generatedAt: Date = new Date()): string {
   const totalEndpoints = services.reduce((sum, s) => sum + s.endpoints.length, 0)
+  const guideToc = USAGE_GUIDE.map(s => `<li><a href="#guide-${esc(s.id)}">${esc(s.title)}</a></li>`).join('')
   const toc = services.map(s => `<li><a href="#svc-${esc(s.slug)}">${esc(s.name)} <span style="color:#94a3b8">(${s.endpoints.length})</span></a></li>`).join('')
-  const body = services.map(s => renderService(s, baseUrl)).join('')
+  const body = renderGuide() + services.map(s => renderService(s, baseUrl)).join('')
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -132,6 +170,9 @@ export function buildStandaloneHtml(services: ApiService[], baseUrl: string, gen
   <nav>
     <h1>API-Doku</h1>
     <div class="sub">${services.length} Services · ${totalEndpoints} Endpoints</div>
+    <div class="nav-section">Einführung</div>
+    <ul>${guideToc}</ul>
+    <div class="nav-section">Services</div>
     <ul>${toc}</ul>
   </nav>
   <main>
