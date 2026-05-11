@@ -120,4 +120,8 @@ export const MIGRATIONS: Migration[] = [
     name: '025_calendar_per_calendar_sync.sql',
     description: 'Calendar: Sync-State pro Kalender (statt nur primary) — Watch-Channel + syncToken auf user_calendars_watched',
   },
+  {
+    name: '026_external_busy_unique_index.sql',
+    description: 'Calendar: stelle uq_external_busy_event(googleCalendarId, googleEventId) sicher — Bug-Fix fuer ON CONFLICT 42P10',
+  },
 ]
