@@ -126,6 +126,9 @@ export async function GET(request: NextRequest) {
               cum.inserted += stats.inserted
               cum.deleted += stats.deleted
               cum.skipped += stats.skipped
+              if (stats.errors.length > 0 && !(trace.upsertErrors as Array<unknown> | undefined)) {
+                trace.upsertErrors = stats.errors
+              }
               pageToken = out.nextPageToken ?? undefined
               if (!pageToken && out.nextSyncToken) {
                 await db.update(userCalendarsWatched).set({ syncToken: out.nextSyncToken, lastSyncedAt: new Date() })
@@ -303,6 +306,9 @@ export async function POST(request: NextRequest) {
           cumStats.inserted += stats.inserted
           cumStats.deleted += stats.deleted
           cumStats.skipped += stats.skipped
+          if (stats.errors.length > 0 && !(trace.upsertErrors as Array<unknown> | undefined)) {
+            trace.upsertErrors = stats.errors
+          }
 
           pageToken = out.nextPageToken ?? undefined
           if (!pageToken && out.nextSyncToken) {

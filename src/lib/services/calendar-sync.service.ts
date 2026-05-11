@@ -220,8 +220,9 @@ export const CalendarSyncService = {
     ))
   },
 
-  async upsertEvents(accountId: string, calendarId: string, events: ExternalEvent[]): Promise<{ inserted: number; deleted: number; skipped: number }> {
+  async upsertEvents(accountId: string, calendarId: string, events: ExternalEvent[]): Promise<{ inserted: number; deleted: number; skipped: number; errors: Array<{ eventId: string; err: string }> }> {
     let inserted = 0, deleted = 0, skipped = 0
+    const errors: Array<{ eventId: string; err: string }> = []
     for (const ev of events) {
       try {
         // Frueher: Events mit xkmu_appointment_id wurden geskipped, weil
@@ -273,10 +274,11 @@ export const CalendarSyncService = {
         inserted++
       } catch (err) {
         console.error('[CalendarSync] upsert event failed:', { calendarId, eventId: ev.id, err: String(err) })
+        if (errors.length < 5) errors.push({ eventId: ev.id, err: String(err).slice(0, 500) })
         skipped++
       }
     }
-    return { inserted, deleted, skipped }
+    return { inserted, deleted, skipped, errors }
   },
 
   // ---------------------------------------------------------------------------
