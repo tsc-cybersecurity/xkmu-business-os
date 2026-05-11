@@ -134,8 +134,11 @@ async function stepResearch(
     template.userPrompt,
     { websiteContent, language }
   )
+  const fullPrompt = template.outputFormat
+    ? `${userPrompt}\n\n${template.outputFormat}`
+    : userPrompt
 
-  const response = await AIService.completeWithContext(userPrompt, {
+  const response = await AIService.completeWithContext(fullPrompt, {
     ...context,
     feature: 'marketing_agent_research',
   }, {
@@ -174,8 +177,11 @@ async function stepSeoAnalysis(
       language,
     }
   )
+  const fullPrompt = template.outputFormat
+    ? `${userPrompt}\n\n${template.outputFormat}`
+    : userPrompt
 
-  const response = await AIService.completeWithContext(userPrompt, {
+  const response = await AIService.completeWithContext(fullPrompt, {
     ...context,
     feature: 'marketing_agent_seo',
   }, {
@@ -224,8 +230,11 @@ async function stepContentGeneration(
       language,
     }
   )
+  const fullPrompt = template.outputFormat
+    ? `${userPrompt}\n\n${template.outputFormat}`
+    : userPrompt
 
-  const response = await AIService.completeWithContext(userPrompt, {
+  const response = await AIService.completeWithContext(fullPrompt, {
     ...context,
     feature: 'marketing_agent_content',
   }, {
