@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
 
     const url = new URL(request.url)
     const probeLive = url.searchParams.get('probe') === '1'
+    const forceSync = url.searchParams.get('forceSync') === '1'
 
     const errors: Record<string, string> = {}
     const safe = async <T>(name: string, fn: () => Promise<T>, fallback: T): Promise<T> => {
@@ -81,6 +82,65 @@ export async function GET(request: NextRequest) {
         )),
       [] as Array<{ id: string }>,
     )
+
+    // 5a. Optional: Force-Sync (mit Trace) — analog zum POST-Handler, nur via GET
+    let forceSyncResult: unknown = null
+    if (forceSync && activeAccount) {
+      forceSyncResult = await safe('forceSync', async () => {
+        const accessToken = await CalendarAccountService.getValidAccessToken(activeAccount.id)
+        const watchedSync = watched.filter(w => w.accountId === activeAccount.id && w.readForBusy)
+        const results: Array<Record<string, unknown>> = []
+        for (const w of watchedSync) {
+          const trace: Record<string, unknown> = {
+            watchedId: w.id,
+            googleCalendarId: w.googleCalendarId,
+            pages: [] as Array<unknown>,
+            upsertStats: { events: 0, inserted: 0, deleted: 0, skipped: 0 },
+            error: null as string | null,
+          }
+          try {
+            await db.update(userCalendarsWatched).set({ syncToken: null }).where(eq(userCalendarsWatched.id, w.id))
+            const timeMin = new Date(Date.now() - 30 * 86400_000)
+            let pageToken: string | undefined
+            let pageNum = 0
+            do {
+              pageNum++
+              const out = await CalendarGoogleClient.eventsList({
+                accessToken, calendarId: w.googleCalendarId, pageToken,
+                timeMin: pageToken ? undefined : timeMin,
+              })
+              const pageSample = out.events.slice(0, 10).map(e => ({
+                id: e.id, summary: e.summary,
+                start: e.start?.toISOString() ?? null, end: e.end?.toISOString() ?? null,
+                status: e.status, transparency: e.transparency,
+                hasXkmuApptId: e.extendedXkmuAppointmentId !== null,
+              }))
+              ;(trace.pages as Array<unknown>).push({
+                page: pageNum, eventCount: out.events.length, sample: pageSample,
+                nextPageToken: out.nextPageToken ? `${out.nextPageToken.slice(0, 24)}...` : null,
+                nextSyncToken: out.nextSyncToken ? 'set' : null,
+              })
+              const stats = await CalendarSyncService.upsertEvents(activeAccount.id, w.googleCalendarId, out.events)
+              const cum = trace.upsertStats as { events: number; inserted: number; deleted: number; skipped: number }
+              cum.events += out.events.length
+              cum.inserted += stats.inserted
+              cum.deleted += stats.deleted
+              cum.skipped += stats.skipped
+              pageToken = out.nextPageToken ?? undefined
+              if (!pageToken && out.nextSyncToken) {
+                await db.update(userCalendarsWatched).set({ syncToken: out.nextSyncToken, lastSyncedAt: new Date() })
+                  .where(eq(userCalendarsWatched.id, w.id))
+              }
+            } while (pageToken && pageNum < 20)
+            if (pageNum >= 20) trace.warning = 'Page-Limit (20) erreicht'
+          } catch (err) {
+            trace.error = String(err)
+          }
+          results.push(trace)
+        }
+        return results
+      }, null)
+    }
 
     // 5. Optional: Live Google-Probe fuer aktiven Account
     let liveProbe: unknown = null
@@ -159,6 +219,7 @@ export async function GET(request: NextRequest) {
         sample: apptRows.slice(0, 20),
       },
       liveProbe,
+      forceSyncResult,
       hints: buildHints({ allAccounts, watched, busyRows, orphanedCount, activeAccount }),
     })
   })
