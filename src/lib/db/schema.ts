@@ -3546,11 +3546,9 @@ export const userCalendarAccounts = pgTable('user_calendar_accounts', {
   tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }).notNull(),
   scopes: text('scopes').array().notNull().default(sql`'{}'::text[]`),
   primaryCalendarId: varchar('primary_calendar_id', { length: 255 }),
-  watchChannelId: uuid('watch_channel_id'),
-  watchResourceId: varchar('watch_resource_id', { length: 255 }),
-  watchExpiresAt: timestamp('watch_expires_at', { withTimezone: true }),
-  syncToken: text('sync_token'),
-  lastMessageNumber: bigint('last_message_number', { mode: 'number' }),
+  // Sync-State (syncToken/watchChannelId/watchResourceId/watchExpiresAt/
+  // lastMessageNumber) lebt seit Migration 025 auf userCalendarsWatched —
+  // hier gedroppt in Migration 027.
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),

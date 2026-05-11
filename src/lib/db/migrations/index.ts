@@ -124,4 +124,8 @@ export const MIGRATIONS: Migration[] = [
     name: '026_external_busy_unique_index.sql',
     description: 'Calendar: stelle uq_external_busy_event(googleCalendarId, googleEventId) sicher — Bug-Fix fuer ON CONFLICT 42P10',
   },
+  {
+    name: '027_drop_calendar_account_legacy_sync_state.sql',
+    description: 'Calendar: drop ungenutzte Sync-State-Spalten von user_calendar_accounts (Cleanup nach Migration 025)',
+  },
 ]
