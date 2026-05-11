@@ -114,16 +114,20 @@ describe('CalendarSyncService.incrementalSyncCalendar', () => {
 describe('CalendarSyncService.upsertEvents', () => {
   beforeEach(() => vi.resetModules())
 
-  it('skips events with extendedXkmuAppointmentId set', async () => {
+  it('upserts auch Events mit extendedXkmuAppointmentId (orphaned-Schutz)', async () => {
+    // Frueher hat upsertEvents Events mit xkmu_appointment_id geskipped.
+    // Das fuehrte zu orphaned Slots: appointments-Row geloescht, Google-
+    // Event blieb, sync schickte das Event nicht in external_busy →
+    // Slot blieb buchbar. Heute syncen wir alle Events.
     const helper = setupDbMock()
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
     const out = await CalendarSyncService.upsertEvents('acc-1', 'primary', [
       ev({ id: 'e1', xkmuApptId: 'appt-123' }) as never,
     ])
-    expect(out.skipped).toBe(1)
-    expect(out.inserted).toBe(0)
-    expect(helper.db.insert).not.toHaveBeenCalled()
+    expect(out.inserted).toBe(1)
+    expect(out.skipped).toBe(0)
+    expect(helper.db.insert).toHaveBeenCalled()
   })
 
   it('deletes events with cancelled status', async () => {

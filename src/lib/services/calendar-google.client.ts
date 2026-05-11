@@ -156,10 +156,20 @@ export const CalendarGoogleClient = {
     calendarId: string
     syncToken?: string
     pageToken?: string
+    /** Used only for initial fullSync — Google rejects timeMin when syncToken is set. */
+    timeMin?: Date
   }): Promise<EventsListResult> {
     const params = new URLSearchParams({ singleEvents: 'true', showDeleted: 'true' })
     if (input.syncToken) params.set('syncToken', input.syncToken)
     if (input.pageToken) params.set('pageToken', input.pageToken)
+    // timeMin nur ohne syncToken setzen — sonst lehnt Google die Anfrage ab.
+    // Begrenzt initial-Fullsync auf relevante Zeitfenster (vergangene 30 Tage
+    // bis offene Zukunft). Sonst koennte Google ohne timeMin Recurring-Events
+    // unvollstaendig expandieren.
+    if (!input.syncToken) {
+      const tm = input.timeMin ?? new Date(Date.now() - 30 * 86400_000)
+      params.set('timeMin', tm.toISOString())
+    }
     const url = `${EVENTS_LIST_URL(input.calendarId)}?${params}`
     const res = await fetch(url, { headers: { Authorization: `Bearer ${input.accessToken}` } })
     if (res.status === 410) {

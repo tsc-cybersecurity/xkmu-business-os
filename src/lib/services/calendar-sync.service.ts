@@ -224,11 +224,14 @@ export const CalendarSyncService = {
     let inserted = 0, deleted = 0, skipped = 0
     for (const ev of events) {
       try {
-        // Skip our own bookings (created with the extended property).
-        if (ev.extendedXkmuAppointmentId) {
-          skipped++
-          continue
-        }
+        // Frueher: Events mit xkmu_appointment_id wurden geskipped, weil
+        // die appointments-Tabelle sie schon haelt. Problem: orphaned
+        // Events (appointments-Row geloescht, Google-Event bleibt) blocken
+        // dann den Slot nicht. Daher syncen wir jetzt ALLE Events nach
+        // external_busy. Visualisierung: Slot ist blockiert; falls auch
+        // eine appointments-Row existiert, ueberlagert die UI sie als
+        // Buchungs-Card oben drauf.
+
         // Cancelled or missing time → DELETE
         if (ev.status === 'cancelled' || !ev.start || !ev.end) {
           await db.delete(externalBusy).where(and(
