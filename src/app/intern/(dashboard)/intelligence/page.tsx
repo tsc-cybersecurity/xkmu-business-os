@@ -5,6 +5,7 @@ import { BarChart3,
   Kanban,
   BookOpen,
   Zap,
+  Code2,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -15,6 +16,7 @@ const cards = [
   { title: 'Projekte', description: 'Projekte planen und verfolgen', href: '/intern/projekte', icon: Kanban },
   { title: 'Prozesse', description: 'Geschäftsprozesse dokumentieren', href: '/intern/prozesse', icon: BookOpen },
   { title: 'Workflows', description: 'Automatisierte Workflows konfigurieren', href: '/intern/settings/workflows', icon: Zap },
+  { title: 'API-Katalog', description: 'Realtime-Doku aller API-Services mit Codebeispielen und HTML-Export', href: '/intern/intelligence/api', icon: Code2 },
 ]
 
 export default function IntelligencePage() {
