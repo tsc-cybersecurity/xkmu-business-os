@@ -96,29 +96,43 @@ async function fetchAppointments(userId: string, from: Date, to: Date) {
 }
 
 async function fetchExternalBusy(userId: string, from: Date, to: Date) {
-  // Find the user's active calendar account
-  const accountRows = await db.select().from(userCalendarAccounts)
-    .where(and(eq(userCalendarAccounts.userId, userId), isNull(userCalendarAccounts.revokedAt)))
-    .limit(1)
-  const account = accountRows[0]
-  if (!account) return []
+  try {
+    // Explicit column selection: nimmt keine Abhaengigkeit auf neue Schema-
+    // Spalten (Migration 025) — falls die noch nicht angewendet wurden,
+    // wuerde db.select() ohne Projektion einen SQL-Error werfen.
+    const accountRows = await db.select({ id: userCalendarAccounts.id })
+      .from(userCalendarAccounts)
+      .where(and(eq(userCalendarAccounts.userId, userId), isNull(userCalendarAccounts.revokedAt)))
+      .limit(1)
+    const account = accountRows[0]
+    if (!account) return []
 
-  // Only consider calendars with read_for_busy = true
-  const watched = await db.select().from(userCalendarsWatched)
-    .where(and(
-      eq(userCalendarsWatched.accountId, account.id),
-      eq(userCalendarsWatched.readForBusy, true),
+    const watched = await db.select({ googleCalendarId: userCalendarsWatched.googleCalendarId })
+      .from(userCalendarsWatched)
+      .where(and(
+        eq(userCalendarsWatched.accountId, account.id),
+        eq(userCalendarsWatched.readForBusy, true),
+      ))
+    if (watched.length === 0) return []
+
+    const calendarIds = watched.map(w => w.googleCalendarId)
+    return db.select({
+      id: externalBusy.id,
+      startAt: externalBusy.startAt,
+      endAt: externalBusy.endAt,
+      summary: externalBusy.summary,
+    }).from(externalBusy).where(and(
+      eq(externalBusy.accountId, account.id),
+      inArray(externalBusy.googleCalendarId, calendarIds),
+      eq(externalBusy.transparency, 'opaque'),
+      gte(externalBusy.endAt, from),
+      lte(externalBusy.startAt, to),
     ))
-  if (watched.length === 0) return []
-
-  const calendarIds = watched.map(w => w.googleCalendarId)
-  return db.select().from(externalBusy).where(and(
-    eq(externalBusy.accountId, account.id),
-    inArray(externalBusy.googleCalendarId, calendarIds),
-    eq(externalBusy.transparency, 'opaque'),
-    gte(externalBusy.endAt, from),
-    lte(externalBusy.startAt, to),
-  ))
+  } catch (err) {
+    // Fail-soft: Termin-Seite muss auch ohne Calendar-Sync funktionieren
+    console.error('[termine] fetchExternalBusy failed:', err)
+    return []
+  }
 }
 
 function startOfWeek(d: Date): Date {

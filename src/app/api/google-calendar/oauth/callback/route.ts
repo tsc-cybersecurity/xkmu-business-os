@@ -46,10 +46,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'invalid_state_signature' }, { status: 400 })
   }
 
-  // Existierenden aktiven Account prüfen — bei Reconnect erst alten revoken (kommt in V2; in V1 abbrechen)
+  // Existierenden aktiven Account erkennen — bei Reconnect alten revoken
+  // statt abzubrechen (verhindert "already_connected"-Sackgasse).
   const existing = await CalendarAccountService.getActiveAccount(verified.uid)
   if (existing) {
-    return errRedirect(request, 'already_connected', cfg.appPublicUrl)
+    try {
+      await CalendarAccountService.revoke(existing.id)
+    } catch (err) {
+      logger.warn('Revoke des bestehenden Calendar-Accounts vor Reconnect fehlgeschlagen — markiere lokal trotzdem als revoked', { module: 'OAuthCallback', accountId: existing.id, error: String(err) })
+    }
   }
 
   let exchange

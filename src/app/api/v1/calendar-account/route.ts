@@ -31,17 +31,24 @@ export async function GET(request: NextRequest) {
         primaryCalendarId: account.primaryCalendarId,
         connectedAt: account.createdAt,
       },
-      calendars: calendars.map((c) => ({
-        id: c.id,
-        googleCalendarId: c.googleCalendarId,
-        displayName: c.displayName,
-        readForBusy: c.readForBusy,
-        // Sync-State fuer UI-Diagnose
-        hasSyncToken: c.syncToken !== null,
-        watchActive: c.watchChannelId !== null && c.watchExpiresAt !== null && c.watchExpiresAt.getTime() > Date.now(),
-        watchExpiresAt: c.watchExpiresAt,
-        lastSyncedAt: c.lastSyncedAt,
-      })),
+      calendars: calendars.map((c) => {
+        // Sync-State (Migration 025) — defensiv lesen, falls Migration noch
+        // nicht durchgelaufen ist und Felder undefined sind.
+        const syncToken = (c as { syncToken?: string | null }).syncToken
+        const watchChannelId = (c as { watchChannelId?: string | null }).watchChannelId
+        const watchExpiresAt = (c as { watchExpiresAt?: Date | null }).watchExpiresAt
+        const lastSyncedAt = (c as { lastSyncedAt?: Date | null }).lastSyncedAt
+        return {
+          id: c.id,
+          googleCalendarId: c.googleCalendarId,
+          displayName: c.displayName,
+          readForBusy: c.readForBusy,
+          hasSyncToken: syncToken != null,
+          watchActive: watchChannelId != null && watchExpiresAt != null && new Date(watchExpiresAt).getTime() > Date.now(),
+          watchExpiresAt: watchExpiresAt ?? null,
+          lastSyncedAt: lastSyncedAt ?? null,
+        }
+      }),
       configured,
     })
   })
