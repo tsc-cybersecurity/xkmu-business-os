@@ -274,7 +274,26 @@ export const CalendarSyncService = {
         inserted++
       } catch (err) {
         console.error('[CalendarSync] upsert event failed:', { calendarId, eventId: ev.id, err: String(err) })
-        if (errors.length < 5) errors.push({ eventId: ev.id, err: String(err).slice(0, 500) })
+        if (errors.length < 5) {
+          // Drizzle wraps query+params in err.message — der echte Postgres-
+          // Grund steckt in err.cause. Beides extrahieren, falls vorhanden.
+          const e = err as { message?: string; cause?: { message?: string; code?: string; detail?: string } }
+          const causeMsg = e.cause?.message ?? null
+          const causeCode = e.cause?.code ?? null
+          const causeDetail = e.cause?.detail ?? null
+          errors.push({
+            eventId: ev.id,
+            err: JSON.stringify({
+              type: (err as Error).name ?? 'Error',
+              causeCode, causeMsg, causeDetail,
+              eventSummary: ev.summary?.slice(0, 100) ?? null,
+              eventStart: ev.start?.toISOString() ?? null,
+              eventEnd: ev.end?.toISOString() ?? null,
+              eventIsAllDay: ev.isAllDay,
+              eventTransparency: ev.transparency,
+            }).slice(0, 800),
+          })
+        }
         skipped++
       }
     }
