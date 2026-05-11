@@ -6,7 +6,10 @@ vi.mock('@/lib/services/calendar-config.service', () => ({
   CalendarConfigService: { getConfig: vi.fn() },
 }))
 vi.mock('@/lib/services/calendar-sync.service', () => ({
-  CalendarSyncService: { incrementalSync: vi.fn() },
+  CalendarSyncService: {
+    getWatchedByChannelId: vi.fn(),
+    incrementalSyncCalendar: vi.fn(),
+  },
 }))
 
 const mockConfig = {
@@ -31,10 +34,13 @@ describe('POST /api/google-calendar/webhook', () => {
 
   it('returns 200 silently on resource-state=sync (initial)', async () => {
     const helper = setupDbMock()
-    helper.selectMock.mockResolvedValueOnce([{ id: 'acc-1', watchChannelId: 'ch-1', lastMessageNumber: null }])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
     vi.mocked(CalendarConfigService.getConfig).mockResolvedValueOnce(mockConfig as never)
+    const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
+    vi.mocked(CalendarSyncService.getWatchedByChannelId).mockResolvedValueOnce({
+      id: 'cal-1', accountId: 'acc-1', watchChannelId: 'ch-1', lastMessageNumber: null,
+    } as never)
 
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
@@ -47,15 +53,17 @@ describe('POST /api/google-calendar/webhook', () => {
     expect(res.status).toBe(200)
   })
 
-  it('triggers incrementalSync on resource-state=exists', async () => {
+  it('triggers incrementalSyncCalendar on resource-state=exists', async () => {
     const helper = setupDbMock()
-    helper.selectMock.mockResolvedValueOnce([{ id: 'acc-1', watchChannelId: 'ch-1', lastMessageNumber: null }])
     helper.updateMock.mockResolvedValueOnce(undefined)
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
     vi.mocked(CalendarConfigService.getConfig).mockResolvedValueOnce(mockConfig as never)
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
-    vi.mocked(CalendarSyncService.incrementalSync).mockResolvedValueOnce({ events: 1, channelExpired: false, reSynced: false })
+    vi.mocked(CalendarSyncService.getWatchedByChannelId).mockResolvedValueOnce({
+      id: 'cal-1', accountId: 'acc-1', watchChannelId: 'ch-1', lastMessageNumber: null,
+    } as never)
+    vi.mocked(CalendarSyncService.incrementalSyncCalendar).mockResolvedValueOnce({ events: 1, inserted: 1, deleted: 0, skipped: 0, reSynced: false })
 
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
@@ -66,15 +74,16 @@ describe('POST /api/google-calendar/webhook', () => {
       'X-Goog-Message-Number': '5',
     }) as never)
     expect(res.status).toBe(200)
-    expect(CalendarSyncService.incrementalSync).toHaveBeenCalledWith('acc-1')
+    expect(CalendarSyncService.incrementalSyncCalendar).toHaveBeenCalledWith('cal-1')
   })
 
-  it('returns 404 when channel-id does not match an account', async () => {
+  it('returns 404 when channel-id does not match a watched calendar', async () => {
     const helper = setupDbMock()
-    helper.selectMock.mockResolvedValueOnce([])  // no account
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
     vi.mocked(CalendarConfigService.getConfig).mockResolvedValueOnce(mockConfig as never)
+    const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
+    vi.mocked(CalendarSyncService.getWatchedByChannelId).mockResolvedValueOnce(null as never)
 
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
@@ -89,10 +98,13 @@ describe('POST /api/google-calendar/webhook', () => {
 
   it('returns 401 on token mismatch', async () => {
     const helper = setupDbMock()
-    helper.selectMock.mockResolvedValueOnce([{ id: 'acc-1', watchChannelId: 'ch-1', lastMessageNumber: null }])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
     vi.mocked(CalendarConfigService.getConfig).mockResolvedValueOnce(mockConfig as never)
+    const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
+    vi.mocked(CalendarSyncService.getWatchedByChannelId).mockResolvedValueOnce({
+      id: 'cal-1', accountId: 'acc-1', watchChannelId: 'ch-1', lastMessageNumber: null,
+    } as never)
 
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
@@ -107,11 +119,13 @@ describe('POST /api/google-calendar/webhook', () => {
 
   it('skips when message-number <= lastMessageNumber (idempotency)', async () => {
     const helper = setupDbMock()
-    helper.selectMock.mockResolvedValueOnce([{ id: 'acc-1', watchChannelId: 'ch-1', lastMessageNumber: 10 }])
     vi.doMock('@/lib/db', () => ({ db: helper.db }))
     const { CalendarConfigService } = await import('@/lib/services/calendar-config.service')
     vi.mocked(CalendarConfigService.getConfig).mockResolvedValueOnce(mockConfig as never)
     const { CalendarSyncService } = await import('@/lib/services/calendar-sync.service')
+    vi.mocked(CalendarSyncService.getWatchedByChannelId).mockResolvedValueOnce({
+      id: 'cal-1', accountId: 'acc-1', watchChannelId: 'ch-1', lastMessageNumber: 10,
+    } as never)
 
     const { POST } = await import('@/app/api/google-calendar/webhook/route')
     const res = await POST(makeRequest({
@@ -122,6 +136,6 @@ describe('POST /api/google-calendar/webhook', () => {
       'X-Goog-Message-Number': '8',  // older than 10
     }) as never)
     expect(res.status).toBe(200)
-    expect(CalendarSyncService.incrementalSync).not.toHaveBeenCalled()
+    expect(CalendarSyncService.incrementalSyncCalendar).not.toHaveBeenCalled()
   })
 })

@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
-import { userCalendarAccounts } from '@/lib/db/schema'
-import { isNull } from 'drizzle-orm'
+import { userCalendarAccounts, userCalendarsWatched } from '@/lib/db/schema'
+import { and, eq, isNull } from 'drizzle-orm'
 import { CalendarAccountService } from './calendar-account.service'
 import { CalendarSyncService } from './calendar-sync.service'
 import { logger } from '@/lib/utils/logger'
@@ -10,10 +10,13 @@ const RENEWAL_THRESHOLD_MS = 24 * 60 * 60 * 1000  // renew channels expiring wit
 /**
  * Maintenance for all active calendar accounts:
  * - Proactive token refresh (the underlying service refreshes when < 60s to expiry)
- * - Channel renewal: stop + re-watch when watch_expires_at < now + 24h
+ * - Channel renewal pro Kalender (Migration 025): stop + re-watch wenn
+ *   watch_expires_at < now + 24h. Iteriert ueber alle readForBusy=true Kalender,
+ *   nicht nur den primaeren.
  */
 export async function runCalendarSyncMaintenance(): Promise<{
-  total: number
+  totalAccounts: number
+  totalCalendars: number
   refreshed: number
   renewed: number
   failed: number
@@ -24,6 +27,7 @@ export async function runCalendarSyncMaintenance(): Promise<{
   let refreshed = 0
   let renewed = 0
   let failed = 0
+  let totalCalendars = 0
 
   for (const acc of accounts) {
     try {
@@ -34,16 +38,29 @@ export async function runCalendarSyncMaintenance(): Promise<{
       // count an attempt as "refreshed" when the original was within 30 min of expiry
       if (before < Date.now() + 30 * 60 * 1000) refreshed++
 
-      // Channel renewal
-      const expiresAt = acc.watchExpiresAt?.getTime() ?? 0
-      if (!acc.watchChannelId || expiresAt < Date.now() + RENEWAL_THRESHOLD_MS) {
-        try {
-          await CalendarSyncService.stopWatch(acc.id)
-        } catch {
-          // ignore — best-effort cleanup
+      // Channel renewal pro Kalender
+      const watched = await db.select().from(userCalendarsWatched).where(and(
+        eq(userCalendarsWatched.accountId, acc.id),
+        eq(userCalendarsWatched.readForBusy, true),
+      ))
+      totalCalendars += watched.length
+
+      for (const w of watched) {
+        const expiresAt = w.watchExpiresAt?.getTime() ?? 0
+        if (!w.watchChannelId || expiresAt < Date.now() + RENEWAL_THRESHOLD_MS) {
+          try {
+            await CalendarSyncService.stopWatchCalendar(w.id)
+          } catch {
+            // ignore — best-effort cleanup
+          }
+          try {
+            await CalendarSyncService.setupWatchCalendar(w.id)
+            renewed++
+          } catch (err) {
+            failed++
+            logger.error('calendar watch renewal failed', err, { watchedId: w.id, accountId: acc.id })
+          }
         }
-        await CalendarSyncService.setupWatch(acc.id)
-        renewed++
       }
     } catch (err) {
       failed++
@@ -51,5 +68,5 @@ export async function runCalendarSyncMaintenance(): Promise<{
     }
   }
 
-  return { total: accounts.length, refreshed, renewed, failed }
+  return { totalAccounts: accounts.length, totalCalendars, refreshed, renewed, failed }
 }
