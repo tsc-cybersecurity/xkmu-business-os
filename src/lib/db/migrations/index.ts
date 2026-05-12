@@ -132,4 +132,8 @@ export const MIGRATIONS: Migration[] = [
     name: '028_api_doc_annotations.sql',
     description: 'API-Doku: persistente KI-generierte Annotationen fuer Endpoints ohne handgepflegte Registry-Eintraege',
   },
+  {
+    name: '029_seo_quickwins_local.sql',
+    description: 'SEO Quick Wins: Weimar/Thueringen in Hero-Subheadlines, Title-Tags und Meta-Descriptions der 5 Kernseiten',
+  },
 ]
