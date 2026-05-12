@@ -76,7 +76,7 @@ SELECT xkmu_set_cross_sell('/ki-beratung', '{
       "link": "/cybersecurity"
     },
     {
-      "icon": "ShieldAlert",
+      "icon": "Scale",
       "title": "NIS-2 Compliance",
       "description": "Betroffenheits-Check und Massnahmenplan fuer NIS-2-pflichtige KMU.",
       "link": "/nis-2"
@@ -103,7 +103,7 @@ SELECT xkmu_set_cross_sell('/it-beratung', '{
       "link": "/cybersecurity"
     },
     {
-      "icon": "ShieldAlert",
+      "icon": "Scale",
       "title": "NIS-2 Compliance",
       "description": "Auch fuer indirekt verpflichtete IT-Dienstleister oft Pflicht.",
       "link": "/nis-2"
@@ -118,7 +118,7 @@ SELECT xkmu_set_cross_sell('/cybersecurity', '{
   "columns": 3,
   "items": [
     {
-      "icon": "ShieldAlert",
+      "icon": "Scale",
       "title": "NIS-2 Compliance",
       "description": "Eigene Landingpage mit Betroffenheits-Check, Pflichten und Beratungsablauf.",
       "link": "/nis-2"

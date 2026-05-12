@@ -47,7 +47,7 @@ BEGIN
   INSERT INTO cms_blocks (page_id, block_type, sort_order, content, settings, is_visible) VALUES (
     v_page_id, 'hero', 0,
     '{
-      "badge": {"icon": "ShieldAlert", "text": "NIS-2 · NIS2UmsuCG"},
+      "badge": {"icon": "Scale", "text": "NIS-2 · NIS2UmsuCG"},
       "headline": "NIS-2-Compliance für KMU.",
       "subheadline": "Was Geschäftsführer jetzt wissen müssen — und wie xKMU Sie pragmatisch zur Erfüllung führt. Festpreise, klare Maßnahmenpläne, Nachweisdokumentation inklusive.",
       "buttons": [

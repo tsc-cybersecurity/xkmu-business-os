@@ -160,4 +160,8 @@ export const MIGRATIONS: Migration[] = [
     name: '035_eeat_trust_stripe.sql',
     description: 'E-E-A-T Trust-Stripe: 4-Spalten-Stats-Block (Erfahrung/BSI/Region/Festpreise) auf Startseite und Ueber-uns',
   },
+  {
+    name: '036_fix_nis2_icon.sql',
+    description: 'NIS-2-Icon-Fix: ShieldAlert (nicht im Mapper) durch Scale (Justizwaage) ersetzen',
+  },
 ]
