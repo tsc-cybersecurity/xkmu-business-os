@@ -58,10 +58,10 @@ const BG_STYLES: Record<string, { bg: string; text: string; muted: string; btnOu
 }
 
 const SIZES = {
-  full:   { section: 'px-0 py-0',           box: 'rounded-none p-12 md:p-20', heading: 'text-4xl md:text-5xl', desc: 'text-xl' },
-  large:  { section: 'container mx-auto px-4 py-16 md:py-24', box: 'rounded-2xl p-10 md:p-16', heading: 'text-3xl md:text-5xl', desc: 'text-lg md:text-xl' },
-  medium: { section: 'container mx-auto px-4 py-16 md:py-24', box: 'rounded-2xl p-8 md:p-12', heading: 'text-3xl md:text-4xl', desc: 'text-lg' },
-  small:  { section: 'container mx-auto px-4 py-8 md:py-12',  box: 'rounded-xl p-6 md:p-8',   heading: 'text-2xl md:text-3xl', desc: 'text-base' },
+  full:   { section: 'px-0 py-0',           box: 'rounded-none p-12 md:p-20', inner: 'container mx-auto px-4 text-center space-y-6', heading: 'text-4xl md:text-5xl', desc: 'text-xl' },
+  large:  { section: 'container mx-auto px-4 py-16 md:py-24', box: 'rounded-2xl p-10 md:p-16', inner: 'max-w-3xl mx-auto text-center space-y-6', heading: 'text-3xl md:text-5xl', desc: 'text-lg md:text-xl' },
+  medium: { section: 'container mx-auto px-4 py-16 md:py-24', box: 'rounded-2xl p-8 md:p-12', inner: 'max-w-3xl mx-auto text-center space-y-6', heading: 'text-3xl md:text-4xl', desc: 'text-lg' },
+  small:  { section: 'container mx-auto px-4 py-8 md:py-12',  box: 'rounded-xl p-6 md:p-8',   inner: 'max-w-3xl mx-auto text-center space-y-6', heading: 'text-2xl md:text-3xl', desc: 'text-base' },
 }
 
 export function CtaBlock({ content, settings }: CtaBlockProps) {
@@ -77,7 +77,7 @@ export function CtaBlock({ content, settings }: CtaBlockProps) {
       }}
     >
       <div className={`${sz.box} ${style.bg} ${style.text}`}>
-        <div className="max-w-3xl mx-auto text-center space-y-6">
+        <div className={sz.inner}>
           {content.headline && (
             <h2 className={`${sz.heading} font-bold`}>{content.headline}</h2>
           )}
