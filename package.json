@@ -1,6 +1,6 @@
 {
   "name": "xkmu-business-os",
-  "version": "1.5.762",
+  "version": "1.5.763",
   "private": true,
   "scripts": {
     "dev": "next dev",
