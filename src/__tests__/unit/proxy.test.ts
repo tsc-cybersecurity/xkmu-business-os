@@ -15,7 +15,7 @@ function makeNextRequest(options: {
   cookies?: Record<string, string>
 }): unknown {
   const pathname = options.pathname ?? '/api/v1/leads'
-  const url = `https://bos.dev.xkmu.de${pathname}`
+  const url = `https://www.xkmu.de${pathname}`
 
   const headersMap = new Map<string, string>([
     ['content-type', 'application/json'],
