@@ -144,4 +144,8 @@ export const MIGRATIONS: Migration[] = [
     name: '031_seo_regional_thueringen.sql',
     description: 'SEO Korrektur: regionaler Fokus Thueringen statt DACH-Raum auf Pillar-Subheadlines und Kontakt-Meta',
   },
+  {
+    name: '032_about_page.sql',
+    description: 'Ueber-uns-Seite: Gruender-Story, Philosophie, Mission, Team (Tino Stenzel, IT-Grundschutz-Praktiker), Werte + Nav-Eintrag',
+  },
 ]
