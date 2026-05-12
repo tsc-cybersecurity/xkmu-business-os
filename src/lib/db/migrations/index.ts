@@ -256,4 +256,8 @@ export const MIGRATIONS: Migration[] = [
     name: '059_faq_remove_name.sql',
     description: 'Startseiten-FAQ: Eigennamen aus 3 Antworten entfernen (xKMU-Markenstimme statt persoenlicher Verweis)',
   },
+  {
+    name: '060_name_meta_blog.sql',
+    description: 'Personennamen aus /ueber-uns Meta-Description und NIS-2-Blog-Artikel entfernen (xKMU-Markenstimme)',
+  },
 ]
