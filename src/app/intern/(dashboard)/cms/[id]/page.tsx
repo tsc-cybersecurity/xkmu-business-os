@@ -75,6 +75,8 @@ interface CmsPage {
   blocks: CmsBlock[]
 }
 
+type BlockField = string | { name?: string; label?: string; type?: string }
+
 interface BlockTypeDefinition {
   id: string
   slug: string
@@ -82,11 +84,16 @@ interface BlockTypeDefinition {
   description: string | null
   icon: string | null
   category: string | null
-  fields: string[]
+  fields: BlockField[]
   defaultContent: Record<string, unknown>
   defaultSettings: Record<string, unknown>
   isActive: boolean | null
   sortOrder: number | null
+}
+
+function fieldLabel(field: BlockField): string {
+  if (typeof field === 'string') return field
+  return field?.label || field?.name || ''
 }
 
 import type { LucideIcon } from 'lucide-react'
@@ -565,7 +572,7 @@ export default function CmsPageEditorPage() {
             {blockTypes.map((bt) => {
               const Icon = (bt.icon ? iconMap[bt.icon] : null) || Box
               const isSelected = newBlockType === bt.slug
-              const fields = (bt.fields as string[]) || []
+              const fields = Array.isArray(bt.fields) ? bt.fields : []
               return (
                 <button
                   key={bt.slug}
@@ -585,11 +592,15 @@ export default function CmsPageEditorPage() {
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">{bt.description}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {fields.map((field) => (
-                          <Badge key={field} variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {field}
-                          </Badge>
-                        ))}
+                        {fields.map((field, i) => {
+                          const label = fieldLabel(field)
+                          if (!label) return null
+                          return (
+                            <Badge key={typeof field === 'string' ? field : i} variant="secondary" className="text-[10px] px-1.5 py-0">
+                              {label}
+                            </Badge>
+                          )
+                        })}
                       </div>
                     </div>
                   </div>
