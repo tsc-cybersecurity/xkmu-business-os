@@ -82,12 +82,13 @@ export const authService: ApiService = {
     {
       method: 'GET',
       path: '/api/v1/auth/me',
-      summary: 'Aktuellen Benutzer abrufen',
+      summary: 'Aktuelle Authentifizierung abrufen',
       description:
-        'Gibt die Daten des aktuell eingeloggten Benutzers zurueck. Erfordert eine aktive Session.',
+        'Liefert Informationen ueber die aktuelle Authentifizierung. Akzeptiert sowohl Session-Cookies als auch x-api-key-Header. Bei Session-Auth wird der eingeloggte Benutzer zurueckgegeben (auth: "session"); bei API-Key-Auth die Key-ID + Permissions (auth: "api-key"). 401 nur, wenn weder gueltige Session noch gueltiger API-Key vorhanden ist.',
       response: {
         success: true,
         data: {
+          auth: 'session',
           user: {
             id: 'b3f1a2c4-5d6e-7f8a-9b0c-1d2e3f4a5b6c',
             email: 'max@mustermann-gmbh.de',
@@ -98,8 +99,13 @@ export const authService: ApiService = {
           },
         },
       },
-      curl: `curl https://example.com/api/v1/auth/me \\
-  -b cookies.txt`,
+      curl: `# Variante A: Session-Cookie
+curl https://example.com/api/v1/auth/me \\
+  -b cookies.txt
+
+# Variante B: API-Key
+curl https://example.com/api/v1/auth/me \\
+  -H "x-api-key: xkmu_<dein-key>"`,
     },
     {
       method: 'GET',

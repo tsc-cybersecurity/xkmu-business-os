@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { NextRequest } from 'next/server'
 import { setupDbMock } from '../../helpers/mock-db'
 import { createTestRequest } from '../../helpers/mock-request'
 import { TEST_TENANT_ID, TEST_USER_ID } from '../../helpers/fixtures'
@@ -400,6 +401,10 @@ describe('GET /api/v1/auth/me', () => {
     return mod.GET
   }
 
+  function makeReq(headers: Record<string, string> = {}): NextRequest {
+    return new NextRequest('http://localhost/api/v1/auth/me', { headers })
+  }
+
   it('returns 200 with authenticated user', async () => {
     vi.doMock('@/lib/auth/session', () => ({
       getSession: vi.fn().mockResolvedValue({
@@ -411,11 +416,12 @@ describe('GET /api/v1/auth/me', () => {
     }))
 
     const handler = await getHandler()
-    const res = await handler()
+    const res = await handler(makeReq())
     const body = await res.json()
 
     expect(res.status).toBe(200)
     expect(body.success).toBe(true)
+    expect(body.data.auth).toBe('session')
     expect(body.data.user.email).toBe('admin@test.de')
     expect(body.data.user.id).toBe(TEST_USER_ID)
   })
@@ -428,7 +434,7 @@ describe('GET /api/v1/auth/me', () => {
     }))
 
     const handler = await getHandler()
-    const res = await handler()
+    const res = await handler(makeReq())
     const body = await res.json()
 
     expect(res.status).toBe(401)
