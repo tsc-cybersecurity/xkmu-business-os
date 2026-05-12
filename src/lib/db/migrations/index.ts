@@ -180,4 +180,8 @@ export const MIGRATIONS: Migration[] = [
     name: '040_module_ctas.sql',
     description: 'Conversion-CTAs: 19 Modul-Detailseiten (A1-A5/B1-B5/C1-C6/D1-D3) + /loesungen mit problemorientierten Headlines + Topic-Routing',
   },
+  {
+    name: '041_kurse_cms_page.sql',
+    description: '/kurse als CMS-Page editierbar: Hero + Intro-Text editierbar, dynamische Course-Liste haengt automatisch darunter',
+  },
 ]
