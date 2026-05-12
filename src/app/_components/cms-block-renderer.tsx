@@ -25,6 +25,8 @@ import { BlogListingBlock } from './blocks/blog-listing-block'
 import { ContactFormBlock } from './blocks/contact-form-block'
 import { ColumnsBlock } from './blocks/columns-block'
 import { WheelBlock } from './blocks/wheel-block'
+import { CourseListingBlock } from './blocks/course-listing-block'
+import type { CourseListingBlockContent } from './blocks/course-listing-block'
 import type { HeroBlockContent } from './blocks/hero-block'
 import type { WheelBlockContent } from './blocks/wheel-block'
 import type { BannerBlockContent } from './blocks/banner-block'
@@ -159,6 +161,8 @@ export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRende
       return <CourseStepByStepBlock content={content as CourseStepByStepBlockContent} />
     case 'course-accordion':
       return <CourseAccordionBlock content={content as CourseAccordionBlockContent} />
+    case 'course-listing':
+      return <CourseListingBlock content={content as CourseListingBlockContent} settings={settings} />
     default:
       return (
         <div className="container mx-auto px-4 py-8">

@@ -208,4 +208,8 @@ export const MIGRATIONS: Migration[] = [
     name: '047_kurse_cms_reapply.sql',
     description: 'CMS-Fix: /kurse-Page defensiv re-applyen falls Migration 041 nicht durch (Page existiert nicht in DB → CMS-Liste leer)',
   },
+  {
+    name: '048_kurse_full_cms.sql',
+    description: '/kurse vollstaendig CMS-bearbeitbar: neuer course-listing Block-Typ + Page mit Hero/Intro/CourseListing/CTA design-konsistent mit Pillar-Seiten',
+  },
 ]
