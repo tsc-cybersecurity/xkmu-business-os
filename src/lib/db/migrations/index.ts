@@ -232,4 +232,8 @@ export const MIGRATIONS: Migration[] = [
     name: '053_seo_og_images.sql',
     description: 'OG-Bilder pro Hauptseite: dynamische /api/og-Route erzeugt 1200x630-PNGs mit Pillar-Farbe; og_image-Spalte fuer 9 Hauptseiten gesetzt',
   },
+  {
+    name: '054_trust_stripe_reapply.sql',
+    description: 'Trust-Stripe (Migration 035) defensiv re-applyen — Live-Check zeigt: Block fehlt auf Startseite (analog /kurse-Problem)',
+  },
 ]
