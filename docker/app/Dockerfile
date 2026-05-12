@@ -12,10 +12,12 @@ RUN apk add --no-cache libc6-compat
 FROM base AS deps
 COPY package.json package-lock.json* ./
 # BuildKit cache-mount: persistiert npm-Cache zwischen Builds.
-# Bei unveraendertem package-lock.json springt Docker eh in den Layer-Cache;
-# bei Lock-Changes bleibt der npm-Download-Cache trotzdem warm → nur Delta wird geladen.
+# npm install statt npm ci, weil package-lock.json auf Windows-Dev plattform-
+# spezifisch ist (optionalDependencies fuer @esbuild/win32-* statt linux-*),
+# was npm ci im Linux-Container als "Missing" rejecten wuerde. npm install
+# mit --prefer-offline ist gleich schnell, sobald der Cache warm ist.
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --prefer-offline --no-audit --no-fund || npm install --prefer-offline --no-audit --no-fund
+    npm install --prefer-offline --no-audit --no-fund
 
 # ============================================
 # Development Stage
