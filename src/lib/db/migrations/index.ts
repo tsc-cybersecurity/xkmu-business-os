@@ -148,4 +148,8 @@ export const MIGRATIONS: Migration[] = [
     name: '032_about_page.sql',
     description: 'Ueber-uns-Seite: Gruender-Story, Philosophie, Mission, Team (Tino Stenzel, IT-Grundschutz-Praktiker), Werte + Nav-Eintrag',
   },
+  {
+    name: '033_nis2_landingpage.sql',
+    description: 'NIS-2-Landingpage: Intro, Betroffenheit, 6 Kernpflichten, 10-Punkte-Selbstcheck, Beratungsablauf, 5 FAQs + Footer-Nav',
+  },
 ]
