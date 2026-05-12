@@ -969,7 +969,7 @@ const pages = [
     slug: '/kontakt',
     title: 'Kontakt',
     seoTitle: 'Kontakt – IT-Beratung Weimar | Termin online buchen',
-    seoDescription: 'Kontaktieren Sie xKMU digital solutions aus Weimar: Termin online buchen, telefonische Hotline oder schriftliche Anfrage. Wir beraten KMU in Thüringen – remote und vor Ort.',
+    seoDescription: 'Kontakt zu xKMU digital solutions aus Weimar: Termin online buchen oder Hotline. Beratung für KMU in Thüringen – remote und vor Ort.',
     status: 'published',
     blocks: [
       {

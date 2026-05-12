@@ -38,8 +38,8 @@ WHERE block_type = 'hero'
 
 -- ─── Kontakt Meta-Description ──────────────────────────────────────
 UPDATE cms_pages SET
-  seo_description = 'Kontaktieren Sie xKMU digital solutions aus Weimar: Termin online buchen, telefonische Hotline oder schriftliche Anfrage. Wir beraten KMU in Thüringen – remote und vor Ort.',
-  published_seo_description = 'Kontaktieren Sie xKMU digital solutions aus Weimar: Termin online buchen, telefonische Hotline oder schriftliche Anfrage. Wir beraten KMU in Thüringen – remote und vor Ort.',
+  seo_description = 'Kontakt zu xKMU digital solutions aus Weimar: Termin online buchen oder Hotline. Beratung für KMU in Thüringen – remote und vor Ort.',
+  published_seo_description = 'Kontakt zu xKMU digital solutions aus Weimar: Termin online buchen oder Hotline. Beratung für KMU in Thüringen – remote und vor Ort.',
   updated_at = now()
 WHERE slug = '/kontakt';
 
