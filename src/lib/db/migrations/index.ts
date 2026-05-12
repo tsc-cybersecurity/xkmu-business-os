@@ -164,4 +164,8 @@ export const MIGRATIONS: Migration[] = [
     name: '036_fix_nis2_icon.sql',
     description: 'NIS-2-Icon-Fix: ShieldAlert (nicht im Mapper) durch Scale (Justizwaage) ersetzen',
   },
+  {
+    name: '037_ai_search_answers.sql',
+    description: 'AI-Search-Antworten: 3 entitaetsdichte Q/A fuer ChatGPT/Perplexity/SGE auf der Startseite ergaenzt',
+  },
 ]
