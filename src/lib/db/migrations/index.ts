@@ -204,4 +204,8 @@ export const MIGRATIONS: Migration[] = [
     name: '046_nav_kurse.sql',
     description: 'Nav-Fix: /kurse als Header-Eintrag (sort_order 4) — fehlte seit Migration 041',
   },
+  {
+    name: '047_kurse_cms_reapply.sql',
+    description: 'CMS-Fix: /kurse-Page defensiv re-applyen falls Migration 041 nicht durch (Page existiert nicht in DB → CMS-Liste leer)',
+  },
 ]
