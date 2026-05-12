@@ -41,7 +41,7 @@ interface OriginalEmail {
 interface ComposeDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  accounts: Array<{ id: string; name: string; email: string }>
+  accounts: Array<{ id: string; name: string; email: string; signature?: string | null }>
   mode: 'new' | 'reply' | 'replyAll' | 'forward'
   originalEmail?: OriginalEmail
   onSent?: () => void
@@ -88,6 +88,16 @@ function textToHtml(text: string): string {
     .replace(/\n/g, '<br>')
 }
 
+// Erzeugt einen Signatur-Block im Standard-Mail-Format ("-- \n<text>").
+// Signatur liegt im DB-Feld als HTML — fuer die Textarea wird sie
+// to-text-gewandelt. Leere Signatur → leerer String.
+function buildSignatureBlock(signatureHtml: string | null | undefined): string {
+  if (!signatureHtml) return ''
+  const text = stripHtml(signatureHtml)
+  if (!text) return ''
+  return `\n\n-- \n${text}`
+}
+
 export function ComposeDialog({
   open,
   onOpenChange,
@@ -109,11 +119,11 @@ export function ComposeDialog({
     if (!open) return
 
     // Account selection
-    if (originalEmail?.accountId) {
-      setAccountId(originalEmail.accountId)
-    } else if (accounts.length > 0) {
-      setAccountId(accounts[0].id)
-    }
+    const targetAccountId = originalEmail?.accountId || accounts[0]?.id || ''
+    if (targetAccountId) setAccountId(targetAccountId)
+
+    const currentAccount = accounts.find((a) => a.id === targetAccountId)
+    const signatureBlock = buildSignatureBlock(currentAccount?.signature)
 
     switch (mode) {
       case 'reply': {
@@ -126,7 +136,7 @@ export function ComposeDialog({
               ? originalEmail.subject
               : `Re: ${originalEmail.subject}`
           )
-          setBody('\n\n' + stripHtml(buildQuotedBody(originalEmail)))
+          setBody('\n\n' + signatureBlock + '\n\n' + stripHtml(buildQuotedBody(originalEmail)))
           setShowCcBcc(false)
         }
         break
@@ -134,11 +144,7 @@ export function ComposeDialog({
       case 'replyAll': {
         if (originalEmail) {
           setTo(originalEmail.fromAddress)
-          // Add original to/cc addresses, excluding the sending account
-          const sendingAccount = accounts.find(
-            (a) => a.id === (originalEmail.accountId || accounts[0]?.id)
-          )
-          const sendingEmail = sendingAccount?.email?.toLowerCase()
+          const sendingEmail = currentAccount?.email?.toLowerCase()
 
           const allTo = originalEmail.toAddresses
             .map((a) => a.address)
@@ -163,7 +169,7 @@ export function ComposeDialog({
               ? originalEmail.subject
               : `Re: ${originalEmail.subject}`
           )
-          setBody('\n\n' + stripHtml(buildQuotedBody(originalEmail)))
+          setBody('\n\n' + signatureBlock + '\n\n' + stripHtml(buildQuotedBody(originalEmail)))
         }
         break
       }
@@ -177,7 +183,7 @@ export function ComposeDialog({
               ? originalEmail.subject
               : `Fwd: ${originalEmail.subject}`
           )
-          setBody('\n\n' + stripHtml(buildQuotedBody(originalEmail)))
+          setBody('\n\n' + signatureBlock + '\n\n' + stripHtml(buildQuotedBody(originalEmail)))
           setShowCcBcc(false)
         }
         break
@@ -188,7 +194,7 @@ export function ComposeDialog({
         setCc('')
         setBcc('')
         setSubject('')
-        setBody('')
+        setBody(signatureBlock)
         setShowCcBcc(false)
         break
       }
