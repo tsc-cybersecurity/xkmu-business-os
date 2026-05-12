@@ -244,4 +244,12 @@ export const MIGRATIONS: Migration[] = [
     name: '056_seo_section_headlines.sql',
     description: 'H2-Sektionsueberschriften personalisieren: "Was Sie konkret erhalten" + "Verwandte Themen" auf Pillars durch Keyword-haltige Varianten ersetzen',
   },
+  {
+    name: '057_seo_module_section_h2.sql',
+    description: 'Modul-Section-H2: "Konkrete Ergebnisse – keine Folien" auf allen 19 Modul-Detailseiten durch modul-spezifische Keyword-Titel ersetzt',
+  },
+  {
+    name: '058_contact_form_tags.sql',
+    description: 'Kontaktformular-Tags auf 18 Eintraege erweitern (Systemintegration, IT-Beratung, Security Quick Check, Incident Response, Security Awareness, Kombinations-Modul ergaenzt) — Modul-CTAs koennen jetzt pre-fillen',
+  },
 ]
