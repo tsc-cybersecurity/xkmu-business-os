@@ -216,4 +216,12 @@ export const MIGRATIONS: Migration[] = [
     name: '049_seo_hero_subheadlines.sql',
     description: 'SEO Hero-Subheadlines schaerfen: Startseite + 4 Pillars + Loesungen mit Outcome-Ankern (5 Tage, 4 Wochen, Festpreis) und Region',
   },
+  {
+    name: '050_seo_module_h1.sql',
+    description: 'SEO H1+Subheadline+Title-Tag fuer 19 Modul-Detailseiten (A1-A5, B1-B5, C1-C6, D1-D3) mit Pillar-Keyword+KMU+Outcome',
+  },
+  {
+    name: '051_seo_remove_dach.sql',
+    description: 'Korrektur zu Migration 049: DACH-Raum-Erwaehnungen aus Hero-Subheadlines entfernt — regionaler Fokus Thueringen + remote',
+  },
 ]
