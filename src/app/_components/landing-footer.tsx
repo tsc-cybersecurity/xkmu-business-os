@@ -45,6 +45,7 @@ export function LandingFooter() {
               <Link
                 key={item.href}
                 href={item.href}
+                title={item.label}
                 {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 className="hover:text-foreground transition-colors"
               >

@@ -90,7 +90,7 @@ export function CtaBlock({ content, settings }: CtaBlockProps) {
               {content.buttons.map((btn, i) => {
                 const baseBtn = 'text-base md:text-lg px-6 md:px-8 w-full sm:w-auto !whitespace-normal break-words h-auto min-h-11 py-2.5 leading-snug max-w-full'
                 return (
-                  <Link key={i} href={btn.href} className="w-full sm:w-auto">
+                  <Link key={i} href={btn.href} className="w-full sm:w-auto" title={btn.label}>
                     <Button
                       size="lg"
                       variant={btn.variant === 'outline' ? 'outline' : 'secondary'}

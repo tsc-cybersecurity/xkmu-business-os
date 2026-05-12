@@ -43,6 +43,8 @@ export async function generateCmsMetadata(slug: string, fallbackTitle: string): 
         },
         twitter: {
           card: image ? 'summary_large_image' : 'summary',
+          site: '@xkmu',
+          creator: '@xkmu',
           title,
           description,
           ...(image ? { images: [image] } : {}),

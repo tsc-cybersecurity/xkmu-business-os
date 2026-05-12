@@ -106,7 +106,7 @@ export function ServiceCardsBlock({ content, settings }: ServiceCardsBlockProps)
             </div>
           )
           if (item.href) {
-            return <Link key={i} href={item.href} className="block">{card}</Link>
+            return <Link key={i} href={item.href} className="block" title={item.title}>{card}</Link>
           }
           return <div key={i}>{card}</div>
         })}

@@ -48,6 +48,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
         twitter: {
           card: 'summary_large_image',
+          site: '@xkmu',
+          creator: '@xkmu',
           title: post.seoTitle || post.title,
           description: post.seoDescription || post.excerpt || undefined,
           images: [ogImage],

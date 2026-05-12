@@ -105,7 +105,7 @@ export function LandingNavbar() {
     <header className={`${headerSticky ? 'fixed' : 'relative'} top-0 left-0 right-0 z-50 h-[100px] bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 shadow-sm`}>
       <div className="container mx-auto px-4 h-full flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="shrink-0">
+        <Link href="/" className="shrink-0" title="Startseite" aria-label="Startseite">
           {logoUrl ? (
             <Image
               src={logoUrl}
@@ -126,6 +126,7 @@ export function LandingNavbar() {
             <Link
               key={item.name}
               href={item.href}
+              title={item.name}
               {...(item.openInNewTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-[var(--brand-600)] dark:hover:text-[var(--brand-400)] transition-colors"
             >
@@ -219,7 +220,7 @@ export function LandingNavbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/kontakt">
+            <Link href="/kontakt" title="Kontakt aufnehmen">
               <Button className="bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white px-6">
                 Kontakt
               </Button>
