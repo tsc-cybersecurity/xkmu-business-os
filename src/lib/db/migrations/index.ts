@@ -228,4 +228,8 @@ export const MIGRATIONS: Migration[] = [
     name: '052_seo_faq_longtail.sql',
     description: 'FAQ-Erweiterung: 3 Pillar-Seiten von 4 auf 8 FAQs (Long-Tail: Kosten, Dauer, Branche, Abgrenzungen, DSGVO) inkl. Schema.org FAQPage-JSON-LD',
   },
+  {
+    name: '053_seo_og_images.sql',
+    description: 'OG-Bilder pro Hauptseite: dynamische /api/og-Route erzeugt 1200x630-PNGs mit Pillar-Farbe; og_image-Spalte fuer 9 Hauptseiten gesetzt',
+  },
 ]
