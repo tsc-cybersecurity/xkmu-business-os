@@ -224,4 +224,8 @@ export const MIGRATIONS: Migration[] = [
     name: '051_seo_remove_dach.sql',
     description: 'Korrektur zu Migration 049: DACH-Raum-Erwaehnungen aus Hero-Subheadlines entfernt — regionaler Fokus Thueringen + remote',
   },
+  {
+    name: '052_seo_faq_longtail.sql',
+    description: 'FAQ-Erweiterung: 3 Pillar-Seiten von 4 auf 8 FAQs (Long-Tail: Kosten, Dauer, Branche, Abgrenzungen, DSGVO) inkl. Schema.org FAQPage-JSON-LD',
+  },
 ]
