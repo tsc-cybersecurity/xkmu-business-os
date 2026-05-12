@@ -252,4 +252,8 @@ export const MIGRATIONS: Migration[] = [
     name: '058_contact_form_tags.sql',
     description: 'Kontaktformular-Tags auf 18 Eintraege erweitern (Systemintegration, IT-Beratung, Security Quick Check, Incident Response, Security Awareness, Kombinations-Modul ergaenzt) — Modul-CTAs koennen jetzt pre-fillen',
   },
+  {
+    name: '059_faq_remove_name.sql',
+    description: 'Startseiten-FAQ: Eigennamen aus 3 Antworten entfernen (xKMU-Markenstimme statt persoenlicher Verweis)',
+  },
 ]
