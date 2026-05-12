@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { cmsSettings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { OrganizationService } from "@/lib/services/organization.service";
+import { buildOrganizationJsonLd } from "@/lib/seo/organization-schema";
 
 const ubuntu = localFont({
   src: "./fonts/ubuntu-regular.woff2",
@@ -90,18 +91,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const logoUrl = await loadBrandingLogoUrl()
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'xKMU',
-    url: PUBLIC_SITE_URL,
-    logo: logoUrl,
-  }
+  const jsonLdGraph = buildOrganizationJsonLd({ siteUrl: PUBLIC_SITE_URL, logoUrl })
 
   return (
     <html lang="de">
       <head>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        {jsonLdGraph.map((schema, i) => (
+          <script key={i} type="application/ld+json">{JSON.stringify(schema)}</script>
+        ))}
       </head>
       <body
         className={`${ubuntu.variable} ${ubuntuMono.variable} ${inter.variable} ${roboto.variable} ${montserrat.variable} antialiased`}
