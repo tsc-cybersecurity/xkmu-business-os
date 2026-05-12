@@ -212,4 +212,8 @@ export const MIGRATIONS: Migration[] = [
     name: '048_kurse_full_cms.sql',
     description: '/kurse vollstaendig CMS-bearbeitbar: neuer course-listing Block-Typ + Page mit Hero/Intro/CourseListing/CTA design-konsistent mit Pillar-Seiten',
   },
+  {
+    name: '049_seo_hero_subheadlines.sql',
+    description: 'SEO Hero-Subheadlines schaerfen: Startseite + 4 Pillars + Loesungen mit Outcome-Ankern (5 Tage, 4 Wochen, Festpreis) und Region',
+  },
 ]
