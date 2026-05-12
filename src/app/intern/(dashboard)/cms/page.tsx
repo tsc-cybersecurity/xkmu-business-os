@@ -26,6 +26,8 @@ interface CmsPage {
   id: string
   slug: string
   title: string
+  seoTitle: string | null
+  seoDescription: string | null
   status: string | null
   publishedAt: string | null
   updatedAt: string | null
@@ -132,6 +134,8 @@ export default function CmsPagesPage() {
             <TableRow>
               <TableHead>Slug</TableHead>
               <TableHead>Titel</TableHead>
+              <TableHead className="max-w-[280px]">SEO-Titel</TableHead>
+              <TableHead className="max-w-[360px]">Meta-Beschreibung</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Letzte Aenderung</TableHead>
               <TableHead className="w-[200px]">Aktionen</TableHead>
@@ -140,7 +144,7 @@ export default function CmsPagesPage() {
           <TableBody>
             {pages.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   Noch keine CMS-Seiten vorhanden
                 </TableCell>
               </TableRow>
@@ -149,6 +153,16 @@ export default function CmsPagesPage() {
                 <TableRow key={page.id}>
                   <TableCell className="font-mono text-sm">{page.slug}</TableCell>
                   <TableCell className="font-medium">{page.title}</TableCell>
+                  <TableCell className="max-w-[280px] text-sm" title={page.seoTitle ?? ''}>
+                    <div className="truncate text-muted-foreground">
+                      {page.seoTitle || <span className="italic opacity-60">—</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="max-w-[360px] text-sm" title={page.seoDescription ?? ''}>
+                    <div className="truncate text-muted-foreground">
+                      {page.seoDescription || <span className="italic opacity-60">—</span>}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
                       {page.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}
