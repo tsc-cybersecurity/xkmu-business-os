@@ -184,4 +184,8 @@ export const MIGRATIONS: Migration[] = [
     name: '041_kurse_cms_page.sql',
     description: '/kurse als CMS-Page editierbar: Hero + Intro-Text editierbar, dynamische Course-Liste haengt automatisch darunter',
   },
+  {
+    name: '042_module_ctas_fix_slugs.sql',
+    description: 'Fix Migration 040: Modul-CTAs mit korrekten langen Slugs (LIKE-Pattern statt exact match)',
+  },
 ]
