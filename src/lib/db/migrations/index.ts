@@ -196,4 +196,8 @@ export const MIGRATIONS: Migration[] = [
     name: '044_seo_robots_nap.sql',
     description: 'SEO-Fixes: in_sitemap=true fuer alle Pillar-/Pflichtseiten + NAP-Box (Sitz/Telefon/E-Mail/Erreichbarkeit) als Text-Block vor Kontaktformular',
   },
+  {
+    name: '045_seo_h1_titles.sql',
+    description: 'SEO H1+Title-Tags: 8 Hauptseiten (Pillars, Loesungen, NIS-2, Ueber-uns, Kontakt, Kurse) mit Keyword+KMU+Region',
+  },
 ]
