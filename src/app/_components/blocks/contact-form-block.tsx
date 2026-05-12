@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -32,11 +33,19 @@ interface FormErrors {
 }
 
 const DEFAULT_TAGS = [
-  'KI-Beratung', 'KI-Automatisierung', 'KI-Assistenten & Chatbots',
+  // Pillar-Level (von Pillar-Seiten-CTAs vorausgewaehlt)
+  'KI-Beratung', 'IT-Beratung', 'Cybersecurity',
+  // KI-Details
+  'KI-Automatisierung', 'KI-Assistenten & Chatbots',
+  // IT-Details
   'IT-Assessment', 'IT-Architektur & Cloud', 'Systemintegration',
+  // Cybersecurity-Details
   'Security Quick Check', 'Hardening & Baselines', 'Backup & Recovery',
   'Incident Response', 'Security Awareness', 'Datenschutz & Compliance',
-  'NIS-2 Unterstützung', 'Kombinations-Modul', 'Managed Services',
+  // Compliance
+  'NIS-2 Unterstützung',
+  // Kombi
+  'Kombinations-Modul', 'Managed Services',
 ]
 
 export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
@@ -46,13 +55,22 @@ export function ContactFormBlock({ content, settings }: ContactFormBlockProps) {
   const successMessage = content.successMessage || 'Wir haben Ihre Anfrage erhalten und werden uns schnellstmöglich bei Ihnen melden.'
   const privacyUrl = content.privacyUrl || '/datenschutz'
 
+  // Pre-Fill via URL-Parameter: /kontakt?interesse=KI-Beratung (mehrere via Komma)
+  // CTAs auf Pillar-/NIS-2-Seiten senden so das Thema mit, das Tag wird hier vorausgewaehlt.
+  const searchParams = useSearchParams()
+  const initialInterests: string[] = (() => {
+    const raw = searchParams?.get('interesse')
+    if (!raw) return []
+    return raw.split(',').map(t => t.trim()).filter(t => tags.includes(t))
+  })()
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     company: '',
     phone: '',
     email: '',
-    interests: [] as string[],
+    interests: initialInterests,
     message: '',
     privacyAccepted: false,
     // Honeypot — muss leer bleiben (echte User sehen das Feld nicht)

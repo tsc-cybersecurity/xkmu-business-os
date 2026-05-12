@@ -168,4 +168,12 @@ export const MIGRATIONS: Migration[] = [
     name: '037_ai_search_answers.sql',
     description: 'AI-Search-Antworten: 3 entitaetsdichte Q/A fuer ChatGPT/Perplexity/SGE auf der Startseite ergaenzt',
   },
+  {
+    name: '038_blog_nis2_pilot.sql',
+    description: 'Blog-Pilotartikel: NIS-2 fuer kleine Unternehmen (~1.300 Woerter, Keyword-Cluster NIS-2 KMU)',
+  },
+  {
+    name: '039_topic_routing.sql',
+    description: 'Topic-Routing: CTA-Links auf Pillar-/NIS-2-Seiten geben das Thema an /kontakt weiter (Pre-Fill)',
+  },
 ]
