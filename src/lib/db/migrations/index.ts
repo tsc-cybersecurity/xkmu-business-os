@@ -200,4 +200,8 @@ export const MIGRATIONS: Migration[] = [
     name: '045_seo_h1_titles.sql',
     description: 'SEO H1+Title-Tags: 8 Hauptseiten (Pillars, Loesungen, NIS-2, Ueber-uns, Kontakt, Kurse) mit Keyword+KMU+Region',
   },
+  {
+    name: '046_nav_kurse.sql',
+    description: 'Nav-Fix: /kurse als Header-Eintrag (sort_order 4) — fehlte seit Migration 041',
+  },
 ]
