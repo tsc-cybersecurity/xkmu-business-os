@@ -188,4 +188,8 @@ export const MIGRATIONS: Migration[] = [
     name: '042_module_ctas_fix_slugs.sql',
     description: 'Fix Migration 040: Modul-CTAs mit korrekten langen Slugs (LIKE-Pattern statt exact match)',
   },
+  {
+    name: '043_cta_style_dark_full.sql',
+    description: 'CTA-Bloecke auf dark-Hintergrund und volle Breite (Pillar-Seiten, Modul-Detailseiten, NIS-2, Ueber-uns)',
+  },
 ]
