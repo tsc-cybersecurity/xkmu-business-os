@@ -12,11 +12,29 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
+// Pillar-Farbe fuer /api/og aus der Blog-Kategorie ableiten.
+function pillarForBlogCategory(category: string | null | undefined): 'ki' | 'it' | 'cyber' | 'nis2' | 'default' {
+  const c = (category ?? '').toLowerCase()
+  if (c.includes('nis')) return 'nis2'
+  if (c.includes('cyber') || c.includes('security') || c.includes('sicherheit') || c.includes('phishing') || c.includes('ransomware') || c.includes('backup')) return 'cyber'
+  if (c.includes('ki') || c.includes(' ai') || c.startsWith('ai')) return 'ki'
+  if (c.includes('it') || c.includes('cloud') || c.includes('infrastruktur') || c.includes('netzwerk')) return 'it'
+  return 'default'
+}
+
+function buildBlogOgImageUrl(post: { title: string; excerpt: string | null; category: string | null }): string {
+  const t = encodeURIComponent(post.title.slice(0, 90))
+  const s = encodeURIComponent((post.excerpt ?? 'xKMU IT-Magazin für KMU').slice(0, 140))
+  const p = pillarForBlogCategory(post.category)
+  return `/api/og?t=${t}&s=${s}&p=${p}`
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const { slug } = await params
     const post = await BlogPostService.getBySlugPublic(slug)
     if (post) {
+      const ogImage = toAbsoluteUrl(post.featuredImage ?? buildBlogOgImageUrl(post))
       return {
         title: post.seoTitle || post.title,
         description: post.seoDescription || post.excerpt || undefined,
@@ -26,13 +44,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           description: post.seoDescription || post.excerpt || undefined,
           type: 'article',
           url: `/it-news/${slug}`,
-          ...(post.featuredImage ? { images: [toAbsoluteUrl(post.featuredImage)] } : {}),
+          images: [ogImage],
         },
         twitter: {
           card: 'summary_large_image',
           title: post.seoTitle || post.title,
           description: post.seoDescription || post.excerpt || undefined,
-          ...(post.featuredImage ? { images: [toAbsoluteUrl(post.featuredImage)] } : {}),
+          images: [ogImage],
         },
       }
     }
