@@ -42,6 +42,7 @@ interface EmailAccount {
   id: string
   name: string
   email: string
+  signature?: string | null
 }
 
 interface AddressObj {
@@ -855,7 +856,7 @@ export default function EmailsPage() {
       <ComposeDialog
         open={composeOpen}
         onOpenChange={setComposeOpen}
-        accounts={accounts.map(a => ({ id: a.id, name: a.name, email: a.email }))}
+        accounts={accounts.map(a => ({ id: a.id, name: a.name, email: a.email, signature: a.signature ?? null }))}
         mode={composeMode}
         originalEmail={composeMode !== 'new' && selectedEmail ? {
           id: selectedEmail.id,
