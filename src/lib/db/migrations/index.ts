@@ -136,4 +136,12 @@ export const MIGRATIONS: Migration[] = [
     name: '029_seo_quickwins_local.sql',
     description: 'SEO Quick Wins: Weimar/Thueringen in Hero-Subheadlines, Title-Tags und Meta-Descriptions der 5 Kernseiten',
   },
+  {
+    name: '030_seo_faqs.sql',
+    description: 'SEO FAQs: FAQ-Sektionen fuer Startseite (8 FAQs) + KI/IT/Cybersecurity-Pillar-Seiten (je 4 FAQs) inkl. Schema.org-JSON-LD',
+  },
+  {
+    name: '031_seo_regional_thueringen.sql',
+    description: 'SEO Korrektur: regionaler Fokus Thueringen statt DACH-Raum auf Pillar-Subheadlines und Kontakt-Meta',
+  },
 ]

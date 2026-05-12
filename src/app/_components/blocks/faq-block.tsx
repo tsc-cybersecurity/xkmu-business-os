@@ -23,9 +23,27 @@ export function FaqBlock({
   const { sectionTitle, sectionSubtitle, items = [] } = content
   const [openIndex, setOpenIndex] = useState<number | null>(null)
 
+  // Schema.org FAQPage JSON-LD - kritisch fuer Google Rich-Results und AI-Search.
+  // Wird auch bei zugeklapptem Accordion ausgeliefert (Crawler sehen alle Q/A).
+  // JSON.stringify ist safe: Inhalt kommt aus dem CMS (intern verwaltete Inhalte).
+  const schemaJson = items.length > 0
+    ? JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: items.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      })
+    : null
+
   return (
     <section className="py-16 md:py-24 px-4">
       <div className="container mx-auto max-w-3xl">
+        {schemaJson && (
+          <script type="application/ld+json">{schemaJson}</script>
+        )}
         {(sectionTitle || sectionSubtitle) && (
           <div className="text-center mb-12">
             {sectionTitle && (

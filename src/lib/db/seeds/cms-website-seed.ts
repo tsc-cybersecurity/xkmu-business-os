@@ -287,7 +287,7 @@ const pages = [
     blocks: pillarBlocks({
       h1: 'KI-Beratung',
       subtitle: 'Artificial Intelligence & Automatisierung',
-      einleitung: 'Von der Potenzialanalyse bis zur laufenden Automation. Wir identifizieren, wo KI wirklich hilft, setzen es um und befähigen Ihr Team – ohne KI-Wildwuchs, sondern mit klaren Regeln. Als IT-Dienstleister aus Thüringen begleiten wir KMU im DACH-Raum remote und vor Ort.',
+      einleitung: 'Von der Potenzialanalyse bis zur laufenden Automation. Wir identifizieren, wo KI wirklich hilft, setzen es um und befähigen Ihr Team – ohne KI-Wildwuchs, sondern mit klaren Regeln. Als IT-Dienstleister aus Thüringen begleiten wir KMU regional – remote und vor Ort.',
       icon: 'Bot',
       modules: [
         { badge: 'A1', title: 'KI-Quick-Start & Potenzialanalyse', description: 'Use-Cases finden und priorisieren', deliverables: ['Use-Case-Backlog', 'KI-Roadmap', 'Leitplanken (Guardrails)'], href: '/ki-beratung/a1' },
@@ -309,7 +309,7 @@ const pages = [
     blocks: pillarBlocks({
       h1: 'IT-Beratung',
       subtitle: 'Infrastruktur, Betrieb & Modernisierung',
-      einleitung: 'Stabile, sichere und skalierbare IT – vom Arbeitsplatz bis zur Cloud-Infrastruktur. Mit Fokus auf Betriebssicherheit, Skalierbarkeit und Kostenkontrolle. Als IT-Dienstleister aus Thüringen sind wir für KMU im DACH-Raum vor Ort und remote erreichbar.',
+      einleitung: 'Stabile, sichere und skalierbare IT – vom Arbeitsplatz bis zur Cloud-Infrastruktur. Mit Fokus auf Betriebssicherheit, Skalierbarkeit und Kostenkontrolle. Als IT-Dienstleister aus Thüringen sind wir für KMU regional erreichbar – remote und vor Ort.',
       icon: 'Monitor',
       modules: [
         { badge: 'B1', title: 'IT-Assessment & Stabilitätscheck', description: 'Klarheit über Zustand, Risiken und Quick-Fixes', deliverables: ['IT-Health-Report', 'Maßnahmenplan'], href: '/it-beratung/b1' },
@@ -331,7 +331,7 @@ const pages = [
     blocks: pillarBlocks({
       h1: 'Cybersecurity-Beratung',
       subtitle: 'Schutz, Resilienz & Compliance',
-      einleitung: 'Angriffsflächen reduzieren, Vorfälle abwehren, NIS-2 und DSGVO technisch umsetzen. Pragmatisch – nicht nach Lehrbuch, sondern nach Risikolage. Aus Weimar in Thüringen für KMU im gesamten DACH-Raum.',
+      einleitung: 'Angriffsflächen reduzieren, Vorfälle abwehren, NIS-2 und DSGVO technisch umsetzen. Pragmatisch – nicht nach Lehrbuch, sondern nach Risikolage. Aus Weimar in Thüringen – regional, remote und vor Ort.',
       icon: 'Shield',
       modules: [
         { badge: 'C1', title: 'Security Quick Check', description: 'Top-Risiken schnell sichtbar machen', deliverables: ['Risiko-Heatmap', 'Maßnahmenkatalog', 'Sofortmaßnahmenliste'], href: '/cybersecurity/c1' },
@@ -969,7 +969,7 @@ const pages = [
     slug: '/kontakt',
     title: 'Kontakt',
     seoTitle: 'Kontakt – IT-Beratung Weimar | Termin online buchen',
-    seoDescription: 'Kontaktieren Sie xKMU digital solutions aus Weimar: Termin online buchen, telefonische Hotline oder schriftliche Anfrage. Wir beraten KMU im DACH-Raum.',
+    seoDescription: 'Kontaktieren Sie xKMU digital solutions aus Weimar: Termin online buchen, telefonische Hotline oder schriftliche Anfrage. Wir beraten KMU in Thüringen – remote und vor Ort.',
     status: 'published',
     blocks: [
       {
