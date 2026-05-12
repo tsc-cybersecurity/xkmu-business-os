@@ -152,4 +152,8 @@ export const MIGRATIONS: Migration[] = [
     name: '033_nis2_landingpage.sql',
     description: 'NIS-2-Landingpage: Intro, Betroffenheit, 6 Kernpflichten, 10-Punkte-Selbstcheck, Beratungsablauf, 5 FAQs + Footer-Nav',
   },
+  {
+    name: '034_internal_linking.sql',
+    description: 'Interne Verlinkung: Cross-Sell-Bloecke auf KI/IT/Cyber/NIS-2/Ueber-uns mit Links zu jeweils 3 verwandten Seiten',
+  },
 ]
