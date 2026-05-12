@@ -192,4 +192,8 @@ export const MIGRATIONS: Migration[] = [
     name: '043_cta_style_dark_full.sql',
     description: 'CTA-Bloecke auf dark-Hintergrund und volle Breite (Pillar-Seiten, Modul-Detailseiten, NIS-2, Ueber-uns)',
   },
+  {
+    name: '044_seo_robots_nap.sql',
+    description: 'SEO-Fixes: in_sitemap=true fuer alle Pillar-/Pflichtseiten + NAP-Box (Sitz/Telefon/E-Mail/Erreichbarkeit) als Text-Block vor Kontaktformular',
+  },
 ]

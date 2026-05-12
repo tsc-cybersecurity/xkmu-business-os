@@ -7,7 +7,7 @@ import { CoursePublicService } from '@/lib/services/course-public.service'
 export const dynamic = 'force-dynamic'
 export const revalidate = 3600
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://xkmu.de'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.xkmu.de'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [
@@ -59,8 +59,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     eq(cmsPages.inSitemap, true),
   ))
   for (const p of cmsRows) {
+    // Skip root '/' — already hard-coded above, avoid duplicate sitemap entry.
+    const cleanSlug = p.slug.replace(/^\/+/, '')
+    if (!cleanSlug) continue
     entries.push({
-      url: `${BASE_URL}/${p.slug.replace(/^\/+/, '')}`,
+      url: `${BASE_URL}/${cleanSlug}`,
       lastModified: p.updatedAt ?? p.publishedAt ?? undefined,
       changeFrequency: 'weekly',
       priority: 0.6,
