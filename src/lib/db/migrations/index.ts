@@ -236,4 +236,8 @@ export const MIGRATIONS: Migration[] = [
     name: '054_trust_stripe_reapply.sql',
     description: 'Trust-Stripe (Migration 035) defensiv re-applyen — Live-Check zeigt: Block fehlt auf Startseite (analog /kurse-Problem)',
   },
+  {
+    name: '055_seo_og_module_pages.sql',
+    description: 'OG-Bilder fuer 19 Modul-Detailseiten (A1-A5, B1-B5, C1-C6, D1-D3) via /api/og mit pillar-spezifischer Farbe und Titel/Subtitle',
+  },
 ]
