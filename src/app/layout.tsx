@@ -94,7 +94,7 @@ export default async function RootLayout({
   const jsonLdGraph = buildOrganizationJsonLd({ siteUrl: PUBLIC_SITE_URL, logoUrl })
 
   return (
-    <html lang="de">
+    <html lang="de-DE">
       <head>
         {jsonLdGraph.map((schema, i) => (
           <script key={i} type="application/ld+json">{JSON.stringify(schema)}</script>
