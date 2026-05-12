@@ -176,4 +176,8 @@ export const MIGRATIONS: Migration[] = [
     name: '039_topic_routing.sql',
     description: 'Topic-Routing: CTA-Links auf Pillar-/NIS-2-Seiten geben das Thema an /kontakt weiter (Pre-Fill)',
   },
+  {
+    name: '040_module_ctas.sql',
+    description: 'Conversion-CTAs: 19 Modul-Detailseiten (A1-A5/B1-B5/C1-C6/D1-D3) + /loesungen mit problemorientierten Headlines + Topic-Routing',
+  },
 ]
