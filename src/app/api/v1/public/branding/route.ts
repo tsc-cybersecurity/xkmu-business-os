@@ -6,7 +6,6 @@ import { OrganizationService } from '@/lib/services/organization.service'
 
 export const dynamic = 'force-dynamic'
 
-const DEFAULT_LOGO_URL = 'https://www.xkmu.de/xkmu_q_gross_slogan.png'
 const DEFAULT_LOGO_ALT = 'xKMU'
 
 export async function GET() {
@@ -34,7 +33,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        logoUrl: logoUrl || DEFAULT_LOGO_URL,
+        logoUrl: logoUrl || null,
         logoAlt: logoAlt || DEFAULT_LOGO_ALT,
         defaultFont: (s.defaultFont as string) || null,
         defaultAccent: (s.defaultAccent as string) || null,
@@ -51,7 +50,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: {
-        logoUrl: DEFAULT_LOGO_URL,
+        logoUrl: null,
         logoAlt: DEFAULT_LOGO_ALT,
       },
     })

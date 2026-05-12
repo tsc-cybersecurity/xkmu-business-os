@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV === 'development'
 
+// Matomo-Tracker (siehe src/app/(public)/layout.tsx) laedt scripts und
+// schickt Beacons an statistik.xkmu.de — muss in script-src + connect-src
+// erlaubt sein, sonst blockiert CSP.
+const MATOMO_URL = (process.env.NEXT_PUBLIC_MATOMO_URL ?? 'https://statistik.xkmu.de').replace(/\/$/, '')
+
 // 'unsafe-inline' fuer style-src ist bei Next.js/React-Apps Standard:
 // Next injiziert Inline-Styles fuer Font-Loading, Hydration und dynamische
 // Werte (z.B. Slot-Type-Farben im Wochenkalender). XSS-Risiko via Style ist
@@ -10,11 +15,11 @@ const isDev = process.env.NODE_ENV === 'development'
 // ignoriert (Konsolen-Warnung) und erst beim Wechsel auf enforce sinnvoll.
 const cspDirectives = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline' ${MATOMO_URL}${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self'",
-  `connect-src 'self'${isDev ? ' ws://localhost:*' : ''}`,
+  `connect-src 'self' ${MATOMO_URL}${isDev ? ' ws://localhost:*' : ''}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

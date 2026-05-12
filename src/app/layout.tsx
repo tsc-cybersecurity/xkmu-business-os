@@ -46,8 +46,6 @@ const PUBLIC_SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')
     ? process.env.NEXT_PUBLIC_SITE_URL
     : 'https://www.xkmu.de'
-const DEFAULT_LOGO_URL = `${PUBLIC_SITE_URL}/xkmu_q_gross_slogan.png`
-
 export const metadata: Metadata = {
   metadataBase: new URL(PUBLIC_SITE_URL),
   title: "xKMU Business OS",
@@ -55,7 +53,6 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: 'xKMU Business OS',
-    images: [{ url: DEFAULT_LOGO_URL, width: 400, height: 128, alt: 'xKMU Business OS' }],
   },
   twitter: {
     card: 'summary',
@@ -66,7 +63,7 @@ export const metadata: Metadata = {
   },
 };
 
-async function loadBrandingLogoUrl(): Promise<string> {
+async function loadBrandingLogoUrl(): Promise<string | null> {
   try {
     const [row] = await db
       .select({ value: cmsSettings.value })
@@ -80,9 +77,9 @@ async function loadBrandingLogoUrl(): Promise<string> {
     const orgLogo = (org?.settings as Record<string, unknown> | undefined)?.logoUrl as string | undefined
     if (orgLogo) return orgLogo
   } catch {
-    // ignore — fall back to default
+    // ignore — no logo configured
   }
-  return DEFAULT_LOGO_URL
+  return null
 }
 
 export default async function RootLayout({

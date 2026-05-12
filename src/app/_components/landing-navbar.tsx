@@ -46,14 +46,13 @@ function getUserDisplayName(user: SessionUser) {
   return user.email
 }
 
-const DEFAULT_LOGO_URL = 'https://www.xkmu.de/xkmu_q_gross_slogan.png'
 const DEFAULT_LOGO_ALT = 'xKMU'
 
 export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [user, setUser] = useState<SessionUser | null>(null)
   const [navItems, setNavItems] = useState<NavItemData[]>([])
-  const [logoUrl, setLogoUrl] = useState(DEFAULT_LOGO_URL)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [logoAlt, setLogoAlt] = useState(DEFAULT_LOGO_ALT)
   const [headerSticky, setHeaderSticky] = useState(true)
   const {
@@ -88,7 +87,7 @@ export function LandingNavbar() {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.success && data.data) {
-          setLogoUrl(data.data.logoUrl || DEFAULT_LOGO_URL)
+          setLogoUrl(data.data.logoUrl || null)
           setLogoAlt(data.data.logoAlt || DEFAULT_LOGO_ALT)
           if (data.data.headerSticky === false) setHeaderSticky(false)
         }
@@ -107,14 +106,18 @@ export function LandingNavbar() {
       <div className="container mx-auto px-4 h-full flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="shrink-0">
-          <Image
-            src={logoUrl}
-            alt={logoAlt}
-            width={200}
-            height={64}
-            className="h-16 w-auto"
-            unoptimized
-          />
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt={logoAlt}
+              width={200}
+              height={64}
+              className="h-16 w-auto"
+              unoptimized
+            />
+          ) : (
+            <span className="text-2xl font-bold tracking-tight">{logoAlt}</span>
+          )}
         </Link>
 
         {/* Desktop Navigation */}
