@@ -156,4 +156,8 @@ export const MIGRATIONS: Migration[] = [
     name: '034_internal_linking.sql',
     description: 'Interne Verlinkung: Cross-Sell-Bloecke auf KI/IT/Cyber/NIS-2/Ueber-uns mit Links zu jeweils 3 verwandten Seiten',
   },
+  {
+    name: '035_eeat_trust_stripe.sql',
+    description: 'E-E-A-T Trust-Stripe: 4-Spalten-Stats-Block (Erfahrung/BSI/Region/Festpreise) auf Startseite und Ueber-uns',
+  },
 ]
