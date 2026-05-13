@@ -3,29 +3,31 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard,
-  Building2,
-  Settings,
-  Shield,
-  Globe,
-  ChevronLeft,
-  ChevronRight,
-  Brain,
-  Bot,
-  Monitor,
-  ListTodo,
-  Mail,
-  Sun,
-  Moon,
-  MonitorSmartphone,
-  LogOut,
-  User,
+import {
+  // Layout / Top-Level
+  LayoutDashboard, Building2, Settings, Shield, Globe, Brain, Bot, Monitor,
+  ListTodo, Mail, MessageCircle, GraduationCap, CalendarDays, ClipboardList,
+  ListOrdered, Briefcase,
+  // System-UI
+  ChevronLeft, ChevronRight, Sun, Moon, MonitorSmartphone, LogOut, User,
   ExternalLink,
-  ClipboardList,
-  ListOrdered,
-  MessageCircle,
-  GraduationCap,
-  CalendarDays,
+  // CRM
+  Building, Users, Package, Wrench, Tag, Receipt, FileText, FileSignature,
+  Clock, UserPlus, Target, Lightbulb,
+  // CMS
+  BookOpen, Palette, Map, LayoutTemplate, Menu, Newspaper, Folder, Megaphone,
+  Share2, CalendarClock, MailOpen, Rss, Image as ImageIcon,
+  // Intelligence
+  BarChart3, Workflow, MessageSquare, FolderKanban, Network,
+  // Agents
+  Gauge, Goal, Database, FileCode, Euro,
+  // Cybersecurity
+  ScrollText, Bug, Lock, BookOpenCheck, Laptop, Banknote,
+  // Management
+  Compass, PackageCheck,
+  // Einstellungen
+  UserCog, Cpu, Sparkles, MessageSquarePlus, FileSearch, Inbox, Link2,
+  FolderTree, AlarmClock, UserCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -40,6 +42,7 @@ export interface NavChild {
   name: string
   href: string
   requiredModule?: Module
+  icon?: typeof LayoutDashboard
 }
 
 export interface NavItem {
@@ -68,18 +71,18 @@ export const navigation: NavItem[] = [
     href: '/intern/crm',
     icon: Building2,
     children: [
-      { name: 'Firmen', href: '/intern/contacts/companies', requiredModule: 'companies' },
-      { name: 'Personen', href: '/intern/contacts/persons', requiredModule: 'persons' },
-      { name: 'Produkte', href: '/intern/catalog/products', requiredModule: 'products' },
-      { name: 'Dienstleistungen', href: '/intern/catalog/services', requiredModule: 'products' },
-      { name: 'Kategorien', href: '/intern/catalog/categories', requiredModule: 'product_categories' },
-      { name: 'Rechnungen', href: '/intern/finance/invoices', requiredModule: 'documents' },
-      { name: 'Angebote', href: '/intern/finance/offers', requiredModule: 'documents' },
-      { name: 'Verträge', href: '/intern/finance/contracts', requiredModule: 'documents' },
-      { name: 'Zeiterfassung', href: '/intern/zeiterfassung', requiredModule: 'time_entries' },
-      { name: 'Leads', href: '/intern/leads', requiredModule: 'leads' },
-      { name: 'Chancen', href: '/intern/chancen', requiredModule: 'opportunities' },
-      { name: 'Ideen', href: '/intern/ideas', requiredModule: 'ideas' },
+      { name: 'Firmen',           href: '/intern/contacts/companies',  icon: Building,       requiredModule: 'companies' },
+      { name: 'Personen',         href: '/intern/contacts/persons',    icon: Users,          requiredModule: 'persons' },
+      { name: 'Produkte',         href: '/intern/catalog/products',    icon: Package,        requiredModule: 'products' },
+      { name: 'Dienstleistungen', href: '/intern/catalog/services',    icon: Wrench,         requiredModule: 'products' },
+      { name: 'Kategorien',       href: '/intern/catalog/categories',  icon: Tag,            requiredModule: 'product_categories' },
+      { name: 'Rechnungen',       href: '/intern/finance/invoices',    icon: Receipt,        requiredModule: 'documents' },
+      { name: 'Angebote',         href: '/intern/finance/offers',      icon: FileText,       requiredModule: 'documents' },
+      { name: 'Verträge',         href: '/intern/finance/contracts',   icon: FileSignature,  requiredModule: 'documents' },
+      { name: 'Zeiterfassung',    href: '/intern/zeiterfassung',       icon: Clock,          requiredModule: 'time_entries' },
+      { name: 'Leads',            href: '/intern/leads',               icon: UserPlus,       requiredModule: 'leads' },
+      { name: 'Chancen',          href: '/intern/chancen',             icon: Target,         requiredModule: 'opportunities' },
+      { name: 'Ideen',            href: '/intern/ideas',               icon: Lightbulb,      requiredModule: 'ideas' },
     ],
   },
   // ── CMS ──
@@ -88,19 +91,19 @@ export const navigation: NavItem[] = [
     href: '/intern/cms-hub',
     icon: Globe,
     children: [
-      { name: 'Content', href: '/intern/cms', requiredModule: 'cms' },
-      { name: 'Design', href: '/intern/cms/design', requiredModule: 'cms' },
-      { name: 'Sitemap', href: '/intern/cms/sitemap', requiredModule: 'cms' },
-      { name: 'Vorlagen', href: '/intern/cms/templates', requiredModule: 'cms' },
-      { name: 'Navigation', href: '/intern/cms/navigation', requiredModule: 'cms' },
-      { name: 'Blogartikel', href: '/intern/blog', requiredModule: 'blog' },
-      { name: 'Blog-Kategorien', href: '/intern/cms/blog-categories', requiredModule: 'blog' },
-      { name: 'Kampagnen', href: '/intern/marketing', requiredModule: 'marketing' },
-      { name: 'Social Media', href: '/intern/social-media', requiredModule: 'social_media' },
-      { name: 'Posting-Kalender', href: '/intern/social-media/kalender', requiredModule: 'social_media' },
-      { name: 'Newsletter', href: '/intern/marketing/newsletter', requiredModule: 'marketing' },
-      { name: 'News-Modul', href: '/intern/news', requiredModule: 'news' },
-      { name: 'Bildgenerierung', href: '/intern/images', requiredModule: 'media' },
+      { name: 'Content',           href: '/intern/cms',                       icon: BookOpen,       requiredModule: 'cms' },
+      { name: 'Design',            href: '/intern/cms/design',                icon: Palette,        requiredModule: 'cms' },
+      { name: 'Sitemap',           href: '/intern/cms/sitemap',               icon: Map,            requiredModule: 'cms' },
+      { name: 'Vorlagen',          href: '/intern/cms/templates',             icon: LayoutTemplate, requiredModule: 'cms' },
+      { name: 'Navigation',        href: '/intern/cms/navigation',            icon: Menu,           requiredModule: 'cms' },
+      { name: 'Blogartikel',       href: '/intern/blog',                      icon: Newspaper,      requiredModule: 'blog' },
+      { name: 'Blog-Kategorien',   href: '/intern/cms/blog-categories',       icon: Folder,         requiredModule: 'blog' },
+      { name: 'Kampagnen',         href: '/intern/marketing',                 icon: Megaphone,      requiredModule: 'marketing' },
+      { name: 'Social Media',      href: '/intern/social-media',              icon: Share2,         requiredModule: 'social_media' },
+      { name: 'Posting-Kalender',  href: '/intern/social-media/kalender',     icon: CalendarClock,  requiredModule: 'social_media' },
+      { name: 'Newsletter',        href: '/intern/marketing/newsletter',      icon: MailOpen,       requiredModule: 'marketing' },
+      { name: 'News-Modul',        href: '/intern/news',                      icon: Rss,            requiredModule: 'news' },
+      { name: 'Bildgenerierung',   href: '/intern/images',                    icon: ImageIcon,      requiredModule: 'media' },
     ],
   },
   // ── Intelligence ──
@@ -109,11 +112,11 @@ export const navigation: NavItem[] = [
     href: '/intern/intelligence',
     icon: Brain,
     children: [
-      { name: 'Business Intelligence', href: '/intern/business-intelligence', requiredModule: 'business_intelligence' },
-      { name: 'n8n Workflows', href: '/intern/n8n-workflows', requiredModule: 'n8n_workflows' },
-      { name: 'KI-Chat', href: '/intern/chat', requiredModule: 'chat' },
-      { name: 'Projekte', href: '/intern/projekte', requiredModule: 'processes' },
-      { name: 'Workflows', href: '/intern/settings/workflows', requiredModule: 'settings' },
+      { name: 'Business Intelligence', href: '/intern/business-intelligence', icon: BarChart3,    requiredModule: 'business_intelligence' },
+      { name: 'n8n Workflows',         href: '/intern/n8n-workflows',         icon: Network,      requiredModule: 'n8n_workflows' },
+      { name: 'KI-Chat',               href: '/intern/chat',                  icon: MessageSquare,requiredModule: 'chat' },
+      { name: 'Projekte',              href: '/intern/projekte',              icon: FolderKanban, requiredModule: 'processes' },
+      { name: 'Workflows',             href: '/intern/settings/workflows',    icon: Workflow,     requiredModule: 'settings' },
     ],
   },
   // ── Agents ──
@@ -122,12 +125,12 @@ export const navigation: NavItem[] = [
     href: '/intern/agents',
     icon: Bot,
     children: [
-      { name: 'Dashboard', href: '/intern/agents' },
-      { name: 'Goals', href: '/intern/agents/goals' },
-      { name: 'Memory', href: '/intern/agents/memory' },
-      { name: 'Definitions', href: '/intern/agents/definitions' },
-      { name: 'Templates', href: '/intern/agents/templates' },
-      { name: 'Kosten', href: '/intern/agents/cost' },
+      { name: 'Dashboard',   href: '/intern/agents',             icon: Gauge },
+      { name: 'Goals',       href: '/intern/agents/goals',       icon: Goal },
+      { name: 'Memory',      href: '/intern/agents/memory',      icon: Database },
+      { name: 'Definitions', href: '/intern/agents/definitions', icon: FileCode },
+      { name: 'Templates',   href: '/intern/agents/templates',   icon: LayoutTemplate },
+      { name: 'Kosten',      href: '/intern/agents/cost',        icon: Euro },
     ],
   },
   // ── Cybersecurity ──
@@ -136,25 +139,25 @@ export const navigation: NavItem[] = [
     href: '/intern/cybersecurity',
     icon: Shield,
     children: [
-      { name: 'CS DIN SPEC 27076', href: '/intern/din-audit', requiredModule: 'din_audits' },
-      { name: 'CS WiBA-Check BSI', href: '/intern/wiba', requiredModule: 'wiba_audits' },
-      { name: 'CS IT-Grundschutz++', href: '/intern/cybersecurity/grundschutz', requiredModule: 'basisabsicherung' },
-      { name: 'CS IR Playbooks', href: '/intern/cybersecurity/ir-playbook', requiredModule: 'basisabsicherung' },
-      { name: 'IT-Assets (Kunden)', href: '/intern/cybersecurity/grundschutz/assets', requiredModule: 'basisabsicherung' },
-      { name: 'Fördermitteldatenbank', href: '/intern/din-audit/grants', requiredModule: 'din_grants' },
+      { name: 'CS DIN SPEC 27076',     href: '/intern/din-audit',                       icon: ScrollText,     requiredModule: 'din_audits' },
+      { name: 'CS WiBA-Check BSI',     href: '/intern/wiba',                            icon: Bug,            requiredModule: 'wiba_audits' },
+      { name: 'CS IT-Grundschutz++',   href: '/intern/cybersecurity/grundschutz',       icon: Lock,           requiredModule: 'basisabsicherung' },
+      { name: 'CS IR Playbooks',       href: '/intern/cybersecurity/ir-playbook',       icon: BookOpenCheck,  requiredModule: 'basisabsicherung' },
+      { name: 'IT-Assets (Kunden)',    href: '/intern/cybersecurity/grundschutz/assets',icon: Laptop,         requiredModule: 'basisabsicherung' },
+      { name: 'Fördermitteldatenbank', href: '/intern/din-audit/grants',                icon: Banknote,       requiredModule: 'din_grants' },
     ],
   },
   // ── Management ──
   {
     name: 'Management',
     href: '/intern/management',
-    icon: Monitor,
+    icon: Briefcase,
     children: [
-      { name: 'Dashboard', href: '/intern/management' },
-      { name: 'EOS Framework', href: '/intern/management/eos' },
-      { name: 'OKR Ziele', href: '/intern/management/okr' },
-      { name: 'Prozesse', href: '/intern/management/sops' },
-      { name: 'Deliverables', href: '/intern/management/deliverables' },
+      { name: 'Dashboard',     href: '/intern/management',              icon: Gauge },
+      { name: 'EOS Framework', href: '/intern/management/eos',          icon: Compass },
+      { name: 'OKR Ziele',     href: '/intern/management/okr',          icon: Target },
+      { name: 'Prozesse',      href: '/intern/management/sops',         icon: Workflow },
+      { name: 'Deliverables',  href: '/intern/management/deliverables', icon: PackageCheck },
     ],
   },
   // ── Einstellungen ──
@@ -163,20 +166,20 @@ export const navigation: NavItem[] = [
     href: '/intern/settings',
     icon: Settings,
     children: [
-      { name: 'Organisation', href: '/intern/settings/organization', requiredModule: 'settings' },
-      { name: 'Benutzer', href: '/intern/settings/users', requiredModule: 'users' },
-      { name: 'Rollen', href: '/intern/settings/roles', requiredModule: 'roles' },
-      { name: 'KI-Provider', href: '/intern/settings/ai-providers', requiredModule: 'ai_providers' },
-      { name: 'KI-Prompts', href: '/intern/settings/ai-prompts', requiredModule: 'ai_prompts' },
-      { name: 'Eigene Prompts', href: '/intern/settings/custom-prompts', requiredModule: 'ai_prompts' },
-      { name: 'KI-Logging', href: '/intern/settings/ai-logs', requiredModule: 'ai_logs' },
-      { name: 'E-Mail (IMAP)', href: '/intern/settings/email-imap', requiredModule: 'settings' },
-      { name: 'E-Mail (Vorlagen)', href: '/intern/settings/email-templates', requiredModule: 'settings' },
-      { name: 'Social Media Connectoren', href: '/intern/integrations/social', requiredModule: 'social_media' },
-      { name: 'Portal-Dok.-Kategorien', href: '/intern/settings/portal-document-categories', requiredModule: 'settings' },
-      { name: 'Cron-Jobs', href: '/intern/settings/cron-jobs', requiredModule: 'settings' },
-      { name: 'Datenbank', href: '/intern/settings/database', requiredModule: 'database' },
-      { name: 'Mein Profil', href: '/intern/settings/profile', requiredModule: 'settings' },
+      { name: 'Organisation',             href: '/intern/settings/organization',                icon: Building,           requiredModule: 'settings' },
+      { name: 'Benutzer',                 href: '/intern/settings/users',                       icon: Users,              requiredModule: 'users' },
+      { name: 'Rollen',                   href: '/intern/settings/roles',                       icon: UserCog,            requiredModule: 'roles' },
+      { name: 'KI-Provider',              href: '/intern/settings/ai-providers',                icon: Cpu,                requiredModule: 'ai_providers' },
+      { name: 'KI-Prompts',               href: '/intern/settings/ai-prompts',                  icon: Sparkles,           requiredModule: 'ai_prompts' },
+      { name: 'Eigene Prompts',           href: '/intern/settings/custom-prompts',              icon: MessageSquarePlus,  requiredModule: 'ai_prompts' },
+      { name: 'KI-Logging',               href: '/intern/settings/ai-logs',                     icon: FileSearch,         requiredModule: 'ai_logs' },
+      { name: 'E-Mail (IMAP)',            href: '/intern/settings/email-imap',                  icon: Inbox,              requiredModule: 'settings' },
+      { name: 'E-Mail (Vorlagen)',        href: '/intern/settings/email-templates',             icon: MailOpen,           requiredModule: 'settings' },
+      { name: 'Social Media Connectoren', href: '/intern/integrations/social',                  icon: Link2,              requiredModule: 'social_media' },
+      { name: 'Portal-Dok.-Kategorien',   href: '/intern/settings/portal-document-categories',  icon: FolderTree,         requiredModule: 'settings' },
+      { name: 'Cron-Jobs',                href: '/intern/settings/cron-jobs',                   icon: AlarmClock,         requiredModule: 'settings' },
+      { name: 'Datenbank',                href: '/intern/settings/database',                    icon: Database,           requiredModule: 'database' },
+      { name: 'Mein Profil',              href: '/intern/settings/profile',                     icon: UserCircle,         requiredModule: 'settings' },
     ],
   },
   // ── Task-Queue (standalone) ──
@@ -400,18 +403,20 @@ export function Sidebar({ user }: SidebarProps) {
                       const isChildActive = child.href.length <= 10
                         ? pathname === child.href
                         : pathname.startsWith(child.href)
+                      const ChildIcon = child.icon
                       return (
                         <Link
                           key={child.href}
                           href={child.href}
                           className={cn(
-                            'block rounded-md px-3 py-2 text-sm transition-colors',
+                            'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
                             isChildActive
                               ? 'bg-accent text-accent-foreground'
                               : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                           )}
                         >
-                          {child.name}
+                          {ChildIcon && <ChildIcon className="h-3.5 w-3.5 shrink-0" />}
+                          <span className="truncate">{child.name}</span>
                         </Link>
                       )
                     })}

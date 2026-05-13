@@ -165,7 +165,7 @@ export function ChatButton() {
           out.push({
             key: child.href,
             name: `${item.name} · ${child.name}`,
-            icon: item.icon,
+            icon: child.icon ?? item.icon,
             href: child.href,
           })
         }
