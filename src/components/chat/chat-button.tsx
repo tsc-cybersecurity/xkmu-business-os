@@ -30,12 +30,24 @@ const DEFAULT_KEYS = [
 ]
 
 type Pos = { right: number; bottom: number }
-type BgStyle = 'transparent' | 'subtle' | 'glass' | 'solid'
+type BgStyle =
+  | 'transparent'
+  | 'subtle'
+  | 'glass'
+  | 'solid'
+  | 'blue'
+  | 'violet'
+  | 'pink'
+  | 'emerald'
+  | 'amber'
+  | 'cyan'
 type Persisted = { pos: Pos; collapsed: boolean; keys: string[]; bgStyle: BgStyle }
 
+// Pastell-Praesets — helle Toene in Light-Mode, gedaempfte tiefe Toene in
+// Dark-Mode, beide mit leicht getoentem Border + Backdrop-Blur.
 const BG_STYLES: Record<BgStyle, { label: string; className: string }> = {
   transparent: {
-    label: 'Transparent',
+    label: 'Klar',
     className: '',
   },
   subtle: {
@@ -51,6 +63,36 @@ const BG_STYLES: Record<BgStyle, { label: string; className: string }> = {
   solid: {
     label: 'Solide',
     className: 'border border-border shadow-lg bg-background',
+  },
+  blue: {
+    label: 'Blau',
+    className:
+      'border border-blue-200/70 dark:border-blue-900/60 shadow-lg bg-blue-100/85 dark:bg-blue-950/60 backdrop-blur-md',
+  },
+  violet: {
+    label: 'Lila',
+    className:
+      'border border-violet-200/70 dark:border-violet-900/60 shadow-lg bg-violet-100/85 dark:bg-violet-950/60 backdrop-blur-md',
+  },
+  pink: {
+    label: 'Rosa',
+    className:
+      'border border-pink-200/70 dark:border-pink-900/60 shadow-lg bg-pink-100/85 dark:bg-pink-950/60 backdrop-blur-md',
+  },
+  emerald: {
+    label: 'Grün',
+    className:
+      'border border-emerald-200/70 dark:border-emerald-900/60 shadow-lg bg-emerald-100/85 dark:bg-emerald-950/60 backdrop-blur-md',
+  },
+  amber: {
+    label: 'Gelb',
+    className:
+      'border border-amber-200/70 dark:border-amber-900/60 shadow-lg bg-amber-100/85 dark:bg-amber-950/60 backdrop-blur-md',
+  },
+  cyan: {
+    label: 'Türkis',
+    className:
+      'border border-cyan-200/70 dark:border-cyan-900/60 shadow-lg bg-cyan-100/85 dark:bg-cyan-950/60 backdrop-blur-md',
   },
 }
 
@@ -429,19 +471,23 @@ function SettingsPopover({
 
       <div className="space-y-1.5 pb-2 border-b border-border/40">
         <div className="text-[11px] text-muted-foreground">Hintergrund</div>
-        <div className="grid grid-cols-4 gap-1">
+        <div className="grid grid-cols-5 gap-1">
           {(Object.keys(BG_STYLES) as BgStyle[]).map((s) => {
             const active = bgStyle === s
+            // Buttons zeigen den jeweiligen Hintergrund als Live-Vorschau —
+            // statt eines neutralen Pill-Buttons bekommt der User direkt das
+            // Preset-Aussehen zu sehen.
             return (
               <button
                 key={s}
                 type="button"
                 onClick={() => onBgStyleChange(s)}
                 className={[
-                  'rounded-md px-2 py-1 text-[11px] border transition-colors',
+                  'rounded-md px-1 py-1.5 text-[10px] transition-all',
+                  BG_STYLES[s].className || 'border border-dashed border-border/60 bg-background/30',
                   active
-                    ? 'border-primary bg-primary/10 text-foreground'
-                    : 'border-border/40 text-muted-foreground hover:text-foreground hover:bg-foreground/5',
+                    ? 'ring-2 ring-primary ring-offset-1 ring-offset-background'
+                    : 'opacity-80 hover:opacity-100',
                 ].join(' ')}
                 title={BG_STYLES[s].label}
               >
