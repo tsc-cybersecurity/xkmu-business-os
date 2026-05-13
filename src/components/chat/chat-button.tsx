@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings2,
-  Check,
   X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,17 +15,32 @@ import { Badge } from '@/components/ui/badge'
 import { useChatContext } from './chat-provider'
 import { navigation, type NavItem } from '@/components/layout/sidebar'
 import { usePermissions } from '@/hooks/use-permissions'
+import type { Module } from '@/lib/types/permissions'
 
-const STORAGE_KEY = 'xkmu_fab_state_v2'
+const STORAGE_KEY = 'xkmu_fab_state_v3'
 const EDGE_PADDING = 8
-const MAX_ICONS = 10
+const MAX_ICONS = 20
 
-// Default-Auswahl: drei Standalone-Items aus der Sidebar — bewusst gleich
-// dem alten QUICK_ACTIONS-Verhalten, damit Bestandsnutzer nichts merken.
-const DEFAULT_KEYS = ['E-Mail Inbox', 'Termine', 'Task-Queue']
+// Default-Auswahl: drei Standalone-Hrefs aus der Sidebar — gleiches Verhalten
+// wie das alte QUICK_ACTIONS-Set, jetzt aber per href adressiert.
+const DEFAULT_KEYS = [
+  '/intern/emails',
+  '/intern/termine',
+  '/intern/settings/task-queue',
+]
 
 type Pos = { right: number; bottom: number }
 type Persisted = { pos: Pos; collapsed: boolean; keys: string[] }
+
+// Flacher Eintrag — Top-Level oder Sub-Nav. `key` ist der href und damit
+// eindeutig (mehrere Sub-Navs koennen denselben Namen tragen, aber nicht
+// dieselbe Route).
+type FlatItem = {
+  key: string
+  name: string
+  icon: NavItem['icon']
+  href: string
+}
 
 function loadState(): Persisted {
   if (typeof window === 'undefined') {
@@ -72,7 +86,6 @@ export function ChatButton() {
     moved: boolean
   } | null>(null)
 
-  // Hydrate aus localStorage erst clientseitig — verhindert Hydration-Mismatch.
   useEffect(() => {
     const s = loadState()
     setPos(s.pos)
@@ -81,7 +94,6 @@ export function ChatButton() {
     setMounted(true)
   }, [])
 
-  // Persistieren bei jeder Aenderung (nach Hydration).
   useEffect(() => {
     if (!mounted) return
     try {
@@ -94,24 +106,46 @@ export function ChatButton() {
     }
   }, [pos, collapsed, keys, mounted])
 
-  // Nur Top-Level-Nav-Items mit href, die der User per Permission erreichen
-  // darf. Items ohne Modulanforderung sind fuer alle sichtbar.
-  const availableItems = useMemo<NavItem[]>(() => {
-    return navigation.filter((item) => {
-      if (!item.href) return false
-      if (!item.requiredModule) return true
+  // Berechtigungs-Check — waehrend des Ladens optimistisch true, damit der
+  // Cluster nicht erst leer auftaucht und dann ploetzlich Items dazukommen.
+  const canSee = useCallback(
+    (mod?: Module): boolean => {
+      if (!mod) return true
       if (permissionsLoading) return true
-      return hasPermission(item.requiredModule, 'read')
-    })
-  }, [hasPermission, permissionsLoading])
+      return hasPermission(mod, 'read')
+    },
+    [hasPermission, permissionsLoading]
+  )
 
-  // Items, die gerade im Cluster angezeigt werden — in der Reihenfolge aus
-  // `keys`, gefiltert auf tatsaechlich verfuegbare/berechtigte Eintraege.
-  const selectedItems = useMemo<NavItem[]>(() => {
-    const byName = new Map(availableItems.map((i) => [i.name, i]))
+  // Flacht navigation in Top-Level + Sub-Navs ab. Sub-Navs erben das Icon
+  // des Eltern-Eintrags; im Anzeigenamen steht "Parent · Child" damit
+  // gleichnamige Eintraege unterscheidbar bleiben.
+  const availableItems = useMemo<FlatItem[]>(() => {
+    const out: FlatItem[] = []
+    for (const item of navigation) {
+      if (item.href && canSee(item.requiredModule)) {
+        out.push({ key: item.href, name: item.name, icon: item.icon, href: item.href })
+      }
+      if (item.children) {
+        for (const child of item.children) {
+          if (!canSee(child.requiredModule)) continue
+          out.push({
+            key: child.href,
+            name: `${item.name} · ${child.name}`,
+            icon: item.icon,
+            href: child.href,
+          })
+        }
+      }
+    }
+    return out
+  }, [canSee])
+
+  const selectedItems = useMemo<FlatItem[]>(() => {
+    const byKey = new Map(availableItems.map((i) => [i.key, i]))
     return keys
-      .map((k) => byName.get(k))
-      .filter((i): i is NavItem => !!i)
+      .map((k) => byKey.get(k))
+      .filter((i): i is FlatItem => !!i)
       .slice(0, MAX_ICONS)
   }, [keys, availableItems])
 
@@ -128,7 +162,6 @@ export function ChatButton() {
     }
   }, [])
 
-  // Bei Viewport-Resize Cluster im Sichtbereich halten.
   useEffect(() => {
     if (!mounted) return
     const onResize = () => setPos((p) => clampToViewport(p))
@@ -136,7 +169,6 @@ export function ChatButton() {
     return () => window.removeEventListener('resize', onResize)
   }, [mounted, clampToViewport])
 
-  // Position-Drag (Pointer-Events am Grip-Handle) ───────────────────────────
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -173,12 +205,11 @@ export function ChatButton() {
     setDragging(false)
   }
 
-  // Toggle/Reorder im Settings-Popover ─────────────────────────────────────
-  const toggleKey = (name: string) => {
+  const toggleKey = (key: string) => {
     setKeys((prev) => {
-      if (prev.includes(name)) return prev.filter((k) => k !== name)
-      if (prev.length >= MAX_ICONS) return prev // Cap durchsetzen
-      return [...prev, name]
+      if (prev.includes(key)) return prev.filter((k) => k !== key)
+      if (prev.length >= MAX_ICONS) return prev
+      return [...prev, key]
     })
   }
 
@@ -222,12 +253,14 @@ export function ChatButton() {
           onReorder={moveKeyTo}
           onClose={() => setSettingsOpen(false)}
           maxIcons={MAX_ICONS}
+          reorderDragKey={reorderDragKey}
+          setReorderDragKey={setReorderDragKey}
         />
       )}
 
       <div
         className={[
-          'flex flex-row items-center gap-1 p-1.5 rounded-full',
+          'flex flex-row items-center gap-0.5 p-1 rounded-full',
           'border border-border/60 shadow-lg',
           'bg-background/60 backdrop-blur-md supports-[backdrop-filter]:bg-background/50',
           dragging ? 'cursor-grabbing select-none' : '',
@@ -240,7 +273,7 @@ export function ChatButton() {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           className={[
-            'flex items-center justify-center h-10 w-6 sm:h-12 rounded-full',
+            'flex items-center justify-center h-6 w-4 rounded-full',
             'text-muted-foreground hover:text-foreground hover:bg-foreground/5',
             dragging ? 'cursor-grabbing' : 'cursor-grab',
             'touch-none',
@@ -249,7 +282,7 @@ export function ChatButton() {
           aria-label="Quick-Actions verschieben"
           role="button"
         >
-          <GripVertical className="h-4 w-4" />
+          <GripVertical className="h-3 w-3" />
         </div>
 
         {!collapsed &&
@@ -257,17 +290,17 @@ export function ChatButton() {
             const Icon = item.icon
             return (
               <Link
-                key={item.name}
-                href={item.href!}
+                key={item.key}
+                href={item.href}
                 aria-label={item.name}
                 title={item.name}
               >
                 <Button
                   variant="ghost"
-                  size="icon-lg"
-                  className="h-10 w-10 sm:h-12 sm:w-12 rounded-full hover:bg-foreground/10"
+                  size="icon"
+                  className="h-6 w-6 rounded-full hover:bg-foreground/10"
                 >
-                  <Icon className="!size-5" />
+                  <Icon className="!size-3.5" />
                 </Button>
               </Link>
             )
@@ -275,169 +308,171 @@ export function ChatButton() {
 
         <Button
           onClick={() => openChat()}
-          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full shadow-md"
-          size="icon-lg"
+          className="h-6 w-6 rounded-full shadow-md"
+          size="icon"
           aria-label="KI-Chat öffnen"
           title="KI-Chat"
         >
-          <Brain className="!size-5" />
+          <Brain className="!size-3.5" />
         </Button>
 
         {!collapsed && (
           <button
             type="button"
             onClick={() => setSettingsOpen((s) => !s)}
-            className="flex items-center justify-center h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+            className="flex items-center justify-center h-5 w-5 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
             title="Quick-Actions konfigurieren"
             aria-label="Quick-Actions konfigurieren"
           >
-            <Settings2 className="h-4 w-4" />
+            <Settings2 className="h-3 w-3" />
           </button>
         )}
 
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="flex items-center justify-center h-8 w-6 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+          className="flex items-center justify-center h-5 w-4 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
           title={collapsed ? 'Erweitern' : 'Einklappen'}
           aria-label={collapsed ? 'Quick-Actions erweitern' : 'Quick-Actions einklappen'}
         >
-          {collapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {collapsed ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
         </button>
       </div>
     </div>
   )
+}
 
-  // Hilfs-Renderer fuer Popover — geschachtelt, damit Closure-Zugriff auf
-  // reorderDragKey/setReorderDragKey ohne Prop-Drilling.
-  function SettingsPopover({
-    availableItems,
-    selectedKeys,
-    onToggle,
-    onReorder,
-    onClose,
-    maxIcons,
-  }: {
-    availableItems: NavItem[]
-    selectedKeys: string[]
-    onToggle: (name: string) => void
-    onReorder: (from: string, to: string) => void
-    onClose: () => void
-    maxIcons: number
-  }) {
-    const selectedSet = new Set(selectedKeys)
-    const orderedSelected = selectedKeys
-      .map((k) => availableItems.find((i) => i.name === k))
-      .filter((i): i is NavItem => !!i)
-    const remaining = availableItems.filter((i) => !selectedSet.has(i.name))
-    const capReached = selectedKeys.length >= maxIcons
+function SettingsPopover({
+  availableItems,
+  selectedKeys,
+  onToggle,
+  onReorder,
+  onClose,
+  maxIcons,
+  reorderDragKey,
+  setReorderDragKey,
+}: {
+  availableItems: FlatItem[]
+  selectedKeys: string[]
+  onToggle: (key: string) => void
+  onReorder: (from: string, to: string) => void
+  onClose: () => void
+  maxIcons: number
+  reorderDragKey: string | null
+  setReorderDragKey: (k: string | null) => void
+}) {
+  const selectedSet = new Set(selectedKeys)
+  const byKey = new Map(availableItems.map((i) => [i.key, i]))
+  const orderedSelected = selectedKeys
+    .map((k) => byKey.get(k))
+    .filter((i): i is FlatItem => !!i)
+  const remaining = availableItems.filter((i) => !selectedSet.has(i.key))
+  const capReached = selectedKeys.length >= maxIcons
 
-    return (
-      <div
-        className={[
-          'w-72 max-h-[420px] overflow-y-auto rounded-xl shadow-xl border border-border/60',
-          'bg-background/95 backdrop-blur-md p-3 space-y-3',
-        ].join(' ')}
-      >
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-medium">Quick-Actions</div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-foreground/5"
-            title="Schliessen"
-            aria-label="Schliessen"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+  return (
+    <div
+      className={[
+        'w-80 max-h-[520px] overflow-y-auto rounded-xl shadow-xl border border-border/60',
+        'bg-background/95 backdrop-blur-md p-3 space-y-3',
+      ].join(' ')}
+    >
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-medium">Quick-Actions</div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+          title="Schliessen"
+          aria-label="Schliessen"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
 
-        <div className="text-[11px] text-muted-foreground">
-          {selectedKeys.length} / {maxIcons} ausgewaehlt · Ziehen zum Sortieren
-        </div>
+      <div className="text-[11px] text-muted-foreground">
+        {selectedKeys.length} / {maxIcons} ausgewaehlt · Ziehen zum Sortieren
+      </div>
 
-        {orderedSelected.length > 0 && (
-          <ul className="space-y-1">
-            {orderedSelected.map((item) => {
-              const Icon = item.icon
-              const isDraggingThis = reorderDragKey === item.name
-              return (
-                <li
-                  key={item.name}
-                  draggable
-                  onDragStart={(e) => {
-                    setReorderDragKey(item.name)
-                    e.dataTransfer.effectAllowed = 'move'
-                    e.dataTransfer.setData('text/plain', item.name)
-                  }}
-                  onDragEnd={() => setReorderDragKey(null)}
-                  onDragOver={(e) => {
-                    e.preventDefault()
-                    e.dataTransfer.dropEffect = 'move'
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    const from = e.dataTransfer.getData('text/plain') || reorderDragKey
-                    if (from && from !== item.name) onReorder(from, item.name)
-                    setReorderDragKey(null)
-                  }}
-                  className={[
-                    'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
-                    'bg-foreground/[0.03] border border-border/40',
-                    isDraggingThis ? 'opacity-50' : '',
-                    'cursor-grab active:cursor-grabbing',
-                  ].join(' ')}
+      {orderedSelected.length > 0 && (
+        <ul className="space-y-1">
+          {orderedSelected.map((item) => {
+            const Icon = item.icon
+            const isDraggingThis = reorderDragKey === item.key
+            return (
+              <li
+                key={item.key}
+                draggable
+                onDragStart={(e) => {
+                  setReorderDragKey(item.key)
+                  e.dataTransfer.effectAllowed = 'move'
+                  e.dataTransfer.setData('text/plain', item.key)
+                }}
+                onDragEnd={() => setReorderDragKey(null)}
+                onDragOver={(e) => {
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'move'
+                }}
+                onDrop={(e) => {
+                  e.preventDefault()
+                  const from = e.dataTransfer.getData('text/plain') || reorderDragKey
+                  if (from && from !== item.key) onReorder(from, item.key)
+                  setReorderDragKey(null)
+                }}
+                className={[
+                  'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
+                  'bg-foreground/[0.03] border border-border/40',
+                  isDraggingThis ? 'opacity-50' : '',
+                  'cursor-grab active:cursor-grabbing',
+                ].join(' ')}
+              >
+                <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1 truncate" title={item.name}>{item.name}</span>
+                <button
+                  type="button"
+                  onClick={() => onToggle(item.key)}
+                  className="h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                  title="Entfernen"
+                  aria-label={`${item.name} entfernen`}
                 >
-                  <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="flex-1 truncate">{item.name}</span>
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      {remaining.length > 0 && (
+        <>
+          <div className="text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+            Hinzufuegen
+            {capReached && <span className="ml-1 text-amber-600">· Limit erreicht</span>}
+          </div>
+          <ul className="space-y-1">
+            {remaining.map((item) => {
+              const Icon = item.icon
+              return (
+                <li key={item.key}>
                   <button
                     type="button"
-                    onClick={() => onToggle(item.name)}
-                    className="h-6 w-6 inline-flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-foreground/5"
-                    title="Entfernen"
-                    aria-label={`${item.name} entfernen`}
+                    disabled={capReached}
+                    onClick={() => onToggle(item.key)}
+                    className={[
+                      'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm',
+                      'text-muted-foreground hover:text-foreground hover:bg-foreground/5',
+                      capReached ? 'opacity-40 cursor-not-allowed' : '',
+                    ].join(' ')}
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 truncate text-left" title={item.name}>{item.name}</span>
                   </button>
                 </li>
               )
             })}
           </ul>
-        )}
-
-        {remaining.length > 0 && (
-          <>
-            <div className="text-[11px] text-muted-foreground pt-1 border-t border-border/40">
-              Hinzufuegen
-              {capReached && <span className="ml-1 text-amber-600">· Limit erreicht</span>}
-            </div>
-            <ul className="space-y-1">
-              {remaining.map((item) => {
-                const Icon = item.icon
-                return (
-                  <li key={item.name}>
-                    <button
-                      type="button"
-                      disabled={capReached}
-                      onClick={() => onToggle(item.name)}
-                      className={[
-                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm',
-                        'text-muted-foreground hover:text-foreground hover:bg-foreground/5',
-                        capReached ? 'opacity-40 cursor-not-allowed' : '',
-                      ].join(' ')}
-                    >
-                      <Check className="h-4 w-4 opacity-0 shrink-0" />
-                      <Icon className="h-4 w-4 shrink-0" />
-                      <span className="flex-1 truncate text-left">{item.name}</span>
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          </>
-        )}
-      </div>
-    )
-  }
+        </>
+      )}
+    </div>
+  )
 }
