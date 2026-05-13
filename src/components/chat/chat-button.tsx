@@ -30,7 +30,31 @@ const DEFAULT_KEYS = [
 ]
 
 type Pos = { right: number; bottom: number }
-type Persisted = { pos: Pos; collapsed: boolean; keys: string[] }
+type BgStyle = 'transparent' | 'subtle' | 'glass' | 'solid'
+type Persisted = { pos: Pos; collapsed: boolean; keys: string[]; bgStyle: BgStyle }
+
+const BG_STYLES: Record<BgStyle, { label: string; className: string }> = {
+  transparent: {
+    label: 'Transparent',
+    className: '',
+  },
+  subtle: {
+    label: 'Dezent',
+    className:
+      'border border-border/40 shadow-md bg-background/50 backdrop-blur-md supports-[backdrop-filter]:bg-background/40',
+  },
+  glass: {
+    label: 'Glas',
+    className:
+      'border border-border/60 shadow-lg bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/75',
+  },
+  solid: {
+    label: 'Solide',
+    className: 'border border-border shadow-lg bg-background',
+  },
+}
+
+const DEFAULT_BG_STYLE: BgStyle = 'glass'
 
 // Flacher Eintrag — Top-Level oder Sub-Nav. `key` ist der href und damit
 // eindeutig (mehrere Sub-Navs koennen denselben Namen tragen, aber nicht
@@ -43,13 +67,19 @@ type FlatItem = {
 }
 
 function loadState(): Persisted {
-  if (typeof window === 'undefined') {
-    return { pos: { right: 24, bottom: 24 }, collapsed: false, keys: DEFAULT_KEYS }
+  const fallback: Persisted = {
+    pos: { right: 24, bottom: 24 },
+    collapsed: false,
+    keys: DEFAULT_KEYS,
+    bgStyle: DEFAULT_BG_STYLE,
   }
+  if (typeof window === 'undefined') return fallback
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { pos: { right: 24, bottom: 24 }, collapsed: false, keys: DEFAULT_KEYS }
+    if (!raw) return fallback
     const parsed = JSON.parse(raw) as Partial<Persisted>
+    const bgStyle: BgStyle =
+      parsed.bgStyle && parsed.bgStyle in BG_STYLES ? parsed.bgStyle : DEFAULT_BG_STYLE
     return {
       pos: {
         right: typeof parsed.pos?.right === 'number' ? parsed.pos.right : 24,
@@ -59,9 +89,10 @@ function loadState(): Persisted {
       keys: Array.isArray(parsed.keys) && parsed.keys.every((k) => typeof k === 'string')
         ? parsed.keys.slice(0, MAX_ICONS)
         : DEFAULT_KEYS,
+      bgStyle,
     }
   } catch {
-    return { pos: { right: 24, bottom: 24 }, collapsed: false, keys: DEFAULT_KEYS }
+    return fallback
   }
 }
 
@@ -73,6 +104,7 @@ export function ChatButton() {
   const [pos, setPos] = useState<Pos>({ right: 24, bottom: 24 })
   const [collapsed, setCollapsed] = useState(false)
   const [keys, setKeys] = useState<string[]>(DEFAULT_KEYS)
+  const [bgStyle, setBgStyle] = useState<BgStyle>(DEFAULT_BG_STYLE)
   const [dragging, setDragging] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [reorderDragKey, setReorderDragKey] = useState<string | null>(null)
@@ -91,6 +123,7 @@ export function ChatButton() {
     setPos(s.pos)
     setCollapsed(s.collapsed)
     setKeys(s.keys)
+    setBgStyle(s.bgStyle)
     setMounted(true)
   }, [])
 
@@ -99,12 +132,12 @@ export function ChatButton() {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ pos, collapsed, keys })
+        JSON.stringify({ pos, collapsed, keys, bgStyle })
       )
     } catch {
       // ignore quota errors
     }
-  }, [pos, collapsed, keys, mounted])
+  }, [pos, collapsed, keys, bgStyle, mounted])
 
   // Berechtigungs-Check — waehrend des Ladens optimistisch true, damit der
   // Cluster nicht erst leer auftaucht und dann ploetzlich Items dazukommen.
@@ -255,14 +288,15 @@ export function ChatButton() {
           maxIcons={MAX_ICONS}
           reorderDragKey={reorderDragKey}
           setReorderDragKey={setReorderDragKey}
+          bgStyle={bgStyle}
+          onBgStyleChange={setBgStyle}
         />
       )}
 
       <div
         className={[
           'flex flex-row items-center gap-0.5 p-1 rounded-full',
-          'border border-border/60 shadow-lg',
-          'bg-background/60 backdrop-blur-md supports-[backdrop-filter]:bg-background/50',
+          BG_STYLES[bgStyle].className,
           dragging ? 'cursor-grabbing select-none' : '',
         ].join(' ')}
       >
@@ -351,6 +385,8 @@ function SettingsPopover({
   maxIcons,
   reorderDragKey,
   setReorderDragKey,
+  bgStyle,
+  onBgStyleChange,
 }: {
   availableItems: FlatItem[]
   selectedKeys: string[]
@@ -360,6 +396,8 @@ function SettingsPopover({
   maxIcons: number
   reorderDragKey: string | null
   setReorderDragKey: (k: string | null) => void
+  bgStyle: BgStyle
+  onBgStyleChange: (s: BgStyle) => void
 }) {
   const selectedSet = new Set(selectedKeys)
   const byKey = new Map(availableItems.map((i) => [i.key, i]))
@@ -387,6 +425,31 @@ function SettingsPopover({
         >
           <X className="h-4 w-4" />
         </button>
+      </div>
+
+      <div className="space-y-1.5 pb-2 border-b border-border/40">
+        <div className="text-[11px] text-muted-foreground">Hintergrund</div>
+        <div className="grid grid-cols-4 gap-1">
+          {(Object.keys(BG_STYLES) as BgStyle[]).map((s) => {
+            const active = bgStyle === s
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => onBgStyleChange(s)}
+                className={[
+                  'rounded-md px-2 py-1 text-[11px] border transition-colors',
+                  active
+                    ? 'border-primary bg-primary/10 text-foreground'
+                    : 'border-border/40 text-muted-foreground hover:text-foreground hover:bg-foreground/5',
+                ].join(' ')}
+                title={BG_STYLES[s].label}
+              >
+                {BG_STYLES[s].label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div className="text-[11px] text-muted-foreground">
