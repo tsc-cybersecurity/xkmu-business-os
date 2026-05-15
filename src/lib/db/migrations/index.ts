@@ -272,4 +272,8 @@ export const MIGRATIONS: Migration[] = [
     name: '063_voice_prompt_templates.sql',
     description: 'Neue Tabelle voice_prompt_templates + 10 recherchierte Outbound-Szenarien fuer Agent 03 (Strikter Auftrag, Termin, Lead-Qualifizierung, Cold-Intro, No-Show-Followup, Reaktivierung, NPS, Event-Einladung, Welcome, DIN-SPEC-Pitch)',
   },
+  {
+    name: '064_voice_calls.sql',
+    description: 'Neue Tabellen voice_calls + voice_call_messages — Persistierung von Call-Metadaten + Transkripten aus voice.xkmu.de Webhook',
+  },
 ]

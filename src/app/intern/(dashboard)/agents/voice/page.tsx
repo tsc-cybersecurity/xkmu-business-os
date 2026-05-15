@@ -21,7 +21,7 @@ import {
 import {
   Loader2, RefreshCw, Play, Square, Phone, Save, Settings2, MessageSquareText,
   PhoneOutgoing, AlertTriangle, CheckCircle2, XCircle, CircleSlash, CircleDashed,
-  FileText, Plus, Pencil, Trash2,
+  FileText, Plus, Pencil, Trash2, History, ExternalLink, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
@@ -67,6 +67,31 @@ const DEFAULT_TEMPLATE_OPTION = {
   category: null as string | null,
   systemPrompt: '',
   greeting: '',
+}
+
+// Persistierte Calls (Webhook von voice.xkmu.de).
+interface VoiceCallRow {
+  id: string
+  roomName: string
+  agentKey: string
+  direction: string
+  phone: string | null
+  callerName: string | null
+  contextText: string | null
+  startedAt: string
+  endedAt: string | null
+  durationSeconds: number | null
+  status: string
+  summary: string | null
+  recordingUrl: string | null
+  twilioCallSid: string | null
+}
+
+interface VoiceCallMessageRow {
+  id: string
+  ts: string
+  role: string
+  text: string
 }
 
 // Field-Spec aus dem Voice-API-Schema. Wir rendern dynamisch — keine harten
@@ -152,6 +177,15 @@ export default function VoiceAgentsPage() {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<VoiceTemplate | null>(null)
   const [templateSaving, setTemplateSaving] = useState(false)
+
+  // ─── Voice-Calls (Webhook-Persistierung) ───
+  const [calls, setCalls] = useState<VoiceCallRow[]>([])
+  const [callsLoading, setCallsLoading] = useState(false)
+  const [callsLoaded, setCallsLoaded] = useState(false)
+  const [callDetailOpen, setCallDetailOpen] = useState(false)
+  const [activeCall, setActiveCall] = useState<VoiceCallRow | null>(null)
+  const [activeMessages, setActiveMessages] = useState<VoiceCallMessageRow[]>([])
+  const [activeLoading, setActiveLoading] = useState(false)
 
   // ────────────────────────────────────────────────────────
   // Status-Polling alle 5 s — gibt schnelles Feedback nach
@@ -427,6 +461,62 @@ export default function VoiceAgentsPage() {
   }
 
   // ────────────────────────────────────────────────────────
+  // Voice-Calls (Webhook-Persistierung)
+  // ────────────────────────────────────────────────────────
+  const fetchCalls = useCallback(async () => {
+    setCallsLoading(true)
+    try {
+      const res = await fetch('/api/v1/voice-calls?limit=100')
+      const data = await res.json()
+      if (data.success) setCalls(data.data)
+    } catch (error) {
+      logger.error('Voice calls fetch failed', error, { module: 'VoiceAgents' })
+    } finally {
+      setCallsLoading(false)
+      setCallsLoaded(true)
+    }
+  }, [])
+
+  const openCallDetail = async (call: VoiceCallRow) => {
+    setActiveCall(call)
+    setActiveMessages([])
+    setCallDetailOpen(true)
+    setActiveLoading(true)
+    try {
+      const res = await fetch(`/api/v1/voice-calls/${call.id}`)
+      const data = await res.json()
+      if (data.success) {
+        setActiveCall(data.data.call)
+        setActiveMessages(data.data.messages)
+      }
+    } finally {
+      setActiveLoading(false)
+    }
+  }
+
+  const handleDeleteCall = async (call: VoiceCallRow) => {
+    if (!confirm(`Anruf "${call.callerName ?? call.phone ?? call.roomName}" wirklich loeschen?`)) return
+    await fetch(`/api/v1/voice-calls/${call.id}`, { method: 'DELETE' })
+    fetchCalls()
+  }
+
+  const formatDateTime = (iso: string | null) => {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleString('de-DE', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    })
+  }
+
+  const formatDuration = (sec: number | null) => {
+    if (sec === null || sec === undefined) return '—'
+    if (sec < 60) return `${sec}s`
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return `${m}m ${s.toString().padStart(2, '0')}s`
+  }
+
+  // ────────────────────────────────────────────────────────
   // Outbound-Call dispatch
   // ────────────────────────────────────────────────────────
   const handleDispatch = async () => {
@@ -529,6 +619,7 @@ export default function VoiceAgentsPage() {
         onValueChange={(v) => {
           if (v === 'settings' && !settingsAgents) fetchSettings()
           if (v === 'prompts' && !promptAgents) fetchPrompts()
+          if (v === 'calls' && !callsLoaded) fetchCalls()
         }}
       >
         <TabsList>
@@ -537,6 +628,7 @@ export default function VoiceAgentsPage() {
           <TabsTrigger value="prompts"><MessageSquareText className="h-4 w-4 mr-2" />Prompts</TabsTrigger>
           <TabsTrigger value="outbound"><PhoneOutgoing className="h-4 w-4 mr-2" />Outbound-Anruf</TabsTrigger>
           <TabsTrigger value="templates"><FileText className="h-4 w-4 mr-2" />Vorlagen</TabsTrigger>
+          <TabsTrigger value="calls"><History className="h-4 w-4 mr-2" />Anrufe</TabsTrigger>
         </TabsList>
 
         {/* ─── Uebersicht ─── */}
@@ -918,7 +1010,191 @@ export default function VoiceAgentsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ─── Anrufe (Webhook-Persistierung) ─── */}
+        <TabsContent value="calls" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Anrufe &amp; Transkripte</h2>
+              <p className="text-xs text-muted-foreground">
+                Persistierte Anrufe (via Webhook von voice.xkmu.de). Klick auf Zeile fuer Transkript.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={fetchCalls} disabled={callsLoading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${callsLoading ? 'animate-spin' : ''}`} />
+              Aktualisieren
+            </Button>
+          </div>
+
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Zeitpunkt</TableHead>
+                    <TableHead>Agent</TableHead>
+                    <TableHead>Richtung</TableHead>
+                    <TableHead>Nummer / Name</TableHead>
+                    <TableHead>Dauer</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[100px]">Aktionen</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {callsLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ) : calls.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        Noch keine Anrufe persistiert. Sobald voice.xkmu.de den Webhook schickt, erscheinen sie hier.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    calls.map((c) => (
+                      <TableRow key={c.id} className="cursor-pointer" onClick={() => openCallDetail(c)}>
+                        <TableCell className="font-mono text-xs">{formatDateTime(c.startedAt)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px]">
+                            {AGENT_LABELS[c.agentKey as AgentKey]?.replace(/^Agent \d+ — /, '') ?? c.agentKey}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {c.direction === 'inbound' ? '↘ inbound' : '↗ outbound'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{c.callerName ?? '—'}</div>
+                          {c.phone && <div className="text-xs text-muted-foreground font-mono">{c.phone}</div>}
+                        </TableCell>
+                        <TableCell className="text-xs">{formatDuration(c.durationSeconds)}</TableCell>
+                        <TableCell>
+                          <Badge variant={c.status === 'completed' ? 'default' : 'secondary'}>
+                            {c.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" title="Anzeigen" onClick={() => openCallDetail(c)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Loeschen"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteCall(c)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* ─── Call-Detail-Dialog ─── */}
+      <Dialog open={callDetailOpen} onOpenChange={setCallDetailOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Anruf-Transkript</DialogTitle>
+          </DialogHeader>
+          {activeCall && (
+            <div className="space-y-4 overflow-y-auto pr-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div>
+                  <div className="text-muted-foreground">Zeitpunkt</div>
+                  <div className="font-medium">{formatDateTime(activeCall.startedAt)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Dauer</div>
+                  <div className="font-medium">{formatDuration(activeCall.durationSeconds)}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Anrufer</div>
+                  <div className="font-medium">{activeCall.callerName ?? '—'}</div>
+                  {activeCall.phone && <div className="font-mono text-[10px]">{activeCall.phone}</div>}
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Status</div>
+                  <div><Badge variant={activeCall.status === 'completed' ? 'default' : 'secondary'}>{activeCall.status}</Badge></div>
+                </div>
+              </div>
+
+              {activeCall.contextText && (
+                <div className="rounded border p-3 text-xs bg-muted/40">
+                  <div className="text-muted-foreground mb-1">Auftrag / Kontext</div>
+                  <div>{activeCall.contextText}</div>
+                </div>
+              )}
+
+              {activeCall.summary && (
+                <div className="rounded border p-3 text-xs bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900">
+                  <div className="text-emerald-700 dark:text-emerald-400 mb-1 font-medium">Zusammenfassung</div>
+                  <div>{activeCall.summary}</div>
+                </div>
+              )}
+
+              {activeCall.recordingUrl && (
+                <a
+                  href={activeCall.recordingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Aufzeichnung oeffnen
+                </a>
+              )}
+
+              <div className="border-t pt-3">
+                <div className="text-muted-foreground text-xs mb-2">Transkript</div>
+                {activeLoading ? (
+                  <div className="py-8 text-center"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></div>
+                ) : activeMessages.length === 0 ? (
+                  <p className="text-xs text-muted-foreground py-4 text-center">Kein Transkript verfuegbar.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {activeMessages.map((m) => {
+                      const isAgent = m.role === 'agent'
+                      return (
+                        <div
+                          key={m.id}
+                          className={`rounded p-2.5 text-sm ${
+                            isAgent
+                              ? 'bg-primary/10 border border-primary/20'
+                              : m.role === 'system'
+                                ? 'bg-muted text-muted-foreground italic'
+                                : 'bg-card border'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-medium uppercase tracking-wide opacity-70">
+                              {m.role === 'agent' ? 'Agent' : m.role === 'user' ? 'Anrufer' : m.role}
+                            </span>
+                            <span className="text-[10px] font-mono opacity-50">
+                              {new Date(m.ts).toLocaleTimeString('de-DE')}
+                            </span>
+                          </div>
+                          <div className="whitespace-pre-wrap">{m.text}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ─── Vorlage-Editor-Dialog ─── */}
       <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>

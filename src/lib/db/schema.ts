@@ -1400,6 +1400,56 @@ export const userUiPrefs = pgTable('user_ui_prefs', {
 ])
 
 // ============================================
+// Voice Calls + Transcripts (Webhook von voice.xkmu.de)
+// ============================================
+// voice.xkmu.de pushed pro Call-Ende einen Webhook. Wir persistieren
+// Metadaten in voice_calls und das Wortprotokoll in voice_call_messages.
+export const voiceCalls = pgTable('voice_calls', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  roomName: varchar('room_name', { length: 200 }).notNull().unique(),
+  agentKey: varchar('agent_key', { length: 50 }).notNull(),
+  direction: varchar('direction', { length: 10 }).notNull().default('outbound'),
+  phone: varchar('phone', { length: 30 }),
+  callerName: varchar('caller_name', { length: 200 }),
+  contextText: text('context_text'),
+  startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+  endedAt: timestamp('ended_at', { withTimezone: true }),
+  durationSeconds: integer('duration_seconds'),
+  status: varchar('status', { length: 30 }).notNull().default('completed'),
+  summary: text('summary'),
+  recordingUrl: text('recording_url'),
+  twilioCallSid: varchar('twilio_call_sid', { length: 100 }),
+  rawPayload: jsonb('raw_payload'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_voice_calls_started').on(table.startedAt),
+  index('idx_voice_calls_agent').on(table.agentKey),
+  index('idx_voice_calls_phone').on(table.phone),
+  index('idx_voice_calls_direction').on(table.direction),
+])
+
+export const voiceCallMessages = pgTable('voice_call_messages', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  callId: uuid('call_id').notNull().references(() => voiceCalls.id, { onDelete: 'cascade' }),
+  ts: timestamp('ts', { withTimezone: true }).notNull(),
+  role: varchar('role', { length: 20 }).notNull(),
+  text: text('text').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_voice_call_messages_call_ts').on(table.callId, table.ts, table.sortOrder),
+])
+
+export const voiceCallsRelations = relations(voiceCalls, ({ many }) => ({
+  messages: many(voiceCallMessages),
+}))
+
+export const voiceCallMessagesRelations = relations(voiceCallMessages, ({ one }) => ({
+  call: one(voiceCalls, { fields: [voiceCallMessages.callId], references: [voiceCalls.id] }),
+}))
+
+// ============================================
 // Voice Prompt-Vorlagen (Outbound-Call-Szenarien fuer Agent 03 etc.)
 // ============================================
 // Pro Vorlage: ein System-Prompt + Greeting, das im Outbound-Tab als
@@ -2003,6 +2053,12 @@ export type NewUserUiPrefs = typeof userUiPrefs.$inferInsert
 
 export type VoicePromptTemplate = typeof voicePromptTemplates.$inferSelect
 export type NewVoicePromptTemplate = typeof voicePromptTemplates.$inferInsert
+
+export type VoiceCall = typeof voiceCalls.$inferSelect
+export type NewVoiceCall = typeof voiceCalls.$inferInsert
+
+export type VoiceCallMessage = typeof voiceCallMessages.$inferSelect
+export type NewVoiceCallMessage = typeof voiceCallMessages.$inferInsert
 
 export type BlogPost = typeof blogPosts.$inferSelect
 export type NewBlogPost = typeof blogPosts.$inferInsert
