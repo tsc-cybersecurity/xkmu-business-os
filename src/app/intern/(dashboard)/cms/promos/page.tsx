@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -20,7 +22,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
   Select,
   SelectContent,
@@ -38,41 +39,33 @@ interface PromoSlot {
   name: string
   description: string | null
   blockType: string
-  content: Record<string, unknown>
-  settings: Record<string, unknown>
   isActive: boolean
-  createdAt: string | null
   updatedAt: string | null
 }
 
 interface BlockType {
   type: string
   name: string
+  defaultContent?: Record<string, unknown>
+  defaultSettings?: Record<string, unknown>
 }
 
 const SLUG_REGEX = /^[a-z0-9][a-z0-9-]{0,118}[a-z0-9]$|^[a-z0-9]$/
 
-const EMPTY_FORM = {
-  id: null as string | null,
-  slug: '',
-  name: '',
-  description: '',
-  blockType: 'cta',
-  contentText: '{}',
-  settingsText: '{}',
-  isActive: true,
-}
-
-type FormState = typeof EMPTY_FORM
-
 export default function CmsPromosPage() {
+  const router = useRouter()
   const [slots, setSlots] = useState<PromoSlot[]>([])
   const [blockTypes, setBlockTypes] = useState<BlockType[]>([])
   const [loading, setLoading] = useState(true)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [form, setForm] = useState<FormState>(EMPTY_FORM)
-  const [saving, setSaving] = useState(false)
+  const [showNewDialog, setShowNewDialog] = useState(false)
+  const [creating, setCreating] = useState(false)
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null)
+
+  // Neu-Anlage-Felder — nur das Noetigste, alles Weitere bearbeitet der
+  // User auf der Editor-Detailseite.
+  const [newSlug, setNewSlug] = useState('')
+  const [newName, setNewName] = useState('')
+  const [newBlockType, setNewBlockType] = useState('cta')
 
   const fetchSlots = useCallback(async () => {
     try {
@@ -92,9 +85,11 @@ export default function CmsPromosPage() {
       const data = await res.json()
       if (data.success) {
         setBlockTypes(
-          (data.data as Array<{ type: string; name: string }>).map((b) => ({
+          (data.data as BlockType[]).map((b) => ({
             type: b.type,
             name: b.name,
+            defaultContent: b.defaultContent ?? {},
+            defaultSettings: b.defaultSettings ?? {},
           }))
         )
       }
@@ -108,76 +103,49 @@ export default function CmsPromosPage() {
     fetchBlockTypes()
   }, [fetchSlots, fetchBlockTypes])
 
-  const openNew = () => {
-    setForm(EMPTY_FORM)
-    setDialogOpen(true)
-  }
-
-  const openEdit = (slot: PromoSlot) => {
-    setForm({
-      id: slot.id,
-      slug: slot.slug,
-      name: slot.name,
-      description: slot.description ?? '',
-      blockType: slot.blockType,
-      contentText: JSON.stringify(slot.content ?? {}, null, 2),
-      settingsText: JSON.stringify(slot.settings ?? {}, null, 2),
-      isActive: slot.isActive,
-    })
-    setDialogOpen(true)
-  }
-
-  const handleSave = async () => {
-    if (!SLUG_REGEX.test(form.slug)) {
+  const handleCreate = async () => {
+    if (!SLUG_REGEX.test(newSlug)) {
       toast.error('Slug darf nur a-z, 0-9 und Bindestriche enthalten.')
       return
     }
-    if (!form.name.trim()) {
+    if (!newName.trim()) {
       toast.error('Name ist erforderlich.')
       return
     }
-
-    let content: unknown
-    let settings: unknown
+    setCreating(true)
     try {
-      content = JSON.parse(form.contentText)
-      settings = JSON.parse(form.settingsText)
-    } catch {
-      toast.error('Inhalt oder Settings ist kein gueltiges JSON.')
-      return
-    }
-
-    setSaving(true)
-    try {
+      // Default-Content/-Settings aus der Block-Type-Definition uebernehmen,
+      // damit der WYSIWYG-Editor sofort sinnvolle Felder anzeigt.
+      const blockType = blockTypes.find((b) => b.type === newBlockType)
       const payload = {
-        slug: form.slug,
-        name: form.name.trim(),
-        description: form.description.trim() || null,
-        blockType: form.blockType,
-        content,
-        settings,
-        isActive: form.isActive,
+        slug: newSlug,
+        name: newName.trim(),
+        blockType: newBlockType,
+        content: blockType?.defaultContent ?? {},
+        settings: blockType?.defaultSettings ?? {},
+        isActive: true,
       }
-      const url = form.id ? `/api/v1/cms/promos/${form.id}` : '/api/v1/cms/promos'
-      const method = form.id ? 'PUT' : 'POST'
-      const res = await fetch(url, {
-        method,
+      const res = await fetch('/api/v1/cms/promos', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
       const data = await res.json()
       if (!data.success) {
-        toast.error(data.error?.message ?? 'Speichern fehlgeschlagen')
+        toast.error(data.error?.message ?? 'Anlegen fehlgeschlagen')
         return
       }
-      toast.success(form.id ? 'Promo aktualisiert' : 'Promo angelegt')
-      setDialogOpen(false)
-      fetchSlots()
+      toast.success('Promo-Slot angelegt')
+      setShowNewDialog(false)
+      setNewSlug('')
+      setNewName('')
+      setNewBlockType('cta')
+      router.push(`/intern/cms/promos/${data.data.id}`)
     } catch (error) {
-      logger.error('Failed to save promo', error, { module: 'CmsPromos' })
-      toast.error('Speichern fehlgeschlagen')
+      logger.error('Failed to create promo', error, { module: 'CmsPromos' })
+      toast.error('Anlegen fehlgeschlagen')
     } finally {
-      setSaving(false)
+      setCreating(false)
     }
   }
 
@@ -214,7 +182,7 @@ export default function CmsPromosPage() {
             einbettbar.
           </p>
         </div>
-        <Button onClick={openNew}>
+        <Button onClick={() => setShowNewDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Neuer Promo-Slot
         </Button>
@@ -280,9 +248,11 @@ export default function CmsPromosPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(slot)} title="Bearbeiten">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      <Link href={`/intern/cms/promos/${slot.id}`}>
+                        <Button variant="ghost" size="icon" title="Bearbeiten">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -301,114 +271,64 @@ export default function CmsPromosPage() {
         </Table>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>{form.id ? 'Promo-Slot bearbeiten' : 'Neuer Promo-Slot'}</DialogTitle>
+            <DialogTitle>Neuer Promo-Slot</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="slug">Slug</Label>
-                <Input
-                  id="slug"
-                  value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase() })}
-                  placeholder="kontakt-cta"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Wird als <code className="text-[10px]">{`{promo:${form.slug || 'slug'}}`}</code> eingebunden.
-                </p>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="name">Name (intern)</Label>
-                <Input
-                  id="name"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="Kontakt-CTA"
-                />
-              </div>
-            </div>
-
             <div className="space-y-1.5">
-              <Label htmlFor="description">Beschreibung (optional)</Label>
+              <Label htmlFor="new-slug">Slug</Label>
               <Input
-                id="description"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Wo wird der Slot eingesetzt?"
+                id="new-slug"
+                value={newSlug}
+                onChange={(e) => setNewSlug(e.target.value.toLowerCase())}
+                placeholder="kontakt-cta"
+              />
+              <p className="text-xs text-muted-foreground">
+                Wird als <code className="text-[10px]">{`{promo:${newSlug || 'slug'}}`}</code> eingebunden.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="new-name">Name (intern)</Label>
+              <Input
+                id="new-name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="z.B. Kontakt-CTA"
               />
             </div>
-
             <div className="space-y-1.5">
-              <Label htmlFor="blockType">Block-Typ</Label>
-              <Select
-                value={form.blockType}
-                onValueChange={(v) => setForm({ ...form, blockType: v })}
-              >
-                <SelectTrigger id="blockType">
-                  <SelectValue />
-                </SelectTrigger>
+              <Label htmlFor="new-blockType">Block-Typ</Label>
+              <Select value={newBlockType} onValueChange={setNewBlockType}>
+                <SelectTrigger id="new-blockType"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {blockTypes.length === 0 ? (
                     <SelectItem value="cta">cta</SelectItem>
                   ) : (
                     blockTypes.map((b) => (
                       <SelectItem key={b.type} value={b.type}>
-                        {b.name} <span className="text-xs text-muted-foreground ml-2">({b.type})</span>
+                        {b.name}
+                        <span className="text-xs text-muted-foreground ml-2">({b.type})</span>
                       </SelectItem>
                     ))
                   )}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="content">Inhalt (JSON)</Label>
-                <Textarea
-                  id="content"
-                  rows={10}
-                  value={form.contentText}
-                  onChange={(e) => setForm({ ...form, contentText: e.target.value })}
-                  className="font-mono text-xs"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="settings">Settings (JSON)</Label>
-                <Textarea
-                  id="settings"
-                  rows={10}
-                  value={form.settingsText}
-                  onChange={(e) => setForm({ ...form, settingsText: e.target.value })}
-                  className="font-mono text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={form.isActive}
-                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                className="h-4 w-4"
-              />
-              <Label htmlFor="isActive" className="cursor-pointer">
-                Aktiv — im Blog rendern
-              </Label>
+              <p className="text-xs text-muted-foreground">
+                Inhalt und Layout im naechsten Schritt im WYSIWYG-Editor pflegen.
+              </p>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={saving}>
+            <Button variant="outline" onClick={() => setShowNewDialog(false)} disabled={creating}>
               Abbrechen
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Speichern
+            <Button onClick={handleCreate} disabled={creating}>
+              {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Anlegen &amp; bearbeiten
             </Button>
           </DialogFooter>
         </DialogContent>
