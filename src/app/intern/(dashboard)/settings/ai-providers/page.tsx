@@ -37,6 +37,7 @@ const providerTypes = [
   { value: 'twitter', label: 'Twitter/X', needsKey: true },
   { value: 'facebook', label: 'Facebook', needsKey: true },
   { value: 'instagram', label: 'Instagram', needsKey: true },
+  { value: 'voice', label: 'Voice Agent (voice.xkmu.de)', needsKey: true },
 ]
 
 const providerColors: Record<string, string> = {
@@ -44,6 +45,7 @@ const providerColors: Record<string, string> = {
   openai: 'bg-gray-700', deepseek: 'bg-teal-500', kimi: 'bg-orange-500',
   firecrawl: 'bg-amber-500', kie: 'bg-pink-500', serpapi: 'bg-lime-500',
   linkedin: 'bg-blue-600', twitter: 'bg-sky-500', facebook: 'bg-blue-700', instagram: 'bg-fuchsia-500',
+  voice: 'bg-indigo-600',
 }
 
 const providerModels: Record<string, Array<{ id: string; name: string }>> = {
@@ -57,7 +59,7 @@ const providerModels: Record<string, Array<{ id: string; name: string }>> = {
 
 const defaultModels: Record<string, string> = { ollama: 'gemma3', openrouter: 'openai/gpt-4o-mini', gemini: 'gemini-2.5-flash', openai: 'gpt-4o-mini', deepseek: 'deepseek-chat', kimi: 'moonshot-v1-8k' }
 const emptyForm: ProviderFormData = { providerType: 'openrouter', name: '', apiKey: '', baseUrl: '', model: '', maxTokens: 1000, temperature: 0.7, priority: 0, isActive: true, isDefault: false }
-const noModelTypes = new Set(['firecrawl', 'kie', 'serpapi', 'linkedin', 'twitter', 'facebook', 'instagram'])
+const noModelTypes = new Set(['firecrawl', 'kie', 'serpapi', 'linkedin', 'twitter', 'facebook', 'instagram', 'voice'])
 
 export default function AiProvidersPage() {
   const [providers, setProviders] = useState<AiProvider[]>([])
@@ -191,7 +193,7 @@ export default function AiProvidersPage() {
               <FormField label="Anbieter-Typ" required><Select value={formData.providerType} onValueChange={handleTypeChange} disabled={!!selected && editMode}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{providerTypes.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select></FormField>
               <FormField label="Name" required><Input value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} /></FormField>
               {needsKey && <FormField label="API-Schluessel" required><Input type="password" value={formData.apiKey} onChange={e => setFormData(p => ({ ...p, apiKey: e.target.value }))} placeholder={editMode ? 'Vorhandener Schluessel ist maskiert — neuen Schluessel hier eintragen, sonst unveraendert lassen' : 'sk-...'} /></FormField>}
-              {(formData.providerType === 'ollama' || formData.providerType === 'kie') && <FormField label="Base URL"><Input value={formData.baseUrl} onChange={e => setFormData(p => ({ ...p, baseUrl: e.target.value }))} /></FormField>}
+              {(formData.providerType === 'ollama' || formData.providerType === 'kie' || formData.providerType === 'voice') && <FormField label="Base URL"><Input value={formData.baseUrl} onChange={e => setFormData(p => ({ ...p, baseUrl: e.target.value }))} placeholder={formData.providerType === 'voice' ? 'https://voice.xkmu.de' : ''} /></FormField>}
               {!isNoModel && <FormField label="Modell" required>{providerModels[formData.providerType] ? <Select value={providerModels[formData.providerType]?.some(m => m.id === formData.model) ? formData.model : '_custom'} onValueChange={v => { if (v !== '_custom') setFormData(p => ({ ...p, model: v })) }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{providerModels[formData.providerType]?.map(m => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}<SelectItem value="_custom">Benutzerdefiniert</SelectItem></SelectContent></Select> : <Input value={formData.model} onChange={e => setFormData(p => ({ ...p, model: e.target.value }))} />}</FormField>}
               {!isNoModel && <div className="grid grid-cols-3 gap-4"><FormField label="Max Tokens"><Input type="number" value={formData.maxTokens} onChange={e => setFormData(p => ({ ...p, maxTokens: parseInt(e.target.value) || 1000 }))} /></FormField><FormField label="Temperatur"><Input type="number" min={0} max={2} step={0.1} value={formData.temperature} onChange={e => setFormData(p => ({ ...p, temperature: parseFloat(e.target.value) || 0.7 }))} /></FormField><FormField label="Prioritaet"><Input type="number" min={0} value={formData.priority} onChange={e => setFormData(p => ({ ...p, priority: parseInt(e.target.value) || 0 }))} /></FormField></div>}
               <div className="flex items-center gap-6">

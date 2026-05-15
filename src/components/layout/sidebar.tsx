@@ -7,7 +7,7 @@ import {
   // Layout / Top-Level
   LayoutDashboard, Building2, Settings, Shield, Globe, Brain, Bot, Monitor,
   ListTodo, Mail, MessageCircle, GraduationCap, CalendarDays, ClipboardList,
-  ListOrdered, Briefcase,
+  ListOrdered, Briefcase, Phone,
   // System-UI
   ChevronLeft, ChevronRight, Sun, Moon, MonitorSmartphone, LogOut, User,
   ExternalLink,
@@ -126,12 +126,13 @@ export const navigation: NavItem[] = [
     href: '/intern/agents',
     icon: Bot,
     children: [
-      { name: 'Dashboard',   href: '/intern/agents',             icon: Gauge },
-      { name: 'Goals',       href: '/intern/agents/goals',       icon: Goal },
-      { name: 'Memory',      href: '/intern/agents/memory',      icon: Database },
-      { name: 'Definitions', href: '/intern/agents/definitions', icon: FileCode },
-      { name: 'Templates',   href: '/intern/agents/templates',   icon: LayoutTemplate },
-      { name: 'Kosten',      href: '/intern/agents/cost',        icon: Euro },
+      { name: 'Dashboard',    href: '/intern/agents',             icon: Gauge },
+      { name: 'Goals',        href: '/intern/agents/goals',       icon: Goal },
+      { name: 'Memory',       href: '/intern/agents/memory',      icon: Database },
+      { name: 'Definitions',  href: '/intern/agents/definitions', icon: FileCode },
+      { name: 'Templates',    href: '/intern/agents/templates',   icon: LayoutTemplate },
+      { name: 'Kosten',       href: '/intern/agents/cost',        icon: Euro },
+      { name: 'Voice-Agents', href: '/intern/agents/voice',       icon: Phone },
     ],
   },
   // ── Cybersecurity ──
