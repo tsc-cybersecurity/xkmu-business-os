@@ -31,6 +31,7 @@ const PUBLIC_PATHS = [
   '/buchen',
   '/api/buchen',
   '/api/google-calendar/webhook',
+  '/api/v1/voice-agent/webhook',
 ]
 
 const CSRF_COOKIE = 'csrf_token'
