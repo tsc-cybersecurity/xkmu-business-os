@@ -37,6 +37,69 @@ const AGENT_KEYS: AgentKey[] = [
   'inbound-receptionist',
 ]
 
+// Use-Case-Templates fuer Outbound-Calls. Werden in das system_prompt_override
+// + greeting_override-Feld vorbefuellt; der User kann sie anschliessend frei
+// editieren. Platzhalter {name} + {context} setzt der Voice-Server zur
+// Laufzeit ein.
+const OUTBOUND_TEMPLATES: Record<string, { label: string; system?: string; greeting?: string }> = {
+  default: {
+    label: 'Default-Prompt (vom Server)',
+  },
+  strict: {
+    label: 'Strikter Auftrag',
+    system: `Du bist ein professioneller Telefonassistent von xKMU und fuehrst diesen einen Anruf in deutscher Sprache.
+
+DEIN AUFTRAG (strikt und ausschliesslich):
+{context}
+
+REGELN:
+1. Du sprichst {name} mit Namen an. Begruesse kurz, stelle dich vor ("Hier ist Lea von xKMU"), nenne sofort den Anrufgrund.
+2. Du arbeitest AUSSCHLIESSLICH den oben genannten Auftrag ab. Weiche unter keinen Umstaenden vom Thema ab.
+3. Wenn {name} Fragen zu anderen Themen stellt, antwortest du freundlich kurz: "Dazu kann ich Ihnen leider keine Auskunft geben — ich rufe heute nur wegen <Auftrag in einem Satz> an." Dann zurueck zum Auftrag.
+4. Kein Smalltalk, keine Produkt- oder Preisangaben, die nicht im Auftrag stehen.
+5. Sobald der Auftrag erledigt ist, beendest du das Gespraech hoeflich.
+6. Bei Voicemail, kein Interesse, oder aggressivem Gegenueber → hoeflich beenden, Ergebnis in einem Satz zusammenfassen.
+7. Niemals erfundene Fakten ueber xKMU. Wenn unklar: "Das klaeren wir am besten in einem persoenlichen Gespraech."`,
+    greeting: `Begruesse {name} freundlich auf Deutsch. Nenne deinen Namen ("Hier ist Lea von xKMU"), pruefe kurz ("habe ich Sie gut erwischt?"), und steige direkt mit dem Anrufgrund aus dem Auftrag ein. Kein Smalltalk.`,
+  },
+  appointment: {
+    label: 'Terminbuchung',
+    system: `Du bist Lea, Telefonassistentin von xKMU. Du rufst {name} an, um einen Termin zu vereinbaren.
+
+TERMIN-KONTEXT:
+{context}
+
+ABLAUF:
+1. Vorstellen, Anrufgrund kurz nennen.
+2. Frage, ob ein 15-Min-Erstgespraech zu dem Thema interessant ist.
+3. Bei Ja → konkrete Zeitfenster anbieten (z.B. "Mo–Mi 10:00, 11:30 oder 14:00 Uhr") und buchen.
+4. Bei Nein / spaeter → fragen, wann ein erneuter Anruf passt, beenden.
+5. Bei Voicemail → kurze freundliche Nachricht hinterlassen mit Bitte um Rueckruf.
+
+Du verbreitest keine Preise und keine Vertragsdetails — das gehoert ins Erstgespraech.`,
+    greeting: `Begruesse {name} freundlich, stelle dich kurz vor ("Hier ist Lea von xKMU") und steige direkt mit dem Terminanliegen ein.`,
+  },
+  qualifier: {
+    label: 'Lead-Qualifizierung',
+    system: `Du bist Lea von xKMU und fuehrst ein kurzes Qualifizierungs-Gespraech mit {name}.
+
+ZIEL:
+{context}
+
+DEINE FRAGEN (kurz halten, Antworten nicht kommentieren — nur erfassen):
+1. Aktueller Status zum Thema (haben sie sich schon damit beschaeftigt?)
+2. Zeithorizont (wann konkret relevant?)
+3. Entscheider (wer entscheidet?)
+4. Naechster sinnvoller Schritt (Termin? Material? Spaeter wieder?)
+
+REGELN:
+- Du verkaufst nichts und beraetst nicht — du sammelst nur Informationen.
+- Max. 3–4 Minuten Gespraechszeit, sonst zusammenfassen + beenden.
+- Bei Desinteresse → freundlich beenden, kein Nachhaken.`,
+    greeting: `Begruesse {name} freundlich, stelle dich kurz vor ("Hier ist Lea von xKMU"), nenne den Anrufgrund in einem Satz und frage ob 2–3 Minuten gerade passen.`,
+  },
+}
+
 // Field-Spec aus dem Voice-API-Schema. Wir rendern dynamisch — keine harten
 // Listen von Voices/Modellen, damit serverseitige Erweiterungen automatisch
 // in der UI auftauchen.
@@ -108,6 +171,9 @@ export default function VoiceAgentsPage() {
   const [outName, setOutName] = useState('')
   const [outPhone, setOutPhone] = useState('')
   const [outContext, setOutContext] = useState('')
+  const [outUseCase, setOutUseCase] = useState<string>('default')
+  const [outSystemOverride, setOutSystemOverride] = useState('')
+  const [outGreetingOverride, setOutGreetingOverride] = useState('')
   const [dispatching, setDispatching] = useState(false)
   const [lastCall, setLastCall] = useState<{ roomName: string; status: string } | null>(null)
 
@@ -313,6 +379,8 @@ export default function VoiceAgentsPage() {
           name: outName.trim(),
           phone: normalizedPhone,
           context: outContext.trim() || undefined,
+          system_prompt_override: outSystemOverride.trim() || undefined,
+          greeting_override: outGreetingOverride.trim() || undefined,
         }),
       })
       const data = await res.json()
@@ -601,15 +669,73 @@ export default function VoiceAgentsPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="out-context">Kontext</Label>
+                <Label htmlFor="out-context">Auftrag / Anrufgrund</Label>
                 <Textarea
                   id="out-context"
                   rows={3}
                   value={outContext}
                   onChange={(e) => setOutContext(e.target.value)}
-                  placeholder='Was soll der Agent wissen? (z.B. "Interessiert sich fuer Premium-Paket")'
+                  placeholder='Konkreter Anrufgrund — wird im Prompt als {context} eingesetzt (z.B. "Terminvereinbarung fuer 15-Min-Erstgespraech zur DIN-SPEC-27076-Analyse")'
                 />
+                <p className="text-[11px] text-muted-foreground">
+                  Je praeziser, desto weniger Abweichung.
+                </p>
               </div>
+
+              {/* ─── Per-Call Prompt-Overrides (optional) ─── */}
+              <div className="space-y-3 pt-2 border-t border-border/40">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Label className="shrink-0">Use-Case</Label>
+                  <Select
+                    value={outUseCase}
+                    onValueChange={(v) => {
+                      setOutUseCase(v)
+                      const tpl = OUTBOUND_TEMPLATES[v]
+                      // Beim Wechsel: Templates uebernehmen. User kann
+                      // anschliessend frei editieren.
+                      setOutSystemOverride(tpl?.system ?? '')
+                      setOutGreetingOverride(tpl?.greeting ?? '')
+                    }}
+                  >
+                    <SelectTrigger className="max-w-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(OUTBOUND_TEMPLATES).map(([k, t]) => (
+                        <SelectItem key={k} value={k}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-[11px] text-muted-foreground">
+                    Platzhalter: <code className="bg-muted px-1 rounded">{'{name}'}</code> · <code className="bg-muted px-1 rounded">{'{context}'}</code>
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="out-system-override">
+                    System-Prompt (Override, optional)
+                  </Label>
+                  <Textarea
+                    id="out-system-override"
+                    rows={8}
+                    value={outSystemOverride}
+                    onChange={(e) => setOutSystemOverride(e.target.value)}
+                    placeholder="Leer lassen → Default-Prompt vom Server (Tab Prompts) wird verwendet."
+                    className="font-mono text-xs"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="out-greeting-override">
+                    Greeting (Override, optional)
+                  </Label>
+                  <Textarea
+                    id="out-greeting-override"
+                    rows={3}
+                    value={outGreetingOverride}
+                    onChange={(e) => setOutGreetingOverride(e.target.value)}
+                    placeholder="Leer lassen → Default-Greeting vom Server."
+                    className="font-mono text-xs"
+                  />
+                </div>
+              </div>
+
               <div className="flex items-center justify-between gap-3 pt-2">
                 <p className="text-xs text-muted-foreground">
                   Verursacht Telefonkosten via Twilio.
@@ -633,6 +759,74 @@ export default function VoiceAgentsPage() {
 }
 
 // ────────────────────────────────────────────────────────────────
+// Hilfetexte pro Setting-Feld. Bewusst lokal gepflegt — die
+// Voice-API liefert nur das Schema, nicht die Bedeutung.
+// "what" = was bewirkt das Feld; "rec" = Empfehlung in der Praxis.
+// ────────────────────────────────────────────────────────────────
+const FIELD_HELP: Record<string, { what: string; rec?: string }> = {
+  // ─── Agent 01 (Simple Latency / Speech-to-Speech) ─────────────
+  model: {
+    what: 'Realtime-Modell fuer Agent 01. native-audio = direkt Audio→Audio (niedrigste Latenz), -exp = experimentell.',
+    rec: 'gemini-live-2.5-flash-native-audio (Default) — schnellste Antwort.',
+  },
+  voice: {
+    what: 'Gemini-Live-Stimme. Aoede klingt natuerlich-weiblich, Charon tief-maennlich, Puck/Kore/Fenrir markanter.',
+    rec: 'Aoede fuer freundlich-neutral, Charon fuer seriös-maennlich.',
+  },
+  language: {
+    what: 'Sprache, in der Agent 01 spricht und versteht.',
+    rec: 'de-DE fuer deutsche Anrufer.',
+  },
+  // ─── LLM (Agent 02/03/04) ─────────────────────────────────────
+  llm_model: {
+    what: 'LLM, das Antworten formuliert. flash = schnell + guenstig, pro = bessere Reasoning-Qualitaet aber langsamer + teurer.',
+    rec: 'gemini-2.5-flash fuer fast alle Calls. 2.5-pro nur bei komplexen Aufgaben (Verhandlung, mehrere Constraints).',
+  },
+  temperature: {
+    what: 'Zufaelligkeit der LLM-Antworten. 0 = deterministisch/formal, 1 = ausgewogen, 2 = sehr kreativ (kann Fakten erfinden). null = Provider-Default.',
+    rec: 'null oder 0.3 — Outbound-Calls sollen verlaesslich klingen, kein Improvisations-Bedarf.',
+  },
+  // ─── STT / TTS ────────────────────────────────────────────────
+  stt_language: {
+    what: 'Speech-to-Text — Sprache, in der der Anrufer spricht. Falsche Wahl → schlechte Transkription.',
+    rec: 'de-DE fuer deutsche Anrufer.',
+  },
+  tts_voice: {
+    what: 'Stimme des Agents (Azure Neural). "Multilingual"-Stimmen wechseln nahtlos die Sprache; KatjaNeural/ConradNeural sind klassische DE-Stimmen.',
+    rec: 'FlorianMultilingualNeural (maennlich) oder SeraphinaMultilingualNeural (weiblich) — beide klingen sehr natuerlich.',
+  },
+  tts_language: {
+    what: 'Akzent/Lokal der TTS-Stimme. Bei deutschen Calls de-DE, sonst klingt die Aussprache fremd.',
+    rec: 'Identisch mit stt_language.',
+  },
+  // ─── Greeting / VAD / Interruption ────────────────────────────
+  greeting_delay_seconds: {
+    what: 'Wartezeit nach Verbindungsaufbau, bevor der Agent "Hallo" sagt. Zu kurz wirkt aggressiv, zu lang wirkt kaputt.',
+    rec: '1.0–1.5 s. Default 1.2 s passt fuer fast alle Telefonsetups.',
+  },
+  vad_activation_threshold: {
+    what: 'Lautstaerke-Schwelle, ab der der Agent erkennt: "der Anrufer spricht". 0.1 = ultra-sensibel (Hintergrundrauschen triggert), 0.9 = nur sehr laute Stimmen.',
+    rec: '0.5 (Default). Lauter Hintergrund (Strasse/Buero) → 0.6–0.7. Sehr leiser Anrufer → 0.3–0.4.',
+  },
+  vad_min_silence_duration: {
+    what: 'Wie viele Sekunden Stille noetig sind, bevor der Agent annimmt "Anrufer hat ausgeredet" und antwortet.',
+    rec: '0.55 s. Niedriger → Agent faellt ins Wort. Hoeher → Gespraech wirkt traege.',
+  },
+  allow_interruptions: {
+    what: 'Darf der Anrufer den Agent unterbrechen? true = natuerliches Gespraech; false = Agent redet immer aus (formal, robotisch).',
+    rec: 'true. Nur deaktivieren wenn der Agent zwingend Pflichttext am Stueck vorlesen muss (Rechtshinweise).',
+  },
+  min_interruption_duration: {
+    what: 'Wie lange der Anrufer reden muss, bevor der Agent als unterbrochen gilt. Kurzes "mhm" oder "ja" soll nicht stoppen.',
+    rec: '0.5–0.7 s. Zu niedrig → Filler-Words stoppen den Agent. Zu hoch → echte Einwuerfe gehen verloren.',
+  },
+  min_endpointing_delay: {
+    what: 'Wartezeit nach Ende der Agent-Aussage, bevor er Anrufer-Schweigen als Nicht-Antwort wertet und nachhakt.',
+    rec: '0.4–0.7 s. Zu niedrig → Agent quasselt direkt rein, der Anrufer kommt nicht zu Wort.',
+  },
+}
+
+// ────────────────────────────────────────────────────────────────
 // Field-Renderer pro Spec-Kind. Halten wir lokal — nur hier
 // gebraucht, kein Wert in einer eigenen Datei.
 // ────────────────────────────────────────────────────────────────
@@ -645,14 +839,25 @@ function SettingsField({
   defaultValue: unknown
   onChange: (v: unknown) => void
 }) {
+  const help = FIELD_HELP[name]
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
-      <div className="space-y-0.5">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+      <div className="space-y-1">
         <Label className="font-mono text-xs">{name}</Label>
         {defaultValue !== undefined && (
           <p className="text-[10px] text-muted-foreground">
             Default: <code>{defaultValue === null ? 'null' : String(defaultValue)}</code>
           </p>
+        )}
+        {help && (
+          <div className="text-[11px] text-muted-foreground leading-snug space-y-0.5 pt-1">
+            <p>{help.what}</p>
+            {help.rec && (
+              <p>
+                <span className="font-medium text-foreground/70">Empfehlung:</span> {help.rec}
+              </p>
+            )}
+          </div>
         )}
       </div>
       <div className="md:col-span-2">

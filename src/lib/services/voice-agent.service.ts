@@ -178,6 +178,10 @@ export const VoiceAgentService = {
     name: string
     phone: string
     context?: string
+    // Optionale Per-Call-Overrides (rueckwaertskompatibel — wenn nicht
+    // gesetzt, nimmt der Agent den Default-Prompt aus /admin/prompts).
+    system_prompt_override?: string
+    greeting_override?: string
   }): Promise<{ roomName: string; status: string }> {
     return voiceFetch<{ roomName: string; status: string }>('/api/dispatch-call', {
       method: 'POST',

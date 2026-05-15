@@ -15,6 +15,10 @@ const dispatchSchema = z.object({
   name: z.string().min(1).max(200),
   phone: z.string().min(4).max(30),
   context: z.string().max(2000).optional(),
+  // Pro-Call Prompt-Overrides — wenn leer/fehlend, faellt der Agent auf
+  // den global gepflegten Prompt aus /api/admin/prompts zurueck.
+  system_prompt_override: z.string().max(50000).optional(),
+  greeting_override: z.string().max(50000).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -37,6 +41,8 @@ export async function POST(request: NextRequest) {
         name: validation.data.name,
         phone: normalizedPhone,
         context: validation.data.context,
+        system_prompt_override: validation.data.system_prompt_override?.trim() || undefined,
+        greeting_override: validation.data.greeting_override?.trim() || undefined,
       })
       return apiSuccess(data)
     } catch (error) {
