@@ -23,9 +23,14 @@ CREATE TABLE IF NOT EXISTS voice_prompt_templates (
   is_active     boolean NOT NULL DEFAULT true,
   sort_order    integer NOT NULL DEFAULT 0,
   created_at    timestamptz NOT NULL DEFAULT now(),
-  updated_at    timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT voice_prompt_templates_agent_slug_unique UNIQUE (agent_key, slug)
+  updated_at    timestamptz NOT NULL DEFAULT now()
 );
+
+-- Unique-Index statt inline CONSTRAINT — so wird er auch dann gesetzt
+-- wenn die Tabelle aus einem Vorlauf bereits ohne Constraint existiert.
+-- `ON CONFLICT (agent_key, slug)` unten matcht diesen Unique-Index.
+CREATE UNIQUE INDEX IF NOT EXISTS voice_prompt_templates_agent_slug_unique
+  ON voice_prompt_templates(agent_key, slug);
 
 CREATE INDEX IF NOT EXISTS idx_voice_prompt_templates_agent_active
   ON voice_prompt_templates(agent_key, is_active);
