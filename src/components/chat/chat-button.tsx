@@ -143,6 +143,7 @@ export function ChatButton() {
   const { hasPermission, loading: permissionsLoading } = usePermissions()
 
   const [mounted, setMounted] = useState(false)
+  const [hydratedFromServer, setHydratedFromServer] = useState(false)
   const [pos, setPos] = useState<Pos>({ right: 24, bottom: 24 })
   const [collapsed, setCollapsed] = useState(false)
   const [keys, setKeys] = useState<string[]>(DEFAULT_KEYS)
@@ -160,6 +161,9 @@ export function ChatButton() {
     moved: boolean
   } | null>(null)
 
+  // Hydration: erst localStorage (instant first paint), dann im Hintergrund
+  // pro-User Prefs vom Server holen und ggf. ueberschreiben. So bleibt das
+  // Verhalten offline-tauglich, syncht aber zwischen Geraeten desselben Users.
   useEffect(() => {
     const s = loadState()
     setPos(s.pos)
@@ -167,8 +171,36 @@ export function ChatButton() {
     setKeys(s.keys)
     setBgStyle(s.bgStyle)
     setMounted(true)
+
+    let cancelled = false
+    fetch('/api/v1/user-ui-prefs')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((res) => {
+        if (cancelled || !res?.success) return
+        const fab = res.data?.fab as Partial<Persisted> | undefined
+        if (!fab) return
+        // Server-Werte gewinnen, falls vorhanden — sonst lokale beibehalten.
+        if (fab.pos && typeof fab.pos.right === 'number' && typeof fab.pos.bottom === 'number') {
+          setPos({ right: fab.pos.right, bottom: fab.pos.bottom })
+        }
+        if (typeof fab.collapsed === 'boolean') setCollapsed(fab.collapsed)
+        if (Array.isArray(fab.keys) && fab.keys.every((k) => typeof k === 'string')) {
+          setKeys(fab.keys.slice(0, MAX_ICONS))
+        }
+        if (fab.bgStyle && (fab.bgStyle as string) in BG_STYLES) {
+          setBgStyle(fab.bgStyle as BgStyle)
+        }
+        setHydratedFromServer(true)
+      })
+      .catch(() => {
+        // Offline / nicht eingeloggt — localStorage bleibt Quelle der Wahrheit.
+      })
+    return () => { cancelled = true }
   }, [])
 
+  // Persistieren: localStorage sofort + debounced PUT zum Server.
+  // Erst nach dem Server-Hydrate schreiben, sonst ueberschreiben wir die
+  // gerade gefetchten Server-Werte mit dem lokalen Stand.
   useEffect(() => {
     if (!mounted) return
     try {
@@ -179,7 +211,18 @@ export function ChatButton() {
     } catch {
       // ignore quota errors
     }
-  }, [pos, collapsed, keys, bgStyle, mounted])
+    if (!hydratedFromServer) return
+    const handle = window.setTimeout(() => {
+      fetch('/api/v1/user-ui-prefs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'fab', value: { pos, collapsed, keys, bgStyle } }),
+      }).catch(() => {
+        // Ignore — beim naechsten Change versuchen wir es wieder.
+      })
+    }, 500)
+    return () => window.clearTimeout(handle)
+  }, [pos, collapsed, keys, bgStyle, mounted, hydratedFromServer])
 
   // Berechtigungs-Check — waehrend des Ladens optimistisch true, damit der
   // Cluster nicht erst leer auftaucht und dann ploetzlich Items dazukommen.
@@ -335,9 +378,12 @@ export function ChatButton() {
         />
       )}
 
+      {/* Mobile = 1.5x groessere Tap-Targets (h-9 = 36px), Desktop bleibt
+          kompakt (h-6 = 24px). Touch-Bedienung braucht ~44px Minimum laut
+          WCAG; 36px + Padding kommt nah dran ohne den Cluster zu fluten. */}
       <div
         className={[
-          'flex flex-row items-center gap-0.5 p-1 rounded-full',
+          'flex flex-row items-center gap-1 sm:gap-0.5 p-1.5 sm:p-1 rounded-full',
           BG_STYLES[bgStyle].className,
           dragging ? 'cursor-grabbing select-none' : '',
         ].join(' ')}
@@ -349,7 +395,7 @@ export function ChatButton() {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           className={[
-            'flex items-center justify-center h-6 w-4 rounded-full',
+            'flex items-center justify-center h-9 w-6 sm:h-6 sm:w-4 rounded-full',
             'text-muted-foreground hover:text-foreground hover:bg-foreground/5',
             dragging ? 'cursor-grabbing' : 'cursor-grab',
             'touch-none',
@@ -358,7 +404,7 @@ export function ChatButton() {
           aria-label="Quick-Actions verschieben"
           role="button"
         >
-          <GripVertical className="h-3 w-3" />
+          <GripVertical className="h-4 w-4 sm:h-3 sm:w-3" />
         </div>
 
         {!collapsed &&
@@ -374,9 +420,9 @@ export function ChatButton() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 rounded-full hover:bg-foreground/10"
+                  className="h-9 w-9 sm:h-6 sm:w-6 rounded-full hover:bg-foreground/10"
                 >
-                  <Icon className="!size-3.5" />
+                  <Icon className="!size-5 sm:!size-3.5" />
                 </Button>
               </Link>
             )
@@ -384,34 +430,34 @@ export function ChatButton() {
 
         <Button
           onClick={() => openChat()}
-          className="h-6 w-6 rounded-full shadow-md"
+          className="h-9 w-9 sm:h-6 sm:w-6 rounded-full shadow-md"
           size="icon"
           aria-label="KI-Chat öffnen"
           title="KI-Chat"
         >
-          <Brain className="!size-3.5" />
+          <Brain className="!size-5 sm:!size-3.5" />
         </Button>
 
         {!collapsed && (
           <button
             type="button"
             onClick={() => setSettingsOpen((s) => !s)}
-            className="flex items-center justify-center h-5 w-5 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+            className="flex items-center justify-center h-8 w-8 sm:h-5 sm:w-5 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
             title="Quick-Actions konfigurieren"
             aria-label="Quick-Actions konfigurieren"
           >
-            <Settings2 className="h-3 w-3" />
+            <Settings2 className="h-4 w-4 sm:h-3 sm:w-3" />
           </button>
         )}
 
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="flex items-center justify-center h-5 w-4 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+          className="flex items-center justify-center h-8 w-6 sm:h-5 sm:w-4 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
           title={collapsed ? 'Erweitern' : 'Einklappen'}
           aria-label={collapsed ? 'Quick-Actions erweitern' : 'Quick-Actions einklappen'}
         >
-          {collapsed ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+          {collapsed ? <ChevronLeft className="h-4 w-4 sm:h-3 sm:w-3" /> : <ChevronRight className="h-4 w-4 sm:h-3 sm:w-3" />}
         </button>
       </div>
     </div>

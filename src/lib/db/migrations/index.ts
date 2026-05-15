@@ -264,4 +264,8 @@ export const MIGRATIONS: Migration[] = [
     name: '061_cms_promo_slots.sql',
     description: 'Neue Tabelle cms_promo_slots — wiederverwendbare CMS-Bloecke fuer Blog-Platzhalter {promo:slug}',
   },
+  {
+    name: '062_user_ui_prefs.sql',
+    description: 'Neue Tabelle user_ui_prefs — pro-Benutzer UI-Praeferenzen als JSONB (FAB-Position, Hintergrund, Icons)',
+  },
 ]

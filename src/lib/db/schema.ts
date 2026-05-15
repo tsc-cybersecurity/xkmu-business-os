@@ -1385,6 +1385,21 @@ export const cmsBlocksRelations = relations(cmsBlocks, ({ one }) => ({
 }))
 
 // ============================================
+// User UI Preferences (Per-User UI-Settings als JSONB)
+// ============================================
+// Aktuell genutzt fuer FAB-Quick-Actions (Position, Hintergrund,
+// ausgewaehlte Icons). Schema bewusst generisch (key-keyed Map),
+// damit weitere UI-Settings ohne Migration dazu kommen.
+export const userUiPrefs = pgTable('user_ui_prefs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().unique().references(() => users.id, { onDelete: 'cascade' }),
+  prefs: jsonb('prefs').notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_user_ui_prefs_user').on(table.userId),
+])
+
+// ============================================
 // CMS Promo-Slots (Wiederverwendbare Bloecke fuer Blog-Platzhalter)
 // ============================================
 // Pro Slot ein CMS-Block (block_type + content + settings — gleiches
@@ -1958,6 +1973,9 @@ export type NewCmsBlockTemplate = typeof cmsBlockTemplates.$inferInsert
 
 export type CmsPromoSlot = typeof cmsPromoSlots.$inferSelect
 export type NewCmsPromoSlot = typeof cmsPromoSlots.$inferInsert
+
+export type UserUiPrefs = typeof userUiPrefs.$inferSelect
+export type NewUserUiPrefs = typeof userUiPrefs.$inferInsert
 
 export type BlogPost = typeof blogPosts.$inferSelect
 export type NewBlogPost = typeof blogPosts.$inferInsert
