@@ -1400,6 +1400,30 @@ export const userUiPrefs = pgTable('user_ui_prefs', {
 ])
 
 // ============================================
+// Voice Prompt-Vorlagen (Outbound-Call-Szenarien fuer Agent 03 etc.)
+// ============================================
+// Pro Vorlage: ein System-Prompt + Greeting, das im Outbound-Tab als
+// Use-Case waehlbar ist. Platzhalter {name} und {context} setzt der
+// Voice-Server zur Laufzeit ein.
+export const voicePromptTemplates = pgTable('voice_prompt_templates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentKey: varchar('agent_key', { length: 50 }).notNull(),
+  slug: varchar('slug', { length: 120 }).notNull(),
+  name: varchar('name', { length: 200 }).notNull(),
+  description: text('description'),
+  category: varchar('category', { length: 60 }),
+  systemPrompt: text('system_prompt').notNull(),
+  greeting: text('greeting').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('voice_prompt_templates_agent_slug_unique').on(table.agentKey, table.slug),
+  index('idx_voice_prompt_templates_agent_active').on(table.agentKey, table.isActive),
+])
+
+// ============================================
 // CMS Promo-Slots (Wiederverwendbare Bloecke fuer Blog-Platzhalter)
 // ============================================
 // Pro Slot ein CMS-Block (block_type + content + settings — gleiches
@@ -1976,6 +2000,9 @@ export type NewCmsPromoSlot = typeof cmsPromoSlots.$inferInsert
 
 export type UserUiPrefs = typeof userUiPrefs.$inferSelect
 export type NewUserUiPrefs = typeof userUiPrefs.$inferInsert
+
+export type VoicePromptTemplate = typeof voicePromptTemplates.$inferSelect
+export type NewVoicePromptTemplate = typeof voicePromptTemplates.$inferInsert
 
 export type BlogPost = typeof blogPosts.$inferSelect
 export type NewBlogPost = typeof blogPosts.$inferInsert

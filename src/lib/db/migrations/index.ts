@@ -268,4 +268,8 @@ export const MIGRATIONS: Migration[] = [
     name: '062_user_ui_prefs.sql',
     description: 'Neue Tabelle user_ui_prefs — pro-Benutzer UI-Praeferenzen als JSONB (FAB-Position, Hintergrund, Icons)',
   },
+  {
+    name: '063_voice_prompt_templates.sql',
+    description: 'Neue Tabelle voice_prompt_templates + 10 recherchierte Outbound-Szenarien fuer Agent 03 (Strikter Auftrag, Termin, Lead-Qualifizierung, Cold-Intro, No-Show-Followup, Reaktivierung, NPS, Event-Einladung, Welcome, DIN-SPEC-Pitch)',
+  },
 ]

@@ -13,8 +13,15 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table'
+import {
   Loader2, RefreshCw, Play, Square, Phone, Save, Settings2, MessageSquareText,
   PhoneOutgoing, AlertTriangle, CheckCircle2, XCircle, CircleSlash, CircleDashed,
+  FileText, Plus, Pencil, Trash2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
@@ -37,67 +44,29 @@ const AGENT_KEYS: AgentKey[] = [
   'inbound-receptionist',
 ]
 
-// Use-Case-Templates fuer Outbound-Calls. Werden in das system_prompt_override
-// + greeting_override-Feld vorbefuellt; der User kann sie anschliessend frei
-// editieren. Platzhalter {name} + {context} setzt der Voice-Server zur
-// Laufzeit ein.
-const OUTBOUND_TEMPLATES: Record<string, { label: string; system?: string; greeting?: string }> = {
-  default: {
-    label: 'Default-Prompt (vom Server)',
-  },
-  strict: {
-    label: 'Strikter Auftrag',
-    system: `Du bist ein professioneller Telefonassistent von xKMU und fuehrst diesen einen Anruf in deutscher Sprache.
+// Use-Case-Vorlagen werden ab jetzt aus der DB geladen (Tabelle
+// voice_prompt_templates). Default-Pseudo-Eintrag bleibt clientseitig —
+// signalisiert "Server-Default-Prompt nehmen, kein Override".
+interface VoiceTemplate {
+  id: string
+  agentKey: string
+  slug: string
+  name: string
+  description: string | null
+  category: string | null
+  systemPrompt: string
+  greeting: string
+  isActive: boolean
+  sortOrder: number
+}
 
-DEIN AUFTRAG (strikt und ausschliesslich):
-{context}
-
-REGELN:
-1. Du sprichst {name} mit Namen an. Begruesse kurz, stelle dich vor ("Hier ist Lea von xKMU"), nenne sofort den Anrufgrund.
-2. Du arbeitest AUSSCHLIESSLICH den oben genannten Auftrag ab. Weiche unter keinen Umstaenden vom Thema ab.
-3. Wenn {name} Fragen zu anderen Themen stellt, antwortest du freundlich kurz: "Dazu kann ich Ihnen leider keine Auskunft geben — ich rufe heute nur wegen <Auftrag in einem Satz> an." Dann zurueck zum Auftrag.
-4. Kein Smalltalk, keine Produkt- oder Preisangaben, die nicht im Auftrag stehen.
-5. Sobald der Auftrag erledigt ist, beendest du das Gespraech hoeflich.
-6. Bei Voicemail, kein Interesse, oder aggressivem Gegenueber → hoeflich beenden, Ergebnis in einem Satz zusammenfassen.
-7. Niemals erfundene Fakten ueber xKMU. Wenn unklar: "Das klaeren wir am besten in einem persoenlichen Gespraech."`,
-    greeting: `Begruesse {name} freundlich auf Deutsch. Nenne deinen Namen ("Hier ist Lea von xKMU"), pruefe kurz ("habe ich Sie gut erwischt?"), und steige direkt mit dem Anrufgrund aus dem Auftrag ein. Kein Smalltalk.`,
-  },
-  appointment: {
-    label: 'Terminbuchung',
-    system: `Du bist Lea, Telefonassistentin von xKMU. Du rufst {name} an, um einen Termin zu vereinbaren.
-
-TERMIN-KONTEXT:
-{context}
-
-ABLAUF:
-1. Vorstellen, Anrufgrund kurz nennen.
-2. Frage, ob ein 15-Min-Erstgespraech zu dem Thema interessant ist.
-3. Bei Ja → konkrete Zeitfenster anbieten (z.B. "Mo–Mi 10:00, 11:30 oder 14:00 Uhr") und buchen.
-4. Bei Nein / spaeter → fragen, wann ein erneuter Anruf passt, beenden.
-5. Bei Voicemail → kurze freundliche Nachricht hinterlassen mit Bitte um Rueckruf.
-
-Du verbreitest keine Preise und keine Vertragsdetails — das gehoert ins Erstgespraech.`,
-    greeting: `Begruesse {name} freundlich, stelle dich kurz vor ("Hier ist Lea von xKMU") und steige direkt mit dem Terminanliegen ein.`,
-  },
-  qualifier: {
-    label: 'Lead-Qualifizierung',
-    system: `Du bist Lea von xKMU und fuehrst ein kurzes Qualifizierungs-Gespraech mit {name}.
-
-ZIEL:
-{context}
-
-DEINE FRAGEN (kurz halten, Antworten nicht kommentieren — nur erfassen):
-1. Aktueller Status zum Thema (haben sie sich schon damit beschaeftigt?)
-2. Zeithorizont (wann konkret relevant?)
-3. Entscheider (wer entscheidet?)
-4. Naechster sinnvoller Schritt (Termin? Material? Spaeter wieder?)
-
-REGELN:
-- Du verkaufst nichts und beraetst nicht — du sammelst nur Informationen.
-- Max. 3–4 Minuten Gespraechszeit, sonst zusammenfassen + beenden.
-- Bei Desinteresse → freundlich beenden, kein Nachhaken.`,
-    greeting: `Begruesse {name} freundlich, stelle dich kurz vor ("Hier ist Lea von xKMU"), nenne den Anrufgrund in einem Satz und frage ob 2–3 Minuten gerade passen.`,
-  },
+const DEFAULT_TEMPLATE_OPTION = {
+  id: '__default__',
+  slug: '__default__',
+  name: 'Default-Prompt (vom Server)',
+  category: null as string | null,
+  systemPrompt: '',
+  greeting: '',
 }
 
 // Field-Spec aus dem Voice-API-Schema. Wir rendern dynamisch — keine harten
@@ -171,11 +140,18 @@ export default function VoiceAgentsPage() {
   const [outName, setOutName] = useState('')
   const [outPhone, setOutPhone] = useState('')
   const [outContext, setOutContext] = useState('')
-  const [outUseCase, setOutUseCase] = useState<string>('default')
+  const [outUseCase, setOutUseCase] = useState<string>(DEFAULT_TEMPLATE_OPTION.slug)
   const [outSystemOverride, setOutSystemOverride] = useState('')
   const [outGreetingOverride, setOutGreetingOverride] = useState('')
   const [dispatching, setDispatching] = useState(false)
   const [lastCall, setLastCall] = useState<{ roomName: string; status: string } | null>(null)
+
+  // ─── Voice-Prompt-Templates (DB) ───
+  const [voiceTemplates, setVoiceTemplates] = useState<VoiceTemplate[]>([])
+  const [templatesLoading, setTemplatesLoading] = useState(false)
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false)
+  const [editingTemplate, setEditingTemplate] = useState<VoiceTemplate | null>(null)
+  const [templateSaving, setTemplateSaving] = useState(false)
 
   // ────────────────────────────────────────────────────────
   // Status-Polling alle 5 s — gibt schnelles Feedback nach
@@ -355,6 +331,102 @@ export default function VoiceAgentsPage() {
   }
 
   // ────────────────────────────────────────────────────────
+  // Voice-Prompt-Templates (DB) — laden + verwalten
+  // ────────────────────────────────────────────────────────
+  const fetchVoiceTemplates = useCallback(async () => {
+    setTemplatesLoading(true)
+    try {
+      const res = await fetch(
+        '/api/v1/voice-prompt-templates?agentKey=outbound-telephony&onlyActive=true'
+      )
+      const data = await res.json()
+      if (data.success) setVoiceTemplates(data.data)
+    } catch (error) {
+      logger.error('Voice templates fetch failed', error, { module: 'VoiceAgents' })
+    } finally {
+      setTemplatesLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchVoiceTemplates()
+  }, [fetchVoiceTemplates])
+
+  const applyTemplate = (slug: string) => {
+    setOutUseCase(slug)
+    if (slug === DEFAULT_TEMPLATE_OPTION.slug) {
+      setOutSystemOverride('')
+      setOutGreetingOverride('')
+      return
+    }
+    const tpl = voiceTemplates.find((t) => t.slug === slug)
+    if (tpl) {
+      setOutSystemOverride(tpl.systemPrompt)
+      setOutGreetingOverride(tpl.greeting)
+    }
+  }
+
+  const openNewTemplate = () => {
+    setEditingTemplate({
+      id: '',
+      agentKey: 'outbound-telephony',
+      slug: '',
+      name: '',
+      description: null,
+      category: null,
+      systemPrompt: '',
+      greeting: '',
+      isActive: true,
+      sortOrder: 0,
+    } as VoiceTemplate)
+    setTemplateDialogOpen(true)
+  }
+
+  const handleSaveTemplate = async () => {
+    if (!editingTemplate) return
+    const isUpdate = !!editingTemplate.id
+    setTemplateSaving(true)
+    try {
+      const payload = {
+        agentKey: editingTemplate.agentKey,
+        slug: editingTemplate.slug,
+        name: editingTemplate.name,
+        description: editingTemplate.description,
+        category: editingTemplate.category,
+        systemPrompt: editingTemplate.systemPrompt,
+        greeting: editingTemplate.greeting,
+        isActive: editingTemplate.isActive,
+        sortOrder: editingTemplate.sortOrder,
+      }
+      const url = isUpdate
+        ? `/api/v1/voice-prompt-templates/${editingTemplate.id}`
+        : '/api/v1/voice-prompt-templates'
+      const res = await fetch(url, {
+        method: isUpdate ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!data.success) {
+        toast.error(data.error?.message ?? 'Speichern fehlgeschlagen')
+        return
+      }
+      toast.success(isUpdate ? 'Vorlage aktualisiert' : 'Vorlage angelegt')
+      setTemplateDialogOpen(false)
+      setEditingTemplate(null)
+      fetchVoiceTemplates()
+    } finally {
+      setTemplateSaving(false)
+    }
+  }
+
+  const handleDeleteTemplate = async (tpl: VoiceTemplate) => {
+    if (!confirm(`Vorlage "${tpl.name}" wirklich loeschen?`)) return
+    await fetch(`/api/v1/voice-prompt-templates/${tpl.id}`, { method: 'DELETE' })
+    fetchVoiceTemplates()
+  }
+
+  // ────────────────────────────────────────────────────────
   // Outbound-Call dispatch
   // ────────────────────────────────────────────────────────
   const handleDispatch = async () => {
@@ -464,6 +536,7 @@ export default function VoiceAgentsPage() {
           <TabsTrigger value="settings"><Settings2 className="h-4 w-4 mr-2" />Settings</TabsTrigger>
           <TabsTrigger value="prompts"><MessageSquareText className="h-4 w-4 mr-2" />Prompts</TabsTrigger>
           <TabsTrigger value="outbound"><PhoneOutgoing className="h-4 w-4 mr-2" />Outbound-Anruf</TabsTrigger>
+          <TabsTrigger value="templates"><FileText className="h-4 w-4 mr-2" />Vorlagen</TabsTrigger>
         </TabsList>
 
         {/* ─── Uebersicht ─── */}
@@ -686,27 +759,26 @@ export default function VoiceAgentsPage() {
               <div className="space-y-3 pt-2 border-t border-border/40">
                 <div className="flex items-center gap-3 flex-wrap">
                   <Label className="shrink-0">Use-Case</Label>
-                  <Select
-                    value={outUseCase}
-                    onValueChange={(v) => {
-                      setOutUseCase(v)
-                      const tpl = OUTBOUND_TEMPLATES[v]
-                      // Beim Wechsel: Templates uebernehmen. User kann
-                      // anschliessend frei editieren.
-                      setOutSystemOverride(tpl?.system ?? '')
-                      setOutGreetingOverride(tpl?.greeting ?? '')
-                    }}
-                  >
+                  <Select value={outUseCase} onValueChange={applyTemplate}>
                     <SelectTrigger className="max-w-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {Object.entries(OUTBOUND_TEMPLATES).map(([k, t]) => (
-                        <SelectItem key={k} value={k}>{t.label}</SelectItem>
+                      <SelectItem value={DEFAULT_TEMPLATE_OPTION.slug}>
+                        {DEFAULT_TEMPLATE_OPTION.name}
+                      </SelectItem>
+                      {voiceTemplates.map((t) => (
+                        <SelectItem key={t.id} value={t.slug}>
+                          {t.name}
+                          {t.category && (
+                            <span className="text-xs text-muted-foreground ml-2">· {t.category}</span>
+                          )}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <span className="text-[11px] text-muted-foreground">
                     Platzhalter: <code className="bg-muted px-1 rounded">{'{name}'}</code> · <code className="bg-muted px-1 rounded">{'{context}'}</code>
                   </span>
+                  {templatesLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="out-system-override">
@@ -753,7 +825,229 @@ export default function VoiceAgentsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* ─── Vorlagen (Use-Case-Templates fuer Outbound) ─── */}
+        <TabsContent value="templates" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Outbound-Vorlagen</h2>
+              <p className="text-xs text-muted-foreground">
+                Use-Case-Templates fuer Agent 03. Werden im Outbound-Tab als Auswahl angeboten.
+              </p>
+            </div>
+            <Button size="sm" onClick={openNewTemplate}>
+              <Plus className="h-4 w-4 mr-2" />
+              Neue Vorlage
+            </Button>
+          </div>
+
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Kategorie</TableHead>
+                    <TableHead>Slug</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-[120px]">Aktionen</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {templatesLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+                      </TableCell>
+                    </TableRow>
+                  ) : voiceTemplates.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        Noch keine Vorlagen angelegt.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    voiceTemplates.map((tpl) => (
+                      <TableRow key={tpl.id}>
+                        <TableCell>
+                          <div className="font-medium">{tpl.name}</div>
+                          {tpl.description && (
+                            <div className="text-xs text-muted-foreground truncate max-w-md">
+                              {tpl.description}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {tpl.category && <Badge variant="outline">{tpl.category}</Badge>}
+                        </TableCell>
+                        <TableCell><code className="text-xs">{tpl.slug}</code></TableCell>
+                        <TableCell>
+                          <Badge variant={tpl.isActive ? 'default' : 'secondary'}>
+                            {tpl.isActive ? 'Aktiv' : 'Inaktiv'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setEditingTemplate(tpl)
+                                setTemplateDialogOpen(true)
+                              }}
+                              title="Bearbeiten"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteTemplate(tpl)}
+                              title="Loeschen"
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* ─── Vorlage-Editor-Dialog ─── */}
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTemplate?.id ? 'Vorlage bearbeiten' : 'Neue Vorlage'}
+            </DialogTitle>
+          </DialogHeader>
+          {editingTemplate && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="tpl-slug">Slug</Label>
+                  <Input
+                    id="tpl-slug"
+                    value={editingTemplate.slug}
+                    onChange={(e) =>
+                      setEditingTemplate({ ...editingTemplate, slug: e.target.value.toLowerCase() })
+                    }
+                    placeholder="strict-task"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tpl-name">Name</Label>
+                  <Input
+                    id="tpl-name"
+                    value={editingTemplate.name}
+                    onChange={(e) =>
+                      setEditingTemplate({ ...editingTemplate, name: e.target.value })
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="tpl-category">Kategorie</Label>
+                  <Input
+                    id="tpl-category"
+                    value={editingTemplate.category ?? ''}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        category: e.target.value || null,
+                      })
+                    }
+                    placeholder="Sales / Service / Marketing"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="tpl-description">Beschreibung</Label>
+                <Input
+                  id="tpl-description"
+                  value={editingTemplate.description ?? ''}
+                  onChange={(e) =>
+                    setEditingTemplate({
+                      ...editingTemplate,
+                      description: e.target.value || null,
+                    })
+                  }
+                  placeholder="Kurze Erklaerung, wofuer diese Vorlage gut ist"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="tpl-system">
+                  System-Prompt — Platzhalter <code className="bg-muted px-1 rounded text-[10px]">{'{name}'}</code> &amp; <code className="bg-muted px-1 rounded text-[10px]">{'{context}'}</code>
+                </Label>
+                <Textarea
+                  id="tpl-system"
+                  rows={14}
+                  value={editingTemplate.systemPrompt}
+                  onChange={(e) =>
+                    setEditingTemplate({ ...editingTemplate, systemPrompt: e.target.value })
+                  }
+                  className="font-mono text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="tpl-greeting">Greeting</Label>
+                <Textarea
+                  id="tpl-greeting"
+                  rows={4}
+                  value={editingTemplate.greeting}
+                  onChange={(e) =>
+                    setEditingTemplate({ ...editingTemplate, greeting: e.target.value })
+                  }
+                  className="font-mono text-xs"
+                />
+              </div>
+              <div className="flex items-center gap-4">
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={editingTemplate.isActive}
+                    onChange={(e) =>
+                      setEditingTemplate({ ...editingTemplate, isActive: e.target.checked })
+                    }
+                    className="h-4 w-4"
+                  />
+                  Aktiv (im Dropdown sichtbar)
+                </label>
+                <div className="flex items-center gap-2 text-sm">
+                  <Label htmlFor="tpl-sort" className="text-xs">Sortierung</Label>
+                  <Input
+                    id="tpl-sort"
+                    type="number"
+                    value={editingTemplate.sortOrder}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        sortOrder: parseInt(e.target.value) || 0,
+                      })
+                    }
+                    className="w-20"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTemplateDialogOpen(false)} disabled={templateSaving}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleSaveTemplate} disabled={templateSaving}>
+              {templateSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
