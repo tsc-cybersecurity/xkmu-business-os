@@ -4,15 +4,16 @@ import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { withPermission } from '@/lib/auth/require-permission'
 import { VoiceAgentService, VoiceAgentNotConfiguredError } from '@/lib/services/voice-agent.service'
 import { logger } from '@/lib/utils/logger'
+import { normalizeToE164 } from '@/lib/utils/phone'
 import { z } from 'zod'
 
-// E.164: + gefolgt von 8-15 Ziffern. Strenge Validierung damit nicht aus
-// Versehen Telefonkosten fuer ungueltige Nummern entstehen.
-const E164 = /^\+[1-9]\d{7,14}$/
-
+// Phone-Feld nimmt jede plausible Schreibweise an — Normalisierung
+// passiert serverseitig zu E.164 (defense-in-depth: das Frontend
+// normalisiert auch, aber falls ein anderer Client ruft, wollen wir
+// keine Twilio-Kosten fuer kaputte Inputs.)
 const dispatchSchema = z.object({
   name: z.string().min(1).max(200),
-  phone: z.string().regex(E164, 'Telefonnummer muss im E.164-Format sein (z.B. +491701234567).'),
+  phone: z.string().min(4).max(30),
   context: z.string().max(2000).optional(),
 })
 
@@ -24,7 +25,19 @@ export async function POST(request: NextRequest) {
       if (!validation.success) {
         return apiValidationError(formatZodErrors(validation.errors))
       }
-      const data = await VoiceAgentService.dispatchCall(validation.data)
+      const normalizedPhone = normalizeToE164(validation.data.phone)
+      if (!normalizedPhone) {
+        return apiError(
+          'VALIDATION_ERROR',
+          'Telefonnummer ungueltig — bitte als 0172... oder +49172... eingeben.',
+          400
+        )
+      }
+      const data = await VoiceAgentService.dispatchCall({
+        name: validation.data.name,
+        phone: normalizedPhone,
+        context: validation.data.context,
+      })
       return apiSuccess(data)
     } catch (error) {
       if (error instanceof VoiceAgentNotConfiguredError) {

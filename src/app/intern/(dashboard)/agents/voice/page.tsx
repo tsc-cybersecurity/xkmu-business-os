@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
+import { normalizeToE164 } from '@/lib/utils/phone'
 
 type AgentKey = 'simple-latency' | 'appointment-booking' | 'outbound-telephony' | 'inbound-receptionist'
 type AgentState = 'running' | 'stopped' | 'starting' | 'missing' | 'failed'
@@ -295,6 +296,13 @@ export default function VoiceAgentsPage() {
       toast.error('Name und Telefonnummer sind erforderlich.')
       return
     }
+    // Eingaben wie "0172 …" oder "+49 (0) 172 …" zu E.164 normalisieren —
+    // das Voice-API akzeptiert ausschliesslich +<countryCode><nummer>.
+    const normalizedPhone = normalizeToE164(outPhone)
+    if (!normalizedPhone) {
+      toast.error('Telefonnummer ungueltig — bitte als 0172… oder +49172… eingeben.')
+      return
+    }
     setDispatching(true)
     setLastCall(null)
     try {
@@ -303,7 +311,7 @@ export default function VoiceAgentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: outName.trim(),
-          phone: outPhone.trim(),
+          phone: normalizedPhone,
           context: outContext.trim() || undefined,
         }),
       })
