@@ -36,18 +36,30 @@ export async function POST(request: NextRequest) {
         return apiError('VALIDATION_ERROR', 'providerType und name sind erforderlich', 400)
       }
 
-      // Firecrawl, kie und serpapi brauchen kein Model
-      if (!['firecrawl', 'kie', 'serpapi'].includes(body.providerType) && !body.model) {
+      // Konnektoren ohne LLM-Modell — Frontend setzt fuer diese Typen
+      // model = providerType, eine Modell-Pflicht ergibt hier keinen Sinn.
+      const noModelTypes = [
+        'firecrawl', 'kie', 'serpapi',
+        'linkedin', 'twitter', 'facebook', 'instagram',
+        'voice',
+      ]
+      if (!noModelTypes.includes(body.providerType) && !body.model) {
         return apiError('VALIDATION_ERROR', 'model ist für diesen Anbieter erforderlich', 400)
       }
 
-      const validTypes = ['ollama', 'openrouter', 'gemini', 'openai', 'deepseek', 'kimi', 'firecrawl', 'kie', 'serpapi']
+      const validTypes = [
+        'ollama', 'openrouter', 'gemini', 'openai', 'deepseek', 'kimi',
+        'firecrawl', 'kie', 'serpapi',
+        'linkedin', 'twitter', 'facebook', 'instagram',
+        'voice',
+      ]
       if (!validTypes.includes(body.providerType)) {
         return apiError('VALIDATION_ERROR', `Ungültiger Provider-Typ. Erlaubt: ${validTypes.join(', ')}`, 400)
       }
 
-      // Cloud-Provider brauchen einen API Key
-      if (['openrouter', 'gemini', 'openai', 'deepseek', 'kimi', 'firecrawl', 'kie', 'serpapi'].includes(body.providerType) && !body.apiKey) {
+      // Alles ausser Ollama braucht einen API-Key.
+      const needsKey = body.providerType !== 'ollama'
+      if (needsKey && !body.apiKey) {
         return apiError('VALIDATION_ERROR', 'API-Schlüssel ist für diesen Anbieter erforderlich', 400)
       }
 
