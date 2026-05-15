@@ -92,6 +92,7 @@ export const navigation: NavItem[] = [
     icon: Globe,
     children: [
       { name: 'Content',           href: '/intern/cms',                       icon: BookOpen,       requiredModule: 'cms' },
+      { name: 'Promo-Slots',       href: '/intern/cms/promos',                icon: Megaphone,      requiredModule: 'cms' },
       { name: 'Design',            href: '/intern/cms/design',                icon: Palette,        requiredModule: 'cms' },
       { name: 'Sitemap',           href: '/intern/cms/sitemap',               icon: Map,            requiredModule: 'cms' },
       { name: 'Vorlagen',          href: '/intern/cms/templates',             icon: LayoutTemplate, requiredModule: 'cms' },

@@ -279,6 +279,12 @@ export default function BlogPostEditorPage() {
               <div className="space-y-2">
                 <Label>Inhalt (Markdown)</Label>
                 <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={20} className="font-mono text-sm" />
+                <p className="text-xs text-muted-foreground">
+                  Tipp: Promo-Bloecke an beliebiger Stelle einfuegen via{' '}
+                  <code className="px-1 py-0.5 bg-muted rounded">{'{promo:slug}'}</code>{' '}
+                  — Slugs verwalten unter{' '}
+                  <a href="/intern/cms/promos" className="underline hover:text-foreground">CMS · Promo-Slots</a>.
+                </p>
               </div>
             </CardContent>
           </Card>

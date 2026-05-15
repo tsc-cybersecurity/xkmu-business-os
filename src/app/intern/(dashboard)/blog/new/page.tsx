@@ -188,6 +188,12 @@ export default function NewBlogPostPage() {
               <div className="space-y-2">
                 <Label>Inhalt (Markdown)</Label>
                 <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={15} className="font-mono text-sm" placeholder="# Ueberschrift\n\nIhr Text hier..." />
+                <p className="text-xs text-muted-foreground">
+                  Tipp: Promo-Bloecke einfuegen via{' '}
+                  <code className="px-1 py-0.5 bg-muted rounded">{'{promo:slug}'}</code>{' '}
+                  — Slugs unter{' '}
+                  <a href="/intern/cms/promos" className="underline hover:text-foreground">CMS · Promo-Slots</a>.
+                </p>
               </div>
               <ImageField
                 imageUrl={featuredImage}

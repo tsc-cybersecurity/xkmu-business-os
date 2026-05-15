@@ -260,4 +260,8 @@ export const MIGRATIONS: Migration[] = [
     name: '060_name_meta_blog.sql',
     description: 'Personennamen aus /ueber-uns Meta-Description und NIS-2-Blog-Artikel entfernen (xKMU-Markenstimme)',
   },
+  {
+    name: '061_cms_promo_slots.sql',
+    description: 'Neue Tabelle cms_promo_slots — wiederverwendbare CMS-Bloecke fuer Blog-Platzhalter {promo:slug}',
+  },
 ]

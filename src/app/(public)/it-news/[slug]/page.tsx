@@ -1,12 +1,15 @@
 import { BlogPostService } from '@/lib/services/blog-post.service'
+import { CmsPromoSlotService } from '@/lib/services/cms-promo-slot.service'
 import { toAbsoluteUrl } from '@/lib/utils/cms-metadata'
-import { MarkdownRenderer } from '../../../_components/markdown-renderer'
+import { extractPromoSlugs } from '@/lib/utils/promo-placeholder'
+import { BlogContentRenderer } from '../../../_components/blog-content-renderer'
 import { Badge } from '@/components/ui/badge'
 import { ArrowLeft, Calendar } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import type { CmsPromoSlot } from '@/lib/db/schema'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -76,6 +79,23 @@ export default async function BlogPostPage({ params }: Props) {
     notFound()
   }
 
+  // Promo-Slots aus dem Content extrahieren und vorab batched laden.
+  // Wenn keine Platzhalter vorhanden sind oder die DB Fehler wirft,
+  // bleibt das Map leer und der Renderer faellt auf reine Markdown-
+  // Darstellung zurueck.
+  let promoMap: Record<string, CmsPromoSlot> = {}
+  if (post.content) {
+    const promoSlugs = extractPromoSlugs(post.content)
+    if (promoSlugs.length > 0) {
+      try {
+        const slots = await CmsPromoSlotService.getActiveBySlugs(promoSlugs)
+        promoMap = Object.fromEntries(slots.map((s) => [s.slug, s]))
+      } catch {
+        // DB not available — Platzhalter werden weggelassen
+      }
+    }
+  }
+
   return (
     <article className="container mx-auto px-4 py-8 max-w-3xl">
       <Link
@@ -122,7 +142,7 @@ export default async function BlogPostPage({ params }: Props) {
       </header>
 
       {post.content && (
-        <MarkdownRenderer content={post.content} className="mb-12" />
+        <BlogContentRenderer content={post.content} promos={promoMap} className="mb-12" />
       )}
 
       {post.tags && post.tags.length > 0 && (

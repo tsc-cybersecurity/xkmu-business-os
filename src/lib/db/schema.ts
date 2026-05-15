@@ -1385,6 +1385,28 @@ export const cmsBlocksRelations = relations(cmsBlocks, ({ one }) => ({
 }))
 
 // ============================================
+// CMS Promo-Slots (Wiederverwendbare Bloecke fuer Blog-Platzhalter)
+// ============================================
+// Pro Slot ein CMS-Block (block_type + content + settings — gleiches
+// Schema wie cms_blocks). Im Blog-Markdown via {promo:slug} eingebettet
+// und durch CmsBlockRenderer zur Laufzeit gerendert.
+export const cmsPromoSlots = pgTable('cms_promo_slots', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: varchar('slug', { length: 120 }).notNull().unique(),
+  name: varchar('name', { length: 200 }).notNull(),
+  description: text('description'),
+  blockType: varchar('block_type', { length: 50 }).notNull(),
+  content: jsonb('content').notNull().default({}),
+  settings: jsonb('settings').notNull().default({}),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_cms_promo_slots_slug').on(table.slug),
+  index('idx_cms_promo_slots_active').on(table.isActive),
+])
+
+// ============================================
 // CMS Block Templates (Wiederverwendbare Blockvorlagen)
 // ============================================
 export const cmsBlockTemplates = pgTable('cms_block_templates', {
@@ -1933,6 +1955,9 @@ export type NewCmsBlock = typeof cmsBlocks.$inferInsert
 
 export type CmsBlockTemplate = typeof cmsBlockTemplates.$inferSelect
 export type NewCmsBlockTemplate = typeof cmsBlockTemplates.$inferInsert
+
+export type CmsPromoSlot = typeof cmsPromoSlots.$inferSelect
+export type NewCmsPromoSlot = typeof cmsPromoSlots.$inferInsert
 
 export type BlogPost = typeof blogPosts.$inferSelect
 export type NewBlogPost = typeof blogPosts.$inferInsert
