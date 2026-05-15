@@ -3,6 +3,7 @@ import { apiSuccess, apiError, apiServerError, apiValidationError } from '@/lib/
 import { validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { withPermission } from '@/lib/auth/require-permission'
 import { VoiceAgentService, VoiceAgentNotConfiguredError } from '@/lib/services/voice-agent.service'
+import { VoiceAppSettingsService } from '@/lib/services/voice-app-settings.service'
 import { logger } from '@/lib/utils/logger'
 import { normalizeToE164 } from '@/lib/utils/phone'
 import { z } from 'zod'
@@ -37,12 +38,23 @@ export async function POST(request: NextRequest) {
           400
         )
       }
+      // {agent_name}-Substitution: zur Dispatch-Zeit aus cms_settings
+      // ziehen. voice.xkmu.de kennt den Placeholder nicht — wir muessen
+      // ihn ersetzen bevor wir forwarden.
+      const appSettings = await VoiceAppSettingsService.get()
+      const systemPrompt = validation.data.system_prompt_override?.trim()
+      const greeting = validation.data.greeting_override?.trim()
+
       const data = await VoiceAgentService.dispatchCall({
         name: validation.data.name,
         phone: normalizedPhone,
         context: validation.data.context,
-        system_prompt_override: validation.data.system_prompt_override?.trim() || undefined,
-        greeting_override: validation.data.greeting_override?.trim() || undefined,
+        system_prompt_override: systemPrompt
+          ? VoiceAppSettingsService.substitute(systemPrompt, appSettings)
+          : undefined,
+        greeting_override: greeting
+          ? VoiceAppSettingsService.substitute(greeting, appSettings)
+          : undefined,
       })
       return apiSuccess(data)
     } catch (error) {

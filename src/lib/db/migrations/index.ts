@@ -276,4 +276,8 @@ export const MIGRATIONS: Migration[] = [
     name: '064_voice_calls.sql',
     description: 'Neue Tabellen voice_calls + voice_call_messages — Persistierung von Call-Metadaten + Transkripten aus voice.xkmu.de Webhook',
   },
+  {
+    name: '065_voice_agent_caller_name.sql',
+    description: 'Globaler Anrufername in cms_settings (key=voice.agent_settings) + Templates 063 auf {agent_name}-Platzhalter umgestellt',
+  },
 ]

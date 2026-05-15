@@ -178,6 +178,10 @@ export default function VoiceAgentsPage() {
   const [editingTemplate, setEditingTemplate] = useState<VoiceTemplate | null>(null)
   const [templateSaving, setTemplateSaving] = useState(false)
 
+  // ─── Voice-App-Settings (callerName fuer {agent_name}-Substitution) ───
+  const [appSettings, setAppSettings] = useState<{ callerName: string }>({ callerName: 'Lea' })
+  const [appSettingsSaving, setAppSettingsSaving] = useState(false)
+
   // ─── Voice-Calls (Webhook-Persistierung) ───
   const [calls, setCalls] = useState<VoiceCallRow[]>([])
   const [callsLoading, setCallsLoading] = useState(false)
@@ -461,6 +465,44 @@ export default function VoiceAgentsPage() {
   }
 
   // ────────────────────────────────────────────────────────
+  // Voice-App-Settings (globaler Anrufername)
+  // ────────────────────────────────────────────────────────
+  const fetchAppSettings = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/voice-agent/app-settings')
+      const data = await res.json()
+      if (data.success) setAppSettings(data.data)
+    } catch (error) {
+      logger.error('Voice app settings fetch failed', error, { module: 'VoiceAgents' })
+    }
+  }, [])
+
+  useEffect(() => { fetchAppSettings() }, [fetchAppSettings])
+
+  const handleSaveAppSettings = async () => {
+    if (!appSettings.callerName.trim()) {
+      toast.error('Anrufername darf nicht leer sein.')
+      return
+    }
+    setAppSettingsSaving(true)
+    try {
+      const res = await fetch('/api/v1/voice-agent/app-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callerName: appSettings.callerName.trim() }),
+      })
+      const data = await res.json()
+      if (!data.success) toast.error(data.error?.message ?? 'Speichern fehlgeschlagen')
+      else {
+        toast.success('Anrufername gespeichert')
+        setAppSettings(data.data)
+      }
+    } finally {
+      setAppSettingsSaving(false)
+    }
+  }
+
+  // ────────────────────────────────────────────────────────
   // Voice-Calls (Webhook-Persistierung)
   // ────────────────────────────────────────────────────────
   const fetchCalls = useCallback(async () => {
@@ -673,6 +715,37 @@ export default function VoiceAgentsPage() {
 
         {/* ─── Settings ─── */}
         <TabsContent value="settings" className="space-y-4">
+          {/* ─── Globaler Anrufername (App-Setting, nicht voice.xkmu.de) ─── */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Agent-Identitaet</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+                <div className="space-y-0.5">
+                  <Label className="font-mono text-xs">callerName</Label>
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    Name, mit dem sich der Agent am Telefon vorstellt. Wird in
+                    Prompts als Platzhalter <code className="bg-muted px-1 rounded">{'{agent_name}'}</code> verwendet
+                    und zur Dispatch-Zeit ersetzt.
+                  </p>
+                </div>
+                <div className="md:col-span-2 flex items-center gap-2">
+                  <Input
+                    value={appSettings.callerName}
+                    onChange={(e) => setAppSettings({ ...appSettings, callerName: e.target.value })}
+                    placeholder="z.B. Lea"
+                    className="max-w-xs"
+                  />
+                  <Button size="sm" onClick={handleSaveAppSettings} disabled={appSettingsSaving}>
+                    {appSettingsSaving ? <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-2" />}
+                    Speichern
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="flex items-center gap-3">
             <Label className="shrink-0">Agent</Label>
             <Select value={settingsAgentKey} onValueChange={setSettingsAgentKey}>
