@@ -18,6 +18,7 @@ export interface CreateBlogPostInput {
   content?: string
   featuredImage?: string
   featuredImageAlt?: string
+  featuredImagePrompt?: string
   seoTitle?: string
   seoDescription?: string
   seoKeywords?: string
@@ -46,6 +47,7 @@ export const BlogPostService = {
         content: data.content || null,
         featuredImage: data.featuredImage || null,
         featuredImageAlt: data.featuredImageAlt || null,
+        featuredImagePrompt: data.featuredImagePrompt || null,
         seoTitle: data.seoTitle || null,
         seoDescription: data.seoDescription || null,
         seoKeywords: data.seoKeywords || null,
@@ -97,6 +99,7 @@ export const BlogPostService = {
     if (data.content !== undefined) updateData.content = data.content || null
     if (data.featuredImage !== undefined) updateData.featuredImage = data.featuredImage || null
     if (data.featuredImageAlt !== undefined) updateData.featuredImageAlt = data.featuredImageAlt || null
+    if (data.featuredImagePrompt !== undefined) updateData.featuredImagePrompt = data.featuredImagePrompt || null
     if (data.seoTitle !== undefined) updateData.seoTitle = data.seoTitle || null
     if (data.seoDescription !== undefined) updateData.seoDescription = data.seoDescription || null
     if (data.seoKeywords !== undefined) updateData.seoKeywords = data.seoKeywords || null

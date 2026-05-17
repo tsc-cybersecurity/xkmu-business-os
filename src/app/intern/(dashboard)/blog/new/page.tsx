@@ -44,6 +44,7 @@ export default function NewBlogPostPage() {
   }, [])
   const [featuredImage, setFeaturedImage] = useState('')
   const [featuredImageAlt, setFeaturedImageAlt] = useState('')
+  const [featuredImagePrompt, setFeaturedImagePrompt] = useState('')
 
   // AI form
   const [aiTopic, setAiTopic] = useState('')
@@ -87,6 +88,7 @@ export default function NewBlogPostPage() {
           excerpt: excerpt || undefined,
           featuredImage: featuredImage || undefined,
           featuredImageAlt: featuredImageAlt || undefined,
+          featuredImagePrompt: featuredImagePrompt || undefined,
           category: category || undefined,
           tags: tagsStr ? tagsStr.split(',').map((t) => t.trim()).filter(Boolean) : [],
           source: 'manual',
@@ -200,7 +202,22 @@ export default function NewBlogPostPage() {
                 onImageChange={setFeaturedImage}
                 label="Beitragsbild"
                 category="blog"
+                initialPrompt={featuredImagePrompt}
               />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="featured-image-prompt-new">Bildprompt (AI)</Label>
+                  <span className="text-xs text-muted-foreground">{featuredImagePrompt.length} Zeichen</span>
+                </div>
+                <Textarea
+                  id="featured-image-prompt-new"
+                  value={featuredImagePrompt}
+                  onChange={(e) => setFeaturedImagePrompt(e.target.value)}
+                  rows={4}
+                  placeholder="Optional — wird beim Klick auf 'Bild generieren' als Start-Prompt uebernommen."
+                  className="font-mono text-xs"
+                />
+              </div>
               {featuredImage && (
                 <div className="space-y-2">
                   <Label>Alt-Text</Label>

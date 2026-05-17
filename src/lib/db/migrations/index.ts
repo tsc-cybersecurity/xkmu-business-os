@@ -280,4 +280,8 @@ export const MIGRATIONS: Migration[] = [
     name: '065_voice_agent_caller_name.sql',
     description: 'Globaler Anrufername in cms_settings (key=voice.agent_settings) + Templates 063 auf {agent_name}-Platzhalter umgestellt',
   },
+  {
+    name: '066_blog_featured_image_prompt.sql',
+    description: 'blog_posts.featured_image_prompt — AI-generierter Bildprompt fuer Hero-Bild persistieren (statt nach Gemini-Call zu verwerfen)',
+  },
 ]

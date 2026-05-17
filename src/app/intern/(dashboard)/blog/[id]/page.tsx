@@ -23,6 +23,7 @@ interface BlogPost {
   content: string | null
   featuredImage: string | null
   featuredImageAlt: string | null
+  featuredImagePrompt: string | null
   seoTitle: string | null
   seoDescription: string | null
   seoKeywords: string | null
@@ -48,6 +49,7 @@ export default function BlogPostEditorPage() {
   const [content, setContent] = useState('')
   const [featuredImage, setFeaturedImage] = useState('')
   const [featuredImageAlt, setFeaturedImageAlt] = useState('')
+  const [featuredImagePrompt, setFeaturedImagePrompt] = useState('')
   const [seoTitle, setSeoTitle] = useState('')
   const [seoDescription, setSeoDescription] = useState('')
   const [seoKeywords, setSeoKeywords] = useState('')
@@ -78,6 +80,7 @@ export default function BlogPostEditorPage() {
         setContent(p.content || '')
         setFeaturedImage(p.featuredImage || '')
         setFeaturedImageAlt(p.featuredImageAlt || '')
+        setFeaturedImagePrompt(p.featuredImagePrompt || '')
         setSeoTitle(p.seoTitle || '')
         setSeoDescription(p.seoDescription || '')
         setSeoKeywords(p.seoKeywords || '')
@@ -109,6 +112,7 @@ export default function BlogPostEditorPage() {
           content: content || '',
           featuredImage: featuredImage || '',
           featuredImageAlt: featuredImageAlt || '',
+          featuredImagePrompt: featuredImagePrompt || '',
           seoTitle: seoTitle || '',
           seoDescription: seoDescription || '',
           seoKeywords: seoKeywords || '',
@@ -299,7 +303,25 @@ export default function BlogPostEditorPage() {
                 onImageChange={setFeaturedImage}
                 label="Beitragsbild"
                 category="blog"
+                initialPrompt={featuredImagePrompt}
               />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="featured-image-prompt">Bildprompt (AI)</Label>
+                  <span className="text-xs text-muted-foreground">{featuredImagePrompt.length} Zeichen</span>
+                </div>
+                <Textarea
+                  id="featured-image-prompt"
+                  value={featuredImagePrompt}
+                  onChange={(e) => setFeaturedImagePrompt(e.target.value)}
+                  rows={4}
+                  placeholder="z.B. Photorealistic editorial photograph of …"
+                  className="font-mono text-xs"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Wird beim Klick auf „Bild generieren" als Start-Prompt uebernommen. Aenderungen hier werden mit dem Beitrag gespeichert.
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label>Alt-Text</Label>
                 <Input value={featuredImageAlt} onChange={(e) => setFeaturedImageAlt(e.target.value)} />

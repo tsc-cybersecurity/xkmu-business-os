@@ -24,6 +24,9 @@ interface ImageGeneratorDialogProps {
   onImageGenerated: (imageUrl: string) => void
   defaultCategory?: string
   trigger?: React.ReactNode
+  /** Beim Oeffnen vorausgefuellter Prompt — z.B. der bei Blog-Generierung
+   *  von der KI vorgeschlagene Hero-Bild-Prompt. */
+  initialPrompt?: string
 }
 
 const PROVIDERS = [
@@ -50,10 +53,10 @@ const ASPECT_RATIOS = [
   { value: '9:16', label: '9:16 (Portrait)' },
 ]
 
-export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'general', trigger }: ImageGeneratorDialogProps) {
+export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'general', trigger, initialPrompt = '' }: ImageGeneratorDialogProps) {
   const [open, setOpen] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [prompt, setPrompt] = useState('')
+  const [prompt, setPrompt] = useState(initialPrompt)
   const [provider, setProvider] = useState('gemini')
   const [model, setModel] = useState('gemini-2.5-flash-image')
   const [aspectRatio, setAspectRatio] = useState('1:1')
@@ -148,8 +151,17 @@ export function ImageGeneratorDialog({ onImageGenerated, defaultCategory = 'gene
     }
   }
 
+  // Wenn der Dialog geoeffnet wird und der initialPrompt sich seit dem
+  // letzten Oeffnen geaendert hat (z.B. Operator generiert neuen Beitrag),
+  // den Prompt nachziehen — aber nur solange der User ihn nicht selbst
+  // schon ueberschrieben hat in dieser Session.
+  const handleOpenChange = (next: boolean) => {
+    if (next && !prompt && initialPrompt) setPrompt(initialPrompt)
+    setOpen(next)
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {trigger || (
           <Button variant="outline" size="sm">

@@ -12,9 +12,11 @@ interface ImageFieldProps {
   onImageChange: (url: string) => void
   label?: string
   category?: string
+  /** Wird an den Generator-Dialog weitergereicht und beim Oeffnen vorausgefuellt. */
+  initialPrompt?: string
 }
 
-export function ImageField({ imageUrl, onImageChange, label = 'Bild (optional)', category = 'general' }: ImageFieldProps) {
+export function ImageField({ imageUrl, onImageChange, label = 'Bild (optional)', category = 'general', initialPrompt }: ImageFieldProps) {
   const [showGallery, setShowGallery] = useState(false)
   const [galleryImages, setGalleryImages] = useState<Array<{ id: string; imageUrl: string; prompt: string }>>([])
   const [uploading, setUploading] = useState(false)
@@ -84,6 +86,7 @@ export function ImageField({ imageUrl, onImageChange, label = 'Bild (optional)',
           <ImageGeneratorDialog
             defaultCategory={category}
             onImageGenerated={onImageChange}
+            initialPrompt={initialPrompt}
           />
           <Button
             type="button"

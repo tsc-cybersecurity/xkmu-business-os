@@ -1591,6 +1591,7 @@ export const blogPosts = pgTable('blog_posts', {
   content: text('content'),
   featuredImage: varchar('featured_image', { length: 500 }),
   featuredImageAlt: varchar('featured_image_alt', { length: 255 }),
+  featuredImagePrompt: text('featured_image_prompt'),
   seoTitle: varchar('seo_title', { length: 70 }),
   seoDescription: varchar('seo_description', { length: 160 }),
   seoKeywords: varchar('seo_keywords', { length: 255 }),

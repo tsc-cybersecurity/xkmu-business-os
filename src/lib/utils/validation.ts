@@ -485,6 +485,7 @@ export const createBlogPostSchema = z.object({
   content: z.string().optional().or(z.literal("")),
   featuredImage: z.string().max(500).optional().or(z.literal("")),
   featuredImageAlt: z.string().max(255).optional().or(z.literal("")),
+  featuredImagePrompt: z.string().optional().or(z.literal("")),
   seoTitle: z.string().max(70).optional().or(z.literal("")),
   seoDescription: z.string().max(160).optional().or(z.literal("")),
   seoKeywords: z.string().max(255).optional().or(z.literal("")),
