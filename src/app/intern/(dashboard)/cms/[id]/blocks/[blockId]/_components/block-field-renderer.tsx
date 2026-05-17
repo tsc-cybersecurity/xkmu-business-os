@@ -668,6 +668,51 @@ export function BlockFieldRenderer({ blockType, content, updateContent: updateCo
           </div>
         </>
       )
+    case 'magazine':
+      return (
+        <>
+          <div className="space-y-2">
+            <Label>Titel</Label>
+            <Input value={(content.title as string) || ''} onChange={e => updateContent('title', e.target.value)} placeholder="Aktuelle Beiträge" />
+          </div>
+          <div className="space-y-2">
+            <Label>Kategorien (werden als Filter-Buttons gerendert)</Label>
+            <BlogCategoriesMultiSelect
+              value={(content.categories as string[]) || []}
+              onChange={(v) => updateContent('categories', v)}
+            />
+            <p className="text-xs text-muted-foreground">Leer = alle aktiven Blog-Kategorien werden geladen.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2">
+              <Label>Sidebar-Items</Label>
+              <Input type="number" min={0} max={6} value={(content.sidebarCount as number) ?? 3} onChange={e => updateContent('sidebarCount', parseInt(e.target.value) || 0)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Grid-Beitraege</Label>
+              <Input type="number" min={0} max={12} value={(content.gridCount as number) ?? 6} onChange={e => updateContent('gridCount', parseInt(e.target.value) || 0)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Link-Prefix</Label>
+              <Input value={(content.linkPrefix as string) || '/it-news'} onChange={e => updateContent('linkPrefix', e.target.value)} placeholder="/it-news" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Autor / Quelle (optional, statt Datum)</Label>
+            <Input value={(content.defaultAuthor as string) || ''} onChange={e => updateContent('defaultAuthor', e.target.value)} placeholder="z.B. xKMU Redaktion" />
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={(content.showAllTab as boolean) !== false} onChange={e => updateContent('showAllTab', e.target.checked)} className="rounded" />
+              <span className="text-sm">„Alle"-Tab anzeigen</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={(content.showDate as boolean) !== false} onChange={e => updateContent('showDate', e.target.checked)} className="rounded" />
+              <span className="text-sm">Datum anzeigen (wenn kein Autor gesetzt)</span>
+            </label>
+          </div>
+        </>
+      )
     case 'contact-form': {
       const interestTags = (content.interestTags as string[]) || []
       return (

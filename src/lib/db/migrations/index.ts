@@ -292,4 +292,8 @@ export const MIGRATIONS: Migration[] = [
     name: '068_blog_no_title_in_content.sql',
     description: 'blog_post_generation + news-blog-draft Templates: content darf NIE mit Titel/Heading/Excerpt beginnen — vermeidet Doppelung mit dem separat gerenderten Blogtitel',
   },
+  {
+    name: '069_magazine_block_type.sql',
+    description: 'Neuer CMS-Block-Typ "magazine" — Featured + Sidebar + Grid mit Kategorie-Filter-Nav fuer Themenseiten (Cybersecurity/KI/Automatisierung)',
+  },
 ]

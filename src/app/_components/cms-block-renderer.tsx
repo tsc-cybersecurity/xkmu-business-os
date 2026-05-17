@@ -27,6 +27,8 @@ import { ColumnsBlock } from './blocks/columns-block'
 import { WheelBlock } from './blocks/wheel-block'
 import { CourseListingBlock } from './blocks/course-listing-block'
 import type { CourseListingBlockContent } from './blocks/course-listing-block'
+import { MagazineBlock } from './blocks/magazine-block'
+import type { MagazineBlockContent } from './blocks/magazine-block'
 import type { HeroBlockContent } from './blocks/hero-block'
 import type { WheelBlockContent } from './blocks/wheel-block'
 import type { BannerBlockContent } from './blocks/banner-block'
@@ -163,6 +165,8 @@ export function CmsBlockRenderer({ blockType, content, settings }: CmsBlockRende
       return <CourseAccordionBlock content={content as CourseAccordionBlockContent} />
     case 'course-listing':
       return <CourseListingBlock content={content as CourseListingBlockContent} settings={settings} />
+    case 'magazine':
+      return <MagazineBlock content={content as MagazineBlockContent} settings={settings} />
     default:
       return (
         <div className="container mx-auto px-4 py-8">
