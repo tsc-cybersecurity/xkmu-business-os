@@ -288,4 +288,8 @@ export const MIGRATIONS: Migration[] = [
     name: '067_news_blog_draft_image_prompt.sql',
     description: 'news-blog-draft Template um featuredImage + featuredImageAlt erweitert — News-Pipeline soll wie manuelle Generierung Bildprompts liefern',
   },
+  {
+    name: '068_blog_no_title_in_content.sql',
+    description: 'blog_post_generation + news-blog-draft Templates: content darf NIE mit Titel/Heading/Excerpt beginnen — vermeidet Doppelung mit dem separat gerenderten Blogtitel',
+  },
 ]

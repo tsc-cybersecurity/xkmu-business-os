@@ -37,7 +37,15 @@ function formatKB(bytes: number | null): string {
   return `${(bytes / 1024).toFixed(0)} KB`
 }
 
-export default function UploadsTab() {
+interface UploadsTabProps {
+  /** Grid-Klassen vom Parent — teilt sich den Raster-Switch mit dem
+   *  Generierte-Bilder-Tab, damit die Einstellung tab-uebergreifend wirkt. */
+  gridClassName?: string
+}
+
+const DEFAULT_GRID = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4'
+
+export default function UploadsTab({ gridClassName }: UploadsTabProps) {
   const [uploads, setUploads] = useState<MediaUpload[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -148,7 +156,7 @@ export default function UploadsTab() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className={gridClassName || DEFAULT_GRID}>
           {uploads.map((u) => (
             <div
               key={u.id}

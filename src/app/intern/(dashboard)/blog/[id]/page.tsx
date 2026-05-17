@@ -59,6 +59,19 @@ export default function BlogPostEditorPage() {
   const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; name: string }>>([])
   const [generatingSeo, setGeneratingSeo] = useState(false)
   const [generatingSocial, setGeneratingSocial] = useState(false)
+  const [suggestingImagePrompt, setSuggestingImagePrompt] = useState(false)
+  const [suggestingCategory, setSuggestingCategory] = useState(false)
+  // Plattform-Auswahl fuer "Social-Media-Posts generieren". Default: die drei
+  // organisch-staerksten Kanaele fuer KMU-Content. LinkedIn ist opt-in, weil
+  // dort B2B-Posts oft eigenstaendig formuliert werden sollen.
+  const [socialPlatforms, setSocialPlatforms] = useState<Record<'instagram' | 'facebook' | 'x' | 'linkedin', boolean>>({
+    instagram: true,
+    facebook: true,
+    x: true,
+    linkedin: false,
+  })
+  const toggleSocialPlatform = (p: 'instagram' | 'facebook' | 'x' | 'linkedin') =>
+    setSocialPlatforms((prev) => ({ ...prev, [p]: !prev[p] }))
 
   useEffect(() => {
     fetch('/api/v1/blog-categories?active=true')
@@ -172,12 +185,19 @@ export default function BlogPostEditorPage() {
   }
 
   const handleGenerateSocial = async () => {
+    const platforms = (Object.entries(socialPlatforms) as Array<[keyof typeof socialPlatforms, boolean]>)
+      .filter(([, v]) => v)
+      .map(([k]) => k)
+    if (platforms.length === 0) {
+      toast.error('Mindestens eine Plattform auswaehlen')
+      return
+    }
     setGeneratingSocial(true)
     try {
       const response = await fetch(`/api/v1/blog/posts/${postId}/generate-social`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ platforms }),
       })
       const data = await response.json()
       if (data.success && data.data?.created > 0) {
@@ -195,6 +215,47 @@ export default function BlogPostEditorPage() {
       toast.error('Generierung fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
     } finally {
       setGeneratingSocial(false)
+    }
+  }
+
+  const handleSuggestImagePrompt = async () => {
+    setSuggestingImagePrompt(true)
+    try {
+      const res = await fetch(`/api/v1/blog/posts/${postId}/image-prompt/generate`, { method: 'POST' })
+      const data = await res.json()
+      if (data.success && data.data?.prompt) {
+        setFeaturedImagePrompt(data.data.prompt)
+        if (data.data.alt && !featuredImageAlt) setFeaturedImageAlt(data.data.alt)
+        toast.success('Bildprompt vorgeschlagen — bitte pruefen und speichern.')
+      } else {
+        toast.error(data.error?.message || 'Kein Vorschlag erhalten')
+      }
+    } catch (error) {
+      logger.error('Failed to suggest image prompt', error, { module: 'BlogPage' })
+      toast.error('Vorschlag fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
+    } finally {
+      setSuggestingImagePrompt(false)
+    }
+  }
+
+  const handleSuggestCategory = async () => {
+    setSuggestingCategory(true)
+    try {
+      const res = await fetch(`/api/v1/blog/posts/${postId}/categorize`, { method: 'POST' })
+      const data = await res.json()
+      if (data.success && data.data?.category) {
+        setCategory(data.data.category)
+        toast.success(`Kategorie vorgeschlagen: ${data.data.category}`)
+      } else if (data.success) {
+        toast.info('KI konnte keine passende Kategorie zuordnen.')
+      } else {
+        toast.error(data.error?.message || 'Vorschlag fehlgeschlagen')
+      }
+    } catch (error) {
+      logger.error('Failed to suggest category', error, { module: 'BlogPage' })
+      toast.error('Vorschlag fehlgeschlagen. Ist ein KI-Provider konfiguriert?')
+    } finally {
+      setSuggestingCategory(false)
     }
   }
 
@@ -318,6 +379,17 @@ export default function BlogPostEditorPage() {
                   placeholder="z.B. Photorealistic editorial photograph of …"
                   className="font-mono text-xs"
                 />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={handleSuggestImagePrompt}
+                  disabled={suggestingImagePrompt}
+                >
+                  {suggestingImagePrompt ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                  {suggestingImagePrompt ? 'Schlage vor...' : 'Bildprompt per KI vorschlagen'}
+                </Button>
                 <p className="text-xs text-muted-foreground">
                   Wird beim Klick auf „Bild generieren" als Start-Prompt uebernommen. Aenderungen hier werden mit dem Beitrag gespeichert.
                 </p>
@@ -344,6 +416,19 @@ export default function BlogPostEditorPage() {
                   </Select>
                 ) : (
                   <Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Keine Kategorien — unter CMS → Blog-Kategorien anlegen" />
+                )}
+                {categoryOptions.length > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={handleSuggestCategory}
+                    disabled={suggestingCategory}
+                  >
+                    {suggestingCategory ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    {suggestingCategory ? 'Schlage vor...' : 'Kategorie per KI vorschlagen'}
+                  </Button>
                 )}
               </div>
               <div className="space-y-2">
@@ -378,6 +463,26 @@ export default function BlogPostEditorPage() {
                 {generatingSeo ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
                 {generatingSeo ? 'Generiere...' : 'SEO per KI generieren'}
               </Button>
+              <div className="space-y-2 pt-2 border-t">
+                <Label className="text-xs text-muted-foreground">Plattformen fuer Social-Media-Entwuerfe</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(['instagram', 'facebook', 'x', 'linkedin'] as const).map((p) => (
+                    <label key={p} className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={socialPlatforms[p]}
+                        onChange={() => toggleSocialPlatform(p)}
+                        className="h-4 w-4"
+                        disabled={generatingSocial}
+                      />
+                      <span className="capitalize">{p === 'x' ? 'X (Twitter)' : p}</span>
+                    </label>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Entwuerfe uebernehmen das aktuelle Beitragsbild als Visual.
+                </p>
+              </div>
               <Button variant="outline" className="w-full" onClick={handleGenerateSocial} disabled={generatingSocial}>
                 {generatingSocial ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
                 {generatingSocial ? 'Generiere Posts...' : 'Social-Media-Posts generieren'}

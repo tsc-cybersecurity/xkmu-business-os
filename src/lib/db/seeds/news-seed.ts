@@ -41,11 +41,11 @@ Liefere eine strukturierte Recherche.`,
     slug: 'news-blog-draft',
     name: 'News Blog Draft',
     description: 'Erzeugt einen Blog-Post-Entwurf aus News + Recherche.',
-    systemPrompt: 'Du bist redaktionell erfahren und schreibst hochwertige Blogposts auf Deutsch für KMU-Zielgruppe. Du gibst ausschließlich gültiges JSON zurück.',
+    systemPrompt: 'Du bist redaktionell erfahren und schreibst hochwertige Blogposts auf Deutsch für KMU-Zielgruppe. Du gibst ausschließlich gültiges JSON zurück. WICHTIG: Das content-Feld beginnt NIE mit dem Titel, NIE mit einer H1/H2 und NIE mit dem Excerpt-Wortlaut — der Titel wird vom Blog separat ueber dem Content gerendert. Erste Zeile von content = Einleitungsabsatz im Fliesstext, danach ## H2-Abschnitte, am Ende ein Fazit-Abschnitt.',
     userPrompt: `Erstelle einen Blogpost aus folgender Recherche:
 News-Titel: {{title}}
 Recherche (JSON): {{research}}`,
-    outputFormat: '{ "title": "...", "excerpt": "...", "content": "Markdown ~600-900 Woerter", "seoTitle": "<=70 Zeichen", "seoDescription": "<=160 Zeichen", "tags": ["...","..."], "featuredImage": "<detaillierter englischer AI-Bildgenerierungs-Prompt, fotorealistisch, B2B, 16:9, ohne Text/Logos/Wasserzeichen>", "featuredImageAlt": "<beschreibender deutscher Alt-Text, max 200 Zeichen>" }',
+    outputFormat: '{ "title": "...", "excerpt": "...", "content": "Markdown ~600-900 Woerter — startet DIREKT mit einem Einleitungsabsatz im Fliesstext, NICHT mit Titel/Heading/Excerpt", "seoTitle": "<=70 Zeichen", "seoDescription": "<=160 Zeichen", "tags": ["...","..."], "featuredImage": "<detaillierter englischer AI-Bildgenerierungs-Prompt, fotorealistisch, B2B, 16:9, ohne Text/Logos/Wasserzeichen>", "featuredImageAlt": "<beschreibender deutscher Alt-Text, max 200 Zeichen>" }',
     triggerInfo: 'News-Pipeline Stufe 2 (generateBlogPost). Erzeugt blog_posts (status=draft).',
   },
   {

@@ -93,6 +93,16 @@ const ASPECT_RATIOS = [
   { value: '4:3', label: '4:3 (Standard)' },
 ]
 
+// Raster-Konfigurationen (Bilder pro Zeile auf lg+). Tailwind JIT braucht
+// die Klassen als vollstaendige Literale — daher Map statt String-Bau.
+type GridCols = 5 | 6 | 8
+const GRID_CLASSES: Record<GridCols, string> = {
+  5: 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4',
+  6: 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3',
+  8: 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2',
+}
+const GRID_STORAGE_KEY = 'xkmu:images:gridCols'
+
 const providerLabels: Record<string, string> = {
   openai: 'DALL-E 3',
   kie: 'kie.ai',
@@ -131,6 +141,21 @@ export default function ImagesPage() {
   const [aspectRatio, setAspectRatio] = useState('1:1')
   const [category, setCategory] = useState('general')
   const [style, setStyle] = useState('vivid')
+
+  // Raster-Groesse — persistent pro Browser (kein DB-Backing noetig, ist
+  // reine UI-Praeferenz). Hydration aus localStorage in useEffect, damit
+  // SSR-Markup nicht abweicht.
+  const [gridCols, setGridCols] = useState<GridCols>(5)
+  useEffect(() => {
+    try {
+      const stored = Number(localStorage.getItem(GRID_STORAGE_KEY))
+      if (stored === 5 || stored === 6 || stored === 8) setGridCols(stored)
+    } catch { /* ignore */ }
+  }, [])
+  const updateGridCols = (next: GridCols) => {
+    setGridCols(next)
+    try { localStorage.setItem(GRID_STORAGE_KEY, String(next)) } catch { /* ignore */ }
+  }
 
   const fetchImages = useCallback(async () => {
     try {
@@ -412,6 +437,23 @@ export default function ImagesPage() {
             ))}
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-1 sm:ml-auto" role="group" aria-label="Bilder pro Zeile">
+          <span className="text-xs text-muted-foreground mr-1 hidden sm:inline">Raster:</span>
+          {([5, 6, 8] as const).map((n) => (
+            <Button
+              key={n}
+              type="button"
+              variant={gridCols === n ? 'default' : 'outline'}
+              size="sm"
+              className="h-8 w-9 px-0 text-xs"
+              onClick={() => updateGridCols(n)}
+              aria-pressed={gridCols === n}
+              aria-label={`${n} Bilder pro Zeile`}
+            >
+              {n}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Gallery Grid */}
@@ -434,7 +476,7 @@ export default function ImagesPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className={GRID_CLASSES[gridCols]}>
           {images.map(image => (
             <div
               key={image.id}
@@ -542,7 +584,7 @@ export default function ImagesPage() {
         </TabsContent>
 
         <TabsContent value="uploads">
-          <UploadsTab />
+          <UploadsTab gridClassName={GRID_CLASSES[gridCols]} />
         </TabsContent>
       </Tabs>
     </div>

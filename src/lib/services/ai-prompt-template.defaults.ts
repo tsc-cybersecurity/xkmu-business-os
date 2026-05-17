@@ -692,10 +692,11 @@ KERNREGELN:
 1. Schreibe vollstaendige, eigenstaendig lesbare Beitraege im Markdown-Format
 2. H2-Ueberschriften (##) fuer alle Hauptabschnitte, H3 (###) optional fuer Unterabschnitte
 3. Aufzaehlungen, kurze Absaetze, konkrete Beispiele wo sinnvoll
-4. Einleitung (1 Absatz, ohne H2) und Fazit-Abschnitt am Ende
-5. Halte SEO-Titel <= 60 und SEO-Description <= 155 Zeichen — niemals laenger
-6. featuredImage = AI-Bildgenerierungs-Prompt auf Englisch, fotorealistisch, B2B-tauglich, ohne Text/Logos/Wasserzeichen
-7. Sprache des Beitrags wie angegeben; Image-Prompt immer Englisch
+4. content beginnt NIE mit dem Titel, NIE mit einer H1/H2, NIE mit dem Excerpt-Wortlaut — direkt mit dem Einleitungsabsatz starten. Der Titel wird vom Blog separat ueber dem Content gerendert; eine Wiederholung wirkt redundant.
+5. Erste Zeile = freier Einleitungsabsatz (Fliesstext, kein Heading), der das Thema einsteigt. Danach ## H2-Abschnitte, am Ende ein Fazit-Abschnitt.
+6. Halte SEO-Titel <= 60 und SEO-Description <= 155 Zeichen — niemals laenger
+7. featuredImage = AI-Bildgenerierungs-Prompt auf Englisch, fotorealistisch, B2B-tauglich, ohne Text/Logos/Wasserzeichen
+8. Sprache des Beitrags wie angegeben; Image-Prompt immer Englisch
 
 WICHTIG - AUSGABEFORMAT:
 - Antworte AUSSCHLIESSLICH mit dem JSON-Objekt
@@ -714,7 +715,7 @@ Generiere alle Felder im vorgegebenen JSON-Format. featuredImage muss ein detail
 {
   "title": "<aussagekraeftiger Titel>",
   "slug": "<url-freundlicher-slug-mit-bindestrichen>",
-  "content": "<kompletter Markdown-Inhalt mit Einleitung, ## H2-Abschnitten und Fazit>",
+  "content": "<Markdown-Inhalt; startet DIREKT mit einem Einleitungsabsatz im Fliesstext — NICHT mit Titel/Heading/Excerpt. Danach ## H2-Abschnitte und am Ende ein Fazit-Abschnitt.>",
   "excerpt": "<Kurze Zusammenfassung in 1-2 Saetzen>",
   "seoTitle": "<max 60 Zeichen, mit Hauptkeyword>",
   "seoDescription": "<max 155 Zeichen, mit Call-to-Action>",

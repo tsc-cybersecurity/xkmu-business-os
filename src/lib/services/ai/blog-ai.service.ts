@@ -172,6 +172,106 @@ export const BlogAIService = {
     return parsed
   },
 
+  /**
+   * Erzeugt aus einem bestehenden Beitrag (Titel/Excerpt/Content) einen
+   * englischen AI-Bildprompt + deutschen Alt-Text. Wird vom Editor-Button
+   * "Bildprompt vorschlagen" genutzt — vor allem fuer Bestands-Posts, die
+   * vor Migration 066/067 erstellt wurden und kein Prompt-Feld haben.
+   */
+  async generateImagePrompt(
+    title: string,
+    excerpt: string,
+    content: string,
+    context: AIRequestContext,
+  ): Promise<{ prompt: string; alt: string }> {
+    const systemPrompt = 'Du bist ein Bild-Director fuer B2B-Editorial-Bilder. Du gibst ausschliesslich gueltiges JSON zurueck, keine Erklaerungen, keine Code-Blocks.'
+    const userPrompt = `Erzeuge fuer den folgenden Blogbeitrag einen passenden AI-Bildgenerierungs-Prompt sowie einen deutschen Alt-Text.
+
+Titel: ${title}
+Zusammenfassung: ${excerpt}
+Inhalt (Auszug): ${(content || '').substring(0, 2000)}
+
+Vorgaben Bildprompt:
+- Englisch, fotorealistisch, B2B-tauglich
+- 16:9 Hero-Bild fuer Blogartikel
+- Keine Texte/Logos/Wasserzeichen im Bild
+- Konkrete Bildkomposition, Stimmung, Beleuchtung
+- 2-4 Saetze
+
+Vorgaben Alt-Text:
+- Deutsch, beschreibend
+- Max 200 Zeichen
+
+Antworte NUR mit:
+{ "prompt": "<englischer Bildprompt>", "alt": "<deutscher Alt-Text>" }`
+
+    const response = await AIService.completeWithContext(userPrompt, context, {
+      maxTokens: 800,
+      temperature: 0.5,
+      systemPrompt,
+    })
+    try {
+      const match = response.text.match(/\{[\s\S]*\}/)
+      if (match) {
+        const parsed = JSON.parse(match[0]) as { prompt?: string; alt?: string }
+        return {
+          prompt: String(parsed.prompt ?? '').trim(),
+          alt: truncateAtWord(String(parsed.alt ?? '').trim(), 255),
+        }
+      }
+    } catch (err) {
+      logger.warn('Failed to parse JSON in image prompt suggestion', { module: 'BlogAIService', error: String(err) })
+    }
+    return { prompt: '', alt: '' }
+  },
+
+  /**
+   * Schlaegt aus einer Liste vorhandener Kategorien die passendste fuer den
+   * Beitrag vor. Gibt den Kategorienamen exakt so zurueck wie eingegeben,
+   * oder null wenn keine sinnvoll passt. Editor zeigt das Ergebnis im
+   * Select-Feld an — kein Auto-Save.
+   */
+  async suggestCategory(
+    title: string,
+    excerpt: string,
+    content: string,
+    candidates: string[],
+    context: AIRequestContext,
+  ): Promise<{ category: string | null }> {
+    if (candidates.length === 0) return { category: null }
+    const systemPrompt = 'Du bist ein Redaktions-Assistent fuer B2B-Blogs. Du gibst ausschliesslich gueltiges JSON zurueck.'
+    const userPrompt = `Waehle die passendste Kategorie fuer diesen Blogbeitrag aus der folgenden Liste. Antworte mit dem exakten Kategorienamen aus der Liste oder mit null, wenn keine wirklich passt.
+
+Verfuegbare Kategorien:
+${candidates.map((c) => `- ${c}`).join('\n')}
+
+Beitragstitel: ${title}
+Zusammenfassung: ${excerpt}
+Inhalt (Auszug): ${(content || '').substring(0, 2000)}
+
+Antworte NUR mit:
+{ "category": "<exakter Name aus Liste oder null>" }`
+
+    const response = await AIService.completeWithContext(userPrompt, context, {
+      maxTokens: 200,
+      temperature: 0.2,
+      systemPrompt,
+    })
+    try {
+      const match = response.text.match(/\{[\s\S]*\}/)
+      if (match) {
+        const parsed = JSON.parse(match[0]) as { category?: string | null }
+        const picked = parsed.category
+        if (typeof picked === 'string' && candidates.includes(picked)) {
+          return { category: picked }
+        }
+      }
+    } catch (err) {
+      logger.warn('Failed to parse JSON in category suggestion', { module: 'BlogAIService', error: String(err) })
+    }
+    return { category: null }
+  },
+
   async generateSEO(
     title: string,
     content: string,
