@@ -41,7 +41,39 @@ type BgStyle =
   | 'emerald'
   | 'amber'
   | 'cyan'
-type Persisted = { pos: Pos; collapsed: boolean; keys: string[]; bgStyle: BgStyle }
+// Icon-Skalierung pro User (statt frueher hartcoded responsive). 1.0 =
+// kompakt fuer Desktop, 1.5 = Touch-freundlich (Default), 2.0 = sehr gross.
+type IconScale = 1 | 1.5 | 2
+type Persisted = { pos: Pos; collapsed: boolean; keys: string[]; bgStyle: BgStyle; iconScale: IconScale }
+
+const DEFAULT_ICON_SCALE: IconScale = 1.5
+
+// CSS-Klassen pro Skala — bewusst keine Tailwind-Arbitrary-Values, damit
+// PurgeCSS sie behaelt. Reihenfolge: buttonSize / iconSize / gripSize /
+// gripIconSize / chevronSize / containerPadding / containerGap.
+const SCALE_CLASSES: Record<IconScale, {
+  button: string; icon: string; grip: string; gripIcon: string;
+  chevron: string; chevronIcon: string; padding: string; gap: string;
+}> = {
+  1: {
+    button: 'h-6 w-6', icon: '!size-3.5',
+    grip: 'h-6 w-4', gripIcon: 'h-3 w-3',
+    chevron: 'h-5 w-4', chevronIcon: 'h-3 w-3',
+    padding: 'p-1', gap: 'gap-0.5',
+  },
+  1.5: {
+    button: 'h-9 w-9', icon: '!size-5',
+    grip: 'h-9 w-6', gripIcon: 'h-4 w-4',
+    chevron: 'h-8 w-6', chevronIcon: 'h-4 w-4',
+    padding: 'p-1.5', gap: 'gap-1',
+  },
+  2: {
+    button: 'h-12 w-12', icon: '!size-7',
+    grip: 'h-12 w-8', gripIcon: 'h-5 w-5',
+    chevron: 'h-10 w-8', chevronIcon: 'h-5 w-5',
+    padding: 'p-2', gap: 'gap-1.5',
+  },
+}
 
 // Pastell-Praesets — helle Toene in Light-Mode, gedaempfte tiefe Toene in
 // Dark-Mode, beide mit leicht getoentem Border + Backdrop-Blur.
@@ -108,12 +140,17 @@ type FlatItem = {
   href: string
 }
 
+function parseIconScale(v: unknown): IconScale {
+  return v === 1 || v === 1.5 || v === 2 ? v : DEFAULT_ICON_SCALE
+}
+
 function loadState(): Persisted {
   const fallback: Persisted = {
     pos: { right: 24, bottom: 24 },
     collapsed: false,
     keys: DEFAULT_KEYS,
     bgStyle: DEFAULT_BG_STYLE,
+    iconScale: DEFAULT_ICON_SCALE,
   }
   if (typeof window === 'undefined') return fallback
   try {
@@ -132,6 +169,7 @@ function loadState(): Persisted {
         ? parsed.keys.slice(0, MAX_ICONS)
         : DEFAULT_KEYS,
       bgStyle,
+      iconScale: parseIconScale(parsed.iconScale),
     }
   } catch {
     return fallback
@@ -148,6 +186,7 @@ export function ChatButton() {
   const [collapsed, setCollapsed] = useState(false)
   const [keys, setKeys] = useState<string[]>(DEFAULT_KEYS)
   const [bgStyle, setBgStyle] = useState<BgStyle>(DEFAULT_BG_STYLE)
+  const [iconScale, setIconScale] = useState<IconScale>(DEFAULT_ICON_SCALE)
   const [dragging, setDragging] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [reorderDragKey, setReorderDragKey] = useState<string | null>(null)
@@ -170,6 +209,7 @@ export function ChatButton() {
     setCollapsed(s.collapsed)
     setKeys(s.keys)
     setBgStyle(s.bgStyle)
+    setIconScale(s.iconScale)
     setMounted(true)
 
     let cancelled = false
@@ -190,6 +230,9 @@ export function ChatButton() {
         if (fab.bgStyle && (fab.bgStyle as string) in BG_STYLES) {
           setBgStyle(fab.bgStyle as BgStyle)
         }
+        if (fab.iconScale === 1 || fab.iconScale === 1.5 || fab.iconScale === 2) {
+          setIconScale(fab.iconScale)
+        }
         setHydratedFromServer(true)
       })
       .catch(() => {
@@ -206,7 +249,7 @@ export function ChatButton() {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ pos, collapsed, keys, bgStyle })
+        JSON.stringify({ pos, collapsed, keys, bgStyle, iconScale })
       )
     } catch {
       // ignore quota errors
@@ -216,13 +259,13 @@ export function ChatButton() {
       fetch('/api/v1/user-ui-prefs', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'fab', value: { pos, collapsed, keys, bgStyle } }),
+        body: JSON.stringify({ key: 'fab', value: { pos, collapsed, keys, bgStyle, iconScale } }),
       }).catch(() => {
         // Ignore — beim naechsten Change versuchen wir es wieder.
       })
     }, 500)
     return () => window.clearTimeout(handle)
-  }, [pos, collapsed, keys, bgStyle, mounted, hydratedFromServer])
+  }, [pos, collapsed, keys, bgStyle, iconScale, mounted, hydratedFromServer])
 
   // Berechtigungs-Check — waehrend des Ladens optimistisch true, damit der
   // Cluster nicht erst leer auftaucht und dann ploetzlich Items dazukommen.
@@ -375,15 +418,18 @@ export function ChatButton() {
           setReorderDragKey={setReorderDragKey}
           bgStyle={bgStyle}
           onBgStyleChange={setBgStyle}
+          iconScale={iconScale}
+          onIconScaleChange={setIconScale}
         />
       )}
 
-      {/* Mobile = 1.5x groessere Tap-Targets (h-9 = 36px), Desktop bleibt
-          kompakt (h-6 = 24px). Touch-Bedienung braucht ~44px Minimum laut
-          WCAG; 36px + Padding kommt nah dran ohne den Cluster zu fluten. */}
+      {/* Groesse via iconScale user-konfigurierbar (1.0 / 1.5 / 2.0).
+          1.5 ist Default — Touch-freundlich wie vorher die mobile sm-Variante. */}
       <div
         className={[
-          'flex flex-row items-center gap-1 sm:gap-0.5 p-1.5 sm:p-1 rounded-full',
+          'flex flex-row items-center rounded-full',
+          SCALE_CLASSES[iconScale].gap,
+          SCALE_CLASSES[iconScale].padding,
           BG_STYLES[bgStyle].className,
           dragging ? 'cursor-grabbing select-none' : '',
         ].join(' ')}
@@ -395,7 +441,8 @@ export function ChatButton() {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           className={[
-            'flex items-center justify-center h-9 w-6 sm:h-6 sm:w-4 rounded-full',
+            'flex items-center justify-center rounded-full',
+            SCALE_CLASSES[iconScale].grip,
             'text-muted-foreground hover:text-foreground hover:bg-foreground/5',
             dragging ? 'cursor-grabbing' : 'cursor-grab',
             'touch-none',
@@ -404,7 +451,7 @@ export function ChatButton() {
           aria-label="Quick-Actions verschieben"
           role="button"
         >
-          <GripVertical className="h-4 w-4 sm:h-3 sm:w-3" />
+          <GripVertical className={SCALE_CLASSES[iconScale].gripIcon} />
         </div>
 
         {!collapsed &&
@@ -420,9 +467,9 @@ export function ChatButton() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-9 w-9 sm:h-6 sm:w-6 rounded-full hover:bg-foreground/10"
+                  className={`${SCALE_CLASSES[iconScale].button} rounded-full hover:bg-foreground/10`}
                 >
-                  <Icon className="!size-5 sm:!size-3.5" />
+                  <Icon className={SCALE_CLASSES[iconScale].icon} />
                 </Button>
               </Link>
             )
@@ -430,34 +477,36 @@ export function ChatButton() {
 
         <Button
           onClick={() => openChat()}
-          className="h-9 w-9 sm:h-6 sm:w-6 rounded-full shadow-md"
+          className={`${SCALE_CLASSES[iconScale].button} rounded-full shadow-md`}
           size="icon"
           aria-label="KI-Chat öffnen"
           title="KI-Chat"
         >
-          <Brain className="!size-5 sm:!size-3.5" />
+          <Brain className={SCALE_CLASSES[iconScale].icon} />
         </Button>
 
         {!collapsed && (
           <button
             type="button"
             onClick={() => setSettingsOpen((s) => !s)}
-            className="flex items-center justify-center h-8 w-8 sm:h-5 sm:w-5 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+            className={`flex items-center justify-center ${SCALE_CLASSES[iconScale].chevron} rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5`}
             title="Quick-Actions konfigurieren"
             aria-label="Quick-Actions konfigurieren"
           >
-            <Settings2 className="h-4 w-4 sm:h-3 sm:w-3" />
+            <Settings2 className={SCALE_CLASSES[iconScale].chevronIcon} />
           </button>
         )}
 
         <button
           type="button"
           onClick={() => setCollapsed((c) => !c)}
-          className="flex items-center justify-center h-8 w-6 sm:h-5 sm:w-4 rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+          className={`flex items-center justify-center ${SCALE_CLASSES[iconScale].chevron} rounded-full text-muted-foreground hover:text-foreground hover:bg-foreground/5`}
           title={collapsed ? 'Erweitern' : 'Einklappen'}
           aria-label={collapsed ? 'Quick-Actions erweitern' : 'Quick-Actions einklappen'}
         >
-          {collapsed ? <ChevronLeft className="h-4 w-4 sm:h-3 sm:w-3" /> : <ChevronRight className="h-4 w-4 sm:h-3 sm:w-3" />}
+          {collapsed
+            ? <ChevronLeft className={SCALE_CLASSES[iconScale].chevronIcon} />
+            : <ChevronRight className={SCALE_CLASSES[iconScale].chevronIcon} />}
         </button>
       </div>
     </div>
@@ -475,6 +524,8 @@ function SettingsPopover({
   setReorderDragKey,
   bgStyle,
   onBgStyleChange,
+  iconScale,
+  onIconScaleChange,
 }: {
   availableItems: FlatItem[]
   selectedKeys: string[]
@@ -486,6 +537,8 @@ function SettingsPopover({
   setReorderDragKey: (k: string | null) => void
   bgStyle: BgStyle
   onBgStyleChange: (s: BgStyle) => void
+  iconScale: IconScale
+  onIconScaleChange: (s: IconScale) => void
 }) {
   const selectedSet = new Set(selectedKeys)
   const byKey = new Map(availableItems.map((i) => [i.key, i]))
@@ -538,6 +591,31 @@ function SettingsPopover({
                 title={BG_STYLES[s].label}
               >
                 {BG_STYLES[s].label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-1.5 pb-2 border-b border-border/40">
+        <div className="text-[11px] text-muted-foreground">Icon-Groesse</div>
+        <div className="grid grid-cols-3 gap-1">
+          {([1, 1.5, 2] as IconScale[]).map((s) => {
+            const active = iconScale === s
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => onIconScaleChange(s)}
+                className={[
+                  'rounded-md px-2 py-1.5 text-xs border transition-colors',
+                  active
+                    ? 'border-primary bg-primary/10 text-foreground font-medium'
+                    : 'border-border/40 text-muted-foreground hover:text-foreground hover:bg-foreground/5',
+                ].join(' ')}
+                title={`Skalierung ${s}x`}
+              >
+                {s === 1 ? '1.0×' : s === 1.5 ? '1.5×' : '2.0×'}
               </button>
             )
           })}
