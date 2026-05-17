@@ -412,7 +412,7 @@ export default function NewsDashboardPage() {
                         )}
                       </Button>
                     </div>
-                    <div className="flex-1 p-2 space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto">
+                    <div className="flex-1 p-2 space-y-2">
                       {items.length === 0 ? (
                         <p className="text-xs text-muted-foreground text-center py-6">
                           Noch keine News
