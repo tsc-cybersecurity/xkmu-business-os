@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Loader2 } from 'lucide-react'
@@ -54,16 +54,41 @@ function formatDate(iso: string | null): string {
 }
 
 export function MagazineBlock({ content, settings }: MagazineBlockProps) {
-  const sidebarCount = content.sidebarCount ?? 3
-  const gridCount = content.gridCount ?? 6
+  const sidebarStep = Math.max(0, content.sidebarCount ?? 3)
+  const gridStep = Math.max(0, content.gridCount ?? 6)
   const showAllTab = content.showAllTab !== false
   const linkPrefix = content.linkPrefix || '/it-news'
-  const totalNeeded = 1 + Math.max(0, sidebarCount) + Math.max(0, gridCount)
 
   const [categories, setCategories] = useState<string[]>(content.categories ?? [])
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [posts, setPosts] = useState<BlogPost[]>([])
   const [loading, setLoading] = useState(true)
+  // Wie viele Sidebar-/Grid-Items aktuell ANGEZEIGT werden (waechst beim
+  // Klick auf "Mehr laden"). Pagination geht gegen denselben /posts-
+  // Endpunkt; geladene Posts liegen kumulativ in `posts`.
+  const [sidebarVisible, setSidebarVisible] = useState(sidebarStep)
+  const [gridVisible, setGridVisible] = useState(gridStep)
+  const [cursorPage, setCursorPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState<null | 'sidebar' | 'grid'>(null)
+
+  // ResizeObserver auf den Featured-Artikel — die Sidebar darf nie hoeher
+  // werden als der Hauptbeitrag links. Ueberschuss wird scrollbar.
+  const featuredRef = useRef<HTMLDivElement | null>(null)
+  const [sidebarMaxHeight, setSidebarMaxHeight] = useState<number | null>(null)
+  useEffect(() => {
+    if (!featuredRef.current) return
+    const el = featuredRef.current
+    const update = () => setSidebarMaxHeight(el.getBoundingClientRect().height)
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    window.addEventListener('resize', update)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [posts.length])
 
   // Wenn der Operator keine Kategorien gepflegt hat, laden wir die aktiven
   // aus der DB — der Block bleibt damit sofort einsetzbar ohne Konfiguration.
@@ -89,28 +114,89 @@ export function MagazineBlock({ content, settings }: MagazineBlockProps) {
     return () => { abort = true }
   }, [content.categories])
 
-  const loadPosts = useCallback(async (cat: string | null) => {
+  // Limit pro Fetch — ueberschiessend laden, damit Cursor-Sprung beim
+  // ersten Render nicht direkt nachladen muss.
+  const fetchLimit = Math.max(12, 1 + sidebarStep + gridStep)
+
+  const fetchPage = useCallback(async (cat: string | null, page: number) => {
+    const params = new URLSearchParams({ page: String(page), limit: String(fetchLimit) })
+    if (cat) params.set('category', cat)
+    else if (categories.length > 0) params.set('categories', categories.join(','))
+    const res = await fetch(`/api/v1/public/blog/posts?${params}`)
+    if (!res.ok) return { items: [] as BlogPost[], meta: { page, totalPages: page } }
+    const data = await res.json()
+    if (!data.success) return { items: [] as BlogPost[], meta: { page, totalPages: page } }
+    return { items: (data.data as BlogPost[]) || [], meta: data.meta ?? { page, totalPages: page } }
+  }, [categories, fetchLimit])
+
+  const loadInitial = useCallback(async (cat: string | null) => {
     setLoading(true)
     try {
-      const params = new URLSearchParams({ page: '1', limit: String(totalNeeded) })
-      if (cat) params.set('category', cat)
-      else if (categories.length > 0) params.set('categories', categories.join(','))
-      const res = await fetch(`/api/v1/public/blog/posts?${params}`)
-      const data = await res.json()
-      if (data.success) setPosts(data.data || [])
-    } catch { /* silent */ }
-    finally { setLoading(false) }
-  }, [categories, totalNeeded])
+      const { items, meta } = await fetchPage(cat, 1)
+      setPosts(items)
+      setCursorPage(1)
+      setHasMore((meta.page ?? 1) < (meta.totalPages ?? 1))
+    } finally {
+      setLoading(false)
+    }
+  }, [fetchPage])
 
   useEffect(() => {
-    loadPosts(activeCategory)
-  }, [loadPosts, activeCategory])
+    setSidebarVisible(sidebarStep)
+    setGridVisible(gridStep)
+    loadInitial(activeCategory)
+  }, [loadInitial, activeCategory, sidebarStep, gridStep])
+
+  // Stellt sicher, dass `posts` mindestens `needed` Items hat — sonst
+  // werden so viele Folgeseiten geladen wie noetig (oder bis hasMore=false).
+  const ensureLoaded = useCallback(async (needed: number) => {
+    let currentPosts = posts
+    let page = cursorPage
+    let more = hasMore
+    while (currentPosts.length < needed && more) {
+      page += 1
+      const { items, meta } = await fetchPage(activeCategory, page)
+      currentPosts = [...currentPosts, ...items]
+      more = (meta.page ?? page) < (meta.totalPages ?? page)
+    }
+    setPosts(currentPosts)
+    setCursorPage(page)
+    setHasMore(more)
+    return currentPosts.length
+  }, [posts, cursorPage, hasMore, fetchPage, activeCategory])
+
+  const handleMoreSidebar = async () => {
+    setLoadingMore('sidebar')
+    try {
+      const nextSidebar = sidebarVisible + sidebarStep
+      await ensureLoaded(1 + nextSidebar + gridVisible)
+      setSidebarVisible(nextSidebar)
+    } finally {
+      setLoadingMore(null)
+    }
+  }
+
+  const handleMoreGrid = async () => {
+    setLoadingMore('grid')
+    try {
+      const nextGrid = gridVisible + gridStep
+      await ensureLoaded(1 + sidebarVisible + nextGrid)
+      setGridVisible(nextGrid)
+    } finally {
+      setLoadingMore(null)
+    }
+  }
 
   const featured = posts[0]
-  const sidebar = posts.slice(1, 1 + sidebarCount)
-  const grid = posts.slice(1 + sidebarCount, 1 + sidebarCount + gridCount)
+  const sidebar = posts.slice(1, 1 + sidebarVisible)
+  const grid = posts.slice(1 + sidebarVisible, 1 + sidebarVisible + gridVisible)
   const author = content.defaultAuthor || ''
   const showDate = content.showDate !== false && !author
+
+  // Pool reicht aktuell schon mehr Sidebar-Items als angezeigt → Button
+  // ohne Roundtrip moeglich. Sonst noch via API laden (hasMore).
+  const canLoadMoreSidebar = sidebarStep > 0 && (posts.length > 1 + sidebarVisible + gridVisible || hasMore)
+  const canLoadMoreGrid = gridStep > 0 && (posts.length > 1 + sidebarVisible + gridVisible || hasMore)
 
   return (
     <section
@@ -156,7 +242,10 @@ export function MagazineBlock({ content, settings }: MagazineBlockProps) {
           {/* Top-Section: Hero links, Sidebar rechts */}
           <div className={`grid gap-8 mb-12 ${sidebar.length > 0 ? 'lg:grid-cols-3' : ''}`}>
             {featured && (
-              <article className={sidebar.length > 0 ? 'lg:col-span-2' : 'max-w-3xl mx-auto w-full'}>
+              <article
+                ref={featuredRef}
+                className={sidebar.length > 0 ? 'lg:col-span-2' : 'max-w-3xl mx-auto w-full'}
+              >
                 <Link href={`${linkPrefix}/${featured.slug}`} className="group block">
                   {featured.category && (
                     <CategoryLabel name={featured.category} />
@@ -185,9 +274,41 @@ export function MagazineBlock({ content, settings }: MagazineBlockProps) {
             )}
 
             {sidebar.length > 0 && (
-              <div className="space-y-6">
-                {sidebar.map((post) => (
-                  <SidebarCard
+              <div
+                className="lg:overflow-y-auto pr-1 -mr-1"
+                style={sidebarMaxHeight ? { maxHeight: `${sidebarMaxHeight}px` } : undefined}
+              >
+                <div className="space-y-6">
+                  {sidebar.map((post) => (
+                    <SidebarCard
+                      key={post.id}
+                      post={post}
+                      linkPrefix={linkPrefix}
+                      author={author}
+                      showDate={showDate}
+                    />
+                  ))}
+                  {canLoadMoreSidebar && (
+                    <button
+                      type="button"
+                      onClick={handleMoreSidebar}
+                      disabled={loadingMore === 'sidebar'}
+                      className="w-full text-xs uppercase tracking-wider font-semibold text-muted-foreground hover:text-foreground py-2 border-t border-foreground/10 inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {loadingMore === 'sidebar' && <Loader2 className="h-3 w-3 animate-spin" />}
+                      Mehr laden
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {grid.length > 0 && (
+            <>
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                {grid.map((post) => (
+                  <GridCard
                     key={post.id}
                     post={post}
                     linkPrefix={linkPrefix}
@@ -196,21 +317,20 @@ export function MagazineBlock({ content, settings }: MagazineBlockProps) {
                   />
                 ))}
               </div>
-            )}
-          </div>
-
-          {grid.length > 0 && (
-            <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {grid.map((post) => (
-                <GridCard
-                  key={post.id}
-                  post={post}
-                  linkPrefix={linkPrefix}
-                  author={author}
-                  showDate={showDate}
-                />
-              ))}
-            </div>
+              {canLoadMoreGrid && (
+                <div className="flex justify-center mt-10">
+                  <button
+                    type="button"
+                    onClick={handleMoreGrid}
+                    disabled={loadingMore === 'grid'}
+                    className="px-6 py-2.5 rounded-full border border-foreground/30 text-sm font-medium uppercase tracking-wider hover:bg-foreground hover:text-background transition-colors inline-flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {loadingMore === 'grid' && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Weitere Beitraege laden
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </>
       )}
