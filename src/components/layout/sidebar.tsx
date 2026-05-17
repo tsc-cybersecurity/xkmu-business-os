@@ -16,7 +16,7 @@ import {
   Clock, UserPlus, Target, Lightbulb,
   // CMS
   BookOpen, Palette, Map, LayoutTemplate, Menu, Newspaper, Folder, Megaphone,
-  Share2, CalendarClock, MailOpen, Rss, Image as ImageIcon,
+  Share2, CalendarClock, MailOpen, Rss, Image as ImageIcon, PanelRight,
   // Intelligence
   BarChart3, Workflow, MessageSquare, FolderKanban, Network,
   // Agents
@@ -99,6 +99,7 @@ export const navigation: NavItem[] = [
       { name: 'Navigation',        href: '/intern/cms/navigation',            icon: Menu,           requiredModule: 'cms' },
       { name: 'Blogartikel',       href: '/intern/blog',                      icon: Newspaper,      requiredModule: 'blog' },
       { name: 'Blog-Kategorien',   href: '/intern/cms/blog-categories',       icon: Folder,         requiredModule: 'blog' },
+      { name: 'Blog-Sidebar',      href: '/intern/cms/blog-sidebar',          icon: PanelRight,     requiredModule: 'blog' },
       { name: 'Kampagnen',         href: '/intern/marketing',                 icon: Megaphone,      requiredModule: 'marketing' },
       { name: 'Social Media',      href: '/intern/social-media',              icon: Share2,         requiredModule: 'social_media' },
       { name: 'Posting-Kalender',  href: '/intern/social-media/kalender',     icon: CalendarClock,  requiredModule: 'social_media' },

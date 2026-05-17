@@ -1,5 +1,6 @@
 import { BlogPostService } from '@/lib/services/blog-post.service'
 import { CmsPromoSlotService } from '@/lib/services/cms-promo-slot.service'
+import { BlogSidebarService } from '@/lib/services/blog-sidebar.service'
 import { toAbsoluteUrl } from '@/lib/utils/cms-metadata'
 import { extractPromoSlugs } from '@/lib/utils/promo-placeholder'
 import { BlogContentRenderer } from '../../../_components/blog-content-renderer'
@@ -79,25 +80,35 @@ export default async function BlogPostPage({ params }: Props) {
     notFound()
   }
 
+  // Sidebar-Settings parallel zur Promo-Aufloesung laden — beide
+  // unabhaengig, defensive try/catch damit DB-Aussetzer den Beitrag
+  // nicht killen.
+  const sidebarSettingsP = BlogSidebarService.get().catch(() => ({ enabled: false, markdown: '' }))
+
   // Promo-Slots aus dem Content extrahieren und vorab batched laden.
   // Wenn keine Platzhalter vorhanden sind oder die DB Fehler wirft,
   // bleibt das Map leer und der Renderer faellt auf reine Markdown-
   // Darstellung zurueck.
   let promoMap: Record<string, CmsPromoSlot> = {}
-  if (post.content) {
-    const promoSlugs = extractPromoSlugs(post.content)
-    if (promoSlugs.length > 0) {
-      try {
-        const slots = await CmsPromoSlotService.getActiveBySlugs(promoSlugs)
-        promoMap = Object.fromEntries(slots.map((s) => [s.slug, s]))
-      } catch {
-        // DB not available — Platzhalter werden weggelassen
-      }
+  const contentPromoSlugs = post.content ? extractPromoSlugs(post.content) : []
+  const sidebarSettings = await sidebarSettingsP
+  const sidebarPromoSlugs = sidebarSettings.enabled && sidebarSettings.markdown
+    ? extractPromoSlugs(sidebarSettings.markdown)
+    : []
+  const allPromoSlugs = Array.from(new Set([...contentPromoSlugs, ...sidebarPromoSlugs]))
+  if (allPromoSlugs.length > 0) {
+    try {
+      const slots = await CmsPromoSlotService.getActiveBySlugs(allPromoSlugs)
+      promoMap = Object.fromEntries(slots.map((s) => [s.slug, s]))
+    } catch {
+      // DB not available — Platzhalter werden weggelassen
     }
   }
 
-  return (
-    <article className="container mx-auto px-4 py-8 max-w-3xl">
+  const showSidebar = sidebarSettings.enabled && sidebarSettings.markdown.trim().length > 0
+
+  const articleInner = (
+    <>
       <Link
         href="/it-news"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8"
@@ -154,6 +165,31 @@ export default async function BlogPostPage({ params }: Props) {
           </div>
         </footer>
       )}
-    </article>
+    </>
+  )
+
+  if (!showSidebar) {
+    return (
+      <article className="container mx-auto px-4 py-8 max-w-3xl">
+        {articleInner}
+      </article>
+    )
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-6xl">
+      <div className="grid gap-10 lg:grid-cols-3">
+        <article className="lg:col-span-2 min-w-0">{articleInner}</article>
+        <aside className="lg:col-span-1">
+          <div className="lg:sticky lg:top-24">
+            <BlogContentRenderer
+              content={sidebarSettings.markdown}
+              promos={promoMap}
+              className="text-sm"
+            />
+          </div>
+        </aside>
+      </div>
+    </div>
   )
 }

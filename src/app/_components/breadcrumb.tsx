@@ -44,20 +44,43 @@ export function Breadcrumb() {
       .catch(() => {})
   }, [])
 
-  // Load CMS page title for current path
+  // Load page title for current path. Erst CMS-Seite probieren, sonst
+  // bei bekannten Blog-Routen den Beitragstitel nachladen — Slugs sehen
+  // sonst als "Eu-ki-verordnung-..." im Breadcrumb haesslich aus.
   useEffect(() => {
     if (pathname === '/') return
+    const segments = pathname.split('/').filter(Boolean)
+    const lastSegment = segments[segments.length - 1]
+    if (!lastSegment) return
+
+    const setLabel = (label: string) => {
+      setDynamicLabels(prev => ({ ...prev, [lastSegment]: label }))
+    }
+
+    // 1) CMS-Page
     fetch(`/api/v1/public/pages${pathname}`)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data?.success && data.data?.title) {
-          const lastSegment = pathname.split('/').filter(Boolean).pop()
-          if (lastSegment) {
-            setDynamicLabels(prev => ({ ...prev, [lastSegment]: data.data.title }))
-          }
+          setLabel(data.data.title)
+          return true
+        }
+        return false
+      })
+      .then((handled) => {
+        if (handled) return
+        // 2) Blog-Beitrag (Bestands-Routen: /it-news, /blog)
+        const BLOG_PREFIXES = ['it-news', 'blog']
+        if (segments.length === 2 && BLOG_PREFIXES.includes(segments[0])) {
+          fetch(`/api/v1/public/blog/posts/${encodeURIComponent(lastSegment)}`)
+            .then((r) => r.ok ? r.json() : null)
+            .then((d) => {
+              if (d?.success && d.data?.title) setLabel(d.data.title)
+            })
+            .catch(() => { /* silent */ })
         }
       })
-      .catch(() => {})
+      .catch(() => { /* silent */ })
   }, [pathname])
 
   if (pathname === '/') return null
