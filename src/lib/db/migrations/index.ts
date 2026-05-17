@@ -284,4 +284,8 @@ export const MIGRATIONS: Migration[] = [
     name: '066_blog_featured_image_prompt.sql',
     description: 'blog_posts.featured_image_prompt — AI-generierter Bildprompt fuer Hero-Bild persistieren (statt nach Gemini-Call zu verwerfen)',
   },
+  {
+    name: '067_news_blog_draft_image_prompt.sql',
+    description: 'news-blog-draft Template um featuredImage + featuredImageAlt erweitert — News-Pipeline soll wie manuelle Generierung Bildprompts liefern',
+  },
 ]

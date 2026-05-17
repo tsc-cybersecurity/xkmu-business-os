@@ -45,7 +45,7 @@ Liefere eine strukturierte Recherche.`,
     userPrompt: `Erstelle einen Blogpost aus folgender Recherche:
 News-Titel: {{title}}
 Recherche (JSON): {{research}}`,
-    outputFormat: '{ "title": "...", "excerpt": "...", "content": "Markdown ~600-900 Woerter", "seoTitle": "<=70 Zeichen", "seoDescription": "<=160 Zeichen", "tags": ["...","..."] }',
+    outputFormat: '{ "title": "...", "excerpt": "...", "content": "Markdown ~600-900 Woerter", "seoTitle": "<=70 Zeichen", "seoDescription": "<=160 Zeichen", "tags": ["...","..."], "featuredImage": "<detaillierter englischer AI-Bildgenerierungs-Prompt, fotorealistisch, B2B, 16:9, ohne Text/Logos/Wasserzeichen>", "featuredImageAlt": "<beschreibender deutscher Alt-Text, max 200 Zeichen>" }',
     triggerInfo: 'News-Pipeline Stufe 2 (generateBlogPost). Erzeugt blog_posts (status=draft).',
   },
   {

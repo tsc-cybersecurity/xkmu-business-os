@@ -26,6 +26,12 @@ export interface BlogDraft {
   seoTitle?: string
   seoDescription?: string
   tags: string[]
+  /** Englischer AI-Bildgenerierungs-Prompt fuer das Hero-Bild — wird
+   *  sowohl an Gemini geschickt als auch in blog_posts.featured_image_prompt
+   *  persistiert, damit Operatoren ihn nachbearbeiten und re-generieren koennen. */
+  featuredImage?: string
+  /** Deutscher Alt-Text. */
+  featuredImageAlt?: string
 }
 
 export interface SocialDraft {
@@ -172,6 +178,8 @@ export const NewsPipelineService = {
       seoTitle: parsed.seoTitle ? truncateAtWord(parsed.seoTitle, 70) : undefined,
       seoDescription: parsed.seoDescription ? truncateAtWord(parsed.seoDescription, 160) : undefined,
       tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+      featuredImage: typeof parsed.featuredImage === 'string' ? parsed.featuredImage : undefined,
+      featuredImageAlt: parsed.featuredImageAlt ? truncateAtWord(parsed.featuredImageAlt, 255) : undefined,
     }
   },
 
@@ -236,10 +244,43 @@ export const NewsPipelineService = {
       // Stufe 2
       await this.markStatus(newsItemId, 'generating')
       const blogDraft = await this.generateBlogPost(item, research)
+
+      // Hero-Bild via Gemini generieren (analog manuelle Blog-Generierung).
+      // Non-blocking: schlaegt es fehl/timeout, wird der Post trotzdem
+      // angelegt — der Bildprompt bleibt aber persistiert, Operator kann
+      // im Editor manuell nachgenerieren.
+      let featuredImageUrl = ''
+      const imagePrompt = blogDraft.featuredImage ?? ''
+      if (imagePrompt) {
+        try {
+          const { ImageGenerationService } = await import('@/lib/services/ai/image-generation.service')
+          const result = await Promise.race([
+            ImageGenerationService.generate(null, {
+              prompt: imagePrompt,
+              provider: 'gemini',
+              aspectRatio: '16:9',
+              category: 'blog',
+              tags: blogDraft.tags.slice(0, 5),
+            }),
+            new Promise<null>((resolve) => setTimeout(() => resolve(null), 60_000)),
+          ])
+          if (result && result.imageUrl) {
+            featuredImageUrl = result.imageUrl
+          } else {
+            logger.warn('news-pipeline: image generation timed out or returned empty', { module: 'NewsPipelineService', newsItemId })
+          }
+        } catch (e) {
+          logger.warn(`news-pipeline: image generation failed: ${e instanceof Error ? e.message : String(e)}`, { module: 'NewsPipelineService', newsItemId })
+        }
+      }
+
       const blogPost = await BlogPostService.create({
         title: blogDraft.title,
         excerpt: blogDraft.excerpt,
         content: blogDraft.content,
+        featuredImage: featuredImageUrl,
+        featuredImageAlt: blogDraft.featuredImageAlt,
+        featuredImagePrompt: imagePrompt,
         seoTitle: blogDraft.seoTitle,
         seoDescription: blogDraft.seoDescription,
         tags: blogDraft.tags,
