@@ -60,10 +60,20 @@ export const SerpApiNewsAdapter: NewsSourceAdapter = {
     if (!keywords.length) return []
 
     const num = Number((config as { maxResults?: unknown }).maxResults) || 10
-    // dateRange-Hint an Google News weiterreichen ('1d', '2d', '7d', ...).
-    // Default '2d' = letzte ~48h. Google's `when`-Parameter kennt 1h/4h/1d/7d/1y.
-    // '2d' wird von Google teils akzeptiert; Hard-Cutoff unten greift unabhaengig.
-    const dateRange = String((config as { dateRange?: unknown }).dateRange ?? '2d')
+
+    // Google News `when=` kennt nur diese Werte. Alles andere mapen wir
+    // auf den naechstliegenden gueltigen Wert, statt einen 400 von SerpAPI
+    // zu provozieren. Lowercase fuer Schreibweisen-Toleranz ("2D" -> "2d").
+    const VALID_WHEN = new Set(['1h', '4h', '1d', '7d', '1y'])
+    const rawDateRange = String((config as { dateRange?: unknown }).dateRange ?? '2d').toLowerCase().trim()
+    const dateRange = VALID_WHEN.has(rawDateRange)
+      ? rawDateRange
+      : rawDateRange === '2d' || rawDateRange === '3d'
+        ? '7d'                            // <=7d → 7d, Hard-Cutoff filtert auf 48h
+        : rawDateRange.endsWith('m')
+          ? '1y'                          // 1m/3m/6m → 1y
+          : '7d'                          // Fallback
+
     const params = new URLSearchParams({
       engine: 'google_news',
       q: keywords.join(' '),

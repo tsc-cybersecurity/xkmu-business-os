@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return apiSuccess(topic)
     } catch (err) {
       logger.error('Error updating news topic', err, { module: 'NewsTopicsAPI' })
-      return apiServerError()
+      return apiServerError(err instanceof Error ? err.message : undefined)
     }
   })
 }

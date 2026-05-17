@@ -208,14 +208,22 @@ export function TopicForm({ initial, onSubmit, saving, submitLabel }: TopicFormP
             </div>
             <div className="space-y-2">
               <Label htmlFor="topic-date-range">Zeitraum</Label>
-              <Input
+              <select
                 id="topic-date-range"
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
-                placeholder="7d"
-              />
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              >
+                <option value="1h">Letzte Stunde</option>
+                <option value="4h">Letzte 4 Stunden</option>
+                <option value="1d">Letzter Tag</option>
+                <option value="2d">Letzte 2 Tage</option>
+                <option value="7d">Letzte 7 Tage</option>
+                <option value="1m">Letzter Monat</option>
+                <option value="1y">Letztes Jahr</option>
+              </select>
               <p className="text-xs text-muted-foreground">
-                z. B. <code>1d</code>, <code>7d</code>, <code>1m</code>, <code>1y</code>
+                Hinweis: Google News kennt nur <code>1h</code>, <code>4h</code>, <code>1d</code>, <code>7d</code>, <code>1y</code> nativ. Andere Werte filtern wir per Hard-Cutoff im Adapter (max 48h).
               </p>
             </div>
           </div>

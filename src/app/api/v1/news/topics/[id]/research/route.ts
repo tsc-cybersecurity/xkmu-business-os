@@ -25,7 +25,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return apiSuccess(result)
     } catch (err) {
       logger.error('news topic research failed', err, { module: 'NewsResearchAPI' })
-      return apiServerError()
+      return apiServerError(err instanceof Error ? err.message : undefined)
     }
   })
 }

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       return apiSuccess({ summary })
     } catch (err) {
       logger.error('news global research failed', err, { module: 'NewsResearchAPI' })
-      return apiServerError()
+      return apiServerError(err instanceof Error ? err.message : undefined)
     }
   })
 }
