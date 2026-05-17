@@ -43,10 +43,24 @@ function mapResult(r: SerpApiNewsResult): NewsSearchResult | null {
   }
 }
 
-// Hard-Cutoff für News-Alter — defensiv, unabhängig vom SerpAPI when-Parameter.
-// Items ohne publishedAt werden durchgelassen (Adapter kann das Datum nicht immer extrahieren).
-const MAX_AGE_HOURS = 48
-const MAX_AGE_MS = MAX_AGE_HOURS * 60 * 60 * 1000
+// Hard-Cutoff abgeleitet aus dem dateRange-Setting. Ohne diese Ableitung
+// (vorher: 48h fest) wurden 7d-Topics auf 48h beschnitten — Nischenkeywords
+// fanden dann gar nichts. Items ohne publishedAt bleiben durchgelassen.
+function cutoffMsFromDateRange(dateRange: string): number {
+  const m = dateRange.match(/^(\d+)([hdwmy])$/)
+  if (!m) return 48 * 60 * 60 * 1000
+  const n = Number(m[1])
+  const unit = m[2]
+  const HOUR = 60 * 60 * 1000
+  switch (unit) {
+    case 'h': return n * HOUR
+    case 'd': return n * 24 * HOUR
+    case 'w': return n * 7 * 24 * HOUR
+    case 'm': return n * 30 * 24 * HOUR
+    case 'y': return n * 365 * 24 * HOUR
+    default:  return 48 * HOUR
+  }
+}
 
 export const SerpApiNewsAdapter: NewsSourceAdapter = {
   async search(keywords, config) {
@@ -69,10 +83,14 @@ export const SerpApiNewsAdapter: NewsSourceAdapter = {
     const dateRange = VALID_WHEN.has(rawDateRange)
       ? rawDateRange
       : rawDateRange === '2d' || rawDateRange === '3d'
-        ? '7d'                            // <=7d → 7d, Hard-Cutoff filtert auf 48h
+        ? '7d'                            // ≤7d → 7d
         : rawDateRange.endsWith('m')
           ? '1y'                          // 1m/3m/6m → 1y
           : '7d'                          // Fallback
+
+    // Cutoff aus dem ORIGINALEN Setting ableiten (nicht aus dem gemappten
+    // Google-Wert) — wenn User 7d eingestellt hat, kommen auch 7 Tage durch.
+    const maxAgeMs = cutoffMsFromDateRange(rawDateRange)
 
     const params = new URLSearchParams({
       engine: 'google_news',
@@ -99,7 +117,7 @@ export const SerpApiNewsAdapter: NewsSourceAdapter = {
       .filter((x): x is NewsSearchResult => x !== null)
       .filter((x) => {
         if (!x.publishedAt) return true // Datum unbekannt → durchlassen
-        return now - x.publishedAt.getTime() <= MAX_AGE_MS
+        return now - x.publishedAt.getTime() <= maxAgeMs
       })
   },
 }

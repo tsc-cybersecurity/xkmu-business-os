@@ -223,7 +223,7 @@ export function TopicForm({ initial, onSubmit, saving, submitLabel }: TopicFormP
                 <option value="1y">Letztes Jahr</option>
               </select>
               <p className="text-xs text-muted-foreground">
-                Hinweis: Google News kennt nur <code>1h</code>, <code>4h</code>, <code>1d</code>, <code>7d</code>, <code>1y</code> nativ. Andere Werte filtern wir per Hard-Cutoff im Adapter (max 48h).
+                Google News kennt nur <code>1h</code>, <code>4h</code>, <code>1d</code>, <code>7d</code>, <code>1y</code> nativ — andere Werte werden gemappt. Der zeitliche Cutoff im Adapter wird aus diesem Setting abgeleitet.
               </p>
             </div>
           </div>
