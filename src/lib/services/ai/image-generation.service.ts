@@ -157,7 +157,31 @@ async function generateWithGemini(
     }
   }
 
-  throw new Error('Gemini returned no image data. Möglicherweise wurde der Prompt abgelehnt.')
+  // Kein Bild → diagnostisch detailliert werden, damit der User die Ursache
+  // sieht. Gemini gibt bei Block den finishReason (SAFETY / PROHIBITED_CONTENT
+  // / RECITATION / IMAGE_SAFETY) plus oft eine erlaeuternde Text-Part zurueck.
+  const reasons = candidates
+    .map((c: { finishReason?: string }) => c.finishReason)
+    .filter((r: unknown): r is string => typeof r === 'string')
+  const textParts = candidates
+    .flatMap((c: { content?: { parts?: Array<{ text?: string }> } }) => c.content?.parts ?? [])
+    .map((p: { text?: string }) => p.text)
+    .filter((t: unknown): t is string => typeof t === 'string')
+  const promptFeedback = (data as { promptFeedback?: { blockReason?: string } }).promptFeedback
+
+  const detail: string[] = []
+  if (reasons.length > 0) detail.push(`finishReason: ${reasons.join(', ')}`)
+  if (promptFeedback?.blockReason) detail.push(`blockReason: ${promptFeedback.blockReason}`)
+  if (textParts.length > 0) detail.push(`Modell-Antwort: ${textParts.join(' ').slice(0, 300)}`)
+
+  const suffix = detail.length > 0 ? ` — ${detail.join(' · ')}` : ''
+  logger.warn('Gemini image generation returned no image', {
+    module: 'ImageGeneration',
+    rawResponse: JSON.stringify(data).slice(0, 1000),
+  })
+  throw new Error(
+    `Gemini hat kein Bild geliefert${suffix}. Prompt evtl. durch Safety-Filter blockiert — umformulieren (z.B. neutralere Personenbeschreibung, keine Markennamen, keine sensiblen Themen).`
+  )
 }
 
 // ============================================
