@@ -121,8 +121,12 @@ services:
   # ============================================
   # Redis (Session Cache)
   # ============================================
+  # Redis 8 GA seit 2025, AGPL/SSPL/RSALv2 Tri-Lizenz — fuer interne
+  # Cache/Queue-Nutzung (BullMQ, Session) unkritisch. Drop-in von 7 → 8,
+  # da wir keine Modules/Lua nutzen. Major-Tag gepinnt damit kein 9er
+  # ueberraschend reinrollt.
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: xkmu-redis
     restart: unless-stopped
     volumes:
