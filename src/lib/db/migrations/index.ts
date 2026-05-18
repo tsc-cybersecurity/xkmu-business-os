@@ -304,4 +304,8 @@ export const MIGRATIONS: Migration[] = [
     name: '071_x_template_shortcode.sql',
     description: 'blog_to_x-Template auf 280-Zeichen-Rechnung getrimmt — URL im content-Feld + Hashtags-Overhead mitgezaehlt, Ziel 240-260 Zeichen Reserve',
   },
+  {
+    name: '072_clean_email_signatures.sql',
+    description: 'email_accounts.signature einmalig saeubern: leere <p>-Absaetze raus, Mehrfach-<br> auf zwei kappen — idempotent',
+  },
 ]
