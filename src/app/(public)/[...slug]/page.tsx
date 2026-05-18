@@ -30,7 +30,11 @@ export default async function CmsCatchAllPage({ params }: Props) {
   if (slug.length === 1 && isShortcodeFormat(slug[0])) {
     try {
       const resolved = await ShortcodeService.resolve(slug[0])
-      if (resolved && resolved.isPublished) {
+      if (resolved) {
+        // Auch fuer Drafts redirecten — die Zielroute entscheidet selbst,
+        // ob sie 404 ausgibt. Sonst sieht der User 404 auf dem Shortcode,
+        // obwohl der Code existiert und z.B. eine Draft-Seite zeigen
+        // koennte (oder die kanonische Slug-Form trotzdem 200 ist).
         redirect(resolved.canonicalUrl)
       }
     } catch {

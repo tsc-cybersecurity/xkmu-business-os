@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { cmsSettings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { OrganizationService } from "@/lib/services/organization.service";
+import { CmsDesignService } from "@/lib/services/cms-design.service";
 import { buildOrganizationJsonLd } from "@/lib/seo/organization-schema";
 
 const ubuntu = localFont({
@@ -40,28 +41,44 @@ const montserrat = localFont({
   display: "swap",
 });
 
-// Public-facing canonical site URL — used in OG/Twitter/JSON-LD metadata.
-// Overridable via NEXT_PUBLIC_SITE_URL fuer abweichende Deployments.
-const PUBLIC_SITE_URL =
+// Fallback-Host wenn CmsDesignService nichts liefert. NEXT_PUBLIC_SITE_URL
+// hat Vorrang vor NEXT_PUBLIC_APP_URL; 'localhost' wird gefiltert, weil
+// OG-Crawler absolute Produktions-URLs erwarten.
+const PUBLIC_SITE_URL_FALLBACK =
   process.env.NEXT_PUBLIC_SITE_URL && !process.env.NEXT_PUBLIC_SITE_URL.includes('localhost')
     ? process.env.NEXT_PUBLIC_SITE_URL
     : 'https://www.xkmu.de'
-export const metadata: Metadata = {
-  metadataBase: new URL(PUBLIC_SITE_URL),
-  title: "xKMU Business OS",
-  description: "Professionelles Business Operating System für KMU",
-  openGraph: {
-    type: 'website',
-    siteName: 'xKMU Business OS',
-  },
-  twitter: {
-    card: 'summary',
-    site: '@xkmu',
-  },
-  icons: {
-    icon: '/favicon.ico',
-  },
-};
+
+// metadataBase wird vom CMS-Design-Setting gesteuert (Operator pflegt das
+// unter /intern/cms/design). Jede Page kann dann `alternates.canonical`
+// als relativen Pfad setzen — Next resolvet ihn gegen diese Base.
+// generateMetadata statt const, damit der DB-Lookup pro Request laeuft.
+export async function generateMetadata(): Promise<Metadata> {
+  let baseUrl = PUBLIC_SITE_URL_FALLBACK
+  try {
+    baseUrl = await CmsDesignService.getAppUrl()
+  } catch {
+    // DB nicht erreichbar → Fallback
+  }
+  return {
+    metadataBase: new URL(baseUrl),
+    title: "xKMU Business OS",
+    description: "Professionelles Business Operating System für KMU",
+    alternates: { canonical: baseUrl },
+    openGraph: {
+      type: 'website',
+      siteName: 'xKMU Business OS',
+      url: baseUrl,
+    },
+    twitter: {
+      card: 'summary',
+      site: '@xkmu',
+    },
+    icons: {
+      icon: '/favicon.ico',
+    },
+  }
+}
 
 async function loadBrandingLogoUrl(): Promise<string | null> {
   try {
@@ -88,7 +105,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const logoUrl = await loadBrandingLogoUrl()
-  const jsonLdGraph = buildOrganizationJsonLd({ siteUrl: PUBLIC_SITE_URL, logoUrl })
+  let siteUrl = PUBLIC_SITE_URL_FALLBACK
+  try {
+    siteUrl = await CmsDesignService.getAppUrl()
+  } catch {
+    // ignore — fallback bleibt aktiv
+  }
+  const jsonLdGraph = buildOrganizationJsonLd({ siteUrl, logoUrl })
 
   return (
     <html lang="de-DE">

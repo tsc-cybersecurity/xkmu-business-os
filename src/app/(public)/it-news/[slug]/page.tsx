@@ -1,7 +1,7 @@
 import { BlogPostService } from '@/lib/services/blog-post.service'
 import { CmsPromoSlotService } from '@/lib/services/cms-promo-slot.service'
 import { BlogSidebarService } from '@/lib/services/blog-sidebar.service'
-import { toAbsoluteUrl } from '@/lib/utils/cms-metadata'
+import { toAbsoluteUrl, buildCanonical } from '@/lib/utils/cms-metadata'
 import { extractPromoSlugs } from '@/lib/utils/promo-placeholder'
 import { BlogContentRenderer } from '../../../_components/blog-content-renderer'
 import { Badge } from '@/components/ui/badge'
@@ -34,8 +34,9 @@ function buildBlogOgImageUrl(post: { title: string; excerpt: string | null; cate
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const canonical = await buildCanonical(`/it-news/${slug}`).catch(() => undefined)
   try {
-    const { slug } = await params
     const post = await BlogPostService.getBySlugPublic(slug)
     if (post) {
       const ogImage = toAbsoluteUrl(post.featuredImage ?? buildBlogOgImageUrl(post))
@@ -43,11 +44,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: post.seoTitle || post.title,
         description: post.seoDescription || post.excerpt || undefined,
         keywords: post.seoKeywords || undefined,
+        ...(canonical ? { alternates: { canonical } } : {}),
         openGraph: {
           title: post.seoTitle || post.title,
           description: post.seoDescription || post.excerpt || undefined,
           type: 'article',
-          url: `/it-news/${slug}`,
+          url: canonical ?? `/it-news/${slug}`,
           images: [ogImage],
         },
         twitter: {
@@ -63,7 +65,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   } catch {
     // DB not available
   }
-  return { title: 'IT-News' }
+  return {
+    title: 'IT-News',
+    ...(canonical ? { alternates: { canonical } } : {}),
+  }
 }
 
 export default async function BlogPostPage({ params }: Props) {
