@@ -67,16 +67,23 @@ function buildQuotedBody(original: OriginalEmail): string {
 }
 
 function stripHtml(html: string): string {
-  // Basic HTML-to-text for the textarea (plain text editing for now)
+  // Basic HTML-to-text for the textarea (plain text editing for now).
+  // </p> war frueher \n\n — bei Signaturen mit zeilenweisen <p>-Tags
+  // ergab das pro Zeile eine zusaetzliche Leerzeile. Jetzt erzeugen
+  // </p>, </div> und <br> jeweils nur EINEN \n; mehrfach aufeinander-
+  // folgende Newlines werden am Ende auf max 2 (= eine Leerzeile)
+  // gekappt. So bleiben absichtliche Absatzpausen erhalten, aber
+  // Block-Tag-Stapelungen blaehen den Text nicht mehr auf.
   return html
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n\n')
-    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
     .replace(/&nbsp;/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
     .trim()
 }
 
