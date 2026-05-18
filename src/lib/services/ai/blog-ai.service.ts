@@ -313,7 +313,7 @@ Antworte NUR mit:
    * laeuft die Plattformen parallel ab.
    */
   async generateSocialPosts(
-    post: { title: string; content: string | null; excerpt: string | null; slug: string },
+    post: { title: string; content: string | null; excerpt: string | null; slug: string; shortcode?: string | null },
     options: { siteUrl: string; platforms?: Array<'instagram' | 'x' | 'linkedin' | 'facebook'> },
     context: AIRequestContext
   ): Promise<Array<{ platform: 'instagram' | 'x' | 'linkedin' | 'facebook'; content: string; hashtags: string[] }>> {
@@ -326,9 +326,14 @@ Antworte NUR mit:
     }
 
     const cleanSiteUrl = options.siteUrl.replace(/\/$/, '')
-    // Public-Route der Blog-Beitraege ist /it-news/<slug>; /blog/<slug> wird
-    // via next.config.ts redirects auf /it-news/<slug> umgeleitet (Bestandsschutz).
-    const url = post.slug ? `${cleanSiteUrl}/it-news/${post.slug}` : cleanSiteUrl
+    // Shortcode-Kurz-URL bevorzugen — kommt jedem Social-Post zugute, aber
+    // ist fuer X mit dem 280-Zeichen-Limit existenziell. Fallback auf die
+    // kanonische /it-news/<slug>-Form fuer alte Posts ohne shortcode.
+    const url = post.shortcode
+      ? `${cleanSiteUrl}/${post.shortcode}`
+      : post.slug
+        ? `${cleanSiteUrl}/it-news/${post.slug}`
+        : cleanSiteUrl
 
     const placeholders = {
       title: post.title,

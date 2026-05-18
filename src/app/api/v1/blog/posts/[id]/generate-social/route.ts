@@ -51,7 +51,7 @@ export async function POST(
           : process.env.NEXT_PUBLIC_APP_URL) ?? 'https://www.xkmu.de'
 
       const generated = await BlogAIService.generateSocialPosts(
-        { title: post.title, content: post.content, excerpt: post.excerpt, slug: post.slug },
+        { title: post.title, content: post.content, excerpt: post.excerpt, slug: post.slug, shortcode: post.shortcode },
         { siteUrl, platforms },
         { userId: auth.userId, feature: 'social_media' }
       )

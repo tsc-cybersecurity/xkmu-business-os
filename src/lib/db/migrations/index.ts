@@ -300,4 +300,8 @@ export const MIGRATIONS: Migration[] = [
     name: '070_shortcode_urls.sql',
     description: 'Shortcode-System: 6-stellige Kurz-URLs (www.xkmu.de/xxxxxx) fuer alle CMS-Seiten + Blog-Beitraege, cross-table-unique, Backfill fuer Bestand',
   },
+  {
+    name: '071_x_template_shortcode.sql',
+    description: 'blog_to_x-Template auf 280-Zeichen-Rechnung getrimmt — URL im content-Feld + Hashtags-Overhead mitgezaehlt, Ziel 240-260 Zeichen Reserve',
+  },
 ]
