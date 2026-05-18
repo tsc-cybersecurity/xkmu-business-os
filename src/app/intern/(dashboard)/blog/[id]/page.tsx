@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, Loader2, Save, Globe, EyeOff, Sparkles, Share2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImageField } from '@/components/shared'
+import { ShortcodeLink } from '@/components/shared/shortcode-link'
 import { logger } from '@/lib/utils/logger'
 
 interface BlogPost {
@@ -32,6 +33,7 @@ interface BlogPost {
   status: string | null
   source: string | null
   inSitemap: boolean | null
+  shortcode: string | null
 }
 
 export default function BlogPostEditorPage() {
@@ -303,7 +305,10 @@ export default function BlogPostEditorPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">Beitrag bearbeiten</h1>
-            <p className="text-sm text-muted-foreground font-mono">{post.slug}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm text-muted-foreground font-mono">{post.slug}</p>
+              <ShortcodeLink shortcode={post.shortcode} siteUrl={process.env.NEXT_PUBLIC_SITE_URL} />
+            </div>
           </div>
           <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
             {post.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}

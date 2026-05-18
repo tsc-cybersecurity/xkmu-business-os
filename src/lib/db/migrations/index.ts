@@ -296,4 +296,8 @@ export const MIGRATIONS: Migration[] = [
     name: '069_magazine_block_type.sql',
     description: 'Neuer CMS-Block-Typ "magazine" — Featured + Sidebar + Grid mit Kategorie-Filter-Nav fuer Themenseiten (Cybersecurity/KI/Automatisierung)',
   },
+  {
+    name: '070_shortcode_urls.sql',
+    description: 'Shortcode-System: 6-stellige Kurz-URLs (www.xkmu.de/xxxxxx) fuer alle CMS-Seiten + Blog-Beitraege, cross-table-unique, Backfill fuer Bestand',
+  },
 ]

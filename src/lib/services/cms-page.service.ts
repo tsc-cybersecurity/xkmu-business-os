@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { cmsPages, cmsBlocks } from '@/lib/db/schema'
 import { eq, and, count, asc } from 'drizzle-orm'
+import { ShortcodeService } from './shortcode.service'
 import type { CmsPage, NewCmsPage, CmsBlock } from '@/lib/db/schema'
 
 export interface CmsPageFilters {
@@ -30,6 +31,10 @@ export interface CmsPageWithBlocks extends CmsPage {
 
 export const CmsPageService = {
   async create(data: CreateCmsPageInput, createdBy?: string): Promise<CmsPage> {
+    // Shortcode wird immer beim Anlegen vergeben — der Operator kann ihn
+    // sofort als Kurz-URL teilen, ohne Extra-Klick. Generation kollisions-
+    // sicher gegen cms_pages + blog_posts cross-table.
+    const shortcode = await ShortcodeService.generate()
     const [page] = await db
       .insert(cmsPages)
       .values({
@@ -41,6 +46,7 @@ export const CmsPageService = {
         ogImage: data.ogImage || null,
         status: data.status || 'draft',
         inSitemap: data.inSitemap ?? true,
+        shortcode,
         createdBy: createdBy || undefined,
       })
       .returning()

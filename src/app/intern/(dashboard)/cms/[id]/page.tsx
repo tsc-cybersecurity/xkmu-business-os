@@ -51,6 +51,7 @@ import { ArrowLeft,
   Table2,
 } from 'lucide-react'
 import { CmsBlockRenderer } from '@/app/_components/cms-block-renderer'
+import { ShortcodeLink } from '@/components/shared/shortcode-link'
 import { toast } from 'sonner'
 
 interface CmsBlock {
@@ -72,6 +73,7 @@ interface CmsPage {
   ogImage: string | null
   status: string | null
   hasDraftChanges: boolean | null
+  shortcode: string | null
   blocks: CmsBlock[]
 }
 
@@ -350,7 +352,10 @@ export default function CmsPageEditorPage() {
           </Link>
           <div>
             <h1 className="text-2xl font-bold">{page.title}</h1>
-            <p className="text-sm text-muted-foreground font-mono">{page.slug}</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-sm text-muted-foreground font-mono">{page.slug}</p>
+              <ShortcodeLink shortcode={page.shortcode} siteUrl={process.env.NEXT_PUBLIC_SITE_URL} />
+            </div>
           </div>
           <Badge variant={page.status === 'published' ? 'default' : 'secondary'}>
             {page.status === 'published' ? 'Veröffentlicht' : 'Entwurf'}

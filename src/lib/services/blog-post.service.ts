@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { blogPosts } from '@/lib/db/schema'
 import { eq, and, count, desc, ilike, inArray } from 'drizzle-orm'
+import { ShortcodeService } from './shortcode.service'
 import type { BlogPost, NewBlogPost } from '@/lib/db/schema'
 
 export interface BlogPostFilters {
@@ -38,6 +39,9 @@ export type UpdateBlogPostInput = Partial<CreateBlogPostInput>
 export const BlogPostService = {
   async create(data: CreateBlogPostInput, authorId?: string): Promise<BlogPost> {
     const slug = data.slug || await this.generateSlug(data.title)
+    // Shortcode bei Anlage vergeben — kollisionssicher gegen cms_pages +
+    // blog_posts (cross-table-unique).
+    const shortcode = await ShortcodeService.generate()
     const [post] = await db
       .insert(blogPosts)
       .values({
@@ -57,6 +61,7 @@ export const BlogPostService = {
         source: data.source || 'manual',
         aiMetadata: data.aiMetadata || null,
         inSitemap: data.inSitemap ?? true,
+        shortcode,
         authorId: authorId || undefined,
         sourceNewsItemId: data.sourceNewsItemId ?? null,
       })
