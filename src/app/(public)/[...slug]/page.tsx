@@ -5,6 +5,7 @@ import { CmsPageService } from '@/lib/services/cms-page.service'
 import { ShortcodeService, isShortcodeFormat } from '@/lib/services/shortcode.service'
 import { generateCmsMetadata } from '@/lib/utils/cms-metadata'
 import type { Metadata } from 'next'
+import type { ResolvedShortcode } from '@/lib/services/shortcode.service'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,17 +29,21 @@ export default async function CmsCatchAllPage({ params }: Props) {
   // (z.B. /buchen oder /pakete sind 6 Zeichen lang und sollen weiterhin
   // ihre CMS-Page sein).
   if (slug.length === 1 && isShortcodeFormat(slug[0])) {
+    // WICHTIG: redirect() MUSS ausserhalb von try/catch stehen — Next.js
+    // wirft intern einen NEXT_REDIRECT-Error, der ungefangen nach oben
+    // durchlaufen muss. Wird er gefangen, faellt der Code unten in
+    // notFound() und der Shortcode-Aufruf liefert 404 statt 307.
+    let resolved: ResolvedShortcode | null = null
     try {
-      const resolved = await ShortcodeService.resolve(slug[0])
-      if (resolved) {
-        // Auch fuer Drafts redirecten — die Zielroute entscheidet selbst,
-        // ob sie 404 ausgibt. Sonst sieht der User 404 auf dem Shortcode,
-        // obwohl der Code existiert und z.B. eine Draft-Seite zeigen
-        // koennte (oder die kanonische Slug-Form trotzdem 200 ist).
-        redirect(resolved.canonicalUrl)
-      }
+      resolved = await ShortcodeService.resolve(slug[0])
     } catch {
       // DB nicht erreichbar → wie Miss behandeln, normale Aufloesung versuchen
+    }
+    if (resolved) {
+      // Auch fuer Drafts redirecten — die Zielroute entscheidet selbst,
+      // ob sie 404 ausgibt. Sonst sieht der User 404 auf dem Shortcode,
+      // obwohl der Code in der DB existiert.
+      redirect(resolved.canonicalUrl)
     }
   }
 
