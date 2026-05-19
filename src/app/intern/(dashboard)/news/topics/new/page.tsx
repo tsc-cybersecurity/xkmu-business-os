@@ -23,6 +23,7 @@ export default function NewNewsTopicPage() {
         keywords: data.keywords,
         sourceType: data.sourceType,
         sourceConfig: data.sourceConfig,
+        socialConfig: data.socialConfig,
         isActive: data.isActive,
         sortOrder: data.sortOrder,
       }

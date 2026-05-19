@@ -4,6 +4,18 @@ import { newsTopics, newsItems } from '@/lib/db/schema'
 import { eq, and, desc, asc, inArray } from 'drizzle-orm'
 import type { NewsTopic, NewNewsTopic, NewsItem, NewNewsItem } from '@/lib/db/schema'
 
+export type NewsSocialPlatform = 'x' | 'facebook' | 'instagram' | 'linkedin'
+
+export interface NewsTopicSocialConfig {
+  platforms: NewsSocialPlatform[]
+  includeImage: boolean
+}
+
+export const DEFAULT_NEWS_TOPIC_SOCIAL_CONFIG: NewsTopicSocialConfig = {
+  platforms: ['x', 'facebook', 'instagram'],
+  includeImage: true,
+}
+
 export interface CreateTopicInput {
   name: string
   description?: string
@@ -11,6 +23,7 @@ export interface CreateTopicInput {
   keywords: string[]
   sourceType?: string
   sourceConfig?: Record<string, unknown>
+  socialConfig?: NewsTopicSocialConfig
   isActive?: boolean
   sortOrder?: number
 }
@@ -44,6 +57,7 @@ export const NewsService = {
         keywords: data.keywords,
         sourceType: data.sourceType ?? 'serpapi_news',
         sourceConfig: data.sourceConfig ?? {},
+        socialConfig: data.socialConfig ?? DEFAULT_NEWS_TOPIC_SOCIAL_CONFIG,
         isActive: data.isActive ?? true,
         sortOrder: data.sortOrder ?? 0,
       })
@@ -59,6 +73,7 @@ export const NewsService = {
     if (data.keywords !== undefined) update.keywords = data.keywords
     if (data.sourceType !== undefined) update.sourceType = data.sourceType
     if (data.sourceConfig !== undefined) update.sourceConfig = data.sourceConfig
+    if (data.socialConfig !== undefined) update.socialConfig = data.socialConfig
     if (data.isActive !== undefined) update.isActive = data.isActive
     if (data.sortOrder !== undefined) update.sortOrder = data.sortOrder
 

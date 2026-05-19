@@ -16,6 +16,13 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Save } from 'lucide-react'
 
+export type SocialPlatform = 'x' | 'facebook' | 'instagram' | 'linkedin'
+
+export interface TopicSocialConfig {
+  platforms: SocialPlatform[]
+  includeImage: boolean
+}
+
 export interface TopicFormData {
   name: string
   description: string
@@ -23,6 +30,7 @@ export interface TopicFormData {
   keywords: string[]
   sourceType: string
   sourceConfig: { maxResults: number; dateRange: string }
+  socialConfig: TopicSocialConfig
   isActive: boolean
   sortOrder: number
 }
@@ -34,8 +42,35 @@ export interface TopicFormInitial {
   keywords?: string[] | null
   sourceType?: string
   sourceConfig?: Record<string, unknown> | null
+  socialConfig?: Record<string, unknown> | null
   isActive?: boolean | null
   sortOrder?: number | null
+}
+
+const PLATFORM_LABELS: Record<SocialPlatform, string> = {
+  x: 'X (Twitter)',
+  facebook: 'Facebook',
+  instagram: 'Instagram',
+  linkedin: 'LinkedIn',
+}
+
+const PLATFORM_ORDER: SocialPlatform[] = ['x', 'facebook', 'instagram', 'linkedin']
+
+const DEFAULT_SOCIAL_PLATFORMS: SocialPlatform[] = ['x', 'facebook', 'instagram']
+
+function readSocialPlatforms(cfg: Record<string, unknown> | null | undefined): SocialPlatform[] {
+  const raw = cfg?.platforms
+  if (!Array.isArray(raw)) return DEFAULT_SOCIAL_PLATFORMS
+  const filtered = raw
+    .map((p) => String(p).toLowerCase())
+    .filter((p): p is SocialPlatform => PLATFORM_ORDER.includes(p as SocialPlatform))
+  return filtered.length > 0 ? filtered : DEFAULT_SOCIAL_PLATFORMS
+}
+
+function readIncludeImage(cfg: Record<string, unknown> | null | undefined): boolean {
+  const v = cfg?.includeImage
+  if (typeof v === 'boolean') return v
+  return true
 }
 
 interface TopicFormProps {
@@ -71,9 +106,25 @@ export function TopicForm({ initial, onSubmit, saving, submitLabel }: TopicFormP
   const [sourceType, setSourceType] = useState(initial?.sourceType ?? 'serpapi_news')
   const [maxResults, setMaxResults] = useState<number>(readMaxResults(initial?.sourceConfig))
   const [dateRange, setDateRange] = useState<string>(readDateRange(initial?.sourceConfig))
+  const [socialPlatforms, setSocialPlatforms] = useState<SocialPlatform[]>(
+    readSocialPlatforms(initial?.socialConfig),
+  )
+  const [socialIncludeImage, setSocialIncludeImage] = useState<boolean>(
+    readIncludeImage(initial?.socialConfig),
+  )
   const [isActive, setIsActive] = useState<boolean>(initial?.isActive ?? true)
   const [sortOrder, setSortOrder] = useState<number>(initial?.sortOrder ?? 0)
   const [error, setError] = useState<string | null>(null)
+
+  const togglePlatform = (platform: SocialPlatform, checked: boolean) => {
+    setSocialPlatforms((prev) => {
+      if (checked) {
+        if (prev.includes(platform)) return prev
+        return [...prev, platform]
+      }
+      return prev.filter((p) => p !== platform)
+    })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,6 +155,10 @@ export function TopicForm({ initial, onSubmit, saving, submitLabel }: TopicFormP
       sourceConfig: {
         maxResults: Number.isFinite(maxResults) ? maxResults : 10,
         dateRange: dateRange || '7d',
+      },
+      socialConfig: {
+        platforms: socialPlatforms,
+        includeImage: socialIncludeImage,
       },
       isActive,
       sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
@@ -227,6 +282,52 @@ export function TopicForm({ initial, onSubmit, saving, submitLabel }: TopicFormP
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Social-Media-Generierung</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Plattformen</Label>
+            <p className="text-xs text-muted-foreground">
+              Für welche Plattformen aus jedem generierten Blog-Beitrag ein Social-Media-Entwurf erzeugt wird. Keine Auswahl → Stufe 3 wird übersprungen.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {PLATFORM_ORDER.map((platform) => {
+                const id = `topic-social-${platform}`
+                const checked = socialPlatforms.includes(platform)
+                return (
+                  <div key={platform} className="flex items-center gap-2">
+                    <Checkbox
+                      id={id}
+                      checked={checked}
+                      onCheckedChange={(c) => togglePlatform(platform, c === true)}
+                    />
+                    <Label htmlFor={id} className="cursor-pointer text-sm">
+                      {PLATFORM_LABELS[platform]}
+                    </Label>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-2">
+            <Checkbox
+              id="topic-social-image"
+              checked={socialIncludeImage}
+              onCheckedChange={(checked) => setSocialIncludeImage(checked === true)}
+            />
+            <Label htmlFor="topic-social-image" className="cursor-pointer">
+              Hero-Bild des Blog-Beitrags an Social-Posts anhängen
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground pl-7 -mt-2">
+            Wenn aktiv und ein Bild via KI generiert werden konnte, wird es als imageUrl an jeden Plattform-Post angehängt.
+          </p>
         </CardContent>
       </Card>
 

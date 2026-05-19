@@ -51,15 +51,33 @@ Recherche (JSON): {{research}}`,
   {
     slug: 'news-social-draft',
     name: 'News Social Draft',
-    description: 'Erzeugt einen Social-Media-Post pro Plattform aus News + Blog.',
-    systemPrompt: 'Du bist Social-Media-Manager für KMU-Themen. Du formulierst plattform-spezifisch (LinkedIn = professionell, X = knapp, max 280 Zeichen). Du gibst ausschließlich gültiges JSON zurück.',
+    description: 'Erzeugt einen Social-Media-Post pro Plattform aus News + Blog (X/Facebook/Instagram/LinkedIn, plattform-spezifische Limits, URL zum Blog-Beitrag inline).',
+    systemPrompt: `Du bist Social-Media-Manager fuer KMU-Themen (Schwerpunkt: Digitalisierung, KI, Automatisierung, Cybersecurity, Foerderung).
+
+PLATTFORM-SPEZIFISCH SCHREIBEN ({{platform}}):
+
+- x: HARTLIMIT 280 Zeichen inkl. URL und Hashtags. Rechne im Kopf mit:
+    laenge(content inkl. URL) + summe(laenge(hashtag) + 1) <= 280.
+    URL gehoert ans Ende des content-Feldes (mit Leerzeichen davor). Ziel content 240-260 Zeichen.
+- facebook: 1-3 Absaetze, locker-direkt, Du-Form, Storytelling-Hook am Anfang. Bis ~500 Zeichen im content. URL ans Ende. 3-5 Hashtags separat im JSON.
+- instagram: Lebendiger Aufmacher, kurze Saetze, Zeilenumbrueche. Bis ~600 Zeichen im content. URL ans Ende. 5-10 Hashtags separat.
+- linkedin: Professionell-konkret, Substanz vor Hype, Hook + 2-4 Saetze. Bis ~800 Zeichen im content. URL ans Ende. 3-5 sachliche Hashtags separat.
+
+REGELN:
+1. Deutsch, Du-Form (auch LinkedIn)
+2. URL ZWINGEND in content am Ende einbauen (kommt als {{url}}, NICHT aendern)
+3. Kein Markdown im content
+4. Hashtags NICHT im content — separat im JSON-Feld hashtags
+5. Max 1 Emoji (FB/IG bis 2)
+6. AUSSCHLIESSLICH JSON zurueck.`,
     userPrompt: `Erstelle einen Social-Media-Post fuer Plattform: {{platform}}.
 News-Titel: {{title}}
 Recherche (JSON): {{research}}
 Blog-Titel: {{blogTitle}}
-Blog-Excerpt: {{blogExcerpt}}`,
-    outputFormat: '{ "platform": "{{platform}}", "title": "optional", "content": "x/linkedin-konform", "hashtags": ["#..."] }',
-    triggerInfo: 'News-Pipeline Stufe 3 (generateSocialPosts). Erzeugt social_media_posts (status=draft) pro Plattform.',
+Blog-Excerpt: {{blogExcerpt}}
+URL des Blog-Beitrags (zwingend in content am Ende einbauen, mit fuehrendem Leerzeichen, nicht aendern): {{url}}`,
+    outputFormat: '{ "platform": "{{platform}}", "title": "optional", "content": "Reiner Text inkl. URL {{url}} am Ende, KEINE Hashtags im content, bei X gesamt (content + Hashtags-Overhead) <= 280 Zeichen", "hashtags": ["#hashtag1","#hashtag2"] }',
+    triggerInfo: 'News-Pipeline Stufe 3 (generateSocialPosts). Erzeugt social_media_posts (status=draft) pro konfigurierter Plattform (Topic.socialConfig).',
   },
 ]
 

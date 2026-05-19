@@ -34,14 +34,30 @@ export interface BlogDraft {
   featuredImageAlt?: string
 }
 
+export type SocialPlatform = 'x' | 'facebook' | 'instagram' | 'linkedin'
+
 export interface SocialDraft {
-  platform: 'linkedin' | 'x'
+  platform: SocialPlatform
   title?: string
   content: string
   hashtags: string[]
 }
 
-const DEFAULT_SOCIAL_PLATFORMS: Array<'linkedin' | 'x'> = ['linkedin', 'x']
+const VALID_SOCIAL_PLATFORMS: readonly SocialPlatform[] = ['x', 'facebook', 'instagram', 'linkedin']
+const DEFAULT_SOCIAL_PLATFORMS: SocialPlatform[] = ['x', 'facebook', 'instagram']
+const DEFAULT_INCLUDE_IMAGE = true
+
+function normalizeSocialConfig(raw: unknown): { platforms: SocialPlatform[]; includeImage: boolean } {
+  const obj = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  const rawPlatforms = Array.isArray(obj.platforms) ? obj.platforms : []
+  const platforms = rawPlatforms
+    .map((p) => String(p).toLowerCase())
+    .filter((p): p is SocialPlatform => (VALID_SOCIAL_PLATFORMS as readonly string[]).includes(p))
+  return {
+    platforms: platforms.length > 0 ? platforms : DEFAULT_SOCIAL_PLATFORMS,
+    includeImage: typeof obj.includeImage === 'boolean' ? obj.includeImage : DEFAULT_INCLUDE_IMAGE,
+  }
+}
 
 function extractJson(text: string): string | null {
   const codeBlockMatch = text.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/)
@@ -186,10 +202,22 @@ export const NewsPipelineService = {
   async generateSocialPosts(
     item: NewsItem,
     research: DeepResearchResult,
-    blog: { id: string; title: string; excerpt: string | null },
+    blog: { id: string; title: string; excerpt: string | null; shortcode?: string | null; slug?: string | null },
+    options: { platforms: SocialPlatform[]; siteUrl: string },
   ): Promise<SocialDraft[]> {
     const drafts: SocialDraft[] = []
-    for (const platform of DEFAULT_SOCIAL_PLATFORMS) {
+    const cleanSiteUrl = options.siteUrl.replace(/\/$/, '')
+    // Shortcode-Kurz-URL bevorzugen (kritisch fuer X-280-Zeichen-Limit) —
+    // Fallback auf /it-news/<slug> oder Stamm-URL, falls weder Shortcode
+    // noch Slug bekannt sind (sollte bei frisch erstelltem Blog-Post nicht
+    // passieren, aber defensiv ist sicherer).
+    const url = blog.shortcode
+      ? `${cleanSiteUrl}/${blog.shortcode}`
+      : blog.slug
+        ? `${cleanSiteUrl}/it-news/${blog.slug}`
+        : cleanSiteUrl
+
+    for (const platform of options.platforms) {
       try {
         const parsed = await runTemplate<Partial<SocialDraft>>('news-social-draft', {
           title: item.title,
@@ -197,6 +225,7 @@ export const NewsPipelineService = {
           blogTitle: blog.title,
           blogExcerpt: blog.excerpt ?? '',
           platform,
+          url,
         }, {
           maxTokens: 1500,
           feature: `news_social_draft_${platform}`,
@@ -210,10 +239,17 @@ export const NewsPipelineService = {
           })
           continue
         }
+        // Defensiv: falls die KI die URL nicht selbst eingebaut hat,
+        // haengen wir sie hier nach an. So ist garantiert IMMER ein Link
+        // zum Blog-Beitrag im Post — wichtig auch bei X.
+        let content = parsed.content
+        if (!content.includes(url)) {
+          content = `${content.trimEnd()} ${url}`
+        }
         drafts.push({
           platform,
           title: parsed.title,
-          content: parsed.content,
+          content,
           hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags : [],
         })
       } catch (err) {
@@ -231,9 +267,15 @@ export const NewsPipelineService = {
     const { NewsService } = await import('@/lib/services/news.service')
     const { BlogPostService } = await import('@/lib/services/blog-post.service')
     const { SocialMediaPostService } = await import('@/lib/services/social-media-post.service')
+    const { CmsDesignService } = await import('@/lib/services/cms-design.service')
 
     const item = await NewsService.getItem(newsItemId)
     if (!item) throw new Error(`news item not found: ${newsItemId}`)
+
+    // Topic laden, um socialConfig (Plattformen + Bild-Flag) zu lesen.
+    // Falls Topic geloescht oder ohne socialConfig: Defaults greifen.
+    const topic = await NewsService.getTopic(item.topicId)
+    const socialCfg = normalizeSocialConfig(topic?.socialConfig)
 
     try {
       // Stufe 1
@@ -289,26 +331,40 @@ export const NewsPipelineService = {
         sourceNewsItemId: newsItemId,
       })
 
-      // Stufe 3
-      const socialDrafts = await this.generateSocialPosts(item, research, {
-        id: blogPost.id,
-        title: blogPost.title,
-        excerpt: blogPost.excerpt,
-      })
+      // Stufe 3 — Social-Media-Posts pro konfigurierter Plattform.
+      // Skippt komplett wenn topic.socialConfig.platforms leer ist (Operator
+      // hat alle Haken entfernt). URL = App-Basis aus CMS-Design + Shortcode.
       const socialErrors: string[] = []
-      for (const draft of socialDrafts) {
-        try {
-          await SocialMediaPostService.create({
-            platform: draft.platform,
-            content: draft.content,
-            title: draft.title,
-            hashtags: draft.hashtags,
-            status: 'draft',
-            aiGenerated: true,
-            sourceNewsItemId: newsItemId,
-          })
-        } catch (e) {
-          socialErrors.push(`${draft.platform}: ${e instanceof Error ? e.message : String(e)}`)
+      if (socialCfg.platforms.length > 0) {
+        const siteUrl = await CmsDesignService.getAppUrl()
+        const socialDrafts = await this.generateSocialPosts(
+          item,
+          research,
+          {
+            id: blogPost.id,
+            title: blogPost.title,
+            excerpt: blogPost.excerpt,
+            shortcode: blogPost.shortcode ?? null,
+            slug: blogPost.slug ?? null,
+          },
+          { platforms: socialCfg.platforms, siteUrl },
+        )
+        const postImageUrl = socialCfg.includeImage && featuredImageUrl ? featuredImageUrl : undefined
+        for (const draft of socialDrafts) {
+          try {
+            await SocialMediaPostService.create({
+              platform: draft.platform,
+              content: draft.content,
+              title: draft.title,
+              hashtags: draft.hashtags,
+              imageUrl: postImageUrl,
+              status: 'draft',
+              aiGenerated: true,
+              sourceNewsItemId: newsItemId,
+            })
+          } catch (e) {
+            socialErrors.push(`${draft.platform}: ${e instanceof Error ? e.message : String(e)}`)
+          }
         }
       }
 

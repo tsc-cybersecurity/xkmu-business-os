@@ -213,7 +213,8 @@ describe('NewsPipelineService — generateSocialPosts', () => {
     const drafts = await NewsPipelineService.generateSocialPosts(
       itemFixture(),
       { summary: 's', keyPoints: [], sources: [], context: '' },
-      { id: 'b1', title: 'BlogTitle', excerpt: 'Ex' },
+      { id: 'b1', title: 'BlogTitle', excerpt: 'Ex', shortcode: 'abc123' },
+      { platforms: ['linkedin', 'x'], siteUrl: 'https://example.test' },
     )
 
     expect(drafts).toHaveLength(2)
@@ -248,7 +249,8 @@ describe('NewsPipelineService — generateSocialPosts', () => {
     const drafts = await NewsPipelineService.generateSocialPosts(
       itemFixture(),
       { summary: 's', keyPoints: [], sources: [], context: '' },
-      { id: 'b1', title: 'BlogTitle', excerpt: null },
+      { id: 'b1', title: 'BlogTitle', excerpt: null, shortcode: 'abc123' },
+      { platforms: ['linkedin', 'x'], siteUrl: 'https://example.test' },
     )
     expect(drafts).toHaveLength(1)
     expect(drafts[0].platform).toBe('x')
@@ -268,12 +270,21 @@ describe('NewsPipelineService — run', () => {
     vi.doMock('@/lib/services/news.service', () => ({
       NewsService: {
         getItem: vi.fn().mockResolvedValue(itemFixture()),
+        getTopic: vi.fn().mockResolvedValue({
+          id: 't1',
+          socialConfig: { platforms: ['linkedin', 'x'], includeImage: true },
+        }),
         updateItem: vi.fn().mockResolvedValue(undefined),
+      },
+    }))
+    vi.doMock('@/lib/services/cms-design.service', () => ({
+      CmsDesignService: {
+        getAppUrl: vi.fn().mockResolvedValue('https://example.test'),
       },
     }))
     vi.doMock('@/lib/services/blog-post.service', () => ({
       BlogPostService: {
-        create: vi.fn().mockResolvedValue({ id: 'b1', title: 'B', excerpt: 'E' }),
+        create: vi.fn().mockResolvedValue({ id: 'b1', title: 'B', excerpt: 'E', shortcode: 'abc123', slug: 'b' }),
       },
     }))
     vi.doMock('@/lib/services/social-media-post.service', () => ({
@@ -314,7 +325,16 @@ describe('NewsPipelineService — run', () => {
     vi.doMock('@/lib/services/news.service', () => ({
       NewsService: {
         getItem: vi.fn().mockResolvedValue(itemFixture()),
+        getTopic: vi.fn().mockResolvedValue({
+          id: 't1',
+          socialConfig: { platforms: ['x'], includeImage: true },
+        }),
         updateItem: vi.fn(),
+      },
+    }))
+    vi.doMock('@/lib/services/cms-design.service', () => ({
+      CmsDesignService: {
+        getAppUrl: vi.fn().mockResolvedValue('https://example.test'),
       },
     }))
     vi.doMock('@/lib/services/ai-prompt-template.service', () => ({

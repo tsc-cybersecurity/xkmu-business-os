@@ -27,6 +27,7 @@ interface NewsTopic {
   keywords: string[] | null
   sourceType: string
   sourceConfig: Record<string, unknown> | null
+  socialConfig: Record<string, unknown> | null
   isActive: boolean | null
   sortOrder: number | null
   createdAt: string | null
@@ -141,6 +142,7 @@ export default function NewsTopicDetailPage() {
         keywords: data.keywords,
         sourceType: data.sourceType,
         sourceConfig: data.sourceConfig,
+        socialConfig: data.socialConfig,
         isActive: data.isActive,
         sortOrder: data.sortOrder,
       }

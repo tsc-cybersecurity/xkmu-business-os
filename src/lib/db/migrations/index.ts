@@ -308,4 +308,12 @@ export const MIGRATIONS: Migration[] = [
     name: '072_clean_email_signatures.sql',
     description: 'email_accounts.signature einmalig saeubern: leere <p>-Absaetze raus, Mehrfach-<br> auf zwei kappen — idempotent',
   },
+  {
+    name: '073_news_topic_social_config.sql',
+    description: 'news_topics.social_config (jsonb) — Pro-Topic-Konfiguration welche Social-Plattformen (X/FB/IG/LinkedIn) generiert werden + ob Hero-Bild angehaengt wird. Default: X+FB+IG mit Bild',
+  },
+  {
+    name: '074_news_social_draft_multiplatform.sql',
+    description: 'news-social-draft-Template: Stilregeln und Zeichenlimits fuer X, Facebook, Instagram und LinkedIn statt LinkedIn-zentrisch',
+  },
 ]

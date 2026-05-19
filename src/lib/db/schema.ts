@@ -1906,6 +1906,10 @@ export const newsTopics = pgTable('news_topics', {
   keywords: text('keywords').array().default([]).notNull(),
   sourceType: varchar('source_type', { length: 30 }).notNull().default('serpapi_news'),
   sourceConfig: jsonb('source_config').default({}),
+  socialConfig: jsonb('social_config')
+    .$type<{ platforms: Array<'x' | 'facebook' | 'instagram' | 'linkedin'>; includeImage: boolean }>()
+    .default({ platforms: ['x', 'facebook', 'instagram'], includeImage: true })
+    .notNull(),
   isActive: boolean('is_active').default(true),
   sortOrder: integer('sort_order').default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

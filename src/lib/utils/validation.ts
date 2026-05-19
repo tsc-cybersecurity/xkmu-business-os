@@ -887,6 +887,13 @@ export const createCourseAssignmentSchema = z.object({
 
 // News Module
 
+export const newsSocialPlatformSchema = z.enum(['x', 'facebook', 'instagram', 'linkedin'])
+
+export const newsTopicSocialConfigSchema = z.object({
+  platforms: z.array(newsSocialPlatformSchema),
+  includeImage: z.boolean(),
+})
+
 export const createNewsTopicSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
@@ -894,6 +901,7 @@ export const createNewsTopicSchema = z.object({
   keywords: z.array(z.string().min(1)).min(1),
   sourceType: z.enum(['serpapi_news']).optional(),
   sourceConfig: z.record(z.string(), z.unknown()).optional(),
+  socialConfig: newsTopicSocialConfigSchema.optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
 })
