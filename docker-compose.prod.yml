@@ -132,6 +132,8 @@ services:
       - LLM_BASE_URL=${MIROFISH_LLM_BASE_URL:-}
       - LLM_MODEL_NAME=${MIROFISH_LLM_MODEL:-gpt-4o-mini}
       - ZEP_API_KEY=${MIROFISH_ZEP_API_KEY:-}
+      # Vite versucht xdg-open beim Start → ENOENT-Spam im Container. Aus.
+      - BROWSER=none
     ports:
       # Backend (5001) bleibt nur intern (App spricht es via http://mirofish:5001).
       # Frontend auf Host 3300, an localhost gebunden — kein Public-Zugriff.

@@ -135,6 +135,10 @@ services:
       - LLM_BASE_URL=${MIROFISH_LLM_BASE_URL:-}
       - LLM_MODEL_NAME=${MIROFISH_LLM_MODEL:-gpt-4o-mini}
       - ZEP_API_KEY=${MIROFISH_ZEP_API_KEY:-}
+      # Vite versucht beim Start einen Browser zu oeffnen → "spawn xdg-open ENOENT"
+      # spammt die Logs (xdg-open existiert im Container nicht). BROWSER=none
+      # weist Vite explizit an, nichts zu starten.
+      - BROWSER=none
     ports:
       # Backend (5001) bleibt nur ueber das interne Docker-Network erreichbar
       # (die App spricht es ueber http://mirofish:5001 an).
