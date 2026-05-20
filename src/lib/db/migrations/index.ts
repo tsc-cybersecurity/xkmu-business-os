@@ -328,4 +328,8 @@ export const MIGRATIONS: Migration[] = [
     name: '077_business_plan_artifacts.sql',
     description: 'business_plan_artifacts — generierte Plan-Artefakte (PDF-Exporte, Pitch-Bilder)',
   },
+  {
+    name: '078_news_topic_social_config_default_fix.sql',
+    description: 'HOTFIX: news_topics.social_config-Default von jsonb_build_object(..) auf JSON-Literal::jsonb umstellen — drizzle-kit crasht beim Pull auf Function-Defaults',
+  },
 ]
