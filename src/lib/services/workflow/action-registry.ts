@@ -672,6 +672,94 @@ const ACTIONS: Record<string, ActionDefinition> = {
       }
     },
   },
+
+  // ─── Businessplan-Pipeline ────────────────────────────────────────────────
+  generate_business_story: {
+    name: 'generate_business_story',
+    label: 'Businessplan: Story generieren',
+    description: 'Aus rohem Seed-Input (Idee oder Briefing) eine Story als Plan-Basis erzeugen.',
+    category: 'ai',
+    icon: 'Lightbulb',
+    configFields: [
+      { key: 'seedInput', label: 'Idee/Briefing', type: 'string' },
+      { key: 'inputType', label: 'Input-Typ (quick|briefing)', type: 'string' },
+      { key: 'planId', label: 'Plan-ID (fuer AI-Logs)', type: 'string' },
+    ],
+    execute: async (ctx, config) => {
+      const { generateBusinessStoryAction } = await import('@/lib/services/business-plan/actions')
+      return generateBusinessStoryAction(ctx, config)
+    },
+  },
+
+  generate_business_plan: {
+    name: 'generate_business_plan',
+    label: 'Businessplan: Plan generieren',
+    description: 'Aus der Story einen Plan generieren — Lean Canvas, KfW-Langform oder beides.',
+    category: 'ai',
+    icon: 'FileText',
+    configFields: [
+      { key: 'story', label: 'Story', type: 'string' },
+      { key: 'mode', label: 'Mode', type: 'select', options: ['canvas', 'kfw', 'both'] },
+      { key: 'planId', label: 'Plan-ID', type: 'string' },
+    ],
+    execute: async (ctx, config) => {
+      const { generateBusinessPlanAction } = await import('@/lib/services/business-plan/actions')
+      return generateBusinessPlanAction(ctx, config)
+    },
+  },
+
+  simulate_with_mirofish: {
+    name: 'simulate_with_mirofish',
+    label: 'Businessplan: Mirofish-Simulation',
+    description: 'Formuliert die Simulationsfrage und schickt den Plan an Mirofish — Bericht zurueck.',
+    category: 'ai',
+    icon: 'Activity',
+    configFields: [
+      { key: 'plan', label: 'Plan (JSON)', type: 'json' },
+      { key: 'mode', label: 'Mode', type: 'select', options: ['canvas', 'kfw', 'both'] },
+      { key: 'seedInput', label: 'Seed-Input', type: 'string' },
+      { key: 'planId', label: 'Plan-ID', type: 'string' },
+    ],
+    execute: async (ctx, config) => {
+      const { simulateWithMirofishAction } = await import('@/lib/services/business-plan/actions')
+      return simulateWithMirofishAction(ctx, config)
+    },
+  },
+
+  analyze_simulation: {
+    name: 'analyze_simulation',
+    label: 'Businessplan: Simulation analysieren',
+    description: 'Bewertet den Mirofish-Bericht gegen den Plan — Score 0-100 + Improvements.',
+    category: 'ai',
+    icon: 'BarChart',
+    configFields: [
+      { key: 'plan', label: 'Plan (JSON)', type: 'json' },
+      { key: 'simulationResult', label: 'Mirofish-Result (JSON)', type: 'json' },
+      { key: 'planId', label: 'Plan-ID', type: 'string' },
+    ],
+    execute: async (ctx, config) => {
+      const { analyzeSimulationAction } = await import('@/lib/services/business-plan/actions')
+      return analyzeSimulationAction(ctx, config)
+    },
+  },
+
+  revise_business_plan: {
+    name: 'revise_business_plan',
+    label: 'Businessplan: Plan ueberarbeiten',
+    description: 'Erzeugt eine neue Plan-Version aus vorherigem Plan + Improvements der letzten Analyse.',
+    category: 'ai',
+    icon: 'Edit',
+    configFields: [
+      { key: 'previousPlan', label: 'Vorheriger Plan (JSON)', type: 'json' },
+      { key: 'improvements', label: 'Improvements (Array)', type: 'json' },
+      { key: 'mode', label: 'Mode', type: 'select', options: ['canvas', 'kfw', 'both'] },
+      { key: 'planId', label: 'Plan-ID', type: 'string' },
+    ],
+    execute: async (ctx, config) => {
+      const { reviseBusinessPlanAction } = await import('@/lib/services/business-plan/actions')
+      return reviseBusinessPlanAction(ctx, config)
+    },
+  },
 }
 
 // ─── Registry API ──────────────────────────────────────────────────────────────
