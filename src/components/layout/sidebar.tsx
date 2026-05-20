@@ -115,6 +115,7 @@ export const navigation: NavItem[] = [
     icon: Brain,
     children: [
       { name: 'Business Intelligence', href: '/intern/business-intelligence', icon: BarChart3,    requiredModule: 'business_intelligence' },
+      { name: 'Businessplan-KI',       href: '/intern/business-plans',        icon: Briefcase,    requiredModule: 'business_plans' },
       { name: 'n8n Workflows',         href: '/intern/n8n-workflows',         icon: Network,      requiredModule: 'n8n_workflows' },
       { name: 'KI-Chat',               href: '/intern/chat',                  icon: MessageSquare,requiredModule: 'chat' },
       { name: 'Projekte',              href: '/intern/projekte',              icon: FolderKanban, requiredModule: 'processes' },
