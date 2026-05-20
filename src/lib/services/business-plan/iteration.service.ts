@@ -223,12 +223,28 @@ export const IterationService = {
           reachedThreshold,
         })
       } else {
-        // Naechste Iteration einplanen
-        await BusinessPlanService.enqueueNextIteration(planId)
-        logger.info(
-          `Plan ${planId} requeued for iteration ${iterationNumber + 1} (score=${analysis.score} < ${plan.scoreThreshold})`,
-          { module: 'IterationService' },
-        )
+        // Auto-Requeue ist ENV-gesteuert. Default: AUS — Operator stoesst
+        // jede Iteration manuell ueber den "Weiter iterieren"-Button an.
+        // Hintergrund: bis Mirofish-Multi-Step-Client stabil ist, wollen
+        // wir keine endlosen Crash-Loops aus dem Worker heraus.
+        const autoRequeue = (process.env.BUSINESS_PLAN_AUTO_REQUEUE ?? 'false').toLowerCase() === 'true'
+        if (autoRequeue) {
+          await BusinessPlanService.enqueueNextIteration(planId)
+          logger.info(
+            `Plan ${planId} auto-requeued for iteration ${iterationNumber + 1} (score=${analysis.score} < ${plan.scoreThreshold})`,
+            { module: 'IterationService' },
+          )
+        } else {
+          // Plan-Status auf 'idle' → UI zeigt "Weiter iterieren"-Button
+          await db.update(businessPlans).set({
+            status: 'idle',
+            updatedAt: new Date(),
+          }).where(eq(businessPlans.id, planId))
+          logger.info(
+            `Plan ${planId} iteration ${iterationNumber} done (score=${analysis.score} < ${plan.scoreThreshold}) — waiting for manual re-trigger (BUSINESS_PLAN_AUTO_REQUEUE=false)`,
+            { module: 'IterationService' },
+          )
+        }
       }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err)

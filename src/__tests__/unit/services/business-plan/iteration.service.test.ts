@@ -34,7 +34,7 @@ describe('IterationService.runIteration', () => {
           // letzten Call pro Tabelle ueber globale Vars.
           if ('score' in (val.analysis ?? {}) || val.analysis !== undefined) {
             lastIterationUpdate = { ...lastIterationUpdate, ...val }
-          } else if (val.status === 'completed' || val.status === 'failed' || val.status === 'running' || val.currentIteration !== undefined || val.finalScore !== undefined) {
+          } else if (val.status === 'completed' || val.status === 'failed' || val.status === 'running' || val.status === 'idle' || val.status === 'stopped' || val.currentIteration !== undefined || val.finalScore !== undefined) {
             // wir interessieren uns vor allem fuer Plan-Status-Updates
             lastPlanUpdate = { ...lastPlanUpdate, ...val }
           } else {
@@ -140,7 +140,7 @@ describe('IterationService.runIteration', () => {
     expect(enqueueNextCalls).toBe(0)
   })
 
-  it('enqueues next iteration when score < threshold and iter < max', async () => {
+  it('sets plan to idle (manual mode) when score < threshold and AUTO_REQUEUE off', async () => {
     const plan = {
       id: 'p1', status: 'running', mode: 'canvas', inputType: 'quick',
       seedInput: { idea: 'X' }, maxIterations: 5, scoreThreshold: 80,
@@ -151,13 +151,33 @@ describe('IterationService.runIteration', () => {
       analysisResult: { success: true, data: { score: 60, reasoning: 'mid', strengths: [], weaknesses: [], improvements: ['I'] } },
     })
     mockBusinessPlanService()
+    delete process.env.BUSINESS_PLAN_AUTO_REQUEUE
 
     const { IterationService } = await import('@/lib/services/business-plan/iteration.service')
     await IterationService.runIteration('p1')
 
-    // Plan-Status sollte NICHT completed sein
-    expect(lastPlanUpdate.status).not.toBe('completed')
+    expect(lastPlanUpdate.status).toBe('idle')
+    expect(enqueueNextCalls).toBe(0)
+  })
+
+  it('auto-requeues when BUSINESS_PLAN_AUTO_REQUEUE=true', async () => {
+    const plan = {
+      id: 'p1', status: 'running', mode: 'canvas', inputType: 'quick',
+      seedInput: { idea: 'X' }, maxIterations: 5, scoreThreshold: 80,
+    }
+    ;(globalThis as any).__planForBpService = plan
+    mockDb({ plan, lastIteration: null })
+    mockActions({
+      analysisResult: { success: true, data: { score: 60, reasoning: 'mid', strengths: [], weaknesses: [], improvements: ['I'] } },
+    })
+    mockBusinessPlanService()
+    process.env.BUSINESS_PLAN_AUTO_REQUEUE = 'true'
+
+    const { IterationService } = await import('@/lib/services/business-plan/iteration.service')
+    await IterationService.runIteration('p1')
+
     expect(enqueueNextCalls).toBe(1)
+    delete process.env.BUSINESS_PLAN_AUTO_REQUEUE
   })
 
   it('marks plan completed when reaching maxIterations even with low score', async () => {
