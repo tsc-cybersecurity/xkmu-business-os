@@ -38,6 +38,7 @@ export const MODULES = [
   'processes',
   'time_entries',
   'appointments',
+  'business_plans',
 ] as const
 
 export type Module = (typeof MODULES)[number]
@@ -93,6 +94,7 @@ export const MODULE_LABELS: Record<Module, string> = {
   processes: 'Prozesshandbuch',
   time_entries: 'Zeiterfassung',
   appointments: 'Termine',
+  business_plans: 'Businesspläne',
 }
 
 export const ACTION_LABELS: Record<Action, string> = {
