@@ -158,7 +158,8 @@ describe('BusinessPlanActions', () => {
       expect(res.success).toBe(true)
       expect(simulateMock).toHaveBeenCalledTimes(1)
       const callArg = simulateMock.mock.calls[0][0]
-      expect(callArg.question).toBe('Wie reagieren Friseure in TH auf das Angebot?')
+      // Multi-Step-API: question landet als simulationRequirement
+      expect(callArg.simulationRequirement).toBe('Wie reagieren Friseure in TH auf das Angebot?')
       expect(callArg.seedMaterials).toHaveLength(1)
       expect(callArg.seedMaterials[0].content).toContain('## Plan-Markdown')
       expect(callArg.seedMaterials[0].contentType).toBe('text/markdown')

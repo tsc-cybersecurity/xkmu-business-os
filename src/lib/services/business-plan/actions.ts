@@ -219,8 +219,12 @@ export const simulateWithMirofishAction = async (
       ? plan.kfw.markdown
       : `# Lean Canvas\n\n\`\`\`json\n${JSON.stringify(plan.canvas, null, 2)}\n\`\`\``
 
+    // Mirofish ist Multi-Step + async (5-15 Min). question wird als
+    // simulationRequirement uebergeben — das ist Mirofish's Steuer-Anweisung,
+    // welche Persona-Reaktionen es simulieren soll.
     const simulationResult = await MirofishClient.simulate({
-      question,
+      simulationRequirement: question,
+      projectName: `Businessplan ${planId.slice(0, 8)}`,
       seedMaterials: [
         {
           filename: 'businessplan.md',
