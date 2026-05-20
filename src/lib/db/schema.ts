@@ -1963,6 +1963,109 @@ export type NewsItem = typeof newsItems.$inferSelect
 export type NewNewsItem = typeof newsItems.$inferInsert
 
 // ============================================
+// Business Plans (KI-Plattform fuer iterative Plan-Optimierung)
+// ============================================
+// business_plans: Haupt-Datensatz mit Operator-Input + Status
+// business_plan_iterations: pro Iteration generierter Plan + Mirofish-Sim + Analyse
+// business_plan_artifacts: generierte Artefakte (PDF-Export, Pitch-Bilder)
+// Siehe docs/superpowers/specs/2026-05-20-businessplan-platform-design.md
+
+export const businessPlans = pgTable('business_plans', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: varchar('title', { length: 255 }).notNull(),
+  mode: varchar('mode', { length: 16 }).$type<'canvas' | 'kfw' | 'both'>().notNull(),
+  inputType: varchar('input_type', { length: 16 }).$type<'quick' | 'briefing'>().notNull(),
+  seedInput: jsonb('seed_input').notNull(),
+  currentIteration: integer('current_iteration').notNull().default(0),
+  maxIterations: integer('max_iterations').notNull().default(5),
+  scoreThreshold: integer('score_threshold').notNull().default(80),
+  finalScore: integer('final_score'),
+  status: varchar('status', { length: 20 })
+    .$type<'idle' | 'running' | 'completed' | 'failed' | 'stopped'>()
+    .notNull()
+    .default('idle'),
+  error: text('error'),
+  currentIterationTaskId: uuid('current_iteration_task_id').references(() => taskQueue.id, { onDelete: 'set null' }),
+  createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_business_plans_status').on(table.status),
+  index('idx_business_plans_created_by').on(table.createdBy),
+])
+
+export const businessPlanIterations = pgTable('business_plan_iterations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  planId: uuid('plan_id').notNull().references(() => businessPlans.id, { onDelete: 'cascade' }),
+  iterationNumber: integer('iteration_number').notNull(),
+  planCanvas: jsonb('plan_canvas'),
+  planKfwMarkdown: text('plan_kfw_markdown'),
+  simulationRequest: jsonb('simulation_request'),
+  simulationResult: jsonb('simulation_result'),
+  analysis: jsonb('analysis'),
+  durationMs: integer('duration_ms'),
+  status: varchar('status', { length: 20 })
+    .$type<'pending' | 'generating' | 'simulating' | 'analyzing' | 'done' | 'failed'>()
+    .notNull()
+    .default('pending'),
+  error: text('error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('uq_business_plan_iter_number').on(table.planId, table.iterationNumber),
+  index('idx_business_plan_iter_plan').on(table.planId),
+  index('idx_business_plan_iter_status').on(table.status),
+])
+
+export const businessPlanArtifacts = pgTable('business_plan_artifacts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  planId: uuid('plan_id').notNull().references(() => businessPlans.id, { onDelete: 'cascade' }),
+  iterationId: uuid('iteration_id').references(() => businessPlanIterations.id, { onDelete: 'set null' }),
+  kind: varchar('kind', { length: 30 }).notNull(),
+  fileUrl: text('file_url').notNull(),
+  meta: jsonb('meta').notNull().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index('idx_business_plan_art_plan').on(table.planId),
+  index('idx_business_plan_art_kind').on(table.kind),
+])
+
+export const businessPlansRelations = relations(businessPlans, ({ many, one }) => ({
+  iterations: many(businessPlanIterations),
+  artifacts: many(businessPlanArtifacts),
+  createdByUser: one(users, {
+    fields: [businessPlans.createdBy],
+    references: [users.id],
+  }),
+}))
+
+export const businessPlanIterationsRelations = relations(businessPlanIterations, ({ one, many }) => ({
+  plan: one(businessPlans, {
+    fields: [businessPlanIterations.planId],
+    references: [businessPlans.id],
+  }),
+  artifacts: many(businessPlanArtifacts),
+}))
+
+export const businessPlanArtifactsRelations = relations(businessPlanArtifacts, ({ one }) => ({
+  plan: one(businessPlans, {
+    fields: [businessPlanArtifacts.planId],
+    references: [businessPlans.id],
+  }),
+  iteration: one(businessPlanIterations, {
+    fields: [businessPlanArtifacts.iterationId],
+    references: [businessPlanIterations.id],
+  }),
+}))
+
+export type BusinessPlan = typeof businessPlans.$inferSelect
+export type NewBusinessPlan = typeof businessPlans.$inferInsert
+export type BusinessPlanIteration = typeof businessPlanIterations.$inferSelect
+export type NewBusinessPlanIteration = typeof businessPlanIterations.$inferInsert
+export type BusinessPlanArtifact = typeof businessPlanArtifacts.$inferSelect
+export type NewBusinessPlanArtifact = typeof businessPlanArtifacts.$inferInsert
+
+// ============================================
 // Type Exports
 // ============================================
 export type Organization = typeof organization.$inferSelect

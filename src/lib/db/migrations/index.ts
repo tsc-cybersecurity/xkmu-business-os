@@ -316,4 +316,16 @@ export const MIGRATIONS: Migration[] = [
     name: '074_news_social_draft_multiplatform.sql',
     description: 'news-social-draft-Template: Stilregeln und Zeichenlimits fuer X, Facebook, Instagram und LinkedIn statt LinkedIn-zentrisch',
   },
+  {
+    name: '075_business_plans.sql',
+    description: 'business_plans — Haupttabelle der KI-Businessplan-Plattform: mode (canvas/kfw/both), input_type, seed_input, max_iterations + score_threshold, Status-Lifecycle',
+  },
+  {
+    name: '076_business_plan_iterations.sql',
+    description: 'business_plan_iterations — pro Iteration: generierter Plan (Canvas+KfW), Mirofish-Simulation, KI-Analyse mit Score',
+  },
+  {
+    name: '077_business_plan_artifacts.sql',
+    description: 'business_plan_artifacts — generierte Plan-Artefakte (PDF-Exporte, Pitch-Bilder)',
+  },
 ]
