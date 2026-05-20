@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ArrowLeft, Briefcase, Loader2, Square, Play, Trash2, RefreshCcw } from 'lucide-react'
+import { ArrowLeft, Briefcase, Loader2, Square, Play, Trash2, RefreshCcw, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { logger } from '@/lib/utils/logger'
 import { ScoreGauge } from './_components/score-gauge'
@@ -204,6 +204,15 @@ export default function BusinessPlanDetailPage() {
           <div className="flex flex-col gap-2">
             <Button variant="outline" size="sm" onClick={fetchPlan} disabled={actionPending}>
               <RefreshCcw className="h-3 w-3 mr-1.5" /> Aktualisieren
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(`/api/v1/business-plans/${id}/export.pdf`, '_blank')}
+              disabled={actionPending || plan.currentIteration === 0}
+              title={plan.currentIteration === 0 ? 'Noch keine Iteration durchgelaufen' : 'Plan als PDF exportieren'}
+            >
+              <Download className="h-3 w-3 mr-1.5" /> PDF
             </Button>
             {plan.status === 'running' ? (
               <Button variant="outline" size="sm" onClick={handleStop} disabled={actionPending}>
