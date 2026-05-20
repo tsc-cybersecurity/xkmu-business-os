@@ -162,10 +162,16 @@ services:
       # xdg-open existiert im Container nicht; BROWSER=none unterdrueckt den Aufruf.
       - BROWSER=none
     ports:
-      # Backend (5001) bleibt nur intern (App spricht es via http://mirofish:5001).
-      # Frontend auf Host 3300, an localhost gebunden — kein Public-Zugriff,
-      # nur lokales Operator-Debugging.
+      # Frontend (Container 3000) auf Host 3300, Backend (5001) ebenfalls
+      # auf Host gemappt — beides an 127.0.0.1 gebunden (kein Public).
+      # Backend-Mapping ist noetig fuer Mirofish-UI-Debugging: das eigene
+      # Mirofish-Frontend hardcoded baseURL=http://localhost:5001, also
+      # versucht der Browser DIREKT 5001 statt durch Vite-Proxy.
+      # Operator tunnelt beide ueber SSH:
+      #   ssh -L 3300:localhost:3300 -L 5001:localhost:5001 user@server
+      # Die App spricht das Backend weiter ueber internes DNS mirofish:5001 an.
       - "127.0.0.1:3300:3000"
+      - "127.0.0.1:5001:5001"
     volumes:
       - mirofish_uploads:/app/backend/uploads
     healthcheck:
