@@ -415,6 +415,16 @@ async function executeHandler(item: TaskQueueItem): Promise<unknown> {
       return { newsItemId, status: 'completed' }
     }
 
+    case 'business_plan_iteration': {
+      const planId = item.referenceId ?? (payload.planId as string | undefined)
+      if (!planId) {
+        return { skipped: true, reason: 'no_plan_id' }
+      }
+      const { IterationService } = await import('./business-plan/iteration.service')
+      await IterationService.runIteration(planId)
+      return { planId, status: 'iteration_completed' }
+    }
+
     default:
       logger.warn(`Unknown task type: ${item.type}`, { module: 'TaskQueue' })
       return { skipped: true, reason: `Unknown type: ${item.type}` }

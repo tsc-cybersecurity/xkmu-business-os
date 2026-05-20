@@ -911,3 +911,36 @@ export const updateNewsTopicSchema = createNewsTopicSchema.partial()
 export const updateNewsItemSchema = z.object({
   isHidden: z.boolean().optional(),
 })
+
+// Business Plans
+
+export const businessPlanModeSchema = z.enum(['canvas', 'kfw', 'both'])
+export const businessPlanInputTypeSchema = z.enum(['quick', 'briefing'])
+
+export const businessPlanQuickInputSchema = z.object({
+  idea: z.string().min(10, 'Idee zu kurz').max(2000, 'Idee zu lang'),
+})
+
+export const businessPlanBriefingInputSchema = z.object({
+  industry: z.string().min(1).max(255),
+  audience: z.string().min(1).max(500),
+  usp: z.string().min(1).max(500),
+  region: z.string().min(1).max(255),
+  capital: z.string().min(1).max(255),
+})
+
+export const createBusinessPlanSchema = z.object({
+  mode: businessPlanModeSchema,
+  inputType: businessPlanInputTypeSchema,
+  // Discriminated union waere praeziser, aber das Frontend schickt ein
+  // generisches Objekt — wir validieren grob und vertrauen dem inputType.
+  seedInput: z.union([businessPlanQuickInputSchema, businessPlanBriefingInputSchema]),
+  maxIterations: z.number().int().min(1).max(10).optional(),
+  scoreThreshold: z.number().int().min(0).max(100).optional(),
+})
+
+export const updateBusinessPlanSchema = z.object({
+  title: z.string().min(1).max(255).optional(),
+  maxIterations: z.number().int().min(1).max(10).optional(),
+  scoreThreshold: z.number().int().min(0).max(100).optional(),
+})
