@@ -3,6 +3,7 @@ import { apiSuccess, apiValidationError, apiServerError } from '@/lib/utils/api-
 import { createBusinessPlanSchema, validateAndParse, formatZodErrors } from '@/lib/utils/validation'
 import { BusinessPlanService, type BusinessPlanStatus, type BusinessPlanMode } from '@/lib/services/business-plan/business-plan.service'
 import { withPermission } from '@/lib/auth/require-permission'
+import { AuditLogService } from '@/lib/services/audit-log.service'
 import { logger } from '@/lib/utils/logger'
 
 export async function GET(request: NextRequest) {
@@ -42,6 +43,22 @@ export async function POST(request: NextRequest) {
       )
       // Auto-Start direkt nach Create (Operator-Erwartung: anlegen → laeuft).
       await BusinessPlanService.start(plan.id)
+
+      await AuditLogService.log({
+        userId: auth.userId,
+        userRole: auth.role,
+        action: 'business_plan.create',
+        entityType: 'business_plans',
+        entityId: plan.id,
+        payload: {
+          title: plan.title,
+          mode: plan.mode,
+          inputType: plan.inputType,
+          maxIterations: plan.maxIterations,
+          scoreThreshold: plan.scoreThreshold,
+        },
+        request,
+      })
 
       const updated = await BusinessPlanService.get(plan.id)
       return apiSuccess(updated ?? plan, undefined, 201)
