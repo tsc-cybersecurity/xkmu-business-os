@@ -587,6 +587,26 @@ ALTER TABLE ai_prompt_templates ADD COLUMN IF NOT EXISTS trigger_info TEXT;
 DELETE FROM scorecard_entries
  WHERE metric_id IS NOT NULL
    AND metric_id NOT IN (SELECT id FROM scorecard_metrics);
+
+-- ── news_topics.social_config-Default: jsonb_build_object → JSON-Literal ──
+-- Migration 073 hat den Default urspruenglich als Funktions-Aufruf gesetzt
+-- (jsonb_build_object(...)). drizzle-kit's interner Default-Parser laeuft
+-- das per JSON.parse und crasht hart mit "Unexpected token 's', sonb_build..."
+-- → drizzle-kit push faellt → Container-Bootloop, App-Migrations laufen nie.
+-- Hier idempotent direkt auf JSON-Literal mit ::jsonb-Cast umstellen.
+-- Nur ALTER COLUMN wenn Spalte existiert (frueher Boot vor Migration 073
+-- darf nicht crashen).
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name='news_topics' AND column_name='social_config'
+  ) THEN
+    ALTER TABLE news_topics
+      ALTER COLUMN social_config
+      SET DEFAULT '{"platforms":["x","facebook","instagram"],"includeImage":true}'::jsonb;
+  END IF;
+END $$;
 EOSQL
 echo "Pre-Drizzle migrations complete!"
 
