@@ -55,14 +55,16 @@ function normalizeResult(raw: unknown): MirofishSimulateResult {
 
 export const MirofishClient = {
   /**
-   * GET / oder /health — Mirofish hat keinen dokumentierten Health-Endpoint,
-   * daher reicht uns ein erfolgreicher Connect auf den Root.
+   * Healthcheck: Mirofish-Backend antwortet auf GET / mit 404 (kein Root-
+   * Endpoint), aber das beweist dass Flask laeuft. Wir checken nur, dass
+   * IRGENDEINE HTTP-Response zurueckkommt — Status egal. Nur TCP-Refused
+   * / Timeout / DNS-Error gilt als unhealthy.
    */
   async healthcheck(): Promise<boolean> {
     const baseUrl = getBaseUrl()
     try {
-      const res = await fetch(`${baseUrl}/`, { method: 'GET' })
-      return res.ok
+      await fetch(`${baseUrl}/`, { method: 'GET' })
+      return true
     } catch (err) {
       logger.warn(
         `Mirofish healthcheck failed: ${err instanceof Error ? err.message : String(err)}`,

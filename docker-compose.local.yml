@@ -169,11 +169,10 @@ services:
     volumes:
       - mirofish_uploads:/app/backend/uploads
     healthcheck:
-      # Mirofish-Image enthaelt curl nicht zwingend — wir nutzen node selbst.
-      # Backend ist der relevante Health-Indikator (Frontend ist nur Debug-UI).
-      # start_period 300s damit der erste uv-build (Python-Deps) nicht
-      # zu Premature-Unhealthy fuehrt.
-      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5001/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      # Mirofish hat keinen / oder /health endpoint — GET / antwortet 404.
+      # Healthcheck akzeptiert JEDEN HTTP-Response (auch 404), weil das
+      # bedeutet "Flask laeuft und antwortet". Nur TCP-Refused/Timeout → fail.
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5001/').then(() => process.exit(0)).catch(() => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3

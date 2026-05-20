@@ -29,10 +29,12 @@ describe('MirofishClient', () => {
       expect(await MirofishClient.healthcheck()).toBe(false)
     })
 
-    it('returns false on non-2xx', async () => {
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }))
+    it('returns true on non-2xx (any HTTP response = Flask is alive)', async () => {
+      // Mirofish hat keinen Root-Endpoint, GET / antwortet 404 — der Server
+      // lebt aber. Healthcheck unterscheidet nur "antwortet" vs. "TCP-tot".
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }))
       const { MirofishClient } = await import('@/lib/services/mirofish/client')
-      expect(await MirofishClient.healthcheck()).toBe(false)
+      expect(await MirofishClient.healthcheck()).toBe(true)
     })
   })
 
