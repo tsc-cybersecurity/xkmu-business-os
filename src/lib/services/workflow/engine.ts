@@ -16,7 +16,7 @@ import { getAction } from './action-registry'
 import { logger } from '@/lib/utils/logger'
 import { evaluateCondition, resolvePath } from './condition-parser'
 
-type StepKind = 'action' | 'branch' | 'parallel' | 'for_each'
+type StepKind = 'action' | 'branch' | 'parallel' | 'for_each' | 'loop'
 
 interface BaseStep {
   id?: string
@@ -49,7 +49,16 @@ interface ForEachStep extends BaseStep {
   steps: WorkflowStep[]
 }
 
-type WorkflowStep = ActionStep | BranchStep | ParallelStep | ForEachStep
+interface LoopStep extends BaseStep {
+  kind: 'loop'
+  /** Hard cap fuer die Anzahl Iterationen, wird auf MAX_LOOP_ITERATIONS gekappt. */
+  maxIterations: number
+  /** Optionale Condition, die VOR jeder Runde geprueft wird. False → exit. */
+  condition?: string
+  steps: WorkflowStep[]
+}
+
+type WorkflowStep = ActionStep | BranchStep | ParallelStep | ForEachStep | LoopStep
 
 interface StepResult {
   step: number
@@ -252,6 +261,79 @@ async function executeOneStep(
     ctx.stepResults[summaryIdx] = {
       ...ctx.stepResults[summaryIdx],
       result: { iterations: arr.length, failedCount },
+      durationMs: Date.now() - startTime,
+    }
+    await persistStepResults(ctx)
+    return
+  }
+
+  // ── LOOP ────────────────────────────────────────────────────
+  // Wiederholt einen Step-Block bis maxIterations erreicht ist ODER die
+  // optionale condition zu false evaluiert. Condition wird VOR jeder Runde
+  // geprueft (auch vor der ersten — initial false → 0 Iterationen).
+  // Hard cap MAX_LOOP_ITERATIONS schuetzt gegen Endlosschleifen bei Bug
+  // in der condition (z.B. immer-true). actionResults.__loop.index ist im
+  // inner-step-Kontext verfuegbar fuer Templating (analog for_each).
+  if (kind === 'loop') {
+    const ls = step as LoopStep
+    const requested = Number.isFinite(ls.maxIterations) ? Math.floor(ls.maxIterations) : 0
+
+    if (requested <= 0) {
+      ctx.stepResults.push({
+        step: stepNum, path, action: 'loop', kind: 'loop', label: ls.label,
+        status: 'failed',
+        error: `loop maxIterations must be > 0 (got ${ls.maxIterations})`,
+        durationMs: Date.now() - startTime,
+      })
+      await persistStepResults(ctx)
+      return
+    }
+
+    const cap = Math.min(requested, MAX_LOOP_ITERATIONS)
+    if (requested > MAX_LOOP_ITERATIONS) {
+      logger.warn(
+        `loop step maxIterations=${requested} capped to ${MAX_LOOP_ITERATIONS}`,
+        { module: 'WorkflowEngine' },
+      )
+    }
+
+    const summaryIdx = ctx.stepResults.length
+    ctx.stepResults.push({
+      step: stepNum, path, action: 'loop', kind: 'loop', label: ls.label,
+      status: 'completed',
+      result: { iterations: 0, failedCount: 0 },
+      durationMs: 0,
+    })
+    await persistStepResults(ctx)
+
+    let failedCount = 0
+    let actualIterations = 0
+    const childCtx: RunContext = { ...ctx, depth: ctx.depth + 1 }
+
+    for (let i = 0; i < cap; i++) {
+      if (ls.condition) {
+        const keepGoing = evaluateCondition(ls.condition, {
+          triggerData: childCtx.triggerData,
+          actionResults: childCtx.actionResults,
+        })
+        if (!keepGoing) break
+      }
+
+      childCtx.actionResults.__loop = { index: i }
+
+      const beforeLen = childCtx.stepResults.length
+      await executeStepList(ls.steps, `${path}.loop[${i + 1}]`, childCtx)
+      for (let j = beforeLen; j < childCtx.stepResults.length; j++) {
+        if (childCtx.stepResults[j].status === 'failed') failedCount++
+      }
+      actualIterations++
+    }
+
+    delete childCtx.actionResults.__loop
+
+    ctx.stepResults[summaryIdx] = {
+      ...ctx.stepResults[summaryIdx],
+      result: { iterations: actualIterations, failedCount },
       durationMs: Date.now() - startTime,
     }
     await persistStepResults(ctx)
