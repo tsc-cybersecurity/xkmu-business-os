@@ -51,6 +51,8 @@ services:
       - LINKEDIN_CLIENT_SECRET=${LINKEDIN_CLIENT_SECRET:-}
       - LINKEDIN_OAUTH_REDIRECT_URI=${LINKEDIN_OAUTH_REDIRECT_URI:-}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-xkmu_redis_secret_2024}@redis:6379
+      # Mirofish (Businessplan-Simulation)
+      - MIROFISH_BASE_URL=${MIROFISH_BASE_URL:-http://mirofish:5001}
       # Schema-Sync- + Seed-Check-Gates (Default: smart skip via Hash in app_meta)
       # - BACKUP_ENABLED=false      # pg_dump pre-migration ueberspringen (~30-60s)
       # - FORCE_SCHEMA_SYNC=true    # Pre-Drizzle SQL + drizzle push + Views erzwingen
@@ -115,6 +117,32 @@ services:
     networks:
       - backend
 
+  # ============================================
+  # Mirofish (KI-Simulationstool fuer Businessplan-Pipeline)
+  # ============================================
+  # Externes AGPL-Tool, separater Prozess + HTTP-Kommunikation. Wir
+  # mappen NUR das Backend-Network — kein Port auf den Host. Eigene UI
+  # spricht das Backend (5001) via internem DNS-Namen "mirofish" an.
+  mirofish:
+    image: ghcr.io/666ghj/mirofish:latest
+    container_name: xkmu-mirofish
+    restart: always
+    environment:
+      - LLM_API_KEY=${MIROFISH_LLM_API_KEY:-}
+      - LLM_BASE_URL=${MIROFISH_LLM_BASE_URL:-}
+      - LLM_MODEL_NAME=${MIROFISH_LLM_MODEL:-gpt-4o-mini}
+      - ZEP_API_KEY=${MIROFISH_ZEP_API_KEY:-}
+    volumes:
+      - mirofish_uploads:/app/backend/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:5001/health || curl -fs http://localhost:5001/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - backend
+
 networks:
   xkmu-network:
     driver: bridge
@@ -126,3 +154,4 @@ volumes:
   ollama_data:
   redis_data:
   db_backups:
+  mirofish_uploads:
