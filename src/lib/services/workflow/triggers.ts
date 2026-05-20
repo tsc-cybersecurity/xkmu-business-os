@@ -94,6 +94,30 @@ export const WORKFLOW_TRIGGERS: TriggerDefinition[] = [
     description: 'Wird gefeuert wenn der Publish-Versuch scheitert (Token, Rate-Limit, API-Fehler).',
     dataShape: ['postId', 'platform', 'error', 'postedVia'],
   },
+  {
+    key: 'business_plan.created',
+    label: 'Businessplan: angelegt',
+    description: 'Wird gefeuert nach Anlegen + Start eines Businessplans (BusinessPlanService.start).',
+    dataShape: ['planId', 'title', 'mode', 'inputType', 'maxIterations', 'scoreThreshold'],
+  },
+  {
+    key: 'business_plan.iteration_completed',
+    label: 'Businessplan: Iteration abgeschlossen',
+    description: 'Wird gefeuert nach jeder durchgelaufenen Iteration (auch wenn der Plan danach weiter iteriert).',
+    dataShape: ['planId', 'iterationNumber', 'score', 'durationMs'],
+  },
+  {
+    key: 'business_plan.completed',
+    label: 'Businessplan: fertig',
+    description: 'Wird gefeuert wenn der Plan in den Status completed wechselt (Score-Threshold erreicht ODER max iterations ausgeschoepft).',
+    dataShape: ['planId', 'finalScore', 'iterationsRun', 'reachedThreshold'],
+  },
+  {
+    key: 'business_plan.failed',
+    label: 'Businessplan: fehlgeschlagen',
+    description: 'Wird gefeuert wenn eine Iteration crasht und der Plan auf failed gesetzt wird (Mirofish-Down, KI-Fehler, etc.).',
+    dataShape: ['planId', 'iterationNumber', 'error'],
+  },
 ]
 
 export const TRIGGER_LABELS: Record<string, string> = Object.fromEntries(

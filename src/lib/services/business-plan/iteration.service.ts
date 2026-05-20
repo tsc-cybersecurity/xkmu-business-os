@@ -44,6 +44,22 @@ interface AnalysisData {
 
 const EMPTY_CTX = { triggerData: {}, stepResults: {} }
 
+/**
+ * Workflow-Trigger fail-soft feuern — Failures duerfen die Iteration nicht
+ * killen (analog SocialPublishOrchestrator).
+ */
+async function fireTrigger(key: string, data: Record<string, unknown>): Promise<void> {
+  try {
+    const { WorkflowEngine } = await import('@/lib/services/workflow/engine')
+    await WorkflowEngine.fire(key, data)
+  } catch (err) {
+    logger.warn(
+      `Trigger ${key} fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`,
+      { module: 'IterationService' },
+    )
+  }
+}
+
 async function loadLastIteration(planId: string) {
   const [iter] = await db.select()
     .from(businessPlanIterations)
@@ -179,6 +195,15 @@ export const IterationService = {
         updatedAt: new Date(),
       }).where(eq(businessPlans.id, planId))
 
+      // Iteration-completed-Trigger feuern (fail-soft — Workflow-Fehler
+      // duerfen die Pipeline nicht killen).
+      await fireTrigger('business_plan.iteration_completed', {
+        planId,
+        iterationNumber,
+        score: analysis.score,
+        durationMs,
+      })
+
       // Stop-Check
       const reachedThreshold = analysis.score >= plan.scoreThreshold
       const reachedMax = iterationNumber >= plan.maxIterations
@@ -191,7 +216,12 @@ export const IterationService = {
           `Plan ${planId} completed (score=${analysis.score}, threshold=${plan.scoreThreshold}, iter=${iterationNumber}/${plan.maxIterations})`,
           { module: 'IterationService' },
         )
-        // Optional: Workflow-Trigger feuern (Task 8). Hier vorerst nur Log.
+        await fireTrigger('business_plan.completed', {
+          planId,
+          finalScore: analysis.score,
+          iterationsRun: iterationNumber,
+          reachedThreshold,
+        })
       } else {
         // Naechste Iteration einplanen
         await BusinessPlanService.enqueueNextIteration(planId)
@@ -216,6 +246,11 @@ export const IterationService = {
         error: errMsg,
         updatedAt: new Date(),
       }).where(eq(businessPlans.id, planId))
+      await fireTrigger('business_plan.failed', {
+        planId,
+        iterationNumber,
+        error: errMsg,
+      })
       throw err
     }
   },

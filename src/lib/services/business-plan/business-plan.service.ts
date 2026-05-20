@@ -90,6 +90,24 @@ export const BusinessPlanService = {
       .set({ status: 'running', error: null, updatedAt: new Date() })
       .where(eq(businessPlans.id, planId))
     await this.enqueueNextIteration(planId)
+
+    // Trigger fail-soft feuern — Workflow-Failures duerfen den Start nicht
+    // blockieren (analog SocialPublishOrchestrator).
+    try {
+      const { WorkflowEngine } = await import('@/lib/services/workflow/engine')
+      await WorkflowEngine.fire('business_plan.created', {
+        planId,
+        title: plan.title,
+        mode: plan.mode,
+        inputType: plan.inputType,
+        maxIterations: plan.maxIterations,
+        scoreThreshold: plan.scoreThreshold,
+      })
+    } catch (err) {
+      logger.warn(`business_plan.created-Trigger fehlgeschlagen: ${err instanceof Error ? err.message : String(err)}`, {
+        module: 'BusinessPlanService',
+      })
+    }
   },
 
   /**
