@@ -169,13 +169,22 @@ services:
     volumes:
       - mirofish_uploads:/app/backend/uploads
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:5001/health || curl -fs http://localhost:5001/ || exit 1"]
+      # Mirofish-Image enthaelt curl nicht zwingend — wir nutzen node selbst.
+      # Backend ist der relevante Health-Indikator (Frontend ist nur Debug-UI).
+      # start_period 300s damit der erste uv-build (Python-Deps) nicht
+      # zu Premature-Unhealthy fuehrt.
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5001/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 300s
     networks:
+      # internal: damit xkmu-app es via http://mirofish:5001 erreicht
+      # mirofish_egress: damit Mirofish beim ersten Start PyPI-Pakete pullen
+      #   kann (uv build hatchling+pydantic etc.) UND zur Laufzeit OpenRouter
+      #   erreicht. internal-only-Netz blockt jeglichen Outbound.
       - internal
+      - mirofish_egress
 
   # ============================================
   # Watchtower (Auto-Update fuer App-Container)
@@ -218,6 +227,11 @@ networks:
     external: true
   internal:
     internal: true
+  # Bridge mit Outbound-Internet — fuer Container die externe APIs brauchen
+  # (z.B. Mirofish → PyPI beim Build, OpenRouter zur Laufzeit). NICHT
+  # vom Public-Internet erreichbar, aber Outbound erlaubt.
+  mirofish_egress:
+    driver: bridge
 
 volumes:
   redis_data:

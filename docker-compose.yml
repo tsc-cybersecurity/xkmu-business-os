@@ -149,11 +149,13 @@ services:
     volumes:
       - mirofish_uploads:/app/backend/uploads
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:5001/health || curl -fs http://localhost:5001/ || exit 1"]
+      # curl im Mirofish-Image nicht garantiert — node-fetch nutzen.
+      # 300s start_period fuer den ersten uv-build (Python-Deps von PyPI).
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5001/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 300s
     networks:
       - xkmu-network
 

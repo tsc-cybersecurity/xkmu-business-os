@@ -141,19 +141,29 @@ services:
     volumes:
       - mirofish_uploads:/app/backend/uploads
     healthcheck:
-      test: ["CMD-SHELL", "curl -fs http://localhost:5001/health || curl -fs http://localhost:5001/ || exit 1"]
+      # curl ist im Mirofish-Image nicht zwingend vorhanden — node-fetch nutzen.
+      # start_period 300s damit der erste uv-build (Python-Deps) nicht
+      # premature unhealthy meldet.
+      test: ["CMD-SHELL", "node -e \"fetch('http://localhost:5001/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 300s
     networks:
+      # backend: damit die App das Backend via http://mirofish:5001 erreicht
+      # mirofish_egress: Outbound zu PyPI + OpenRouter (backend ist internal: true)
       - backend
+      - mirofish_egress
 
 networks:
   xkmu-network:
     driver: bridge
   backend:
     internal: true
+  # Bridge fuer Container die Outbound brauchen, ohne im Public-xkmu-network
+  # erreichbar zu sein. NICHT public — nur Outbound-NAT.
+  mirofish_egress:
+    driver: bridge
 
 volumes:
   postgres_data:
