@@ -219,6 +219,31 @@ export const TEMPLATE_PLACEHOLDERS: Record<string, Array<{ key: string; label: s
     { key: 'tone', label: 'Tonalität', description: 'Gewünschte Tonalität' },
     { key: 'language', label: 'Sprache', description: 'Ausgabesprache (de/en)' },
   ],
+  // ── Businessplan-Pipeline ──
+  'business_plan.idea_to_story': [
+    { key: 'seedInput', label: 'Idee/Briefing', description: 'Rohe Idee (Quick-Mode) oder strukturiertes Briefing als JSON' },
+    { key: 'inputType', label: 'Input-Typ', description: '"quick" oder "briefing"' },
+  ],
+  'business_plan.story_to_canvas': [
+    { key: 'story', label: 'Story', description: 'Generierte Story aus Stufe 1' },
+  ],
+  'business_plan.story_to_kfw': [
+    { key: 'story', label: 'Story', description: 'Generierte Story aus Stufe 1' },
+  ],
+  'business_plan.simulation_question': [
+    { key: 'mode', label: 'Mode', description: 'canvas | kfw | both' },
+    { key: 'seedInput', label: 'Seed-Input', description: 'Originaler Operator-Input' },
+    { key: 'planExcerpt', label: 'Plan-Auszug', description: 'Kurzform des aktuellen Plans für Kontext' },
+  ],
+  'business_plan.analyze_simulation': [
+    { key: 'plan', label: 'Plan', description: 'Vollständiger aktueller Plan (Canvas oder Markdown)' },
+    { key: 'simulationResult', label: 'Mirofish-Bericht', description: 'Strukturierter Simulationsbericht mit Risk-Signals und Narrativen' },
+  ],
+  'business_plan.revise_plan': [
+    { key: 'mode', label: 'Mode', description: 'canvas | kfw | both' },
+    { key: 'previousPlan', label: 'Vorheriger Plan', description: 'Plan-Version der letzten Iteration' },
+    { key: 'improvements', label: 'Improvements', description: 'Konkrete Verbesserungsanweisungen aus der letzten Analyse' },
+  ],
 }
 
 // ============================================
@@ -302,6 +327,19 @@ export const TRIGGER_INFO: Record<string, string> = {
     'Blog-Detail (/intern/blog/[id]) → "Social Posts generieren" → Plattform LinkedIn.',
   blog_to_facebook:
     'Blog-Detail (/intern/blog/[id]) → "Social Posts generieren" → Plattform Facebook.',
+  // --- Businessplan-Pipeline (/intern/business-plans) ---
+  'business_plan.idea_to_story':
+    'Businessplan-Pipeline Stufe 1 (IterationService.runIteration, Iteration 1). Wandelt rohen Idee-Pitch in eine Story als Basis.',
+  'business_plan.story_to_canvas':
+    'Businessplan-Pipeline Stufe 2a. Erzeugt Lean Canvas (9 Boxen) aus der Story. Nur bei mode=canvas oder both, Iteration 1.',
+  'business_plan.story_to_kfw':
+    'Businessplan-Pipeline Stufe 2b. Erzeugt KfW-Langform-Plan (Markdown) aus der Story. Nur bei mode=kfw oder both, Iteration 1.',
+  'business_plan.simulation_question':
+    'Businessplan-Pipeline Stufe 3a. Formuliert die natuerlichsprachliche Simulationsfrage fuer Mirofish aus dem aktuellen Plan-Stand.',
+  'business_plan.analyze_simulation':
+    'Businessplan-Pipeline Stufe 3b. Bewertet Mirofish-Simulationsbericht → Score 0-100 + Improvements. Steuert Stop-Bedingung der Iterationsschleife.',
+  'business_plan.revise_plan':
+    'Businessplan-Pipeline Stufe 2c. Ab Iteration 2: ueberarbeitet den vorherigen Plan basierend auf den Improvements der letzten Analyse.',
   // --- Company-Actions (alle company_*) ---
   // Generischer Fallback fuer alle 30+ company_*-Slugs: kontextueller Action-Button
   // im Firmen-Detail-View. Konkrete Aktion ergibt sich aus dem Slug-Namen.

@@ -332,4 +332,8 @@ export const MIGRATIONS: Migration[] = [
     name: '078_news_topic_social_config_default_fix.sql',
     description: 'HOTFIX: news_topics.social_config-Default von jsonb_build_object(..) auf JSON-Literal::jsonb umstellen — drizzle-kit crasht beim Pull auf Function-Defaults',
   },
+  {
+    name: '079_business_plan_ai_templates.sql',
+    description: 'Sechs AI-Prompt-Templates fuer Businessplan-Pipeline (idea→story, story→canvas, story→kfw, simulation_question, analyze_simulation, revise_plan). Idempotent via NOT EXISTS, im UI unter /intern/settings/ai-prompts pflegbar',
+  },
 ]
