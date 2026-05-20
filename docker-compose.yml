@@ -136,8 +136,12 @@ services:
       - LLM_MODEL_NAME=${MIROFISH_LLM_MODEL:-gpt-4o-mini}
       - ZEP_API_KEY=${MIROFISH_ZEP_API_KEY:-}
     ports:
-      # nur Backend; Frontend-Port 3000 absichtlich nicht gemappt
-      - "127.0.0.1:5001:5001"
+      # Backend (5001) bleibt nur ueber das interne Docker-Network erreichbar
+      # (die App spricht es ueber http://mirofish:5001 an).
+      # Frontend (Container-Port 3000) wird auf Host-Port 3300 gemappt, an
+      # localhost gebunden — kein oeffentlicher Zugriff, aber Operator kann
+      # via http://localhost:3300 das Mirofish-UI lokal nutzen/debuggen.
+      - "127.0.0.1:3300:3000"
     volumes:
       - mirofish_uploads:/app/backend/uploads
     healthcheck:

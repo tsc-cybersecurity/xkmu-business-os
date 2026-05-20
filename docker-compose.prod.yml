@@ -132,6 +132,10 @@ services:
       - LLM_BASE_URL=${MIROFISH_LLM_BASE_URL:-}
       - LLM_MODEL_NAME=${MIROFISH_LLM_MODEL:-gpt-4o-mini}
       - ZEP_API_KEY=${MIROFISH_ZEP_API_KEY:-}
+    ports:
+      # Backend (5001) bleibt nur intern (App spricht es via http://mirofish:5001).
+      # Frontend auf Host 3300, an localhost gebunden — kein Public-Zugriff.
+      - "127.0.0.1:3300:3000"
     volumes:
       - mirofish_uploads:/app/backend/uploads
     healthcheck:
